@@ -1,0 +1,2430 @@
+﻿/// <reference path="../Script/reference.js" />
+/********************************************
+ * >>>>> grid: 그리드 컨트롤 >>>>>
+ * 2017-11-01: 문재원: 최초 작성
+ * 2018-08-07: 문재원: 전체적인 소스 변경 ( wijmo 모듈 변경)
+ * 2018-08-07: 문재원: 밴드기능 보류 -> 2018-09-04 완
+ *******************************************/
+var _gridParams = function () {
+    this.id = '';
+    this.padding = 0;
+    this.rowNumber = true;
+    this.selectMode = enumSelectMode.MultiRange;
+    this.allowAddNew = false;
+    this.allowSorting = true;
+    this.allowFilter = true;
+    this.allowMerging = 'ColumnHeaders';
+    this.allowDragging = true;
+    this.autoClipboard = true;
+    this.rowMerging = false;
+    this.colMerging = false;
+    this.isTopAddNew = false;
+    this.isCheckBoxGrid = false;
+    this.isSubTotalGrid = false;
+    this.totalPosition = 'bottom';
+    this.groupField = undefined;
+    this.groupASC = true;
+    this.lockColumn = 0;
+    this.contextMenu = true;
+    this.removeContextMenu = [];
+    this.selectFirstRowAtSetStore = true;
+    this.bindComboBoxID = '';
+};
+var _columnParams = function () {
+    this.width = 100;
+    this.align = undefined;
+    this.readOnly = true;
+    this.isRequired = false;
+    this.columnType = enumColumnTypes.text;
+    this.mask = undefined;
+    this.allowMerging = false;
+    this.allowDragging = true;
+    this.backColor = 'white';
+    this.foreColor = 'black';
+    this.hidden = false;
+    this.iconCls = '';
+    this.decimalPrecision = 0;
+    this.gpcd = '';
+    this.ref01 = '';
+    this.ref02 = '';
+    this.ref03 = '';
+    this.ref04 = '';
+    this.ref05 = '';
+    this.ref06 = '';
+    this.ref07 = '';
+    this.ref08 = '';
+    this.ref09 = '';
+    this.ref10 = '';
+    this.callCenter = false;
+    this.groupType = enumGrouping.none;
+    this.wordWrap = false;
+    this.multiLine = false;
+};
+var _comboParams = function () {
+    this.gpcd = '';
+    this.ref01 = '';
+    this.ref02 = '';
+    this.ref03 = '';
+    this.ref04 = '';
+    this.ref05 = '';
+    this.ref06 = '';
+    this.ref07 = '';
+    this.ref08 = '';
+    this.ref09 = '';
+    this.ref10 = '';
+    this.callCenter = false;
+};
+var ItsGrid = {
+    list: [],
+    Init: function () {
+        // 드롭다운 메뉴 위치 조정
+        //$(document).on('DOMNodeInserted', function (e) {
+        //    if ($(e.target).hasClass('wj-dropdown-panel')) {
+        //        //setTimeout(function () {
+        //            try {
+        //                if ($('.wj-hasdropdown').offset().top + $(e.target).height() + 22 > $(document).height()) {
+        //                    $(e.target).css('top', $('.wj-hasdropdown').offset().top - $(e.target).height() - 2)
+        //                } else {
+        //                    $(e.target).css('top', $('.wj-hasdropdown').offset().top + 22);
+        //                }
+        //                $(e.target).css('left', $('.wj-hasdropdown').offset().left - 0);
+                        
+        //                if ($(e.target).hasClass('ctx-menu')) {
+        //                    if ($('.wj-menu-items.ctx-menu').height() + $('.wj-menu-items.ctx-menu').position().top > $('.wj-menu-items.ctx-menu').parent().height()) {
+        //                        $('.wj-menu-items.ctx-menu').css('top', $('.wj-menu-items.ctx-menu').parent().height() - $('.wj-menu-items.ctx-menu').height() - 30);
+        //                    }
+
+        //                }
+        //            }
+        //            catch (e) { }
+        //            finally {
+        //                $(e.target).show();
+        //            }
+        //        //});
+        //    } else if ($(e.target).attr('type') == 'tel' && $(e.target).parent().hasClass('wj-cell')) {
+        //        $(e.target).on('propertychange change keyup paste input', function (e) {
+        //            var $inputVal = $(this).val().toString().replace(/[^0-9.-]/g, "");
+        //            if ($inputVal == '') $inputVal = '0';
+        //            if (e.keyCode == 107 && ItsPage.PLUSKEYYN == 'Y') {
+        //                $inputVal = ($inputVal + '000').replace(/[^0-9.-]/g, "");
+        //            }
+        //            if ($inputVal.length > 14) {
+        //                $inputVal = $inputVal.substring(0, 14);
+        //            }
+        //            //$(this).val($inputVal);
+        //            $(this).val(ItsHelper.NumberComma($inputVal));
+        //        });
+                
+        //    }
+        //});
+    },
+    /**
+     * @param {String} id
+     * @param {_gridParams} params
+     * @param {Object[]} columns
+     */
+    Create: function (id, params, columns) {
+        params.id = id;
+        var $params = new _gridParams();
+        ItsHelper.CopyObj(params, $params);
+
+        if ($params.id == undefined) {
+            alert('Grid control must have attribute \'id\'.');
+            return;
+        }
+        if ($('#' + $params.id).length == 0) {
+            alert('Can not find \'' + $params.id + '\' tag.');
+            return;
+        }
+        if ($params.allowDragging) {
+            $params.allowDragging = 1;
+        } else {
+            $params.allowDragging = 0;
+        }
+        var colList = []; // 그리드에 넣을 컬럼
+        var notBandCol = []; // 밴드가 아닌 컬럼
+        var bandCol = []; // 밴드인 컬럼
+        var bandText = []; // 밴드 라벨 목록
+        var btnColumn = []; // 버튼형 컬럼 목록
+        var dateColumn = []; // 데이트피커형 컬럼 목록
+        var comboColumn = []; // 콤보박스형 컬럼 목록
+        var checkColumn = []; // 체크박스형 컬럼 목록
+        colList.push({
+            header: ' ',
+            binding: 'isRowCheck',
+            width: 40,
+            dataType: wijmo.DataType.Boolean,
+            visible: $params.isCheckBoxGrid,
+            align:'center',
+            isReadOnly: false,
+            allowResizing: false
+        });
+        // 프로툴 전용(권한에 따라 컬럼 숨기기)
+        // if (ItsPage.COSTYN != 'Y') {
+        //     var rlist = [];
+        //     for (var i = 0; i < columns.length; i++) {
+        //         ItsPage.costColumn.data.forEach(function (d) {
+        //             if (d.COSTCOL == columns[i].field) {
+        //                 rlist.push(i);
+        //             }
+        //         });
+        //     }
+        //     for (var i = rlist.length; i > 0; i--) {
+        //         columns.splice(rlist[i - 1], 1);
+        //     }
+        // }
+        columns.forEach(function (col) {
+            if (col.type == 'column') {
+                notBandCol.push(col.field);
+                colList.push(col.colObj);
+            } else if (col.type == 'band') {
+                col.columns.forEach(function (col2) {
+                    bandText.push(col.text);
+                    bandCol.push({ field: col2.field, text: col.text, obj: col2.colObj });
+                    colList.push(col2.colObj);
+                    if (col2.editType == enumColumnTypes.button) {
+                        btnColumn.push({ obj: col2.colObj, buttonClass: col2.buttonClass, field: col2.field });
+                    } else if (col2.editType == enumColumnTypes.date) {
+                        dateColumn.push({ obj: col2.colObj, field: col2.field });
+                    } else if (col2.editType == enumColumnTypes.combo) {
+                        comboColumn.push({
+                            obj: col2.colObj, field: col2.field, gpcd: col2.gpcd,
+                            ref01: col2.ref01, ref02: col2.ref02, ref03: col2.ref03,
+                            ref04: col2.ref04, ref05: col2.ref05, ref06: col2.ref06,
+                            ref07: col2.ref07, ref08: col2.ref08, ref09: col2.ref09,
+                            ref10: col2.ref10, callCenter: col2.callCenter
+                        });
+                    } else if (col2.editType == enumColumnTypes.check) {
+                        checkColumn.push({ obj: col2.colObj, field: col2.field });
+                    }
+                });
+            }
+            if (col.editType == enumColumnTypes.button) {
+                btnColumn.push({ obj: col.colObj, buttonClass: col.buttonClass, field: col.field });
+            } else if (col.editType == enumColumnTypes.date) {
+                dateColumn.push({ obj: col.colObj, field: col.field });
+            } else if (col.editType == enumColumnTypes.combo) {
+                comboColumn.push({
+                    obj: col.colObj, field: col.field, gpcd: col.gpcd,
+                    ref01: col.ref01, ref02: col.ref02, ref03: col.ref03,
+                    ref04: col.ref04, ref05: col.ref05, ref06: col.ref06,
+                    ref07: col.ref07, ref08: col.ref08, ref09: col.ref09,
+                    ref10: col.ref10, callCenter: col.callCenter
+                });
+            } else if (col.editType == enumColumnTypes.check) {
+                checkColumn.push({ obj: col.colObj, field: col.field });
+            }
+        });
+        var $initColVisible = { };
+        colList.forEach(function (col) {
+            $initColVisible[col.binding] = col.visible;
+        });
+        
+        //try {
+        //    if (colList[colList.length - 1].width.toString().indexOf('*') == -1) {
+        //        if (colList[colList.length - 1].width.toString() == '0') {
+        //            colList[colList.length - 1].width = '*';
+        //        } else {
+        //            colList[colList.length - 1].width = colList[colList.length - 1].width + '*';
+        //        }
+        //    }
+        //} catch (e) {
+
+        //}
+
+        // 그리드 생성
+        var $obj = new wijmo.grid.FlexGrid('#' + $params.id, {
+            autoGenerateColumns: false, // 컬럼 자동생성 X
+            alternatingRowStep: 0,
+            //showAlternatingRows: false,
+            imeEnabled: true, // 한영전환관련
+            allowSorting: $params.allowSorting,
+            allowDragging: $params.allowDragging,
+            allowMerging: $params.allowMerging,
+            allowAddNew: $params.allowAddNew,
+            allowDelete: $params.allowAddNew,
+            newRowAtTop: $params.isTopAddNew,
+            selectionMode: $params.selectMode,
+            frozenColumns: $params.lockColumn,
+            autoClipboard: $params.autoClipboard,
+            keyActionTab: 'Cycle',
+            keyActionEnter: 'None',
+            columns: colList,
+            itemsSourceChanged: function () {
+                // 스타일 관련
+                if ($obj._$initStyle == undefined) {
+                    var state = {
+                        columns: $obj.columnLayout,
+                        filterDefinition: $obj.flexFilter.filterDefinition,
+                        sortDescriptions: $obj.collectionView.sortDescriptions.map(function (sortDesc) {
+                            return { property: sortDesc.property, ascending: sortDesc.ascending };
+                        })
+                    }
+                    $obj._$initStyle = JSON.stringify(state);
+                }
+                if ($obj._$customStyle != undefined) {
+                    var ori_datamap = [];
+                    $obj.columns.forEach(function (d) {
+                        if (d.dataMap != undefined) {
+                            ori_datamap.push({ binding: d.binding, dataMap: d.dataMap, wordWrap: $params.wordWrap, multiLine: $params.multiLine })
+                        }
+                    })
+                    var json = $obj._$customStyle;
+                    if (json) {
+                        var state = JSON.parse(json);
+                        $obj.columnLayout = state.columns.replace(/\n/gi, '\\n');
+                        $obj.flexFilter.filterDefinition = state.filterDefinition;
+                        try {
+                            var view = $obj.collectionView;
+                            view.deferUpdate(function () {
+                                view.sortDescriptions.clear();
+                                if (typeof (state.sortDescriptions) != 'object') {
+                                    if (state.sortDescriptions.substring(state.sortDescriptions.length - 3) == ']}]') {
+                                        state.sortDescriptions = JSON.parse(state.sortDescriptions.replace(']}]', ']'));
+                                    }
+                                }
+                                for (var i = 0; i < state.sortDescriptions.length; i++) {
+                                    var sortDesc = state.sortDescriptions[i];
+                                    view.sortDescriptions.push(
+                                        new wijmo.collections.SortDescription(sortDesc.property, sortDesc.ascending)
+                                    );
+                                }
+                            });
+                        }
+                        catch (e) { }
+
+
+                        if ($obj.bandText.length > 0) { // 밴드기능
+                            var hr = new wijmo.grid.Row();
+                            hr.allowMerging = true;
+                            var ch = $obj.columnHeaders;
+                            ch.rows.splice(0, 1);
+                            ch.rows.splice(0, 0, hr);
+                            for (var i = 0; i < $obj.bandText.length; i++) {
+                                for (var j = 0; j < $obj.bandCol.length; j++) {
+                                    if ($obj.bandText[i] == $obj.bandCol[j].text) {
+                                        var $field = $obj.bandCol[j].field;
+                                        var $column = $obj.getColumn($field);
+                                        ch.setCellData(0, $column.index, $obj.bandText[i]);
+                                    }
+                                }
+                            }
+                            var $col = $obj.getColumn('isRowCheck');
+                            $col.allowMerging = true;
+                            ch.setCellData(0, $col.index, $col.header);
+                            for (var i = 0; i < $obj.notBandCol.length; i++) {
+                                var $col = $obj.getColumn($obj.notBandCol[i]);
+                                if ($col != undefined) {
+                                    $col.allowMerging = true;
+                                    ch.setCellData(0, $col.index, $col.header);
+                                }
+                            }
+                        }
+                    }
+                    ori_datamap.forEach(function (d) {
+                        $obj.columns[ItsGrid.$colIndex($params.id, d.binding)].dataMap = d.dataMap;
+                        $obj.columns[ItsGrid.$colIndex($params.id, d.binding)].dataMap._originData = d.dataMap.collectionView.items;
+                    })
+                    
+                    // 2025-01-02 : 스타일 저장 후 날짜 선택 미표시로 인한 추가
+                    dateColumn.forEach(function (col) {
+                        for (var i = 0; i < $obj.columns.length; i++) {
+                            if ($obj.columns[i]._binding != undefined) {
+                                if (col.field == $obj.columns[i]._binding._key) {
+                                    $obj.columns[i].editor = new wijmo.input.InputDate(document.createElement('div'), {
+                                        showDropDownButton: !$obj.columns[i].isReadOnly
+                                    })
+                                    //new CustomGridEditor($obj, col.field, wijmo.input.InputDate, {
+                                    //    format: 'd'
+                                    //});
+                                }
+                            }
+                        }
+                    });
+
+                }
+                // select 이벤트 관련
+                $obj._curRowIdx = undefined;
+                var $index = 0;
+                if ($obj.ItsSelectKey != undefined) {
+                    var $key = Object.keys($obj.ItsSelectKey)[0];
+                    if (ItsGrid.$isGroupGrid($params.id)) {
+                        $.each($obj.itemsSource.items, function (i, v) {
+                            if (v[$key] == $obj.ItsSelectKey[$key]) {
+                                $index = i;
+                            }
+                        });
+                    } else {
+                        $.each($obj.itemsSource, function (i, v) {
+                            if (v[$key] == $obj.ItsSelectKey[$key]) {
+                                $index = i;
+                            }
+                        });
+                    }
+
+                    $obj.ItsInitIndex = $index;
+                }
+                if ($obj.ItsInitIndex == undefined)
+                    $obj.ItsInitIndex = 0;
+                $obj.initState = true;
+
+                var $vfcol = 0;
+                for (var i = 0; i < $obj.columns.length; i++) {
+                    if ($obj.columns[i].isVisible) {
+                        $vfcol = i;
+                        break;
+                    }
+                }
+                if ($params.selectFirstRowAtSetStore) {
+                    $obj.initState = false;
+                    $obj.select($obj.ItsInitIndex, $vfcol);
+                } else {
+                    $obj.select(-1, $vfcol);
+                }
+                
+                $obj.initState = false;
+                if ($obj.ItsSelectKey != undefined) {
+                    try {
+                        var rc = $obj.cells.getCellBoundingRect($obj.ItsInitIndex, 0, true);
+                        $obj.scrollPosition = new wijmo.Point($obj.scrollPosition.x, -rc.top);
+                    }
+                    catch(e){
+                    }
+
+                }
+                $obj.ItsSelectKey = undefined;
+                if (ItsGrid.Length($params.id) == 0) {
+                    return;
+                }
+                //if ($params.selectFirstRowAtSetStore) {
+                    if (ItsGrid.Event($params.id).onSelect != undefined) {
+                        ItsGrid.Event($params.id).onSelect($obj.ItsInitIndex, $obj.columns[0].binding);
+                    }
+                //}
+                //$obj.focus();
+            },
+            selectionChanged: function (s, e) {
+                try {
+                    parent.wait_start();
+                } catch (ex) { }
+                $obj._ctxMenu.hide();
+                if ($obj.initState == false) {
+                    if (ItsGrid.$isGroupGrid($params.id)) {
+                        var row = s.itemsSource._idx;
+                    } else {
+                        var row = e.row;
+                    }
+                    if ($obj._curRowIdx != row && row > -1) {
+                        if (ItsGrid.Event($params.id).onSelect != undefined) {
+                            ItsGrid.Event($params.id).onSelect(row, $obj.columns[e.col].binding);
+                        }
+                    }
+                    $obj._curRowIdx = row;
+                }
+                setTimeout(function () {
+                    $('#' + $params.id).find('.itsgrid-selected-row').removeClass('itsgrid-selected-row');
+
+                    $.each($('#' + $params.id).find('.wj-state-active').siblings(), function () {
+                        if ($(this).height() <= 25) {
+                            $(this).addClass('itsgrid-selected-row');
+                        }
+                    });
+
+                    $('#' + $params.id).find('.wj-state-active').addClass('itsgrid-selected-row');
+
+                    try {
+                        parent.wait_end();
+                    } catch (ex) { }
+                }, 1);
+            },
+            scrollPositionChanged: function () {
+                setTimeout(function () {
+                    $('#' + $params.id).find('.itsgrid-selected-row').removeClass('itsgrid-selected-row');
+                    $('#' + $params.id).find('.wj-state-active').siblings().addClass('itsgrid-selected-row');
+                    $('#' + $params.id).find('.wj-state-active').addClass('itsgrid-selected-row');
+                }, 0);
+            },
+            cellEditEnded: function (sender, e) {
+                var $oldValue = e._data;
+                var $newValue;
+                if ($oldValue == undefined) {
+                    if ($obj.columns[e.col].format != undefined && $obj.columns[e.col].format.indexOf('d') > -1) { // dateColumn의경우
+                        try {
+                            $oldValue = e.panel._activeCell.innerText.trim();
+                        } catch (e) {
+                            $oldValue = e.panel._activeCell.innerText;
+                        }
+                    } else {
+                        $oldValue = ''; // 다른경우
+                    }
+                } else if (typeof ($oldValue) == 'object') {
+                    try {
+                        $oldValue = e.panel._activeCell.innerText.trim();
+                    } catch (e) {
+                        $oldValue = '';
+                    }
+                }
+                if (ItsGrid.$isGroupGrid($params.id)) {
+                    var row = sender.itemsSource._idx;
+                    if (row == -1) return;
+                    $newValue = sender.itemsSource.items[row][e._p._cols[e.col]._binding._key];
+                } else {
+                    var row = e.row;
+                    $newValue = sender.getCellData(row, e.col);
+                }
+
+                //if ($obj.columns[e.col].format != undefined && $obj.columns[e.col].format.indexOf('n') > -1) {
+                //    var val = ItsHelper.FloatFormat(sender.getCellData(row, e.col), +$obj.columns[e.col].format.substr(1, 1));
+                //    sender.setCellData(row, e.col, val);
+                //}
+
+                if (e._p._cols[e.col]._binding._key != 'isRowCheck') {
+                    if (ItsGrid.$isGroupGrid($params.id)) {
+                        $obj.itemsSource.items[row]['isRowCheck'] = true;
+                        $obj.refresh();
+                    } else {
+                        if (sender.getCellData(row, e.col) != $oldValue) {
+                            $obj.cells.setCellData(row, 'isRowCheck', true);
+                        }
+                    }
+                    //$obj.cells.setCellData(row, ItsGrid.$colIndex($params.id, 'isRowCheck'), true);
+                    //ItsGrid.CheckRow($params.id, row);
+                }
+
+                ItsGrid.Event($params.id).onChanged(row, e._p._cols[e.col]._binding._key, $newValue, $oldValue, 'cellEditEnded');
+            },
+            pastedCell: function (p, rng, data) {
+
+                var $val = rng.data;
+                var $format = p.columns[rng.col].format;
+                if (p.columns[rng.col].format != undefined && (p.columns[rng.col].format.indexOf('n') > -1 || p.columns[rng.col].format.indexOf('G8') > -1)) {
+                    $val = parseFloat($val.replace(/[,]/gi, ''));
+                }
+                // 클립보드 oldvalue 사용불가..
+                if (ItsGrid.$isGroupGrid($params.id)) {
+                    var row = p.itemsSource._idx;
+                } else {
+                    var row = rng.row;
+                }
+                //if ($obj.columns[rng.col].format != undefined && $obj.columns[rng.col].format.indexOf('n') > -1) {
+                //    var val = ItsHelper.FloatFormat($val, +$obj.columns[rng.col].format.substr(1, 1));
+                //    $obj.cells.setCellData(row, rng.col, val);
+                //}
+                //if ($val != p.getCellData(rng.row, rng.col)) {
+                if (p._cols[rng.col]._binding._key != 'isRowCheck') {
+                    if (ItsGrid.$isGroupGrid($params.id)) {
+                        $obj.itemsSource.items[row]['isRowCheck'] = true;
+                        //$obj.cells.setCellData(row, 'isRowCheck', true);
+                    } else {
+                        $obj.cells.setCellData(row, 'isRowCheck', true);
+                    }
+                }
+                ItsGrid.Event($params.id).onChanged(row, p.columns[rng.col].binding, $val, undefined, 'pastedCell');
+                //}
+            }
+        });
+        $obj.beginningEdit.addHandler(function (p, rng, data) {
+            var $field = $obj.columns[rng.col].binding;
+            var $format = $obj.columns[rng.col].format;
+            var $value = '';
+            if ($format != undefined && $format.substring(0, 1) == 'd') {
+                try {
+                    $value = ItsHelper.GetYearMonthDay($value);
+                } catch (e) {
+                    $value = '';
+                }
+                if ($obj.cells.getCellData(rng.row, $field) == '') {
+                    $obj.cells.setCellData(rng.row, $field, ItsHelper.GetYearMonthDay());
+                }
+            }
+            ItsGrid.Event($params.id).onBeginningEdit(rng.row, $field, ItsGrid.GetValue($params.id, rng.row, $field));
+        });
+        // -----------------------------------------------------------------------------------------------------------------------
+        for (var i = 0; i < $obj.columns.length; i++) {
+            $obj.columns[i].customAllowMerging = $obj.columns[i].allowMerging;
+        }
+        $obj.bandText = bandText;
+        $obj.bandCol = bandCol;
+        $obj.notBandCol = notBandCol;
+
+        if ($obj.bandText.length > 0) { // 밴드기능
+            var hr = new wijmo.grid.Row();
+            hr.allowMerging = true;
+            var ch = $obj.columnHeaders;
+            ch.rows.splice(0, 0, hr);
+            for (var i = 0; i < $obj.bandText.length; i++) {
+                for (var j = 0; j < $obj.bandCol.length; j++) {
+                    if ($obj.bandText[i] == $obj.bandCol[j].text) {
+                        var $field = $obj.bandCol[j].field;
+                        var $column = $obj.getColumn($field);
+                        ch.setCellData(0, $column.index, $obj.bandText[i]);
+                    }
+                }
+            }
+            var $col = $obj.getColumn('isRowCheck');
+            $col.allowMerging = true;
+            ch.setCellData(0, $col.index, $col.header);
+            for (var i = 0; i < $obj.notBandCol.length; i++) {
+                var $col = $obj.getColumn($obj.notBandCol[i]);
+                $col.allowMerging = true;
+                ch.setCellData(0, $col.index, $col.header);
+            }
+        }
+        $obj.formatItem.addHandler(function (s, e) {
+            if (e.panel == s.columnHeaders && e.range.rowSpan > 1) {
+                var html = e.cell.innerHTML;
+                e.cell.innerHTML = '<div class="v-center">' + html + '</div>';
+            }
+            if (e.panel == s.columnHeaders && e.range.columnSpan > 1) {
+                var html = e.cell.innerHTML;
+                e.cell.innerHTML = '<div class="h-center">' + html + '</div>';
+            }
+        });
+
+        // -----------------------------------------------------------------------------------------------------------------------
+        // 버튼컬럼 처리
+        $obj.formatItem.addHandler(function (s, e) {
+            try {
+                btnColumn.forEach(function (col) {
+                    if ($obj.columns[e.col]._binding != undefined) {
+                        if (!$(e.cell).hasClass('wj-header') && 
+                            !$(e.cell).hasClass('wj-group') && 
+                            col.field == $obj.columns[e.col]._binding._key && 
+                            e.panel != s.columnHeaders) {
+
+                            if (col.buttonClass.indexOf('fa') > -1) {
+                                e.cell.innerHTML = '<div class=\"' + col.buttonClass + ' ' + 'ItsGridButton' + '\" onClick=\"ItsGrid.Event(\'' + $params.id + '\').onButtonClick(ItsGrid.$GetRowIndex(\'' + params.id + '\'),\'' + col.field + '\')\"></div>';
+                            } else {
+                                e.cell.innerHTML = '<div style=\"height:inherit;margin: 0 auto;max-width: 30px;\"><div style=\"background:url(../../images/UserControl/' + col.buttonClass + '.png) no-repeat\" class=\"ItsGridButton ItsGridButton_img\" onClick=\"ItsGrid.Event(\'' + $params.id + '\').onButtonClick(ItsGrid.$GetRowIndex(\'' + params.id + '\'),\'' + col.field + '\')\"></div></div>';
+                            }
+
+                            
+                        }
+                    }
+                });
+            } catch (e) { }
+        });
+
+        // 날짜 선택컬럼 처리
+        dateColumn.forEach(function (col) {
+            for (var i = 0; i < $obj.columns.length; i++) {
+                if ($obj.columns[i]._binding != undefined) {
+                    if (col.field == $obj.columns[i]._binding._key) {
+                        $obj.columns[i].editor = new wijmo.input.InputDate(document.createElement('div'), {
+                            showDropDownButton: !$obj.columns[i].isReadOnly
+                        })
+                        //new CustomGridEditor($obj, col.field, wijmo.input.InputDate, {
+                        //    format: 'd'
+                        //});
+                    }
+                }
+            }
+        });
+        // 콤보박스 컬럼 데이터는 미리 일괄로 가져옴
+        var maria = new ItsMaria();
+        for (var i = 0; i < comboColumn.length; i++) {
+            var col = comboColumn[i];
+            var query = "CALL DC_COMBO(\'";
+            query += col.gpcd.replace('*', '').replace('@', '').replace(/[']/gi, "''") + '\',\'';
+            query += col.ref01 + '\',\'';
+            query += col.ref02 + '\',\'';
+            query += col.ref03 + '\',\'';
+            query += col.ref04 + '\',\'';
+            query += col.ref05 + '\',\'';
+            query += col.ref06 + '\',\'';
+            query += col.ref07 + '\',\'';
+            query += col.ref08 + '\',\'';
+            query += col.ref09 + '\',\'';
+            query += col.ref10 + '\'';
+            query += ');';
+            maria.AddQuery(query);
+        }
+        if (maria.ToString() != '') {
+            maria.Query();
+            if (maria.isError) {
+                console.log('그리드콤보박스 로드 에러:' + maria.errMessage);
+                return;
+            }
+            for (var i = 0; i < comboColumn.length; i++) {
+                var col = comboColumn[i];
+                var data = maria.stores[i].data;
+                if (col.gpcd.indexOf('*') > -1) {
+                    data.unshift({ 'Label': '전체', 'Value': '', 'Tag': '' });
+                }
+                if (col.gpcd.indexOf('@') > -1) {
+                    data.unshift({ 'Label': '', 'Value': '', 'Tag': '' });
+                }
+                col.dataItem = data;
+            };
+        } 
+
+        comboColumn.forEach(function (col) {
+            for (var i = 0; i < $obj.columns.length; i++) {
+                if ($obj.columns[i]._binding != undefined) {
+                    if (col.field == $obj.columns[i]._binding._key) {
+
+                        var $tag = Object.keys(col.dataItem[0])[2];
+                        if ($tag == undefined || $tag == '' || $tag.substring(0, 3) == 'REF') {
+                            $tag = Object.keys(col.dataItem[0])[0];
+                        }
+
+                        var $dataMap = new wijmo.grid.DataMap(col.dataItem, Object.keys(col.dataItem[0])[1], $tag);
+                        $obj.columns[i].dataMap = $dataMap;
+                        $obj.columns[i].dataMap._originData = col.dataItem;
+                    }
+                }
+            }
+        })
+        
+        $obj.$cellBackColorRanges = []; // 컬러 설정 관련
+        $obj.$cellForeColorRanges = []; // 컬러 설정 관련
+        // 필터 만들기 -----------------------------------------------------------------------------------------------------------------------
+        var filter = new wijmo.grid.filter.FlexGridFilter($obj);
+        $obj.flexFilter = filter;
+        $obj.flexFilter.showFilterIcons = $params.allowFilter;
+        // 컬럼선택 목록 보기 -----------------------------------------------------------------------------------------------------------------------
+        var theColumnPickerDiv = $('<div style="display:none"><div id="' + $params.id + 'theColumnPicker" class="column-picker"></div></div>');
+        var colPickerList = [];
+        $obj.columns.forEach(function (c) {
+            if ($initColVisible[c.binding]) {
+                colPickerList.push(c);
+            }
+        });
+        var theColumnPicker = new wijmo.input.ListBox(theColumnPickerDiv, {
+            itemsSource: colPickerList,
+            checkedMemberPath: 'visible',
+            displayMemberPath: 'header',
+            itemChecked: function (s, e) {
+                var c = s.checkedItems.find(function (c) { if (c.binding == s._items[s.selectedIndex].binding) return c });
+                if (c == undefined) {
+                    $obj.columns[ItsGrid.$colIndex($params.id, s._items[s.selectedIndex].binding)].visible = false;
+                } else {
+                    $obj.columns[ItsGrid.$colIndex($params.id, s._items[s.selectedIndex].binding)].visible = true;
+                }
+            },
+            lostFocus: function () {
+                wijmo.hidePopup(theColumnPicker.hostElement);
+            }
+        });
+        // 우클릭 컨텐츠 정의 -----------------------------------------------------------------------------------------------------------------------
+        var localStorage = {};
+        var ctxMenu = new wijmo.input.Menu(document.createElement('div'), {
+            owner: $obj,
+            displayMemberPath: 'header',
+            subItemsPath: 'items',
+            commandParameterPath: 'cmd',
+            dropDownCssClass: 'ctx-menu',
+            openOnHover: true,
+            closeOnLeave: true,
+            itemsSource: [
+                { header: '전체선택', cmd: 'all_chk' },
+                { header: '영역선택', cmd: 'part_chk' },
+                { header: '-' },
+                { header: '정렬초기화', cmd: 'clr_sort' },
+                { header: '컬럼목록',   cmd: 'col_list' },
+                { header: '-' },
+                
+                { header: '컬럼너비맞춤', cmd: 'col_resize' },
+                { header: '스타일저장', cmd: 'add_style' },
+                { header: '스타일초기화', cmd: 'reset_style' },
+                { header: '-' },
+                { header: '셀계산', cmd: 'cell_calc' },
+                { header: '엑셀내보내기', cmd: 'export_xlsx' },
+            ],
+            command: {
+                executeCommand: function (cmd) {
+                    var CtxParam = {};
+                    if (cmd == 'all_chk') {
+                        var $curflag = $obj.checkFlag;
+                        try {
+                            for (var i = 0; i <= $obj.rows.length; i++) {
+                                if ($obj.rows[i]._data._gd == undefined) {
+                                    $obj.rows[i]._data.isRowCheck = !$curflag;
+                                }
+                            }
+                        } catch (e) { }
+                        $obj.refresh();
+                        $obj.checkFlag = !$curflag;
+                    } else if (cmd == 'part_chk') {
+                        try {
+                            for (var i = $obj.selection.topRow; i <= $obj.selection.bottomRow; i++) {
+                                if ($obj.rows[i]._data._gd == undefined) {
+                                    $obj.rows[i]._data.isRowCheck = !$obj.rows[i]._data.isRowCheck;
+                                }
+                            }
+                        } catch (e) { }
+                        $obj.refresh();
+                    } else if (cmd == 'clr_sort') {
+                        $obj.collectionView.sortDescriptions.clear()
+                    } else if (cmd == 'col_list') {
+                        var $left = $('#_dropdown').css('left');
+                        var $top = $('#_dropdown').css('top');
+                        wijmo.showPopup(theColumnPicker.hostElement, $obj.hostElement.querySelector('.dropdown'), false, true, false);
+                        theColumnPicker.focus();
+                        theColumnPicker.hostElement.style.left = $left;
+                        theColumnPicker.hostElement.style.top = $top;
+                    } else if (cmd == 'col_resize') {
+                        $obj.autoSizeColumns();
+                    } else if (cmd == 'add_style') {
+                        ItsGrid.$saveStyle($params.id);                        
+                    } else if (cmd == 'reset_style') {
+                        var json = $obj._$initStyle;
+                        if (json) {
+                            var state = JSON.parse(json);
+                            $obj.columnLayout = state.columns;
+                            $obj.flexFilter.filterDefinition = state.filterDefinition;
+                            var view = $obj.collectionView;
+                            view.deferUpdate(function () {
+                                view.sortDescriptions.clear();
+                                for (var i = 0; i < state.sortDescriptions.length; i++) {
+                                    var sortDesc = state.sortDescriptions[i];
+                                    view.sortDescriptions.push(
+                                        new wijmo.collections.SortDescription(sortDesc.property, sortDesc.ascending)
+                                    );
+                                }
+                            });
+                            if ($obj.bandText.length > 0) { // 밴드기능
+                                var hr = new wijmo.grid.Row();
+                                hr.allowMerging = true;
+                                var ch = $obj.columnHeaders;
+                                ch.rows.splice(0, 1);
+                                ch.rows.splice(0, 0, hr);
+                                for (var i = 0; i < $obj.bandText.length; i++) {
+                                    for (var j = 0; j < $obj.bandCol.length; j++) {
+                                        if ($obj.bandText[i] == $obj.bandCol[j].text) {
+                                            var $field = $obj.bandCol[j].field;
+                                            var $column = $obj.getColumn($field);
+                                            ch.setCellData(0, $column.index, $obj.bandText[i]);
+                                        }
+                                    }
+                                }
+                                var $col = $obj.getColumn('isRowCheck');
+                                $col.allowMerging = true;
+                                ch.setCellData(0, $col.index, $col.header);
+                                for (var i = 0; i < $obj.notBandCol.length; i++) {
+                                    var $col = $obj.getColumn($obj.notBandCol[i]);
+                                    $col.allowMerging = true;
+                                    ch.setCellData(0, $col.index, $col.header);
+                                }
+                            }
+                        }
+                        var maria = new ItsMaria('SYSGRID', 'DEL_GRIDSTYLE');
+                        maria.AddSessionUserId();
+                        maria.AddParam('PRGCD', ItsPage.name);
+                        maria.AddParam('GRIDID', id);
+                        maria.CallProcCenter();
+                        if (maria.isError) {
+                            maria.ShowErrMsg();
+                            return;
+                        }
+                        $obj._$customStyle = undefined;
+
+                        // 콤보박스 컬럼
+                        comboColumn.forEach(function (col) {
+                            for (var i = 0; i < $obj.columns.length; i++) {
+                                if ($obj.columns[i]._binding != undefined) {
+                                    if (col.field == $obj.columns[i]._binding._key) {
+                                        var $data = ItsGrid.$getGpcdData(
+                                            {
+                                                gpcd: col.gpcd,
+                                                ref01: col.ref01, ref02: col.ref02, ref03: col.ref03,
+                                                ref04: col.ref04, ref05: col.ref05, ref06: col.ref06,
+                                                ref07: col.ref07, ref08: col.ref08, ref09: col.ref09,
+                                                ref10: col.ref10, callCenter: col.callCenter
+                                            }, false);
+                                        try {
+                                            var $tag = Object.keys($data[0])[2];
+                                            if ($tag == undefined || $tag == '' || $tag.substring(0, 3) == 'REF') {
+                                                $tag = Object.keys($data[0])[0];
+                                            }
+                                            var $dataMap = new wijmo.grid.DataMap($data, Object.keys($data[0])[1], $tag);
+                                            $obj.columns[i].dataMap = $dataMap;
+                                            $obj.columns[i].dataMap._originData = $data;
+                                        } catch (e) { }
+                                    }
+                                }
+                            }
+                        });
+
+                        // 2025-01-02 : 스타일 저장 후 날짜 선택 미표시로 인한 추가
+                        // 날짜 선택컬럼 처리
+                        dateColumn.forEach(function (col) {
+                            for (var i = 0; i < $obj.columns.length; i++) {
+                                if ($obj.columns[i]._binding != undefined) {
+                                    if (col.field == $obj.columns[i]._binding._key) {
+                                        $obj.columns[i].editor = new wijmo.input.InputDate(document.createElement('div'), {
+                                            showDropDownButton: !$obj.columns[i].isReadOnly
+                                        })
+                                        //new CustomGridEditor($obj, col.field, wijmo.input.InputDate, {
+                                        //    format: 'd'
+                                        //});
+                                    }
+                                }
+                            }
+                        });
+
+
+                    } else if (cmd == 'cell_calc') {
+                        ItsGrid.$calculate($params.id);
+                    } else if (cmd == 'export_xlsx') {
+                        ItsGrid.$exportXlsx($params.id);
+                    }
+                    CtxParam['checkFlag'] = $obj.checkFlag;
+                    ItsGrid.Event($params.id).onCtxMenu(cmd, CtxParam);
+                }
+            }
+        });
+        var hitTest;
+        // 우클릭 했을때의 동작 -----------------------------------------------------------------------------------------------------------------------
+        if ($params.contextMenu) {
+            $obj.addEventListener($obj.hostElement, 'contextmenu', function (e) {
+                hitTest = $obj.hitTest(e);
+                if (hitTest.panel == $obj.cells) {
+                    e.preventDefault();
+                    ctxMenu.selectedIndex = -1;
+                    try {
+                        $params.removeContextMenu.forEach(function (m) {
+                            for (var i = 0; i < ctxMenu.itemsSource.length; i++) {
+                                if (ctxMenu.itemsSource[i].header == m) {
+                                    ctxMenu.itemsSource.splice(i, 1);
+                                }
+                            }
+                        });
+                    } catch (e) { };
+                    wijmo.showPopup(ctxMenu.dropDown, e);
+                    ctxMenu.dropDown.focus();
+                }
+            });
+        }
+        // row 넘버 표시, 셀 색상 설정-----------------------------------------------------------------------------------------------------------------------
+        $obj.itemFormatter = function (p, r, c, cell) {
+
+            if ($params.rowNumber) {
+                if (p.cellType == wijmo.grid.CellType.RowHeader) {
+                    if ($params.allowAddNew && $params.isTopAddNew) {
+                        if (r == 0) {
+                            cell.textContent = '+';
+                        } else {
+                            cell.textContent = r.toString();
+                        }
+                    } else if ($params.allowAddNew && !$params.isTopAddNew) {
+                        if (p._rows.length - 1 == r) {
+                            cell.textContent = '+';
+                        } else {
+                            cell.textContent = (r + 1).toString();
+                        }
+                    } else {
+                        cell.textContent = (r + 1).toString();
+                    }
+                }
+            }
+            if (wijmo.grid.CellType.Cell === p.cellType && $obj.rows[r]._data != undefined) { // 색상지정
+                cell.style.backgroundColor = 'white';
+                cell.style.color = 'black';
+                // column
+                columns.forEach(function (col) {
+                    if (col.type == 'column') {
+                        try {
+                            if (col.field == $obj.columns[c]._binding._key) {
+                                if ($obj.columns[c].backColor == undefined) {
+                                    cell.style.backgroundColor = col.backColor;
+                                } else {
+                                    cell.style.backgroundColor = $obj.columns[c].backColor;
+                                }
+                                if ($obj.columns[c].foreColor == undefined) {
+                                    cell.style.color = col.foreColor;
+                                } else {
+                                    cell.style.color = $obj.columns[c].foreColor;
+                                }
+                            }
+                        } catch (e) { }
+                    } else if (col.type == 'band') {
+                        col.columns.forEach(function (col2) {
+                            try {
+                                if (col2.field == $obj.columns[c]._binding._key) {
+                                    cell.style.backgroundColor = col2.backColor;
+                                    cell.style.color = col2.foreColor;
+                                }
+                            } catch (e) { }
+                        });
+                    }
+                });
+                for (var i = 0; i < columns.length; i++) {
+                    try {
+                        if (columns[i].field == $obj.columns[c]._binding._key) {
+                            cell.style.backgroundColor = columns[i].backColor;
+                            cell.style.color = columns[i].foreColor;
+                        }
+                    } catch (e) { }
+                }
+                // row
+                if ($obj.rows[r]._data['BACKGROUND'] != null && $obj.rows[r]._data['BACKGROUND'] != '' && $obj.rows[r]._data['BACKGROUND'] != undefined) {
+                    cell.style.backgroundColor = $obj.rows[r]._data['BACKGROUND'];
+                }
+                if ($obj.rows[r]._data['FOREGROUND'] != null && $obj.rows[r]._data['FOREGROUND'] != '' && $obj.rows[r]._data['FOREGROUND'] != undefined) {
+                    cell.style.color = $obj.rows[r]._data['FOREGROUND'];
+                }
+                // cell
+                for (var i = 0; i < $obj.$cellBackColorRanges.length; i++) {
+                    if ($obj.$cellBackColorRanges[i].row == r && $obj.$cellBackColorRanges[i].col == c) {
+                        cell.style.backgroundColor = $obj.$cellBackColorRanges[i].color;
+                    }
+                }
+                for (var i = 0; i < $obj.$cellForeColorRanges.length; i++) {
+                    if ($obj.$cellForeColorRanges[i].row == r && $obj.$cellForeColorRanges[i].col == c) {
+                        cell.style.color = $obj.$cellForeColorRanges[i].color;
+                    }
+                }
+                var $format = $obj.columns[c].format;
+                if ($format != undefined && ($format.substring(0, 1) == 'n' || $format.substring(0, 2) == 'G8')) {
+                    try {
+                        if (parseFloat($obj.cells.getCellData(r, c, true).toString().replace(/[^0-9.-]/gi, '')) < 0) {
+                            cell.style.color = 'tomato';
+                        };
+                    } catch (e) { }
+                }
+                try {
+                    if ($params.isCheckBoxGrid && $obj.cells.getCellData(r, 0, true) == 'true') {
+                        cell.style.backgroundColor = '#fbf7ff';
+                    }
+                } catch (e) { }
+            }
+        };
+        if ($params.allowMerging == 'All') {
+            $obj.getMergedRange = function (panel, r, c, clip) {
+                if (panel.cellType == 1) {
+                    if (panel.columns[c].allowMerging) {
+                        var rng = new wijmo.grid.CellRange(r, c);
+                        for (var i = rng.col; i < panel.columns.length - 1; i++) {
+                            if (panel.getCellData(rng.row, i, true) != panel.getCellData(rng.row, i + 1, true))
+                                break;
+                            rng.col2 = i + 1;
+                        }
+                        for (var i = rng.col; i > 0; i--) {
+                            if (panel.getCellData(rng.row, i, true) != panel.getCellData(rng.row, i - 1, true))
+                                break;
+                            rng.col = i - 1;
+                        }
+                        for (var i = rng.row; i < panel.rows.length - 1; i++) {
+                            if (panel.getCellData(i, rng.col, true) != panel.getCellData(i + 1, rng.col, true))
+                                break;
+                            rng.row2 = i + 1;
+                        }
+                        for (var i = rng.row; i > 0; i--) {
+                            if (panel.getCellData(i, rng.col, true) != panel.getCellData(i - 1, rng.col, true))
+                                break;
+                            rng.row = i - 1;
+                        }
+                        return rng;
+                    }
+                }
+            }
+        }
+        // 정렬 관련
+        $obj.formatItem.addHandler(function (s, e) {
+            if (e.cell.children.length == 0) {
+                if ($obj.columns[e.col].width < parseInt(e.cell.style.width.replace('px', ''))) {
+                    e.cell.innerHTML = '<div>' + e.cell.innerHTML + '</div>';
+                    wijmo.setCss(e.cell, {
+                        display: 'table',
+                        tableLayout: 'fixed'
+                    });
+                    wijmo.setCss(e.cell.children[0], {
+                        display: 'table-cell',
+                        textAlign: 'center',
+                        verticalAlign: 'middle'
+                    });
+                }
+                if ($obj.columns[e.col].height < parseInt(e.cell.style.height.replace('px', ''))) {
+                    e.cell.innerHTML = '<div>' + e.cell.innerHTML + '</div>';
+                    wijmo.setCss(e.cell, {
+                        display: 'table',
+                        tableLayout: 'fixed'
+                    });
+                    wijmo.setCss(e.cell.children[0], {
+                        display: 'table-cell',
+                        verticalAlign: 'middle'
+                    });
+                }
+
+            }
+        });
+        //$obj.formatItem.addHandler(function (s, e) {
+        //    setTimeout(function () {
+        //        // 서브토탈 그룹 텍스트
+        //        //var gw = 0;
+        //        var subtotalIcon = $('#' + $params.id).find('.wj-btn.wj-btn-glyph.wj-elem-collapse').parent();
+        //        //var glength = $('#' + $params.id).find('.wj-btn.wj-btn-glyph.wj-elem-collapse').eq(0).parent().text().length * 11;
+        //        //gw = glength;
+        //        //subtotalIcon.css('width', gw);
+        //        subtotalIcon.css('z-index', 5);
+        //        subtotalIcon.css('border-right', '0px');
+        //    }, 0);
+        //})
+        $obj.totalPosition = $params.totalPosition;
+        if ($params.isSubTotalGrid) {
+            if ($obj.totalPosition != 'top') {
+                $obj.columnFooters.rows.push(new wijmo.grid.GroupRow());
+                $obj.bottomLeftCells.setCellData(0, 0, '총');
+            }
+        }
+        if ($obj.totalPosition == 'top') {
+            $params.isSubTotalGrid = true;
+        }
+        // ------------------------------------------------------------------------------------------------------------------------------------------------
+
+        try {
+            $obj.refresh();
+            if (ItsPage.gridStyle.data.length > 0) {
+                var styleData = ItsPage.gridStyle.data.filterObjects("GRIDID", $params.id);
+                if (styleData.length == 1) {
+                    $obj._$customStyle = styleData[0]['STYLEINFO'];
+                }
+            }
+        } catch (e) { }
+
+        // ------------------------------------------------------------------------------------------------------------------------------------------------
+        $obj._ctxMenu = ctxMenu;
+        $obj.checkFlag = false;
+        $obj.ItsSelectKey = undefined;
+        $obj.isSubTotalGrid = $params.isSubTotalGrid;
+        $obj.groupField = $params.groupField;
+        $obj.groupASC = $params.groupASC;
+        $obj.rowHeaders.columns.minSize = 30;
+        this.list.push($obj);
+        return $obj;
+    },
+    /**************************************************
+     * grid: 제어 함수
+     * 2018-01-15: 문재원: addkey(), getkey(), setkey() 추가
+     * 2018-01-18: isSelect() 추가
+     * 2018-02-13: isChecked() 추가
+     * 2018-03-13: 색상 관련 함수 추가
+     **************************************************/
+    Get: function (id) {
+        try {
+            for (var i = 0; i < ItsGrid.list.length; i++) {
+                if (id == ItsGrid.list[i]._e.id) {
+                    return ItsGrid.list[i];
+                }
+            }
+        } catch (e) { return undefined; }
+
+    },
+    Length: function (id) {
+        var $obj = ItsGrid.Get(id);
+        try {
+            if (ItsGrid.$isGroupGrid(id)) {
+                return $obj.itemsSource.itemCount;
+            } else {
+                return $obj.itemsSource.length;
+            }
+        } catch (e) {
+            return 0;
+        }
+    },
+    Clear: function (id) {
+        ItsGrid.SetStore(id, new Store());
+        //ItsGrid.Get(id).itemsSource = [];
+    },
+    FinishEditing: function (id) {
+        ItsGrid.Get(id).finishEditing(true);
+    },
+    SetReadOnly: function (id, field, boolean) {
+        if (boolean != false)
+            boolean = true;
+
+        ItsGrid.Get(id).columns[ItsGrid.$colIndex(id, field)].isReadOnly = boolean;
+    },
+    GetStore: function (id) {
+        var $obj = ItsGrid.Get(id);
+        try {
+            if (ItsGrid.$isGroupGrid(id)) {
+                return $obj.itemsSource.items;
+            } else {
+                return $obj.itemsSource;
+            }
+        } catch (e) {
+            return 0;
+        }
+    },
+    SetStore: function (id, store, selectIndex) {
+        var $obj = ItsGrid.Get(id);
+        $obj.ItsInitIndex = selectIndex;
+        $obj.$cellBackColorRanges = [];
+        $obj.$cellForeColorRanges = [];
+        store.data.forEach(function (row) {
+            ItsGrid.Get(id).columns.forEach(function (col) {
+                if (col.format == 'check' && typeof (row[col.binding]) != typeof (true)) {
+                    row[col.binding] = false;
+                }
+            })
+            if (row.isRowCheck == undefined) {
+                row.isRowCheck = false;
+            }
+        });
+        $obj.checkFlag = false;
+        if ($obj.bindComboBoxID != undefined) {
+            $obj.groupField = ItsCombo.GetValue($obj.bindComboBoxID);
+        }
+        if (ItsGrid.$isGroupGrid(id)) {
+
+            var cv = new wijmo.collections.CollectionView(store.data);
+
+            if ($obj.totalPosition == 'top') {
+                var grandTotalsGroup = new wijmo.collections.PropertyGroupDescription('총', function (item, propName) {
+                    return '';
+                });
+                cv.groupDescriptions.push(grandTotalsGroup);
+            }
+            if ($obj.groupField != undefined && $obj.groupField != '') {
+                var sd = new wijmo.collections.SortDescription($obj.groupField, $obj.groupASC);
+                var gd = new wijmo.collections.PropertyGroupDescription($obj.groupField);
+                cv.sortDescriptions.push(sd);
+                cv.groupDescriptions.push(gd);
+            }
+                
+            $obj.itemsSource = cv;
+        }
+        else {
+            $obj.itemsSource = store.data;
+        }
+        try {
+            var visibleLength = $obj.columns.length;
+            for (var i = $obj.columns.length - 1; i >= 0; i--) {
+                if ($obj.columns[i].visible) {
+                    visibleLength = i;
+                    break;
+                }
+            }
+            //$obj.autoSizeColumn(0, store.data.length, true);
+            if ($obj.columns[visibleLength].width.toString().indexOf('*') == -1) {
+                $('#' + id).parent('.SplitLeft').siblings('.SplitVBar').trigger('dblclick');
+
+            }
+        } catch (e) { }
+    },
+    IsSelect: function (id) {
+        if (ItsGrid.Get(id).selectedRows.length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    },
+    IsChecked: function (id, index) {
+        var $obj = ItsGrid.Get(id);
+        var $return = false;
+        try {
+            var $res = ItsGrid.GetValue(id, index, 'isRowCheck');
+            if ($res == 'true' || $res == true) $return = true
+            else $return = false;
+            return $return;
+        } catch (e) {
+            return false;
+        }
+        return $return;
+    },
+    HasChecked: function (id) {
+        var $data = ItsGrid.GetStore(id);
+        var $return = false;
+        try {
+            for (var i = 0; i < $data.length; i++) {
+                if ($data[i]['isRowCheck'] == true || $data[i]['isRowCheck'] == 'true') {
+                    return true;
+                }
+            }
+        } catch (e) {
+            return false;
+        }
+        return $return;
+    },
+    CheckRow: function (id, rowIndex) {
+        ItsGrid.SetValue(id, rowIndex, 'isRowCheck', true);
+    },
+    UnCheckRow: function (id, rowIndex) {
+        ItsGrid.SetValue(id, rowIndex, 'isRowCheck', false);
+    },
+    CheckAll: function (id) {
+        var $obj = ItsGrid.Get(id);
+        for (var i = 0; i < $obj.rows.length; i++) {
+            if ($obj.rows[i]._data._gd == undefined) {
+                $obj.rows[i]._data.isRowCheck = true;
+            }
+        }
+        $obj.checkFlag = true;
+        $obj.refresh();
+    },
+    UnCheckAll: function (id) {
+        var $obj = ItsGrid.Get(id);
+        for (var i = 0; i < $obj.rows.length; i++) {
+            if ($obj.rows[i]._data._gd == undefined) {
+                $obj.rows[i]._data.isRowCheck = false;
+            }
+        }
+        $obj.checkFlag = false;
+        $obj.refresh();
+    },
+    SelectRow: function (id, rowIndex) {
+        var $obj = ItsGrid.Get(id);
+        //if (rowIndex < 0) {
+        //    return;
+        //}
+        if (rowIndex > ItsGrid.Length(id) - 1) {
+            return;
+        }
+        var $i = 0;
+        for (var i = 0; i < $obj.columns.length; i++) {
+            if ($obj.columns[i].isVisible) {
+                $i = i;
+                break;
+            }
+        }
+        setTimeout(function () {
+            try{
+                $obj.select(rowIndex, $i);
+            }
+            catch (e) {  }
+            finally {
+                $obj.focus();
+            }
+        });
+    },
+    SelectCell: function (id, rowIndex, field) {
+        var $obj = ItsGrid.Get(id);
+        if (rowIndex < 0) {
+            return;
+        }
+        if (rowIndex > ItsGrid.Length(id) - 1) {
+            return;
+        }
+        var $col = ItsGrid.$colIndex(id, field);
+        if ($col > $obj.columns.length - 1) {
+            return;
+        }
+        setTimeout(function () {
+            try {
+                $obj.select(rowIndex, $col);
+                //$obj.startEditing();
+            }
+            catch (e) { }
+            finally {
+                $obj.focus();
+            }
+        }, 1);
+    },
+    GetRowCurrent: function (id) {
+        try {
+            return ItsGrid.GetRowData(id, ItsGrid.Get(id).selection._row);
+        } catch (e) {
+            return -1;
+        }
+    },
+    GetCurrentIndex: function (id) {
+        var $obj = ItsGrid.Get(id);
+        try {
+            if ($obj.rows.length <= 0) {
+                return -1;
+            }
+            if (ItsGrid.$isGroupGrid(id)) {
+                return $obj.itemsSource._idx;
+            } else {
+                return ItsGrid.Get(id).selection._row;
+            }
+        } catch (e) {
+            return -1;
+        }
+    },
+    GetRowData: function (id, index) {
+        try {
+            if (ItsGrid.$isGroupGrid(id)) {
+                var data = jQuery.extend(true, {}, ItsGrid.Get(id).itemsSource.items[index]);
+            } else {
+                var data = jQuery.extend(true, {}, ItsGrid.Get(id).rows[index]._data);
+            }
+            for (var i = 0; i < Object.keys(data).length; i++) {
+                try {
+                    var $format = ItsGrid.Get(id).columns[ItsGrid.$colIndex(id, Object.keys(data)[i])].format;
+                    if ($format != undefined && $format.substring(0, 1) == 'd') {
+                        var yn = false;
+                        try{
+                            yn = data[Object.keys(data)[i]].includes(':');
+                        }
+                        catch(ex){
+                            yn = false;
+                        }
+
+                        if (data[Object.keys(data)[i]] == undefined || data[Object.keys(data)[i]] == '' || data[Object.keys(data)[i]] == null) {
+                            data[Object.keys(data)[i]] = '';
+                        } else if (yn) {
+                            $value = data[Object.keys(data)[i]];
+                        }
+                        else {
+                            data[Object.keys(data)[i]] = ItsHelper.GetYearMonthDay(data[Object.keys(data)[i]]);
+                        }
+                        //data[Object.keys(data)[i]] = ItsHelper.GetYearMonthDay(data[Object.keys(data)[i]]);
+                    }
+                } catch (e) {
+                }
+            }
+            return data;
+        } catch (e) {
+            return;
+        }
+    },
+    SetRowData: function (id, index, data) {
+        var $obj = ItsGrid.Get(id);
+        var $keys = Object.keys(data);
+        for (var i = 0; i < $keys.length; i++) {
+            try {
+                if (ItsGrid.$isGroupGrid(id)) {
+                    ItsGrid.SetValue(id, index, $keys[i], data[$keys[i]]);
+                } else {
+                    $obj.cells.setCellData(index, $keys[i], data[$keys[i]]);
+                }
+            } catch (e) { }
+        }
+        $obj.refresh();
+    },
+    GetValue: function (id, index, field, boolYn) {
+
+        try {
+            if (ItsGrid.$isGroupGrid(id)) {
+                var $value = ItsGrid.Get(id).itemsSource.items[index][field];
+            } else {
+                var $value = ItsGrid.Get(id).rows[index]._data[field];
+            }
+            try {
+                var $format = ItsGrid.Get(id).columns[ItsGrid.$colIndex(id, field)].format;
+                if ($format != undefined && ($format.substring(0, 1) == 'n' || $format.substring(0, 2) == 'G8')) {
+                    try {
+                        $value = parseFloat($value.toString().replace(/[^0-9.-]/gi, ''));
+                    } catch (e) {
+                        $value = '';
+                    }
+                    if (isNaN($value)) $value = 0;
+                } else if ($format != undefined && $format.substring(0, 1) == 'd') {
+                    try {
+
+                        var yn = false;
+                        try {
+                            yn = $value.includes(':');
+                        }
+                        catch (ex) {
+                            yn = false;
+                        }
+
+                        if ($value == undefined || $value == '' || $value == null) {
+                            $value = '';
+                        } else if (yn) {
+                            $value = ItsGrid.Get(id).rows[index]._data[field];
+                        }
+                        else {
+                            $value = ItsHelper.GetYearMonthDay($value);
+                        }
+                    } catch (e) {
+                        $value = '';
+                    }
+                } else if (boolYn == false && ItsGrid.Get(id).columns[ItsGrid.$colIndex(id, field)].format == 'check') {
+                    if ($value) {
+                        $value = 'Y';
+                    } else if (!$value) {
+                        $value = 'N';
+                    }
+                }
+                var $mask = ItsGrid.Get(id).columns[ItsGrid.$colIndex(id, field)].mask;
+                if ($mask != undefined) {
+                    if ($value == $mask.replace(/0/gi, '_')) {
+                        $value = '';
+                    }
+                }
+            } catch (e) {
+
+            }
+            return $value;
+        } catch (e) {
+            return;
+        }
+    },
+    /**
+     * @param {String} id
+     * @param {String} field
+     * @param {_comboParams} params
+     * @param {Object[]} columns
+     */
+    SetGpcd: function (id, field, params) {
+        var $params = new _comboParams();
+        ItsHelper.CopyObj(params, $params);
+
+        var $data = ItsGrid.$getGpcdData(
+            {   gpcd :  $params.gpcd, 
+                ref01 : $params.ref01, 
+                ref02 : $params.ref02, 
+                ref03 : $params.ref03, 
+                ref04 : $params.ref04, 
+                ref05 : $params.ref05, 
+                ref06 : $params.ref06, 
+                ref07 : $params.ref07, 
+                ref08 : $params.ref08, 
+                ref09 : $params.ref09, 
+                ref10 : $params.ref10, 
+                callCenter: $params.callCenter
+            }, false);
+        try {
+            var $tag = Object.keys($data[0])[2];
+            if ($tag == undefined || $tag == '' || $tag.substring(0, 3) == 'REF') {
+                $tag = Object.keys($data[0])[0];
+            }
+            var $dataMap = new wijmo.grid.DataMap($data, Object.keys($data[0])[1], $tag);
+            ItsGrid.Get(id).columns[ItsGrid.$colIndex(id, field)].dataMap = $dataMap;
+            ItsGrid.Get(id).columns[ItsGrid.$colIndex(id, field)].dataMap._originData = $data;
+        } catch (e) {
+            var $dataMap = new wijmo.grid.DataMap([], 'Value', 'Label');
+            ItsGrid.Get(id).columns[ItsGrid.$colIndex(id, field)].dataMap = $dataMap;
+            ItsGrid.Get(id).columns[ItsGrid.$colIndex(id, field)].dataMap._originData = [];
+
+        }
+    },
+    GetRefValue: function (id, rowIndex, field, refName) {
+        var $obj = ItsGrid.Get(id);
+        if ($obj.columns[ItsGrid.$colIndex(id, field)].dataMap == undefined) {
+            return "";
+        }
+        var $data = $obj.columns[ItsGrid.$colIndex(id, field)].dataMap._originData;
+        var $value = ItsGrid.GetValue(id, rowIndex, field);
+        var $refValue = "";
+        $data.forEach(function (d) {
+            if (d['Value'] == $value) {
+                $refValue = d[refName];
+            }
+        })
+        return $refValue;
+    },
+    GetValueByRefValue: function (id, field, refName, refValue) {
+        var $obj = ItsGrid.Get(id);
+        if ($obj.columns[ItsGrid.$colIndex(id, field)].dataMap == undefined) {
+            return "";
+        }
+        var $data = $obj.columns[ItsGrid.$colIndex(id, field)].dataMap._originData;
+        var $value = "";
+
+        $data.forEach(function (d) {
+            if (d[refName] == refValue) {
+                $value = d['Value'];
+            }
+        })
+        return $value;
+    },
+    SetValueByRefValue: function (id, rowIndex, field, refName, refValue) {
+        var $obj = ItsGrid.Get(id);
+        if ($obj.columns[ItsGrid.$colIndex(id, field)].dataMap == undefined) {
+            return "";
+        }
+        var $data = $obj.columns[ItsGrid.$colIndex(id, field)].dataMap._originData;
+        var $value = "";
+
+        $data.forEach(function (d) {
+            if (d[refName] == refValue) {
+                $value = d['Value'];
+            }
+        })
+        if ($value == "") return;
+
+        ItsGrid.SetValue(id, rowIndex, field, $value);
+    },
+    SetValue: function (id, index, field, value) {
+        var $obj = ItsGrid.Get(id);
+        var $oldValue = ItsGrid.GetValue(id, index, field);
+        try {
+            if (ItsGrid.$colIndex(id, field) > -1) {
+                var $format = ItsGrid.Get(id).columns[ItsGrid.$colIndex(id, field)].format;
+                if ($format != undefined && ($format.substring(0, 1) == 'n' || $format.substring(0, 2) == 'G8')) {
+                    if (isNaN(value)) value = 0;
+                } else if ($format != undefined && $format == 'check') {
+                    if (value == 'Y') {
+                        value = true;
+                    } else if (value == 'N') {
+                        value = false;
+                    }
+                }
+            }
+
+            if (ItsGrid.$isGroupGrid(id)) {
+                $obj.itemsSource.items[index][field] = value;
+                $obj.refresh();
+            } else {
+                $obj.rows[index].dataItem[field] = value;
+                $obj.refresh();
+                //$obj.cells.setCellData(index, ItsGrid.$colIndex(id, field), value);
+            }
+
+        } catch (e) { }
+    },
+    SetColumnName: function (id, index, text) {
+        try {
+            var $obj = ItsGrid.Get(id);
+            $obj.columnHeaders.setCellData(0, index, text);
+        } catch (e) { }
+    },
+    AddRow: function (id, startEdit, rowData) {
+        var $obj = ItsGrid.Get(id);
+        if (startEdit == undefined) {
+            startEdit = ItsGrid.Length(id) + 1;
+        }
+        if (rowData == undefined) {
+            rowData = { isRowCheck: false };
+        }
+        if (ItsGrid.Length(id) < 1) {
+
+            var $new_store = new Store();
+            $new_store.data.push(rowData);
+            ItsGrid.Get(id).columns.forEach(function (c) {
+                if (c.format == 'check')
+                    $new_store.YnToBool(c.binding);
+            });
+
+            ItsGrid.SetStore(id, $new_store);
+            return;
+        } else {
+            var $new_store = new Store();
+            if (ItsGrid.$isGroupGrid(id)) {
+                $new_store.data = $obj.itemsSource.items;
+            } else {
+                $new_store.data = $obj.itemsSource;
+            }
+            //$new_store.data = $obj.itemsSource;
+            $new_store.data.splice(startEdit, 0, rowData);
+            ItsGrid.Clear(id);
+
+            ItsGrid.Get(id).columns.forEach(function (c) {
+                if (c.format == 'check')
+                    $new_store.YnToBool(c.binding);
+            });
+
+            ItsGrid.SetStore(id, $new_store, startEdit);
+        }
+    },
+    ClearRow: function (id, index) {
+        ItsGrid.RemoveRow(id, index);
+        ItsGrid.AddRow(id, index);
+    },
+    RemoveRow: function (id, index) {
+        var $obj = ItsGrid.Get(id);
+        var $new_store = new Store();
+        if (ItsGrid.$isGroupGrid(id)) {
+            $new_store.data = $obj.itemsSource.items;
+        } else {
+            $new_store.data = $obj.itemsSource;
+        }
+        //$new_store.data = $obj.itemsSource;
+        $new_store.data.splice(index, 1);
+        ItsGrid.Clear(id);
+        ItsGrid.SetStore(id, $new_store);
+    },
+    Addkey: function (id, key) {
+        alert('addkey기능 삭제, setkey로 대체 합니다.');
+    },
+    Setkey: function (id, keyField, keyValue) {
+        var $obj = ItsGrid.Get(id);
+        $obj.ItsSelectKey = {};
+        $obj.ItsSelectKey[keyField] = keyValue;
+    },
+    Getkey: function (id) {
+        var $obj = ItsGrid.Get(id);
+        return $obj.ItsSelectKey;
+    },
+    // 색상 관련
+    SetCellBackColor: function (id, rowIdx, field, color) {
+        var $obj = ItsGrid.Get(id);
+        $obj.$cellBackColorRanges.push({ row: rowIdx, col: ItsGrid.$colIndex(id, field), color: color });
+        $obj.refresh();
+    },
+    SetCellForeColor: function (id, rowIdx, field, color) {
+        var $obj = ItsGrid.Get(id);
+        $obj.$cellForeColorRanges.push({ row: rowIdx, col: ItsGrid.$colIndex(id, field), color: color });
+        $obj.refresh();
+    },
+    SetColumnBackColor: function (id, field, color) {
+        var $obj = ItsGrid.Get(id);
+        for (var i = 0; i < $obj.rows.length; i++) {
+            $obj.$cellBackColorRanges.push({ row: i, col: ItsGrid.$colIndex(id, field), color: color });
+        }
+        $obj.refresh();
+    },
+    SetColumnForeColor: function (id, field, color) {
+        var $obj = ItsGrid.Get(id);
+        for (var i = 0; i < $obj.rows.length; i++) {
+            $obj.$cellForeColorRanges.push({ row: i, col: ItsGrid.$colIndex(id, field), color: color });
+        }
+        $obj.refresh();
+    },
+    SetColumnName: function (id, index, text) {
+        ItsGrid.Get(id).columns[index].header = text;
+    },
+    SetRowBackColor: function (id, rowIdx, color) {
+        var $obj = ItsGrid.Get(id);
+        try {
+            ItsGrid.SetValue(id, rowIdx, 'BACKGROUND', color);
+            $obj.refresh();
+        } catch (e) { }
+    },
+    SetRowForeColor: function (id, rowIdx, color) {
+        var $obj = ItsGrid.Get(id);
+        try {
+            ItsGrid.SetValue(id, rowIdx, 'FOREGROUND', color);
+            $obj.refresh();
+        } catch (e) { }
+    },
+    SetGroupField: function (id, groupField, isAsc) {
+        if (groupField == '') {
+            groupField == undefined;
+        }
+        var store = new Store();
+        store.data = ItsGrid.GetStore(id);
+        if (isAsc != undefined) {
+            ItsGrid.Get(id).groupASC = isAsc;
+        }
+        ItsGrid.Get(id).groupField = groupField;
+        try {
+            ItsGrid.SetStore(id, store);
+        } catch(e) {  }
+        
+    },
+    Focus: function (id, rowIndex, colIndex) {
+        var $obj = ItsGrid.Get(id);
+        if (typeof (colIndex) == typeof ('A')) {
+            colIndex = ItsGrid.$colIndex(id, colIndex);
+        }
+        setTimeout(function () {
+            if (rowIndex != undefined && colIndex != undefined) {
+                $obj.select(rowIndex, colIndex);
+            }
+            try{
+                $obj.hostElement.focus();
+            } catch(e) {}
+        }, 10);
+    },
+    SetMatching: function (id, matchingfield, store) {
+        var data = store.data;
+        var $obj = ItsGrid.Get(id);
+
+        for (var i = 0; i < data.length; i++) {
+            for (var j = 0; j < $obj.rows.length; j++) {
+                if (data[i][matchingfield] == $obj.rows[j].dataItem[matchingfield]) {
+                    var colnm = Object.keys(data[i]);
+                    for (var a = 0; a < colnm.length; a++) {
+                        try {
+                            var value = data[i][colnm[a]];
+                            if (ItsGrid.$colIndex(id, colnm[a]) > -1) {
+                                var $format = ItsGrid.Get(id).columns[ItsGrid.$colIndex(id, colnm[a])].format;
+                                if ($format != undefined && ($format.substring(0, 1) == 'n' || $format.substring(0, 2) == 'G8')) {
+                                    if (isNaN(value)) value = 0;
+                                }
+                            }
+
+                            if (ItsGrid.$isGroupGrid(id)) {
+                                $obj.itemsSource.items[j][colnm[a]] = value;
+                            } else {
+                                $obj.rows[j].dataItem[colnm[a]] = value;
+                                //$obj.cells.setCellData(index, ItsGrid.$colIndex(id, field), value);
+                            }
+
+                        } catch (e) { }
+                    }
+                }
+            }
+        }
+
+        $obj.refresh();
+    },
+    // 우클릭시의 동작들
+    Print: function (id) {
+        ItsGrid.$print(id);
+    },
+    Export: function (id) {
+        ItsGrid.$exportXlsx(id);
+    },
+    /** 
+    @returns {ItsGrid.Listener} 
+    */
+    Event: function (key) {
+        if (ItsPage.EventList[key] == undefined) {
+            ItsPage.EventList[key] = new ItsGrid.Listener();
+        }
+        return ItsPage.EventList[key];
+    },
+    Listener: function () {
+        this.onChanged = function (rowIndex, field, newValue, oldValue, type) { };
+        //this.onPastingCell = function (rowIndex, field, newValue, oldValue) { };
+        this.onBeginningEdit = function (rowIndex, field, value) { };
+        this.onSelect = function (rowIndex, field) { };
+        this.onButtonClick = function (rowIndex, field) { };
+        this.onDoubleClick = function (rowIndex, field) { };
+        this.onKeydownEnter = function (rowIndex, field) { };
+        this.onKeydown = function (rowIndex, field, keyCode, ctrlKey, shiftKey, altKey) { };
+        this.onCtxMenu = function (cmd, CtxParam) { };
+    }
+};
+
+
+/**************************************************
+ * grid: 내부 함수
+ * 2018-01-15: 문재원: $searchSelect() 추가 key로 해당 index 찾아서 선택하기
+ **************************************************/
+ItsGrid.$colIndex = function (id, fieldName) {
+    var $obj = ItsGrid.Get(id);
+    for (var i = 0; i < $obj.columns.length; i++) {
+        if (fieldName == $obj.columns[i]._binding._key) {
+            return i;
+        }
+    }
+    return -1;
+}
+ItsGrid.$isGroupGrid = function (id) {
+    try{
+        var $obj = ItsGrid.Get(id);
+        if ($obj.totalPosition == 'top') {
+            return true;
+        }
+        if ($obj.groupField != undefined && $obj.groupField != '') {
+            return true;
+        }
+        return false;
+    } catch (e) {
+
+    }
+    
+}
+ItsGrid.$GetRowIndex = function (id) {
+    var $obj = ItsGrid.Get(id);
+    if (ItsGrid.$isGroupGrid(id)) {
+        return $obj.itemsSource._idx;
+    } else {
+        return ItsGrid.GetCurrentIndex(id);
+    }
+}
+ItsGrid.$saveStyle = function (id) {
+    var $obj = ItsGrid.Get(id);
+    var state = {
+        columns: $obj.columnLayout,
+        filterDefinition: $obj.flexFilter.filterDefinition,
+        sortDescriptions: $obj.collectionView.sortDescriptions.map(function (sortDesc) {
+            return { property: sortDesc.property, ascending: sortDesc.ascending };
+        })
+    }
+    var maria = new ItsMaria('SYSGRID', 'SAVE_GRIDSTYLE');
+    maria.AddSessionUserId();
+    maria.AddParam('PRGCD', ItsPage.name);
+    maria.AddParam('GRIDID', id);
+    maria.AddParam('STYLEINFO', JSON.stringify(state));
+    maria.CallProcCenter();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+    $obj._$customStyle = JSON.stringify(state);
+
+}
+ItsGrid.$print = function (id) {
+    var $obj = ItsGrid.Get(id);
+    // *로 너비를 준 컬럼이 있을 시 오류 발생하므로 size로 대체 작업 해줌
+    $obj.columns.forEach(function (col) {
+        if (typeof (col.width) != typeof (1)) {
+            col.width = col.size;
+        }
+    });
+
+    var fontFile = {
+        source: '../../fonts/malgun.ttf',
+        name: "malgun",
+        style: "normal",
+        weight: "normal",
+        sansSerif: true
+    },
+        font = new wijmo.pdf.PdfFont('malgun');
+    wijmo.grid.pdf.FlexGridPdfConverter.export($obj, ItsHelper.GetDateFull().replace(/[^0-9.-]/gi, '') + '_' + ItsPage.name + '.pdf', {
+        maxPages: 10,
+        scaleMode: wijmo.grid.pdf.ScaleMode.PageWidth,
+        documentOptions: {
+            compress: false,
+            header: { declarative: { text: ItsPage.name + ' ' + id + ' ' + ItsHelper.GetDateFull() } },
+            footer: { declarative: { text: '\t&[Page] of &[Pages]' } },
+            info: { author: 'C1', title: ItsPage.name }
+        },
+        styles: {
+            cellStyle: { backgroundColor: '#ffffff', borderColor: '#c6c6c6', font: font },
+            altCellStyle: { backgroundColor: '#f9f9f9', font: font },
+            groupCellStyle: { backgroundColor: '#dddddd', font: font },
+            headerCellStyle: { backgroundColor: '#eaeaea', font: font }
+        },
+        embeddedFonts: [fontFile]
+    });
+};
+ItsGrid.$exportXlsx = function (id) {
+    var $obj = ItsGrid.Get(id);
+
+    //if(ItsGrid.Length(id) > 3000) {
+    var rng = new wijmo.grid.CellRange(0, 0, $obj.rows.length - 1, $obj.columns.length - 1);
+
+    var usernm = '';
+    try {
+        usernm = parent.$('.loginifo span').text();
+        usernm = usernm.substring(0, usernm.length - 1);
+    } catch {
+        usernm = ItsPage.EMPCD;
+    }
+
+    var csv = $obj.getClipString(rng, true, true);
+
+    csv += '\r\n ' + ItsHelper.GetDateFull() + ' ' + usernm;
+
+
+    var e = document.createElement('a');
+    e.setAttribute('href', 'data:' + 'txt/csv;charset=utf-8,\ufeff' + encodeURIComponent(csv));
+    e.setAttribute('download', ItsPage.name + '.csv');
+    e.style.display = 'none';
+    document.body.appendChild(e);
+    e.click();
+    document.body.removeChild(e);
+    //} else {
+    // 탭이랑 그리드 같이쓰면 FlexGridXlsxConverter 안되는 짜증나는 문제 있어서 그냥 이기능 지운다.
+    //    setTimeout(function () {
+    //        var book = wijmo.grid.xlsx.FlexGridXlsxConverter.saveAsync($obj, {
+    //            includeColumnHeaders: true,
+    //            includeRowHeaders: true,
+    //            sheetName: 'sheet1'
+    //        }, ItsPage.name + '.xlsx',
+    //            function (base64) {
+    //                try { parent.wait_end(); } catch (e) { }
+    //            },
+    //            function (reason) {
+    //                ItsMsg.Alert(reason);
+    //                try { parent.wait_end(); } catch (e) { }
+    //            });
+    //    }, 1000);
+    //}
+};
+ItsGrid.RenderTable = function (flex) {
+    var tbl = '<table>';
+    if (flex.headersVisibility & wijmo.grid.HeadersVisibility.Column) {
+        tbl += '<thead>';
+        for (var r = 0; r < flex.columnHeaders.rows.length; r++) {
+            tbl += ItsGrid.RenderRow(flex.columnHeaders, r);
+        }
+        tbl += '</thead>';
+    }
+    tbl += '<tbody>';
+    for (var r = 0; r < flex.rows.length; r++) {
+        tbl += ItsGrid.RenderRow(flex.cells, r);
+    }
+    tbl += '</tbody>';
+    tbl += '</table>';
+    return tbl;
+}
+ItsGrid.RenderRow = function (panel, r) {
+    var tr = '',
+        row = panel.rows[r];
+    if (row.renderSize > 0) {
+        tr += '<tr>';
+        for (var c = 0; c < panel.columns.length; c++) {
+            var col = panel.columns[c];
+            if (col.renderSize > 0) {
+
+                // get cell style, content
+                var style = 'width:' + col.renderSize + 'px;' +
+                    'text-align:' + col.getAlignment() + ';' +
+                    'padding-right: 6px';
+                var content = panel.getCellData(r, c, true);
+                if (!row.isContentHtml && !col.isContentHtml) {
+                    content = wijmo.escapeHtml(content);
+                }
+
+                // add cell to row
+                if (panel.cellType == wijmo.grid.CellType.ColumnHeader) {
+                    tr += '<th style="' + style + '">' + content + '</th>';
+                } else {
+
+                    // show boolean values as checkboxes
+                    var raw = panel.getCellData(r, c, false);
+                    if (raw === true) {
+                        content = '&#9745;';
+                    } else if (raw === false) {
+                        content = '&#9744;';
+                    }
+
+                    tr += '<td style="' + style + '">' + content + '</td>';
+                }
+            }
+        }
+        tr += '</tr>';
+    }
+    return tr;
+}
+ItsGrid.$calculate = function (id) {
+    ItsPage.InitData('gridCalc');
+    var $obj = ItsGrid.Get(id);
+    var SELECTCELL = 0;
+    var NUMBERCELL = 0;
+    var SUM = 0;
+    var AVG = 0;
+    var MAX = 0;
+    var MIN = 99999999999;
+    $obj.selectedRanges.forEach(function ($selection) {
+        for (var r = $selection.topRow; r < $selection.bottomRow + 1; r++) {
+            for (var c = $selection.leftCol; c < $selection.rightCol + 1; c++) {
+                //if ($obj.columns[c].format != undefined && $obj.columns[c].format.substring(0, 1) == 'n') {
+
+                var $val = parseFloat($obj.cells.getCellData(r, c, true).replace(/[,]/gi, ''));
+                if (!isNaN($val)) {
+                    NUMBERCELL = NUMBERCELL + 1;
+                    SUM = SUM + $val;
+                    if (MAX < $val) MAX = $val;
+                    if (MIN > $val) MIN = $val;
+                } else {
+                    $val = 0;
+                }
+                //}
+                SELECTCELL = SELECTCELL + 1;
+            }
+        }
+
+    });
+    
+    if (MIN == 99999999999) MIN = 0;
+    AVG = SUM / NUMBERCELL;
+    var regexp = /\B(?=(\d{3})+(?!\d))/g;
+    var $data = {
+        SELECTCELL: SELECTCELL.toLocaleString(),
+        NUMBERCELL: NUMBERCELL.toLocaleString(),
+        SUM: SUM.toLocaleString(),
+        AVG: AVG.toLocaleString(),
+        MAX: MAX.toLocaleString(),
+        MIN: MIN.toLocaleString()
+    };
+    ItsPage.SetStore('gridCalc', $data);
+    ItsPop.Open('gridCalc');
+};
+ItsGrid.$getGpcdData = function (params, async, callbackFn) {
+    if (params.gpcd.substring(0, 6).toUpperCase() == 'SELECT') {
+        var maria = new ItsMaria();
+        params.gpcd.replace(/[']/gi, "''");
+        maria.AddQuery(params.gpcd);
+        if (params.callCenter) {
+            maria.QueryCenter();
+        } else {
+            maria.Query();
+        }
+        if (maria.isError) {
+            ItsMsg.Alert(maria.errMessage);
+            if (maria.errMessage.indexOf('session expired') > -1 || maria.errMessage.indexOf('ERROR:로그인 세션이 끊겼습니다.') > -1 || maria.errMessage.indexOf('Unable to connect to any of the specified MySQL hosts.') > -1) {
+                parent.location.replace('/PAGECOM/Login/login.aspx');
+                return;
+            }
+        } else {
+            return maria.store.data;
+        };
+    }
+    else {
+        var maria = new ItsMaria('DC_COMBO');
+        maria.async = async;
+        maria.callbackFn = callbackFn
+        maria.AddParam('GPCD', params.gpcd);
+        maria.AddParam('REF01', params.ref01);
+        maria.AddParam('REF02', params.ref02);
+        maria.AddParam('REF03', params.ref03);
+        maria.AddParam('REF04', params.ref04);
+        maria.AddParam('REF05', params.ref05);
+        maria.AddParam('REF06', params.ref06);
+        maria.AddParam('REF07', params.ref07);
+        maria.AddParam('REF08', params.ref08);
+        maria.AddParam('REF09', params.ref09);
+        maria.AddParam('REF10', params.ref10);
+        //maria.AddQuery("CALL DC_COMBO(\'" + gpcd + "\',\'" + ref01 + "\',\'" + ref02 + "\',\'" + ref03 + "\',\'" + ref04 + "\',\'" + ref05 + "\')");
+        if (params.callCenter) {
+            maria.CallProcCenter();
+        } else {
+            maria.CallProc();
+        }
+        if (maria.isError) {
+            alert(maria.errMessage);
+            if (maria.errMessage.indexOf('session expired') > -1 || maria.errMessage.indexOf('ERROR:로그인 세션이 끊겼습니다.') > -1 || maria.errMessage.indexOf('Unable to connect to any of the specified MySQL hosts.') > -1) {
+                parent.location.replace('/PAGECOM/Login/login.aspx');
+                return;
+            }
+        } else {
+            if (!async) {
+                return maria.store.data;
+            }
+        };
+    }
+}
+/********************************************
+ * >>>>> column: 그리드 컬럼 컨트롤 >>>>>
+ * 2017-11-01: 문재원: 최초 작성
+ *******************************************/
+var column = {
+    list: [],
+    /**
+     * @param {String} label
+     * @param {String} field
+     * @param {_columnParams} params
+     */
+    create: function (label, field, params) {
+        // decimalField 공통코드 지정 필드인경우 해당공통코드값으로 소수점 지정
+        //try {
+        //    ItsPage.decimalField.data.forEach(function (d) {
+        //        if (d.REF01 == field) {
+        //            params.decimalPrecision = parseInt(d.REF02);
+        //        }
+        //    })
+        //} catch (e) { }
+
+        var $params = new _columnParams();
+        ItsHelper.CopyObj(params, $params);
+
+        if ($params.columnType == enumColumnTypes.text) {
+            $params.dataType = 1;
+            if ($params.align == undefined) {
+                $params.align = 'left';
+            }
+
+        } else if ($params.columnType == enumColumnTypes.number) {
+            $params.dataType = 2;
+            $params.isRequired = true;
+            $params.format = 'G8';
+            //$params.format = 'n' + parseInt($params.decimalPrecision).toString();
+            if ($params.align == undefined) {
+                $params.align = 'right';
+            }
+        } else if ($params.columnType == enumColumnTypes.date) {
+            $params.dataType = 4;
+            $params.format = 'd';
+            if ($params.align == undefined) {
+                $params.align = 'left';
+            }
+        } else if ($params.columnType == enumColumnTypes.check) {
+            $params.dataType = 3;
+            $params.format = 'check';
+            $params.align = 'center';
+        } else if ($params.columnType == enumColumnTypes.button) {
+            $params.align = 'center';
+            if ($params.iconCls.indexOf('fa') > -1) {
+                $params.buttonClass = 'fa ' + $params.iconCls;
+            } else {
+                $params.buttonClass = $params.iconCls;
+            }
+        } else if ($params.columnType == enumColumnTypes.combo) {
+            $params.dataType = 0;
+            if ($params.align == undefined) {
+                $params.align = 'left';
+            }
+            if ($params.gpcd == '') {
+                alert('combo column must have \'gpcd\' attribute.');
+            }
+        } else if ($params.columnType == enumColumnTypes.find) {
+            $params.dataType = 0;
+            if ($params.align == undefined) {
+                $params.align = 'left';
+            }
+        }
+        if (($params.backColor == 'white' && $params.readOnly == false) || $params.columnType == enumColumnTypes.find) {
+            $params.backColor = 'white';
+        } else if ($params.readOnly) {
+            if ($params.backColor == 'white') {
+                $params.backColor = '#F7F7F7';
+            }
+        }
+        var $obj = {
+            header: label,
+            binding: field,
+            width: $params.width,
+            isReadOnly: $params.readOnly,
+            isRequired: $params.isRequired,
+            allowMerging: $params.allowMerging,
+            visible: !$params.hidden,
+            format: $params.format,
+            dataType: $params.dataType,
+            mask: $params.mask,
+            align: $params.align,
+            aggregate: $params.groupType,
+            allowDragging: $params.allowDragging,
+            wordWrap: $params.wordWrap,
+            multiLine: $params.multiLine
+        }
+
+        this.list.push($obj);
+        return {
+            colObj: $obj,
+            foreColor: $params.foreColor,
+            backColor: $params.backColor,
+            field: field, type: 'column',
+            editType: $params.columnType,
+            mask: $params.mask,
+            buttonClass: $params.buttonClass,
+            gpcd: $params.gpcd,
+            ref01: $params.ref01,
+            ref02: $params.ref02,
+            ref03: $params.ref03,
+            ref04: $params.ref04,
+            ref05: $params.ref05,
+            ref06: $params.ref06,
+            ref07: $params.ref07,
+            ref08: $params.ref08,
+            ref09: $params.ref09,
+            ref10: $params.ref10,
+            callCenter: $params.callCenter
+        };
+    },
+    /**
+     * @param {String} label
+     * @param {_bandParams} params
+     * @param {Object[]} columns
+     */
+    band: function (label, params, columns) {
+
+        var $band = {
+            text: label,
+            columns: columns,
+            type: 'band'
+        };
+        this.list.push($band);
+        return $band;
+    },
+    split: function () {
+
+        var $split = {
+            width: '*',
+            binding: '-',
+            header: '-',
+            isReadOnly: true
+        };
+        this.list.push($split);
+        return {
+            colObj: $split,
+            field: '-', type: 'column',
+        };
+    }
+};
+/**************************************************
+ * column: 내부 함수
+ * 2017-12-18: 문재원: $setColumnCheck 추가 (그리드 체크박스 처리)
+ **************************************************/
+//column.$gpcd = function(gpcd, ref01, ref02, ref03, ref04, ref05, callCenter) {
+//};
+/**************************************************
+ * grid: 커스텀에디터
+ **************************************************/
+//var CustomGridEditor = /** @class */ (function () {
+//    /**
+//     * Initializes a new instance of a CustomGridEditor.
+//     */
+//    function CustomGridEditor(flex, binding, edtClass, options) {
+//        var _this = this;
+//        // save references
+//        this._grid = flex;
+//        this._col = flex.columns.getColumn(binding);
+//        // create editor
+//        this._ctl = new edtClass(document.createElement('div'), options);
+//        // connect grid events
+//        flex.beginningEdit.addHandler(this._beginningEdit, this);
+//        flex.sortingColumn.addHandler(function () {
+//            var ecv = _this._grid.editableCollectionView;
+//            if (ecv) {
+//                ecv.commitEdit();
+//            }
+//        });
+//        flex.scrollPositionChanged.addHandler(function () {
+//            if (_this._ctl.containsFocus()) {
+//                flex.focus();
+//            }
+//        });
+//        // connect editor events
+//        this._ctl.addEventListener(this._ctl.hostElement, 'keydown', function (e) {
+//            switch (e.keyCode) {
+//                case wijmo.Key.Tab:
+//                case wijmo.Key.Enter:
+//                    e.preventDefault(); // TFS 255685
+//                    _this._closeEditor(true);
+//                    _this._grid.focus();
+//                    // forward event to the grid so it will move the selection
+//                    var evt = document.createEvent('HTMLEvents');
+//                    evt.initEvent('keydown', true, true);
+//                    'altKey,metaKey,ctrlKey,shiftKey,keyCode'.split(',').forEach(function (prop) {
+//                        evt[prop] = e[prop];
+//                    });
+//                    _this._grid.hostElement.dispatchEvent(evt);
+//                    break;
+//                case wijmo.Key.Escape:
+//                    _this._closeEditor(false);
+//                    _this._grid.focus();
+//                    break;
+//            }
+//        });
+//        // close the editor when it loses focus
+//        this._ctl.lostFocus.addHandler(function () {
+//            setTimeout(function () {
+//                if (!_this._ctl.containsFocus()) {
+//                    _this._closeEditor(true); // apply edits and close editor
+//                    _this._grid.onLostFocus(); // commit item edits if the grid lost focus
+//                }
+//            });
+//        });
+//        // commit edits when grid loses focus
+//        this._grid.lostFocus.addHandler(function () {
+//            setTimeout(function () {
+//                if (!_this._grid.containsFocus() && !CustomGridEditor._isEditing) {
+//                    var ecv = _this._grid.editableCollectionView;
+//                    if (ecv) {
+//                        ecv.commitEdit();
+//                    }
+//                }
+//            });
+//        });
+//        // open drop-down on f4/alt-down
+//        this._grid.addEventListener(this._grid.hostElement, 'keydown', function (e) {
+//            // open drop-down on f4/alt-down
+//            _this._openDropDown = false;
+//            if (e.keyCode == wijmo.Key.F4 ||
+//                (e.altKey && (e.keyCode == wijmo.Key.Down || e.keyCode == wijmo.Key.Up))) {
+//                var colIndex = _this._grid.selection.col;
+//                if (colIndex > -1 && _this._grid.columns[colIndex] == _this._col) {
+//                    _this._openDropDown = true;
+//                    _this._grid.startEditing(true);
+//                    e.preventDefault();
+//                }
+//            }
+//            // commit edits on Enter (in case we're at the last row, TFS 268944)
+//            if (e.keyCode == wijmo.Key.Enter) {
+//                var ecv = _this._grid.editableCollectionView;
+//                if (ecv && ecv.currentEditItem) {
+//                    ecv.commitEdit();
+//                }
+//            }
+//        }, true);
+//        // close editor when user resizes the window
+//        // REVIEW: hides editor when soft keyboard pops up (TFS 326875)
+//        window.addEventListener('resize', function () {
+//            if (_this._ctl.containsFocus()) {
+//                _this._closeEditor(true);
+//                _this._grid.focus();
+//            }
+//        });
+//    }
+//    Object.defineProperty(CustomGridEditor.prototype, "control", {
+//        // gets an instance of the control being hosted by this grid editor
+//        get: function () {
+//            return this._ctl;
+//        },
+//        enumerable: true,
+//        configurable: true
+//    });
+//    // handle the grid's beginningEdit event by canceling the built-in editor,
+//    // initializing the custom editor and giving it the focus.
+//    CustomGridEditor.prototype._beginningEdit = function (grid, args) {
+//        var _this = this;
+//        // check that this is our column
+//        if (grid.columns[args.col] != this._col) {
+//            return;
+//        }
+//        // check that this is not the Delete key
+//        // (which is used to clear cells and should not be messed with)
+//        var evt = args.data;
+//        if (evt && evt.keyCode == wijmo.Key.Delete) {
+//            return;
+//        }
+//        // cancel built-in editor
+//        args.cancel = true;
+//        // save cell being edited
+//        this._rng = args.range;
+//        CustomGridEditor._isEditing = true;
+//        // initialize editor host
+//        var rcCell = grid.getCellBoundingRect(args.row, args.col), rcBody = document.body.getBoundingClientRect(), ptOffset = new wijmo.Point(-rcBody.left, -rcBody.top), zIndex = (args.row < grid.frozenRows || args.col < grid.frozenColumns) ? '3' : '';
+//        wijmo.setCss(this._ctl.hostElement, {
+//            position: 'absolute',
+//            left: rcCell.left - 1 + ptOffset.x,
+//            top: rcCell.top - 1 + ptOffset.y,
+//            width: rcCell.width + 1,
+//            height: grid.rows[args.row].renderHeight + 1,
+//            borderRadius: '0px',
+//            zIndex: zIndex,
+//        });
+//        // initialize editor content
+//        if (!wijmo.isUndefined(this._ctl['text'])) {
+//            this._ctl['text'] = grid.getCellData(this._rng.row, this._rng.col, true);
+//        }
+//        else {
+//            throw 'Can\'t set editor value/text...';
+//        }
+//        // start editing item
+//        var ecv = grid.editableCollectionView, item = grid.rows[args.row].dataItem;
+//        if (ecv && item) {
+//            setTimeout(function () {
+//                ecv.editItem(item);
+//            }, 50); // wait for the grid to commit edits after losing focus
+//        }
+//        // activate editor
+//        document.body.appendChild(this._ctl.hostElement);
+//        this._ctl.focus();
+//        setTimeout(function () {
+//            // get the key that triggered the editor
+//            var key = (evt && evt.charCode > 32)
+//                ? String.fromCharCode(evt.charCode)
+//                : null;
+//            // get input element in the control
+//            var input = _this._ctl.hostElement.querySelector('input');
+//            // send key to editor
+//            if (input) {
+//                if (key) {
+//                    input.value = key;
+//                    wijmo.setSelectionRange(input, key.length, key.length);
+//                    var evtInput = document.createEvent('HTMLEvents');
+//                    evtInput.initEvent('input', true, false);
+//                    input.dispatchEvent(evtInput);
+//                }
+//                else {
+//                    input.select();
+//                }
+//            }
+//            // give the control focus
+//            if (!input && !_this._openDropDown) {
+//                _this._ctl.focus();
+//            }
+//            // open drop-down on F4/alt-down
+//            if (_this._openDropDown && _this._ctl instanceof wijmo.input.DropDown) {
+//                _this._ctl.isDroppedDown = true;
+//                _this._ctl.dropDown.focus();
+//            }
+//        }, 50);
+//    };
+//    // close the custom editor, optionally saving the edits back to the grid
+//    CustomGridEditor.prototype._closeEditor = function (saveEdits) {
+//        if (this._rng) {
+//            var grid = this._grid, ctl = this._ctl, host = ctl.hostElement;
+//            // raise grid's cellEditEnding event
+//            var e = new wijmo.grid.CellEditEndingEventArgs(grid.cells, this._rng);
+//            grid.onCellEditEnding(e);
+//            // save editor value into grid
+//            if (saveEdits) {
+//                if (!wijmo.isUndefined(ctl['value'])) {
+//                    this._grid.setCellData(this._rng.row, this._rng.col, ctl['value']);
+//                }
+//                else if (!wijmo.isUndefined(ctl['text'])) {
+//                    this._grid.setCellData(this._rng.row, this._rng.col, ctl['text']);
+//                }
+//                else {
+//                    throw 'Can\'t get editor value/text...';
+//                }
+//                this._grid.invalidate();
+//            }
+//            // close editor and remove it from the DOM
+//            if (ctl instanceof wijmo.input.DropDown) {
+//                ctl.isDroppedDown = false;
+//            }
+//            host.parentElement.removeChild(host);
+//            this._rng = null;
+//            CustomGridEditor._isEditing = false;
+//            // raise grid's cellEditEnded event
+//            grid.onCellEditEnded(e);
+//        }
+//    };
+//    return CustomGridEditor;
+//}());

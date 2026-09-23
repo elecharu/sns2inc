@@ -1,0 +1,519 @@
+﻿/* DVP1001_S01: 개발관리 - 제품개발관리 - 프로젝트 경과조회 */
+
+/// <reference path="../../Script/reference.js" />
+
+/* 페이지 로드 시 최초 실행 */
+ItsPage.Load = function () {
+
+    ItsGrid.Create('grid1', { isCheckBoxGrid: true, isSubTotalGrid: true }, [
+        column.create('등록일자', 'REGDAY', { width: 90, align: 'center', columnType: enumColumnTypes.date, readOnly: false }),
+        column.create('등록일시', 'REGTIME', { width: 90, align: 'center', readOnly: false, mask: "00:00" }),
+        column.create('발생일자', 'REPSDAY', { width: 90, align: 'center', readOnly: false, columnType: enumColumnTypes.date }),
+        column.create('발생일시', 'REPSTIME', { width: 90, align: 'center', readOnly: false, mask: "00:00" }),
+        column.create('완료일자', 'REPEDAY', { width: 90, align: 'center', readOnly: false, columnType: enumColumnTypes.date }),
+        column.create('완료일시', 'REPETIME', { width: 90, align: 'center', readOnly: false, mask: "00:00" }),
+        column.create('소요일', 'REPUTIME', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+        column.create('설비코드', 'EQMCD', { width: 120, readOnly: true }),
+        column.create('설비명', 'EQMNM', { width: 180, readOnly: true }),
+        //column.create('부품코드', 'PARTCD', { width: 180, hidden: true }),
+        //column.create('부품명', 'PARTNM', { width: 180, readOnly: true }),
+        //column.create('부품수량', 'PARTQTY', { width: 80, columnType: enumColumnTypes.number, readOnly: false, groupType: enumGrouping.sum }),
+        column.create('금액(만원)', 'REPAMT', { width: 80, columnType: enumColumnTypes.number, readOnly: false, groupType: enumGrouping.sum }),
+        column.create('수리업체', 'REPCUST', { width: 120, readOnly: false }),
+        column.create('작업자', 'EMPCD', { hidden: true }),
+        column.create('수리유형', 'ISSUE', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'ISSUE', readOnly: false }),
+        column.create('고장원인', 'MALFUNCTION', { width: 230, readOnly: false, multiLine: true }),
+        column.create('처리내용', 'HANDLE', { width: 230, readOnly: false, multiLine: true }),
+        column.create('비고', 'REMARK', { width: 230, readOnly: false, multiLine: true }),
+        column.create('설비수리키', 'EQMREPKEY', { width: 100, hidden: true }),
+        column.split()
+    ]);
+
+
+    ItsGrid.Create('grid2', { isCheckBoxGrid: true }, [
+        column.create('설비수리키', 'EQMREPKEY', { width: 100, hidden: true }),
+        column.create('사번', 'EMPCD', { width: 80, readOnly: false }),
+        column.create('사원명', 'EMPNM', { width: 150 }),
+
+    ]);
+
+    ItsGrid.Create('grid3', { isCheckBoxGrid: true }, [
+        column.create('사번', 'EMPCD', { width: 80, columnType: enumColumnTypes.find, gpcd: 'EMPCD', readOnly: false }),
+        column.create('사원명', 'EMPNM', { width: 150 }),
+
+    ]);
+
+    // 그리드 Row 높이 자동설정
+    ItsGrid.Get('grid1').autoRowHeights = true;
+    ItsDateRange.SetInitValueFrom('date_SEARCH', ItsHelper.AddDay(-7, ItsHelper.GetYearMonthDay()));
+};
+
+/* 조회 */
+ItsButton.EventSearch = function () {
+    ItsGrid.Clear('grid2');
+    var maria = new ItsMaria('EQM1001_R01', 'LIST_EQMREP');
+    maria.AddPanel('sdiv1');
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+
+    ItsGrid.SetStore('grid1', maria.store);
+    ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
+};
+
+/* 왼쪽 그리드 선택시 */
+ItsGrid.Event('grid1').onSelect = function () {
+
+    var maria = new ItsMaria('EQM1001_R01', 'LIST_EMPCD');
+    maria.AddParam('EQMREPKEY', ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMREPKEY'));
+    maria.CallProc();
+
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore('grid2', maria.store);
+
+
+}
+
+//팝업창
+ItsButton.EventAdd = function () {
+    ItsPop.Open('pop1');
+    ItsPage.InitData('pdiv1');
+    ItsGrid.Clear('grid3');
+
+}
+
+////설비 선택할때마다 타는 이벤트
+//ItsFind.Event('pop1_find_EQMCD').onChanged = function () {
+
+//    var EQMCD = ItsFind.GetValue('pop1_find_EQMCD');
+//    ItsFind.Enable('pop1_find_PARTCD');
+//    ItsFind.SetRef01('pop1_find_PARTCD', 'EQM');
+//    ItsFind.SetRef02('pop1_find_PARTCD', EQMCD);
+//    if (!EQMCD) {
+//        ItsFind.SetValue('pop1_find_PARTCD', '');
+
+//        ItsFind.Disable('pop1_find_PARTCD');
+
+//    }
+
+//};
+
+/* 팝업 행추가 */
+ItsButton.Event('pdiv2_btn_ADD').onClick = function () {
+    ItsGrid.AddRow('grid3', 0);
+};
+
+/* 팝업 행삭제 */
+ItsButton.Event('pdiv2_btn_DEL').onClick = function () {
+
+    var RowCount = ItsGrid.Length('grid3');
+
+    for (var i = RowCount - 1; i >= 0; i--) {
+        if (ItsGrid.IsChecked('grid3', i)) {
+            ItsGrid.RemoveRow('grid3', i);
+
+        }
+    }
+};
+
+/* 팝업 그리드팝업 */
+ItsGrid.Event('grid3').onDoubleClick = function (rowIndex, field) {
+    ItsGrid.Event('grid3').onKeydownEnter(rowIndex, field);
+};
+
+ItsGrid.Event('grid3').onKeydownEnter = function (rowIndex, field) {
+
+    if (field == 'EMPCD') {
+
+        ItsPop.OpenFindCOM({ gpcd: 'EMPCD' }, function (res) {
+            for (var i = 0; i < ItsGrid.Length('grid3'); i++) {
+
+                if (ItsGrid.GetValue('grid3', i, 'EMPCD') == res['CODE']) {
+                    ItsMsg.Alert(res['NAME'] + '는 추가되어 있는 사원입니다.')
+                    return;
+                }
+            }
+            ItsGrid.SetValue('grid3', ItsGrid.GetCurrentIndex('grid3'), 'EMPCD', res['CODE']);
+            ItsGrid.SetValue('grid3', ItsGrid.GetCurrentIndex('grid3'), 'EMPNM', res['NAME']);
+            ItsGrid.CheckRow('grid3', rowIndex);
+
+        })
+
+    };
+}
+//완료일자 사용여부
+ItsCheck.Event('pop1_check_REPEYN').onChanged = function (newValue) {
+    if (newValue) {
+        ItsDate.Enable('pop1_date_REPEDAY');
+        ItsText.Enable('pop1_txt_REPETIME');
+        ItsDate.SetValue('pop1_date_REPEDAY', ItsHelper.GetYearMonthDay());
+        ItsDate.Event('pop1_date_REPEDAY').onChanged();
+    }
+    else {
+        ItsDate.SetValue('pop1_date_REPEDAY', '');
+        ItsDate.Disable('pop1_date_REPEDAY');
+        ItsText.SetValue('pop1_txt_REPETIME', '');
+        ItsText.Disable('pop1_txt_REPETIME');
+        ItsNum.SetValue('pop1_num_REPUTIME', 0);
+    }
+};
+//등록일자 수정시
+ItsDate.Event('pop1_date_REPSDAY').onChanged = function (value, oldValue) {
+    var start = ItsDate.GetValue('pop1_date_REPSDAY').split('-');
+    var end = ItsDate.GetValue('pop1_date_REPEDAY').split('-');
+
+    try {
+        var startday = new Date(start[0], start[1], start[2]);
+        var endday = new Date(end[0], end[1], end[2]);
+
+        if (end[0] == '') {
+            ItsNum.SetValue('pop1_num_REPUTIME', 0);
+        }
+        else {
+            var daynum = Math.abs(endday.getTime() - startday.getTime());
+            daynum = (daynum / (1000 * 3600 * 24)) + 1;
+
+            ItsNum.SetValue('pop1_num_REPUTIME', daynum);
+        }
+    }
+    catch (e) {
+        ItsDate.SetValue('pop1_date_REPSDAY', ItsHelper.GetYearMonthDay());
+        ItsDate.SetValue('pop1_date_REPEDAY', ItsHelper.GetYearMonthDay());
+        ItsNum.SetValue('pop1_num_REPUTIME', 0);
+    }
+}
+// 완료일자 수정시
+ItsDate.Event('pop1_date_REPEDAY').onChanged = function (value, oldValue) {
+    if (ItsCheck.GetValue('pop1_check_REPEYN') == 'Y') {
+        var start = ItsDate.GetValue('pop1_date_REPSDAY').split('-');
+        var end = ItsDate.GetValue('pop1_date_REPEDAY').split('-');
+
+        try {
+            var startday = new Date(start[0], start[1], start[2]);
+            var endday = new Date(end[0], end[1], end[2]);
+
+            var daynum = Math.abs(endday.getTime() - startday.getTime());
+            daynum = (daynum / (1000 * 3600 * 24)) + 1;
+
+            ItsNum.SetValue('pop1_num_REPUTIME', daynum);
+        }
+        catch (e) {
+            ItsDate.SetValue('pop1_date_REPSDAY', ItsHelper.GetYearMonthDay());
+            ItsDate.SetValue('pop1_date_REPEDAY', ItsHelper.GetYearMonthDay());
+            ItsNum.SetValue('pop1_num_REPUTIME', 0);
+        }
+    }
+}
+
+// 팝업창 저장버튼 (신규등록)
+ItsPop.Event('pop1').onAddBtnClick = function () {
+    var Count = 0;
+    var RowCount = ItsGrid.Length('grid3');
+
+
+    var maria = new ItsMaria('EQM1001_R01', 'ADD_EQMREP');
+    maria.AddPanel('pdiv1');
+
+    for (var i = 0; i < RowCount; i++) {
+        if (ItsGrid.IsChecked('grid3', i)) {
+            maria.AddList('EMPCD_LIST', ItsGrid.GetValue('grid3', i, 'EMPCD'));
+            Count++;
+        }
+    }
+
+    if (Count <= 0) {
+        ItsMsg.Alert('작업자를(을) 추가 해주세요.');
+        return;
+    }
+
+    maria.CallProc();
+
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    } else {
+        ItsPop.Event('pop1').onCancelBtnClick();
+        ItsMsg.Toast(ItsMsg.CommonMsg.AddComplete);
+        ItsButton.EventSearch();
+    }
+}
+
+// 팝업창 창닫기
+ItsPop.Event('pop1').onCancelBtnClick = function () {
+    ItsPage.InitData('pdiv1');
+    ItsPop.Close('pop1');
+}
+
+//메인그리드  날짜변경시 소요일자 자동계산
+ItsGrid.Event('grid1').onChanged = function (rowIndex, field, newValue, oldValue, type) {
+    if (field == 'REPSDAY' || field == 'REPEDAY') {
+        if (ItsGrid.GetValue('grid1', rowIndex, 'REPEDAY') == '') {
+            ItsGrid.SetValue('grid1', rowIndex, 'REPUTIME', 0);
+        }
+        else {
+            if (ItsGrid.GetValue('grid1', rowIndex, 'REPSDAY') == '') {
+                ItsGrid.SetValue('grid1', rowIndex, 'REPSDAY', ItsHelper.GetYearMonthDay());
+            }
+            var start = ItsGrid.GetValue('grid1', rowIndex, 'REPSDAY').split('-');
+            var end = ItsGrid.GetValue('grid1', rowIndex, 'REPEDAY').split('-');
+
+            try {
+                var startday = new Date(start[0], start[1], start[2]);
+                var endday = new Date(end[0], end[1], end[2]);
+
+                var daynum = Math.abs(endday.getTime() - startday.getTime());
+                daynum = daynum / (1000 * 3600 * 24) + 1;
+
+                ItsGrid.SetValue('grid1', rowIndex, 'REPUTIME', daynum);
+            }
+            catch (e) {
+                ItsGrid.SetValue('grid1', rowIndex, 'REPSDAY', ItsHelper.GetYearMonthDay());
+                ItsGrid.SetValue('grid1', rowIndex, 'REPEDAY', ItsHelper.GetYearMonthDay());
+                ItsGrid.SetValue('grid1', rowIndex, 'REPUTIME', 0);
+            }
+        }
+    }
+}
+
+// 메인그리드에서 설비, 부품 선택클릭시
+ItsGrid.Event('grid1').onKeydownEnter = function (rowIndex, field) {
+    if (field == 'EQMCD') {
+        ItsPop.OpenFindCOM({ gpcd: 'EQMCD', }, function (res) {
+            if (ItsGrid.GetValue('grid1', rowIndex, 'EQMCD') == res['CODE']) {
+                ItsMsg.Alert(res['CODE'] + '는 추가되어 있는 설비입니다.')
+                return;
+            }
+            ItsGrid.SetValue('grid1', rowIndex, 'EQMCD', res['CODE']);
+            ItsGrid.SetValue('grid1', rowIndex, 'EQMNM', res['NAME']);
+            ItsGrid.SetValue('grid1', rowIndex, 'PARTCD', '');
+            ItsGrid.SetValue('grid1', rowIndex, 'PARTNM', '');
+            ItsGrid.CheckRow('grid1', rowIndex);
+        })
+    }
+
+    if (field == 'PARTNM') {
+        var EQMCD = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMCD');
+        var PARTTP = 'EQM';
+        ItsPop.OpenFindCOM({ gpcd: 'PARTCD', ref02: EQMCD, ref01: PARTTP }, function (res) {
+            if (ItsGrid.GetValue('grid1', rowIndex, 'PARTCD') == res['CODE']) {
+                ItsMsg.Alert(res['NAME'] + '는 추가되어 있는 부품입니다.')
+                return;
+            }
+            ItsGrid.SetValue('grid1', rowIndex, 'PARTCD', res['CODE']);
+            ItsGrid.SetValue('grid1', rowIndex, 'PARTNM', res['NAME']);
+            ItsGrid.CheckRow('grid1', rowIndex);
+        })
+    }
+}
+
+ItsGrid.Event('grid1').onDoubleClick = function (rowIndex, field) {
+    ItsGrid.Event('grid1').onKeydownEnter(rowIndex, field);
+}
+
+/* 메인 저장  이벤트*/
+ItsButton.EventSave = function () {
+    var hasChecked = false;
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if (ItsGrid.IsChecked('grid1', i)) {
+            hasChecked = true;
+            break;
+        }
+    }
+
+    if (!hasChecked) {
+        ItsMsg.Toast('선택된 항목이 없습니다.');
+        return;
+    }
+
+    ItsMsg.Confirm('선택하신 설비이력을 저장하시겠습니까?', function () {
+
+        var maria = new ItsMaria('EQM1001_R01', 'SAVE_EQMREP');
+
+        for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+            if (ItsGrid.IsChecked('grid1', i)) {
+
+                maria.AddList('EQMREPKEY_LIST', ItsGrid.GetValue('grid1', i, 'EQMREPKEY'));
+                maria.AddList('REGDAY_LIST', ItsGrid.GetValue('grid1', i, 'REGDAY'));
+                maria.AddList('REGTIME_LIST', ItsGrid.GetValue('grid1', i, 'REGTIME'));
+                maria.AddList('REPSDAY_LIST', ItsGrid.GetValue('grid1', i, 'REPSDAY'));
+                maria.AddList('REPSTIME_LIST', ItsGrid.GetValue('grid1', i, 'REPSTIME'));
+                maria.AddList('REPEDAY_LIST', ItsGrid.GetValue('grid1', i, 'REPEDAY'));
+                maria.AddList('REPETIME_LIST', ItsGrid.GetValue('grid1', i, 'REPETIME'));
+                maria.AddList('REPUTIME_LIST', ItsGrid.GetValue('grid1', i, 'REPUTIME'));
+                maria.AddList('EQMCD_LIST', ItsGrid.GetValue('grid1', i, 'EQMCD'));
+                maria.AddList('PARTCD_LIST', ItsGrid.GetValue('grid1', i, 'PARTCD'));
+                maria.AddList('PARTQTY_LIST', ItsGrid.GetValue('grid1', i, 'PARTQTY'));
+                maria.AddList('REPAMT_LIST', ItsGrid.GetValue('grid1', i, 'REPAMT'));
+                maria.AddList('REPCUST_LIST', ItsGrid.GetValue('grid1', i, 'REPCUST'));
+                maria.AddList('ISSUE_LIST', ItsGrid.GetValue('grid1', i, 'ISSUE'));
+                maria.AddList('MALFUNCTION_LIST', ItsGrid.GetValue('grid1', i, 'MALFUNCTION'));
+                maria.AddList('HANDLE_LIST', ItsGrid.GetValue('grid1', i, 'HANDLE'));
+                maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid1', i, 'REMARK'));
+
+            }
+        }
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsMsg.Toast('수정되었습니다.');
+        ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
+        ItsButton.EventSearch();
+    },
+
+        function () {
+            ItsMsg.Toast('수정이 취소되었습니다.');
+            return;
+        }
+
+    )
+}
+
+/* 메인 삭제 이벤트*/
+ItsButton.EventDelete = function () {
+    var hasChecked = false;
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if (ItsGrid.IsChecked('grid1', i)) {
+            hasChecked = true;
+            break;
+        }
+    }
+
+    if (!hasChecked) {
+        ItsMsg.Toast('선택된 항목이 없습니다.');
+        return;
+    }
+    ItsMsg.Confirm("선택한 항목을 삭제하시겠습니까?", function () {
+
+        var maria = new ItsMaria('EQM1001_R01', 'DELETE_EQMREP');
+        for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+            if (ItsGrid.IsChecked('grid1', i)) {
+                maria.AddList('EQMREPKEY_LIST', ItsGrid.GetValue('grid1', i, 'EQMREPKEY'));
+
+            }
+        }
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsMsg.Toast(ItsMsg.CommonMsg.DeleteComplete());
+        ItsButton.EventSearch();
+
+    },
+        function () {
+            ItsMsg.Toast('삭제가 취소되었습니다.');
+            return;
+        }
+
+
+    )
+}
+
+/* 행추가 이벤트*/
+ItsButton.Event('bdiv2_btn_ADD').onClick = function () {
+
+    var EQMREPKEY = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMREPKEY');
+    if (EQMREPKEY == null) {
+        return;
+    }
+
+    ItsGrid.AddRow('grid2', ItsGrid.Length('grid2'));
+
+    ItsGrid.CheckRow('grid2', ItsGrid.GetCurrentIndex('grid2'));
+};
+
+// 사번 더블 클릭시
+ItsGrid.Event('grid2').onDoubleClick = function (rowIndex, field) {
+    ItsGrid.Event('grid2').onKeydownEnter(rowIndex, field);
+}
+ItsGrid.Event('grid2').onKeydownEnter = function (rowIndex, field) {
+    if (field == 'EMPCD') {
+        ItsPop.OpenFindCOM({ gpcd: 'EMPCD' }, function (res) {
+            for (var i = 0; i < ItsGrid.Length('grid2'); i++) {
+                if (ItsGrid.GetValue('grid2', i, 'EMPCD') == res['CODE']) {
+                    ItsMsg.Alert(res['NAME'] + '는 추가되어 있는 사원입니다.')
+                    return;
+                }
+            }
+            ItsGrid.SetValue('grid2', ItsGrid.GetCurrentIndex('grid2'), 'EMPCD', res['CODE']);
+            ItsGrid.SetValue('grid2', ItsGrid.GetCurrentIndex('grid2'), 'EMPNM', res['NAME']);
+
+
+            var maria = new ItsMaria('EQM1001_R01', 'SAVE_EMPCD');
+            maria.AddParam('EQMREPKEY', ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMREPKEY'));
+            maria.AddParam('EMPCD', ItsGrid.GetValue('grid2', ItsGrid.GetCurrentIndex('grid2'), 'EMPCD'));
+
+            maria.CallProc();
+            if (maria.isError) {
+                maria.ShowErrMsg();
+                return;
+            }
+
+
+            ItsGrid.SetStore('grid2', maria.store);
+            ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
+            ItsGrid.Setkey('grid1', 'EQMREPKEY', ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMREPKEY'));
+            ItsButton.EventSearch();
+        })
+    }
+}
+
+
+/* 행삭제 버튼*/
+ItsButton.Event('bdiv2_btn_DEL').onClick = function () {
+    var checkedCount = 0;
+    var totalCount = ItsGrid.Length('grid2');
+
+    for (var i = 0; i < totalCount; i++) {
+        if (ItsGrid.IsChecked('grid2', i)) {
+            checkedCount++;
+        }
+    }
+
+    if (checkedCount === 0) {
+        ItsMsg.Toast('선택된 사원이 없습니다.');
+        return;
+    }
+
+    if (checkedCount === totalCount) {
+        ItsMsg.Toast('모든 사원을 삭제할 수 없습니다.');
+        return;
+    }
+
+    ItsMsg.Confirm("선택한 항목을 삭제하시겠습니까?", function () {
+
+        var maria = new ItsMaria('EQM1001_R01', 'DELETE_EMPCD');
+        maria.AddParam('EQMREPKEY', ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMREPKEY'));
+        for (var i = 0; i < ItsGrid.Length('grid2'); i++) {
+            if (ItsGrid.IsChecked('grid2', i)) {
+                maria.AddList('EMPCD_LIST', ItsGrid.GetValue('grid2', i, 'EMPCD'));
+            }
+        }
+
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsMsg.Toast(ItsMsg.CommonMsg.DeleteComplete());
+        ItsGrid.Setkey('grid1', 'EQMREPKEY', ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMREPKEY'));
+        ItsButton.EventSearch();
+
+    },
+        function () {
+            ItsMsg.Toast('삭제가 취소되었습니다.');
+            return;
+        }
+    )
+};
+

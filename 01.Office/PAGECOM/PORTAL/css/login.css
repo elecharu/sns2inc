@@ -1,0 +1,261 @@
+body {
+    background: url(/images/Login/login_background.jpg) no-repeat 0 #0a1d39;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: 100% 100%;
+    font-family: 'NanumSquare_acR', sans-serif;
+}
+
+.login_logo {
+}
+
+.menu_logo img {
+    margin-left: 550px;
+    width: 290px;
+    height: 60px;
+}
+
+.logo_text1 {
+    margin-top: -37px;
+    margin-left: 845px;
+    width: 101px;
+    height: 19px;
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 19px;
+    letter-spacing: 0.025em;
+    color: #FFFFFF;
+}
+
+.logo_text2 {
+    margin-left: 845px;
+    width: 101px;
+    height: 14px;
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 700;
+    font-size: 11px;
+    line-height: 14px;
+    color: #FFFFFF;
+}
+
+.title1 {
+    margin-left: 90px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    width: 240px;
+    height: 55px;
+    font-family: 'NanumSquare_ac';
+    font-style: normal;
+    font-weight: 800;
+    font-size: 50px;
+    line-height: 55px;
+    color: #003784;
+}
+
+.title2 {
+    margin-left: 120px;
+    margin-top: 5px;
+    width: 350px;
+    height: 20px;
+    font-family: 'NanumSquare_ac';
+    font-style: normal;
+    font-weight: 800;
+    font-size: 18px;
+    line-height: 20px;
+    text-align: left;
+    color: #6B6B6B;
+}
+
+.title2_point {
+    color: #0096ff;
+}
+
+.login_box {
+    background: url(/images/Login/bg_popup.jpg) no-repeat 0;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: relative;
+    margin: 0 auto;
+    top: 150px;
+    width: 1050px;
+    height: 600px;
+    padding: 40px;
+    text-align: center;
+}
+
+    .login_box input {
+        border: transparent 2px solid;
+        height: 55px;
+        width: 322px;
+        font-size: 18px;
+        color: #ffffff;
+    }
+
+        .login_box input:focus {
+            outline-color: #0078FF;
+        }
+
+    .login_box button:active {
+        background: #213F61;
+        border: #213F61 1px solid;
+    }
+
+    .login_box input::placeholder {
+        font-family: 'NanumGothic';
+        font-style: normal;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 13px;
+        color: #9E9E9E;
+    }
+
+    .login_box button {
+        display: block;
+        margin-left: 50px;
+        background: #0078FF;
+        border: #0078FF 1px solid;
+        height: 55px;
+        width: 322px;
+        font-size: 18px;
+        font-weight: 800;
+        color: #ffffff;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+
+#login_id {
+    display: block;
+    margin-top: 20px;
+    margin-left: 50px;
+    background-image: url(../img/login_user1.png);
+    background-repeat: no-repeat;
+    padding-left: 15px;
+    padding-top: 30px;
+    font-family: 'NanumSquare_ac';
+    font-style: normal;
+    font-weight: 800;
+    font-size: 17px;
+    line-height: 18px;
+    color: #3D3D3D;
+}
+
+#login_pw {
+    display: block;
+    margin-top: 10px;
+    margin-left: 50px;
+    background-image: url(../img/login_pass1.png);
+    background-repeat: no-repeat;
+    padding-left: 15px;
+    padding-top: 30px;
+    font-family: 'NanumSquare_ac';
+    font-style: normal;
+    font-weight: 800;
+    font-size: 17px;
+    line-height: 16px;
+    color: #3D3D3D;
+}
+
+/*체크박스스타일*/
+.check_Box4 {
+    position: relative;
+    margin-top: 10px;
+    margin-left: 50px;
+    width: 100%;
+    text-align: left;
+}
+
+    .check_Box4 input {
+        display: none;
+    }
+
+    .check_Box4 label {
+        position: relative;
+        display: inline-block;
+        background: url(/images/Login/login_check_o.png)no-repeat 0 0;
+        line-height: 20px;
+        height: 22px;
+        cursor: pointer;
+    }
+
+    .check_Box4 label {
+        position: relative;
+        vertical-align: middle;
+        color: #808080;
+        font-size: 10pt;
+        font-weight: bold;
+        padding-left: 29px;
+    }
+
+    .check_Box4 input[type="checkbox"]:checked + label {
+        position: relative;
+        display: inline-block;
+        background: url(/images/Login/login_check.png)no-repeat 0;
+        line-height: 20px;
+        height: 22px;
+        cursor: pointer;
+    }
+
+.errmsg {
+    margin-left: 48px;
+    padding-top: 10px;
+    color: #e40000;
+    font-weight: bold;
+    max-height: 20px;
+    line-height: 20px;
+    text-align: left;
+}
+
+    .errmsg img {
+        display: none;
+    }
+
+.chk_system {
+    height: 30px;
+    margin-top: 30px;
+    margin-left: 2px;
+    display: block;
+    width: 400px;
+}
+
+.chk_system input[type=radio] {
+    width: 50px;
+    height: 20px;
+    line-height: 20px;
+    vertical-align: middle;
+}
+
+.chk_system span {
+    height: 20px;
+    line-height: 20px;
+    vertical-align: middle;
+    color: #6B6B6B;
+    font-size: 12pt;
+    font-weight: bold;
+}
+
+.btn_login_item {
+    position: relative;
+    vertical-align: middle;
+    color: #0078FF;
+    font-size: 10pt;
+    font-weight: bold;
+    padding-left: 80px;
+    cursor: pointer;
+}
+
+@media screen and (max-height:650px) {
+    body {
+        background-image: none;
+        background-color: white;
+    }
+
+    .login_box {
+        top: 0px;
+        padding: 0px;
+        background-image: none;
+        margin-left: -10px;
+    }
+}

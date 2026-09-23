@@ -1,0 +1,1 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="TmlLabel.aspx.cs" Inherits="TmlLabel" %>

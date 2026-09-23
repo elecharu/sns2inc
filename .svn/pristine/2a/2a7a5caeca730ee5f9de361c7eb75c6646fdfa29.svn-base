@@ -1,0 +1,102 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+
+public static class ItsMsgBox
+{
+    public static void Show(string msg)
+    {
+        bool isWait = ItsWait.IsWait;
+        if (isWait) ItsWait.Stop();
+        MessageBox.Show(msg, "ITSCO", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.None, MessageBoxOptions.DefaultDesktopOnly);
+        if (isWait) ItsWait.Start();
+    }
+
+    public static void Show(object obj)
+    {
+        bool isWait = ItsWait.IsWait;
+        if (isWait) ItsWait.Stop();
+        MessageBox.Show(obj.ToString(), "ITSCO", MessageBoxButton.OK, MessageBoxImage.Information, MessageBoxResult.None, MessageBoxOptions.DefaultDesktopOnly);
+        if (isWait) ItsWait.Start();
+    }
+
+    public static void ShowErr(string msg)
+    {
+        if (msg.IndexOf("Deadlock") > -1)
+        {
+            string dir = @"C:\DEAD\";
+            string path = dir + DateTime.Now.ToString("yyyyMMdd") + ".txt";
+            path = path.Replace(" ", "");
+
+            if (!System.IO.Directory.Exists(dir))
+            {
+                System.IO.Directory.CreateDirectory(dir);
+            }
+            if (System.IO.File.Exists(path))
+            {
+                System.IO.File.AppendAllText(path, "--------------------------------------------------------------------------------------------------------------\r\n");
+                System.IO.File.AppendAllText(path, "시간 : " + DateTime.Now.ToString("HH:mm:ss") + "\r\n");
+                System.IO.File.AppendAllText(path, "오류 발생" + msg + "\r\n");
+                System.IO.File.AppendAllText(path, "SQL쿼리 : " + ItsMaria.Get() + "\r\n");
+                System.IO.File.AppendAllText(path, "--------------------------------------------------------------------------------------------------------------\r\n");
+            }
+            else
+            {
+                System.IO.File.AppendAllText(path, "--------------------------------------------------------------------------------------------------------------\r\n");
+                System.IO.File.AppendAllText(path, "시간 : " + DateTime.Now.ToString("HH:mm:ss") + "\r\n");
+                System.IO.File.AppendAllText(path, "오류 발생" + msg + "\r\n");
+                System.IO.File.AppendAllText(path, "SQL쿼리 : " + ItsMaria.Get() + "\r\n");
+                System.IO.File.AppendAllText(path, "--------------------------------------------------------------------------------------------------------------\r\n");
+            }
+
+            return;
+        }
+
+        bool isWait = ItsWait.IsWait;
+        if (isWait) ItsWait.Stop();
+        MessageBox.Show(msg, "ITSCO", MessageBoxButton.OK, MessageBoxImage.Warning, MessageBoxResult.None, MessageBoxOptions.DefaultDesktopOnly);
+        if (isWait) ItsWait.Start();
+    }
+
+    public static bool ShowYesNo(string msg)
+    {
+        if (msg.IndexOf("Deadlock") > -1)
+        {
+            string dir = @"C:\DEAD\";
+            string path = dir + DateTime.Now.ToString("yyyyMMdd") + ".txt";
+            path = path.Replace(" ", "");
+
+            if (!System.IO.Directory.Exists(dir))
+            {
+                System.IO.Directory.CreateDirectory(dir);
+            }
+            if (System.IO.File.Exists(path))
+            {
+                System.IO.File.AppendAllText(path, "--------------------------------------------------------------------------------------------------------------\r\n");
+                System.IO.File.AppendAllText(path, "시간 : " + DateTime.Now.ToString("HH:mm:ss") + "\r\n");
+                System.IO.File.AppendAllText(path, "오류 발생" + msg + "\r\n");
+                System.IO.File.AppendAllText(path, "SQL쿼리 : " + ItsMaria.Get() + "\r\n");
+                System.IO.File.AppendAllText(path, "--------------------------------------------------------------------------------------------------------------\r\n");
+            }
+            else
+            {
+                System.IO.File.AppendAllText(path, "--------------------------------------------------------------------------------------------------------------\r\n");
+                System.IO.File.AppendAllText(path, "시간 : " + DateTime.Now.ToString("HH:mm:ss") + "\r\n");
+                System.IO.File.AppendAllText(path, "오류 발생" + msg + "\r\n");
+                System.IO.File.AppendAllText(path, "SQL쿼리 : " + ItsMaria.Get() + "\r\n");
+                System.IO.File.AppendAllText(path, "--------------------------------------------------------------------------------------------------------------\r\n");
+            }
+            return false;
+        }
+
+        bool isWait = ItsWait.IsWait;
+        if (isWait) ItsWait.Stop();
+        MessageBoxResult result = MessageBox.Show(msg, "ITSCO", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.None, MessageBoxOptions.DefaultDesktopOnly);
+        if (isWait) ItsWait.Start();
+
+        if (result == MessageBoxResult.Yes) return true;
+        else return false;
+    }
+}

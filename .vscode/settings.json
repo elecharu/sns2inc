@@ -1,0 +1,7 @@
+{
+    "svn.ignoreMissingSvnWarning": true,
+    "iisexpress.port": "55085",
+    "csharp-dev-tools.solutionViewer.selectedWorkspaceSolutions": [
+        "01.Office/ItsWeb.sln"
+    ]
+}

@@ -1,0 +1,60 @@
+﻿/// <reference path="../../Script/reference.js" />
+
+/* 페이지 로드 시 수행 */
+ItsPage.Load = function () {
+    
+    /* 그리드 생성 */
+    ItsGrid.Create('grid1', { isCheckBoxGrid: false }, [
+
+        column.create("법인", "COMPANYCD", { width: 100, align: 'center' }),
+        column.create("모품목유형", "MITEMCG", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM100' }),
+        column.create("모품목ID", "MITEMID", { width: 100, align: 'center' }),
+        column.create("모품목코드", "MITEMCD", { width: 100, align: 'center' }),
+        column.create("모품명", "MITEMNM", { width: 250 }),
+
+        column.create("자품목유형", "CITEMCG", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM100' }),
+        column.create("자품목ID", "CITEMID", { width: 100, align: 'center' }),
+        column.create("자품목코드", "CITEMCD", { width: 100, align: 'center' }),
+        column.create("자품명", "CITEMNM", { width: 250 }), 
+                
+        column.create("모품목량", "MUSAGE", { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 2 }),
+        column.create("소요량", "CUSAGE", { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 2}),
+        column.create("LOSS량", "LUSAGE", { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 2 }),
+        column.create("실소요량", "CUSAGE", { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 2 }),
+        column.create("단위", "BOMUNIT", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'DM150', align: 'center' }),
+
+        column.create("공장", "FACTORYCD", { width: 70, align: 'center' }),
+        column.create("투입공정", "PRCCD", { width: 70, align: 'center' }),
+        column.create("공정명", "PRCNM", { width: 100, align: 'center' }),
+        column.create("작업순번", "PRCSEQ", { width: 100, align: 'center' }),
+
+        column.create("사용여부", "USEYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("비고", "REMARK", { width: 100, align: 'center' }),
+        column.split()
+    ]);
+};
+
+/* 조회 */
+ItsButton.EventSearch = function () {
+
+    var maria = new ItsMaria('MST1001_R03', 'SEL_BOM');
+    maria.AddPanel('sdiv1');
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore('grid1', maria.store.YnToBool('USEYN'));
+    ItsMsg.Toast(maria.store.Length() + '건이 조회되었습니다.');
+    ItsGrid.Get('grid1').autoSizeColumns();
+};
+
+
+
+
+
+
+
+
+

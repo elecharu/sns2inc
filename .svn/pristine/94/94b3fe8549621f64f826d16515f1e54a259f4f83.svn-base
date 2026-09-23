@@ -1,0 +1,590 @@
+﻿namespace ITSSCHEDULER
+{
+    partial class MainForm
+    {
+        /// <summary>
+        /// 必需的设计器变量。
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// 清理所有正在使用的资源。
+        /// </summary>
+        /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows 窗体设计器生成的代码
+
+        /// <summary>
+        /// 设计器支持所需的方法 - 不要修改
+        /// 使用代码编辑器修改此方法的内容。
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+            this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.btnConfig = new System.Windows.Forms.Button();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.panel5 = new System.Windows.Forms.Panel();
+            this.lbl_value12 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.panel2 = new System.Windows.Forms.Panel();
+            this.lbl_value11 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.panel3 = new System.Windows.Forms.Panel();
+            this.panel4 = new System.Windows.Forms.Panel();
+            this.lbl_value22 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.panel6 = new System.Windows.Forms.Panel();
+            this.lbl_value21 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.panel7 = new System.Windows.Forms.Panel();
+            this.panel8 = new System.Windows.Forms.Panel();
+            this.lbl_value32 = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
+            this.panel9 = new System.Windows.Forms.Panel();
+            this.lbl_value31 = new System.Windows.Forms.Label();
+            this.label14 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.panel_config = new System.Windows.Forms.Panel();
+            this.btnConfigSave = new System.Windows.Forms.Button();
+            this.NUM_STD_1_IN = new System.Windows.Forms.NumericUpDown();
+            this.NUM_STD_1_OUT = new System.Windows.Forms.NumericUpDown();
+            this.btnConfigClose = new System.Windows.Forms.Button();
+            this.label8 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label_errmsg = new System.Windows.Forms.Label();
+            this.contextMenuStrip1.SuspendLayout();
+            this.panel1.SuspendLayout();
+            this.panel5.SuspendLayout();
+            this.panel2.SuspendLayout();
+            this.panel3.SuspendLayout();
+            this.panel4.SuspendLayout();
+            this.panel6.SuspendLayout();
+            this.panel7.SuspendLayout();
+            this.panel8.SuspendLayout();
+            this.panel9.SuspendLayout();
+            this.panel_config.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.NUM_STD_1_IN)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NUM_STD_1_OUT)).BeginInit();
+            this.SuspendLayout();
+            // 
+            // notifyIcon1
+            // 
+            this.notifyIcon1.ContextMenuStrip = this.contextMenuStrip1;
+            this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
+            this.notifyIcon1.Text = "notifyIcon1";
+            this.notifyIcon1.Visible = true;
+            this.notifyIcon1.Click += new System.EventHandler(this.notifyIcon1_Click);
+            this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.closeToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(145, 26);
+            // 
+            // closeToolStripMenuItem
+            // 
+            this.closeToolStripMenuItem.Font = new System.Drawing.Font("굴림", 9F);
+            this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.closeToolStripMenuItem.Text = "프로그램종료";
+            this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
+            // 
+            // btnConfig
+            // 
+            this.btnConfig.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnConfig.BackColor = System.Drawing.Color.Black;
+            this.btnConfig.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.btnConfig.ForeColor = System.Drawing.Color.White;
+            this.btnConfig.Location = new System.Drawing.Point(0, 0);
+            this.btnConfig.Name = "btnConfig";
+            this.btnConfig.Size = new System.Drawing.Size(856, 58);
+            this.btnConfig.TabIndex = 0;
+            this.btnConfig.Text = ">>> 경계값 설정 >>>";
+            this.btnConfig.UseVisualStyleBackColor = false;
+            this.btnConfig.Click += new System.EventHandler(this.btnConfig_Click);
+            // 
+            // panel1
+            // 
+            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel1.Controls.Add(this.panel5);
+            this.panel1.Controls.Add(this.panel2);
+            this.panel1.Controls.Add(this.label1);
+            this.panel1.Location = new System.Drawing.Point(4, 61);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(265, 319);
+            this.panel1.TabIndex = 11;
+            // 
+            // panel5
+            // 
+            this.panel5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel5.Controls.Add(this.lbl_value12);
+            this.panel5.Controls.Add(this.label7);
+            this.panel5.Location = new System.Drawing.Point(12, 190);
+            this.panel5.Name = "panel5";
+            this.panel5.Size = new System.Drawing.Size(239, 111);
+            this.panel5.TabIndex = 13;
+            // 
+            // lbl_value12
+            // 
+            this.lbl_value12.BackColor = System.Drawing.Color.White;
+            this.lbl_value12.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbl_value12.Font = new System.Drawing.Font("굴림", 28F, System.Drawing.FontStyle.Bold);
+            this.lbl_value12.ForeColor = System.Drawing.Color.Black;
+            this.lbl_value12.Location = new System.Drawing.Point(0, 39);
+            this.lbl_value12.Name = "lbl_value12";
+            this.lbl_value12.Size = new System.Drawing.Size(237, 70);
+            this.lbl_value12.TabIndex = 1;
+            this.lbl_value12.Text = "45%";
+            this.lbl_value12.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label7
+            // 
+            this.label7.BackColor = System.Drawing.Color.Black;
+            this.label7.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label7.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label7.ForeColor = System.Drawing.Color.White;
+            this.label7.Location = new System.Drawing.Point(0, 0);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(237, 39);
+            this.label7.TabIndex = 0;
+            this.label7.Text = "ROLL2";
+            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // panel2
+            // 
+            this.panel2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel2.Controls.Add(this.lbl_value11);
+            this.panel2.Controls.Add(this.label4);
+            this.panel2.Location = new System.Drawing.Point(12, 67);
+            this.panel2.Name = "panel2";
+            this.panel2.Size = new System.Drawing.Size(239, 111);
+            this.panel2.TabIndex = 12;
+            // 
+            // lbl_value11
+            // 
+            this.lbl_value11.BackColor = System.Drawing.Color.White;
+            this.lbl_value11.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbl_value11.Font = new System.Drawing.Font("굴림", 28F, System.Drawing.FontStyle.Bold);
+            this.lbl_value11.ForeColor = System.Drawing.Color.Black;
+            this.lbl_value11.Location = new System.Drawing.Point(0, 39);
+            this.lbl_value11.Name = "lbl_value11";
+            this.lbl_value11.Size = new System.Drawing.Size(237, 70);
+            this.lbl_value11.TabIndex = 1;
+            this.lbl_value11.Text = "25℃";
+            this.lbl_value11.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label4
+            // 
+            this.label4.BackColor = System.Drawing.Color.Black;
+            this.label4.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label4.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label4.ForeColor = System.Drawing.Color.White;
+            this.label4.Location = new System.Drawing.Point(0, 0);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(237, 39);
+            this.label4.TabIndex = 0;
+            this.label4.Text = "ROLL1";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label1
+            // 
+            this.label1.BackColor = System.Drawing.Color.SteelBlue;
+            this.label1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label1.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label1.ForeColor = System.Drawing.Color.White;
+            this.label1.Location = new System.Drawing.Point(0, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(263, 55);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "입수온도";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // panel3
+            // 
+            this.panel3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel3.Controls.Add(this.panel4);
+            this.panel3.Controls.Add(this.panel6);
+            this.panel3.Controls.Add(this.label10);
+            this.panel3.Location = new System.Drawing.Point(275, 61);
+            this.panel3.Name = "panel3";
+            this.panel3.Size = new System.Drawing.Size(265, 319);
+            this.panel3.TabIndex = 12;
+            // 
+            // panel4
+            // 
+            this.panel4.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel4.Controls.Add(this.lbl_value22);
+            this.panel4.Controls.Add(this.label3);
+            this.panel4.Location = new System.Drawing.Point(12, 190);
+            this.panel4.Name = "panel4";
+            this.panel4.Size = new System.Drawing.Size(239, 111);
+            this.panel4.TabIndex = 13;
+            // 
+            // lbl_value22
+            // 
+            this.lbl_value22.BackColor = System.Drawing.Color.White;
+            this.lbl_value22.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbl_value22.Font = new System.Drawing.Font("굴림", 28F, System.Drawing.FontStyle.Bold);
+            this.lbl_value22.ForeColor = System.Drawing.Color.Black;
+            this.lbl_value22.Location = new System.Drawing.Point(0, 39);
+            this.lbl_value22.Name = "lbl_value22";
+            this.lbl_value22.Size = new System.Drawing.Size(237, 70);
+            this.lbl_value22.TabIndex = 1;
+            this.lbl_value22.Text = "45%";
+            this.lbl_value22.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label3
+            // 
+            this.label3.BackColor = System.Drawing.Color.Black;
+            this.label3.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label3.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label3.ForeColor = System.Drawing.Color.White;
+            this.label3.Location = new System.Drawing.Point(0, 0);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(237, 39);
+            this.label3.TabIndex = 0;
+            this.label3.Text = "ROLL2";
+            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // panel6
+            // 
+            this.panel6.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel6.Controls.Add(this.lbl_value21);
+            this.panel6.Controls.Add(this.label9);
+            this.panel6.Location = new System.Drawing.Point(12, 67);
+            this.panel6.Name = "panel6";
+            this.panel6.Size = new System.Drawing.Size(239, 111);
+            this.panel6.TabIndex = 12;
+            // 
+            // lbl_value21
+            // 
+            this.lbl_value21.BackColor = System.Drawing.Color.White;
+            this.lbl_value21.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbl_value21.Font = new System.Drawing.Font("굴림", 28F, System.Drawing.FontStyle.Bold);
+            this.lbl_value21.ForeColor = System.Drawing.Color.Black;
+            this.lbl_value21.Location = new System.Drawing.Point(0, 39);
+            this.lbl_value21.Name = "lbl_value21";
+            this.lbl_value21.Size = new System.Drawing.Size(237, 70);
+            this.lbl_value21.TabIndex = 1;
+            this.lbl_value21.Text = "25℃";
+            this.lbl_value21.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label9
+            // 
+            this.label9.BackColor = System.Drawing.Color.Black;
+            this.label9.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label9.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label9.ForeColor = System.Drawing.Color.White;
+            this.label9.Location = new System.Drawing.Point(0, 0);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(237, 39);
+            this.label9.TabIndex = 0;
+            this.label9.Text = "ROLL1";
+            this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label10
+            // 
+            this.label10.BackColor = System.Drawing.Color.SeaGreen;
+            this.label10.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label10.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label10.ForeColor = System.Drawing.Color.White;
+            this.label10.Location = new System.Drawing.Point(0, 0);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(263, 55);
+            this.label10.TabIndex = 0;
+            this.label10.Text = "출수온도";
+            this.label10.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // panel7
+            // 
+            this.panel7.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel7.Controls.Add(this.panel8);
+            this.panel7.Controls.Add(this.panel9);
+            this.panel7.Controls.Add(this.label15);
+            this.panel7.Location = new System.Drawing.Point(545, 61);
+            this.panel7.Name = "panel7";
+            this.panel7.Size = new System.Drawing.Size(265, 319);
+            this.panel7.TabIndex = 14;
+            // 
+            // panel8
+            // 
+            this.panel8.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel8.Controls.Add(this.lbl_value32);
+            this.panel8.Controls.Add(this.label12);
+            this.panel8.Location = new System.Drawing.Point(12, 190);
+            this.panel8.Name = "panel8";
+            this.panel8.Size = new System.Drawing.Size(239, 111);
+            this.panel8.TabIndex = 13;
+            // 
+            // lbl_value32
+            // 
+            this.lbl_value32.BackColor = System.Drawing.Color.White;
+            this.lbl_value32.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbl_value32.Font = new System.Drawing.Font("굴림", 28F, System.Drawing.FontStyle.Bold);
+            this.lbl_value32.ForeColor = System.Drawing.Color.Black;
+            this.lbl_value32.Location = new System.Drawing.Point(0, 39);
+            this.lbl_value32.Name = "lbl_value32";
+            this.lbl_value32.Size = new System.Drawing.Size(237, 70);
+            this.lbl_value32.TabIndex = 1;
+            this.lbl_value32.Text = "45%";
+            this.lbl_value32.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label12
+            // 
+            this.label12.BackColor = System.Drawing.Color.Black;
+            this.label12.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label12.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label12.ForeColor = System.Drawing.Color.White;
+            this.label12.Location = new System.Drawing.Point(0, 0);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(237, 39);
+            this.label12.TabIndex = 0;
+            this.label12.Text = "ROLL2";
+            this.label12.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // panel9
+            // 
+            this.panel9.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel9.Controls.Add(this.lbl_value31);
+            this.panel9.Controls.Add(this.label14);
+            this.panel9.Location = new System.Drawing.Point(12, 67);
+            this.panel9.Name = "panel9";
+            this.panel9.Size = new System.Drawing.Size(239, 111);
+            this.panel9.TabIndex = 12;
+            // 
+            // lbl_value31
+            // 
+            this.lbl_value31.BackColor = System.Drawing.Color.White;
+            this.lbl_value31.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lbl_value31.Font = new System.Drawing.Font("굴림", 28F, System.Drawing.FontStyle.Bold);
+            this.lbl_value31.ForeColor = System.Drawing.Color.Black;
+            this.lbl_value31.Location = new System.Drawing.Point(0, 39);
+            this.lbl_value31.Name = "lbl_value31";
+            this.lbl_value31.Size = new System.Drawing.Size(237, 70);
+            this.lbl_value31.TabIndex = 1;
+            this.lbl_value31.Text = "25℃";
+            this.lbl_value31.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label14
+            // 
+            this.label14.BackColor = System.Drawing.Color.Black;
+            this.label14.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label14.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label14.ForeColor = System.Drawing.Color.White;
+            this.label14.Location = new System.Drawing.Point(0, 0);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(237, 39);
+            this.label14.TabIndex = 0;
+            this.label14.Text = "ROLL1";
+            this.label14.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label15
+            // 
+            this.label15.BackColor = System.Drawing.Color.IndianRed;
+            this.label15.Dock = System.Windows.Forms.DockStyle.Top;
+            this.label15.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label15.ForeColor = System.Drawing.Color.White;
+            this.label15.Location = new System.Drawing.Point(0, 0);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(263, 55);
+            this.label15.TabIndex = 0;
+            this.label15.Text = "고무온도";
+            this.label15.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // panel_config
+            // 
+            this.panel_config.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel_config.Controls.Add(this.btnConfigSave);
+            this.panel_config.Controls.Add(this.NUM_STD_1_IN);
+            this.panel_config.Controls.Add(this.NUM_STD_1_OUT);
+            this.panel_config.Controls.Add(this.btnConfigClose);
+            this.panel_config.Controls.Add(this.label8);
+            this.panel_config.Controls.Add(this.label5);
+            this.panel_config.Font = new System.Drawing.Font("굴림", 10F);
+            this.panel_config.Location = new System.Drawing.Point(39, 31);
+            this.panel_config.Name = "panel_config";
+            this.panel_config.Size = new System.Drawing.Size(805, 368);
+            this.panel_config.TabIndex = 15;
+            // 
+            // btnConfigSave
+            // 
+            this.btnConfigSave.BackColor = System.Drawing.Color.Black;
+            this.btnConfigSave.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.btnConfigSave.ForeColor = System.Drawing.Color.White;
+            this.btnConfigSave.Location = new System.Drawing.Point(234, 62);
+            this.btnConfigSave.Name = "btnConfigSave";
+            this.btnConfigSave.Size = new System.Drawing.Size(274, 58);
+            this.btnConfigSave.TabIndex = 15;
+            this.btnConfigSave.Text = "저장";
+            this.btnConfigSave.UseVisualStyleBackColor = false;
+            this.btnConfigSave.Click += new System.EventHandler(this.btnConfigSave_Click);
+            // 
+            // NUM_STD_1_IN
+            // 
+            this.NUM_STD_1_IN.DecimalPlaces = 1;
+            this.NUM_STD_1_IN.Font = new System.Drawing.Font("굴림", 28F, System.Drawing.FontStyle.Bold);
+            this.NUM_STD_1_IN.Location = new System.Drawing.Point(113, 195);
+            this.NUM_STD_1_IN.Name = "NUM_STD_1_IN";
+            this.NUM_STD_1_IN.Size = new System.Drawing.Size(251, 50);
+            this.NUM_STD_1_IN.TabIndex = 13;
+            this.NUM_STD_1_IN.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // NUM_STD_1_OUT
+            // 
+            this.NUM_STD_1_OUT.DecimalPlaces = 1;
+            this.NUM_STD_1_OUT.Font = new System.Drawing.Font("굴림", 28F, System.Drawing.FontStyle.Bold);
+            this.NUM_STD_1_OUT.Location = new System.Drawing.Point(404, 195);
+            this.NUM_STD_1_OUT.Name = "NUM_STD_1_OUT";
+            this.NUM_STD_1_OUT.Size = new System.Drawing.Size(251, 50);
+            this.NUM_STD_1_OUT.TabIndex = 9;
+            this.NUM_STD_1_OUT.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // btnConfigClose
+            // 
+            this.btnConfigClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnConfigClose.BackColor = System.Drawing.Color.IndianRed;
+            this.btnConfigClose.Font = new System.Drawing.Font("Arial", 24F, System.Drawing.FontStyle.Bold);
+            this.btnConfigClose.ForeColor = System.Drawing.Color.White;
+            this.btnConfigClose.Location = new System.Drawing.Point(735, 3);
+            this.btnConfigClose.Name = "btnConfigClose";
+            this.btnConfigClose.Size = new System.Drawing.Size(64, 58);
+            this.btnConfigClose.TabIndex = 1;
+            this.btnConfigClose.Text = "X";
+            this.btnConfigClose.UseVisualStyleBackColor = false;
+            this.btnConfigClose.Click += new System.EventHandler(this.btnConfigClose_Click);
+            // 
+            // label8
+            // 
+            this.label8.BackColor = System.Drawing.Color.SeaGreen;
+            this.label8.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label8.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label8.ForeColor = System.Drawing.Color.White;
+            this.label8.Location = new System.Drawing.Point(404, 146);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(251, 50);
+            this.label8.TabIndex = 6;
+            this.label8.Text = "출수표준온도";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label5
+            // 
+            this.label5.BackColor = System.Drawing.Color.SteelBlue;
+            this.label5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label5.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label5.ForeColor = System.Drawing.Color.White;
+            this.label5.Location = new System.Drawing.Point(113, 146);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(251, 50);
+            this.label5.TabIndex = 10;
+            this.label5.Text = "입수표준온도";
+            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label_errmsg
+            // 
+            this.label_errmsg.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label_errmsg.BackColor = System.Drawing.Color.IndianRed;
+            this.label_errmsg.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label_errmsg.ForeColor = System.Drawing.Color.White;
+            this.label_errmsg.Location = new System.Drawing.Point(0, 78);
+            this.label_errmsg.Name = "label_errmsg";
+            this.label_errmsg.Size = new System.Drawing.Size(856, 303);
+            this.label_errmsg.TabIndex = 16;
+            this.label_errmsg.Text = "오류메시지";
+            this.label_errmsg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // MainForm
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(856, 390);
+            this.Controls.Add(this.panel7);
+            this.Controls.Add(this.panel3);
+            this.Controls.Add(this.btnConfig);
+            this.Controls.Add(this.panel1);
+            this.Controls.Add(this.label_errmsg);
+            this.Controls.Add(this.panel_config);
+            this.Font = new System.Drawing.Font("굴림", 9F);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.Name = "MainForm";
+            this.Text = "Its Schedule Service";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Load += new System.EventHandler(this.MainForm_Load);
+            this.contextMenuStrip1.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
+            this.panel5.ResumeLayout(false);
+            this.panel2.ResumeLayout(false);
+            this.panel3.ResumeLayout(false);
+            this.panel4.ResumeLayout(false);
+            this.panel6.ResumeLayout(false);
+            this.panel7.ResumeLayout(false);
+            this.panel8.ResumeLayout(false);
+            this.panel9.ResumeLayout(false);
+            this.panel_config.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.NUM_STD_1_IN)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.NUM_STD_1_OUT)).EndInit();
+            this.ResumeLayout(false);
+
+        }
+
+        #endregion
+        private System.Windows.Forms.NotifyIcon notifyIcon1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
+        private System.Windows.Forms.Button btnConfig;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel panel5;
+        private System.Windows.Forms.Label lbl_value12;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Panel panel2;
+        private System.Windows.Forms.Label lbl_value11;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Panel panel3;
+        private System.Windows.Forms.Panel panel4;
+        private System.Windows.Forms.Label lbl_value22;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Panel panel6;
+        private System.Windows.Forms.Label lbl_value21;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Panel panel7;
+        private System.Windows.Forms.Panel panel8;
+        private System.Windows.Forms.Label lbl_value32;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Panel panel9;
+        private System.Windows.Forms.Label lbl_value31;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.Panel panel_config;
+        private System.Windows.Forms.Button btnConfigClose;
+        private System.Windows.Forms.Label label_errmsg;
+        private System.Windows.Forms.NumericUpDown NUM_STD_1_IN;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.NumericUpDown NUM_STD_1_OUT;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Button btnConfigSave;
+    }
+}
+

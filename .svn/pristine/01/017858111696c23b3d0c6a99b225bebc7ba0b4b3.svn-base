@@ -1,0 +1,40 @@
+div#MAIN_BODY {
+    padding: 0px;
+}
+
+#top_wrap{
+    display:flex;
+    flex-direction:row;
+    margin:0;
+    flex-wrap:wrap;
+    background-color:#E5E5E5;
+    padding:10px;
+}
+
+.menu{
+    flex-grow:1;
+    width:45%;
+    height:88px;
+    margin:2px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background-color:white;
+    border-radius: 5px;
+}
+.icon{
+    width:66px;
+    height:46px;
+    align-self:center;
+}
+
+.menu_title{
+    font-weight:700;
+    font-size:15px;
+    margin-top:6px;
+    text-align: center;
+}
+.divide3 {
+    width:30%;
+}

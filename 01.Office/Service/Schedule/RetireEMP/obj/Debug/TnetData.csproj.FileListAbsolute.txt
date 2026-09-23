@@ -1,0 +1,10 @@
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\TnetData\bin\TnetData.exe
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\TnetData\bin\TnetData.pdb
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\TnetData\bin\HtmlAgilityPack.dll
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\TnetData\bin\HtmlAgilityPack.pdb
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\TnetData\bin\HtmlAgilityPack.xml
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\TnetData\obj\Debug\TnetData.exe
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\TnetData\obj\Debug\TnetData.pdb
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\TnetData\obj\Debug\TnetData.csprojResolveAssemblyReference.cache
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\StockCalc\obj\Debug\TnetData.exe
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\StockCalc\obj\Debug\TnetData.pdb

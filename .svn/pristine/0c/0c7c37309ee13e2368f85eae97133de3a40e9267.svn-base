@@ -1,0 +1,528 @@
+﻿<ResourceDictionary x:Class="ITSLIB.StyleGrid"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core" 
+                    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+                    xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+                    xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
+                    xmlns:dxgt="http://schemas.devexpress.com/winfx/2008/xaml/grid/themekeys"
+                    xmlns:its="clr-namespace:ITSLIB">
+
+    <!-- ############################################################### ValueConvert -->
+    <its:CvtFileKey x:Key="CvtFileKey"/>
+    <its:CvtToDate x:Key="CvtToDate"/>
+
+    <!-- ############################################################### ValueConvert -->
+    <Style x:Key="ICON_KEYPAD" TargetType="{x:Type UserControl}">
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="Silver"/>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="False">
+                <Setter Property="Background" Value="Transparent"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="KEY_OKNG" TargetType="{x:Type Label}">
+        <EventSetter Event="PreviewMouseUp" Handler="KEY_PreviewMouseUp"/>
+        <Setter Property="Margin" Value="2 2 0 0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Background" Value="Red" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="WhiteSmoke"/>
+                <Setter Property="Foreground" Value="Black"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="KEY_NUM" TargetType="{x:Type Label}">
+        <EventSetter Event="PreviewMouseUp" Handler="KEY_PreviewMouseUp"/>
+        <Setter Property="Margin" Value="2 2 0 0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Background" Value="#333333" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="WhiteSmoke"/>
+                <Setter Property="Foreground" Value="Black"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    
+    <Style x:Key="KEY_COMMON" TargetType="{x:Type Label}">
+        <EventSetter Event="PreviewMouseUp" Handler="KEY_PreviewMouseUp"/>
+        <Setter Property="Margin" Value="2 2 0 0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Background" Value="#4472C4" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="WhiteSmoke"/>
+                <Setter Property="Foreground" Value="Black"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    
+    <Style x:Key="KEY_MOVE" TargetType="{x:Type Label}">
+        <EventSetter Event="PreviewMouseUp" Handler="KEY_PreviewMouseUp"/>
+        <Setter Property="Margin" Value="2 2 0 0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Background" Value="SteelBlue" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="WhiteSmoke"/>
+                <Setter Property="Foreground" Value="Black"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    
+    <Style x:Key="KEY_CLOSE" TargetType="{x:Type Label}">
+        <EventSetter Event="PreviewMouseUp" Handler="KEY_PreviewMouseUp"/>
+        <Setter Property="Margin" Value="2 2 0 0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Width" Value="40" />
+        <Setter Property="Height" Value="30" />
+        <Setter Property="Background" Value="IndianRed" />
+        <Setter Property="Foreground" Value="White" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="WhiteSmoke"/>
+                <Setter Property="Foreground" Value="Black"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ############################################################### CellStyle -->
+    <Style TargetType="its:Column">
+        <Setter Property="CellTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Border x:Name="selectedLineBorder" BorderBrush="Black">
+                        <dxe:InplaceBaseEdit x:Name="PART_Editor" />
+                    </Border>
+                    <DataTemplate.Triggers>
+                        <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                            <Setter Property="BorderThickness" Value="0,0,0,1" TargetName="selectedLineBorder"/>
+                        </Trigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="COMBO_COLUMN" TargetType="its:Column">
+        <Setter Property="CellTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Border x:Name="selectedLineBorder" BorderBrush="Black">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Right" VerticalAlignment="Center" 
+                                       Foreground="Blue"
+                                       Visibility="{Binding Path=Column.CodeVisible}"
+                                       Text="{Binding Path=Value}"></TextBlock>
+                            <dxe:InplaceBaseEdit x:Name="PART_Editor" />
+                        </DockPanel>
+                    </Border>
+                    <DataTemplate.Triggers>
+                        <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                            <Setter Property="BorderThickness" Value="0,0,0,1" TargetName="selectedLineBorder"/>
+                        </Trigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="POP_COLUMN" TargetType="its:Column">
+        <Setter Property="CellTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Border x:Name="selectedLineBorder" BorderBrush="Black">
+                        <DockPanel>
+                            <UserControl x:Name="POP_LINE" DockPanel.Dock="Top" Height="0"/>
+                            <TextBlock x:Name="GPCD" Text="{Binding Path=Column.GPCD}" Visibility="Collapsed"/>
+                            <TextBlock x:Name="REF01" Text="{Binding Path=Column.REF01}" Visibility="Collapsed"/>
+                            <TextBlock x:Name="REF02" Text="{Binding Path=Column.REF02}" Visibility="Collapsed"/>
+                            <TextBlock x:Name="REF03" Text="{Binding Path=Column.REF03}" Visibility="Collapsed"/>
+                            <TextBlock x:Name="REF04" Text="{Binding Path=Column.REF04}" Visibility="Collapsed"/>
+                            <TextBlock x:Name="REF05" Text="{Binding Path=Column.REF05}" Visibility="Collapsed"/>
+                            <dxe:TextEdit x:Name="PART_Editor"
+                                          MouseDoubleClick="POP_COLUMN_MouseDoubleClick"
+                                          KeyUp="POP_COLUMN_KeyUp"/>
+                        </DockPanel>
+                    </Border>
+                    <DataTemplate.Triggers>
+                        <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                            <Setter Property="BorderThickness" Value="0,0,0,1" TargetName="selectedLineBorder"/>
+                        </Trigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DATE_COLUMN" TargetType="its:Column">
+        <Setter Property="CellTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Border x:Name="selectedLineBorder" BorderBrush="Black">
+                        <dxe:DateEdit x:Name="PART_Editor" Margin="0"
+                                          EditValue="{Binding Value, Mode=TwoWay, Converter={StaticResource CvtToDate}}"
+                                          DisplayFormatString="yyyy-MM-dd"
+                                          Mask="yyyy-MM-dd"/>
+                    </Border>
+                    <DataTemplate.Triggers>
+                        <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                            <Setter Property="BorderThickness" Value="0,0,0,1" TargetName="selectedLineBorder"/>
+                        </Trigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="NUMKEY_COLUMN" TargetType="its:Column">
+        <Setter Property="CellTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Border x:Name="selectedLineBorder" BorderBrush="Black">
+                        <DockPanel>
+                            <Popup x:Name="popup" 
+                                StaysOpen="False"
+                                PlacementTarget="{Binding ElementName=numericBox}">
+                                <DockPanel Background="Silver">
+                                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                        <StackPanel Orientation="Vertical">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="1" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="2" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="3" />
+                                                <Label Style="{DynamicResource KEY_COMMON}" Content="Clear" Width="50" />
+                                                <Label Style="{DynamicResource KEY_CLOSE}" Content="✖" Width="30" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="4" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="5" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="6" />
+                                                <Label Style="{DynamicResource KEY_COMMON}" Content="Backspace" Width="82" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="7" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="8" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="9" />
+                                                <Label Style="{DynamicResource KEY_COMMON}" Content="Delete" Width="82" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0 0 2 2">
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="0" Width="82" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="." />
+                                                <Label Style="{DynamicResource KEY_MOVE}" Content="◀" Width="40" />
+                                                <Label Style="{DynamicResource KEY_MOVE}" Content="▶" Width="40" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Popup>
+                            <UserControl DockPanel.Dock="Right"
+                                         x:Name="numKeyPadIcon"
+                                         Width="20" Height="20" 
+                                         HorizontalAlignment="Right"
+                                         Style="{DynamicResource ICON_KEYPAD}"
+                                         MouseUp="STD_KEYPAD_MouseUp">
+                                <Canvas x:Name="canvas" Width="16" Height="16">
+                                    <Line X1="2" Y1="1" X2="14" Y2="1" Stroke="Gray" StrokeThickness="2"/>
+                                    <Line X1="2" Y1="0" X2="2" Y2="16" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="14" Y1="0" X2="14" Y2="16" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="2" Y1="5.5" X2="14" Y2="5.5" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="2" Y1="8" X2="14" Y2="8" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="2" Y1="10.5" X2="14" Y2="10.5" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="2" Y1="13" X2="14" Y2="13" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="2" Y1="15.5" X2="14" Y2="15.5" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="5" Y1="5" X2="5" Y2="15.5" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="8" Y1="5" X2="8" Y2="15.5" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="11" Y1="5" X2="11" Y2="15.5" Stroke="Gray" StrokeThickness="1"/>
+                                </Canvas>
+                            </UserControl>
+                            <dxe:SpinEdit x:Name="PART_Editor" 
+                                  Mask="{Binding Path=Column.NumberMask}" 
+                                  DisplayFormatString="{Binding Path=Column.NumberMask}"
+                                  NullValue="0"
+                                  MaxValue="999999999999" 
+                                  MinValue="-999999999999"
+                                  BorderBrush="Silver"
+                                  BorderThickness="1"
+                                  VerticalAlignment="Center" 
+                                  VerticalContentAlignment="Center"
+                                  Margin="3"
+                                  FontFamily="DotumChe">
+                            </dxe:SpinEdit>
+                        </DockPanel>
+                    </Border>
+                    <DataTemplate.Triggers>
+                        <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                            <Setter Property="BorderThickness" Value="0,0,0,1" TargetName="selectedLineBorder"/>
+                        </Trigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="TIME_COLUMN" TargetType="its:Column">
+        <Setter Property="CellTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Border x:Name="selectedLineBorder" BorderBrush="Black">
+                        <DockPanel>
+                            <Popup x:Name="popup" 
+                                   StaysOpen="False"
+                                   PlacementTarget="{Binding ElementName=PART_Editor}">
+                                <DockPanel Background="Silver">
+                                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                        <StackPanel Orientation="Vertical">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label Style="{DynamicResource KEY_MOVE}" Content="◀" Width="40" />
+                                                <Label Style="{DynamicResource KEY_MOVE}" Content="▶" Width="40" />
+                                                <Label Style="{DynamicResource KEY_CLOSE}" Content="✖" Width="40" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="1" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="2" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="3" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="4" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="5" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="6" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="7" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="8" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="9" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0 0 2 2">
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="0" Width="124" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Popup>
+                            <UserControl DockPanel.Dock="Right"
+                                         x:Name="keyPadIcon"
+                                         Width="20" Height="20" 
+                                         HorizontalAlignment="Right"
+                                         Style="{DynamicResource ICON_KEYPAD}"
+                                         MouseUp="TIME_KEYPAD_MouseUp">
+                                <Canvas x:Name="canvas" Width="16" Height="16">
+                                    <Line X1="9" Y1="7" X2="5" Y2="10" Stroke="Gray" StrokeThickness="2"></Line>
+                                    <Line X1="8" Y1="3.5" X2="8" Y2="9" Stroke="Gray" StrokeThickness="2"></Line>
+                                    <Ellipse Width="14" Height="14" Stroke="Gray" StrokeThickness="2" Canvas.Top="1" Canvas.Left="1"></Ellipse>
+                                    <Line X1="3" Y1="16" X2="5" Y2="13" Stroke="Gray" StrokeThickness="2"></Line>
+                                    <Line X1="11" Y1="13" X2="13" Y2="16" Stroke="Gray" StrokeThickness="2"></Line>
+                                    <Ellipse Width="4" Height="4" Stroke="Gray" StrokeThickness="2" Canvas.Left="1"/>
+                                    <Ellipse Width="4" Height="4" Stroke="Gray" StrokeThickness="2" Canvas.Left="11"/>
+                                </Canvas>
+                            </UserControl>
+                            <dxe:TextEdit x:Name="PART_Editor"
+                                      MaskAutoComplete="Optimistic"
+                                      Mask="{Binding Path=Column.TimeMask}" 
+                                      MaskType="RegEx"
+                                      MaskUseAsDisplayFormat="True"/>
+                        </DockPanel>
+                    </Border>
+                    <DataTemplate.Triggers>
+                        <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                            <Setter Property="BorderThickness" Value="0,0,0,1" TargetName="selectedLineBorder"/>
+                        </Trigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="STD_COLUMN" TargetType="its:Column">
+        <Setter Property="CellTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Border x:Name="selectedLineBorder" BorderBrush="Black">
+                        <DockPanel>
+                            <Popup x:Name="popup" 
+                                StaysOpen="False"
+                                PlacementTarget="{Binding ElementName=PART_Editor}">
+                                <DockPanel Background="Silver">
+                                    <StackPanel DockPanel.Dock="Left" Orientation="Horizontal">
+                                        <StackPanel Orientation="Vertical">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="1" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="2" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="3" />
+                                                <!--<Label Style="{DynamicResource KEY_OKNG}" Content="Y" Width="50"/>-->
+                                                <!--<Label Style="{DynamicResource KEY_COMMON}" Content="Clear" Width="50" />-->
+                                                <Label Style="{DynamicResource KEY_CLOSE}" Content="✖" Width="82"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="4" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="5" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="6" />
+                                                <Label Style="{DynamicResource KEY_OKNG}" Content="Y" />
+                                                <Label Style="{DynamicResource KEY_OKNG}" Content="N" />
+                                                <!--<Label Style="{DynamicResource KEY_NUM}" Content="(" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content=")" />-->
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="7" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="8" />
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="9" />
+                                                <Label Style="{DynamicResource KEY_COMMON}" Content="Back" Width="40" />
+                                                <Label Style="{DynamicResource KEY_COMMON}" Content="Del" Width="40" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Margin="0 0 2 2">
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="-"/>
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="0"/>
+                                                <Label Style="{DynamicResource KEY_NUM}" Content="." />
+                                                <Label Style="{DynamicResource KEY_MOVE}" Content="◀" Width="40" />
+                                                <Label Style="{DynamicResource KEY_MOVE}" Content="▶" Width="40" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DockPanel>
+                            </Popup>
+                            <UserControl DockPanel.Dock="Right"
+                                         x:Name="stdKeyPadIcon"
+                                         Width="20" Height="20" 
+                                         HorizontalAlignment="Right"
+                                         Style="{DynamicResource ICON_KEYPAD}"
+                                         MouseUp="STD_KEYPAD_MouseUp">
+                                <Canvas x:Name="canvas" Width="16" Height="16">
+                                    <Line X1="2" Y1="1" X2="14" Y2="1" Stroke="Gray" StrokeThickness="2"/>
+                                    <Line X1="2" Y1="0" X2="2" Y2="16" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="14" Y1="0" X2="14" Y2="16" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="2" Y1="5.5" X2="14" Y2="5.5" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="2" Y1="8" X2="14" Y2="8" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="2" Y1="10.5" X2="14" Y2="10.5" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="2" Y1="13" X2="14" Y2="13" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="2" Y1="15.5" X2="14" Y2="15.5" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="5" Y1="5" X2="5" Y2="15.5" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="8" Y1="5" X2="8" Y2="15.5" Stroke="Gray" StrokeThickness="1"/>
+                                    <Line X1="11" Y1="5" X2="11" Y2="15.5" Stroke="Gray" StrokeThickness="1"/>
+                                </Canvas>
+                            </UserControl>
+                            <dxe:InplaceBaseEdit x:Name="PART_Editor" />
+                        </DockPanel>
+                    </Border>
+                    <DataTemplate.Triggers>
+                        <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                            <Setter Property="BorderThickness" Value="0,0,0,1" TargetName="selectedLineBorder"/>
+                        </Trigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="BUTTON_COLUMN" TargetType="its:Column">
+        <Setter Property="CellTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Border x:Name="selectedLineBorder" BorderBrush="Black">
+                        <Button x:Name="BUTTON_CONTROL" Loaded="BUTTON_COLUMN_LOADED" Cursor="Hand"></Button>
+                    </Border>
+                    <DataTemplate.Triggers>
+                        <Trigger Property="dxg:DataViewBase.IsFocusedRow" Value="True">
+                            <Setter Property="BorderThickness" Value="0,0,0,1" TargetName="selectedLineBorder"/>
+                        </Trigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="IMAGE_COLUMN" TargetType="its:Column">
+        <Setter Property="CellTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <Image x:Name="PART_Editor" 
+                           Stretch="None"
+                           Source="{Binding Path=Value, Converter={StaticResource CvtFileKey}}"></Image>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="NUMBER_COLUMN" TargetType="its:Column">
+        <Setter Property="CellTemplate">
+            <Setter.Value>
+                <DataTemplate>
+                    <its:Number x:Name="NUMBER_CONTROL" ShowKeyPad="Y" HidenLabel="Y"></its:Number>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="BindRowStyle" TargetType="dxg:RowControl">
+        <Setter Property="Background" Value="{Binding DataContext.BACKGROUND, Mode=OneWay}" />
+        <Setter Property="Foreground" Value="{Binding DataContext.FOREGROUND, Mode=OneWay}" />
+    </Style>
+
+    <DataTemplate x:Key="{dxgt:RowIndicatorThemeKey ResourceKey=IconPresenterTemplate, ThemeName=Office2013DarkGray}">
+        <StackPanel x:Name="root" Orientation="Horizontal" HorizontalAlignment="Center">
+            <TextBlock Text="{Binding DataContext.RowNo}" Margin="2,0,2,0" VerticalAlignment="Center"/>
+            <ContentPresenter x:Name="iconPresenter" Content="{x:Null}"/>
+        </StackPanel>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding Path=IndicatorState}" Value="Focused">
+                <Setter Property="ContentTemplate" Value="{DynamicResource {dxgt:RowIndicatorThemeKey ResourceKey=FocusedIconTemplate}}" TargetName="iconPresenter"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Path=IndicatorState}" Value="Changed">
+                <Setter Property="ContentTemplate" Value="{DynamicResource {dxgt:RowIndicatorThemeKey ResourceKey=FocusedIconTemplate}}" TargetName="iconPresenter"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Path=IndicatorState}" Value="NewItemRow">
+                <Setter Property="ContentTemplate" Value="{DynamicResource {dxgt:RowIndicatorThemeKey ResourceKey=FocusedIconTemplate}}" TargetName="iconPresenter"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Path=IndicatorState}" Value="Editing">
+                <Setter Property="ContentTemplate" Value="{DynamicResource {dxgt:RowIndicatorThemeKey ResourceKey=FocusedIconTemplate}}" TargetName="iconPresenter"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Path=IndicatorState}" Value="Error">
+                <Setter Property="ContentTemplate" Value="{DynamicResource {dxgt:RowIndicatorThemeKey ResourceKey=ErrorIconTemplate}}" TargetName="iconPresenter"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Path=IndicatorState}" Value="FocusedError">
+                <Setter Property="ContentTemplate" Value="{DynamicResource {dxgt:RowIndicatorThemeKey ResourceKey=FocusedErrorIconTemplate}}" TargetName="iconPresenter"/>
+            </DataTrigger>
+            <DataTrigger Binding="{Binding Path=IndicatorState}" Value="AutoFilterRow">
+                <Setter Property="ContentTemplate" Value="{DynamicResource {dxgt:RowIndicatorThemeKey ResourceKey=FocusedIconTemplate}}" TargetName="iconPresenter"/>
+            </DataTrigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+
+</ResourceDictionary>

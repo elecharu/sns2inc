@@ -1,0 +1,100 @@
+﻿.ItsMsg-title {
+    height:40px;
+    line-height:40px;
+    background-color:#4774B9;
+    color:#FFFFFF;
+    padding-left: 12px;
+}
+.ItsMsg-title img {
+    width: 16px;
+    height: auto;
+    margin-right: 5px;
+    line-height: 40px;
+    vertical-align: text-top;
+}
+.ItsMsg-text {
+    width:100%;
+    padding: 37px 30px;
+    /*text-align:center;*/
+}
+.ItsMsgGw-text {
+    padding: 30px 25px;
+    text-align: center;
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 14px;
+    color: #3D3D3D;
+}
+.ItsMsg-text.alert {
+    background: url(../../images/Popup/ic_popup_exclamation.png?ver=1.0) no-repeat;
+    background-size: 34px 34px;
+    background-position-x:30px;
+    background-position-y: center;
+    margin-bottom: 0px;
+}
+.ItsMsg-text.confirm {
+    background: url(../../images/Popup/ic_popup_question.png?ver=1.0) no-repeat;
+    background-size: 34px 34px;
+    background-position-x: 30px;
+    background-position-y: center;
+}
+.ItsMsg-text div {
+    display:inline-block;
+    margin-left:53px;
+    max-width:500px;
+    font-size: 14px;
+}
+.msgbox-container {
+    max-width: 624px;
+}
+.msgbox-buttons {
+    height:48px;
+    text-align: center;
+    overflow: hidden;
+    background-color:#FCFBFC;
+    border-top:1px solid #EEEEEE;
+}
+.msgbox-a {
+    display: block;
+    border-radius: 5px;
+    border: 1px solid #C9C9C9;
+    background-color: #FFFFFF;
+    color: #565656;
+    margin: 0px 15px 0px 15px;
+    padding: 5px 0px 5px 0px;
+    cursor: pointer;
+    font-size: 12px;
+    height: 28px;
+    font-family: SpoqaHanSansNeo_B;
+    user-select: none;
+}
+
+.msgbox-a:active {
+    color: #FFFFFF !important;
+    border: 1px solid #4774B9;
+    background-color: #4774B9;
+}
+.msgbox-a:focus, .msgbox-a:hover {
+    color: #4774B9;
+    border: 1px solid #4774B9;
+    text-decoration: none !important;
+}
+.msgbox-ok {
+    width: 70px;
+    height:28px;
+    margin: 10px auto;
+}
+.msgbox-yes {
+    width: 70px;
+    height:28px;
+    display: inline-block;
+    margin: 10px 5px 10px auto;
+}
+.msgbox-no {
+    width: 70px;
+    height:28px;
+    display: inline-block;
+    margin: 10px auto 10px 5px;
+}

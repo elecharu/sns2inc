@@ -1,0 +1,45 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Common/Master/MasterBase.master" AutoEventWireup="true" 
+    CodeFile="SYS0001_R02.aspx.cs" Inherits="SYS0001_R02" %>
+<asp:Content ContentPlaceHolderID="CPH_HEAD" Runat="Server">
+    <%--<link rel="stylesheet" type="text/css" href="SYS0101_R01.css" />--%>
+    <script type="text/javascript" src="SYS0001_R02.js?ver=<%= BasePage.srcVersion %>"></script>
+</asp:Content>
+<asp:Content ContentPlaceHolderID="CPH_SEARCH" Runat="Server">
+    <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
+        <Its:text runat="server" Label="키워드" Field="KEYWORD"/>
+    </Its:div>
+</asp:Content>
+<asp:Content ContentPlaceHolderID="CPH_BODY" Runat="Server">
+    <Its:div runat="server" Type="SplitSingle">
+        <Its:grid runat="server" ID="grid1"/>
+    </Its:div>
+</asp:Content>
+<asp:Content ContentPlaceHolderID="CPH_POP" Runat="Server">
+    <Its:pop runat="server" ID="pop1" Title="추가" Type="add" Width="700">
+        <Its:text runat="server" Label="헤더코드" Field="GPCD1" ID="txt_GPCD_ddiv1" Required="true" />
+        <Its:text runat="server" Label="헤더명" Field="GPNM" />
+        <Its:text runat="server" Label="MES컬럼" Field="MESCOLUMN" />
+        <Its:newline runat="server" />
+        <Its:text runat="server" Label="참조설명01" Field="REF01NM" />
+        <Its:text runat="server" Label="참조설명02" Field="REF02NM" />
+        <Its:text runat="server" Label="참조설명03" Field="REF03NM" />
+        <Its:text runat="server" Label="참조설명04" Field="REF04NM" />
+        <Its:text runat="server" Label="참조설명05" Field="REF05NM" />
+        <Its:text runat="server" Label="참조설명06" Field="REF06NM" />
+        <Its:text runat="server" Label="참조설명07" Field="REF07NM" />
+        <Its:text runat="server" Label="참조설명08" Field="REF08NM" />
+        <Its:text runat="server" Label="참조설명09" Field="REF09NM" />
+        <Its:text runat="server" Label="참조설명10" Field="REF10NM" />
+        <Its:text runat="server" Label="참조설명11" Field="REF11NM" />
+        <Its:text runat="server" Label="참조설명12" Field="REF12NM" />
+        <Its:text runat="server" Label="참조설명13" Field="REF13NM" />
+        <Its:text runat="server" Label="참조설명14" Field="REF14NM" />
+        <Its:text runat="server" Label="참조설명15" Field="REF15NM" />
+        <Its:text runat="server" Label="참조설명16" Field="REF16NM" />
+        <Its:text runat="server" Label="참조설명17" Field="REF17NM" />
+        <Its:text runat="server" Label="참조설명18" Field="REF18NM" />
+        <Its:text runat="server" Label="참조설명19" Field="REF19NM" />
+        <Its:text runat="server" Label="참조설명20" Field="REF20NM" />
+        <Its:onoff runat="server" Label="사용여부" Field="SYSYN" />
+    </Its:pop>
+</asp:Content>

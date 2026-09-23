@@ -1,0 +1,261 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Data;
+
+namespace ITSLIB
+{
+    public partial class Button : UserControl
+    {
+        public Button()
+        {
+            InitializeComponent();
+            this.Loaded += Button_Loaded;
+        }
+
+        private Brush LocalBackLeave = null;
+        private Brush LocalBackEnter = null;
+        private Brush LocalForeLeave = null;
+        private Brush LocalForeEnter = null;
+
+        private void Button_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Loaded -= Button_Loaded;
+
+            if (LocalBackLeave == null) LocalBackLeave = new SolidColorBrush((Color)FindResource("ColorButtonBackLeave"));
+            if (LocalBackEnter == null) LocalBackEnter = new SolidColorBrush((Color)FindResource("ColorButtonBackEnter"));
+            if (LocalForeLeave == null) LocalForeLeave = new SolidColorBrush((Color)FindResource("ColorButtonForeLeave"));
+            if (LocalForeEnter == null) LocalForeEnter = new SolidColorBrush((Color)FindResource("ColorButtonForeEnter"));
+
+            border.Background = LocalBackLeave;
+            textBlock.Foreground = LocalForeLeave;
+        }
+        private string _LangKey = "";
+        public string LangKey
+        {
+            get { return _LangKey; }
+            set
+            {
+                _LangKey = value;
+            }
+        }
+        public bool Enabled
+        {
+            get { return border.IsEnabled; }
+            set
+            {
+                border.IsEnabled = value;
+                if (border.IsEnabled)
+                {
+                    (border.Background as SolidColorBrush).Color = (Color)FindResource("LocalButtonLeave");
+                }
+                else
+                {
+                    (border.Background as SolidColorBrush).Color = Colors.Silver;
+                }
+            }
+        }
+
+        public string Label
+        {
+            get { return textBlock.Text; }
+            set { textBlock.Text = value; }
+        }
+
+        public string BackColor
+        {
+            get { return border.Background.ToString(); }
+            set
+            {
+                LocalBackLeave = new SolidColorBrush((Color)ColorConverter.ConvertFromString(value));
+                SetLeaveStyle();
+            }
+        }
+
+        public string ForeColor
+        {
+            get { return textBlock.Foreground.ToString(); }
+            set
+            {
+                LocalForeLeave = new SolidColorBrush((Color)ColorConverter.ConvertFromString(value));
+            }
+        }
+
+        private string _CommandName = "";
+        public string CommandName
+        {
+            get { return _CommandName; }
+            set { _CommandName = value; }
+        }
+
+        private void Button_MouseEnter(object sender, MouseEventArgs e)
+        {
+            if (IsEnterBackChange)
+            {
+                border.Background = LocalBackEnter;
+                textBlock.Foreground = LocalForeEnter;
+            }
+            else
+            {
+                textBlock.Foreground = new SolidColorBrush(Colors.Yellow);
+            }
+        }
+
+        private void Button_MouseLeave(object sender, MouseEventArgs e)
+        {
+            SetLeaveStyle();
+        }
+
+        public bool IsEnterBackChange = true;
+
+        public void SetLeaveStyle()
+        {
+            border.Background = LocalBackLeave;
+            textBlock.Foreground = LocalForeLeave;
+        }
+
+        private void Button_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!_IsDown) return;
+            else _IsDown = false;
+
+            if (e != null && e.ChangedButton != MouseButton.Left) return;
+            else if (e != null && e.ChangedButton == MouseButton.Left) e.Handled = true;
+
+            // 사무실 프로그램 메인 화면 버튼 클릭시
+            if (this.CommandName.Length > 4 && this.CommandName.Substring(0, 5) == "MAIN_")
+            {
+                ItsWait.Start();
+                ItsElement.OFFICE_MAIN_WINDOW.EventCommand(CommandName);
+                ItsWait.Stop();
+                return;
+            }
+
+            if (this.CommandName == "INIT_ITEM_VALUE")
+            {
+                DockPanel dockPanel = ItsElement.FindParent<DockPanel>(this);
+                if (dockPanel != null)
+                {
+                    List<StackContent> sclist = ItsElement.FindChild<StackContent>(dockPanel);
+                    if (sclist.Count > 0)
+                    {
+                        //Type type = sclist[0].DataContext.GetType();
+                        //object model = Activator.CreateInstance(type);
+                        sclist[0].ModelPanel.InitData();
+                    }
+                    else
+                    {
+                        List<WrapContent> wclist = ItsElement.FindChild<WrapContent>(dockPanel);
+                        if (wclist.Count > 0)
+                        {
+                            //Type type = wclist[0].DataContext.GetType();
+                            //object model = Activator.CreateInstance(type);
+                            //wclist[0].DataContext = model;
+                            wclist[0].ModelPanel.InitData();
+                        }
+                    }
+                }
+
+                return;
+            }
+
+            if (this.CommandName == "NEW_ITEM_CANCEL")
+            {
+                StackPanel SPANEL = ItsElement.FindParent<StackPanel>(this);
+                if (SPANEL != null)
+                {
+                    UserControl UC = ItsElement.FindParent<UserControl>(SPANEL);
+                    if (UC != null)
+                    {
+                        UC.MaxHeight = 0; UC.MaxWidth = 0;
+                    }
+                }
+
+                return;
+            }
+
+            string comName = this.CommandName;
+            if (this.CommandName == "NEW_ITEM_ADD")
+            {
+                DockPanel DOCK = ItsElement.FindParent<DockPanel>(this);
+                if (DOCK == null) return;
+                List<WrapContent> WRAP_LIST = ItsElement.FindChild<WrapContent>(DOCK);
+                if (WRAP_LIST.Count == 0) return;
+
+                if (ItsMsgBox.ShowYesNo("신규항목을 추가하시겠습니까?"))
+                {
+                    comName = WRAP_LIST[0].Name;
+                }
+            }
+
+            if (comName == "")
+            {
+                // ButtonList 안에 버튼은 CommandName 이 없음.
+                // ItsMsgBox.Show("버튼에 명령어(CommandName)을 부여하세요.");
+                return;
+            }
+
+            do
+            {
+                DependencyObject dobj = sender as DependencyObject;
+                sender = VisualTreeHelper.GetParent(dobj);
+                if (sender == null)
+                {
+                    sender = LogicalTreeHelper.GetParent(dobj);
+                    if (sender is Popup)
+                    {
+                        sender = (sender as Popup).Parent;
+                    }
+                }
+
+                if (sender is ItsPageBase)
+                {
+                    try
+                    {
+                        ItsWait.Start();
+                        (sender as ItsPageBase).EventCommand(comName);
+                        ItsWait.Stop();
+                    }
+                    catch(Exception ex)
+                    {
+                        ItsMsgBox.ShowErr(comName + " Error : " + ex.Message);
+                        ItsWait.Stop();
+                    }
+                }
+                if (sender is ItsWinBase)
+                {
+                    try
+                    {
+                        ItsWait.Start();
+                        (sender as ItsWinBase).EventCommand(comName);
+                        ItsWait.Stop();
+                    }
+                    catch (Exception ex)
+                    {
+                        ItsMsgBox.ShowErr(comName + " Error : " + ex.Message);
+                        ItsWait.Stop();
+                    }
+                }
+
+            } while (sender != null && !(sender is ItsPageBase) && !(sender is ItsWinBase));
+        }
+
+        private bool _IsDown = false;
+        private void Button_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            _IsDown = true;
+        }
+    }
+}

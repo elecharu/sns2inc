@@ -1,0 +1,8 @@
+{
+  "short_name": "OptiscoMES",
+  "name": "OptiscoMES",
+  
+  "start_url": "/PAGECOM/PORTAL/index.aspx",
+  "display": "standalone",
+  "orientation": "landscape"
+}

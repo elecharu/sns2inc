@@ -1,0 +1,182 @@
+﻿CREATE DEFINER = 'root'@'localhost'
+PROCEDURE MES_SNS2.MST1001_S01(
+-- *****************************************************************************
+-- Comment: BOM 정보
+-- Create:  2026-09-14 신정수
+-- Modify:  
+-- *****************************************************************************
+  IN $ITEMCG VARCHAR(100), -- 품목유형
+  IN $ITEMID VARCHAR(100), -- 품목코드
+  IN $ITEMCD VARCHAR(100), -- 품목코드
+  IN $ENDYN       VARCHAR(1),   
+-- *****************************************************************************
+ IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
+PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+-- SET @DEBUGLOGYN = 'Y';
+-- *****************************************************************************
+
+  DECLARE _$COUNT INT;
+-- ****************************************************************************
+CASE $CALLTYPE
+-- ****************************************************************************
+WHEN 'LIST_ITEM' THEN
+
+  SELECT 
+      COMPANYCD
+    , ITEMID
+    , ITEMCD   
+    , ITEMNM   
+    , ITEMCG 
+    , ENDYN
+  FROM MSTITEM
+  WHERE ENDYN = $ENDYN  -- 종료여부
+    AND IF($ITEMCG = '', 1=1, ITEMCG = $ITEMCG)
+    AND ITEMCD LIKE CONCAT($ITEMCD, '%')
+  ORDER BY  COMPANYCD, ITEMCD
+  ;
+-- ****************************************************************************
+WHEN 'LIST_BOM' THEN
+
+
+  -- 임시 테이블 생성
+  DROP TABLE IF EXISTS TEMP_END;
+  CREATE TEMPORARY TABLE TEMP_END (
+    LEVEL  DECIMAL(20, 0) NOT NULL,
+    ENDYN  VARCHAR(1) NOT NULL,
+    IDX    VARCHAR(1000) NOT NULL,
+    PIDX   VARCHAR(1000) NOT NULL,
+    MITEMID VARCHAR(100) NOT NULL,
+    ITEMID VARCHAR(100) NOT NULL,
+    MUSAGE DECIMAL(20, 8),
+    CUSAGE DECIMAL(20, 8),
+    PRCCD VARCHAR(100) NOT NULL,
+    BOMSEQ INT 
+  );
+
+  DROP TABLE IF EXISTS TEMP_CUR;
+  CREATE TEMPORARY TABLE TEMP_CUR (
+    IDX    VARCHAR(1000) NOT NULL,
+    PIDX   VARCHAR(1000) NOT NULL,
+    MITEMID VARCHAR(100) NOT NULL,
+    ITEMID VARCHAR(100) NOT NULL,
+    MUSAGE DECIMAL(20, 8),
+    CUSAGE DECIMAL(20, 8),
+    PRCCD VARCHAR(100) NOT NULL,
+    BOMSEQ INT 
+  );
+
+
+  INSERT INTO TEMP_END (LEVEL, ENDYN, IDX, PIDX, MITEMID, ITEMID, BOMSEQ,  PRCCD)
+  SELECT 0, 'N', ITEMID, '', '', ITEMID, 0, ''
+  FROM MSTITEM
+  WHERE MSTITEM.ITEMID = $ITEMID;
+
+  SET _$COUNT = 1;
+
+  WHILE _$COUNT < 20 DO
+
+    TRUNCATE TABLE TEMP_CUR;
+    INSERT INTO TEMP_CUR (IDX,  PIDX, 
+      MITEMID, ITEMID, 
+      MUSAGE, CUSAGE, BOMSEQ,
+      PRCCD
+    )
+    SELECT 
+      CONCAT(TEMP_END.IDX, '      ' , MSTBOM.CITEMID),   TEMP_END.IDX,     
+      MSTBOM.MITEMID,  MSTBOM.CITEMID,    
+      MSTBOM.MUSAGE, MSTBOM.CUSAGE, MSTBOM.PRCSEQ,
+      MSTBOM.PRCCD
+    FROM TEMP_END
+    INNER JOIN MSTBOM 
+    ON TEMP_END.ITEMID = MSTBOM.MITEMID
+    WHERE TEMP_END.ENDYN = 'N';
+
+    UPDATE TEMP_END SET ENDYN = 'Y';
+
+    INSERT INTO TEMP_END (LEVEL, ENDYN, IDX, PIDX, MITEMID, ITEMID, MUSAGE, CUSAGE, BOMSEQ, PRCCD)
+    SELECT _$COUNT, 'N', IDX, PIDX, MITEMID, ITEMID, MUSAGE, CUSAGE, BOMSEQ, PRCCD
+    FROM TEMP_CUR;
+
+    SET _$COUNT = _$COUNT + 1;
+ 
+  END WHILE;
+
+  SELECT 
+    TEMP_END.BOMSEQ,
+    TEMP_END.LEVEL, 
+    TEMP_END.IDX, 
+    TEMP_END.PIDX,
+    CITEM.COMPANYCD,
+    CITEM.ITEMID,
+    CITEM.ITEMCD,
+    CITEM.ITEMNM,
+    CITEM.ITEMCG,
+    ROUND(TEMP_END.MUSAGE, 0) AS MUSAGE, 
+    TEMP_END.CUSAGE,
+    GPCD('DM150', CITEM.ITEMUNIT) AS ITEMUNIT,
+    MSTPRC.FACTORYCD,
+    MSTPRC.PRCCD,
+    MSTPRC.PRCNM,
+    CASE 
+      WHEN LEVEL = 0 THEN 'HONEYDEW'
+      WHEN TEMP_END.LEVEL ='1' THEN 'SEASHELL' -- 반제품, SUB품
+      ELSE '' END AS BACKGROUND,
+    CASE WHEN LEVEL = 0 THEN '●' ELSE '' END AS L0,
+    CASE WHEN LEVEL = 1 THEN '●' ELSE '' END AS L1,
+    CASE WHEN LEVEL = 2 THEN '●' ELSE '' END AS L2,
+    CASE WHEN LEVEL = 3 THEN '●' ELSE '' END AS L3,
+    CASE WHEN LEVEL = 4 THEN '●' ELSE '' END AS L4,
+    CASE WHEN LEVEL = 5 THEN '●' ELSE '' END AS L5,
+    CASE WHEN LEVEL = 6 THEN '●' ELSE '' END AS L6,
+    CASE WHEN LEVEL = 7 THEN '●' ELSE '' END AS L7,
+    CASE WHEN LEVEL = 8 THEN '●' ELSE '' END AS L8,
+    CASE WHEN LEVEL = 9 THEN '●' ELSE '' END AS L9,
+    CASE WHEN LEVEL = 10 THEN '●' ELSE '' END AS L10,
+    CASE WHEN LEVEL = 11 THEN '●' ELSE '' END AS L11,
+    CASE WHEN LEVEL = 12 THEN '●' ELSE '' END AS L12,
+    CASE WHEN LEVEL = 13 THEN '●' ELSE '' END AS L13,
+    CASE WHEN LEVEL = 14 THEN '●' ELSE '' END AS L14,
+    CASE WHEN LEVEL = 15 THEN '●' ELSE '' END AS L15
+  FROM TEMP_END
+  LEFT JOIN MSTITEM AS CITEM 
+    ON TEMP_END.ITEMID = CITEM.ITEMID
+  LEFT JOIN MSTPRC
+    ON MSTPRC.PRCCD = TEMP_END.PRCCD
+  ORDER BY TEMP_END.IDX;
+
+
+  DROP TABLE IF EXISTS TEMP_END;
+  DROP TABLE IF EXISTS TEMP_CUR;
+-- ****************************************************************************
+WHEN 'SAVE_BOMPRC' THEN
+
+  IF $PRCCD = '' THEN
+    CALL COMERR('선택된 공정이 없습니다.');
+    LEAVE PROC;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT PRCCD
+      FROM MSTBOMPRC
+      WHERE FBOMSEQ = $BOMSEQ )
+  THEN
+    INSERT INTO MSTBOMPRC (
+      FBOMSEQ, PRCCD, RTIME, REMP, RPRG
+      ) VALUES (
+      $BOMSEQ, $PRCCD, CALLTIME(), CALLEMP(), CALLPRG()
+      );
+  ELSE
+    UPDATE MSTBOMPRC SET
+      PRCCD = $PRCCD,
+      MTIME = CALLTIME(),
+      MEMP = CALLEMP(),
+      MPRG = CALLPRG()
+      WHERE FBOMSEQ = $BOMSEQ;
+  END IF;
+
+-- ****************************************************************************
+WHEN 'DEL_BOMPRC' THEN
+
+  DELETE FROM MSTBOMPRC WHERE FBOMSEQ = $BOMSEQ;
+-- ****************************************************************************
+END CASE;  END

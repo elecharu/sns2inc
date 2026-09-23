@@ -1,0 +1,118 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="MasterBase.master.cs" Inherits="MasterBase" %>
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <title>:: ITSCO ::</title>
+    <!-- Thrid Part -->
+    <script src="../../Script/include.js?ver=2.002.001"></script>
+    <!-- Page -->
+    <asp:ContentPlaceHolder id="CPH_HEAD" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body id="ItsBodyEl">
+    <div id="DebugPanel"><div id="DebugClose">닫기</div></div>
+    <div id="MAIN_BUTTON">
+        <Its:button runat="server" Label="조회"     ID="COMMON_SEARCH" BackColor="Transparent" TabIndex="-1"  Disabled="true"/>
+        <Its:button runat="server" Label="추가"     ID ="COMMON_ADD"   BackColor="Transparent" TabIndex="-1" Disabled="true"/>
+        <Its:button runat="server" Label="저장"     ID="COMMON_SAVE"   BackColor="Transparent" TabIndex="-1" Disabled="true"/>
+        <Its:button runat="server" Label="삭제"     ID="COMMON_DELETE" BackColor="Transparent" TabIndex="-1" Disabled="true"/>
+        <Its:button runat="server" Label="인쇄"     ID="COMMON_PRINT"  BackColor="Transparent" TabIndex="-1" Disabled="true"/>
+        <Its:button runat="server" Label="내보내기" ID="COMMON_EXPORT" BackColor="Transparent" TabIndex="-1" Hidden="true" Disabled="true"/>
+        <Its:button runat="server" Label="초기화"   ID="COMMON_INIT"   BackColor="Transparent" TabIndex="-1" />
+        <Its:button runat="server" Label="닫기"     ID="COMMON_CLOSE"  BackColor="Transparent" TabIndex="-1" />
+        <Its:newline runat="server" />
+    </div>
+    <div style="background-color:transparent;height:32px;"></div>
+    <div id="MAIN_INFO">
+        <div id="MAIN_TITLE">
+            <div id="MAIN_TITLE_TEXT"></div>
+            <div id="MAIN_CUSTOM_BUTTON">
+                <asp:ContentPlaceHolder id="CPH_CUSTOM_BUTTON" runat="server">
+                </asp:ContentPlaceHolder>
+            </div>
+        </div>
+        <div id="MAIN_INFO_SPLIT">
+            <div id="MAIN_INFO_SPLIT2"></div>
+        </div>
+        <div id="MAIN_PATH">
+            <div id="MAIN_TOAST"></div>
+            <!-- 우측 페이지 정보 영역 -->
+            <Its:button runat="server" ID="COMMON_HELP" Float="right" TabIndex="-1"/>
+            <div id="MAIN_PAGENAME" ></div>
+            <div id="MAIN_MENUPATH"></div>
+        </div>
+    </div>
+    <div style="background-color:#F3F3F3;height:5px;"></div>
+    <asp:ContentPlaceHolder id="CPH_SEARCH" runat="server">
+    </asp:ContentPlaceHolder>
+    <div id="MAIN_BODY">
+        <asp:ContentPlaceHolder id="CPH_BODY" runat="server">
+        </asp:ContentPlaceHolder>
+        <div id="SplitDragV"></div>
+        <div id="SplitDragH"></div>
+        <input id="SplitDragF" />
+        <div style="clear:both;height:0px;"></div>
+    </div>
+    <div id="MAIN_POP">
+        <asp:ContentPlaceHolder id="CPH_POP" runat="server">
+        </asp:ContentPlaceHolder>
+    </div>
+    <Its:pop runat="server" ID="gridCalc" Title="셀 계산" Width="420">
+        <Its:num runat="server" Label="선택셀" Field="SELECTCELL" ReadOnly="true" />
+        <Its:num runat="server" Label="숫자셀" Field="NUMBERCELL" ReadOnly="true" />
+        <Its:newline runat="server" />
+        <Its:num runat="server" Label="합계" Field="SUM" ReadOnly="true" />
+        <Its:num runat="server" Label="평균" Field="AVG" ReadOnly="true" />
+        <Its:newline runat="server" />
+        <Its:num runat="server" Label="최소값" Field="MIN" ReadOnly="true" />
+        <Its:num runat="server" Label="최대값" Field="MAX" ReadOnly="true" />
+    </Its:pop>
+    <!-- 상품관리 findpop -->
+    <Its:pop runat="server" ID="findPop_ITEMCD" Title="상품 관리" Width="1140" >
+        <iframe id="ifr_ITEMCD" src="" width="100%" height="100%" frameborder=0 framespacing=0; style="width:100%;"></iframe>
+    </Its:pop>
+    <!-- 공통 findpop -->
+    <Its:pop runat="server" ID="findPop_COM" Title="코드 검색" Width="300" >
+        <its:div runat="server" Type="BorderBlock" ID="findPop_COM_sdiv" >
+            <Its:text runat="server" Field="ITEMCD" HiddenLabel="true" Placeholder="품목코드" ID="findPop_COM_ITEMCD"  Hidden="true"/>
+            <Its:text runat="server" Field="ITEMNM" HiddenLabel="true" Placeholder="품명" ID="findPop_COM_ITEMNM"  Hidden="true"/>
+            <Its:find runat="server" Field="MATERIAL" HiddenLabel="true" GPCD="MATERIAL" Placeholder="재질" ID="findPop_COM_MATERIAL"  Hidden="true"/>
+            <Its:text runat="server" Field="ITEMSPEC" HiddenLabel="true" Placeholder="규격" ID="findPop_COM_ITEMSPEC"  Hidden="true"/>
+            <Its:combo runat="server" Field="ITEMTP" HiddenLabel="true" GPCD="*ITEMTP" ID="findPop_COM_ITEMTP"  Hidden="true"/>
+            <Its:text runat="server" Field="KEYWORD" HiddenLabel="true" Placeholder="키워드" ID="findPop_COM_KEYWORD" />
+            <Its:button runat="server" Label="조회" FaIcon="fa-search" ID="findPop_COM_search"  />
+        </its:div>
+        <Its:grid runat="server" ID="findPop_COM_grid1" Height="350" />
+    </Its:pop>
+    <Its:pop runat="server" ID="help_openpop" Width="590">
+        <img src=""/>
+    </Its:pop>
+    <!-- 팩스 팝업 -->
+    <Its:pop runat="server" Title="FAX" ID="COMMON_FAXPOP" >
+        <Its:div runat="server" Type="SplitSingle" >
+            <Its:text runat="server" Label="발신FAX번호" Field="TR_SENDFAXNUM" ID="COMMON_FAXPOP_TR_SENDFAXNUM" InputWidth="300" />
+            <Its:newline runat="server" />
+            <Its:text runat="server" Label="제목" Field="TR_TITLE" ID="COMMON_FAXPOP_TR_TITLE" InputWidth="300" />
+            <Its:newline runat="server" />
+            <Its:text runat="server" Label="발신자" Field="TR_SENDNAME" ID="COMMON_FAXPOP_TR_SENDNAME" InputWidth="300" />
+            <Its:newline runat="server" />
+            <Its:find runat="server" Label="거래처" Field="TR_NAME" ID="COMMON_FAXPOP_TR_NAME" GPCD="CUSTCDFAX" />
+            <Its:newline runat="server" />
+            <Its:text runat="server" Label="수신FAX번호" Field="TR_PHONE" ID="COMMON_FAXPOP_TR_PHONE" InputWidth="300" />
+            <Its:text runat="server" Field="TR_DOCNAME" Hidden="true" ID="COMMON_FAXPOP_filename" />
+            <Its:newline runat="server" />
+            <Its:display runat="server" Label="" LabelWidth="180" />
+            <Its:button runat="server" Label="발신" ID="COMMON_FAXPOP_btn_SEND" />
+            <Its:button runat="server" Label="취소"  ID="COMMON_FAXPOP_btn_CANCLE" />
+        </Its:div>
+    </Its:pop>
+    <Its:pop runat="server" Title="전표 조회" ID="COMMON_ACCPOP" Width="1400" Type="add" AddBtnName="닫기" CancelBtnName="닫기">
+        <Its:div runat="server" Type="SplitSingle" >
+            <Its:grid runat="server" ID="COMMON_ACCPOP_grid1" Height="220"/>
+        </Its:div>
+    </Its:pop>
+</body>
+</html>

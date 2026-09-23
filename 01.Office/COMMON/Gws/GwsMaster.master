@@ -1,0 +1,110 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="GwsMaster.master.cs" Inherits="GwsMaster" %>
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>그룹웨어</title>
+    <%-- Thrid Part --%>
+    <link rel="stylesheet" type="text/css" href="../../PAGECOM/fonts/font.css?ver=<%= BasePage.srcVersion %>" media="none" onload="this.media='all'" />
+    <script src="../../Script/jquery-3.3.1/jquery-3.3.1.min.js"></script>
+    <script src="../../Script/jquery-3.3.1/jquery-ui-1.12.1.min.js"></script>
+    <script src="../../Script/bootstrap-modal/bootstrap-modalmanager.js"></script>
+    <script src="../../Script/bootstrap-modal/bootstrap-modal.js"></script>
+    <script src="../../COMMON/Gws/GwsMaster.js?ver=<%= BasePage.srcVersion %>"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script> 
+    <script type="text/javascript" src="../../Script/FullCalendar-v3.9.0/moment.min.js"></script>
+    <link rel="stylesheet" href="../../COMMON/Gws/GwsMaster.css?ver=<%= BasePage.srcVersion %>" />
+    <link rel="stylesheet" href="../../Script/jquery-3.3.1/jquery-ui-1.12.1.min.css" />
+    <link rel="stylesheet" href="../../Script/bootstrap-modal/bootstrap-modal.css" />
+    <link rel="stylesheet" href="../../Script/bootstrap-modal/bootstrap-modal-bs3patch.css" />
+    <script type="text/javascript" src="../../UserControl/ItsPage.js"></script>
+    <script type="text/javascript" src="../../UserControl/ItsMaria.js"></script>
+    <script type="text/javascript" src="../../UserControl/ItsMsg.js"></script>
+    <script type="text/javascript" src="../../UserControl/ItsMailService.js"></script>
+    <script type="text/javascript" src="../../UserControl/ItsFileManager.js?ver=<%= BasePage.srcVersion %>"></script>
+    <script type="text/javascript" src="../../PAGECOM/PORTAL/js/common.js"></script>
+    <script type="text/javascript" src="../../PAGECOM/PORTAL/js/portal.js"></script>
+    <script>
+        //if (!sessionCheck()) {
+        //    location.href = location.origin;
+        //}
+        document.addEventListener('DOMContentLoaded', function () {
+            $('.mail_cnt').text(<%=mail%>);
+            $('.appr_cnt').text(<%=appr%>);
+            if(<%=appr%> > 0) $('#appr_cnt').show();
+            if(<%=mail%> > 0) $('#mail_cnt').show();
+            $('.hold_cnt').text(<%=hold%>);
+            $('.ref_cnt').text(<%=refs%>);
+            $('.myap_cnt').text(<%=myap%>);
+            $('.pre_cnt').text(<%=pre%>);
+            $('.sche_cnt').text(<%=sche%>);
+        });
+        mobilecheck();
+    </script>
+    <%-- Page --%>
+    <asp:ContentPlaceHolder id="CPH_HEAD" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <div class="wrap">
+        <div class="header">
+            <div class="header_inner">
+                <%--<div class="header_top">
+                    <ul>
+				        <li class="MES"><a href="javascript:void(0)" onclick="goMES()">MES 이동</a></li>
+				        <li class="ERP"><a href="javascript:void(0)" onclick="goERP()">ERP 이동</a></li>	
+                        <li><a href="/PAGEGWS/GWS2002/GWS2002_S01.aspx">안읽은 메일 <span class="cnt">3</span>건</a></li>
+                        <li><a href="/PAGEGWS/GWS2002/GWS2002_S01.aspx">결재대기문서 <span class="cnt">3</span>건</a></li>
+                        <li><a href="/PAGEGWS/GWS2002/GWS2002_S01.aspx">수신참조문서 <span class="cnt">3</span>건</a></li>
+                        <li><a href="/PAGEGWS/GWS2002/GWS2002_S01.aspx">나의기안문서 <span class="cnt">3</span>건</a></li>
+                        <li><a href="/PAGEGWS/GWS8001/GWS8001_R01.aspx">Mypage</a></li>
+                        <li><a href="javascript:void(0)" onclick="logout()">Logout</a></li>
+                    </ul>
+                </div>--%>
+	            <ul>
+		            <li class="logo">
+			            <a href="/PAGEGWS/GWS0000/GWS0000_R01.aspx">
+				            <img  src="../../images/logo.png">
+			            </a>
+		            </li>
+		            <li class="header_MN">
+			            <ul class="header_MN_Box1">
+                            <% if(Request.Cookies["MPUSERMAIL"] != null && Request.Cookies["MPUSERMAIL"].Value != "") { %>
+				            <li><a href="javascript:maillink2('/PAGEGWS/GWS1002/GWS1002_S01.aspx', '/PAGEGWS/GWS1004/GWS1004_S01.aspx')">메일<span id="mail_cnt">(<span class="mail_cnt"></span>)</span></a></li>
+                            <% } %>
+				            <li><a href="/PAGEGWS/GWS2000/GWS2000_R01.aspx">전자결재<span id="appr_cnt">(<span class="appr_cnt"></span>)</span></a></li>
+				            <li><a href="/PAGEGWS/GWS3001/GWS3001_S01.aspx">일정관리</a></li>
+				            <li><a href="/PAGEGWS/GWS4001/GWS4001_R01.aspx">문서함</a></li>
+				            <li><a href="/PAGEGWS/GWS5001/GWS5001_S01.aspx?bd=1">게시판</a></li>
+				            <li><a href="/PAGEGWS/GWS6001/GWS6001_S01.aspx">주소록</a></li>
+                            <% if(Request.Cookies["MPUSERAUT"] != null && Request.Cookies["MPUSERAUT"].Value != "") { %>
+				            <li><a href="/PAGEGWS/GWS7001/GWS7001_R01.aspx">환경설정</a></li>
+                            <% } %>
+			            </ul>
+
+			            <ul class="header_MN_Box2">				
+				            <li><a href="javascript:void(0)" onclick="logout()" >로그아웃</a></li>
+				            <li><a href="/PAGEGWS/GWS8001/GWS8001_R01.aspx" id="myname"></a></li>
+				            <li class="ERP"><a href="javascript:void(0)" onclick="goERP('new')">ERP 이동</a></li>	
+				            <li class="MES"><a href="javascript:void(0)" onclick="goMES()">MES 이동</a></li>	
+			            </ul>
+		            </li>
+		        </ul>
+            </div>
+        </div>
+        <asp:ContentPlaceHolder id="CPH_BODY" runat="server">
+        </asp:ContentPlaceHolder>
+        <div class="footer">
+	        <div class="footer_inner">
+		        <img src="../../images/logo_f.png">
+		        <ul>
+			        <li>경상북도 경주시 외동읍 문산공단안길 35  Tel : 054-746-3747  FAX : 054-773-5523   E-mail : yeungjin01@hanmail.net </li>
+			        <li>Copyright © YOUNGJIN All Rights Reserved. </li>
+		        </ul>
+	        </div>
+        </div>
+    </div>
+</body>
+</html>

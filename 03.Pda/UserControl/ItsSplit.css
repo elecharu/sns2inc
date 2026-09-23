@@ -1,0 +1,19 @@
+.SplitVBar {
+    cursor:col-resize;
+    display: inline-block;
+    float:left;
+    width: 2px;
+    height: 100%;
+    min-height:20px;
+    background-color: LightSteelBlue;
+    border: none;
+}
+
+.SplitHBar {
+    cursor:row-resize;
+    display: block;
+    height: 2px;
+    width:100%;
+    background-color: LightSteelBlue;
+    border: none;
+}

@@ -1,0 +1,35 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="MasterBase.master.cs" Inherits="MasterBase" %>
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="manifest" href="/manifest.json" />
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no"> <!-- PM66 : 320*534 -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>S&S 2공장 PDA</title>
+    <!-- Thrid Part -->
+    <script>
+        window.$srcVersion = '<%=srcVersion%>';
+    </script>
+    <script src="../../Script/include.js?ver=<%=srcVersion %>"></script>
+    <!-- Page -->
+    <asp:ContentPlaceHolder id="CPH_HEAD" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body id="ItsBodyEl">
+    <div class="main-title">
+        <div class="title-menu"><i class="fa fa-list" aria-hidden="true"></i></div>
+        <div class="title-logo"><div class="title-text"></div></div>
+    </div>
+    <div id="MAIN_BODY">
+        <asp:ContentPlaceHolder id="CPH_BODY" runat="server">
+        </asp:ContentPlaceHolder>
+        <div style="clear:both;height:0px;"></div>
+    </div>
+    <div id="MAIN_POP">
+        <asp:ContentPlaceHolder id="CPH_POP" runat="server">
+        </asp:ContentPlaceHolder>
+    </div>
+</body>
+</html>

@@ -1,0 +1,639 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Windows.Controls.Primitives;
+using System.Data;
+using DevExpress.Xpf.Grid;
+using DevExpress.Mvvm.UI;
+using System.IO;
+using DevExpress.Xpf.Core.Native;
+using System.ComponentModel;
+
+namespace ITSLIB
+{
+    public class Grid : GridControl
+    {
+        public ItsModelGrid ModelGrid = null;
+        public string InitStyle = "";
+        TableView vv;
+        public Grid()
+        {
+            DevExpress.Xpf.Core.ThemeManager.SetThemeName(this, "Office2013DarkGray");
+
+            this.SelectionMode = MultiSelectMode.Cell;
+            this.ClipboardCopyMode = ClipboardCopyMode.ExcludeHeader;
+
+            this.MaxWidth = 3000;
+            this.MaxHeight = 2000;
+
+            
+
+            TableView view = new TableView();
+            this.View = view;
+            vv = view;
+            view.NavigationStyle = GridViewNavigationStyle.Cell;
+            view.ShowFilterPanelMode = ShowFilterPanelMode.Never;
+            view.EditorShowMode = DevExpress.Xpf.Core.EditorShowMode.Default;
+            view.ShowGroupPanel = false;
+            view.IndicatorWidth = 30;
+            view.AllowCellMerge = false;
+            view.AllowSorting = true;
+            view.AllowColumnFiltering = true;
+            view.AllowBestFit = true;
+            view.EnableImmediatePosting = true;
+            view.ImmediateUpdateRowPosition = true;
+            view.EditFormColumnCount = 4;
+            view.EditFormPostConfirmation = PostConfirmationMode.None;
+            view.EditFormPostMode = EditFormPostMode.Immediate;
+            view.EditorShowMode = DevExpress.Xpf.Core.EditorShowMode.MouseDown;
+
+            this.Loaded += Grid_Loaded;
+            this.PreviewMouseDown += Grid_PreviewMouseDown;
+            this.PreviewKeyDown += Grid_PreviewKeyDown;
+            this.MouseDown += Grid_MouseDown;
+            this.MouseUp += Grid_MouseUp;
+            this.SelectedItemChanged += Grid_SelectedItemChanged;
+            this.CustomUnboundColumnData += Grid_CustomUnboundColumnData;
+            (this.View as TableView).CellValueChanged += Grid_CellValueChanged;
+
+            this.ContextMenu = new ContextMenu();
+
+            MenuItem menuAllSelect = new MenuItem();
+            menuAllSelect.Tag = "ALLSELECT";
+            menuAllSelect.Header = "전체선택";
+            menuAllSelect.Click += menuAllSelect_Click;
+            this.ContextMenu.Items.Add(menuAllSelect);
+
+            MenuItem menuRangeSelect = new MenuItem();
+            menuRangeSelect.Header = "영역선택";
+            menuRangeSelect.Tag = "";
+            menuRangeSelect.Click += menuRangeSelect_Click;
+            this.ContextMenu.Items.Add(menuRangeSelect);
+
+            MenuItem menuCellCalc = new MenuItem();
+            menuCellCalc.Header = "셀계산";
+            menuCellCalc.Tag = "";
+            menuCellCalc.Click += MenuCellCalc_Click;
+            this.ContextMenu.Items.Add(menuCellCalc);
+
+            // 2019.02.11 그리드 너비최적화 추가 - PJH
+            MenuItem menuBestWidth = new MenuItem();
+            menuBestWidth.Header = "너비최적화";
+            menuBestWidth.Tag = "";
+            menuBestWidth.Click += MenuBestWidth_Click;
+            this.ContextMenu.Items.Add(menuBestWidth);
+
+            MenuItem menuSortClear = new MenuItem();
+            menuSortClear.Header = "정렬초기화";
+            menuSortClear.Tag = "";
+            menuSortClear.Click += MenuSortClear_Click;
+            this.ContextMenu.Items.Add(menuSortClear);
+
+            MenuItem menuFilterClear = new MenuItem();
+            menuFilterClear.Header = "필터초기화";
+            menuFilterClear.Tag = "";
+            menuFilterClear.Click += menuFilterClear_Click;
+            this.ContextMenu.Items.Add(menuFilterClear);
+
+            MenuItem menuExcel = new MenuItem();
+            menuExcel.Header = "엑셀열기";
+            menuExcel.Tag = "";
+            menuExcel.Click += menuExcel_Click;
+            this.ContextMenu.Items.Add(menuExcel);
+
+            MenuItem menuLayoutSave = new MenuItem();
+            menuLayoutSave.Header = "스타일저장";
+            menuLayoutSave.Tag = "";
+            menuLayoutSave.Click += menuLayoutSave_Click;
+            this.ContextMenu.Items.Add(menuLayoutSave);
+
+            MenuItem menuLayoutInit = new MenuItem();
+            menuLayoutInit.Header = "스타일초기화";
+            menuLayoutInit.Tag = "";
+            menuLayoutInit.Click += menuLayoutInit_Click;
+            this.ContextMenu.Items.Add(menuLayoutInit);
+        }
+
+        private void Grid_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Right)
+            {
+                if (this.CurrentColumn == vv.VisibleColumns.Last())
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
+            if (e.Key == Key.Left)
+            {
+                if (this.CurrentColumn == vv.VisibleColumns.First())
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
+        }
+
+        private void Grid_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            _IsMouseClick = false;
+        }
+
+
+        // 2019.02.11 그리드 너비최적화 추가 - PJH
+        private void MenuBestWidth_Click(object sender, RoutedEventArgs e)
+        {
+            TableView view = this.View as TableView;
+            view.BestFitColumns();
+        }
+
+        private void Grid_SelectedItemChanged(object sender, EventArgs e)
+        {
+            if (this.SelectedItem == null) return;
+
+            int index = this.ModelGrid.Rows.IndexOf((this.SelectedItem as DataRowView).Row);
+            this.ModelGrid.ModelChanged(index);
+        }
+
+        private void Grid_CellValueChanged(object sender, CellValueChangedEventArgs e)
+        {
+            this.ModelGrid.Rows[e.RowHandle].EndEdit();
+        }
+
+        private void MenuCellCalc_Click(object sender, RoutedEventArgs e)
+        {
+            decimal selCount = 0m;
+            decimal numCount = 0m;
+            decimal sumValue = 0m;
+            decimal aveValue = 0m;
+            decimal minValue = 9999999999m;
+            decimal maxValue = -9999999999m;
+
+            IList<GridCell> cellList = (this.View as TableView).GetSelectedCells();
+          
+            if (cellList != null)
+            {
+                foreach (GridCell cell in cellList)
+                {
+                    if (this.IsGroupRowHandle(cell.RowHandle))
+                        continue;
+
+                    selCount++;
+                    try
+                    {
+                        decimal cellValue = ItsString.ParseDecimal(this.GetCellValue(cell.RowHandle, cell.Column.FieldName));   // 2019.03.06 셀계산시 정렬적용 안됨 수정
+                        //decimal cellValue = ModelGrid.GetDecimal(cell.RowHandle, cell.Column.FieldName);
+                        sumValue += cellValue;
+                        if (cellValue < minValue) minValue = cellValue;
+                        if (cellValue > maxValue) maxValue = cellValue;
+                        numCount++;
+                    }
+                    catch { }
+                }
+                if (numCount == 0) aveValue = sumValue;
+                else aveValue = sumValue / numCount;
+            }
+
+            if (minValue == 9999999999m) minValue = 0m;
+            if (maxValue == -9999999999m) maxValue = 0m;
+
+            ItsPageBase basePage = (ItsElement.GetPage(this) as ItsPageBase);
+            basePage.ShowCellCalc(selCount, numCount, sumValue, aveValue, minValue, maxValue);
+        }
+
+        private void MenuSortClear_Click(object sender, RoutedEventArgs e)
+        {
+            this.ClearSorting();
+        }
+
+        private void menuFilterClear_Click(object sender, RoutedEventArgs e)
+        {
+            foreach(Column col in this.Columns)
+            {
+                this.ClearColumnFilter(col);
+            }
+        }
+
+        private void menuAllSelect_Click(object sender, RoutedEventArgs e)
+        {
+            if (ModelGrid.Rows.Count == 0) return;
+
+            bool isChecked = ModelGrid.IsChecked(0);
+            foreach(DataRow row in ModelGrid.Rows)
+            {
+                row["ISCHECKED"] = !isChecked;
+            }
+        }
+
+        private void menuRangeSelect_Click(object sender, RoutedEventArgs e)
+        {
+            if (this.SelectedItems.Count == 0) return;
+
+            bool isChecked = (bool)((this.SelectedItems[0] as DataRowView).Row["ISCHECKED"]);
+            foreach (object obj in this.SelectedItems)
+            {
+                DataRow row = (obj as DataRowView).Row;
+                row["ISCHECKED"] = !isChecked;
+            }
+        }
+
+        private void menuExcel_Click(object sender, RoutedEventArgs e)
+        {
+            string fileName = System.IO.Path.GetTempPath();
+            try
+            {
+                fileName = fileName + "\\" + ItsElement.FindParent<ItsPageBase>(this).Name;
+            }
+            catch { };
+            fileName += "_" + this.Name + ".xlsx";
+
+            try
+            {
+                TableView view = this.View as TableView;
+                if (view == null) return;
+                view.ExportToXlsx(fileName);
+            }
+            catch
+            {
+                try
+                {
+                    TreeListView view = this.View as TreeListView;
+                    if (view == null) return;
+                    view.ExportToXlsx(fileName);
+                }
+                catch
+                {
+                    //DevExpress.Xpf.PivotGrid.PivotGridControl pgrid = this as DevExpress.Xpf.PivotGrid.PivotGridControl;
+                    //pgrid.ExportToXlsx(fileName);
+                }
+            }
+
+            try
+            {
+                System.Diagnostics.Process proc = new System.Diagnostics.Process();
+                proc.StartInfo.FileName = fileName;
+                proc.Start();
+            }
+            catch { }
+
+        }
+
+        private void menuLayoutSave_Click(object sender, RoutedEventArgs e)
+        {
+            Stream steamStyle = new MemoryStream();
+            this.SaveLayoutToStream(steamStyle);
+            steamStyle.Seek(0, SeekOrigin.Begin);
+            StreamReader reader = new StreamReader(steamStyle);
+            string curStyle = reader.ReadToEnd();
+
+            if (ItsMsgBox.ShowYesNo("스타일을 저장하시겠습니까?") == false) return;
+
+            ItsMaria.Set("COMSTYLE", "SAVE");
+            ItsMaria.AddOne("EMPCD", ItsMemberShip.EMPCD);
+            ItsMaria.AddOne("PRGCD", ItsElement.GetPage(this).Name);
+            ItsMaria.AddOne("GRIDNM", this.Name);
+            ItsMaria.AddOne("STYLEINFO", curStyle.Replace("$", "↕"));
+            ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ItsMsgBox.ShowErr(ItsMaria.ErrMessage);
+            }
+        }
+
+        private void menuLayoutInit_Click(object sender, RoutedEventArgs e)
+        {
+            if (ItsMsgBox.ShowYesNo("스타일을 초기화하시겠습니까?") == false) return;
+
+            byte[] byteArray = Encoding.UTF8.GetBytes(InitStyle);
+            MemoryStream stream = new MemoryStream(byteArray);
+            this.RestoreLayoutFromStream(stream);
+
+            ItsMaria.Set("COMSTYLE", "INIT");
+            ItsMaria.AddOne("EMPCD", ItsMemberShip.EMPCD);
+            ItsMaria.AddOne("PRGCD", ItsElement.GetPage(this).Name);
+            ItsMaria.AddOne("GRIDNM", this.Name);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ItsMsgBox.ShowErr(ItsMaria.ErrMessage);
+            }
+        }
+
+        public void LoadGridStyle()
+        {
+            try
+            {
+                ItsMaria.Set("COMSTYLE", "LOAD");
+                ItsMaria.AddOne("EMPCD", ItsMemberShip.EMPCD);
+                ItsMaria.AddOne("PRGCD", ItsElement.GetPage(this).Name);
+                ItsMaria.AddOne("GRIDNM", this.Name);
+                DataSet ds = ItsMaria.Call();
+
+                string styleText = ItsData.GetText(ds.Tables[0], 0, "STYLEINFO");
+                byte[] byteArray = Encoding.UTF8.GetBytes(styleText.Replace("↕", "$"));
+                MemoryStream stream = new MemoryStream(byteArray);
+                this.RestoreLayoutFromStream(stream);
+            }
+            catch { }
+        }
+
+        public int EditColumnCount
+        {
+            get
+            {
+                return (this.View as TableView).EditFormColumnCount;
+            }
+            set
+            {
+                (this.View as TableView).EditFormColumnCount = value;
+            }
+        }
+
+        public static bool _IsMouseClick = false; // for ItsModelGrid.RowChanged
+        private void Grid_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            ItsPageBase page = ItsElement.FindParent<ItsPageBase>(this);
+            if (page != null) page.ActiveGrid = this;
+            _IsMouseClick = true;
+        }
+
+        private void Grid_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            // 2019.09.05 수정
+            TableViewHitInfo hitInfo = ((TableView)this.View).CalcHitInfo(e.OriginalSource as DependencyObject);
+            if (hitInfo.HitTest == TableViewHitTest.GroupValue || hitInfo.HitTest == TableViewHitTest.GroupRow)
+                return;
+
+            ItsPageBase page = ItsElement.FindParent<ItsPageBase>(this);
+            if (page != null) page.ActiveGrid = this;
+
+            // 전체선택, 영역선택 없애기
+            if (this.Columns.GetColumnByFieldName("ISCHECKED") == null)
+            {
+                if ((this.ContextMenu.Items[0] as MenuItem).Tag.ToString() == "ALLSELECT")
+                {
+                    this.ContextMenu.Items.RemoveAt(0);
+                    this.ContextMenu.Items.RemoveAt(0);
+                }
+            }
+
+            // 왼쪽 상단코너를 포함해 컬럼헤더를 클릭 시
+            try
+            {
+                IndicatorColumnHeader indicator = LayoutHelper.FindParentObject<IndicatorColumnHeader>((DependencyObject)e.OriginalSource);
+                if (indicator != null)
+                {
+                    this.ContextMenu.IsOpen = true;
+                    return;
+                }
+            }
+            catch(InvalidOperationException ex)
+            {
+
+            }
+
+            // 오른쪽 마우스 클릭 시
+            if (e.RightButton == MouseButtonState.Pressed)
+            {
+                this.ContextMenu.IsOpen = true;
+                return;
+            }
+
+            if (this.CurrentColumn != null)
+            {
+
+                //if (this.CurrentColumn.FieldName == "ISCHECKED")
+                //{
+                //    int rowIndex = this.ModelGrid.Rows.IndexOf((this.SelectedItem as DataRowView).Row);
+                //    bool checkValue = this.ModelGrid.GetBool(rowIndex, "ISCHECKED");
+                //    this.ModelGrid.SetValue(rowIndex, "ISCHECKED", !checkValue);
+                //    ModelGrid.Rows[rowIndex].EndEdit();
+
+                //    object curItem = this.SelectedItem;
+                //    this.ItemsSource = null;
+                //    this.ItemsSource = this.ModelGrid.DefaultView;
+                //    this.SelectedItem = curItem;
+                //    this.CurrentItem = curItem;
+
+                //    return;
+                //}
+
+                // 빈 영역 클릭 시 무시
+                TableViewHitInfo info = ((TableView)View).CalcHitInfo((DependencyObject)e.OriginalSource);
+                if (info.InRowCell == false) return;
+
+                if (this.CurrentItem == null) return;
+                if (this.CurrentColumn.ReadOnly) return;
+
+                string fieldName = this.CurrentColumn.FieldName.ToUpper();
+                if (this.ModelGrid.GetCellType(fieldName) == ItsEnums.CellTypes.Check)
+                {
+                    int rowIndex = this.ModelGrid.Rows.IndexOf((this.SelectedItem as DataRowView).Row);
+                    bool checkValue = this.ModelGrid.GetBool(rowIndex, fieldName);
+                    this.ModelGrid.SetValue(rowIndex, fieldName, !checkValue);
+                    ModelGrid.Rows[rowIndex].EndEdit();
+
+                    object curItem = this.SelectedItem;
+                    this.ItemsSource = null;
+                    this.ItemsSource = this.ModelGrid.DefaultView;
+                    this.SelectedItem = curItem;
+                    this.CurrentItem = curItem;
+
+                    return;
+                }
+            }
+        }
+
+        private void Grid_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Loaded -= Grid_Loaded;
+
+            Column column = new Column();
+            column.Header = "No.";
+            column.FieldName = "RowNo";
+            column.UnboundType = DevExpress.Data.UnboundColumnType.Integer;
+            column.AllowSorting = DevExpress.Utils.DefaultBoolean.False;
+            column.AllowPrinting = false;
+            column.Width = 0;
+            column.Visible = false;
+            this.Columns.Add(column);
+
+            column = new Column();
+            column.Header = "FOREGROUND";
+            column.FieldName = "FOREGROUND";
+            column.Width = 0;
+            column.Visible = false;
+            column.AllowPrinting = false;
+            this.Columns.Add(column);
+
+            column = new Column();
+            column.Header = "BACKGROUND";
+            column.FieldName = "BACKGROUND";
+            column.Width = 0;
+            column.Visible = false;
+            column.AllowPrinting = false;
+            this.Columns.Add(column);
+
+            ItsPageBase page = ItsElement.FindParent<ItsPageBase>(this);
+            if (page != null)
+            {
+                page.ActiveGrid = this;
+                page.GridList.Add(this);
+
+                Stream steamStyle = new MemoryStream();
+                this.SaveLayoutToStream(steamStyle);
+                steamStyle.Seek(0, SeekOrigin.Begin);
+
+                StreamReader reader = new StreamReader(steamStyle);
+                this.InitStyle = reader.ReadToEnd();
+
+                this.LoadGridStyle();
+            }
+
+            TableView view = this.View as TableView;
+            if (view != null)
+            {
+                view.ShowGroupPanel = false;
+                (this.View as TableView).RowStyle = (Style)FindResource("BindRowStyle");
+            }
+        }
+
+        public bool IsShowDetail
+        {
+            get
+            {
+                TableView view = this.View as TableView;
+                if (view != null && view.EditFormShowMode == EditFormShowMode.Inline)
+                {
+                    return true;
+                }
+                return false;
+            }
+            set
+            {
+                TableView view = this.View as TableView;
+                if (view != null)
+                {
+                    if (value)
+                    {
+                        view.EditFormShowMode = EditFormShowMode.Inline;
+                        view.EditFormPostMode = EditFormPostMode.Cached;
+                        view.EditFormColumnCount = 4;
+                        view.ShowGroupPanel = false;
+                    }
+                    else view.EditFormShowMode = EditFormShowMode.None;
+                }
+            }
+        }
+
+        private void Grid_CustomUnboundColumnData(object sender, GridColumnDataEventArgs e)
+        {
+            e.Value = this.GetRowHandleByListIndex(e.ListSourceRowIndex) + 1;
+        }
+
+        public string Header
+        {
+            get
+            {
+                Expander exp = ItsElement.FindParent<Expander>(this);
+                if (exp != null) return exp.Header.ToString();
+                else return "";
+            }
+            set
+            {
+                Expander exp = ItsElement.FindParent<Expander>(this);
+                if (exp != null) exp.Header = value;
+            }
+        }
+
+        public void SelectRow(string key)
+        {
+            for (int i = 0; i < ModelGrid.Rows.Count; i++)
+            {
+                string rowKey = ModelGrid.GetKey(i);
+                if (rowKey == key)
+                {
+                    this.SelectedItem = ModelGrid.DefaultView[i];
+                    this.CurrentItem = this.SelectedItem;
+                }
+            }
+        }
+
+        public void SelectRow(DataRow row)
+        {
+            this.SelectedItem = row.Table.DefaultView[row.Table.Rows.IndexOf(row)];
+            this.CurrentItem = this.SelectedItem;
+        }
+
+        public DataRow GetRowData(int index)
+        {
+            if (ModelGrid != null && ModelGrid.Rows.Count > index)
+            {
+                return ModelGrid.Rows[index];
+            }
+            return null;
+        }
+
+        public int GetIndex()
+        {
+            return ModelGrid.Rows.IndexOf((this.CurrentItem as DataRowView).Row);
+        }
+
+        public void SetIndex(int index)
+        {
+            this.SelectedItem = ModelGrid.DefaultView[index];
+            this.CurrentItem = this.SelectedItem;
+        }
+
+        public int RowCount
+        {
+            get
+            {
+                return ModelGrid.Rows.Count;
+            }
+        }
+
+        public void Clear()
+        {
+            ModelGrid.Rows.Clear();
+            this.ItemsSource = null;
+            this.ItemsSource = ModelGrid.DefaultView;
+        }
+
+        public bool GroupRow
+        {
+            get
+            {
+                TableView view = this.View as TableView;
+                if (view != null && view.ShowGroupPanel == true)
+                {
+                    return true;
+                }
+                return false;
+            }
+            set
+            {
+                TableView view = this.View as TableView;
+                if (view != null)
+                {
+                    if (value)
+                    {
+                        view.ShowGroupPanel = true;
+                    }
+                    else view.ShowGroupPanel = false;
+                }
+            }
+        }
+
+    }
+}

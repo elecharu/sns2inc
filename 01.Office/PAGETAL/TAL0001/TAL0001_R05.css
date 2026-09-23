@@ -1,0 +1,38 @@
+﻿
+
+#EQM_LIST {
+    padding: 10px;
+}
+
+
+.eqm-btn {
+    width: 250px; /* 네모칸 가로 */
+    height: 80px; /* 네모칸 세로 */
+    margin: 20px; /* 버튼 사이 간격 */
+    font-size: 20px; /* 글씨 크기 */
+    font-weight: bold;
+    border-radius: 10px;
+    border: 2px solid #cccccc;
+    background: #f5f5f5;
+    cursor: pointer;
+}
+
+.eqm-btn:hover {
+    background: #dbefff;
+}
+.eqm-btn.active {
+    background: #4774B9;
+    color: white;
+    border: 2px solid #4774B9;
+}
+#pop_PROB_SOL textarea {
+    font-size: 30px !important;
+    line-height: 1.4 !important;
+    padding-top: 8px !important;
+}
+
+#div1 .l-btn-text {
+    font-size: 28px !important;
+    font-weight: bold !important;
+    line-height: 28px !important;
+}

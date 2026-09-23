@@ -1,0 +1,251 @@
+﻿using PLC_GATHERING_Prj.Model;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Data;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Navigation;
+using System.Windows.Threading;
+using System.Xml.Linq;
+
+namespace PLC_GATHERING_Prj.ViewModel
+{
+    public class clThread
+    {
+        static clThread _this = new clThread();
+
+        public static clThread This
+        {
+            get { return _this; }
+        }
+
+        public void MainTimeMathod()
+        {
+            while (true)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MainWindow.mainWindow.tbNowtime.Text = DateTime.Now.ToString();
+                });
+            }
+        }
+
+        public void PLCListUpdate()
+        {
+            while (true) 
+            {
+                try
+                {
+                    Thread.Sleep(1000);
+
+                    ItsMariaThread itsMariaThread = new ItsMariaThread();
+
+                    string selectedPLCCD = string.Empty;
+
+                    ItsMaria.Set("PLC_GATHERING", "MONITORING");
+
+                    DataSet ds = ItsMaria.Call();
+
+                    Model.clDataView.This.DataViewAdd(ds.Tables[0]);
+                }
+                catch (Exception ex)
+                {
+                    Log.This.DB_HistLog_Write("PLCListUpdate", ex.Message);
+                }
+            }           
+        }
+
+        public void Work(object PLCCDSTR)
+        {
+            string plccode = PLCCDSTR.ToString().Substring(4);
+            string threadid = PLCCDSTR.ToString().Substring(0, 4);
+
+            while (true)
+            {
+                Thread.Sleep(2000);
+
+                try
+                {
+                    //Log.This.ErrLog_main(
+                    //                        "Work _GlobalSet => " + "\r\n"
+                    //                        + Workspace.This._GlobalSet[plccode] + "\r\n"
+                    //                        + plccode + "\r\n");
+
+                    DataTable plc_list = Workspace.This._GlobalSet[plccode].Tables[1];
+                    foreach (DataRow row in plc_list.Rows)
+                    {
+                        string plccd = row["PLCCD"].ToString();
+                        string plcip = row["PLCIP"].ToString();
+                        string plcport = row["PLCPORT"].ToString();
+                        string saddr = row["SADDR"].ToString();
+                        string eaddr = row["EADDR"].ToString();
+                        string frametp = row["FRAMETP"].ToString();
+
+                        //Log.This.ErrLog_main(
+                        //    "Work => " + "\r\n" +
+                        //    "PLCCD = " + plccd + "\r\n" +
+                        //    "PLCIP = " + plcip + "\r\n" +
+                        //    "PLCPORT = " + plcport + "\r\n" +
+                        //    "SADDR = " + saddr + "\r\n" +
+                        //    "EADDR = " + eaddr + "\r\n" +
+                        //    "FRAMETP = " + frametp);
+
+                        //네가지 기종 별 함 수 호출
+                        if (frametp == "MEL_TCP")
+                        {
+                            ItsPlcNet.Read_MEL_TCP(plcip, Convert.ToInt32(plcport), saddr, eaddr, ref Workspace.This.plcdata, plccd);
+                        }
+                        else if (frametp == "XG_TCP")
+                        {
+                            ItsPlcNet.Read_XG_TCP(plcip, plcport, saddr, eaddr, ref Workspace.This.plcdata, plccd);
+                        }
+                        else if (frametp == "NETEYE")
+                        {
+                            ItsPlcNet.Read_NETEYE(plcip, Convert.ToInt32(plcport), saddr, eaddr, ref Workspace.This.plcdata, plccd);
+                        }
+                        else if (frametp == "MEL_A")
+                        {
+                            ItsPlcNet.Read_MEL_A(plcip, Convert.ToInt32(plcport), saddr, eaddr, ref Workspace.This.plcdata, plccd);
+                        }
+                    }
+
+                    ReduceMemory();
+                }
+                catch (Exception ex)
+                {
+                    string file2 = plccode + "_" + System.DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
+
+                    Log.This.DB_HistLog_Write("Work", ex.Message);
+
+                    ReduceMemory();
+                }
+                finally
+                {
+                    Workspace.This.status[plccode] = "N";
+                }
+            }
+        }
+
+        public void SavePLCData(object PLCdata)
+        {
+            while (true)
+            {
+                try
+                {
+                    Thread.Sleep(3000);
+
+                    ItsMariaThread itsMariaThread = new ItsMariaThread();
+
+                    itsMariaThread.Set("PLC_GATHERING", "UPDATE_PLC");
+
+                    int splitindex = 7; //설비코드에 기반하여 
+
+                    for (int i = 0; i < Workspace.This.plcdata.Count; i++)
+                    {
+                        itsMariaThread.AddList("ADDRKEYLIST", Workspace.This.plcdata.Keys.ToList()[i].Substring(splitindex));
+                        itsMariaThread.AddList("VALUELIST", Workspace.This.plcdata[Workspace.This.plcdata.Keys.ToList()[i]]);
+                    }
+
+                    //Log.This.ErrLog_main(
+                    //    "SavePLCData Procedure Get Query=> " +
+                    //    itsMariaThread.Get()
+                    //    );
+
+                    DataSet ds_siren = itsMariaThread.Call();
+
+                    //Log.This.ErrLog_main(
+                    //    "EQMCD return data => " +
+                    //    ds_siren.Tables[0].Rows[0][0].ToString());
+
+                    if (itsMariaThread.IsError)
+                    {
+                        Log.This.DB_HistLog_Write("SavePLCData", itsMariaThread.ErrMessage);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ex.Message.Contains("스레드"))
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        Log.This.DB_HistLog_Write("SavePLCData", ex.Message);
+                    }                   
+                }
+            }       
+        }
+
+        DateTime _MainTime = new DateTime(2024, 10, 15, 10, 0, 0);
+
+        public void PLC_RESET()
+        {
+            while (true)
+            {               
+                DateTime NowTime = DateTime.Now;
+
+                TimeSpan timeSpan = NowTime - _MainTime;
+
+                if (timeSpan.TotalDays >= 1)
+                {
+                    try
+                    {
+                        Thread.Sleep(3000);
+
+                        ItsMariaThread itsMariaThread = new ItsMariaThread();
+
+                        itsMariaThread.Set("PLC_GATHERING", "PLC_RESET");
+
+                        DataSet ds = itsMariaThread.Call();
+
+                        for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                        {
+                            //현재는 LS PLC만 쓰기가 가능하도록 설정(1: 초기화 모드, 0: 초기화 모드 복귀)
+                            ItsPlcNet.Write_XG_TCP(ds.Tables[0].Rows[i]["PLCIP"].ToString(), Int32.Parse(ds.Tables[0].Rows[i]["PLCPORT"].ToString()), ds.Tables[0].Rows[i]["RESTCOUNT"].ToString(), "1");
+
+                            Thread.Sleep(10000);
+
+                            ItsPlcNet.Write_XG_TCP(ds.Tables[0].Rows[i]["PLCIP"].ToString(), Int32.Parse(ds.Tables[0].Rows[i]["PLCPORT"].ToString()), ds.Tables[0].Rows[i]["RESTCOUNT"].ToString(), "0");
+                        }                   
+
+                        _MainTime = DateTime.Now;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex.Message.Contains("스레드"))
+                        {
+                            return;
+                        }
+                        else
+                        {
+                            Log.This.DB_HistLog_Write("SavePLCData", ex.Message);
+                        }
+                    }
+                }           
+            }
+        }
+
+        public void ReduceMemory()
+        {
+            try
+            {
+                Process A = Process.GetCurrentProcess();
+                A.MaxWorkingSet = Process.GetCurrentProcess().MaxWorkingSet;
+                A.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Log.This.DB_HistLog_Write("ReduceMemory", ex.Message);
+            }
+        }
+    }
+}

@@ -1,0 +1,45 @@
+﻿/// <reference path="../../Script/reference.js" />
+
+/* 페이지 로드 시 수행 */
+ItsPage.Load = function () {
+
+    /* 그리드 생성 */
+    ItsGrid.Create('grid1', { isCheckBoxGrid: false }, [
+        column.create("창고코드", "WARECD", { width: 100, align: 'center' }),
+        column.create("창고명", "WARENM", { width: 100 }),
+        column.create("생산공장코드", "FACTORYCD", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD' }),
+        column.create("자재창고여부", "MTRYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("공정창고여부", "PRCYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("구매입고창고여부", "PARTYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("제품창고", "PRODYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("가상창고여부", "VMIYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("출하반품", "RTNYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("매출창고여부", "SALYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("외주창고여부", "SUBYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("본사창고여부", "HEADYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("사용여부", "USEYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("(-)재고허용", "MINUS_YN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        //column.create("MES전용사용", "MESYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("거래처코드", "CUSTCD", { width: 100, align: 'center' }),
+        column.create("관리부서코드", "DEPTCD", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CUSTCD' }),
+        //column.create("정렬순서", "SORTNO", { width: 100, align: 'center' })
+        column.create("비고", "REMARK", { width: 250 }),
+        column.split()
+    ]);
+};
+
+/* 조회 */
+ItsButton.EventSearch = function () {
+    var maria = new ItsMaria('MST1002_R01', 'SEL_WARE');
+    maria.AddPanel('sdiv1');
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore('grid1', maria.store.YnToBool('MTRYN').YnToBool('PRCYN').YnToBool('PARTYN').YnToBool('PRODYN').YnToBool('VMIYN').YnToBool('RTNYN').YnToBool('SALYN').YnToBool('SUBYN').YnToBool('HEADYN').YnToBool('USEYN').YnToBool('MINUS_YN'));
+    ItsMsg.Toast(maria.store.Length() + '건이 조회되었습니다.');
+
+    ItsGrid.Get('grid1').autoSizeColumns();
+};

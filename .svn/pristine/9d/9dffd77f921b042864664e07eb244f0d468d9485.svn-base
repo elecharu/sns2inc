@@ -1,0 +1,555 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Threading;
+using System.Diagnostics;
+
+namespace ItsPlc
+{
+    public partial class Main : Form
+    { 
+        public Main()
+        {
+            InitializeComponent();
+
+            DataSet ds = ItsMaria.Query("SELECT ''AS PLCCD, '전체' AS PLCNM UNION ALL SELECT PLCCD, PLCNM FROM SYSPLC;");
+            cmb_PLC.DataSource = ds.Tables[0];
+            cmb_PLC.DisplayMember = "PLCNM";
+            cmb_PLC.ValueMember = "PLCCD";
+            cmb_PLC.SelectedValueChanged += Cmb_PLC_SelectedValueChanged;
+        }
+
+        private Thread[] myThread;
+        private Thread saveThread;
+
+        private static Dictionary<string, string> status = new Dictionary<string, string>();
+        private static Dictionary<string, DataSet> _GlobalSet = new Dictionary<string, DataSet>();
+        private static Dictionary<string, string> plcdata = new Dictionary<string, string>();
+        private static Dictionary<string, string> plcdata1 = new Dictionary<string, string>();
+        private void Main_Load(object sender, EventArgs e)
+        {
+            if (Process.GetProcessesByName("ItsPlc").Length > 1)
+            {
+                string msg = "프로그램이 현재 실행중입니다.   ";
+                MessageBox.Show(msg, ":: Its Debug ::", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                this.Close();
+            }
+
+            ItsMaria.Set("PLC_GATHERING_NET", "LIST_PLC");
+            DataSet ds = ItsMaria.Call();
+            if (ds.Tables[2].Rows.Count > 0)
+            {
+                comboBox_MECH.DataSource = ds.Tables[2];
+                comboBox_MECH.DisplayMember = "PLCNM";
+                comboBox_MECH.ValueMember = "PLCCD";
+            }
+            else
+            {
+                comboBox_MECH.DataSource = null;
+            }
+
+            label_colock.Text = DateTime.Now.ToString();
+            timer1.Interval = 100;
+            timer1.Start();
+
+            timer2.Interval = 1000;
+            timer2.Stop();
+
+            // 프로그램 open과 동시에 수집 시작
+            btnRun_Click(null, null);
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            timer1.Stop();
+
+            label_colock.Text = DateTime.Now.ToString();
+
+            try
+            {
+                ItsMaria.Set("PLC_GATHERING_NET", "MONT");
+                ItsMaria.AddOne("EQMCD", comboBox_MECH.SelectedValue.ToString());
+               
+                DataSet ds = ItsMaria.Call();
+                dataGridView1.DataSource = ds.Tables[0];
+                dataGridView1.ClearSelection();
+
+                if (dataGridView1.Rows.Count > _ScrollValue)
+                {
+                    dataGridView1.FirstDisplayedScrollingRowIndex = _ScrollValue;
+                }
+
+                ItsMaria.Set("PLC_GATHERING_NET", "STATUS");
+                if (checkBox1.Checked)
+                {
+                    ItsMaria.AddOne("ERRYN", "Y");
+                }
+                else
+                {
+                    ItsMaria.AddOne("ERRYN", "N");
+                }
+
+                ds = ItsMaria.Call();
+                dataGridView2.DataSource = ds.Tables[0];
+
+                for (int i = 0; i < dataGridView2.Rows.Count; i++)
+                {
+                    if (dataGridView2.Rows[i].Cells["STATUS"].Value.ToString() == "ERROR")
+                    {
+                        dataGridView2.Rows[i].DefaultCellStyle.ForeColor = Color.Yellow;
+                    }
+                }
+
+                dataGridView2.ClearSelection();
+
+                if (dataGridView2.Rows.Count > _ScrollValue1)
+                {
+                    dataGridView2.FirstDisplayedScrollingRowIndex = _ScrollValue1;
+                }
+
+                Application.DoEvents();
+            }
+            catch { }
+            finally
+            {
+                timer1.Start();
+            }
+        }
+
+        private void timer2_Tick(object sender, EventArgs e)
+        {
+            timer2.Stop();
+
+            try
+            {
+                ItsMaria.Set("PLC_GATHERING_NET", "RECORD");
+                ItsMaria.Call();
+
+                Application.DoEvents();
+            }
+            catch { }
+
+            finally
+            {
+                timer2.Start();
+            }
+        }
+
+
+        private void work(object PLCCDSTR)
+        {
+            string plccode = PLCCDSTR.ToString().Substring(4);
+            string threadid = PLCCDSTR.ToString().Substring(0, 4);
+
+            string file = plccode + "_" + threadid + ".txt";
+
+            //나중에 문서될 시 로컬에 에러찍어보기 위함
+            //if (!System.IO.File.Exists(file))
+            //{
+            //    System.IO.File.WriteAllText(file, "");
+            //}
+
+            while (true)
+            {
+                Thread.Sleep(2000);
+
+                StringBuilder aaa = new StringBuilder();
+                aaa.AppendLine("start: " + DateTime.Now.ToString());
+
+                try
+                { 
+                    aaa.AppendLine("t1: " + DateTime.Now.ToString());
+
+                    DataTable plc_list = _GlobalSet[plccode].Tables[1];
+                    foreach (DataRow row in plc_list.Rows)
+                    {
+                        string plccd = row["PLCCD"].ToString();
+                        string plcip = row["PLCIP"].ToString();
+                        string plcport = row["PLCPORT"].ToString();
+                        string saddr = row["SADDR"].ToString();
+                        string eaddr = row["EADDR"].ToString();
+                        string frametp = row["FRAMETP"].ToString();
+
+                        aaa.AppendLine("read: " + DateTime.Now.ToString());
+
+                        //네가지 기종 별 함 수 호출
+                        if (frametp == "MEL_TCP")
+                        {
+                            ItsPlcNet.Read_MEL_TCP(plcip, Convert.ToInt32(plcport), saddr, eaddr, ref plcdata, plccd);
+                        }
+                        else if (frametp == "XG_TCP")
+                        {
+                            ItsPlcNet.Read_XG_TCP(plcip, plcport, saddr, eaddr, ref plcdata, plccd);
+                        }
+                        else if (frametp == "NETEYE")
+                        {
+                            ItsPlcNet.Read_NETEYE(plcip, Convert.ToInt32(plcport), saddr, eaddr, ref plcdata, plccd);
+                        }
+                        else if (frametp == "MEL_A")
+                        {
+                            ItsPlcNet.Read_MEL_A(plcip, Convert.ToInt32(plcport), saddr, eaddr, ref plcdata, plccd);
+                        }
+
+                        aaa.Append(" - " + DateTime.Now.ToString());
+                    }
+
+                    aaa.AppendLine("t2: " + DateTime.Now.ToString());
+
+                    aaa.AppendLine("t3: " + DateTime.Now.ToString());
+
+                    ReduceMemory();
+                }
+
+                catch (Exception ex)
+                {
+                    string file2 = plccode + "_" + System.DateTime.Now.ToString("yyyy-MM-dd") + ".txt";
+
+                    if (!System.IO.File.Exists(file2))
+                    {
+                        System.IO.File.AppendAllText(file2, "\r\n" + plccode + "\r\n" + ex);
+                    }
+                    else
+                    {
+                        System.IO.File.AppendAllText(file2, "\r\n" + plccode + "\r\n" + ex);
+                    }
+
+                    ReduceMemory();
+                }
+                finally
+                {
+                    status[plccode] = "N";
+                }
+
+                aaa.AppendLine("end: " + DateTime.Now.ToString());
+
+                //string text = System.IO.File.ReadAllText(file);
+                //System.IO.File.WriteAllText(file, text + aaa.ToString());
+            }
+        }
+
+        int _FRM0strtimeflag = 10;
+        int _FRM0endtimeflag = 10;
+        int _FRM1strtimeflag = 10;
+        int _FRM1endtimeflag = 10;
+
+        private void SavePlcData(object aaa)
+        {
+            // sysplccur 현재 값 업데이트
+            while (true)
+            {
+                try
+                {
+                    System.Threading.Thread.Sleep(3000);
+
+                    ItsMariaThread maria = new ItsMariaThread();
+
+                    maria.Set("PLC_GATHERING_NET", "UP_CUR");
+                    for (int i = 0; i < plcdata.Count; i++)
+                    {
+                        maria.AddList("ADDRKEYLIST", plcdata.Keys.ToList()[i]);
+                        maria.AddList("VALUELIST", plcdata[plcdata.Keys.ToList()[i]]);
+                    }
+                    DataSet ds_siren = maria.Call();
+
+                    // 2023-12-26 PLC쓰기 옵션값 체크
+                    //if (ds_siren.Tables[0].Rows.Count > 0)
+                    //{
+                    //    foreach (DataRow row in ds_siren.Tables[0].Rows)
+                    //    {
+                    //        string plcip = row["PLCIP"].ToString();
+                    //        string plcport = row["PLCPORT"].ToString();
+                    //        string address = row["PLCADDR"].ToString();
+                    //        string data = row["WRITEVALUE"].ToString();
+
+                    //        ItsPlcNet.Write_XG_TCP(plcip, Int32.Parse(plcport), address, data);
+                    //    }
+                    //}
+                }
+                catch(Exception ex)
+                {
+                    Log.This.ErrLog_main("SavePlcData Error => " + ex.Message);
+                }
+            }
+        }
+
+        private void btnRun_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                saveThread = new Thread(new ParameterizedThreadStart(SavePlcData));
+                saveThread.IsBackground = true;
+                saveThread.Start("");
+
+                dataGridView2.DataSource = null;
+
+                btnStop.Enabled = true;
+                btnRun.Enabled = false;
+                cmb_PLC.Enabled = false;
+
+                string line;
+
+                ItsMaria.Set("PLC_GATHERING_NET", "LIST_PLC");
+                ItsMaria.AddOne("EQMCD", cmb_PLC.SelectedValue);
+                DataSet ds = ItsMaria.Call();
+                string aa = "";
+
+                myThread = new Thread[ds.Tables[2].Rows.Count];
+                for (int i = 0; i < ds.Tables[2].Rows.Count; i++)
+                {
+                    line = ds.Tables[2].Rows[i][0].ToString();
+
+                    ItsMaria.Set("PLC_GATHERING_NET", "LIST_PLC_SINGLE");
+                    ItsMaria.AddOne("EQMCD", line.ToString());
+                    DataSet ds1 = ItsMaria.Call();
+                    try
+                    {
+                        aa = line;
+                        _GlobalSet.Add(line, ds1);
+
+                        foreach (DataRow row in ds1.Tables[0].Rows)
+                        {
+                            string plckey = row["PLCKEY"].ToString();
+                            if (!plcdata.ContainsKey(plckey))
+                            {
+                                plcdata.Add(plckey, row["PLCVALUE"].ToString());
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+
+                    }
+
+                    string threadid = "0000" + i;
+                    threadid = threadid.Substring(threadid.Length - 4, 4);
+
+                    myThread[i] = new Thread(new ParameterizedThreadStart(work));
+                    myThread[i].IsBackground = true;
+                    myThread[i].Start(threadid + line.ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+
+        private void btnStop_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                btnRun.Enabled = true;
+                btnStop.Enabled = false;
+                cmb_PLC.Enabled = true;
+
+                for (int i = 0; i < myThread.Length; i++)
+                {
+                    if (myThread[i] != null)
+                    {
+                        try
+                        {
+                            myThread[i].Abort();
+                        }
+                        catch
+                        {
+                        }
+                    }
+                }
+
+                try
+                {
+                    saveThread.Abort();
+                }
+                catch
+                {
+                    // ReduceMemory();
+                }
+            }
+            catch { }
+        }
+
+        private void Main_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            DialogResult result = MessageBox.Show("프로그램을 종료하시겠습니까?", "종료여부", MessageBoxButtons.YesNo);
+
+            if (result == DialogResult.No)
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            btnStop_Click(null, null);
+        }
+
+        private void button_singleRead_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string mode = "";
+
+                if (radioButton_1.Checked) // 멜섹Q
+                {
+                    mode = "MELSEC1";
+                    if (!plcdata1.ContainsKey("A" + textBox_addr.Text))
+                    {
+                        plcdata1.Add("A" + textBox_addr.Text, "");
+                    }
+                    ItsPlcNet.Read_MEL_TCP(textBox_ip.Text, Convert.ToInt32(textBox_port.Text), textBox_addr.Text, textBox_addr.Text, ref plcdata1, "A");
+                    textBox_value.Text = plcdata1["A" + textBox_addr.Text].ToString();
+                }
+               else if (radioButton_2.Checked) //멜섹A
+                {
+                    if (!plcdata1.ContainsKey("A" + textBox_addr.Text))
+                    {
+                        plcdata1.Add("A" + textBox_addr.Text, "");
+                    }
+
+                    textBox_value.Text = ItsPlcNet._Read_MEL_A_SINGLE(textBox_ip.Text, Convert.ToInt32(textBox_port.Text), textBox_addr.Text, textBox_addr.Text, "", true);
+                }
+                else if (radioButton_4.Checked) //NETEYE
+                {
+                    if (!plcdata1.ContainsKey("A" + textBox_addr.Text))
+                    {
+                        plcdata1.Add("A" + textBox_addr.Text, "");
+                    }
+                    textBox_value.Text = ItsPlcNet._Read_NETEYE_SINGLE(textBox_ip.Text, Convert.ToInt32(textBox_port.Text), textBox_addr.Text, textBox_addr.Text, "", true);
+                }
+                else //XGT
+                {
+                    //mode = "XGT";
+                    //textBox_value.Text = ItsPlc.Read(textBox_ip.Text, textBox_port.Text, mode, textBox_addr.Text, "1");
+
+                    if (!plcdata1.ContainsKey("A" + textBox_addr.Text))
+                    {
+                        plcdata1.Add("A" + textBox_addr.Text, "");
+                    }
+                    ItsPlcNet.Read_XG_TCP(textBox_ip.Text, textBox_port.Text, textBox_addr.Text, textBox_addr.Text, ref plcdata1, "A");
+                    textBox_value.Text = plcdata1["A" + textBox_addr.Text].ToString();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+        }
+
+        private void button_wTest_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string mode = "";
+                if (radioButton_1.Checked)
+                {
+                    mode = "MELSEC1";
+                }
+                else
+                {
+                    mode = "XGT";
+                }
+                ItsPlcNet.Write_XG_TCP(textBox_wIP.Text, Int32.Parse(textBox_wPort.Text), textBox_wAddr.Text, textBox_wValue.Text);
+            }
+            catch { }
+        }
+
+        int _ScrollValue = 0;
+        private void dgvVehicles_Scroll(object sender, ScrollEventArgs e)
+        {
+            if (e.ScrollOrientation == ScrollOrientation.VerticalScroll)
+            {
+                _ScrollValue = e.NewValue;
+            }
+        }
+        int _ScrollValue1 = 0;
+        private void dgvVehicles_Scroll1(object sender, ScrollEventArgs e)
+        {
+            if (e.ScrollOrientation == ScrollOrientation.VerticalScroll)
+            {
+                _ScrollValue1 = e.NewValue;
+            }
+        }
+
+        private void ReduceMemory()
+        {
+            Process A = Process.GetCurrentProcess();
+            A.MaxWorkingSet = Process.GetCurrentProcess().MaxWorkingSet;
+            A.Dispose();
+        }
+
+        private void comboBox_MECH_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                string[] info = comboBox_MECH.Text.Split('■');
+                textBox_ip.Text = info[2];
+                textBox_port.Text = info[3];
+                if (info[4] == "XG_TCP")
+                {
+                    radioButton_3.Checked = true;
+                    radioButton_1.Checked = false;
+                    radioButton_2.Checked = false;
+                    radioButton_4.Checked = false;
+                }
+                if (info[4] == "MEL_TCP")
+                {
+                    radioButton_1.Checked = true;
+                    radioButton_3.Checked = false;
+                    radioButton_2.Checked = false;
+                    radioButton_4.Checked = false;
+                }
+                if (info[4] == "MEL_A")
+                {
+                    radioButton_2.Checked = true;
+                    radioButton_1.Checked = false;
+                    radioButton_3.Checked = false;
+                    radioButton_4.Checked = false;
+                }
+                if (info[4] == "NETEYE")
+                {
+                    radioButton_4.Checked = true;
+                    radioButton_2.Checked = false;
+                    radioButton_1.Checked = false;
+                    radioButton_3.Checked = false;
+                }
+            }
+            catch { }
+        }
+
+        private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            try
+            {
+                textBox_addr.Text = dataGridView1.Rows[e.RowIndex].Cells["PLCADDR"].Value.ToString();
+            }
+            catch { }
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox1.Checked) checkBox2.Checked = false;
+        }
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox2.Checked) checkBox1.Checked = false;
+        }
+
+
+        private void Cmb_PLC_SelectedValueChanged(object sender, EventArgs e)
+        {
+            ItsMaria.Set("PLC_GATHERING_NET", "LIST_PLC");
+            ItsMaria.AddOne("EQMCD", cmb_PLC.SelectedValue);    // PLC선택시 코드 전송
+            DataSet ds = ItsMaria.Call();
+            if (ds.Tables[2].Rows.Count > 0)
+            {
+                comboBox_MECH.DataSource = ds.Tables[2];
+                comboBox_MECH.DisplayMember = "PLCNM";
+                comboBox_MECH.ValueMember = "PLCCD";
+            }
+        }
+    }
+}

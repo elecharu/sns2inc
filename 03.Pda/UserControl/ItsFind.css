@@ -1,0 +1,163 @@
+﻿div.ItsFind {
+    float:left;
+    display:inline-block;
+    width:auto;
+    height:auto;
+    margin-right:2px;
+    background-color:transparent;
+    box-sizing: initial !important;
+}
+div.ItsFind_table {
+    display:table-cell;
+    background-color:transparent;
+    vertical-align:middle;
+    height:32px;
+    /*font-size:0px;*/
+}
+div.ItsFind_table > span {
+    vertical-align:middle;
+    display:inline-block;
+    text-align:right;
+    background-color:transparent; 
+    margin-right:4px;
+    /*font-size:12px;*/
+    white-space: normal;
+}
+div.ItsFind_box {
+    vertical-align:middle;
+    display:inline-block;
+    background-color:transparent; 
+    /*font-size:0px;*/
+}
+div.ItsFind_box > input {
+    padding:4px 28px 4px 6px;
+    height:18px;
+    border:1px solid silver;
+    /*font-size:12px;*/
+    float:left;
+    box-sizing: content-box;
+    line-height: 18px;
+}
+div.ItsFind_box > input:focus {
+    border: 1px solid gray;
+    background-color:mintcream;
+}
+
+div.ItsFind_box > span.ItsFind_name {
+    display: inline-block;
+    float:left;
+    background-color:aliceblue;
+    height: 28px;
+    line-height:28px;
+    /*padding-top:4px;*/
+    padding-left:4px;
+    border: 1px solid silver;
+    border-left:none;
+    /*font-size:12px;*/
+    overflow:hidden;
+    box-sizing: border-box;
+}
+
+div.ItsFind_button {
+    float:left;
+    display:inline-block;
+    overflow:hidden;
+    vertical-align:middle;
+    height:28px;
+    width:24px;
+    margin-left:-24px;
+    text-align:center;
+    border:1px solid silver;
+    background-color:aliceblue;
+    font-size:11px;
+    box-sizing: border-box !important;
+}
+
+div.ItsFind_button > i {
+    margin-top:8px;
+    font-size:11px;
+}
+
+div.ItsFind_box > div.ItsControl_pop
+{
+    visibility:hidden;
+    display:block;
+    padding:0px;
+    margin:0px;
+    margin-top:26px;
+    position:fixed;
+    list-style:none;
+    z-index:99999999;
+    border:1px solid silver;
+    /*font-size:12px;*/
+    background-color:aliceblue;
+    left:0;
+}
+
+div.ItsFind_box > div.ItsControl_pop > ul
+{
+    padding:0px;
+    margin:0px;
+    list-style:none;
+    max-height:300px;
+    overflow-y:auto;
+    /*font-size:12px;*/
+    background-color:white;
+}
+
+div.ItsFind_box > div.ItsControl_pop > ul > li {
+    display: block;
+    word-wrap: unset;
+    vertical-align: middle;
+    background-color: white;
+    min-height: 20px;
+    border-bottom: solid 1px silver;
+}
+div.ItsFind_box > div.ItsControl_pop span.list {
+    display:inline-block;
+    padding:5px;
+    overflow-x:hidden;
+    vertical-align:top;
+}
+div.ItsFind_box > div.ItsControl_pop span.no {
+    display:inline-block;
+    width:30px;
+    text-align:center;
+    padding:5px;
+    overflow-x:hidden;
+    vertical-align:top;
+}
+div.ItsFind_box > div.ItsControl_pop > ul > li.select {
+    background-color:aliceblue;
+}
+div.ItsFind_box > div.ItsControl_pop > ul > li.over {
+    background-color:whitesmoke;
+}
+div.ItsFind.readonly input {
+    background-color:aliceblue;
+}
+div.ItsFind.readonly div.ItsFind_button {
+    color:silver;
+}
+
+div.ItsFind_limit {
+    vertical-align:middle;
+    display:table;
+    background-color:transparent;
+}
+div.ItsFind_limit > span {
+    display: inline-block;
+    vertical-align: middle;
+    height: 20px;
+    background-color: whitesmoke;
+    border: 1px solid silver;
+    text-align: center;
+    margin: 5px 0px 5px 10px;
+    padding: 2px 5px 0px 5px;
+    cursor: pointer;
+    font-size: 12px;
+}
+div.ItsFind_limit > span.select {
+    background-color:indianred;
+    color:white;
+}

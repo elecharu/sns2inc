@@ -1,0 +1,419 @@
+﻿namespace ITSSCHEDULER
+{
+    partial class MainForm
+    {
+        /// <summary>
+        /// 必需的设计器变量。
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// 清理所有正在使用的资源。
+        /// </summary>
+        /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows 窗体设计器生成的代码
+
+        /// <summary>
+        /// 设计器支持所需的方法 - 不要修改
+        /// 使用代码编辑器修改此方法的内容。
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.PLCCD = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.PLCADDR = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.EQMCD = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.EQMNM = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.PLCVALUE = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.REMARK = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.MTIME = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.btnSearch = new System.Windows.Forms.Button();
+            this.lbl_err = new System.Windows.Forms.Label();
+            this.textBoxValue = new System.Windows.Forms.TextBox();
+            this.button_rTest = new System.Windows.Forms.Button();
+            this.textBoxAddr = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.textBoxPort = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.textBoxIp = new System.Windows.Forms.TextBox();
+            this.textBoxValue2 = new System.Windows.Forms.TextBox();
+            this.button_wTest = new System.Windows.Forms.Button();
+            this.textBoxAddr2 = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.textBoxPort2 = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.textBoxIp2 = new System.Windows.Forms.TextBox();
+            this.contextMenuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.SuspendLayout();
+            // 
+            // notifyIcon1
+            // 
+            this.notifyIcon1.ContextMenuStrip = this.contextMenuStrip1;
+            this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
+            this.notifyIcon1.Text = "notifyIcon1";
+            this.notifyIcon1.Visible = true;
+            this.notifyIcon1.Click += new System.EventHandler(this.notifyIcon1_Click);
+            this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.closeToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(145, 26);
+            // 
+            // closeToolStripMenuItem
+            // 
+            this.closeToolStripMenuItem.Font = new System.Drawing.Font("굴림", 9F);
+            this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.closeToolStripMenuItem.Text = "프로그램종료";
+            this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
+            // 
+            // dataGridView1
+            // 
+            this.dataGridView1.AllowUserToAddRows = false;
+            this.dataGridView1.AllowUserToDeleteRows = false;
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.PLCCD,
+            this.Column1,
+            this.Column2,
+            this.Column3,
+            this.PLCADDR,
+            this.EQMCD,
+            this.EQMNM,
+            this.PLCVALUE,
+            this.REMARK,
+            this.MTIME});
+            this.dataGridView1.Location = new System.Drawing.Point(2, 53);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.ReadOnly = true;
+            this.dataGridView1.RowTemplate.Height = 23;
+            this.dataGridView1.Size = new System.Drawing.Size(1400, 649);
+            this.dataGridView1.TabIndex = 1;
+            // 
+            // PLCCD
+            // 
+            this.PLCCD.DataPropertyName = "PLCCD";
+            this.PLCCD.HeaderText = "PLC번호";
+            this.PLCCD.Name = "PLCCD";
+            this.PLCCD.ReadOnly = true;
+            // 
+            // Column1
+            // 
+            this.Column1.DataPropertyName = "PLCNM";
+            this.Column1.HeaderText = "PLC명";
+            this.Column1.Name = "Column1";
+            this.Column1.ReadOnly = true;
+            // 
+            // Column2
+            // 
+            this.Column2.DataPropertyName = "PLCIP";
+            this.Column2.HeaderText = "PLC IP";
+            this.Column2.Name = "Column2";
+            this.Column2.ReadOnly = true;
+            // 
+            // Column3
+            // 
+            this.Column3.DataPropertyName = "PLCPORT";
+            this.Column3.HeaderText = "PLC포트";
+            this.Column3.Name = "Column3";
+            this.Column3.ReadOnly = true;
+            // 
+            // PLCADDR
+            // 
+            this.PLCADDR.DataPropertyName = "PLCADDR";
+            this.PLCADDR.HeaderText = "PLC번지";
+            this.PLCADDR.Name = "PLCADDR";
+            this.PLCADDR.ReadOnly = true;
+            // 
+            // EQMCD
+            // 
+            this.EQMCD.DataPropertyName = "EQMCD";
+            this.EQMCD.HeaderText = "설비코드";
+            this.EQMCD.Name = "EQMCD";
+            this.EQMCD.ReadOnly = true;
+            // 
+            // EQMNM
+            // 
+            this.EQMNM.DataPropertyName = "EQMNM";
+            this.EQMNM.HeaderText = "설비명";
+            this.EQMNM.Name = "EQMNM";
+            this.EQMNM.ReadOnly = true;
+            this.EQMNM.Width = 150;
+            // 
+            // PLCVALUE
+            // 
+            this.PLCVALUE.DataPropertyName = "PLCVALUE";
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            this.PLCVALUE.DefaultCellStyle = dataGridViewCellStyle1;
+            this.PLCVALUE.HeaderText = "항목값";
+            this.PLCVALUE.Name = "PLCVALUE";
+            this.PLCVALUE.ReadOnly = true;
+            // 
+            // REMARK
+            // 
+            this.REMARK.DataPropertyName = "REMARK";
+            this.REMARK.HeaderText = "항목명";
+            this.REMARK.Name = "REMARK";
+            this.REMARK.ReadOnly = true;
+            this.REMARK.Width = 300;
+            // 
+            // MTIME
+            // 
+            this.MTIME.DataPropertyName = "MTIME";
+            this.MTIME.FillWeight = 200F;
+            this.MTIME.HeaderText = "업데이트";
+            this.MTIME.Name = "MTIME";
+            this.MTIME.ReadOnly = true;
+            this.MTIME.Width = 200;
+            // 
+            // btnSearch
+            // 
+            this.btnSearch.Location = new System.Drawing.Point(744, 4);
+            this.btnSearch.Name = "btnSearch";
+            this.btnSearch.Size = new System.Drawing.Size(468, 45);
+            this.btnSearch.TabIndex = 2;
+            this.btnSearch.Text = "현재값 조회";
+            this.btnSearch.UseVisualStyleBackColor = true;
+            this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
+            // 
+            // lbl_err
+            // 
+            this.lbl_err.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lbl_err.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lbl_err.Font = new System.Drawing.Font("굴림", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lbl_err.Location = new System.Drawing.Point(223, 245);
+            this.lbl_err.Name = "lbl_err";
+            this.lbl_err.Size = new System.Drawing.Size(630, 421);
+            this.lbl_err.TabIndex = 3;
+            this.lbl_err.Text = "lbl_err";
+            this.lbl_err.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lbl_err.Visible = false;
+            // 
+            // textBoxValue
+            // 
+            this.textBoxValue.Location = new System.Drawing.Point(127, 28);
+            this.textBoxValue.Name = "textBoxValue";
+            this.textBoxValue.Size = new System.Drawing.Size(54, 21);
+            this.textBoxValue.TabIndex = 116;
+            // 
+            // button_rTest
+            // 
+            this.button_rTest.BackColor = System.Drawing.Color.SeaGreen;
+            this.button_rTest.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.button_rTest.ForeColor = System.Drawing.Color.White;
+            this.button_rTest.Location = new System.Drawing.Point(183, 26);
+            this.button_rTest.Name = "button_rTest";
+            this.button_rTest.Size = new System.Drawing.Size(84, 25);
+            this.button_rTest.TabIndex = 115;
+            this.button_rTest.Text = "READ";
+            this.button_rTest.UseVisualStyleBackColor = false;
+            this.button_rTest.Click += new System.EventHandler(this.button_rTest_Click);
+            // 
+            // textBoxAddr
+            // 
+            this.textBoxAddr.Location = new System.Drawing.Point(72, 28);
+            this.textBoxAddr.Name = "textBoxAddr";
+            this.textBoxAddr.Size = new System.Drawing.Size(49, 21);
+            this.textBoxAddr.TabIndex = 114;
+            // 
+            // label1
+            // 
+            this.label1.BackColor = System.Drawing.Color.Transparent;
+            this.label1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label1.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label1.ForeColor = System.Drawing.Color.Black;
+            this.label1.Location = new System.Drawing.Point(2, 28);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(64, 21);
+            this.label1.TabIndex = 113;
+            this.label1.Text = "번지";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // textBoxPort
+            // 
+            this.textBoxPort.Location = new System.Drawing.Point(183, 4);
+            this.textBoxPort.Name = "textBoxPort";
+            this.textBoxPort.Size = new System.Drawing.Size(82, 21);
+            this.textBoxPort.TabIndex = 112;
+            // 
+            // label2
+            // 
+            this.label2.BackColor = System.Drawing.Color.Transparent;
+            this.label2.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label2.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label2.ForeColor = System.Drawing.Color.Black;
+            this.label2.Location = new System.Drawing.Point(2, 4);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(65, 21);
+            this.label2.TabIndex = 111;
+            this.label2.Text = "IP/PORT";
+            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // textBoxIp
+            // 
+            this.textBoxIp.Location = new System.Drawing.Point(72, 4);
+            this.textBoxIp.Name = "textBoxIp";
+            this.textBoxIp.Size = new System.Drawing.Size(109, 21);
+            this.textBoxIp.TabIndex = 110;
+            // 
+            // textBoxValue2
+            // 
+            this.textBoxValue2.Location = new System.Drawing.Point(423, 28);
+            this.textBoxValue2.Name = "textBoxValue2";
+            this.textBoxValue2.Size = new System.Drawing.Size(54, 21);
+            this.textBoxValue2.TabIndex = 123;
+            // 
+            // button_wTest
+            // 
+            this.button_wTest.BackColor = System.Drawing.Color.SeaGreen;
+            this.button_wTest.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.button_wTest.ForeColor = System.Drawing.Color.White;
+            this.button_wTest.Location = new System.Drawing.Point(479, 26);
+            this.button_wTest.Name = "button_wTest";
+            this.button_wTest.Size = new System.Drawing.Size(84, 25);
+            this.button_wTest.TabIndex = 122;
+            this.button_wTest.Text = "WRITE";
+            this.button_wTest.UseVisualStyleBackColor = false;
+            this.button_wTest.Click += new System.EventHandler(this.button_wTest_Click);
+            // 
+            // textBoxAddr2
+            // 
+            this.textBoxAddr2.Location = new System.Drawing.Point(368, 28);
+            this.textBoxAddr2.Name = "textBoxAddr2";
+            this.textBoxAddr2.Size = new System.Drawing.Size(49, 21);
+            this.textBoxAddr2.TabIndex = 121;
+            // 
+            // label3
+            // 
+            this.label3.BackColor = System.Drawing.Color.Transparent;
+            this.label3.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label3.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label3.ForeColor = System.Drawing.Color.Black;
+            this.label3.Location = new System.Drawing.Point(298, 28);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(64, 21);
+            this.label3.TabIndex = 120;
+            this.label3.Text = "번지";
+            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // textBoxPort2
+            // 
+            this.textBoxPort2.Location = new System.Drawing.Point(479, 4);
+            this.textBoxPort2.Name = "textBoxPort2";
+            this.textBoxPort2.Size = new System.Drawing.Size(82, 21);
+            this.textBoxPort2.TabIndex = 119;
+            // 
+            // label4
+            // 
+            this.label4.BackColor = System.Drawing.Color.Transparent;
+            this.label4.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label4.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label4.ForeColor = System.Drawing.Color.Black;
+            this.label4.Location = new System.Drawing.Point(298, 4);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(65, 21);
+            this.label4.TabIndex = 118;
+            this.label4.Text = "IP/PORT";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // textBoxIp2
+            // 
+            this.textBoxIp2.Location = new System.Drawing.Point(368, 4);
+            this.textBoxIp2.Name = "textBoxIp2";
+            this.textBoxIp2.Size = new System.Drawing.Size(109, 21);
+            this.textBoxIp2.TabIndex = 117;
+            // 
+            // MainForm
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(1414, 704);
+            this.Controls.Add(this.textBoxValue2);
+            this.Controls.Add(this.button_wTest);
+            this.Controls.Add(this.textBoxAddr2);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.textBoxPort2);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.textBoxIp2);
+            this.Controls.Add(this.textBoxValue);
+            this.Controls.Add(this.button_rTest);
+            this.Controls.Add(this.textBoxAddr);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.textBoxPort);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.textBoxIp);
+            this.Controls.Add(this.lbl_err);
+            this.Controls.Add(this.btnSearch);
+            this.Controls.Add(this.dataGridView1);
+            this.Font = new System.Drawing.Font("굴림", 9F);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Name = "MainForm";
+            this.Text = "Its Schedule Service";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Load += new System.EventHandler(this.MainForm_Load);
+            this.contextMenuStrip1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.ResumeLayout(false);
+            this.PerformLayout();
+
+        }
+
+        #endregion
+        private System.Windows.Forms.NotifyIcon notifyIcon1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
+        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.Button btnSearch;
+        private System.Windows.Forms.Label lbl_err;
+        private System.Windows.Forms.TextBox textBoxValue;
+        private System.Windows.Forms.Button button_rTest;
+        private System.Windows.Forms.TextBox textBoxAddr;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox textBoxPort;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox textBoxIp;
+        private System.Windows.Forms.DataGridViewTextBoxColumn PLCCD;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Column3;
+        private System.Windows.Forms.DataGridViewTextBoxColumn PLCADDR;
+        private System.Windows.Forms.DataGridViewTextBoxColumn EQMCD;
+        private System.Windows.Forms.DataGridViewTextBoxColumn EQMNM;
+        private System.Windows.Forms.DataGridViewTextBoxColumn PLCVALUE;
+        private System.Windows.Forms.DataGridViewTextBoxColumn REMARK;
+        private System.Windows.Forms.DataGridViewTextBoxColumn MTIME;
+        private System.Windows.Forms.TextBox textBoxValue2;
+        private System.Windows.Forms.Button button_wTest;
+        private System.Windows.Forms.TextBox textBoxAddr2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox textBoxPort2;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox textBoxIp2;
+    }
+}
+

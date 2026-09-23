@@ -1,0 +1,73 @@
+﻿div.ItsOnoff {
+    display:inline-block;
+    float:left;
+    width:auto;
+    height:auto;
+    margin-right:2px;
+    background-color:transparent;
+    box-sizing: initial !important;
+    /*width:200px;*/
+}
+div.ItsOnoff_table {
+    display:table-cell;
+    background-color:transparent;
+    vertical-align:middle;
+    height:20px;
+    /*font-size:0px;*/
+}
+
+div.ItsOnoff_button {
+    vertical-align:middle;
+    display:inline-block;
+    text-align: center;
+    margin-right:4px;
+    margin-top:2px;
+    background-color:aliceblue; 
+    color:dimGray;
+    /*font-size:12px;*/
+    padding: 0px 4px;
+    border-radius: 8px;
+    border: 1px solid #d0d0d0;
+    cursor:pointer;
+}
+
+.ItsOnoff_button > strong{
+    text-align:left;
+}
+
+strong.ItsOnoff_button_on {
+    vertical-align: middle;
+    display: inline-block;
+    text-align: center;
+    margin-right: 4px;
+    margin-left: 4px;
+    background-color: #5BC0DE;
+    color: white;
+    /*font-size: 12px;*/
+    padding: 0px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+strong.ItsOnoff_button_off {
+    vertical-align: middle;
+    display: inline-block;
+    text-align: center;
+    margin-right: 4px;
+    margin-left: 4px;
+    background-color: #5BC0DE;
+    color: white;
+    /*font-size: 12px;*/
+    padding: 0px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+div.ItsOnoff_table > span {
+    vertical-align: middle;
+    display: inline-block;
+    text-align: right;
+    margin-right: 4px;
+    background-color: transparent;
+    /*font-size: 12px;*/
+    white-space: normal;
+    margin-top:2px;
+}

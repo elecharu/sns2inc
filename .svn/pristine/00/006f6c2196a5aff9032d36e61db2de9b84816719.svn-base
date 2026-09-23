@@ -1,0 +1,257 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.IO;
+using System.Drawing;
+using System.Drawing.Printing;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
+using System.Reflection;
+using System.Management;
+using System.Xml;
+
+/// <summary>
+/// ComMate: 프린터 관련
+/// </summary>
+public class ItsPrinter
+{
+    /// <summary>
+    /// ComMate: 윈도우 API 정의
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    private class DOCINFOA
+    {
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string pDocName;
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string pOutputFile;
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string pDataType;
+    }
+    [DllImport("winspool.Drv", EntryPoint = "OpenPrinterA", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    private static extern bool OpenPrinter([MarshalAs(UnmanagedType.LPStr)] string szPrinter, out IntPtr hPrinter, IntPtr pd);
+
+    [DllImport("winspool.Drv", EntryPoint = "ClosePrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    private static extern bool ClosePrinter(IntPtr hPrinter);
+
+    [DllImport("winspool.Drv", EntryPoint = "StartDocPrinterA", SetLastError = true, CharSet = CharSet.Ansi, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    private static extern bool StartDocPrinter(IntPtr hPrinter, Int32 level, [In, MarshalAs(UnmanagedType.LPStruct)] DOCINFOA di);
+
+    [DllImport("winspool.Drv", EntryPoint = "EndDocPrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    private static extern bool EndDocPrinter(IntPtr hPrinter);
+
+    [DllImport("winspool.Drv", EntryPoint = "StartPagePrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    private static extern bool StartPagePrinter(IntPtr hPrinter);
+
+    [DllImport("winspool.Drv", EntryPoint = "EndPagePrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    private static extern bool EndPagePrinter(IntPtr hPrinter);
+
+    [DllImport("winspool.Drv", EntryPoint = "WritePrinter", SetLastError = true, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
+    private static extern bool WritePrinter(IntPtr hPrinter, IntPtr pBytes, Int32 dwCount, out Int32 dwWritten);
+
+    [DllImport("winspool.drv")]
+    private static extern bool SetDefaultPrinter(string printerName);
+
+    /// <summary>
+    /// ComMate: 프린터로 바이트 배열 날리기
+    /// </summary>
+    private static bool SendBytesToPrinter(string PrinterName, IntPtr pBytes, Int32 dwCount)
+    {
+        Int32 dwError = 0, dwWritten = 0;
+        IntPtr hPrinter = new IntPtr(0);
+        DOCINFOA di = new DOCINFOA();
+
+        di.pDocName = "ComMate C#.NET RAW Document";
+        di.pDataType = "RAW";
+
+        // 프린터 오픈
+        bool IsSuccess = false; // 성공여부
+        if (OpenPrinter(PrinterName.Normalize(), out hPrinter, IntPtr.Zero))
+        {
+            // 문서 시작
+            if (StartDocPrinter(hPrinter, 1, di))
+            {
+                // 페이지 시작
+                if (StartPagePrinter(hPrinter))
+                {
+                    // 바이트 쓰기
+                    IsSuccess = WritePrinter(hPrinter, pBytes, dwCount, out dwWritten);
+                    EndPagePrinter(hPrinter);
+                }
+                EndDocPrinter(hPrinter);
+            }
+            ClosePrinter(hPrinter);
+        }
+        // 실패시 에러메시지
+        if (IsSuccess == false)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("프린터를 연결할 수 없습니다.");
+            sb.AppendLine("");
+            sb.AppendLine("프린터명:{0}");
+            sb.AppendLine("에러코드:{1}");
+
+            dwError = Marshal.GetLastWin32Error();
+            String.Format(sb.ToString(), PrinterName, dwError);
+        }
+        return IsSuccess;
+    }
+    /// <summary>
+    /// ComMate: 프린터로 파일 날리기
+    /// </summary>
+    public static bool SendFileToPrinter(string PrinterName, string FilePath)
+    {
+        // 파일을 바이트배열로 변환
+        FileStream fs = new FileStream(FilePath, FileMode.Open);
+        BinaryReader br = new BinaryReader(fs);
+        int nLength = Convert.ToInt32(fs.Length);
+        Byte[] bytes = br.ReadBytes(nLength);
+
+        // 메모리 포인트
+        IntPtr pUnmanagedBytes = Marshal.AllocCoTaskMem(nLength);
+        Marshal.Copy(bytes, 0, pUnmanagedBytes, nLength);
+
+        // 바이트를 프린터로 전송
+        bool IsSuccess = SendBytesToPrinter(PrinterName, pUnmanagedBytes, nLength);
+
+        // 메모리 해제
+        Marshal.FreeCoTaskMem(pUnmanagedBytes);
+
+        return IsSuccess;
+    }
+    /// <summary>
+    /// ComMate: 프린터로 문자열 날리기
+    /// </summary>
+    public static bool SendStringToPrinter(string PrinterName, string CommandStr)
+    {
+        Int32 dwCount = CommandStr.Length;
+
+        // ANSI코드 기반 바이트배열로 전환
+        IntPtr pBytes = Marshal.StringToCoTaskMemAnsi(CommandStr);
+
+        // 바이트배열을 프린터로 전송
+        bool IsSuccess = SendBytesToPrinter(PrinterName, pBytes, dwCount);
+
+        // 메모리 해제
+        Marshal.FreeCoTaskMem(pBytes);
+
+        return IsSuccess;
+    }
+
+    /// <summary>
+    /// ComMate: 바코드 전용 프린트 이름 ( 설정되어 있지 않을 경우 기본 프린터 )
+    /// </summary>
+    public static string BarcodePrintName
+    {
+        get
+        {
+            try
+            {
+                return System.IO.File.ReadAllText("ConfigPrintBarcode.config");
+            }
+            catch
+            {
+                return DefaultPrintName;
+            }
+        }
+    }
+    /// <summary>
+    /// ComMate: 일반 프린터 이름 ( 설정되어 있지 않을 경우 기본 프린터 )
+    /// </summary>
+    public static string GeneralPrintName
+    {
+        get
+        {
+            try
+            {
+                return System.IO.File.ReadAllText("ConfigPrintGeneral.config");
+            }
+            catch
+            {
+                return DefaultPrintName;
+            }
+        }
+    }
+    /// <summary>
+    /// ComMate: 기본 프린터 이름
+    /// </summary>
+    public static string DefaultPrintName
+    {
+        get
+        {
+            System.Drawing.Printing.PrintDocument printDoc = new System.Drawing.Printing.PrintDocument();
+            return printDoc.PrinterSettings.PrinterName;
+        }
+    }
+    private static string _defaultPrintName = "";
+    /// <summary>
+    /// ComMate: 기본 프린터 변경
+    /// </summary>
+    public static void ChangeDefaultPrinter(string printerName)
+    {
+        _defaultPrintName = ItsPrinter.DefaultPrintName;
+        SetDefaultPrinter(printerName);
+    }
+    /// <summary>
+    /// ComMate: 변경전 기본 프린터로 되돌림
+    /// </summary>
+    public static void ResetDefaultPrinter()
+    {
+        if (_defaultPrintName.Trim() != "")
+        {
+            SetDefaultPrinter(_defaultPrintName);
+        }
+    }
+    /// <summary>
+    /// ComMate: 설치된 프린터 목록 가져오기
+    /// </summary>
+    public static string[] GetPrinterList()
+    {
+        int count = PrinterSettings.InstalledPrinters.Count;
+        string[] printerList = new string[count];
+        for (int i = 0; i < count; i++)
+        {
+            printerList[i] = PrinterSettings.InstalledPrinters[i];
+        }
+        return printerList;
+    }
+    /// <summary>
+    /// ComMate: 프린터 온라인 여부
+    /// </summary>
+    public static bool IsPrinterOnline(string printerName)
+    {
+        ManagementObjectCollection MgmtCollection;
+        ManagementObjectSearcher MgmtSearcher;
+
+        try
+        {
+            MgmtSearcher = new ManagementObjectSearcher("SELECT * FROM Win32_Printer");
+            MgmtCollection = MgmtSearcher.Get();
+
+            foreach (ManagementObject objWMI in MgmtCollection)
+            {
+                if (objWMI["Name"].ToString().ToLower() == printerName.ToLower())
+                {
+                    try
+                    {
+                        if (Convert.ToBoolean(objWMI["WorkOffline"]) == false)
+                        {
+                            return true;
+                        }
+                    }
+                    catch
+                    {
+                        // 에러 무시
+                    }
+                }
+            }
+
+        }
+        catch
+        {
+            // 에러 무시
+        }
+
+        return false;
+    }
+}

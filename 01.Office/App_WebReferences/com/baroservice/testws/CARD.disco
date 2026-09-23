@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<discovery xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://schemas.xmlsoap.org/disco/">
+  <contractRef ref="http://testws.baroservice.com/CARD.asmx?wsdl" docRef="http://testws.baroservice.com/CARD.asmx" xmlns="http://schemas.xmlsoap.org/disco/scl/" />
+  <soap address="http://testws.baroservice.com/CARD.asmx" xmlns:q1="http://ws.baroservice.com/" binding="q1:BaroService_CARDSoap" xmlns="http://schemas.xmlsoap.org/disco/soap/" />
+  <soap address="http://testws.baroservice.com/CARD.asmx" xmlns:q2="http://ws.baroservice.com/" binding="q2:BaroService_CARDSoap12" xmlns="http://schemas.xmlsoap.org/disco/soap/" />
+</discovery>

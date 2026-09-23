@@ -1,0 +1,147 @@
+﻿/// <reference path="../../Script/reference.js" />
+
+/* 페이지 로드 시 수행 */
+ItsPage.Load = function () {
+
+    // 2026-09-16 점검종류 그리드(grid1) 생성
+    ItsGrid.Create('grid1', { isCheckBoxGrid: true }, [
+        column.create('점검유형', 'CHKTP', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKTP', align: 'center' }),
+        column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
+        column.create('점검항목', 'CHKLOC', { width: 130, columnType: enumColumnTypes.combo, gpcd: 'CHKLOC', readOnly: false }),
+        column.create('점검명', 'CHKKNDNM', { width: 300, readOnly: false }),
+
+        column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', readOnly: false }),
+        column.create('점검주기', 'CHKCYCLE', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKCYCLE', readOnly: false }),
+        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', readOnly: false }),
+        column.create('사용여부', 'USEYN', { width: 80, columnType: enumColumnTypes.check, readOnly: false }),
+        column.create('비고', 'REMARK', { width: 150, readOnly: false }),
+
+        column.split()
+    ]);
+
+};
+
+/* 상단 메인 조회 버튼 */
+// 2026-09-16 상단 검색조건 패널(sdiv1) 기준 점검종류 목록 조회 및 그리드(grid1) 바인딩
+ItsButton.EventSearch = function () {
+    ItsGrid.Clear('grid1');
+
+    var maria = new ItsMaria('EQM1001_R02', 'LIST_MSTCHKKND');
+    maria.AddPanel('sdiv1');
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+    ItsGrid.SetStore('grid1', maria.store.YnToBool('USEYN'));
+    ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
+};
+
+/* 상단 메인 추가 버튼 */
+// 2026-09-16 점검항목 등록 모달 팝업(pop1) 열기 및 입력 폼(pdiv1) 초기화
+ItsButton.EventAdd = function () {
+    ItsPage.InitData('pdiv1');
+    ItsPop.Open('pop1');
+};
+
+// 2026-09-16 점검항목 등록 모달 팝업(pop1) 내 추가 버튼 클릭 시 신규 점검종류 등록 처리
+ItsPop.Event('pop1').onAddBtnClick = function () {
+    var maria = new ItsMaria('EQM1001_R02', 'ADD_MSTCHKKND');
+    maria.AddPanel('pdiv1');
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+    ItsMsg.Toast(ItsMsg.CommonMsg.AddComplete);
+    ItsPop.Close('pop1');
+    ItsButton.EventSearch();
+};
+
+// 2026-09-16 점검항목 등록 모달 팝업(pop1) 내 취소 버튼 클릭 시 팝업 닫기
+ItsPop.Event('pop1').onCancelBtnClick = function () {
+    ItsPop.Close('pop1');
+};
+
+/* 상단 메인 저장 버튼 */
+// 2026-09-16 그리드(grid1) 체크된 행의 점검종류 정보 일괄 수정 저장
+ItsButton.EventSave = function () {
+    var hasChecked = false;
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if (ItsGrid.IsChecked('grid1', i)) {
+            hasChecked = true;
+            break;
+        }
+    }
+
+    if (!hasChecked) {
+        ItsMsg.Toast('선택된 항목이 없습니다.');
+        return;
+    }
+
+    ItsMsg.Confirm('선택하신 항목을 저장하시겠습니까?', function () {
+
+        var maria = new ItsMaria('EQM1001_R02', 'SAVE_MSTCHKKND');
+        for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+            if (ItsGrid.IsChecked('grid1', i)) {
+                maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid1', i, 'CHKKNDCD'));
+                maria.AddList('CHKLOC_LIST', ItsGrid.GetValue('grid1', i, 'CHKLOC'));
+                maria.AddList('CHKKNDNM_LIST', ItsGrid.GetValue('grid1', i, 'CHKKNDNM'));
+                maria.AddList('CHKCYCLE_LIST', ItsGrid.GetValue('grid1', i, 'CHKCYCLE'));
+                maria.AddList('CHKMTH_LIST', ItsGrid.GetValue('grid1', i, 'CHKMTH'));
+                maria.AddList('CHKTP_LIST', ItsGrid.GetValue('grid1', i, 'CHKTP'));
+                maria.AddList('CHKVALTP_LIST', ItsGrid.GetValue('grid1', i, 'CHKVALTP'));
+                maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid1', i, 'REMARK'));
+                if (ItsGrid.GetValue('grid1', i, 'USEYN', false) == 'Y')
+                    maria.AddList('USEYN_LIST', 'Y');
+                else
+                    maria.AddList('USEYN_LIST', 'N');
+            }
+        }
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
+        ItsButton.EventSearch();
+    }, function () {
+        ItsMsg.Toast('저장이 취소되었습니다.');
+    });
+};
+
+/* 상단 메인 삭제 버튼 */
+// 2026-09-16 그리드(grid1) 체크된 행의 점검종류 일괄 삭제 처리 (루프 외부 단일 CallProc 호출)
+ItsButton.EventDelete = function () {
+    var hasChecked = false;
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if (ItsGrid.IsChecked('grid1', i)) {
+            hasChecked = true;
+            break;
+        }
+    }
+
+    if (!hasChecked) {
+        ItsMsg.Toast('선택된 항목이 없습니다.');
+        return;
+    }
+
+    ItsMsg.Confirm('선택한 항목을 삭제하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_R02', 'DELETE_MSTCHKKND');
+        for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+            if (ItsGrid.IsChecked('grid1', i)) {
+                maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid1', i, 'CHKKNDCD'));
+            }
+        }
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsMsg.Toast(ItsMsg.CommonMsg.DeleteComplete());
+        ItsButton.EventSearch();
+    }, function () {
+        ItsMsg.Toast('삭제가 취소되었습니다.');
+    });
+};

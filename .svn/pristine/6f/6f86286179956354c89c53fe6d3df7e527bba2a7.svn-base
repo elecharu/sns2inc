@@ -1,0 +1,650 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Data;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Diagnostics;
+using System.Windows.Input.Test;
+using DevExpress.Xpf.Grid;
+
+namespace ITSLIB
+{
+    /// <summary>
+    /// ItsLabelText.xaml 的交互逻辑
+    /// </summary>
+    public partial class Pop : UserControl
+    {
+        public ItsModelPanel ModelPanel = null;
+        public string FieldName = "";
+        ItsModelGrid MODEL_POP = new ItsModelGrid();
+        public Pop()
+        {
+            InitializeComponent();
+
+            MODEL_POP.Binding(gridView);
+            MODEL_POP.CellType("CODE", ItsEnums.CellTypes.Text);
+            MODEL_POP.CellType("NAME", ItsEnums.CellTypes.Text);
+            MODEL_POP.CellType("REF01", ItsEnums.CellTypes.Text);
+            MODEL_POP.CellType("REF02", ItsEnums.CellTypes.Text);
+            MODEL_POP.CellType("REF03", ItsEnums.CellTypes.Text);
+            MODEL_POP.CellType("REF04", ItsEnums.CellTypes.Text);
+            MODEL_POP.CellType("REF05", ItsEnums.CellTypes.Text);
+
+            this.Loaded += Pop_Loaded;
+
+            textCode.BorderBrush = Brushes.Silver;
+            textCode.BorderThickness = new Thickness(1d);
+            textCode.PreviewMouseDoubleClick += textCode_PreviewMouseDoubleClick;
+
+            foreach (Column col in gridView.Columns)
+            {
+                gridView.ClearColumnFilter(col);
+            }
+            gridView.ClearSorting();
+
+            (gridView.View as TableView).AllowEditing = false;
+            (gridView.View as TableView).BestFitMode = DevExpress.Xpf.Core.BestFitMode.AllRows;
+            gridView.SelectionMode = MultiSelectMode.Row;
+
+
+            //borderName.Visibility = Visibility.Collapsed;
+            ShowKeyPad = "";
+            ShowTmlPad = "";
+        }
+
+        private void Pop_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Loaded -= Pop_Loaded;
+
+            textCode.MaxWidth = this.Width - 115;
+            try
+            {
+                this.FieldName = BindingOperations.GetBinding(this, ITSLIB.Pop.ValueProperty).Path.Path;
+            }
+            catch { }
+        }
+        private string _LangKey = "";
+        public string LangKey
+        {
+            get { return _LangKey; }
+            set
+            {
+                _LangKey = value;
+            }
+        }
+        private string _REF01 = "";
+        public string REF01
+        {
+            get { return _REF01; }
+            set
+            {
+                _REF01 = value;
+                if (this.ModelPanel != null)
+                {
+                    this.ModelPanel.SetRef01(this.FieldName, value);
+                }
+            }
+        }
+
+        private string _REF02 = "";
+        public string REF02
+        {
+            get { return _REF02; }
+            set
+            {
+                _REF02 = value;
+                if (this.ModelPanel != null)
+                {
+                    this.ModelPanel.SetRef02(this.FieldName, value);
+                }
+            }
+        }
+
+        private string _REF03 = "";
+        public string REF03
+        {
+            get { return _REF03; }
+            set
+            {
+                _REF03 = value;
+                if (this.ModelPanel != null)
+                {
+                    this.ModelPanel.SetRef03(this.FieldName, value);
+                }
+            }
+        }
+
+        private string _REF04 = "";
+        public string REF04
+        {
+            get { return _REF04; }
+            set
+            {
+                _REF04 = value;
+                if (this.ModelPanel != null)
+                {
+                    this.ModelPanel.SetRef04(this.FieldName, value);
+                }
+            }
+        }
+
+        private string _REF05 = "";
+        public string REF05
+        {
+            get { return _REF05; }
+            set
+            {
+                _REF05 = value;
+                if (this.ModelPanel != null)
+                {
+                    this.ModelPanel.SetRef05(this.FieldName, value);
+                }
+            }
+        }
+
+        private bool _ShowAutoFilterRow = false;
+        public bool ShowAutoFilterRow
+        {
+            get { return _ShowAutoFilterRow; }
+            set
+            {
+                _ShowAutoFilterRow = value;
+                if (this.gridView.View != null && gridView.View is TableView)
+                {
+                    (gridView.View as TableView).ShowAutoFilterRow = value;
+                }   
+            }
+        }
+
+        private string _GPCD = "";
+        public string GPCD
+        {
+            get { return _GPCD; }
+            set
+            {
+                if (value == "") return;
+                _GPCD = value;
+
+                StringBuilder query = new StringBuilder();
+                query.Append("CALL DC_POP('" + _GPCD + "_HEAD', '', '', '', '', '', '')");
+                DataSet ds = ItsMaria.Query(query.ToString());
+
+                while(gridView.Columns.Count > 0)
+                {
+                    gridView.Columns.RemoveAt(0);
+                }
+                for (int i = 0; i < ds.Tables[0].Columns.Count; i++)
+                {
+                    ITSLIB.Column column = new ITSLIB.Column();
+                    column.Header = ds.Tables[0].Rows[0][i].ToString();
+                    column.Width = new GridColumnWidth(double.Parse(ds.Tables[1].Rows[0][i].ToString()));
+                    column.FieldName = ds.Tables[0].Columns[i].ColumnName;
+                    gridView.Columns.Add(column);
+                }
+            }
+        }
+
+        private void textCode_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            textCode.Focus();
+            textCode.SelectAll();
+        }
+
+        public bool ReadOnly
+        {
+            get { return textCode.IsReadOnly; }
+            set
+            {
+                textCode.IsReadOnly = value;
+                if (value)
+                {
+                    textCode.Background = Brushes.LavenderBlush;
+                    searchIcon.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    textCode.Background = Brushes.White;
+                    searchIcon.Visibility = Visibility.Visible;
+                }
+            }
+        }
+
+        public string Label
+        {
+            get { return textBlock.Text; }
+            set { textBlock.Text = value; }
+        }
+
+        public string HidenLabel
+        {
+            set
+            {
+                if (value.Length > 0)
+                {
+                    this.Width = this.Width - textBlock.Width;
+                    textBlock.Width = 0;
+                    textBlock.Visibility = Visibility.Hidden;
+                }
+            }
+        }
+
+        public double LabelWidth
+        {
+            get { return textBlock.Width; }
+            set { textBlock.Width = value; }
+        }
+
+        public string Value
+        {
+            get { return (string)GetValue(ValueProperty); }
+            set { SetValue(ValueProperty, value.ToUpper()); }
+        }
+
+        public readonly static DependencyProperty ValueProperty =
+            DependencyProperty.Register("Value",
+                typeof(string),
+                typeof(Pop),
+                new FrameworkPropertyMetadata("", FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, valueChangedCallback));
+        private static void valueChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            ((Pop)(sender)).textCode.Text = e.NewValue.ToString();
+        }
+
+        private void ListShow()
+        {
+            if (this.ModelPanel != null)
+            {
+                _REF01 = this.ModelPanel._REF01[this.FieldName];
+                _REF02 = this.ModelPanel._REF02[this.FieldName];
+                _REF03 = this.ModelPanel._REF03[this.FieldName];
+                _REF04 = this.ModelPanel._REF04[this.FieldName];
+                _REF05 = this.ModelPanel._REF05[this.FieldName];
+            }
+
+            string keyword = textCode.Text.Trim();
+
+            StringBuilder query = new StringBuilder();
+            query.Append("CALL DC_POP('" + this.GPCD + "_LIST', '" + keyword + "', '");
+            query.Append(this.REF01 + "', '");
+            query.Append(this.REF02 + "', '");
+            query.Append(this.REF03 + "', '");
+            query.Append(this.REF04 + "', '");
+            query.Append(this.REF05 + "')");
+            DataTable dt = ItsMaria.Query(query.ToString()).Tables[0];
+
+            MODEL_POP.SetData(dt);
+
+            popupSearch.IsOpen = true;
+
+            popupKeypad.IsOpen = false;
+            textCode.Select(textCode.Text.Length, 0);
+
+            gridView.Focus();
+            //gridView.MaxHeight = 20;
+            gridView.MaxHeight = 5000;
+
+            textCode.Focus();
+
+        }
+
+        private void ListHide()
+        {
+            foreach (Column col in gridView.Columns)
+            {
+                gridView.ClearColumnFilter(col);
+            }
+            gridView.ClearSorting();
+            popupSearch.IsOpen = false;
+            textCode.Select(textCode.Text.Length, 0);
+            textCode.Focus();
+        }
+
+        public string ShowKeyPad
+        {
+            set
+            {
+                if (value.Length > 0)
+                {
+                    keyPadIcon.MaxWidth = 1000;
+                    canvasKeypad.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    keyPadIcon.MaxWidth = 0;
+                    canvasKeypad.Visibility = Visibility.Hidden;
+                }
+            }
+        }
+
+        public string ShowTmlPad
+        {
+            set
+            {
+                if (value.Length > 0)
+                {
+                    tmlPadIcon.MaxWidth = 1000;
+                    TmlCanvasKeypad.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    tmlPadIcon.MaxWidth = 0;
+                    TmlCanvasKeypad.Visibility = Visibility.Collapsed;
+                }
+            }
+        }
+
+        private void textCode_GotFocus(object sender, RoutedEventArgs e)
+        {
+            textCode.BorderBrush = Brushes.Black;
+            textCode.BorderThickness = new Thickness(1d);
+            if (!textCode.IsReadOnly)
+            {
+                textCode.Background = Brushes.MintCream;
+            }
+        }
+
+        private void textCode_LostFocus(object sender, RoutedEventArgs e)
+        {
+            textCode.BorderBrush = Brushes.Silver;
+            textCode.BorderThickness = new Thickness(1d);
+            if (!textCode.IsReadOnly)
+            {
+                textCode.Background = Brushes.White;
+            }
+        }
+
+        private void textCode_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ListHide();
+
+            string code = "";
+            string name = "";
+            if (textCode.Text.Trim() == "")
+            {
+                code = "";
+                name = "";
+            }
+            else if (this.ModelPanel != null)
+            {
+                try
+                {
+                    if (this.FieldName == "")
+                        this.FieldName = BindingOperations.GetBinding(this, ITSLIB.Pop.ValueProperty).Path.Path;
+                }
+                catch { }
+
+                this.ModelPanel.SetPopInfo(this.FieldName, textCode.Text);
+                code = this.ModelPanel.GetPopCode(this.FieldName);
+                name = this.ModelPanel.GetPopName(this.FieldName);
+            }
+            else
+            {
+                StringBuilder query = new StringBuilder();
+                query.Append("CALL DC_POP('" + GPCD + "_INFO', '" + textCode.Text + "', '");
+                query.Append(REF01 + "', '");
+                query.Append(REF02 + "', '");
+                query.Append(REF03 + "', '");
+                query.Append(REF04 + "', '");
+                query.Append(REF05 + "');");
+                DataTable dt = ItsMaria.Query(query.ToString()).Tables[0];
+
+                code = ItsData.GetText(dt, 0, "CODE");
+                name = ItsData.GetText(dt, 0, "NAME");
+            }
+
+            if (code != "")
+            {
+                textCode.Text = code;
+                textName.Text = name;
+                //textCode.Visibility = Visibility.Collapsed;
+            } 
+            else
+            {
+                textName.Text = "";
+                //textCode.Visibility = Visibility.Visible;
+            }
+
+            SetValue(ValueProperty, textCode.Text);
+            textCode.SelectionStart = textCode.Text.Length;
+
+            double maxWidth = this.Width - textBlock.Width - textCode.MinWidth;
+            if (searchIcon.Visibility == Visibility.Visible)
+            {
+                maxWidth = maxWidth - searchIcon.Width;
+            }
+            if (keyPadIcon.Visibility == Visibility.Visible)
+            {
+                maxWidth = maxWidth - searchIcon.Width;
+            }
+            textName.MaxWidth = maxWidth;
+        }
+
+        private void textCode_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                if (popupSearch.IsOpen == false)
+                {
+                    e.Handled = true;
+                    ListShow();
+                }
+                else
+                {
+                    Select_Click(null, null);
+                }
+                return;
+            }
+
+            // if (gridView.ModelCount == 0) return;
+
+            if (e.Key == Key.Up)
+            {
+                if (popupSearch.IsOpen == false)
+                {
+                    e.Handled = true;
+                    ListShow();
+                }
+
+                if (gridView.GetIndex() > 0)
+                {
+                    gridView.SelectedItem = MODEL_POP.DefaultView[gridView.GetIndex() - 1];
+                    gridView.CurrentItem = gridView.SelectedItem;
+                }
+                textCode.Select(textCode.Text.Length, 0);
+                textCode.Focus();
+                return;
+            }
+
+            if (e.Key == Key.Down)
+            {
+                if (popupSearch.IsOpen == false)
+                {
+                    e.Handled = true;
+                    ListShow();
+                }
+
+                if (gridView.GetIndex() < gridView.RowCount - 1)
+                {
+                    gridView.SelectedItem = MODEL_POP.DefaultView[gridView.GetIndex() + 1];
+                    gridView.CurrentItem = gridView.SelectedItem;
+                }
+                textCode.Select(textCode.Text.Length, 0);
+                textCode.Focus();
+                return;
+            }
+        }
+
+        private void Close_Click(object sender, RoutedEventArgs e)
+        {
+            ListHide();
+        }
+
+        private void Clear_Click(object sender, RoutedEventArgs e)
+        {
+            // ListHide();
+            Value = "";
+            ListShow();
+        }
+
+        private void Select_Click(object sender, RoutedEventArgs e)
+        {
+            string sCODE = "";
+            try
+            {
+                sCODE = (gridView.SelectedItem as DataRowView).Row["CODE"].ToString();
+            }
+            catch
+            {
+                if (gridView.RowCount > 0)
+                {
+                    sCODE = MODEL_POP.Rows[0]["CODE"].ToString();
+                }
+            }
+
+            if (sCODE != "")
+            {
+                textCode.Text = sCODE;
+            }
+
+            ListHide();
+            textCode.SelectionStart = textCode.Text.Length;
+        }
+
+        private void KEY_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            textCode.Focus();
+
+            string keyCode = (e.Source as Label).Content.ToString();
+
+            if (keyCode == "공백") SendKeys.Send(textCode, " ");
+            else if (keyCode == "삭제") SendKeys.Send(textCode, "{BACKSPACE}");
+            else if (keyCode == "◀") SendKeys.Send(textCode, "{LEFT}");
+            else if (keyCode == "▶") SendKeys.Send(textCode, "{RIGHT}");
+            else if (keyCode == "전부삭제")
+            {
+                textCode.Text = "";
+            }
+            else if (keyCode == "✖")
+            {
+                popupKeypad.IsOpen = false;
+                tmlKeypad.IsOpen = false;
+            }
+            else if (keyCode == "대")
+            {
+                DockPanel dockPanel = ItsElement.FindParent<DockPanel>(sender as Label);
+                List<Label> labelList = ItsElement.FindChild<Label>(dockPanel);
+                foreach (Label label in labelList)
+                {
+                    if (label.Content.ToString().Length == 1)
+                    {
+                        label.Content = label.Content.ToString().ToUpper();
+                    }
+                }
+            }
+            else if (keyCode == "소")
+            {
+                DockPanel dockPanel = ItsElement.FindParent<DockPanel>(sender as Label);
+                List<Label> labelList = ItsElement.FindChild<Label>(dockPanel);
+                foreach (Label label in labelList)
+                {
+                    if (label.Content.ToString().Length == 1)
+                    {
+                        label.Content = label.Content.ToString().ToLower();
+                    }
+                }
+            }
+            else if (keyCode == "특")
+            {
+                DockPanel dockPanel = ItsElement.FindParent<DockPanel>(sender as Label);
+                List<Label> labelList = ItsElement.FindChild<Label>(dockPanel);
+                foreach (Label label in labelList)
+                {
+                    if (label.Content.ToString().Length == 1 && "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789◀▶대소특삭제전부삭제공백✖".IndexOf(label.Content.ToString().ToUpper()) == -1)
+                    {
+                        if (label.Content.ToString() == "+") label.Content = "[";
+                        else if (label.Content.ToString() == "-") label.Content = "]";
+                        else if (label.Content.ToString() == "*") label.Content = "(";
+                        else if (label.Content.ToString() == "/") label.Content = ")";
+
+                        else if (label.Content.ToString() == "=") label.Content = ":";
+                        else if (label.Content.ToString() == "?") label.Content = ";";
+
+                        else if (label.Content.ToString() == "~") label.Content = "_";
+                        else if (label.Content.ToString() == "!") label.Content = "&";
+                        else if (label.Content.ToString() == "@") label.Content = "{";
+                        else if (label.Content.ToString() == "#") label.Content = "}";
+                        else if (label.Content.ToString() == "$") label.Content = ".";
+                        else if (label.Content.ToString() == "%") label.Content = ",";
+
+                        else if (label.Content.ToString() == "^") label.Content = "`";
+
+                        // 역으로 교체
+                        else if (label.Content.ToString() == "[") label.Content = "+";
+                        else if (label.Content.ToString() == "]") label.Content = "-";
+                        else if (label.Content.ToString() == "(") label.Content = "*";
+                        else if (label.Content.ToString() == ")") label.Content = "/";
+
+                        else if (label.Content.ToString() == ":") label.Content = "=";
+                        else if (label.Content.ToString() == ";") label.Content = "?";
+
+                        else if (label.Content.ToString() == "_") label.Content = "~";
+                        else if (label.Content.ToString() == "&") label.Content = "!";
+                        else if (label.Content.ToString() == "{") label.Content = "@";
+                        else if (label.Content.ToString() == "}") label.Content = "#";
+                        else if (label.Content.ToString() == ".") label.Content = "$";
+                        else if (label.Content.ToString() == ",") label.Content = "%";
+
+                        else if (label.Content.ToString() == "`") label.Content = "^";
+
+                        else label.Content = "";
+                    }
+                }
+            }
+            else
+            {
+                int curSelLength = textCode.SelectionStart;
+                textCode.Text = textCode.Text.Substring(0, curSelLength) + keyCode + textCode.Text.Substring(curSelLength);
+                textCode.SelectionStart = curSelLength + keyCode.Length;
+                textCode.SelectionLength = 0;
+            }
+
+            textCode.Focus();
+        }
+
+        private void keyPad_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            popupSearch.IsOpen = false;
+            if (popupKeypad.IsOpen) popupKeypad.IsOpen = false;
+            else popupKeypad.IsOpen = true;
+        }
+
+        private void keyPad2_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            popupSearch.IsOpen = false;
+            if (tmlKeypad.IsOpen) tmlKeypad.IsOpen = false;
+            else tmlKeypad.IsOpen = true;
+        }
+
+        private void search_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            popupKeypad.IsOpen = false;
+            tmlKeypad.IsOpen = false;
+            if (popupSearch.IsOpen) ListHide();
+            else ListShow();
+        }
+
+        private void gridView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            Select_Click(null, null);
+        }
+    }
+}

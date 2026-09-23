@@ -1,0 +1,66 @@
+﻿<its:ItsPageTml x:Class="TML0000.R02"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+    xmlns:local="clr-namespace:TML0000"
+    xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
+    Width="600" Height="400">
+    <Canvas>
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
+            <its:WrapContent x:Name="PANEL_S1" Width="600" Height="60">
+                <its:Date Label="일자" Width="180" Value="{Binding MEALDT}"/>
+                <its:Combo x:Name="MEALTIME" Label="구분" Width="150" Value="{Binding MEALTIME}" GPCD="MEALTIME"/>
+                <its:Pop Label="사원" Value="{Binding EMPCD}" GPCD="EMPCD"/>
+                <UserControl Width="5"/>
+                <its:Button Label="조회" BackColor="Purple" CommandName="LIST_EMP" Width="50"/>
+                <UserControl Width="20"/>
+                <UserControl Width="5000"/>
+                <its:Button Label="식사신청" CommandName="POP_MEAL" Width="100"/>
+                <its:Button Label="신청취소" CommandName="POP_MEAL_CANCEL" BackColor="IndianRed" Width="100"/>
+                <UserControl Width="5000"/>
+            </its:WrapContent>
+        </UserControl>
+        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="60">
+            <its:Grid x:Name="GRID_G1" Width="600" Height="340" >
+                <its:Grid.Columns>
+                    <its:Column Width="60" Header="선택" IsRowCheck="True" />
+                    <its:Column Width="100" Header="사업장" FieldName="BDVCD" Visible="False"/>
+                    <its:Column Width="100" Header="부서코드" FieldName="DEPTCD" Visible="False"/>
+                    <its:Column Width="70" Header="부서" FieldName="DEPTNM"/>
+                    <its:Column Width="80" Header="사원번호" FieldName="EMPCD" Visible="False"/>
+                    <its:Column Width="80" Header="성명" FieldName="EMPNM"/>
+                    <its:Column Width="70" Header="직위" FieldName="COLONELCY"/>
+                    <its:Column Width="90" Header="일자" FieldName="MEALDT"/>
+                    <its:Column Width="60" Header="식사여부" FieldName="MEAL" CellType="Check" />
+                    <its:Column Width="100" Header="등록경로코드" FieldName="INPUTDEVICE" Visible="False"/>
+                    <its:Column Width="80" Header="등록경로" FieldName="INPUTDEVICENM"/>
+                    <its:Column Width="100" Header="등록자" FieldName="INPUTEMPCD"/>
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="150" Canvas.Top="50">
+            <its:WrapContent Background="WhiteSmoke" x:Name="PANEL_A1" Width="300">
+                <Label x:Name="label_POP_YN" Content="Y" Visibility="Collapsed" />
+                <Label x:Name="label_POP1" Content="식사 인원 파악 (식사 요청)" Margin ="70 0 0 0" />
+                <UserControl Width="50"/>
+                <Label x:Name="label_POP2" Content="1999-01-01 점심" Margin ="95 0 0 5"/>
+                <UserControl Width="5000"/>
+                <its:Grid x:Name="GRID_G2" Width="300" Height="200">
+                    <its:Grid.Columns>
+                        <its:Column Width="60" Header="선택" IsRowCheck="True" />
+                        <its:Column Width="100" Header="사업장" FieldName="BDVCD" Visible="False"/>
+                        <its:Column Width="80" Header="사원번호" FieldName="EMPCD" />
+                        <its:Column Width="110" Header="성명" FieldName="EMPNM"/>
+                    </its:Grid.Columns>
+                </its:Grid>
+                <Label Content="식사 신청 하시겠습니까?" x:Name="label_POP3" />
+                <UserControl Width="35"/>
+                <its:Button Label="네" BackColor="SeaGreen" CommandName="ADD_MEAL"/>
+                <UserControl Width="10"/>
+                <its:Button Label="아니오" BackColor="IndianRed" CommandName="CANCEL"/>
+            </its:WrapContent>
+        </UserControl>
+    </Canvas>
+</its:ItsPageTml>

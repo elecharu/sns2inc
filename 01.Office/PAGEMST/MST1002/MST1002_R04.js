@@ -1,0 +1,48 @@
+﻿/// <reference path="../../Script/reference.js" />
+
+/* 페이지 로드 시 수행 */
+ItsPage.Load = function () {
+    
+    /* 그리드 생성 */
+    ItsGrid.Create('grid1', { isCheckBoxGrid: false, allowMerging: 'Cells' }, [
+        column.create("공장", "FACTORYNM", { width: 100, align: 'center', allowMerging: true }),
+        column.create("구분", "GUBUN_BC", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'PP412', allowMerging: true }),
+        column.create("공정코드", "PRCCD", { width: 100, align: 'center' }),
+        column.create("공정명", "PRCNM", { width: 200 }),        
+        column.create("사용여부", "USEYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("적용시작일", "SDT", { width: 150, align: 'center' }),
+        column.create("적용종료일", "EDT", { width: 150, align: 'center' }),
+        column.create("반제품구분", "PRCSEMT", { width: 100, align: 'center' }),
+        column.create("공정대분류", "PRCGROUP", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'PP310' }),
+        column.create("지시여부", "INSYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("박스순번관리여부", "BOXYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
+        column.create("비고", "REMARK", { width: 200}),
+
+        column.split()
+    ]);
+};
+
+/* 조회 */
+ItsButton.EventSearch = function () {
+
+    var maria = new ItsMaria('MST1002_R04', 'SEL_PRC');
+    maria.AddPanel('sdiv1');
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore('grid1', maria.store.YnToBool('USEYN').YnToBool('INSYN').YnToBool('BOXYN'));
+    ItsMsg.Toast(maria.store.Length() + '건이 조회되었습니다.');
+
+    //ItsGrid.Get('grid1').autoSizeColumns();
+};
+
+
+
+
+
+
+
+

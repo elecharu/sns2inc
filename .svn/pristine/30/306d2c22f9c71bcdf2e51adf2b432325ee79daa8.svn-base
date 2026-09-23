@@ -1,0 +1,327 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Windows.Input.Test;
+
+namespace ITSLIB
+{
+    /// <summary>
+    /// ItsLabelText.xaml 的交互逻辑
+    /// </summary>
+    public partial class Text : UserControl
+    {
+        public ItsModelPanel ModelPanel = null;
+        
+        
+        public Text()
+        {
+            InitializeComponent();
+            textBox.BorderBrush = Brushes.Silver;
+            textBox.BorderThickness = new Thickness(1d);
+        }
+        public bool ReadOnly
+        {
+            get { return textBox.IsReadOnly; }
+            set
+            {
+                textBox.IsReadOnly = value;
+                if (_CustomColor == null)
+                {
+                    if (value)
+                    {
+                        textBox.Background = Brushes.LavenderBlush;
+                    }
+                    else
+                    {
+                        textBox.Background = Brushes.White;
+                    }
+                }
+            }
+        }
+        private string _LangKey = "";
+        public string LangKey
+        {
+            get { return _LangKey; }
+            set
+            {
+                _LangKey = value;
+            }
+        }
+        private Brush _CustomColor = null;
+        public Brush CustomColor
+        {
+            get { return _CustomColor; }
+            set
+            {
+                _CustomColor = value;
+                textBox.Background = value;
+            }
+        }
+
+        public new bool IsFocused
+        {
+            get
+            {
+                return textBox.IsFocused;
+            }
+        }
+
+        public void SetFocus()
+        {
+            textBox.SelectAll();
+            textBox.Focus();
+        }
+
+        public string Label
+        {
+            get { return textBlock.Text; }
+            set { textBlock.Text = value; }
+        }
+
+        public string HidenLabel
+        {
+            set
+            {
+                if (value.Length > 0)
+                {
+                    this.Width = this.Width - textBlock.Width;
+                    textBlock.Width = 0;
+                    textBlock.Visibility = Visibility.Hidden;
+                }
+            }
+        }
+
+        public double LabelWidth
+        {
+            get { return textBlock.Width; }
+            set { textBlock.Width = value; }
+        }
+
+        public string Unit
+        {
+            get { return textUnit.Text; }
+            set { textUnit.Text = value; }
+        }
+
+        public string Value
+        {
+            get { return (string)GetValue(ValueProperty); }
+            set { SetValue(ValueProperty, value); }
+        }
+        public readonly static DependencyProperty ValueProperty =
+            DependencyProperty.Register("Value",
+                typeof(string),
+                typeof(Text),
+                new FrameworkPropertyMetadata("", FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, valueChangedCallback));
+        private static void valueChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            ((Text)(sender)).textBox.Text = e.NewValue.ToString();
+        }
+
+        private void textBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            textBox.BorderBrush = Brushes.Black;
+            textBox.BorderThickness = new Thickness(1.5d);
+            if (!textBox.IsReadOnly)
+            {
+                textBox.Background = Brushes.MintCream;
+            }
+
+            if (_inputType == ItsEnums.InputTypes.Alphabat)
+            {
+                InputMethod.SetPreferredImeConversionMode(textBox, ImeConversionModeValues.Alphanumeric);
+            }
+            else if (_inputType == ItsEnums.InputTypes.Native)
+            {
+                InputMethod.SetPreferredImeConversionMode(textBox, ImeConversionModeValues.Native);
+            }
+
+            if (_ShowKeyPad) keypop.IsOpen = true;
+        }
+
+        private void textBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            textBox.BorderBrush = Brushes.Silver;
+            textBox.BorderThickness = new Thickness(1d);
+            if (!textBox.IsReadOnly)
+            {
+                textBox.Background = Brushes.White;
+            }
+
+            keypop.IsOpen = false;
+        }
+
+        private void textBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            SetValue(ValueProperty, textBox.Text);
+            if (this.ModelPanel != null) this.ModelPanel.AcceptChanges();
+        }
+
+        private void textBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            textBox.SelectAll();
+        }
+
+        private bool _ShowKeyPad = false;
+        public string ShowKeyPad
+        {
+            set
+            {
+                if (value.Length > 0)
+                {
+                    _ShowKeyPad = true;
+                }
+                else
+                {
+                    _ShowKeyPad = false;
+                }
+            }
+        }
+
+        private ItsEnums.InputTypes _inputType = ItsEnums.InputTypes.Alphabat;
+        public ItsEnums.InputTypes InputType
+        {
+            get
+            {
+                return _inputType;
+            }
+            set
+            {
+                _inputType = value;
+            }
+        }
+
+        private void KEY_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            textBox.Focus();
+
+            e.Handled = true;
+
+            string keyCode = (e.Source as Label).Content.ToString();
+
+            if (keyCode == "공백") SendKeys.Send(textBox, " ");
+            else if (keyCode == "삭제") SendKeys.Send(textBox, "{BACKSPACE}");
+            else if (keyCode == "◀") SendKeys.Send(textBox, "{LEFT}");
+            else if (keyCode == "▶") SendKeys.Send(textBox, "{RIGHT}");
+            else if (keyCode == "전부삭제")
+            {
+                textBox.Text = "";
+            }
+            else if (keyCode == "✖")
+            {
+                keypop.IsOpen = false;
+            }
+            else if (keyCode == "대")
+            {
+                DockPanel dockPanel = ItsElement.FindParent<DockPanel>(sender as Label);
+                List<Label> labelList = ItsElement.FindChild<Label>(dockPanel);
+                foreach(Label label in labelList)
+                {
+                    if (label.Content.ToString().Length == 1)
+                    {
+                        label.Content = label.Content.ToString().ToUpper();
+                    }
+                }
+            }
+            else if (keyCode == "소")
+            {
+                DockPanel dockPanel = ItsElement.FindParent<DockPanel>(sender as Label);
+                List<Label> labelList = ItsElement.FindChild<Label>(dockPanel);
+                foreach (Label label in labelList)
+                {
+                    if (label.Content.ToString().Length == 1)
+                    {
+                        label.Content = label.Content.ToString().ToLower();
+                    }
+                }
+            }
+            else if (keyCode == "특")
+            {
+                DockPanel dockPanel = ItsElement.FindParent<DockPanel>(sender as Label);
+                List<Label> labelList = ItsElement.FindChild<Label>(dockPanel);
+                foreach (Label label in labelList)
+                {
+                    if (label.Content.ToString().Length == 1 && "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789◀▶대소특삭제전부삭제공백✖".IndexOf(label.Content.ToString().ToUpper()) == -1)
+                    {
+                        if (label.Content.ToString() == "+") label.Content = "[";
+                        else if (label.Content.ToString() == "-") label.Content = "]";
+                        else if (label.Content.ToString() == "*") label.Content = "(";
+                        else if (label.Content.ToString() == "/") label.Content = ")";
+
+                        else if (label.Content.ToString() == "=") label.Content = ":";
+                        else if (label.Content.ToString() == "?") label.Content = ";";
+
+                        else if (label.Content.ToString() == "~") label.Content = "_";
+                        else if (label.Content.ToString() == "!") label.Content = "&";
+                        else if (label.Content.ToString() == "@") label.Content = "{";
+                        else if (label.Content.ToString() == "#") label.Content = "}";
+                        else if (label.Content.ToString() == "$") label.Content = ".";
+                        else if (label.Content.ToString() == "%") label.Content = ",";
+
+                        else if (label.Content.ToString() == "^") label.Content = "`";
+
+                        // 역으로 교체
+                        else if (label.Content.ToString() == "[") label.Content = "+";
+                        else if (label.Content.ToString() == "]") label.Content = "-";
+                        else if (label.Content.ToString() == "(") label.Content = "*";
+                        else if (label.Content.ToString() == ")") label.Content = "/";
+
+                        else if (label.Content.ToString() == ":") label.Content = "=";
+                        else if (label.Content.ToString() == ";") label.Content = "?";
+
+                        else if (label.Content.ToString() == "_") label.Content = "~";
+                        else if (label.Content.ToString() == "&") label.Content = "!";
+                        else if (label.Content.ToString() == "{") label.Content = "@";
+                        else if (label.Content.ToString() == "}") label.Content = "#";
+                        else if (label.Content.ToString() == ".") label.Content = "$";
+                        else if (label.Content.ToString() == ",") label.Content = "%";
+
+                        else if (label.Content.ToString() == "`") label.Content = "^";
+
+
+                        else label.Content = "";
+                    }
+                }
+            }
+            else
+            {
+                //try
+                //{
+                //    SendKeys.Send(textBox, keyCode);
+                //}
+                //catch
+                //{
+                    int curSelLength = textBox.SelectionStart;
+                    textBox.Text = textBox.Text.Substring(0, curSelLength) + keyCode + textBox.Text.Substring(curSelLength);
+                    textBox.SelectionStart = curSelLength + keyCode.Length;
+                    textBox.SelectionLength = 0;
+                //}
+            }
+
+            textBox.Focus();
+        }
+
+        private void textBox_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (_ShowKeyPad) keypop.IsOpen = true;
+        }
+
+        private void textBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                if (_ShowKeyPad) keypop.IsOpen = !keypop.IsOpen;
+            }
+        }
+    }
+}

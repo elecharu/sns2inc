@@ -1,0 +1,93 @@
+﻿/// <reference path="../../Script/reference.js" />
+
+/* 페이지 로드 시 수행 */
+ItsPage.Load = function () {
+    
+    /* 그리드 생성 */
+    ItsGrid.Create('grid1', { isCheckBoxGrid: false }, [
+        column.create("법인", "COMPANYCD", { width: 100, align: 'center' }),
+        column.create("품목유형", "ITEMCG", { width: 70, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center' }),
+        column.create("품목ID", "ITEMID", { width: 100, hidden: true }),
+        column.create("품목코드", "ITEMCD", { width: 100 }),        
+        column.create("품명", "ITEMNM", { width: 250 }),
+        column.create("종료여부", "ENDYN", { width: 100, columnType: enumColumnTypes.check }),        
+        column.split()
+    ]);
+
+    ItsGrid.Create('grid2', { isCheckBoxGrid: true }, [
+        column.create('BOMKEY', 'BOMSEQ', { width: 50, align: 'center', hidden: true }),
+        column.create('Lv', 'LEVEL', { width: 50, align: 'center' }),
+        column.band('', {}, [
+            column.create('0', 'L0', { width: 30, align: 'center' }),
+            column.create('1', 'L1', { width: 30, align: 'center' }),
+            column.create('2', 'L2', { width: 30, align: 'center' }),
+            column.create('3', 'L3', { width: 30, align: 'center' }),
+            column.create('4', 'L4', { width: 30, align: 'center' }),
+            column.create('5', 'L5', { width: 30, align: 'center' }),
+            column.create('6', 'L6', { width: 30, align: 'center' }),
+            column.create('7', 'L7', { width: 30, align: 'center' }),
+            column.create('8', 'L8', { width: 30, align: 'center' }),
+            column.create('9', 'L9', { width: 30, align: 'center' }),
+            column.create('10', 'L10', { width: 30, align: 'center' }),
+            column.create('11', 'L11', { width: 30, align: 'center' }),
+            column.create('12', 'L12', { width: 30, align: 'center' }),
+            column.create('13', 'L13', { width: 30, align: 'center' }),
+            column.create('14', 'L14', { width: 30, align: 'center' }),
+            column.create('15', 'L15', { width: 30, align: 'center' }),
+        ]),
+        column.create("법인", "COMPANYCD", { width: 100, align: 'center' }),
+        column.create("품목유형", "ITEMCG", { width: 70, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center' }),
+        column.create("품목ID", "ITEMID", { width: 150, hidden: true }),
+        column.create("품목코드", "ITEMCD", { width: 150 }),        
+        column.create("품명", "ITEMNM", { width: 250 }),
+
+        column.create("모품목량", "MUSAGE", { width: 70, columnType: enumColumnTypes.number, decimalPrecision: 2 }),
+        column.create("소요량", "CUSAGE", { width: 70, columnType: enumColumnTypes.number, decimalPrecision: 2 }),
+        column.create("단위", "ITEMUNIT", { width: 70, align: 'center' }),
+
+        column.create("공장", "FACTORYCD", { width: 70 }),
+        column.create("투입공정", "PRCCD", { width: 70 }),
+        column.create("공정명", "PRCNM", { width: 100 }),
+        column.create("비고", "REMARK", { width: 100 }),
+        column.split()
+    ]);
+
+};
+
+/* 조회 */
+ItsButton.EventSearch = function () {
+    ItsGrid.Clear('grid2');
+
+    var maria = new ItsMaria('MST1001_S01 ', 'LIST_ITEM');
+
+    maria.AddPanel('sdiv1');
+    
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore('grid1', maria.store.YnToBool('ENDYN'));
+
+    ItsGrid.Get('grid1').autoSizeColumns();
+
+    ItsMsg.Toast(maria.store.Length() + '건이 조회되었습니다.');
+};
+
+/* 품목선택시 BOM 조회 */
+ItsGrid.Event('grid1').onSelect = function (rowIndex, field) {
+    var maria = new ItsMaria('MST1001_S01', 'LIST_BOM');
+
+    maria.AddRecord('grid1', rowIndex);
+
+    maria.CallProc();
+
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }    
+
+    ItsGrid.SetStore('grid2', maria.store);
+    ItsGrid.Get('grid2').autoSizeColumns();
+}

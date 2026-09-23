@@ -1,0 +1,498 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{3C681882-F93B-487C-A437-C62ABCA7CE75}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ITSLIB</RootNamespace>
+    <AssemblyName>ITSLIB</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\AAABIN\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DevExpress.Charts.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Data.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\AAALIB\DevExpress.Data.v16.1.dll</HintPath>
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="DevExpress.Mvvm.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="DevExpress.Office.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Pdf.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.PivotGrid.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Printing.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.RichEdit.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Sparkline.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Utils.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\AAALIB\DevExpress.Utils.v16.1.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Utils.v16.1.UI, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Xpf.Controls.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\DevExpress 16.1\Components\Bin\Framework\DevExpress.Xpf.Controls.v16.1.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Xpf.Core.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\DevExpress 16.1\Components\Bin\Framework\DevExpress.Xpf.Core.v16.1.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Xpf.Docking.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\DevExpress 16.1\Components\Bin\Framework\DevExpress.Xpf.Docking.v16.1.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Xpf.DocumentViewer.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Grid.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\DevExpress 16.1\Components\Bin\Framework\DevExpress.Xpf.Grid.v16.1.dll</HintPath>
+    </Reference>
+    <Reference Include="DevExpress.Xpf.Grid.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Xpf.PivotGrid.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Printing.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Xpf.Ribbon.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraCharts.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraEditors.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraGauges.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraPrinting.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraReports.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraReports.v16.1.Extensions, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="MySql.Data">
+      <HintPath>..\..\AAALIB\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="ReachFramework" />
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Design" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Printing" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="ThoughtWorks.QRCode">
+      <HintPath>..\..\AAALIB\ThoughtWorks.QRCode.dll</HintPath>
+    </Reference>
+    <Reference Include="TMLMAIN, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\AAALIB\TMLMAIN.exe</HintPath>
+    </Reference>
+    <Reference Include="UIAutomationProvider" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsFormsIntegration" />
+    <Reference Include="WindowsInput">
+      <HintPath>..\..\AAALIB\WindowsInput.dll</HintPath>
+    </Reference>
+    <Reference Include="WpfSendKeys">
+      <HintPath>..\..\AAALIB\WpfSendKeys.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="00_Class\BarcodeLib\BarcodeCommon.cs" />
+    <Compile Include="00_Class\BarcodeLib\BarcodeLib.cs" />
+    <Compile Include="00_Class\BarcodeLib\BarcodeXML.Designer.cs" />
+    <Compile Include="00_Class\BarcodeLib\IBarcode.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\Blank.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\Codabar.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\Code11.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\Code128.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\Code39.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\Code93.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\EAN13.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\EAN8.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\FIM.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\Interleaved2of5.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\ISBN.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\ITF14.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\JAN13.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\MSI.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\Postnet.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\Standard2of5.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\Telepen.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\UPCA.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\UPCE.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\UPCSupplement2.cs" />
+    <Compile Include="00_Class\BarcodeLib\Symbologies\UPCSupplement5.cs" />
+    <Compile Include="00_Class\ItsBarCode.cs" />
+    <Compile Include="00_Class\ItsData.cs" />
+    <Compile Include="00_Class\ItsEnums.cs" />
+    <Compile Include="00_Class\ItsEqm.cs" />
+    <Compile Include="00_Class\ItsEqmConn.cs" />
+    <Compile Include="00_Class\ItsFileDialog.cs" />
+    <Compile Include="00_Class\ItsFileSystem.cs" />
+    <Compile Include="00_Class\ItsGlobalValue.cs" />
+    <Compile Include="00_Class\ItsKeyPad.cs" />
+    <Compile Include="00_Class\ItsLocalInfo.cs" />
+    <Compile Include="00_Class\ItsMariaThread.cs" />
+    <Compile Include="00_Class\ItsMemberShip.cs" />
+    <Compile Include="00_Class\ItsMsgBox.cs" />
+    <Compile Include="00_Class\ItsMssql.cs" />
+    <Compile Include="00_Class\ItsMaria.cs" />
+    <Compile Include="00_Class\ItsElement.cs" />
+    <Compile Include="00_Class\ItsHelper.cs" />
+    <Compile Include="00_Class\ItsPrinter.cs" />
+    <Compile Include="00_Class\ItsSecurity.cs" />
+    <Compile Include="00_Class\ItsMath.cs" />
+    <Compile Include="00_Class\ItsSerial.cs" />
+    <Compile Include="00_Class\ItsServerInfo.cs" />
+    <Compile Include="00_Class\ItsString.cs" />
+    <Compile Include="00_Class\ItsLang.cs" />
+    <Compile Include="00_Control\ItsAnimator.cs" />
+    <Compile Include="00_Control\ItsCanvasContent.cs" />
+    <Compile Include="00_Control\ItsDockContent.cs" />
+    <Compile Include="00_Control\ItsPass.xaml.cs">
+      <DependentUpon>ItsPass.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsSttList.xaml.cs">
+      <DependentUpon>ItsSttList.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsPopContent.cs" />
+    <Compile Include="00_Control\ItsReportViewer.cs" />
+    <Compile Include="00_Control\ItsColumnBand.cs" />
+    <Compile Include="00_Control\ItsFileManager.xaml.cs">
+      <DependentUpon>ItsFileManager.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsImage.xaml.cs">
+      <DependentUpon>ItsImage.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Model\ItsModelCombo.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="00_Model\ItsModelGrid.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="00_Page\ItsPageOffice.cs" />
+    <Compile Include="00_Page\ItsPageTml.cs" />
+    <Compile Include="00_Resource\ResConverter.cs" />
+    <Compile Include="00_Style\StyleTml.cs" />
+    <Compile Include="00_Style\StyleCanvas.cs" />
+    <Compile Include="00_Style\StyleOffice.cs" />
+    <Compile Include="00_Style\StyleGrid.cs" />
+    <Compile Include="00_Style\StyleControl.cs" />
+    <Compile Include="00_Window\ItsQueryWin.xaml.cs">
+      <DependentUpon>ItsQueryWin.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Window\ItsReport.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="00_Window\ItsWinBase.cs" />
+    <Compile Include="00_Control\ItsButtonCommon.xaml.cs">
+      <DependentUpon>ItsButtonCommon.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsButtonList.xaml.cs">
+      <DependentUpon>ItsButtonList.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsCombo.xaml.cs">
+      <DependentUpon>ItsCombo.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsButton.xaml.cs">
+      <DependentUpon>ItsButton.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsColumn.cs" />
+    <Compile Include="00_Control\ItsGrid.cs" />
+    <Compile Include="00_Control\ItsNumber.xaml.cs">
+      <DependentUpon>ItsNumber.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsCheck.xaml.cs">
+      <DependentUpon>ItsCheck.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsOnOff.xaml.cs">
+      <DependentUpon>ItsOnOff.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsDate.xaml.cs">
+      <DependentUpon>ItsDate.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsEditContent.cs" />
+    <Compile Include="00_Control\ItsWrapContent.cs" />
+    <Compile Include="00_Control\ItsPop.xaml.cs">
+      <DependentUpon>ItsPop.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsText.xaml.cs">
+      <DependentUpon>ItsText.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Window\ItsWinRpt.xaml.cs">
+      <DependentUpon>ItsWinRpt.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_WinForm\CaptureForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="00_WinForm\CaptureForm.designer.cs">
+      <DependentUpon>CaptureForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="00_Model\ItsModelPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="00_Page\ItsPageBase.cs" />
+    <Compile Include="class\FullScreenManager.cs" />
+    <Compile Include="class\WindowResize.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="IconWindow.xaml.cs">
+      <DependentUpon>IconWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="00_Control\ItsStackContent.cs" />
+    <Compile Include="00_Control\ItsTime.xaml.cs">
+      <DependentUpon>ItsTime.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="00_Window\ItsReport.resx">
+      <DependentUpon>ItsReport.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="00_WinForm\CaptureForm.resx">
+      <DependentUpon>CaptureForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Licenses.licx" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <None Include="00_Class\BarcodeLib\BarcodeXML.xsc">
+      <DependentUpon>BarcodeXML.xsd</DependentUpon>
+    </None>
+    <None Include="00_Class\BarcodeLib\BarcodeXML.xsd" />
+    <None Include="00_Class\BarcodeLib\BarcodeXML.xss">
+      <DependentUpon>BarcodeXML.xsd</DependentUpon>
+    </None>
+    <Resource Include="Fonts\Roboto-Black.ttf" />
+    <Resource Include="Fonts\Roboto-BlackItalic.ttf" />
+    <Resource Include="Fonts\Roboto-Bold.ttf" />
+    <Resource Include="Fonts\Roboto-BoldItalic.ttf" />
+    <Resource Include="Fonts\Roboto-Italic.ttf" />
+    <Resource Include="Fonts\Roboto-Light.ttf" />
+    <Resource Include="Fonts\Roboto-LightItalic.ttf" />
+    <Resource Include="Fonts\Roboto-Medium.ttf" />
+    <Resource Include="Fonts\Roboto-MediumItalic.ttf" />
+    <Resource Include="Fonts\Roboto-Regular.ttf" />
+    <Resource Include="Fonts\Roboto-Thin.ttf" />
+    <Resource Include="Fonts\Roboto-ThinItalic.ttf" />
+    <Resource Include="Fonts\RobotoCondensed-Bold.ttf" />
+    <Resource Include="Fonts\RobotoCondensed-BoldItalic.ttf" />
+    <Resource Include="Fonts\RobotoCondensed-Italic.ttf" />
+    <Resource Include="Fonts\RobotoCondensed-Light.ttf" />
+    <Resource Include="Fonts\RobotoCondensed-LightItalic.ttf" />
+    <Resource Include="Fonts\RobotoCondensed-Regular.ttf" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="00_Control\ItsPass.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Control\ItsSttList.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Control\ItsFileManager.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Control\ItsImage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Style\Basic.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="00_Control\ItsButtonCommon.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Control\ItsButtonList.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="00_Control\ItsCombo.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Control\ItsButton.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Control\ItsNumber.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Control\ItsCheck.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Control\ItsOnOff.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Control\ItsDate.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Control\ItsPop.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Control\ItsText.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="00_Resource\ResColors.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Style\StyleTml.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Style\StyleCanvas.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Style\StyleOffice.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Style\StyleGrid.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="00_Style\StyleControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="00_Window\ItsQueryWin.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="00_Window\ItsWinRpt.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="IconWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="00_Control\ItsTime.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="MainWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="resource\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="00_Class\BarcodeLib\Release Notes.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="00_Resource\empty.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="00_Resource\loading.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="00_Resource\images.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\HNS_field_ic_calender_d.png" />
+    <Resource Include="Images\HNS_field_ic_calender_n.png" />
+    <Resource Include="Images\HNS_field_ic_calender_p.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\HNS_field_ic_search_d.png" />
+    <Resource Include="Images\HNS_field_ic_search_n.png" />
+    <Resource Include="Images\HNS_field_ic_search_p.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\HNS_checkbox_disabled.png" />
+    <Resource Include="Images\HNS_checkbox_off.png" />
+    <Resource Include="Images\HNS_checkbox_on.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\HNS_popup_ic_closed.png" />
+    <Resource Include="Images\HNS_popup_ic_mini.png" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>COPY $(TargetPath) ..\AAALIB\$(TargetFileName)</PostBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

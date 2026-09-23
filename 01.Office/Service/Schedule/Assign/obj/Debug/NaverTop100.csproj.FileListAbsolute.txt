@@ -1,0 +1,12 @@
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\AAABIN\NaverTop100.exe
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\AAABIN\NaverTop100.pdb
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Scrap\NaverTop100\obj\Debug\NaverTop100.exe
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Scrap\NaverTop100\obj\Debug\NaverTop100.pdb
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Scrap\NaverTop100\obj\Debug\NaverTop100.csprojResolveAssemblyReference.cache
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Scrap\NaverTop100\bin\NaverTop100.exe
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Scrap\NaverTop100\bin\NaverTop100.pdb
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Scrap\NaverTop100\bin\HtmlAgilityPack.dll
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Scrap\NaverTop100\bin\HtmlAgilityPack.pdb
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Scrap\NaverTop100\bin\HtmlAgilityPack.xml
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\TnetData\obj\Debug\NaverTop100.exe
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\TnetData\obj\Debug\NaverTop100.pdb

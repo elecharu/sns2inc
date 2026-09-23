@@ -1,0 +1,22 @@
+﻿<div class="Sub_left menu4">			
+	<div class="Sub_left_top height_150">
+		<h1>문서함</h1>
+		<button class="margin_T30 S_L_btn" onclick="toAdd()"><img src="../../images/left_icon04.png"/> 파일업로드</button>
+	</div>		
+	<div class="Sub_left_mn border_Tno">
+		<ul>
+			<li class="padding_L30  margin_B5 padding_T3">
+				<a href="/PAGEGWS/GWS4001/GWS4001_R01.aspx" class="Sub_left_mn_PD"><div class="Sub_left_mn_in"><img src="../../images/left_icon04_5.png"/> </div><span>회사자료실</span></a>						
+			</li>
+		</ul>
+	</div>
+	<div class="Sub_left_mn">
+		<ul>
+			<li class="padding_L30  margin_B5 padding_T3">
+				<a href="/PAGEGWS/GWS4002/GWS4002_R01.aspx" class="Sub_left_mn_PD"><div class="Sub_left_mn_in"><img src="../../images/left_icon04_5.png"/> </div><span>개인자료실</span></a>						
+			</li>
+		</ul>
+	</div>
+	<div class="border_T9a">
+	</div>		
+</div>

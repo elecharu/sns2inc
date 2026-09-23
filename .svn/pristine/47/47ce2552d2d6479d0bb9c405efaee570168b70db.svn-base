@@ -1,0 +1,177 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.IO;
+using System.IO.Ports;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+public static class ItsOmronSerialFINS
+{
+    private static string START = "@";
+    private static string UNIT_NO = "00";
+    private static string HEADER = "FA";
+    private static string RWT = "0";        // response wait time
+    private static string ICF = "00";
+    private static string DA2 = "00";
+    private static string SA2 = "00";
+    private static string SID = "00";
+    private static string READ = "0101";
+    private static string MA = "82";        // 메모리 영역 (D:82)
+    private static string READ_ADDR = "";   // 읽을번지
+    private static string WORD_READ = "00"; // 워드읽기(고정)
+    private static string ADDR_COUNT = "0001";   // 읽을번지수량
+    private static string FCS = "";         // FCS
+    private static string END = "*\r";
+
+    public static System.IO.Ports.SerialPort serialPort = new System.IO.Ports.SerialPort();
+
+
+    //------ DM 읽기(1개 번지)----------------------------------------------------------------
+    // 일단 변환 로직은 미작성
+    public static string DM_READ(SerialPort serialPort, string comm_text)
+    {
+        if (!serialPort.IsOpen)
+        {
+            try
+            {
+                serialPort.Open();
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        // D를 일단 지우고 4자리가 아니면 탈출
+        READ_ADDR = comm_text.Replace("D", "");
+        if (READ_ADDR.Length != 4)
+        {
+            return "Addr Error!";
+        }
+
+        // 10회까지 시도
+        int PLC_Loop = 0;
+        string receive = "";
+        Start:
+
+        PLC_Loop = PLC_Loop + 1;
+        if (PLC_Loop > 10)
+        {
+            return "";
+        }
+
+        // 명령어 생성
+        string command = START + UNIT_NO + HEADER + RWT + ICF + DA2 + SA2 + SID + READ + MA + READ_ADDR + WORD_READ + ADDR_COUNT;
+
+        FCS = CalcFCS(command).ToUpper();
+
+        receive = serialPort.ReadExisting();
+
+        // 명령어 전달
+        serialPort.Write(command + FCS + END);
+
+        System.Threading.Thread.Sleep(200);
+
+        // 결과 수신
+        receive = serialPort.ReadExisting();
+
+        if (receive == "")
+        {
+            goto Start;
+        }
+
+        // 정상수신여부
+        if (receive.Substring(7, 4).Equals("00"))
+        {
+            // hex -> dec
+            return Convert.ToInt32(receive.Substring(7, 4), 16).ToString();
+        }
+        else
+        {
+            return "Error Code : " + receive.Substring(6, 2);
+        }
+        
+
+    }
+    //------ DM 쓰기(1개 번지) ------------------------------------------------------------
+    public static string DM_WRITE(SerialPort serialPort, string comm_addr, string comm_writeVal)
+    {
+
+        //// D를 일단 지우고 4자리가 아니면 탈출
+        //comm_addr = comm_addr.Replace("D", "");
+        //if (comm_addr.Length != 4)
+        //{
+        //    return "";
+        //}
+        //// dec -> hex
+        //comm_writeVal = Convert.ToString(int.Parse(comm_writeVal, System.Globalization.NumberStyles.HexNumber)).ToUpper();
+
+        //string comm_text = comm_addr + comm_writeVal;
+
+        //// 10회까지 시도
+        //int PLC_Loop = 0;
+
+        //Start:
+
+        //PLC_Loop = PLC_Loop + 1;
+        //if (PLC_Loop > 10)
+        //{
+        //    return "";
+        //}
+
+        //// 명령어 생성
+        //string command = START + HEADER_WRITE + comm_text;
+        //// 명령어 전달
+        //serialPort.Write(command + CalcFCS(command).ToUpper() + "*\r");
+
+        //// 결과 수신
+        //string receive = serialPort.ReadExisting();
+
+        //if (receive == "") goto Start;
+
+        //// 정상수신여부
+        //if (receive.Substring(6, 2).Equals("00"))
+        //{
+        //    // hex -> dec
+        //    return Convert.ToInt32(receive.Substring(7, 4), 16).ToString();
+        //}
+        //else
+        //{
+        //    return "Error Code : " + receive.Substring(6, 2);
+        //}
+        return "";
+    }
+    //------ FCS ----------------------------------------------------------------
+    public static string CalcFCS(string command)
+    {
+        //// Frame Check Sequence
+        //int atas, bawah, cari = 0;
+        //// 아스키코드 배열
+        //byte[] array = Encoding.ASCII.GetBytes(command);
+
+        //// XOR
+        //foreach (byte element in array)
+        //{
+        //    cari = cari ^ element;
+        //}
+
+        //atas = cari & 240; // 240 = B11110000
+        //atas >>= 4; //  오른쪽 시프트
+        //bawah = cari & 15; //15 = B00001111
+
+        //return command + atas.ToString() + bawah.ToString() + END;
+
+        int f = 0;
+        byte[] x;
+        for (int i = 0; i < command.Length; i++)
+        {
+            x = ASCIIEncoding.ASCII.GetBytes(command.Substring(i, 1));
+            f = f ^ (int)x[0];
+        }
+
+        return f.ToString("X");
+    }
+}
+

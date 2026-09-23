@@ -1,0 +1,348 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0016)http://localhost -->
+<html>
+<head>
+	<title>123</title>
+	<meta HTTP-EQUIV='Content-Type' CONTENT='text/html; charset=UTF-8'/>
+	<style type="text/css">
+		.csD98400E0 {color:#000000;background-color:transparent;border-left:#000000 1px solid;border-top:#000000 1px solid;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:11px; font-weight:bold; font-style:normal; }
+		.cs361D1709 {color:#000000;background-color:transparent;border-left:#000000 1px solid;border-top:#000000 1px solid;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:12px; font-weight:normal; font-style:normal; }
+		.cs1A5A8742 {color:#000000;background-color:transparent;border-left:#000000 1px solid;border-top:#000000 1px solid;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:16px; font-weight:bold; font-style:normal; }
+		.cs362907D3 {color:#000000;background-color:transparent;border-left:#000000 1px solid;border-top-style: none;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:11px; font-weight:normal; font-style:normal; }
+		.csE79E1BE9 {color:#000000;background-color:transparent;border-left:#000000 1px solid;border-top-style: none;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:12px; font-weight:normal; font-style:normal; }
+		.cs94826830 {color:#000000;background-color:transparent;border-left:#000000 1px solid;border-top-style: none;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:13px; font-weight:bold; font-style:normal; }
+		.cs70D16A2F {color:#000000;background-color:transparent;border-left:#000000 1px solid;border-top-style: none;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:19px; font-weight:bold; font-style:normal; }
+		.csAC5EDCE6 {color:#000000;background-color:transparent;border-left-style: none;border-top:#000000 1px solid;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:11px; font-weight:bold; font-style:normal; }
+		.cs3854C4A1 {color:#000000;background-color:transparent;border-left-style: none;border-top:#000000 1px solid;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:12px; font-weight:normal; font-style:normal; }
+		.cs67B7CA21 {color:#000000;background-color:transparent;border-left-style: none;border-top:#000000 1px solid;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:12px; font-weight:normal; font-style:normal; padding-left:5px;}
+		.csA45733FD {color:#000000;background-color:transparent;border-left-style: none;border-top:#000000 1px solid;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:20px; font-weight:bold; font-style:normal; }
+		.cs781B2B45 {color:#000000;background-color:transparent;border-left-style: none;border-top:#000000 1px solid;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:27px; font-weight:bold; font-style:normal; }
+		.csF2B13E2B {color:#000000;background-color:transparent;border-left-style: none;border-top-style: none;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:굴림; font-size:12px; font-weight:bold; font-style:normal; }
+		.cs3E6965D8 {color:#000000;background-color:transparent;border-left-style: none;border-top-style: none;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:11px; font-weight:bold; font-style:normal; }
+		.csE28DC1C8 {color:#000000;background-color:transparent;border-left-style: none;border-top-style: none;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:11px; font-weight:normal; font-style:normal; }
+		.cs3F4C4AC2 {color:#000000;background-color:transparent;border-left-style: none;border-top-style: none;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:12px; font-weight:normal; font-style:normal; }
+		.cs4EAA1AC7 {color:#000000;background-color:transparent;border-left-style: none;border-top-style: none;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:13px; font-weight:bold; font-style:normal; }
+		.cs1D6955C8 {color:#000000;background-color:transparent;border-left-style: none;border-top-style: none;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:15px; font-weight:bold; font-style:normal; }
+		.csC2440A88 {color:#000000;background-color:transparent;border-left-style: none;border-top-style: none;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:16px; font-weight:bold; font-style:normal; }
+		.csEFAEB9CD {color:#000000;background-color:transparent;border-left-style: none;border-top-style: none;border-right:#000000 1px solid;border-bottom:#000000 1px solid;font-family:맑은 고딕; font-size:19px; font-weight:bold; font-style:normal; }
+		.csF7D3565D {height:0px;width:0px;overflow:hidden;font-size:0px;line-height:0px;}
+	</style>
+</head>
+<body leftMargin=10 topMargin=10 rightMargin=10 bottomMargin=10 style="background-color:#FFFFFF">
+<table cellpadding="0" cellspacing="0" border="0" style="border-width:0px;empty-cells:show;width:1030px;height:767px;position:relative;">
+	<tr>
+		<td style="position:absolute;"><div class="csE28DC1C8" style="width:98px;height:16px;margin-top:649px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:16px;margin-top:649px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:16px;margin-top:649px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:16px;margin-top:649px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:16px;margin-top:649px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:166px;height:16px;line-height:14px;margin-top:649px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;금&nbsp;형&nbsp;수&nbsp;명</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:16px;line-height:12px;margin-top:649px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>13</nobr></div>
+		<div class="csE28DC1C8" style="width:98px;height:17px;margin-top:631px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:17px;margin-top:631px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:17px;margin-top:631px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:17px;margin-top:631px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:17px;margin-top:631px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:166px;height:17px;line-height:14px;margin-top:631px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;T/D코팅(유,무)</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:17px;line-height:12px;margin-top:631px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>12</nobr></div>
+		<div class="csE28DC1C8" style="width:98px;height:17px;margin-top:613px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:17px;margin-top:613px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:17px;margin-top:613px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:17px;margin-top:613px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:17px;margin-top:613px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:166px;height:17px;line-height:14px;margin-top:613px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;SCRAP&nbsp;처리</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:17px;line-height:12px;margin-top:613px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>11</nobr></div>
+		<div class="csE28DC1C8" style="width:98px;height:17px;margin-top:595px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:17px;margin-top:595px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:17px;margin-top:595px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:17px;margin-top:595px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:17px;margin-top:595px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:166px;height:17px;line-height:12px;margin-top:595px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;UN&nbsp;LOADING</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:17px;line-height:12px;margin-top:595px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>10</nobr></div>
+		<div class="csE28DC1C8" style="width:98px;height:17px;margin-top:577px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:17px;margin-top:577px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:17px;margin-top:577px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:17px;margin-top:577px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:17px;margin-top:577px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:166px;height:17px;line-height:12px;margin-top:577px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;LOADING</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:17px;line-height:12px;margin-top:577px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>9</nobr></div>
+		<div class="csE28DC1C8" style="width:98px;height:17px;margin-top:559px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:17px;margin-top:559px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:17px;margin-top:559px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:17px;margin-top:559px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:17px;margin-top:559px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:166px;height:17px;line-height:14px;margin-top:559px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;제품GAUGE형태</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:17px;line-height:12px;margin-top:559px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>8</nobr></div>
+		<div class="csE28DC1C8" style="width:98px;height:17px;margin-top:541px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:17px;margin-top:541px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:17px;margin-top:541px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:17px;margin-top:541px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:17px;margin-top:541px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:166px;height:17px;line-height:14px;margin-top:541px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;GUIDE&nbsp;방식</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:17px;line-height:12px;margin-top:541px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>7</nobr></div>
+		<div class="csE28DC1C8" style="width:98px;height:17px;margin-top:523px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:17px;margin-top:523px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:17px;margin-top:523px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:17px;margin-top:523px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:17px;margin-top:523px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:166px;height:17px;line-height:14px;margin-top:523px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;자&nbsp;동&nbsp;화&nbsp;방식</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:17px;line-height:12px;margin-top:523px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>6</nobr></div>
+		<div class="csE28DC1C8" style="width:98px;height:17px;margin-top:505px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:17px;margin-top:505px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:17px;margin-top:505px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:17px;margin-top:505px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:17px;margin-top:505px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:60px;height:17px;line-height:14px;margin-top:505px;margin-left:166px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>좌.우</nobr></div>
+		<div class="csE28DC1C8" style="width:98px;height:17px;margin-top:487px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:17px;margin-top:487px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:17px;margin-top:487px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:17px;margin-top:487px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:17px;margin-top:487px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:60px;height:17px;line-height:14px;margin-top:487px;margin-left:166px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>전.후</nobr></div>
+		<div class="csE28DC1C8" style="width:98px;height:17px;margin-top:469px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:17px;margin-top:469px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:17px;margin-top:469px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:17px;margin-top:469px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:17px;margin-top:469px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:166px;height:17px;line-height:14px;margin-top:469px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;CUSHION&nbsp;사용&nbsp;유,&nbsp;무</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:17px;line-height:12px;margin-top:469px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>4</nobr></div>
+		<div class="csE28DC1C8" style="width:98px;height:17px;margin-top:451px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:17px;margin-top:451px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:17px;margin-top:451px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:17px;margin-top:451px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:17px;margin-top:451px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:166px;height:17px;line-height:14px;margin-top:451px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;장&nbsp;비&nbsp;능&nbsp;력</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:17px;line-height:12px;margin-top:451px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>3</nobr></div>
+		<div class="csE28DC1C8" style="width:98px;height:17px;margin-top:433px;margin-left:931px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:103px;height:17px;margin-top:433px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:275px;height:17px;margin-top:433px;margin-left:551px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:123px;height:17px;margin-top:433px;margin-left:427px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:199px;height:17px;margin-top:433px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:166px;height:17px;line-height:14px;margin-top:433px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;본&nbsp;체&nbsp;구&nbsp;조</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:17px;line-height:12px;margin-top:433px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>2</nobr></div>
+		<div class="cs4EAA1AC7" style="width:98px;height:20px;line-height:17px;margin-top:412px;margin-left:931px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>비고</nobr></div>
+		<div class="cs4EAA1AC7" style="width:103px;height:20px;line-height:17px;margin-top:412px;margin-left:827px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>적용일</nobr></div>
+		<div class="cs4EAA1AC7" style="width:275px;height:20px;line-height:17px;margin-top:412px;margin-left:551px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>수정내용</nobr></div>
+		<div class="cs4EAA1AC7" style="width:123px;height:20px;line-height:17px;margin-top:412px;margin-left:427px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>E.C.O&nbsp;&nbsp;&nbsp;NO</nobr></div>
+		<div class="csE28DC1C8" style="width:199px;height:20px;margin-top:412px;margin-left:227px;position:absolute;">
+		</div>
+		<div class="csF2B13E2B" style="width:166px;height:20px;line-height:14px;margin-top:412px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;가로*세로*높이</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:20px;line-height:12px;margin-top:412px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>1</nobr></div>
+		<div class="csC2440A88" style="width:602px;height:24px;line-height:22px;margin-top:387px;margin-left:427px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>E&nbsp;.&nbsp;C&nbsp;.&nbsp;O&nbsp;현황</nobr></div>
+		<div class="csC2440A88" style="width:199px;height:24px;line-height:22px;margin-top:387px;margin-left:227px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>규&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;격</nobr></div>
+		<div class="csC2440A88" style="width:166px;height:24px;line-height:22px;margin-top:387px;margin-left:60px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>항&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;목</nobr></div>
+		<div class="csC2440A88" style="width:36px;height:24px;line-height:22px;margin-top:387px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>NO</nobr></div>
+		<div class="csE28DC1C8" style="width:344px;height:250px;margin-top:136px;margin-left:685px;position:absolute;">
+		</div>
+		<div class="csE28DC1C8" style="width:341px;height:250px;margin-top:136px;margin-left:343px;position:absolute;">
+		</div>
+		<div class="cs362907D3" style="width:341px;height:250px;margin-top:136px;margin-left:0px;position:absolute;">
+		</div>
+		<div class="csEFAEB9CD" style="width:344px;height:28px;line-height:26px;margin-top:107px;margin-left:685px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>조&nbsp;&nbsp;&nbsp;&nbsp;립</nobr></div>
+		<div class="csEFAEB9CD" style="width:341px;height:28px;line-height:26px;margin-top:107px;margin-left:343px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>하&nbsp;&nbsp;&nbsp;형</nobr></div>
+		<div class="cs70D16A2F" style="width:341px;height:28px;line-height:26px;margin-top:107px;margin-left:0px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>상&nbsp;&nbsp;형</nobr></div>
+		<div class="cs362907D3" style="width:1028px;height:14px;margin-top:92px;margin-left:0px;position:absolute;">
+		</div>
+		<div class="cs3E6965D8" style="width:134px;height:17px;margin-top:74px;margin-left:895px;position:absolute;">
+		</div>
+		<div class="cs3E6965D8" style="width:67px;height:17px;line-height:15px;margin-top:74px;margin-left:827px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>이관일</nobr></div>
+		<div class="cs3E6965D8" style="width:86px;height:17px;margin-top:74px;margin-left:740px;position:absolute;">
+		</div>
+		<div class="cs3E6965D8" style="width:75px;height:17px;line-height:15px;margin-top:74px;margin-left:664px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>제작완료일</nobr></div>
+		<div class="cs3E6965D8" style="width:84px;height:17px;margin-top:74px;margin-left:579px;position:absolute;">
+		</div>
+		<div class="cs3E6965D8" style="width:63px;height:17px;line-height:15px;margin-top:74px;margin-left:515px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>제작처</nobr></div>
+		<div class="cs3E6965D8" style="width:71px;height:17px;margin-top:74px;margin-left:443px;position:absolute;">
+		</div>
+		<div class="cs3E6965D8" style="width:81px;height:17px;line-height:15px;margin-top:74px;margin-left:361px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>작업&nbsp;LINE</nobr></div>
+		<div class="cs3E6965D8" style="width:294px;height:17px;margin-top:74px;margin-left:66px;position:absolute;">
+		</div>
+		<div class="cs362907D3" style="width:64px;height:17px;line-height:15px;margin-top:74px;margin-left:0px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>공&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;정</nobr></div>
+		<div class="cs3E6965D8" style="width:294px;height:17px;margin-top:56px;margin-left:66px;position:absolute;">
+		</div>
+		<div class="cs362907D3" style="width:64px;height:17px;line-height:15px;margin-top:56px;margin-left:0px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>품&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;명</nobr></div>
+		<div class="cs3E6965D8" style="width:294px;height:17px;margin-top:38px;margin-left:66px;position:absolute;">
+		</div>
+		<div class="cs362907D3" style="width:64px;height:17px;line-height:15px;margin-top:38px;margin-left:0px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>품&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;번</nobr></div>
+		<div class="cs3E6965D8" style="width:294px;height:18px;margin-top:19px;margin-left:66px;position:absolute;">
+		</div>
+		<div class="cs362907D3" style="width:64px;height:18px;line-height:15px;margin-top:19px;margin-left:0px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>차&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;종</nobr></div>
+		<div class="csAC5EDCE6" style="width:67px;height:17px;line-height:15px;margin-top:0px;margin-left:962px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>승&nbsp;&nbsp;&nbsp;&nbsp;인</nobr></div>
+		<div class="csAC5EDCE6" style="width:66px;height:17px;line-height:15px;margin-top:0px;margin-left:895px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>검&nbsp;&nbsp;&nbsp;&nbsp;토</nobr></div>
+		<div class="csAC5EDCE6" style="width:67px;height:17px;line-height:15px;margin-top:0px;margin-left:827px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>검&nbsp;&nbsp;&nbsp;토</nobr></div>
+		<div class="csAC5EDCE6" style="width:294px;height:17px;margin-top:0px;margin-left:66px;position:absolute;">
+		</div>
+		<div class="csD98400E0" style="width:64px;height:17px;line-height:15px;margin-top:0px;margin-left:0px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>관리번호</nobr></div>
+		<div class="cs3F4C4AC2" style="width:95px;height:19px;line-height:16px;margin-top:723px;margin-left:866px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>누적수량</nobr></div>
+		<div class="cs3F4C4AC2" style="width:95px;height:19px;line-height:16px;margin-top:723px;margin-left:770px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>LOT수량</nobr></div>
+		<div class="cs3F4C4AC2" style="width:191px;height:19px;line-height:16px;margin-top:703px;margin-left:770px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>작업수량</nobr></div>
+		<div class="csA45733FD" style="width:837px;height:35px;line-height:28px;margin-top:666px;margin-left:192px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>◆&nbsp;금형&nbsp;수리&nbsp;현황◆</nobr></div>
+		<div class="cs1A5A8742" style="width:190px;height:35px;margin-top:666px;margin-left:0px;position:absolute;">
+		</div>
+		<div class="cs3854C4A1" style="width:67px;height:22px;line-height:-1px;margin-top:743px;margin-left:962px;position:absolute;text-align:left;vertical-align:middle;">
+		</div>
+		<div class="cs3854C4A1" style="width:95px;height:22px;margin-top:743px;margin-left:866px;position:absolute;">
+		</div>
+		<div class="cs3854C4A1" style="width:95px;height:22px;line-height:-1px;margin-top:743px;margin-left:770px;position:absolute;text-align:center;vertical-align:middle;">
+		</div>
+		<div class="cs67B7CA21" style="width:162px;height:22px;margin-top:743px;margin-left:602px;position:absolute;">
+		</div>
+		<div class="cs67B7CA21" style="width:138px;height:22px;margin-top:743px;margin-left:458px;position:absolute;">
+		</div>
+		<div class="cs67B7CA21" style="width:318px;height:22px;margin-top:743px;margin-left:134px;position:absolute;">
+		</div>
+		<div class="cs3854C4A1" style="width:85px;height:22px;margin-top:743px;margin-left:48px;position:absolute;">
+		</div>
+		<div class="cs361D1709" style="width:46px;height:22px;margin-top:743px;margin-left:0px;position:absolute;">
+		</div>
+		<div class="cs94826830" style="width:21px;height:278px;line-height:17px;margin-top:387px;margin-left:0px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>금</nobr><br/><nobr>형</nobr><br/><nobr>상</nobr><br/><nobr>세</nobr><br/><nobr>사</nobr><br/><nobr>양</nobr></div>
+		<div class="csF2B13E2B" style="width:105px;height:35px;line-height:14px;margin-top:487px;margin-left:60px;position:absolute;text-align:left;vertical-align:middle;">
+			<nobr>&nbsp;CLAMP&nbsp;위치</nobr></div>
+		<div class="csF2B13E2B" style="width:36px;height:35px;line-height:12px;margin-top:487px;margin-left:23px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>5</nobr></div>
+		<div class="cs1D6955C8" style="width:67px;height:54px;margin-top:19px;margin-left:962px;position:absolute;">
+		</div>
+		<div class="cs1D6955C8" style="width:66px;height:54px;margin-top:19px;margin-left:895px;position:absolute;">
+		</div>
+		<div class="cs1D6955C8" style="width:67px;height:54px;margin-top:19px;margin-left:827px;position:absolute;">
+		</div>
+		<div class="csAC5EDCE6" style="width:24px;height:72px;line-height:15px;margin-top:0px;margin-left:802px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>결</nobr><br/><br/><nobr>제</nobr></div>
+		<div class="cs781B2B45" style="width:440px;height:72px;line-height:38px;margin-top:0px;margin-left:361px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>금형이력카드</nobr></div>
+		<div class="cs3F4C4AC2" style="width:67px;height:39px;line-height:16px;margin-top:703px;margin-left:962px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>비고</nobr></div>
+		<div class="cs3F4C4AC2" style="width:167px;height:39px;line-height:16px;margin-top:703px;margin-left:602px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>교환&nbsp;부품명</nobr></div>
+		<div class="cs3F4C4AC2" style="width:143px;height:39px;line-height:16px;margin-top:703px;margin-left:458px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>수리자</nobr></div>
+		<div class="cs3F4C4AC2" style="width:323px;height:39px;line-height:16px;margin-top:703px;margin-left:134px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>수&nbsp;&nbsp;&nbsp;정&nbsp;&nbsp;&nbsp;내&nbsp;&nbsp;&nbsp;용</nobr></div>
+		<div class="cs3F4C4AC2" style="width:85px;height:39px;line-height:16px;margin-top:703px;margin-left:48px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>수정일자</nobr></div>
+		<div class="csE79E1BE9" style="width:46px;height:39px;line-height:16px;margin-top:703px;margin-left:0px;position:absolute;text-align:center;vertical-align:middle;">
+			<nobr>NO</nobr></div>
+		</td>
+	</tr>
+</table>
+</body>
+</html>

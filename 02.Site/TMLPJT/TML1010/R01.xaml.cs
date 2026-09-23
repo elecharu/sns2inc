@@ -1,0 +1,252 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.IO;
+using System.Xml;
+using System.Data;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using ITSLIB;
+using DevExpress.Xpf.Grid;
+
+namespace TML1010
+{
+    /// <summary>
+    /// R01.xaml에 대한 상호 작용 논리
+    /// </summary>
+    public partial class R01 : ITSLIB.ItsPageTml
+    {
+        ItsModelPanel MODEL_S1 = new ItsModelPanel();
+        ItsModelPanel MODEL_A1 = new ItsModelPanel();
+
+        ItsModelGrid MODEL_G1 = new ItsModelGrid();
+        ItsModelGrid MODEL_G2 = new ItsModelGrid();
+
+
+        // 생성자
+        public R01()
+        {
+            InitializeComponent();
+
+            MODEL_S1.Binding(PANEL_S1);
+            MODEL_S1.DefaultValue("SDATE", DateTime.Now);
+            MODEL_S1.DefaultValue("EDATE", DateTime.Now);
+            MODEL_S1.InitData();
+
+            MODEL_A1.Binding(PANEL_A1);
+            MODEL_A1.InitData();
+
+            MODEL_G1.Binding(GRID_G1);
+            MODEL_G1.EventValueChanged += MODEL_G1_EventValueChanged;
+
+            MODEL_G2.Binding(GRID_G2);
+        }
+
+        private void MODEL_G1_EventValueChanged(int rowIndex, string fieldName)
+        {
+            if (fieldName == "LOTQTY")
+            {
+                if (MODEL_G1.GetDecimal(rowIndex, "OKQTY") < MODEL_G1.GetDecimal(rowIndex, "LOTQTY"))
+                {
+                    ShowMessageBox("", "출하수량이 출하가능량을 초과하였습니다.");
+                    MODEL_G1.SetValue(rowIndex, "LOTQTY", 0);
+                }
+
+                CALCUL_LOTUNIT(rowIndex);
+            }
+        }
+
+        // LOT 개수 계산
+        public void CALCUL_LOTUNIT(int rowIndex)
+        {
+            decimal CARINQTY = MODEL_G1.GetDecimal(rowIndex, "CARINQTY");
+            decimal LOTQTY = MODEL_G1.GetDecimal(rowIndex, "LOTQTY");
+            decimal LOTUNIT = 0;
+            if (CARINQTY != 0)
+            {
+                LOTUNIT = LOTQTY / CARINQTY;
+            }
+
+            if (CARINQTY != 0 && LOTQTY != 0)
+            {
+                MODEL_G1.SetValue(rowIndex, "LOTUNIT", LOTUNIT);
+            }
+            else
+            {
+                MODEL_G1.SetValue(rowIndex, "LOTUNIT", 0);
+            }
+        }
+
+        public override void EventPageLoaded()
+        {
+            base.EventPageLoaded();
+
+            //if (ItsLocalInfo.TMLOSCYN == "Y")
+            //{
+            //    ItsLocalInfo.TMLCD = "jj04N";
+
+            //    string INIT = ItsData.GetScalar(ItsMaria.Query("SELECT CUSTCD FROM MSTEMP_OSC WHERE FACTORYCD = '07' AND EMPNO = '" + ItsLocalInfo.TMLCD + "';"));
+            //    MODEL_S1.SetValue("CUSTCD", INIT);
+            //}
+            //else
+            //{
+            //    pop_CUSTCD.ReadOnly = false;
+            //}
+
+            MODEL_S1.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));
+            MODEL_S1.SetValue("EDATE", DateTime.Now.AddMonths(1).AddDays(-DateTime.Now.Day).ToString("yyyy-MM-dd"));
+
+            PANEL_A1.Close();
+        }
+
+        public override void EventCommand(string commandName)
+        {
+            base.EventCommand(commandName);
+
+            // 발주 조회
+            if (commandName == "LIST_MTRODR")
+            {
+                ItsMaria.Set("TML1010_R01", "LIST_MTRODR");
+
+                ItsMaria.AddModel(MODEL_S1);
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_G1.SetData(ds.Tables[0]);
+                (GRID_G1.View as TableView).BestFitColumns();
+            }
+            // 납품 등록
+            else if (commandName == "ADD_MTRCUSTLOT") {
+                ShowMessageBox(commandName, MODEL_S1.GetValue("PRDDATE") + "일자로 납품등록을 진행 하시겠습니까??");
+                return;
+            }
+
+            // 라벨재발행
+            else if (commandName == "LABEL_REPRINT")
+            {
+                ItsMaria.Set("TML1010_R01", "LABEL_REPRINT");
+                ItsMaria.AddOne("LOTKEY", MODEL_G2.GetText(MODEL_G2.CurrentIndex, "LOTKEY"));
+                ItsMaria.AddOne("INWARE", MODEL_G2.GetText(MODEL_G2.CurrentIndex, "INWARE"));
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                // 라벨출력 필요
+                ItsBarcode barcode = new ItsBarcode(ItsData.GetText(ds.Tables[0], 0, "LABELCD"));
+
+                barcode.SetDataTable(ds.Tables[1]);
+                //barcode.PrinterName = ItsPrinter.DefaultPrintName;
+                barcode.Print(false);
+            }
+            // 납품 취소
+            else if (commandName == "MTRCUST_INVOICE_CANCEL")
+            {
+                ShowMessageBox(commandName, "납품 취소 하시겠습니까??");
+                return;
+            }
+            else if (commandName == "POP_MTRCUSTLOT")
+            {
+                ItsMaria.Set("TML1010_R01", "LIST_MTRCUSTLOT");
+                ItsMaria.AddOne("MTRODRKEY", MODEL_G1.GetText(MODEL_G1.CurrentIndex, "MTRODRKEY"));
+                ItsMaria.AddOne("MTRODRSEQ", MODEL_G1.GetText(MODEL_G1.CurrentIndex, "MTRODRSEQ"));
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_A1.SetValue("MTRODRKEY", ds.Tables[0].Rows[0]["MTRODRKEY"]);
+                MODEL_A1.SetValue("MTRODRSEQ", ds.Tables[0].Rows[0]["MTRODRSEQ"]);
+                MODEL_A1.SetValue("OUTDATE", ds.Tables[0].Rows[0]["PRDDATE"]);
+                MODEL_A1.SetValue("OUTCUSTCD", ds.Tables[0].Rows[0]["OUTCUSTCD"]);
+                MODEL_A1.SetValue("INCUSTCD", ds.Tables[0].Rows[0]["INCUSTCD"]);
+                MODEL_G2.SetData(ds.Tables[0]);
+
+                PANEL_A1.Show();
+            }
+        }
+        
+        public override void EventMessageResult(string commandName)
+        {
+            base.EventMessageResult(commandName);
+
+            // 납품 취소
+            if (commandName == "MTRCUST_INVOICE_CANCEL")
+            {
+                ItsMaria.Set("TML1010_R01", "DEL_MTRCUSTLOT");
+
+                ItsMaria.AddModel(MODEL_A1);
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                PANEL_A1.Close();
+
+                EventCommand("LIST_MTRODR");
+            }
+            // 납품 등록
+            else if (commandName == "ADD_MTRCUSTLOT")
+            {
+                ItsMaria.Set("TML1010_R01", "ADD_MTRCUSTLOT");
+                ItsMaria.AddOne("PRDDATE", MODEL_S1.GetValue("PRDDATE"));
+
+                for (int i = 0; i < MODEL_G1.Rows.Count; i++)
+                {
+                    if (MODEL_G1.IsChecked(i))
+                    {
+                        ItsMaria.AddList("MTRODRKEY_LIST", MODEL_G1.GetText(i, "MTRODRKEY"));
+                        ItsMaria.AddList("MTRODRSEQ_LIST", MODEL_G1.GetText(i, "MTRODRSEQ"));
+                        ItsMaria.AddList("ITEMID_LIST", MODEL_G1.GetText(i, "ITEMID"));
+                        ItsMaria.AddList("LOTQTY_LIST", MODEL_G1.GetText(i, "LOTQTY"));
+                        ItsMaria.AddList("CARINQTY_LIST", MODEL_G1.GetText(i, "CARINQTY"));
+                        ItsMaria.AddList("LOTUNIT_LIST", MODEL_G1.GetText(i, "LOTUNIT"));
+                    }
+                }
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_A1.SetValue("INVOICEKEY", ds.Tables[0].Rows[0]["INVOICEKEY"]);
+                MODEL_A1.SetValue("OUTDATE", ds.Tables[0].Rows[0]["PRDDATE"]);
+                MODEL_A1.SetValue("OUTCUSTCD", ds.Tables[0].Rows[0]["OUTCUSTCD"]);
+                MODEL_A1.SetValue("INCUSTCD", ds.Tables[0].Rows[0]["INCUSTCD"]);
+                MODEL_G2.SetData(ds.Tables[0]);
+
+                PANEL_A1.Show();
+            }
+        }
+    }
+}
+

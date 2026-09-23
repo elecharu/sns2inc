@@ -1,0 +1,208 @@
+﻿namespace ITSSCHEDULER
+{
+    partial class MainForm
+    {
+        /// <summary>
+        /// 必需的设计器变量。
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
+        /// <summary>
+        /// 清理所有正在使用的资源。
+        /// </summary>
+        /// <param name="disposing">如果应释放托管资源，为 true；否则为 false。</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        #region Windows 窗体设计器生成的代码
+
+        /// <summary>
+        /// 设计器支持所需的方法 - 不要修改
+        /// 使用代码编辑器修改此方法的内容。
+        /// </summary>
+        private void InitializeComponent()
+        {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.PLCCD = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.PLCADDR = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.PLCVALUE = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.REMARK = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.label_errmsg = new System.Windows.Forms.Label();
+            this.LTIME = new System.Windows.Forms.Label();
+            this.bt_disconn = new System.Windows.Forms.Button();
+            this.bt_conn = new System.Windows.Forms.Button();
+            this.serialPort1 = new System.IO.Ports.SerialPort(this.components);
+            this.contextMenuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.SuspendLayout();
+            // 
+            // notifyIcon1
+            // 
+            this.notifyIcon1.ContextMenuStrip = this.contextMenuStrip1;
+            this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
+            this.notifyIcon1.Text = "notifyIcon1";
+            this.notifyIcon1.Visible = true;
+            this.notifyIcon1.Click += new System.EventHandler(this.notifyIcon1_Click);
+            this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.closeToolStripMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(145, 26);
+            // 
+            // closeToolStripMenuItem
+            // 
+            this.closeToolStripMenuItem.Font = new System.Drawing.Font("굴림", 9F);
+            this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(144, 22);
+            this.closeToolStripMenuItem.Text = "프로그램종료";
+            this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
+            // 
+            // dataGridView1
+            // 
+            this.dataGridView1.AllowUserToAddRows = false;
+            this.dataGridView1.AllowUserToDeleteRows = false;
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.PLCCD,
+            this.PLCADDR,
+            this.PLCVALUE,
+            this.REMARK});
+            this.dataGridView1.Location = new System.Drawing.Point(0, 53);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.ReadOnly = true;
+            this.dataGridView1.RowTemplate.Height = 23;
+            this.dataGridView1.Size = new System.Drawing.Size(984, 451);
+            this.dataGridView1.TabIndex = 1;
+            this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            // 
+            // PLCCD
+            // 
+            this.PLCCD.DataPropertyName = "PLCCD";
+            this.PLCCD.HeaderText = "PLC번호";
+            this.PLCCD.Name = "PLCCD";
+            this.PLCCD.ReadOnly = true;
+            // 
+            // PLCADDR
+            // 
+            this.PLCADDR.DataPropertyName = "PLCADDR";
+            this.PLCADDR.HeaderText = "PLC번지";
+            this.PLCADDR.Name = "PLCADDR";
+            this.PLCADDR.ReadOnly = true;
+            // 
+            // PLCVALUE
+            // 
+            this.PLCVALUE.DataPropertyName = "PLCVALUE";
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            this.PLCVALUE.DefaultCellStyle = dataGridViewCellStyle1;
+            this.PLCVALUE.HeaderText = "항목값";
+            this.PLCVALUE.Name = "PLCVALUE";
+            this.PLCVALUE.ReadOnly = true;
+            // 
+            // REMARK
+            // 
+            this.REMARK.DataPropertyName = "REMARK";
+            this.REMARK.HeaderText = "항목명";
+            this.REMARK.Name = "REMARK";
+            this.REMARK.ReadOnly = true;
+            this.REMARK.Width = 300;
+            // 
+            // label_errmsg
+            // 
+            this.label_errmsg.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label_errmsg.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.label_errmsg.Location = new System.Drawing.Point(125, 149);
+            this.label_errmsg.Name = "label_errmsg";
+            this.label_errmsg.Size = new System.Drawing.Size(691, 243);
+            this.label_errmsg.TabIndex = 2;
+            this.label_errmsg.Text = "ERR 메시지";
+            this.label_errmsg.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.label_errmsg.Visible = false;
+            // 
+            // LTIME
+            // 
+            this.LTIME.BackColor = System.Drawing.Color.Black;
+            this.LTIME.Font = new System.Drawing.Font("굴림", 20.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.LTIME.ForeColor = System.Drawing.Color.White;
+            this.LTIME.Location = new System.Drawing.Point(775, 9);
+            this.LTIME.Name = "LTIME";
+            this.LTIME.Size = new System.Drawing.Size(197, 36);
+            this.LTIME.TabIndex = 11;
+            this.LTIME.Text = "12:00:00";
+            this.LTIME.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // bt_disconn
+            // 
+            this.bt_disconn.Location = new System.Drawing.Point(130, 9);
+            this.bt_disconn.Name = "bt_disconn";
+            this.bt_disconn.Size = new System.Drawing.Size(106, 36);
+            this.bt_disconn.TabIndex = 14;
+            this.bt_disconn.Text = "DISCONN";
+            this.bt_disconn.UseVisualStyleBackColor = true;
+            // 
+            // bt_conn
+            // 
+            this.bt_conn.Location = new System.Drawing.Point(12, 9);
+            this.bt_conn.Name = "bt_conn";
+            this.bt_conn.Size = new System.Drawing.Size(112, 36);
+            this.bt_conn.TabIndex = 13;
+            this.bt_conn.Text = "CONN";
+            this.bt_conn.UseVisualStyleBackColor = true;
+            this.bt_conn.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // MainForm
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(984, 504);
+            this.Controls.Add(this.bt_disconn);
+            this.Controls.Add(this.bt_conn);
+            this.Controls.Add(this.LTIME);
+            this.Controls.Add(this.label_errmsg);
+            this.Controls.Add(this.dataGridView1);
+            this.Font = new System.Drawing.Font("굴림", 9F);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.Name = "MainForm";
+            this.Text = "Its Schedule Service";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Load += new System.EventHandler(this.MainForm_Load);
+            this.contextMenuStrip1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.ResumeLayout(false);
+
+        }
+
+        #endregion
+        private System.Windows.Forms.NotifyIcon notifyIcon1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
+        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.Label label_errmsg;
+        private System.Windows.Forms.Label LTIME;
+        private System.Windows.Forms.Button bt_disconn;
+        private System.Windows.Forms.Button bt_conn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn PLCCD;
+        private System.Windows.Forms.DataGridViewTextBoxColumn PLCADDR;
+        private System.Windows.Forms.DataGridViewTextBoxColumn PLCVALUE;
+        private System.Windows.Forms.DataGridViewTextBoxColumn REMARK;
+        private System.IO.Ports.SerialPort serialPort1;
+    }
+}
+

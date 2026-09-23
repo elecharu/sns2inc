@@ -1,0 +1,9 @@
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\StockCalc\bin\StockCalc.exe
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\StockCalc\bin\StockCalc.pdb
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\StockCalc\bin\HtmlAgilityPack.dll
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\StockCalc\bin\HtmlAgilityPack.pdb
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\StockCalc\bin\HtmlAgilityPack.xml
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\StockCalc\obj\Debug\StockCalc.exe
+D:\SOURCE\ITS_WEB_MP_VA.2.0\Service\Schedule\StockCalc\obj\Debug\StockCalc.pdb
+D:\SOURCE\ITS_ERP_YJ_VA.1.0\Service\Schedule\Assign\obj\Debug\StockCalc.exe
+D:\SOURCE\ITS_ERP_YJ_VA.1.0\Service\Schedule\Assign\obj\Debug\StockCalc.pdb

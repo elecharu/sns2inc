@@ -1,0 +1,115 @@
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+
+namespace PLC_GATHERING_Prj
+{
+    class Log
+    {
+        static Log _this = new Log();
+
+        public static Log This
+        {
+            get { return _this; }
+        }
+
+        public void DB_HistLog_Write(string state, string msg)
+        {
+            try
+            {
+                ItsMariaThread itsMariaThread = new ItsMariaThread();
+
+                itsMariaThread.Query(
+                                    "INSERT INTO PROGRAM_HISTORY(CUSTCD, STATUS, MESSAGE)" +
+                                    "VALUES('" + Workspace.This.CUSTCD + "', '" + state + "', '" + msg + "', '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "')"
+                                    );
+            }
+            catch (Exception ex)
+            {
+                Log_main("DB_HistLog_Write => " + ex.Message);
+            }
+        }
+
+        public void Log_main(String msg)
+        {
+            string FilePath = Directory.GetCurrentDirectory() + @"\Logs\" + DateTime.Today.ToString("yyyyMMdd") + ".log";
+
+            string DirPath = Directory.GetCurrentDirectory() + @"\Logs";
+
+            DirectoryInfo di = new DirectoryInfo(DirPath);
+
+            FileInfo fi = new FileInfo(FilePath);
+
+            try
+            {
+                if (di.Exists != true) Directory.CreateDirectory(DirPath);
+
+                if (fi.Exists != true)
+                {
+                    using (StreamWriter sw = new StreamWriter(FilePath))
+                    {
+                        sw.WriteLine(msg);
+
+                        sw.Close();
+                    }
+                }
+                else
+                {
+                    using (StreamWriter sw = File.AppendText(FilePath))
+                    {
+                        sw.WriteLine(msg);
+
+                        sw.Close();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                ErrLog_main("Log_main => " + e.Message);
+            }
+        }
+
+        public void ErrLog_main(String msg)
+        {
+            string FilePath = Directory.GetCurrentDirectory() + @"\Logs\" + DateTime.Today.ToString("yyyyMMdd") + ".Errlog";
+
+            string DirPath = Directory.GetCurrentDirectory() + @"\Logs";
+
+            DirectoryInfo di = new DirectoryInfo(DirPath);
+
+            FileInfo fi = new FileInfo(FilePath);
+
+            try
+            {
+                if (di.Exists != true) Directory.CreateDirectory(DirPath);
+
+                if (fi.Exists != true)
+                {
+                    using (StreamWriter sw = new StreamWriter(FilePath))
+                    {
+                        sw.WriteLine("[" + DateTime.Now + "]" + msg + "\r\n");
+
+                        sw.Close();
+                    }
+                }
+                else
+                {
+                    using (StreamWriter sw = File.AppendText(FilePath))
+                    {
+                        sw.WriteLine("[" + DateTime.Now + "]" + msg + "\r\n");
+
+                        sw.Close();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+        }
+    }
+}

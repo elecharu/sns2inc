@@ -1,0 +1,385 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Collections;
+using System.IO;
+using System.Timers;
+using MySql.Data.MySqlClient;
+using System.Net;
+using Excel = Microsoft.Office.Interop.Excel;
+
+using System.Web;
+//asdfasdf
+namespace ITSFILEREADER
+{
+    public partial class Form1 : Form
+    {
+        private string _filePath;
+        private string rootPath = @"C:\"; // 실제 서버용
+        private string saveTextPath = @"C:\3DFILE_COPY\FILEPATH.txt"; // 설비파일이 저장되는 경로가 적힌 txt
+        private string copyPath = @"C:\3DFILE_COPY\";   // 원본파일 복사해두는 폴더
+        //private string rootPath = @"C:\Users\DK\Desktop\TEST";   // 내부 테스트 용
+        //private string saveTextPath = @"C:\Users\DK\Desktop\TEST\TEST_FROM\FILEPATH.txt"; // 설비파일이 저장되는 경로가 적힌 txt
+        //private string copyPath = @"C:\Users\DK\Desktop\TEST\TEST_TO\";   // 원본파일 복사해두는 폴더
+        //private string pdfPath = @"D:\ITSCO\1.source\ITS_MES_DE_VA.1.0\01.Office\UploadFiles\";
+        private string pdfPath = @"C:\ITSCO\MES_DE\01.Office\UploadFiles\MES_DE\";    // 이미지파일 저장되는 위치
+
+
+
+        System.Timers.Timer t1;
+ 
+
+        private bool _t2ReadyToRun = false;
+
+        public Form1()
+
+        {
+            InitializeComponent();
+
+            // 중복 실행 확인
+            bool isRun = false;
+            System.Diagnostics.Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+            System.Diagnostics.Process[] processess = System.Diagnostics.Process.GetProcesses();
+     
+            foreach (System.Diagnostics.Process process in processess)
+            {
+                if (currentProcess.Id != process.Id)
+                {
+                    if (currentProcess.ProcessName == process.ProcessName)
+                    {
+                        isRun = true;
+                        break;
+                    }
+                }
+            }
+            if (isRun)
+            {
+                MessageBox.Show("프로그램이 이미 실행중입니다.\n\n트레이 아이콘을 확인하세요.");
+                this.Close();
+            }
+            else
+            {
+                t1 = new System.Timers.Timer();
+                t1.Interval = 5000; // 
+                t1.Enabled = false;
+                t1.Elapsed += T1_Elapsed;
+
+            }
+        }
+
+
+
+        private void T1_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            t1.Stop();
+
+            DirectoryInfo fileDir = new DirectoryInfo(_filePath);
+            if (!fileDir.Exists) { t1.Start(); return; }
+
+            FileInfo[] eqmFile = fileDir.GetFiles();
+
+            foreach (FileInfo fileInfo in eqmFile)
+            {
+                if (fileInfo.Extension.ToLower() == ".xlsx" && !fileInfo.FullName.Contains("_copy"))
+                {
+                    string destFullPath = copyPath + fileInfo.Name.Replace(".xlsx", "_copy.xlsx");
+
+                    if (!Directory.Exists(copyPath)) Directory.CreateDirectory(copyPath);
+
+                    File.Copy(fileInfo.FullName, destFullPath, true);
+
+                    // 엑셀 읽고 DataTable로 변환
+                    DataTable dt = ReadExcelToDataTable(destFullPath, fileInfo.Name);
+
+                    // DB에 저장
+                    SaveDataTableToSQL(dt);
+                    File.Delete(fileInfo.FullName);
+                }
+
+                ////pdf 복사 
+                else if (fileInfo.Extension.ToLower() == ".pdf" && !fileInfo.FullName.Contains("_copy"))
+                {
+
+                    // 파일키 찾아오기
+                    ItsMaria.Set("COMFILE", "NEWKEY");
+                    DataSet ds = ItsMaria.Call();
+                    if (ItsMaria.IsError)
+                    {
+                        MessageBox.Show("DB 오류 : " + ItsMaria.ErrMessage);
+                        return;
+                    }
+
+                    string fileKey = ds.Tables[0].Rows[0]["FILEKEY"].ToString();
+
+                    string folderName = fileKey.Substring(0, 4);
+                    string targetFolder = Path.Combine(pdfPath, folderName);
+
+                    if (!Directory.Exists(targetFolder))
+                        Directory.CreateDirectory(targetFolder);
+                    string newFileName = fileKey + fileInfo.Extension.ToLower();
+                    string targetFilePath = Path.Combine(targetFolder, newFileName);
+
+                    File.Copy(fileInfo.FullName, targetFilePath, true);
+
+                    File.Delete(fileInfo.FullName);
+                    /// UploadFiles / MES_DE /
+                    string filePath = "/UploadFiles/MES_DE/" + fileKey.Substring(0, 4) + "/" + newFileName;
+
+                    ItsMaria.Set("SAVE_3DMEASURE", "SAVE_PDF");
+                    ItsMaria.AddOne("FILEKEY", fileKey);
+                    ItsMaria.AddOne("FILENAME", fileInfo.Name);
+                    ItsMaria.AddOne("FILEEXT", fileInfo.Extension.ToLower());
+                    ItsMaria.AddOne("FILESIZE", fileInfo.Length.ToString());
+                    ItsMaria.AddOne("FILEPATH", filePath);
+                    ItsMaria.AddOne("LOCATION", "");
+                    DataSet ds1 = ItsMaria.Call();
+                    if (ItsMaria.IsError)
+                    {
+                        MessageBox.Show("DB 오류 : " + ItsMaria.ErrMessage);
+                        return;
+                    }
+                }
+            }
+            t1.Start();
+        }
+
+
+
+
+
+
+        private DataTable ReadPdfToDataTable(string originalFileName)
+        {
+            DataTable dt = new DataTable();
+
+            dt.Columns.Add("파일이름");
+            dt.Columns.Add("파일경로");
+            dt.Columns.Add("파일크기");
+            dt.Columns.Add("확장자");
+            dt.Columns.Add("생성일자");
+            dt.Columns.Add("업로드일자");
+
+            FileInfo fi = new FileInfo(originalFileName);
+
+            if (fi.Exists)
+            {
+                DataRow dr = dt.NewRow();
+
+                dr["파일이름"] = fi.Name;
+                dr["파일경로"] = fi.FullName;
+                dr["파일크기"] = fi.Length.ToString();
+                dr["확장자"] = fi.Extension.ToLower();
+                dr["생성일자"] = fi.CreationTime.ToString("yyyy-MM-dd HH:mm:ss");
+                dr["업로드일자"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+                dt.Rows.Add(dr);
+            }
+
+            return dt;
+
+        }
+        // 엑셀 읽어서 DataTable 생성
+        private DataTable ReadExcelToDataTable(string fileFullPath, string originalFileName)
+        {
+            DataTable dt = new DataTable();
+
+            dt.Columns.Add("파일이름");
+            dt.Columns.Add("이름");
+            dt.Columns.Add("컨트롤");
+            dt.Columns.Add("노미널");
+            dt.Columns.Add("측정");
+            dt.Columns.Add("공차");
+            dt.Columns.Add("편차");
+            dt.Columns.Add("테스트");
+            dt.Columns.Add("OUTTOL");
+            dt.Columns.Add("SEQ", typeof(int));
+            Excel.Application xlApp = new Excel.Application();
+            Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(fileFullPath);
+            Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
+            Excel.Range xlRange = xlWorksheet.UsedRange;
+
+            int rowCount = xlRange.Rows.Count;
+            int sequence = 1; // 순서 번호 카운터 시작
+
+            for (int r = 1; r <= rowCount; r++)
+            {
+                string testValue = xlRange.Cells[r, 7].Value2?.ToString(); // G 컬럼 = 7
+                if (testValue == "합격" || testValue == "불합격")
+                {
+                    DataRow dr = dt.NewRow();
+
+                    dr["파일이름"] = originalFileName;
+
+                    for (int c = 1; c <= 8; c++) // c = 컬럼수
+                    {
+                        dr[c] = xlRange.Cells[r, c].Value2?.ToString();
+                    }
+                    dr["SEQ"] = ++sequence; // 순서 번호 부여
+                    dt.Rows.Add(dr);
+                }
+            }
+
+            
+            xlWorkbook.Close(false);
+            xlApp.Quit();
+            releaseObject(xlRange);
+            releaseObject(xlWorksheet);
+            releaseObject(xlWorkbook);
+            releaseObject(xlApp);
+
+            return dt;
+        }
+
+        // DataTable → SQL 저장
+        private void SaveDataTableToSQL(DataTable dt)
+        {
+            ItsMaria.Set("SAVE_3DMEASURE", "SAVE"); // 프로시저 이름 예시
+
+
+            foreach (DataRow row in dt.Rows)
+            {
+                
+                ItsMaria.AddOne("FILENAME", row["파일이름"].ToString());
+                ItsMaria.AddList("NAME_LIST", row["이름"].ToString());
+                ItsMaria.AddList("CONTROL_LIST", row["컨트롤"].ToString());
+                ItsMaria.AddList("NOMINAL_LIST", row["노미널"].ToString());
+                ItsMaria.AddList("MEAVAL_LIST", row["측정"].ToString());
+                ItsMaria.AddList("TOLVAL_LIST", row["공차"].ToString());
+                ItsMaria.AddList("DEVVAL_LIST", row["편차"].ToString());
+                ItsMaria.AddList("TESTYN_LIST", row["테스트"].ToString());
+                ItsMaria.AddList("OUTTOL_LIST", row["OUTTOL"].ToString());
+                ItsMaria.AddList("SEQ_LIST", row["SEQ"].ToString());
+            }
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                MessageBox.Show("DB 오류 : " + ItsMaria.ErrMessage);
+            }
+        }
+
+
+
+        private void releaseObject(object obj)
+        {
+            try
+            {
+                System.Runtime.InteropServices.Marshal.ReleaseComObject(obj);
+                obj = null;
+            }
+            catch (Exception ex)
+            {
+                obj = null;
+                MessageBox.Show("Unable to release the Object " + ex.ToString());
+            }
+            finally
+            {
+                GC.Collect();
+     
+            }
+        }
+        
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            if (File.Exists(saveTextPath))
+            {
+                _filePath = File.ReadAllText(saveTextPath, Encoding.UTF8);
+            }
+
+            //patchTextBox.Text = _filePath;
+
+            
+            patchTextBox.Text = _filePath;
+        }
+
+        private bool IsClose = false;
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (IsClose == true) return;
+
+            e.Cancel = true;
+            this.Visible = false;
+        }
+
+        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.IsClose = true;
+            this.Close();
+        }
+
+        private bool _stop = false;
+        private void btnStop_Click(object sender, EventArgs e)
+        {
+            t1.Stop();
+            _stop = true;
+
+            btnStart.Enabled = true;
+            btnStop.Enabled = false;
+        }
+
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            if (_filePath == "")
+            {
+                MessageBox.Show("파일경로가 지정되어 있지 않습니다.");
+                return;
+            }
+
+            _stop = false;
+            t1.Start();
+
+            this.Visible = false;
+            btnStart.Enabled = false;
+            btnStop.Enabled = true;
+
+        }
+
+        private void foldSave_Click(object sender, EventArgs e)   // 파일경로저장 열기
+        {
+
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+
+            dialog.ShowDialog();
+
+            string dialogPath = dialog.SelectedPath;
+
+            string textValue = dialogPath;
+
+            if (!Directory.Exists(rootPath)) Directory.CreateDirectory(rootPath);
+
+            File.WriteAllText(saveTextPath, textValue, Encoding.UTF8);
+
+            if (textValue != "") { _filePath = File.ReadAllText(saveTextPath, Encoding.UTF8); }
+            else { _filePath = ""; }
+
+            patchTextBox.Text = _filePath;
+
+        }
+
+        private void notifyIcon1_Click(object sender, EventArgs e)
+        {
+            this.Visible = true;
+
+        }
+
+        private void notifyIcon1_DoubleClick(object sender, EventArgs e)
+        {
+            this.Visible = true;
+        }
+
+        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+
+        }
+        
+    }
+
+
+}
+
+
+

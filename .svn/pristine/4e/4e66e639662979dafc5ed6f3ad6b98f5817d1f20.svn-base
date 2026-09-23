@@ -1,0 +1,50 @@
+﻿<its:ItsPageOffice x:Class="SYS0202.R01"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:SYS0202"
+      xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
+      mc:Ignorable="d" 
+      d:DesignHeight="700" d:DesignWidth="1000"
+      Title="R01">
+    <DockPanel>
+        <UserControl Style="{DynamicResource SEARCH}" DockPanel.Dock="Top">
+            <its:WrapContent x:Name="PANEL_S1">
+                <!-- ################################# PANEL SEARCH : START -->
+                <its:Combo Label="패키지" Value="{Binding PKGTP}" GPCD="PKGTP"></its:Combo>
+                <!-- ################################# PANEL SEARCH : END -->
+            </its:WrapContent>
+        </UserControl>
+        <DockPanel>
+            <DockPanel DockPanel.Dock="Left">
+                <ScrollViewer Width="250">
+                    <DockPanel x:Name="SUB_MENU" Margin="0" Background="WhiteSmoke"/>
+                </ScrollViewer>
+            </DockPanel>
+            <DockPanel>
+                <UserControl Style="{DynamicResource ADD}" DockPanel.Dock="Top">
+                    <its:WrapContent x:Name="PANEL_A1">
+                        <!-- ################################# PANEL CONTENT: START-->
+                        <its:Text Label="메뉴명" Value="{Binding MENUNM}"/>
+                        <its:Pop Label="화면코드" Value="{Binding PRGCD}" GPCD="PRGCD"/>
+                        <!-- ################################# PANEL CONTENT: END-->
+                    </its:WrapContent>
+                </UserControl>
+                <UserControl Style="{DynamicResource GRID}" Grid.Column="2">
+                    <its:Grid x:Name="GRID_G2">
+                        <its:Grid.Columns>
+                            <!-- ################################# COLUMN FLEX: START -->
+                            <its:Column Width="100" Header="선택" IsRowCheck="True"/>
+                            <its:Column Width="100" Header="메뉴명" FieldName="MENUNM" ReadOnly="False"/>
+                            <its:Column Width="100" Header="화면번호" FieldName="PRGCD" ReadOnly="False"/>
+                            <its:Column Width="100" Header="순번" FieldName="MENUSEQ" DecimalPoint="0" ReadOnly="False"/>
+                            <its:Column Width="200" Header="비고" FieldName="REMARK" ReadOnly="False"/>
+                            <!-- ################################# COLUMN FLEX: END -->
+                        </its:Grid.Columns>
+                    </its:Grid>
+                </UserControl>
+            </DockPanel>
+        </DockPanel>
+    </DockPanel>
+</its:ItsPageOffice>

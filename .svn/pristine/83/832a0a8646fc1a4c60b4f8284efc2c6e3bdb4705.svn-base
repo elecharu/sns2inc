@@ -1,0 +1,85 @@
+﻿<?xml version="1.0"?>
+<!--
+  For more information on how to configure your ASP.NET application, please visit
+  http://go.microsoft.com/fwlink/?LinkId=169433
+  -->
+<configuration>
+  <!--<appSettings>
+    <add key="ActiveReports 12 License" value="bSYNGtwoWAUOrRZvhnMMHBhrQ3gLa7TfYRgT1bDGrm0VGwv56U7ausi0UC/KSVoihTJunJ0xFy0UEqrkk4AkcutiiqlI4Pi4+JHRrew05lqKawIyQwFi2Kz6pQjtEkcgsSdt5xtvBlsLI/Hi3k1WtHgpwrargKgPY3d9NoCHjlC4O9y+Atq1BLXqLEEDl3BIT3SLEy6k/kAGtKvVpOT9YnncTbEog8X2RD0HcB7SC3nL/Zhrl2XRr5fj0bUCRBizpWpwljLVYGtRXYXSyDeCf8v3trpaeswDdz7jdwQ7EL47oSG30WfSrY6yJ2X1LC14KzsUwH4eXYE=" />
+  </appSettings>-->
+  <!--
+    web.config 변경 내용에 대한 설명은  http://go.microsoft.com/fwlink/?LinkId=235367을 참고하십시오.
+
+    다음 특성은 <httpRuntime> 태그에 설정할 수 있습니다.
+      <system.Web>
+        <httpRuntime targetFramework="4.5" />
+      </system.Web>
+  -->
+  <system.web>
+    <customErrors mode="Off"/>
+    <httpRuntime requestValidationMode="2.0" executionTimeout="3600" maxRequestLength="1073741824"/>
+    <compilation debug="true" targetFramework="4.5.2">
+      <assemblies>
+        <add assembly="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=B77A5C561934E089"/>
+        <add assembly="WindowsBase, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31BF3856AD364E35"/>
+        <add assembly="System.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=B03F5F7F11D50A3A"/>
+      </assemblies>
+    </compilation>
+    <pages validateRequest="false" controlRenderingCompatibilityVersion="4.0">
+      <controls>
+        <add tagPrefix="Its" tagName="div" src="~/UserControl/ItsDiv.ascx"/>
+        <add tagPrefix="Its" tagName="grid" src="~/UserControl/ItsGrid.ascx"/>
+        <add tagPrefix="Its" tagName="newline" src="~/UserControl/ItsNewLine.ascx"/>
+        <add tagPrefix="Its" tagName="text" src="~/UserControl/ItsText.ascx"/>
+        <add tagPrefix="Its" tagName="combo" src="~/UserControl/ItsCombo.ascx"/>
+        <add tagPrefix="Its" tagName="button" src="~/UserControl/ItsButton.ascx"/>
+        <add tagPrefix="Its" tagName="split" src="~/UserControl/ItsSplit.ascx"/>
+        <add tagPrefix="Its" tagName="pop" src="~/UserControl/ItsPop.ascx"/>
+        <add tagPrefix="Its" tagName="tab" src="~/UserControl/ItsTab.ascx"/>
+        <add tagPrefix="Its" tagName="rptViewer" src="~/UserControl/ItsRptViewer.ascx"/>
+        <add tagPrefix="Its" tagName="img" src="~/UserControl/ItsImage.ascx"/>
+        <add tagPrefix="Its" tagName="fileManager" src="~/UserControl/ItsFileManager.ascx"/>
+        <add tagPrefix="Its" tagName="date" src="~/UserControl/ItsDate.ascx"/>
+        <add tagPrefix="Its" tagName="dateRange" src="~/UserControl/ItsDateRange.ascx"/>
+        <add tagPrefix="Its" tagName="month" src="~/UserControl/ItsMonth.ascx"/>
+        <add tagPrefix="Its" tagName="num" src="~/UserControl/ItsNum.ascx"/>
+        <add tagPrefix="Its" tagName="find" src="~/UserControl/ItsFind.ascx"/>
+        <add tagPrefix="Its" tagName="display" src="~/UserControl/ItsDisplay.ascx"/>
+        <add tagPrefix="Its" tagName="onoff" src="~/UserControl/ItsOnoff.ascx"/>
+        <add tagPrefix="Its" tagName="textarea" src="~/UserControl/ItsTextArea.ascx"/>
+        <add tagPrefix="Its" tagName="TaxfileManager" src="~/UserControl/ItsTaxFileManager.ascx"/>
+        <add tagPrefix="Its" tagName="Radio" src="~/UserControl/ItsRadio.ascx"/>
+        <add tagPrefix="Its" tagName="check" src="~/UserControl/ItsCheck.ascx"/>
+        <add tagPrefix="Its" tagName="label" src="~/UserControl/ItsLabel.ascx"/>
+      </controls>
+    </pages>
+  </system.web>
+  <runtime>
+    <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+      <dependentAssembly>
+        <assemblyIdentity name="System.Web.Helpers" publicKeyToken="31bf3856ad364e35"/>
+        <bindingRedirect oldVersion="1.0.0.0-3.0.0.0" newVersion="3.0.0.0"/>
+      </dependentAssembly>
+      <dependentAssembly>
+        <assemblyIdentity name="System.Web.WebPages" publicKeyToken="31bf3856ad364e35"/>
+        <bindingRedirect oldVersion="1.0.0.0-3.0.0.0" newVersion="3.0.0.0"/>
+      </dependentAssembly>
+    </assemblyBinding>
+  </runtime>
+  <system.webServer>
+    <staticContent>
+      <mimeMap fileExtension=".properties" mimeType="application / octet-stream"/>
+      <mimeMap fileExtension=".hwp" mimeType="application/unknown"/>
+    </staticContent>
+  </system.webServer>
+  <appSettings>
+    <add key="com.baroservice.testws.TI" value="http://testws.baroservice.com/TI.asmx"/>
+    <add key="com.baroservice.ws.TI" value="http://ws.baroservice.com/TI.asmx"/>
+    <add key="com.baroservice.testws.EDOC" value="http://testws.baroservice.com/EDOC.asmx"/>
+    <add key="com.baroservice.ws.EDOC" value="http://ws.baroservice.com/EDOC.asmx"/>
+    <add key="com.baroservice.ws.CARD" value="http://ws.baroservice.com/CARD.asmx"/>
+    <add key="com.baroservice.testws.CARD" value="http://testws.baroservice.com/CARD.asmx"/>
+    <add key="com.baroservice.testws.BANKACCOUNT" value="http://testws.baroservice.com/BANKACCOUNT.asmx"/>
+    <add key="com.baroservice.ws.BANKACCOUNT" value="http://ws.baroservice.com/BANKACCOUNT.asmx"/>
+  </appSettings>
+</configuration>

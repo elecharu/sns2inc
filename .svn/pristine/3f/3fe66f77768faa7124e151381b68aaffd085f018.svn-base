@@ -1,0 +1,240 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Windows.Input.Test;
+using ItsKeyPad;
+using WindowsInput.Native;
+
+namespace ITSLIB
+{
+    /// <summary>
+    /// ItsLabelText.xaml 的交互逻辑
+    /// </summary>
+    public partial class Time : UserControl
+    {
+        public ItsModelPanel ModelPanel = null;
+        public Time()
+        {
+            InitializeComponent();
+            ShowKeyPad = "Y";
+        }
+        public bool ReadOnly
+        {
+            get { return textEdit.IsReadOnly; }
+            set
+            {
+                textEdit.IsReadOnly = value;
+                if (value)
+                {
+                    textEdit.Background = new BrushConverter().ConvertFrom("#ECECEC") as SolidColorBrush;
+                }
+                else
+                {
+                    textEdit.Background = Brushes.White;
+                }
+            }
+        }
+
+        public string Label
+        {
+            get { return textBlock.Text; }
+            set { textBlock.Text = value; }
+        }
+
+        public string HidenLabel
+        {
+            set
+            {
+                if (value.Length > 0)
+                {
+                    this.Width = this.Width - textBlock.Width;
+                    textBlock.Width = 0;
+                    textBlock.Visibility = Visibility.Hidden;
+                }
+            }
+        }
+
+        public double LabelWidth
+        {
+            get { return textBlock.Width; }
+            set { textBlock.Width = value; }
+        }
+
+        public string Value
+        {
+            get
+            {
+                string value = GetValue(ValueProperty).ToString();
+                if (value.Length == 5)
+                {
+                    value = value + ":00";
+                }
+                SetValue(ValueProperty, value);
+
+                return value;
+            }
+            set
+            {
+                if (value.Length == 5)
+                {
+                    value = value + ":00";
+                }
+
+                //int startIndex = textEdit.SelectionStart;
+                //SetValue(ValueProperty, value);
+                //textEdit.SelectionStart = startIndex;
+            }
+        }
+        public readonly static DependencyProperty ValueProperty =
+            DependencyProperty.Register("Value",
+                typeof(string),
+                typeof(Time),
+                new FrameworkPropertyMetadata("", FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, propertyChangedCallback));
+        private static void propertyChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            object editValue = ((Time)(sender)).textEdit.EditValue;
+            int length = 5;
+            if (((Time)(sender)).textEdit.Mask == "([0-1]\\d|2[0-3]):[0-5]\\d:[0-5]\\d") length = 8;
+            try
+            {
+                if (editValue == null || editValue.ToString() == "" || editValue.ToString().Substring(0, length) != e.NewValue.ToString())
+                {
+                    ((Time)(sender)).textEdit.EditValue = e.NewValue.ToString();
+                    ((Time)(sender)).Value = e.NewValue.ToString();
+                }
+            }
+            catch { }
+        }
+
+        public string ShowKeyPad
+        {
+            set
+            {
+                if (value == "Y" || value.ToUpper() == "TRUE")
+                {
+                    keyPadIcon.MaxWidth = 1000;
+                    canvas.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    keyPadIcon.MaxWidth = 0;
+                    canvas.Visibility = Visibility.Hidden;
+                }
+            }
+        }
+
+        public string ShowSecond
+        {
+            set
+            {
+                if (value.Length > 0)
+                {
+                    textEdit.Mask = "([0-1]\\d|2[0-3]):[0-5]\\d:[0-5]\\d";
+                }
+            }
+        }
+
+        public new bool IsFocused
+        {
+            get
+            {
+                return textEdit.IsFocused;
+            }
+        }
+
+        private void numericBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            textEdit.SelectionStart = 0;
+            textEdit.SelectionLength = 100;
+        }
+
+        private void KEY_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+
+            textEdit.Focus();
+
+            //int startIndex = textEdit.SelectionStart;
+
+            string keyCode = (e.Source as Label).Content.ToString();
+
+            if (keyCode == "1") InputSimulatorStatic.Keyboard.KeyPress(VirtualKeyCode.NUMPAD1);
+            else if (keyCode == "2") InputSimulatorStatic.Keyboard.KeyPress(VirtualKeyCode.NUMPAD2);
+            else if (keyCode == "3") InputSimulatorStatic.Keyboard.KeyPress(VirtualKeyCode.NUMPAD3);
+            else if (keyCode == "4") InputSimulatorStatic.Keyboard.KeyPress(VirtualKeyCode.NUMPAD4);
+            else if (keyCode == "5") InputSimulatorStatic.Keyboard.KeyPress(VirtualKeyCode.NUMPAD5);
+            else if (keyCode == "6") InputSimulatorStatic.Keyboard.KeyPress(VirtualKeyCode.NUMPAD6);
+            else if (keyCode == "7") InputSimulatorStatic.Keyboard.KeyPress(VirtualKeyCode.NUMPAD7);
+            else if (keyCode == "8") InputSimulatorStatic.Keyboard.KeyPress(VirtualKeyCode.NUMPAD8);
+            else if (keyCode == "9") InputSimulatorStatic.Keyboard.KeyPress(VirtualKeyCode.NUMPAD9);
+            else if (keyCode == "0") InputSimulatorStatic.Keyboard.KeyPress(VirtualKeyCode.NUMPAD0);
+            else if (keyCode == "◀") InputSimulatorStatic.Keyboard.KeyPress(VirtualKeyCode.LEFT);
+            else if (keyCode == "▶") InputSimulatorStatic.Keyboard.KeyPress(VirtualKeyCode.RIGHT);
+            else if (keyCode == "✖")
+            {
+                popup.IsOpen = false;
+            }
+            else
+            {
+                ItsMsgBox.Show("키코드가 정의되지 않았습니다. ");
+            }
+
+            textEdit.Focus();
+            //try
+            //{
+            //    textEdit.SelectionStart = startIndex + 1;
+            //}
+            //catch { }
+        }
+
+        private void canvas_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            popup.IsOpen = true;
+            textEdit.Focus();
+            textEdit.SelectAll();
+        }
+
+        private void textEdit_EditValueChanged(object sender, DevExpress.Xpf.Editors.EditValueChangedEventArgs e)
+        { 
+            try
+            {
+                SetValue(ValueProperty, textEdit.EditValue.ToString());
+            }
+            catch
+            {
+                ItsMsgBox.Show("입력값이 유효하지 않습니다.");
+                return;
+            }
+        }
+
+        private void textEdit_GotFocus(object sender, RoutedEventArgs e)
+        {
+            textEdit.BorderBrush = Brushes.Black;
+            textEdit.BorderThickness = new Thickness(1.5d);
+            if (!textEdit.IsReadOnly)
+            {
+                textEdit.Background = Brushes.MintCream;
+            }
+        }
+
+        private void textEdit_LostFocus(object sender, RoutedEventArgs e)
+        {
+            textEdit.BorderBrush = Brushes.Silver;
+            textEdit.BorderThickness = new Thickness(1d);
+            if (!textEdit.IsReadOnly)
+            {
+                textEdit.Background = Brushes.White;
+            }
+        }
+    }
+}

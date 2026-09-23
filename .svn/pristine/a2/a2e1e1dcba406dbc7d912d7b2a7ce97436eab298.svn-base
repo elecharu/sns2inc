@@ -1,0 +1,300 @@
+﻿
+
+/// <reference path="../../Script/reference.js" />
+
+/* 페이지 접근 시 수행 */
+ItsPage.Load = function () {
+
+    ItsGrid.Create('grid1', { isCheckBoxGrid: false }, [
+        column.create('설비코드', 'EQMCD', { width: 100, align: 'center' }),
+        column.create('설비명', 'EQMNM', { width: 250 }),
+        column.create('년도', 'YEAR', { width: 80, align: 'center' }),
+
+        column.create('1월', 'M01', { width: 80, align: 'center', readOnly: true }),
+        column.create('2월', 'M02', { width: 80, align: 'center', readOnly: true }),
+        column.create('3월', 'M03', { width: 80, align: 'center', readOnly: true }),
+        column.create('4월', 'M04', { width: 80, align: 'center', readOnly: true }),
+        column.create('5월', 'M05', { width: 80, align: 'center', readOnly: true }),
+        column.create('6월', 'M06', { width: 80, align: 'center', readOnly: true }),
+        column.create('7월', 'M07', { width: 80, align: 'center', readOnly: true }),
+        column.create('8월', 'M08', { width: 80, align: 'center', readOnly: true }),
+        column.create('9월', 'M09', { width: 80, align: 'center', readOnly: true }),
+        column.create('10월', 'M10', { width: 80, align: 'center', readOnly: true }),
+        column.create('11월', 'M11', { width: 80, align: 'center', readOnly: true }),
+        column.create('12월', 'M12', { width: 80, align: 'center', readOnly: true }),
+
+        column.split()
+    ]);
+
+    // 월컬럼 하이퍼링크 처리
+    ItsGrid.Get('grid1').formatItem.addHandler(function (s, e) {
+        if ((s.columns[e.col].binding == 'M01' || s.columns[e.col].binding == 'M02' || s.columns[e.col].binding == 'M03' || s.columns[e.col].binding == 'M04' || s.columns[e.col].binding == 'M05'
+            || s.columns[e.col].binding == 'M06' || s.columns[e.col].binding == 'M07' || s.columns[e.col].binding == 'M08' || s.columns[e.col].binding == 'M09' || s.columns[e.col].binding == 'M10'
+            || s.columns[e.col].binding == 'M11' || s.columns[e.col].binding == 'M12')
+            && e.panel != s.columnHeaders       // 컬럼헤더 제외
+            && e.panel != s.columnFooters) {    // 총계 제외
+
+            var html = e.cell.innerHTML;
+            var value = ItsGrid.GetValue('grid1', e.row, s.columns[e.col].binding);
+
+            var color = '#337ab7';
+
+            if (value == '점검완료')
+                color = '#1DDB16';
+
+            var html = e.cell.innerHTML;
+            e.cell.innerHTML = '<a href="#" style="color:' + color + '" onclick="ItsGrid.Event(\'grid1\').onDoubleClick(' + e.row + ',\'' + s.columns[e.col].binding + '\')" >' + html + '</a>';
+        }
+    })
+
+
+    ItsGrid.Create('grid2', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
+        column.create('점검명', 'CHKKNDNM', { width: 290, readOnly: true }),
+        column.create('점검항목', 'CHKLOC', { width: 110, columnType: enumColumnTypes.combo, gpcd: "CHKLOC", readOnly: true }),
+        column.create('점검방법', 'CHKMTH', { width: 80, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', readOnly: true }),
+        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', readOnly: true }),
+        column.create('점검값', 'CHKVALUE', { width: 80, readOnly: false }),
+        column.split()
+    ]);
+
+    ItsGrid.Create('grid3', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
+        column.create('점검명', 'CHKKNDNM', { width: 290, readOnly: true }),
+        column.create('점검항목', 'CHKLOC', { width: 110, columnType: enumColumnTypes.combo, gpcd: "CHKLOC", readOnly: true }),
+        column.create('점검방법', 'CHKMTH', { width: 80, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', readOnly: true }),
+        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', readOnly: true }),
+        column.create('점검값', 'CHKVALUE', { width: 80, readOnly: false }),
+        column.split()
+    ]);
+
+    ItsCombo.SetValueByIndex('cmb_SYEAR', 4);
+};
+
+/******************************************************************************************************************************************************************/
+
+/* 조회 */
+ItsButton.EventSearch = function () {
+    var maria = new ItsMaria('EQM1001_R04', 'LIST_CYCLE_EQMCD');
+
+    maria.AddPanel('sdiv1');
+
+    maria.CallProc();
+
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore('grid1', maria.store);
+    ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.data.length));
+};
+
+// 점검필요, 점검완료 클릭시
+ItsGrid.Event('grid1').onDoubleClick = function (rowindex, field) {
+    var CellValue = ItsGrid.GetValue('grid1', rowindex, field);
+    var EQMCD = ItsGrid.GetValue('grid1', rowindex, 'EQMCD');
+    var YEAR = ItsGrid.GetValue('grid1', rowindex, 'YEAR');
+    var MONTH = '';
+
+    if (field == 'M01' || field == 'M02' || field == 'M03' || field == 'M04' || field == 'M05' || field == 'M06' || field == 'M07' || field == 'M08' || field == 'M09' || field == 'M10'
+        || field == 'M11' || field == 'M12') {
+        MONTH = field.substr(1, 2);
+    }
+
+    if (MONTH != '') {
+        if (CellValue == '점검필요') {
+            LIST_CHKPLANEQM_EQM02(EQMCD, YEAR + '-' + MONTH);
+
+            ItsPop.Open('pop1');
+        }
+        else if (CellValue == '점검완료') {
+            SEARCH_CHKRSTEQM(EQMCD, YEAR + '-' + MONTH);
+
+            ItsPop.Open('pop2');
+        }
+    }
+};
+
+// 정기점검리스트 조회 
+LIST_CHKPLANEQM_EQM02 = function (EQMCD, YYYYMM) {
+    ItsPage.InitData('pdiv1');
+
+    var maria = new ItsMaria('EQM1001_R04', 'LIST_CHKPLANEQM_EQM02');
+
+    maria.AddParam('EQMCD', EQMCD);
+
+    maria.CallProc();
+
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsFind.SetValue('pop1_find_EQMCD', EQMCD);
+    ItsText.SetValue('txt_YYYYMM', YYYYMM);
+
+    ItsGrid.SetStore('grid2', maria.store);
+}
+
+// 해당월 정기점검이력 찾기
+SEARCH_CHKRSTEQM = function (EQMCD, YYYYMM) {
+    ItsPage.InitData('pdiv3');
+    ItsGrid.Clear('grid3');
+
+    var maria = new ItsMaria('EQM1001_R04', 'SEARCH_CHKRSTEQM');
+
+    maria.AddParam('EQMCD', EQMCD);
+    maria.AddParam('YYYYMM', YYYYMM);
+
+    maria.CallProc();
+
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsPage.SetStore('pdiv3', maria.store.data[0]);
+    ItsGrid.SetStore('grid3', maria.storeExtend1);
+}
+/******************************************************************************************************************************************************************/
+// 정기점검 등록
+ItsPop.Event('pop1').onAddBtnClick = function () {
+    var CHKPLANEQM = ItsGrid.Length('grid2');
+
+    if (CHKPLANEQM == 0) {
+        ItsMsg.Toast('해당설비의 정기점검 계획이 존재하지 않습니다.');
+        ItsPop.Event('pop1').onCancelBtnClick();
+        return;
+    }
+
+    var maria = new ItsMaria('EQM1001_R04', 'ADD_CHKRSTEQM');
+
+    maria.AddPanel('pdiv1');
+
+    for (var i = 0; i < ItsGrid.Length('grid2'); i++) {
+        maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid2', i, 'CHKKNDCD'));
+        maria.AddList('CHKKNDNM_LIST', ItsGrid.GetValue('grid2', i, 'CHKKNDNM'));
+        maria.AddList('CHKLOC_LIST', ItsGrid.GetValue('grid2', i, 'CHKLOC'));
+        maria.AddList('CHKMTH_LIST', ItsGrid.GetValue('grid2', i, 'CHKMTH'));
+        maria.AddList('CHKVALTP_LIST', ItsGrid.GetValue('grid2', i, 'CHKVALTP'));
+        maria.AddList('CHKCYCLE_LIST', ItsGrid.GetValue('grid2', i, 'CHKCYCLE'));
+        maria.AddList('CHKVALUE_LIST', ItsGrid.GetValue('grid2', i, 'CHKVALUE'));
+    }
+
+    maria.CallProc();
+
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsPop.Close('pop1');
+    ItsButton.EventSearch();
+}
+
+// 취소버튼
+ItsPop.Event('pop1').onCancelBtnClick = function () {
+    ItsPop.Close('pop1');
+    ItsButton.EventSearch();
+}
+/******************************************************************************************************************************************************************/
+// 정기점검 수정
+ItsPop.Event('pop2').onAddBtnClick = function () {
+    var maria = new ItsMaria('EQM1001_R04', 'SAVE_CHKRSTEQM');
+
+    maria.AddPanel('pdiv3');
+
+    for (var i = 0; i < ItsGrid.Length('grid3'); i++) {
+        maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid3', i, 'CHKKNDCD'));
+        maria.AddList('CHKKNDNM_LIST', ItsGrid.GetValue('grid3', i, 'CHKKNDNM'));
+        maria.AddList('CHKLOC_LIST', ItsGrid.GetValue('grid3', i, 'CHKLOC'));
+        maria.AddList('CHKMTH_LIST', ItsGrid.GetValue('grid3', i, 'CHKMTH'));
+        maria.AddList('CHKVALTP_LIST', ItsGrid.GetValue('grid3', i, 'CHKVALTP'));
+        maria.AddList('CHKCYCLE_LIST', ItsGrid.GetValue('grid3', i, 'CHKCYCLE'));
+        maria.AddList('CHKVALUE_LIST', ItsGrid.GetValue('grid3', i, 'CHKVALUE'));
+    }
+
+    maria.CallProc();
+
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsMsg.Alert("수정되었습니다.");
+}
+
+// 정기점검삭제 버튼
+ItsButton.Event('pop2_btn_DELETE_CHKRSTEQM').onClick = function () {
+    ItsMsg.Confirm("정기점검이력을 [삭제] 하시겠습니까?", function () {
+        var maria = new ItsMaria('EQM1001_R04', 'DELETE_CHKRSTEQM');
+
+        maria.AddParam('CHKRSTKEY', ItsText.GetValue('pop2_txt_CHKRSTKEY'));
+
+        maria.CallProc();
+
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsPop.Close('pop2');
+        ItsButton.EventSearch();
+    });
+}
+
+// 취소버튼
+ItsPop.Event('pop2').onCancelBtnClick = function () {
+    ItsPop.Close('pop2');
+    ItsButton.EventSearch();
+}
+/******************************************************************************************************************************************************************/
+
+
+ItsGrid.Event('grid2').onChanged = function (rowIndex, field) {
+
+
+    var CHKVALTP = ItsGrid.GetValue('grid2', rowIndex, 'CHKVALTP');
+    var VALUE = ItsGrid.GetValue('grid2', rowIndex, 'CHKVALUE');
+    // 1. 검사타입
+    if (CHKVALTP === '03') {
+
+        // 대문자 변환 + 공백 제거
+        if (VALUE) {
+            VALUE = VALUE.toString().trim().toUpperCase();
+        }
+
+        if (VALUE === 'OK') {
+            ItsGrid.SetValue('grid2', rowIndex, 'CHKVALUE', 'OK');
+            //ItsGrid.SetValue('grid2', rowIndex, 'JUDGE', 'Y');
+
+        } else if (VALUE === 'NG') {
+            ItsGrid.SetValue('grid2', rowIndex, 'CHKVALUE', 'NG');
+            //ItsGrid.SetValue('grid2', rowIndex, 'JUDGE', 'N');
+
+        } else {
+            // OK/NG 아니면 전부 초기화
+            ItsGrid.SetValue('grid2', rowIndex, 'CHKVALUE', '');
+            //ItsGrid.SetValue('grid2', rowIndex, 'JUDGE', '');
+        }
+
+
+
+    } else {
+        var isValidNumber = /^-?\d+(\.\d+)?$/.test(VALUE);
+
+        if (!isValidNumber) {
+            // 숫자 아니면 초기화
+            ItsGrid.SetValue('grid2', rowIndex, 'CHKVALUE', '');
+
+        } else {
+            // 숫자 정규화
+            var num = Number(VALUE);
+            ItsGrid.SetValue('grid2', rowIndex, 'CHKVALUE', num);
+
+        }
+
+    }
+
+}

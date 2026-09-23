@@ -1,0 +1,84 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+using System.Data;
+
+namespace ITSLIB
+{
+    public partial class TEST_P1 : ItsPageOffice
+    {
+        ItsModelGrid MODEL_G1 = new ItsModelGrid();
+
+        public TEST_P1()
+        {
+            InitializeComponent();
+
+            BTNLIST.Clear();
+            BTNLIST.ButtonWidth = "100";
+            BTNLIST.ButtonHeight = "80";
+            BTNLIST.SelectColor("CC", "Chartreuse");
+
+            BTNLIST.AddButton("AA", "AA");
+            BTNLIST.AddButton("BB", "BB");
+            BTNLIST.AddButton("CC", "CC");
+            BTNLIST.AddButton("DD", "DD");
+        }
+
+        public override void EventSearch()
+        {
+            base.EventSearch();
+
+            ItsMsgBox.ShowYesNo("AA");
+        }
+
+        public override void EventCommand(string commandName)
+        {
+            base.EventCommand(commandName);
+            if (commandName == "SEARCH")
+            {
+                MODEL_G1.Binding(GRID_G1);
+
+                DataTable dt = new DataTable();
+                dt.Columns.Add("ITEMTP");
+                dt.Columns.Add("OUTTIME");
+                dt.Columns.Add("OUTQTY");
+                dt.Columns.Add("INQTY");
+
+                DataRow row = dt.NewRow();
+                row["ITEMTP"] = "1";
+                row["OUTTIME"] = "12:10";
+                row["OUTQTY"] = "100.50";
+                row["INQTY"] = "200.2334455";
+                dt.Rows.Add(row);
+
+                row = dt.NewRow();
+                row["ITEMTP"] = "2";
+                row["OUTTIME"] = "12:10:45";
+                row["OUTQTY"] = "200";
+                row["INQTY"] = "300";
+                dt.Rows.Add(row);
+
+                row = dt.NewRow();
+                row["ITEMTP"] = "3";
+                row["OUTTIME"] = "11:10";
+                row["OUTQTY"] = "400.50342432";
+                row["INQTY"] = "500.2334455";
+                dt.Rows.Add(row);
+
+                MODEL_G1.SetData(dt);
+
+                string aa = "Column 'WARECD' cannot be null";
+                ItsMsgBox.Show(aa.Substring(aa.IndexOf("'"), aa.LastIndexOf("'") - aa.IndexOf("'") + 1) + "컬럼은 NULL값이 들어갈 수 없습니다.");
+            }
+        }
+    }
+}

@@ -1,0 +1,22 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace PLC_GATHERING_Prj.Property
+{
+    public class MyPLCList
+    {
+        public string EQMCD { get; set; }
+        public string EQMNM { get; set; }
+        public string PLCIP { get; set; }
+        public string PLCPORT { get; set; }
+        public string OVERTIME { get; set; }
+        public string STATUS { get; set; }
+        public string REMARK { get; set; }
+        public string EQMSTT { get; set; }
+        public string EQMCNT { get; set; }
+        public string WORKTIME { get; set; }
+    }
+}

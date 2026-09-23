@@ -1,0 +1,228 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.IO;
+using System.IO.Ports;
+using System.Windows.Forms;
+
+public static class ItsPlcSerial
+{
+    private static string CRLF = Convert.ToChar(13).ToString() + Convert.ToChar(10).ToString();
+    private static string ENQ = Convert.ToChar(5).ToString();
+    private static string ACK = Convert.ToChar(6).ToString();
+    private static string STX = Convert.ToChar(2).ToString();
+    private static string EOT = Convert.ToChar(4).ToString();
+    private static string ETX = Convert.ToChar(3).ToString();
+    private static string NAK = Convert.ToChar(21).ToString();
+
+    public static System.IO.Ports.SerialPort SerialPlc = new System.IO.Ports.SerialPort();
+    public static decimal ReadHex(SerialPort serial, string addr, int count)
+    {
+        string hexString = Read(serial, addr, count);
+        try
+        {
+            return (decimal)(Convert.ToInt32(hexString, 16));
+        }
+        catch { return 0m; }
+    }
+    public static string Read(SerialPort serial, string addr, int count)
+    {
+        if (!serial.IsOpen)
+        {
+            try
+            {
+                serial.Open();
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        int PLC_Loop = 0, ilen = 0;
+
+        string[] sARR = new string[20];
+        string sADD = "";
+        string sRcv = "";
+        string sRCV1 = "";
+
+        string sHEX = "";
+        string sRESULT = "";
+
+        int i = 0;
+
+        if (count > 20)
+        {
+            count = 20;
+        }
+
+        for (i = 0; i < count; i++)
+        {
+            sARR[i] = addr.Substring(i * 6, 6);
+        }
+
+        for (i = 0; i < count; i++)
+        {
+            sADD = sADD + "07%" + sARR[i];
+        }
+
+        ilen = count * 6 + 9;   //9 : Ack + 국번(00) + "RSB" + 갯수(00) + ... + ETX
+
+        sHEX = "0" + String.Format("{0:X}", Convert.ToInt32(count));
+
+        sHEX = sHEX.Substring(sHEX.Length - 2, 2);
+
+
+        //' 프로토콜 시작
+        Start:
+
+        PLC_Loop = PLC_Loop + 1;
+        if (PLC_Loop > 10)
+        {
+            return "";
+        }
+
+        sRcv = serial.ReadExisting();
+
+        serial.Write(ENQ + "00RSS" + sHEX + sADD + EOT);
+
+        Delay(200);
+
+        sRcv = serial.ReadExisting();
+
+        if (sRcv == "") goto Start;
+
+        if (sRcv.Length < ilen)
+        {
+            goto Start;
+        }
+
+        if (sRcv.Substring(6, 2) != sHEX) goto Start;
+
+        if (sRcv.Substring(0, 1) == ACK && sRcv.Substring(ilen - 1, 1) == ETX)
+        {
+            sRCV1 = sRcv.Substring(8, count * 6);
+
+            for (i = 0; i < sRCV1.Length; i = i + 6)
+            {
+                sRESULT = sRESULT + sRCV1.Substring(i + 2, 4);
+            }
+        }
+        else
+        {
+            goto Start;
+
+        }
+
+        return sRESULT;
+    }
+
+    public static bool Write(SerialPort serial, string addr, string value)
+    {
+        if (!serial.IsOpen)
+        {
+            try
+            {
+                serial.Open();
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        if (addr.Length == 6) addr = addr.Substring(2);
+        if (addr.Length != 4)
+        {
+            return false;
+        }
+
+        try
+        {
+            string tempValue = "0000" + int.Parse(value).ToString("X");
+            value = tempValue.Substring(tempValue.Length - 4);
+        }
+        catch { }
+
+        string sRcv = "";
+
+        string sDATA = "";
+        string sCNTHEX = "";
+
+        int iCNT = 0;
+
+        int PLC_Loop = 0;
+
+        Start:
+
+        PLC_Loop = PLC_Loop + 1;
+        if (PLC_Loop > 10)
+        {
+            return false;
+        }
+
+        sRcv = serial.ReadExisting();
+
+        iCNT = addr.Length / 4;
+
+        sCNTHEX = "00" + String.Format("{0:X}", iCNT);
+
+        sCNTHEX = sCNTHEX.Substring(sCNTHEX.Length - 2, 2);
+
+
+        for (int i = 0; i < addr.Length; i = i + 4)
+        {
+            sDATA = sDATA + "07%DW" + addr.Substring(i, 4) + value.Substring(i, 4);
+        }
+
+        serial.Write(ENQ + "00WSS" + sCNTHEX + sDATA + EOT);       //자료 입력할 주소 보냄   ===> Step 1.
+
+        Delay(200);
+
+        sRcv = serial.ReadExisting();
+
+        if (sRcv == "") goto Start;
+
+        if (sRcv.Substring(0, 1) != ACK) goto Start;
+
+        return true;
+    }
+
+    public static void Delay(long miliSecond)
+    {
+        decimal iDiff = 0m;
+        DateTime sETIME;
+
+        DateTime sSTIME = DateTime.Now;
+        int iDELCNT = 0;
+
+        while (iDELCNT == 0)
+        {
+            sETIME = DateTime.Now;
+            iDiff = DateDiff(sSTIME, sETIME);
+            if (iDiff > miliSecond) break;
+            Application.DoEvents();
+        }
+    }
+
+    public static decimal DateDiff(DateTime date1, DateTime date2)
+    {
+        string sSDATE = "";
+        string sEDATE = "";
+
+
+        decimal iDELS = 0;
+        decimal iDELE = 0;
+
+        sSDATE = date1.Year.ToString() + date1.Month.ToString("00") + date1.Day.ToString("00") + date1.Hour.ToString("00") + date1.Minute.ToString("00") + date1.Second.ToString("00") + date1.Millisecond.ToString("000");
+        sEDATE = date2.Year.ToString() + date2.Month.ToString("00") + date2.Day.ToString("00") + date2.Hour.ToString("00") + date2.Minute.ToString("00") + date2.Second.ToString("00") + date2.Millisecond.ToString("000");
+
+        iDELS = decimal.Parse(sSDATE);
+        iDELE = decimal.Parse(sEDATE);
+
+        decimal diff = iDELE - iDELS;
+
+        return diff;
+    }
+}
+

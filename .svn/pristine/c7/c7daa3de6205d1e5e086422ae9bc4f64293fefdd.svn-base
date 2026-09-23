@@ -1,0 +1,446 @@
+﻿<Window x:Class="PLC_GATHERING_Prj.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PLC_GATHERING_Prj"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="800" Width="1500"
+        Background="Black"
+        Loaded="Window_Loaded"
+        WindowStartupLocation="CenterScreen"
+        Closed="Window_Closed">
+    <Window.CommandBindings>
+        <CommandBinding Command="New" CanExecute="CommandBinding_CanExecute" />
+        <CommandBinding Command="Open" CanExecute="CommandBinding_CanExecute" />
+        <CommandBinding Command="Save" CanExecute="CommandBinding_CanExecute" />
+    </Window.CommandBindings>
+    <DockPanel>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="0.2*"/>
+                <RowDefinition/>
+                <RowDefinition Height="0.2*"/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition Height="0.2*"/>
+                <RowDefinition/>
+                <RowDefinition Height="0.2*"/>
+                <RowDefinition Height="10*"/>
+            </Grid.RowDefinitions>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5*"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Border
+                BorderBrush="White"
+                BorderThickness="1"
+                Margin="2">
+                    <TextBlock
+                        x:Name="tbMaintext"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                FontSize="30"
+                Text="::::PLC DATA 수집 프로그램::::"
+                Foreground="LawnGreen"
+                FontWeight="Bold">
+                    </TextBlock>
+                </Border>
+                <Border Grid.Column="1"
+                BorderBrush="White"
+                Margin="2"
+                BorderThickness="1">
+                    <TextBlock
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                FontSize="20"
+                Name="tbNowtime"
+                Foreground="White">
+                    </TextBlock>
+                </Border>
+            </Grid>
+            <Path Stroke="LawnGreen" StrokeThickness="3" Stretch="Fill" Grid.Row="1">
+                <Path.Data>
+                    <LineGeometry StartPoint="0,0" EndPoint="1,0"/>
+                </Path.Data>
+            </Path>
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="4*"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Border Margin="2"
+        Background="Orange"
+        Name="bdstatusColor">
+                    <TextBlock Text="-- 수집 대기 --"
+               VerticalAlignment="Center"
+               HorizontalAlignment="Center"
+               FontWeight="Bold"
+               FontSize="25"
+               Name="tbstatusText">
+                    </TextBlock>
+                </Border>
+                <Grid Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Margin="2" Content="Run"
+        Name="btnRun"
+        FontWeight="Bold" FontSize="20" Click="btnRun_Click">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="5"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                    <Button Margin="2" Grid.Column="1"
+        Content="Stop" FontWeight="Bold" FontSize="20"
+        Name="btnStop" Click="btnStop_Click">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="5"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </Grid>
+            </Grid>
+            <Path Stroke="LawnGreen" StrokeThickness="3" Stretch="Fill" Grid.Row="3">
+                <Path.Data>
+                    <LineGeometry StartPoint="0,0" EndPoint="1,0"/>
+                </Path.Data>
+            </Path>
+            <Grid Grid.Row="4" Visibility="Hidden">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.5*"/>
+                    <ColumnDefinition Width="0.5*"/>
+                    <ColumnDefinition Width="0.5*"/>
+                    <ColumnDefinition Width="0.5*"/>
+                    <ColumnDefinition Width="0.5*"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0"
+                Grid.ColumnSpan="5"
+                BorderBrush="White"
+                BorderThickness="1"
+                Margin="2">
+                </Border>
+                <Border Grid.Column="0"
+                BorderBrush="White"
+                BorderThickness="1"
+                Margin="5">
+                    <TextBlock 
+                        Text="PLC TYPE"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Foreground="White"
+                        FontSize="20">
+                    </TextBlock>
+                </Border>
+                <RadioButton Grid.Column="1" Foreground="White"
+                     VerticalContentAlignment="Center"
+                     HorizontalContentAlignment="Left"
+                     FontSize="20"
+                     Margin="5"
+                     Name="rbMEL_Q">
+                </RadioButton>
+                <RadioButton Grid.Column="2" Foreground="White"
+         VerticalContentAlignment="Center"
+         HorizontalContentAlignment="Left"
+         FontSize="20"
+                     Margin="5"
+                     Name="rbMEL_A">
+                    MEL A
+                </RadioButton>
+                <RadioButton Grid.Column="3" Foreground="White"
+         VerticalContentAlignment="Center"
+         HorizontalContentAlignment="Left"
+         FontSize="20"
+                     Margin="5"
+                     Name="rbLS_XGT">
+                    LS XGT
+                </RadioButton>
+                <RadioButton Grid.Column="4" Foreground="White"
+         VerticalContentAlignment="Center"
+         HorizontalContentAlignment="Left"
+         FontSize="20"
+                     Margin="5"
+                     Name="rbNETEYE">
+                    NETEYE
+                </RadioButton>
+            </Grid>
+            <Grid Grid.Row="5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Border BorderBrush="White"
+        BorderThickness="1"
+        Margin="2">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="IP/PORT"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"
+                   Foreground="White"
+                   FontSize="20">
+                        </TextBlock>
+                        <TextBox FontSize="20"
+                  Grid.Column="1"
+                  VerticalContentAlignment="Center"
+                  HorizontalContentAlignment="Center"
+                  Margin="2"
+                 Name="textBox_ip">
+                        </TextBox>
+                        <TextBox FontSize="20"
+                  Grid.Column="2"
+                  VerticalContentAlignment="Center"
+                  HorizontalContentAlignment="Center"
+                  Margin="2"
+                 Name="textBox_port">
+                        </TextBox>
+                    </Grid>
+                </Border>
+                <Border 
+    Grid.Column="1"
+    BorderBrush="White"
+    BorderThickness="1"
+    Margin="2">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.5*"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="번지"
+       VerticalAlignment="Center"
+       HorizontalAlignment="Center"
+       Foreground="White"
+       FontSize="20">
+                        </TextBlock>
+                        <TextBox FontSize="20"
+      Grid.Column="1"
+      VerticalContentAlignment="Center"
+      HorizontalContentAlignment="Center"
+      Margin="2"
+                         Name="textBox_addr">
+                        </TextBox>
+                        <TextBox FontSize="20"
+      Grid.Column="2"
+      VerticalContentAlignment="Center"
+      HorizontalContentAlignment="Center"
+      Margin="2"
+                         Name="textBox_value">
+                        </TextBox>
+                    </Grid>
+                </Border>
+                <Grid Grid.Column="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <Button Margin="2" Content="READ"
+                    FontWeight="Bold" FontSize="20" 
+                    Name="btRead" Click="btRead_Click">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="5"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                    <Button Margin="2" Grid.Column="1"
+                    Content="WRITE" FontWeight="Bold" FontSize="20"
+                    Name="btnWrite" Click="btnWrite_Click">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="5"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </Grid>
+            </Grid>
+            <Path Stroke="LawnGreen" StrokeThickness="3" Stretch="Fill" Grid.Row="6">
+                <Path.Data>
+                    <LineGeometry StartPoint="0,0" EndPoint="1,0"/>
+                </Path.Data>
+            </Path>
+            <Grid Grid.Row="7" Visibility="Hidden">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Border 
+                    Margin="2"
+                    BorderBrush="White"
+                    BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition/>
+                                <ColumnDefinition Width="2*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Machine"
+                               Foreground="White"
+                               FontSize="20"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center">
+                            </TextBlock>
+                            <ComboBox Grid.Column="1"
+                                      Margin="2"
+                                      Name="cbPLCList"
+                                      VerticalContentAlignment="Center"
+                                      HorizontalContentAlignment="Center"
+                                      SelectionChanged="cbPLCList_SelectionChanged"
+                                      >
+                            </ComboBox>
+                        </Grid>
+                    </Border>
+                </Grid>
+                <Border Grid.Column="1"
+                BorderBrush="White"
+                BorderThickness="1"
+                Margin="2">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition Width="2*"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <CheckBox Content="OK 조회" Grid.Column="1" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
+          Foreground="White" FontSize="20" Margin="5"
+          Name="ckOK"/>
+                        <CheckBox Content="NG 조회" Grid.Column="2" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" 
+          Foreground="White" FontSize="20" Margin="5"
+          Name="ckNG"/>
+                    </Grid>
+                </Border>
+                <Border Grid.Column="2"
+                Grid.ColumnSpan="2"
+        BorderBrush="White"
+        BorderThickness="1"
+        Margin="2">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="5*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="설비"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Foreground="White"
+                    FontSize="20">
+                        </TextBlock>
+                        <ComboBox Grid.Column="1"
+                                  IsEnabled="False"
+                  Margin="2"
+                  Name="cbMachin"
+                  SelectionChanged="cbMachin_SelectionChanged"
+                  VerticalContentAlignment="Center"
+                  HorizontalContentAlignment="Center">
+                        </ComboBox>
+                    </Grid>
+                </Border>
+            </Grid>
+            <Path Stroke="LawnGreen" StrokeThickness="3" Stretch="Fill" Grid.Row="8">
+                <Path.Data>
+                    <LineGeometry StartPoint="0,0" EndPoint="1,0"/>
+                </Path.Data>
+            </Path>
+            <Grid Grid.Row="9">
+                <DataGrid x:Name="dgPLCList" Margin="2" AutoGenerateColumns="False"
+                  SelectionMode="Single" HeadersVisibility="Column"
+                  GridLinesVisibility="Horizontal"
+                  VerticalScrollBarVisibility="Visible"
+                  CanUserAddRows="False">
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="TextBlock.TextAlignment" Value="Center"/>
+                        </Style>
+                    </DataGrid.CellStyle>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="설비코드" Binding="{Binding EQMCD}" Width="1*">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="설비명" Binding="{Binding EQMNM}" Width="2*">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="IP" Binding="{Binding PLCIP}" Width="1*">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="PORT" Binding="{Binding PLCPORT}" Width="1*">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="경과시간" Binding="{Binding OVERTIME}" Width="1*">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="수집여부" Binding="{Binding STATUS}" Width="1*">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="상태" Binding="{Binding EQMSTT}" Width="1*">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="수량" Binding="{Binding EQMCNT}" Width="1*">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="작업시간" Binding="{Binding WORKTIME}"  Width="1*">
+                            <DataGridTextColumn.HeaderStyle>
+                                <Style TargetType="DataGridColumnHeader">
+                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                </Style>
+                            </DataGridTextColumn.HeaderStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Background" Value="LightGray"/>
+                        </Style>
+                    </DataGrid.RowStyle>
+                </DataGrid>
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>

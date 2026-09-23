@@ -1,0 +1,136 @@
+﻿div.ItsDate {
+    float:left;
+    display:inline-block;
+    margin-top:2px;
+    margin-bottom:2px;
+    background-color:transparent;
+}
+div.ItsDate_table {
+    background-color:transparent;
+}
+div.ItsDate_table > span {
+    vertical-align:middle;
+    display:inline-block;
+    text-align:right;
+    background-color:transparent; 
+    white-space: normal;
+    font-family: 'SpoqaHanSansNeo_M';
+    color:#565656;
+}
+div.ItsDate_box {
+    vertical-align:middle;
+    display:inline-block;
+}
+div.ItsDate_box > input {
+    outline: none;
+    padding:0px 4px 0px 4px;
+    vertical-align:middle;
+    height:20px;
+    border:1px solid #C0C0C0;
+    border-right: 1px solid transparent;
+    box-sizing: border-box;
+    line-height: 11px;
+    font-weight:normal;
+    font-size:12px;
+    color:#565656;
+}
+div.ItsDate_box > input:read-only {
+    color:#A3A3A3;
+}
+div.ItsDate_button {
+    cursor:pointer;
+    display:inline-block;
+    overflow:hidden;
+    vertical-align:middle;
+    height:20px;
+    width:22px;
+    text-align:center;
+    margin-left: -5px;
+    border:1px solid #C0C0C0;
+    background-color:white;
+    background: url(../images/UserControl/ic_calendar_n.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+
+div.ItsDate_box > input:focus {
+    border: 1px solid #4774B9;
+}
+div.ItsDate_box > input:read-only {
+    border: 1px solid #C0C0C0;
+    background-color:#F0F0F0;
+}
+div.ItsDate_box > input:hover ~ div.ItsDate_button  {
+    border: 1px solid #4774B9;
+    background: url(../images/UserControl/ic_calendar_h.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsDate_box > div.ItsDate_button:hover  {
+    border: 1px solid #4774B9;
+    background: url(../images/UserControl/ic_calendar_h.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsDate_box > input:focus ~ div.ItsDate_button  {
+    border: 1px solid #4774B9;
+    background: url(../images/UserControl/ic_calendar_p.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+    background-color:#4774B9;
+}
+div.ItsDate_box > input:read-only ~ div.ItsDate_button  {
+    border: 1px solid #C0C0C0;
+    background: url(../images/UserControl/ic_calendar_d.png) no-repeat, #F0F0F0;
+    background-size: 20px;
+    background-color:#F0F0F0;
+}
+.datetimepicker {
+    margin-top: 1px;
+    border: 1px solid #4774B9;
+    padding:0px;
+}
+.datetimepicker-dropdown-bottom-right:before {
+    border-bottom-color: #4774B9;
+    display:none;
+}
+.table-condensed > thead > tr:nth-child(1) {
+    background-color: #4774B9;
+    color:white;
+}
+.table-condensed > thead > tr:nth-child(2) {
+    padding:4px;
+}
+.table-condensed > thead > tr:nth-child(1) > th {
+    border-radius:0px;
+}
+.table-condensed > tbody {
+    padding:4px;
+}
+.datetimepicker-dropdown-bottom-right:after{
+    top:initial;
+    left:initial;
+    display:none;
+}
+.datetimepicker thead tr:first-child th:hover {
+    background-color: #4774B9;
+}
+/*.datetimepicker table tr td.active:active, 
+.datetimepicker table tr td.active:hover:active, 
+.datetimepicker table tr td.active.disabled:active, 
+.datetimepicker table tr td.active.disabled:hover:active,
+.datetimepicker table tr td.active.active, 
+.datetimepicker table tr td.active:hover.active, 
+.datetimepicker table tr td.active.disabled.active, 
+.datetimepicker table tr td.active.disabled:hover.active {
+    border-radius:30px;
+}
+.datetimepicker table tr td span.active:active, 
+.datetimepicker table tr td span.active:hover:active, 
+.datetimepicker table tr td span.active.disabled:active, 
+.datetimepicker table tr td span.active.disabled:hover:active, 
+.datetimepicker table tr td span.active.active, 
+.datetimepicker table tr td span.active:hover.active, 
+.datetimepicker table tr td span.active.disabled.active, 
+.datetimepicker table tr td span.active.disabled:hover.active {
+    border-radius:50px;
+}*/
+.dropdown-menu {
+    font-size:11px;
+}

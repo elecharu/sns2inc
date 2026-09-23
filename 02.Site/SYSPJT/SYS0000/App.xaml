@@ -1,0 +1,14 @@
+﻿<Application x:Class="SYS0000.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:SYS0000"
+             xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
+             StartupUri="R01.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/ITSLIB;component/00_Style/Basic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,90 @@
+﻿<its:ItsPageOffice x:Class="SYS0101.R01"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:SYS0101"
+      xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
+      mc:Ignorable="d" 
+      d:DesignHeight="700" d:DesignWidth="1000"
+      Title="R01">
+    <DockPanel>
+        <UserControl Style="{DynamicResource SEARCH}" DockPanel.Dock="Top">
+            <its:WrapContent x:Name="PANEL_S1">
+                <!-- ################################# PANEL SEARCH : START -->
+                <its:Text Label="키워드" Value="{Binding KEYWORD}"/>
+                <!-- ################################# PANEL SEARCH : END -->
+            </its:WrapContent>
+        </UserControl>
+        <UserControl Style="{DynamicResource ADD}" DockPanel.Dock="Top">
+            <its:WrapContent x:Name="PANEL_A1">
+                <!-- ################################# PANEL CONTENT: START -->
+                <its:Text Label="헤더코드" Value="{Binding GPCD1}"/>
+                <its:Text Label="헤더명" Value="{Binding GPNM}"/>
+                <its:Check Label="시스템여부" Value="{Binding SYSYN}"/>
+                <UserControl Width="5000"/>
+                <its:Text Label="참조설명01" Value="{Binding REF01NM}"/>
+                <its:Text Label="참조설명02" Value="{Binding REF02NM}"/>
+                <its:Text Label="참조설명03" Value="{Binding REF03NM}"/>
+                <its:Text Label="참조설명04" Value="{Binding REF04NM}"/>
+                <UserControl Width="5000"/>
+                <its:Text Label="참조설명05" Value="{Binding REF05NM}"/>
+                <its:Text Label="참조설명06" Value="{Binding REF06NM}"/>
+                <its:Text Label="참조설명07" Value="{Binding REF07NM}"/>
+                <its:Text Label="참조설명08" Value="{Binding REF08NM}"/>
+                <UserControl Width="5000"/>
+                <its:Text Label="참조설명09" Value="{Binding REF09NM}"/>
+                <its:Text Label="참조설명10" Value="{Binding REF10NM}"/>
+                <its:Text Label="참조설명11" Value="{Binding REF11NM}"/>
+                <its:Text Label="참조설명12" Value="{Binding REF12NM}"/>
+                <UserControl Width="5000"/>
+                <its:Text Label="참조설명13" Value="{Binding REF13NM}"/>
+                <its:Text Label="참조설명14" Value="{Binding REF14NM}"/>
+                <its:Text Label="참조설명15" Value="{Binding REF15NM}"/>
+                <its:Text Label="참조설명16" Value="{Binding REF16NM}"/>
+                <UserControl Width="5000"/>
+                <its:Text Label="참조설명17" Value="{Binding REF17NM}"/>
+                <its:Text Label="참조설명18" Value="{Binding REF18NM}"/>
+                <its:Text Label="참조설명19" Value="{Binding REF19NM}"/>
+                <its:Text Label="참조설명20" Value="{Binding REF20NM}"/>
+                <UserControl Width="5000"/>
+                <its:Text Label="비고" Width="600" Value="{Binding REMARK}"/>
+                <!-- ################################# PANEL CONTENT: END -->
+            </its:WrapContent>
+        </UserControl>
+      
+        <UserControl Style="{DynamicResource GRID}">
+            <its:Grid x:Name="GRID_G1">
+                <its:Grid.Columns>
+                    <!-- ################################# COLUMN FLEX: START -->
+                    <its:Column Width="100" Header="선택" IsRowCheck="True"/>
+                    <its:Column Width="100" Header="헤더코드" FieldName="GPCD1"/>
+                    <its:Column Width="100" Header="헤더명" FieldName="GPNM"/>
+                    <its:Column Width="100" Header="시스템여부" FieldName="SYSYN" ReadOnly="False" CellType="Check"/>
+                    <its:Column Width="100" Header="참조설명01" FieldName="REF01NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명02" FieldName="REF02NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명03" FieldName="REF03NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명04" FieldName="REF04NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명05" FieldName="REF05NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명06" FieldName="REF06NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명07" FieldName="REF07NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명08" FieldName="REF08NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명09" FieldName="REF09NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명10" FieldName="REF10NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명11" FieldName="REF11NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명12" FieldName="REF12NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명13" FieldName="REF13NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명14" FieldName="REF14NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명15" FieldName="REF15NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명16" FieldName="REF16NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명17" FieldName="REF17NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명18" FieldName="REF18NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명19" FieldName="REF19NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="참조설명20" FieldName="REF20NM" ReadOnly="False"/>
+                    <its:Column Width="100" Header="비고" FieldName="REMARK" ReadOnly="False"/>
+                    <!-- ################################# COLUMN FLEX: END -->
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+    </DockPanel>
+</its:ItsPageOffice>

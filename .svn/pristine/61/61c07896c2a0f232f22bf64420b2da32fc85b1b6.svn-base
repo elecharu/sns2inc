@@ -1,0 +1,197 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="MobileMaster.master.cs" Inherits="MobileMaster" %>
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" >
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <title>그룹웨어</title>
+    <%-- Thrid Part --%>
+    <link rel="stylesheet" type="text/css" href="../../PAGECOM/fonts/font.css?ver=<%= BasePage.srcVersion %>" media="none" onload="this.media='all'" />
+    <script type="text/javascript" src="../../Script/FullCalendar-v3.9.0/moment.min.js"></script>
+    <script src="../../Script/jquery-3.3.1/jquery-3.3.1.min.js"></script>
+    <script src="../../Script/jquery-3.3.1/jquery-ui-1.12.1.min.js"></script>
+    <script src="../../Script/bootstrap-modal/bootstrap-modalmanager.js"></script>
+    <script src="../../Script/bootstrap-modal/bootstrap-modal.js"></script>
+    <script src="../../COMMON/Mobile/MobileMaster.js?ver=<%= BasePage.srcVersion %>"></script>
+    <script type="text/javascript" src="../../UserControl/ItsPage.js"></script>
+    <script type="text/javascript" src="../../UserControl/ItsMaria.js"></script>
+    <script type="text/javascript" src="../../UserControl/ItsMsg.js"></script>
+    <script type="text/javascript" src="../../UserControl/ItsMailService.js"></script>
+    <script type="text/javascript" src="../../UserControl/ItsFileManager.js?ver=<%= BasePage.srcVersion %>"></script>
+    <script type="text/javascript" src="../../PAGECOM/Mobile/js/common.js"></script>
+    <script type="text/javascript" src="../../PAGECOM/Mobile/js/portal.js"></script>
+    <link rel="stylesheet" href="../../PAGECOM/Mobile/css/common.css?ver=<%= BasePage.srcVersion %>" />
+    <link rel="stylesheet" href="../../PAGECOM/Mobile/css/layout.css?ver=<%= BasePage.srcVersion %>" />
+    <link rel="stylesheet" href="../../PAGECOM/Mobile/css/style.css?ver=<%= BasePage.srcVersion %>" />
+    <link rel="stylesheet" href="../../Script/jquery-3.3.1/jquery-ui-1.12.1.min.css" />
+    <link rel="stylesheet" href="../../Script/bootstrap-modal/bootstrap-modal.css" />
+    <link rel="stylesheet" href="../../Script/bootstrap-modal/bootstrap-modal-bs3patch.css" />
+    <script>
+        //mobilecheck();
+        document.addEventListener('DOMContentLoaded', function () {
+            $('.mail_cnt').text(<%=mail%>);
+            $('.appr_cnt').text(<%=appr%>);
+            if(<%=appr%> > 0) $('#appr_cnt').show();
+            if(<%=mail%> > 0) $('#mail_cnt').show();
+            $('.hold_cnt').text(<%=hold%>);
+            $('.ref_cnt').text(<%=refs%>);
+            $('.myap_cnt').text(<%=myap%>);
+            $('.sche_cnt').text(<%=sche%>);
+            var myinfo = ItsMailService.GetEmpInfo();
+            var mailboxkey = myinfo.MAILBOXKEY.split("»");
+            var mailboxnm = myinfo.MAILBOXNM.split("»");
+            var html = '';
+            for (var i = 0; i < mailboxkey.length - 1; i++) {
+                html += '<li><a href="javascript:mymailbox(\'' + mailboxkey[i] + '\')"><span>' + mailboxnm[i] + '</span></a></li>';
+            }
+            $('#mailbox').append(html);
+            var maria = new ItsMaria('GWS0000_R01', 'MENU_MOBILE');
+            maria.CallProc();
+            if (maria.isError) {
+                maria.ShowErrMsg();
+                return;
+            } else {
+                var sign = '';
+                for (var i = 0; i < maria.store.Length() ; i++) {
+                    var data = maria.store.data[i];
+                    sign += '<li><a href="javascript:signbox(' + data.SIGNBOXSEQ + ')"><span>' + data.BOXNM + '</span></a></li>';
+                }
+                $('#signboxlist').html(sign);
+                var bd = '';
+                for (var i = 0; i < maria.storeExtend1.Length() ; i++) {
+                    var data = maria.storeExtend1.data[i];
+                    bd += '<li><a href="../GWM5001/GWM5001_S01.aspx?bd=' + data.BOARDTP + '"><span>' + data.BOARDNAME + '</span></a></li>';
+                }
+                $('#boardlist').html(bd);
+            }
+        });
+        function mymailbox(mailboxkey) {
+            var form = document.createElement('form');
+            var objs;
+            objs = document.createElement('input');
+            objs.setAttribute('name', 'mailboxkey');
+            objs.setAttribute('value', mailboxkey);
+            form.appendChild(objs);
+            form.setAttribute('method', 'post');
+            form.setAttribute('action', "../GWM1002/GWM1002_S07.aspx");
+            document.body.appendChild(form);
+            form.submit();
+        }
+        //function daummail(mailbox, mailboxnm) {
+        //    var form = document.createElement('form');
+        //    var obj, obj2;
+        //    obj = document.createElement('input');
+        //    obj.setAttribute('name', 'mailbox');
+        //    obj.setAttribute('value', mailbox);
+        //    form.appendChild(obj);
+        //    obj2 = document.createElement('input');
+        //    obj2.setAttribute('name', 'mailboxnm');
+        //    obj2.setAttribute('value', mailboxnm);
+        //    form.appendChild(obj2);
+        //    form.setAttribute('method', 'post');
+        //    form.setAttribute('action', "../GWM1004/GWM1004_S01.aspx");
+        //    document.body.appendChild(form);
+        //    form.submit();
+        //}
+    </script>
+    <asp:ContentPlaceHolder id="CPH_HEAD" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <div class="top_fixed">
+        <div class="backdrop" style="display: none;">
+            <a href="#" class="m_toggle_btn">
+                <span></span>
+                <span></span>
+            </a>
+        </div>
+        <asp:ContentPlaceHolder id="CPH_HEADER" runat="server">
+        </asp:ContentPlaceHolder>
+        <div class="user_hidden_menu">
+            <div class="user_hidden_close_btn">
+                <span></span>
+                <span></span>
+            </div>
+            <div class="layout">
+                <ul class="per_info">
+                    <li>
+					    <img src="" onerror="this.src='../../images/per_info.jpg'" class="mpuserimg">
+					    <img src="../../images/m_userinfo_Box.png" class="userinfo_Box">
+                    </li>   
+				    <li class="margin_L120 padding_T20 textAlignLeft">
+					    <p class="mpusernm"></p>
+					    <p class="mpusergrade"></p>	
+					    <button onclick="logout()">로그아웃</button>
+				    </li>
+                </ul>
+                <div id="cssmenu">
+				    <ul>		   
+                        <% if(Request.Cookies["MPUSERMAIL"] != null && Request.Cookies["MPUSERMAIL"].Value != "") { %>
+				       <li class="p_mail"><a href="javascript:maillink('../GWM1001/GWM1001_R01.aspx')" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon01.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">메일쓰기</span></a></li>
+				       <li class="active has-sub p_mail"><a href="javascript:void(0);" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon02.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">메일함</span><span class="holder" style="border-color: rgba(0, 0, 0, 0.35);"></span></a>
+					      <ul id="mailbox">
+						    <li><a href="javascript:maillink('../GWM1002/GWM1002_S01.aspx')"><span>받은메일함</span></a></li>
+                            <li><a href="javascript:maillink('../GWM1002/GWM1002_S08.aspx')"><span>내게쓴메일함</span></a></li>
+						    <li><a href="javascript:maillink('../GWM1002/GWM1002_S02.aspx')"><span>보낸메일함</span></a></li>
+                            <li><a href="javascript:maillink('../GWM1002/GWM1002_S03.aspx')"><span>중요메일함</span></a></li>
+                            <li><a href="javascript:maillink('../GWM1002/GWM1002_S04.aspx')"><span>임시보관함</span></a></li>
+                            <li><a href="javascript:maillink('../GWM1002/GWM1002_S05.aspx')"><span>예약메일함</span></a></li>
+                            <li><a href="javascript:maillink('../GWM1002/GWM1002_S06.aspx')"><span>스팸메일함</span></a></li>
+					      </ul>
+				       </li>
+                       <% } %>
+				       <%--<li class="active has-sub"><a href="javascript:void(0);" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon02.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">다음메일</span><span class="holder" style="border-color: rgba(0, 0, 0, 0.35);"></span></a>
+					      <ul id="daummailbox">
+					      </ul>
+				       </li>	--%>
+                       <li class="active has-sub"><a href="javascript:void(0);" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon03.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">결재함</span><span class="holder" style="border-color: rgba(0, 0, 0, 0.35);"></span></a>
+					      <ul>
+						    <li><a href="../GWM2002/GWM2002_S01.aspx"><span>결재대기문서</span></a></li>
+                            <li><a href="../GWM2002/GWM2002_S02.aspx"><span>수신참조문서</span></a></li>
+                            <li><a href="../GWM2002/GWM2002_S08.aspx"><span>보류문서</span></a></li>
+                            <li><a href="../GWM2002/GWM2002_S03.aspx"><span>기안문서함</span></a></li>
+                            <li><a href="../GWM2002/GWM2002_S09.aspx"><span>기안완료함</span></a></li>
+                            <li><a href="../GWM2002/GWM2002_S05.aspx"><span>결재진행함</span></a></li>
+                            <li><a href="../GWM2002/GWM2002_S10.aspx"><span>결재완료함</span></a></li>
+                            <li><a href="../GWM2002/GWM2002_S06.aspx"><span>수신참조함</span></a></li>
+					      </ul>
+				       </li>
+                       <li class="active has-sub"><a href="javascript:void(0);" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon03.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">개인문서함</span><span class="holder" style="border-color: rgba(0, 0, 0, 0.35);"></span></a>
+					      <ul id="signboxlist">
+					      </ul>
+				       </li>
+				       <li><a href="../GWM5001/GWM5001_S01.aspx" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon12.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">공지사항</span></a></li>
+				       <li><a href="../GWM3001/GWM3001_S01.aspx" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon04.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">사내일정</span></a></li>
+                       <li class="active has-sub"><a href="javascript:void(0);" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon05.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">자료실</span><span class="holder" style="border-color: rgba(0, 0, 0, 0.35);"></span></a>
+					      <ul>
+						    <li><a href="../GWM4001/GWM4001_R01.aspx"><span>공용자료실</span></a></li>
+						    <li><a href="../GWM4002/GWM4002_R01.aspx"><span>개인자료실</span></a></li>
+					      </ul>
+				       </li>
+				       <li class="active has-sub"><a href="javascript:void(0);" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon06.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">게시판</span><span class="holder" style="border-color: rgba(0, 0, 0, 0.35);"></span></a>
+					      <ul id="boardlist">
+					      </ul>
+				       </li>
+				       <li><a href="../GWM5001/GWM5001_S02.aspx" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon07.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">보고서</span></a></li>
+				       <li><a href="../GWM5001/GWM5001_S03.aspx" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon08.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">차량운행일지</span></a></li>
+                       <li class="active has-sub"><a href="javascript:void(0);" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon09.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">주소록</span><span class="holder" style="border-color: rgba(0, 0, 0, 0.35);"></span></a>
+					      <ul>
+						    <li><a href="../GWM6001/GWM6001_S01.aspx"><span>공용주소록</span></a></li>
+						    <li><a href="../GWM6001/GWM6001_S02.aspx"><span>개인주소록</span></a></li>
+					      </ul>
+				       </li>
+                       <li><a href="../GWM2001/GWM2001_R02.aspx" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon04.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">근태신청</span></a></li>
+				       <li><a href="../GWM7001/GWM7001_S01.aspx" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon11.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">작업지시</span></a></li>
+                       <li><a href="../GWM8001/GWM8001_S01.aspx" style="text-shadow: rgba(0, 0, 0, 0.35) 0px 1px 1px;"><div class="mn_icon"><img src="../../images/mn_icon11.png"></div><span style="border-color: rgba(0, 0, 0, 0.35);">재고조회</span></a></li>
+				    </ul>
+			    </div>
+            </div>		
+        </div>
+    </div>
+    <asp:ContentPlaceHolder id="CPH_BODY" runat="server">
+    </asp:ContentPlaceHolder>
+</body>
+</html>

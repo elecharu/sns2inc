@@ -1,0 +1,123 @@
+using System;
+using System.Drawing;
+using System.Collections;
+using System.ComponentModel;
+using DevExpress.XtraReports.UI;
+using System.Drawing.Printing;
+using System.Data;
+using System.Collections.Generic;
+using ItsLibRpt;
+
+namespace XtraRpt
+{
+    public partial class S01A : DevExpress.XtraReports.UI.XtraReport
+    {
+        public class MODEL_R1
+        {   
+            public string EQMCD { get; set; } // 설비코드
+            public string EQMNM { get; set; } // 설비명
+            public string EQMSPEC { get; set; } // 설비형식
+            public string EQMTP { get; set; } // 설비유형
+            public string TMLEQM { get; set; } // 배치장소
+            public string EPOWER { get; set; } // 동력
+            public string MKDATE { get; set; } // 제작일자
+            public string MKCUST { get; set; } // 제작처
+            public string BUYAMT { get; set; } // 구입금액
+            public string CUSTTEL { get; set; } // 연락선
+            public string FILEPATH { get; set; } // 이미지
+            public string NO { get; set; } // NO
+            public string REGTIME { get; set; } // 일자
+            public string EQMREPTP { get; set; } // 고장유형
+            public string HANDLE { get; set; } // 처리내용
+        }
+
+
+
+        public S01A(Dictionary<string, string> param)
+        {
+            InitializeComponent();
+            ItsMaria maria = new ItsMaria("EQM1001_S01", "CALL_RPT");
+            var eqmcd = param.ContainsKey("EQMCD") ? param["EQMCD"] : (param.ContainsKey("FANO") ? param["FANO"] : "");
+            maria.AddParam("EQMCD", eqmcd);
+            maria.AddParam("FANO", eqmcd);
+            var check = param.ContainsKey("CHECKYN") ? param["CHECKYN"] : "N";
+
+            DataSet ds = maria.CallProc();
+            if (maria.IsError)
+            {
+                Console.WriteLine(maria.ErrMessage);
+                return;
+            }
+
+            if (ds == null || ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0)
+            {
+                return;
+            }
+
+            string filepath1 = ds.Tables[0].Rows[0]["FILEPATH"].ToString();
+            string filepath2 = ds.Tables[0].Rows[0]["FILEPATH2"].ToString();
+
+            // 공통 초기화
+            xrPictureBox1.Visible = false;
+            xrPictureBox2.Visible = false;
+            xrPictureBox3.Visible = false;
+            xrPictureBox4.Visible = false;
+            xrPictureBox5.Visible = false;
+
+            bool hasFile1 = !string.IsNullOrEmpty(filepath1);
+            bool hasFile2 = !string.IsNullOrEmpty(filepath2);
+
+            if (hasFile1 && hasFile2)
+            {
+                xrPictureBox1.Visible = true;
+                xrPictureBox2.Visible = true;
+
+                xrPictureBox1.ImageUrl = filepath1;
+                xrPictureBox2.ImageUrl = filepath2;
+
+                // "Y"일 경우에만 xrPictureBox4/5 사용
+                if (check == "Y")
+                {
+                    xrPictureBox1.Visible = false;
+                    xrPictureBox2.Visible = false;
+                    xrPictureBox4.Visible = true;
+                    xrPictureBox5.Visible = true;
+
+                    xrPictureBox4.ImageUrl = filepath1;
+                    xrPictureBox5.ImageUrl = filepath2;
+                }
+            }
+            else if (hasFile1 || hasFile2)
+            {
+                xrPictureBox3.Visible = true;
+                xrPictureBox3.ImageUrl = hasFile1 ? filepath1 : filepath2;
+            }
+
+            // 2026-09-17 설비코드(EQMCD/FANO) 컬럼 안전 바인딩
+            string eqmCode = ds.Tables[0].Columns.Contains("EQMCD") ? ds.Tables[0].Rows[0]["EQMCD"].ToString() : (ds.Tables[0].Columns.Contains("FANO") ? ds.Tables[0].Rows[0]["FANO"].ToString() : "");
+
+            xrTableCell11.Text = ds.Tables[0].Rows[0]["EQMNM"].ToString(); // 설비명
+            xrTableCell13.Text = eqmCode; // 관리번호
+            xrTableCell8.Text = ds.Tables[0].Rows[0]["MKCUST"].ToString(); // 제작처
+            xrTableCell14.Text = ds.Tables[0].Rows[0]["EQMPLACE"].ToString(); // 설치장소
+            xrTableCell16.Text = ds.Tables[0].Rows[0]["BUYCUST"].ToString(); // 구입처
+            xrTableCell18.Text = ds.Tables[0].Rows[0]["EQMRANK"].ToString(); // 등급
+            xrTableCell20.Text = ds.Tables[0].Rows[0]["MKDATE"].ToString(); // 제작일
+            xrTableCell22.Text = ds.Tables[0].Rows[0]["MODEL"].ToString(); // 형식
+            xrTableCell26.Text = ds.Tables[0].Rows[0]["EQMSPEC"].ToString(); // 규격
+            xrTableCell37.Text = ds.Tables[0].Rows[0]["BUYAMT"].ToString(); // 금액
+            xrTableCell92.Text = eqmCode; // 관리번호
+
+            if (ds.Tables.Count > 1)
+            {
+                this.DataSource = ds.Tables[1];
+            }
+            //this.xrSubreport1.ReportSource.DataSource = ds.Tables[1];
+        
+        }
+
+      
+
+
+    }
+}

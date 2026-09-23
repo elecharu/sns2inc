@@ -1,0 +1,81 @@
+.wj-flexgrid {
+    min-height:100px;
+    height:calc(100% - 4px);
+    border:none;
+}
+.wj-content {
+    border-radius: 0px;
+}
+.wj-listbox{
+    position:fixed!important;
+    max-height: 200px!important;
+    /*height: 150px;*/
+}
+.wj-columnfiltereditor .wj-listbox {
+    position: static!important;
+}
+.wj-cell {
+    border-right: 1px solid #e9e9e9;
+    border-bottom: 1px solid #e9e9e9; 
+    white-space: pre;
+    padding: 3px 6px;
+}
+.wj-state-multi-selected {
+    background: #feeef4 !important; 
+    color: black !important;
+}
+.wj-state-selected {
+    background: #feeef4 !important; 
+    border: 1px solid Salmon;
+    color: black !important;
+}
+.wj-alt:not(.wj-header):not(.wj-group):not(.wj-state-selected):not(.wj-state-multi-selected) {
+    background: white;
+}
+.wj-header {
+    background: #f2f6ff;
+    /*white-space: initial;*/
+}
+.wj-header-space {
+    white-space: pre;
+}
+.wj-cell.wj-frozen-col {
+    border-right: 1px solid #afafaf;
+}
+/* CELL MERGE */
+.wj-cell .v-center {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: pre-wrap;
+}
+.wj-cell .h-center {
+    text-align:center;
+}
+.ItsGridButton {
+    /*color: #919191;*/
+    /*font-size: 13px;*/
+    cursor: pointer;
+}
+.wj-control .wj-btn, .wj-viewer .wj-control .wj-applybutton {
+    padding: 0px 7px;
+    min-width: 26px;
+    /*font-size: 12px;*/
+    /*color: #808080;*/
+}
+.wj-flexgrid .wj-group {
+    background-color: Snow !important;
+    color: Indigo !important;
+    font-weight: bold;
+}
+.itsgrid-seleted-row {
+    border-bottom: 1px solid indianred;
+}
+
+.ItsGrid div[wj-part="root"]{
+    overflow-y:scroll !important;
+}
+.wj-flexgrid .wj-cell.wj-filter-on, .wj-flexgrid .wj-cell.wj-filter-off {
+    padding-right: 1.1em;
+    text-align: center !important;
+}

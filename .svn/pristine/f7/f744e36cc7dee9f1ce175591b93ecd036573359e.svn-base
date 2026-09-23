@@ -1,0 +1,187 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
+
+namespace ITSSCHEDULER_FRM
+{
+    public partial class MainForm : Form
+    {
+        System.Timers.Timer _updateTimer = new System.Timers.Timer();
+        public MainForm()
+        {
+            InitializeComponent();
+
+            // 중복 실행 확인
+            bool isRun = false;
+            System.Diagnostics.Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+            System.Diagnostics.Process[] processess = System.Diagnostics.Process.GetProcesses();
+            foreach (System.Diagnostics.Process process in processess)
+            {
+                if (currentProcess.Id != process.Id)
+                {
+                    if (currentProcess.ProcessName == process.ProcessName)
+                    {
+                        isRun = true;
+                        break;
+                    }
+                }
+            }
+            if (isRun)
+            {
+                MessageBox.Show("프로그램이 이미 실행중입니다.\n\n트레이 아이콘을 확인하세요.");
+                this.Close();
+            }
+            else
+            {
+                // PLC값 업데이트
+                _updateTimer.Interval = 1000; // 1초간격
+                _updateTimer.Elapsed += updateTimer_Elapsed;
+                _updateTimer.Start();
+            }
+        }
+
+        private void ShowErrMsg(string errmsg)
+        {
+           // lbl_err.Visible = true;
+        }
+
+        private void HiddenErrMsg()
+        {
+            //lbl_err.Visible = false;
+        }
+        private void err_log(string text)
+        {
+            string filePath = "log.txt";
+            System.IO.File.AppendAllText(filePath, "\r\n" + System.DateTime.Now.ToString("yyyy-MM-dd") + "  " + text, Encoding.UTF8);
+        }
+        private void updateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            (sender as System.Timers.Timer).Stop();
+
+            HiddenErrMsg();
+            try
+            {
+                // plc 목록 조회
+                ItsMaria.Set("PLC_GATHERING_ZIGBEE", "LIST_PLC");
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowErrMsg(ItsMaria.ErrMessage);
+                    err_log(ItsMaria.ErrMessage);
+                    (sender as System.Timers.Timer).Start();
+                    return;
+                }
+                // 번지목록
+                DataTable addr_list = ds.Tables[0];
+                Dictionary<string, string> plcdata = new Dictionary<string, string>();
+                foreach (DataRow row in addr_list.Rows)
+                {
+                    plcdata.Add(row["PLCKEY"].ToString(), row["PLCVALUE"].ToString());
+                }
+
+                // MSSQL
+                StringBuilder query = new StringBuilder();
+                query.AppendLine(" SELECT CONCAT('FRM01', ");
+                query.AppendLine(" CASE NM ");
+                query.AppendLine(" WHEN 'YYMM' THEN CONCAT('DW', Mech ,'00') ");
+                query.AppendLine(" WHEN 'DDHH' THEN CONCAT('DW', Mech ,'01') ");
+                query.AppendLine(" WHEN 'MMSS' THEN CONCAT('DW', Mech ,'02') ");
+                query.AppendLine(" WHEN 'JobState' THEN CONCAT('DW', Mech ,'03') ");
+                query.AppendLine(" WHEN 'SCTime' THEN CONCAT('DW', Mech ,'04') ");
+                query.AppendLine(" WHEN 'GwTime' THEN CONCAT('DW', Mech ,'05') ");
+                query.AppendLine(" WHEN 'GPTime' THEN CONCAT('DW', Mech ,'06') ");
+                query.AppendLine(" WHEN 'BGTime' THEN CONCAT('DW', Mech ,'07') ");
+                query.AppendLine(" WHEN 'UTemp' THEN CONCAT('DW', Mech ,'08') ");
+                query.AppendLine(" WHEN 'UTemp1' THEN CONCAT('DW', Mech ,'09') ");
+                query.AppendLine(" WHEN 'UTemp2' THEN CONCAT('DW', Mech ,'10') ");
+                query.AppendLine(" WHEN 'DTemp' THEN CONCAT('DW', Mech ,'11') ");
+                query.AppendLine(" WHEN 'DTemp1' THEN CONCAT('DW', Mech ,'12') ");
+                query.AppendLine(" WHEN 'DTemp2' THEN CONCAT('DW', Mech ,'13') ");
+                query.AppendLine(" END ");
+                query.AppendLine(" ) AS PLCKEY, VAL AS  PLCVALUE ");
+                query.AppendLine(" FROM ( ");
+                query.AppendLine(" SELECT FactGB, REPLACE(MechCD, 'M-', '') AS Mech,  ");
+                query.AppendLine(" CAST(JobState as nvarchar) as JobState, ");
+                query.AppendLine(" CAST(YYMM as nvarchar) as YYMM,	CAST(DDHH as nvarchar) as DDHH,	CAST(MMSS as nvarchar) as MMSS, ");
+                query.AppendLine(" CAST(SCTime as nvarchar) as SCTime,	CAST(GwTime as nvarchar) as GwTime,	CAST(GPTime as nvarchar) as GPTime,	CAST(BGTime as nvarchar) as BGTime, ");
+                query.AppendLine(" CAST(UTemp as nvarchar) as UTemp,	CAST(UTemp1 as nvarchar) as UTemp1,	CAST(UTemp2 as nvarchar) as UTemp2, ");
+                query.AppendLine(" CAST(DTemp as nvarchar) as DTemp,	CAST(DTemp1 as nvarchar) as DTemp1,	CAST(DTemp2 as nvarchar) as DTemp2, ");
+                query.AppendLine(" CHGTIME	FROM PRSUNO	WHERE JOBSTATE IS NOT NULL ");
+                query.AppendLine(" ) AS A UNPIVOT ( ");
+                query.AppendLine("  VAL FOR NM IN([YYMM], [DDHH], [MMSS], [JobState], [SCTIME], [GWTIME], [GPTIME], [UTEMP], [UTEMP1], [UTEMP2], [DTEMP], [DTEMP1], [DTEMP2]) ");
+                query.AppendLine(" ) UNPVT  ");
+                query.AppendLine(" ; ");
+                DataTable dtmssql = SqlQuery.ExecuteDataset(query.ToString()).Tables[0];
+                if (SqlResult.IsError)
+                {
+                    ShowErrMsg(SqlResult.ErrMessage);
+                    err_log(ItsMaria.ErrMessage);
+                    (sender as System.Timers.Timer).Start();
+                    return;
+                }
+                foreach (DataRow row in dtmssql.Rows)
+                {
+                    plcdata[row["PLCKEY"].ToString()] = row["PLCVALUE"].ToString();
+                }
+
+                // 업데이트
+                ItsMaria.Set("PLC_GATHERING_ZIGBEE", "UP_CUR");
+                foreach (string plckey in plcdata.Keys)
+                {
+                    ItsMaria.AddList("ADDRKEYLIST", plckey);
+                    ItsMaria.AddList("VALUELIST", plcdata[plckey]);
+                }
+                ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowErrMsg(ItsMaria.ErrMessage);
+                    err_log(ItsMaria.ErrMessage);
+                    (sender as System.Timers.Timer).Start();
+                    return;
+                }
+                (sender as System.Timers.Timer).Start();
+            }
+            catch(Exception ex)
+            {
+                ShowErrMsg(ex.ToString());
+                err_log(ex.ToString());
+                (sender as System.Timers.Timer).Start();
+            }
+            
+
+            
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+        }
+        private bool IsClose = false;
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (IsClose == true) return;
+
+            e.Cancel = true;
+            this.Visible = false;
+        }
+
+        private void notifyIcon1_DoubleClick(object sender, EventArgs e)
+        {
+            this.Visible = true;
+        }
+
+        private void notifyIcon1_Click(object sender, EventArgs e)
+        {
+            this.Visible = true;
+        }
+
+        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.IsClose = true;
+            this.Close();
+        }
+    }
+}

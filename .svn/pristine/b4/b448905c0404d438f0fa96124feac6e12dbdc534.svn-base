@@ -1,0 +1,71 @@
+﻿<Window x:Class="ITSLIB.ItsQueryWin"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ITSLIB"
+        mc:Ignorable="d"
+        Title="ItsQueryWin" Height="500" Width="800">
+    <DockPanel>
+        <DockPanel DockPanel.Dock="Top" Height="30" Background="Black">
+            <TextBlock VerticalAlignment="Center" Foreground="Yellow"
+                       Margin="10 0 0 0"
+                       FontSize="14" FontWeight="Bold">호출주소 :</TextBlock>
+            <TextBlock VerticalAlignment="Center" Foreground="White"
+                       Margin="10 0 10 0" x:Name="CONNSTR"
+                       FontSize="14" FontWeight="Bold">CONNSTR</TextBlock>
+        </DockPanel>
+        <DockPanel DockPanel.Dock="Top" Height="30" Background="#4472C4">
+            <TextBlock VerticalAlignment="Center" Foreground="Yellow"
+                       Margin="10 0 0 0"
+                       FontSize="14" FontWeight="Bold">프로시저명 :</TextBlock>
+            <TextBlock VerticalAlignment="Center" Foreground="White"
+                       Margin="10 0 10 0" x:Name="PROCNAME"
+                       FontSize="14" FontWeight="Bold">PROCNAME</TextBlock>
+            <TextBlock VerticalAlignment="Center" Foreground="Yellow"
+                       Margin="10 0 0 0" 
+                       FontSize="14" FontWeight="Bold">호출구분자 :</TextBlock>
+            <TextBlock VerticalAlignment="Center" Foreground="White"
+                       Margin="10 0 10 0" x:Name="CALLTYPE"
+                       FontSize="14" FontWeight="Bold">CALLTYPE</TextBlock>
+            <TextBlock VerticalAlignment="Center" Foreground="Yellow"
+                       Margin="10 0 0 0" 
+                       FontSize="14" FontWeight="Bold">트랜잭션 :</TextBlock>
+            <TextBlock VerticalAlignment="Center" Foreground="White"
+                       Margin="10 0 10 0" x:Name="TRANYN"
+                       FontSize="14" FontWeight="Bold">TRANYN</TextBlock>
+        </DockPanel>
+        <DataGrid SelectionUnit="Cell" DockPanel.Dock="Top"
+                  FontSize="14" FontWeight="Bold" x:Name="GRID_VALUE">
+            <DataGrid.CellStyle>
+                <Style TargetType="{x:Type DataGridCell}">
+                    <Style.Triggers>
+                        <Trigger  Property="IsSelected" Value="true">
+                            <Setter Property="Background" Value="Yellow" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.CellStyle>
+            <DataGrid.Columns>
+                <DataGridTextColumn CanUserSort="False" Binding="{Binding NAME1}" Foreground="Black" Header="변수명" IsReadOnly="True" Width="100"></DataGridTextColumn>
+                <DataGridTextColumn CanUserSort="False" Binding="{Binding VALUE1}" Foreground="Blue" Header="변수값" IsReadOnly="True" Width="150"></DataGridTextColumn>
+                <DataGridTextColumn CanUserSort="False" Binding="{Binding NAME2}" Foreground="Black" Header="변수명" IsReadOnly="True" Width="100"></DataGridTextColumn>
+                <DataGridTextColumn CanUserSort="False" Binding="{Binding VALUE2}" Foreground="Blue" Header="변수값" IsReadOnly="True" Width="150"></DataGridTextColumn>
+                <DataGridTextColumn CanUserSort="False" Binding="{Binding NAME3}" Foreground="Black" Header="변수명" IsReadOnly="True" Width="100"></DataGridTextColumn>
+                <DataGridTextColumn CanUserSort="False" Binding="{Binding VALUE3}" Foreground="Blue" Header="변수값" IsReadOnly="True" Width="150"></DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <DockPanel Height="30" DockPanel.Dock="Top" Background="#4472C4">
+            <TextBlock FontSize="14" FontWeight="Bold" 
+                       Margin="20 0 20 0"
+                       DockPanel.Dock="Left" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Yellow"> >>> 개발자 디버깅용 데이터베이스 호출문 >>></TextBlock>
+            <Button FontSize="14" FontWeight="Bold"
+                DockPanel.Dock="Left" x:Name="COPY" Click="COPY_Click">복사 및 닫기</Button>
+            <UserControl></UserControl>
+        </DockPanel>
+        <TextBox FontSize="14" FontWeight="Bold"
+                 Padding="10" Foreground="Blue"
+                 Text="마리아 쿼리문"
+            x:Name="TEXTBOX" DockPanel.Dock="Top" TextWrapping="Wrap" AcceptsReturn="True"></TextBox>
+    </DockPanel>
+</Window>

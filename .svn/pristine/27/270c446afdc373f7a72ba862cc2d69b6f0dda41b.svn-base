@@ -1,0 +1,100 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Data;
+
+namespace ITSLIB
+{
+    public class ItsPageTml : ItsPageBase
+    {
+        public ItsPageTml()
+        {
+            this.Loaded += ItsPageTml_Loaded;
+        }
+
+        private bool _isLoad = false;
+        private void ItsPageTml_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Loaded -= ItsPageTml_Loaded;
+
+            if (_isLoad == false)
+            {
+                if (this.Style == null)
+                {
+                    this.Style = (Style)FindResource("TML");
+                }
+                this.EventPageLoaded();
+
+                _isLoad = true;
+            }
+        }
+
+        public virtual void EventPopClose(string panelName)
+        {
+
+        }
+
+        public virtual void EventMessageResult(string cmd)
+        {
+
+        }
+
+        public virtual void EventMessageCancel(string cmd)
+        {
+
+        }
+
+        public void ShowMessageBox(string commandName, string msg)
+        {
+            TMLMAIN.MainWindow tmlMain = ItsElement.FindParent<TMLMAIN.MainWindow>(this);
+            if (tmlMain != null)
+            {
+                tmlMain.ShowMessageBox(commandName, msg);
+                return;
+            }
+            else
+            {
+                if (ItsMsgBox.ShowYesNo(msg))
+                {
+                    EventMessageResult(commandName);
+                }
+                else
+                {
+                    EventMessageCancel(commandName);
+                }
+            }
+        }
+
+        // 2020-12-08 메세지 색상변경 pjh
+        public void ShowMessageBox_B(string commandName, string msg, Brush backcolor)
+        {
+            TMLMAIN.MainWindow tmlMain = ItsElement.FindParent<TMLMAIN.MainWindow>(this);
+            if (tmlMain != null)
+            {
+                tmlMain.ShowMessageBox_B(commandName, msg, backcolor);
+                return;
+            }
+            else
+            {
+                if (ItsMsgBox.ShowYesNo(msg))
+                {
+                    EventMessageResult(commandName);
+                }
+                else
+                {
+                    EventMessageCancel(commandName);
+                }
+            }
+        }
+    }
+}

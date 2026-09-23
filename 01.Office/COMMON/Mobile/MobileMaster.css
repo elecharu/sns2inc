@@ -1,0 +1,34 @@
+﻿@charset "utf-8";
+
+* { margin:0; padding:0; box-sizing:border-box; font-family:'굴림', Malgun Gothic; max-height:inherit;}
+html,body { width:100%; height:100%;max-width:800px;}
+html { font-size:62.5%; overflow-y:scroll; overflow-x:hidden;}
+body,input,select,textarea,button { font-size:1.4rem; line-height:1; letter-spacing:-0.00em; color:#444; font-family:'굴림', Malgun Gothic; }
+body.noscroll { overflow:hidden; }
+h1,h2,h3,h4,h5,h6 { font-size:100%; font-weight:normal; }
+a { color:inherit; text-decoration:none; }
+table { width:100%; table-layout:fixed; word-break:break-all; border-collapse:collapse; border-spacing:0; }
+img,fieldset,hr { border:0 none; }
+ul,li { list-style:none; }
+address,em { font-style:normal; }
+img,video,canvas { height:auto; }
+
+[type="text"],[type="password"],[type="email"],select,textarea { padding:0.5em; border:1px solid #ccc; }
+
+.layout { position:relative; max-width:800px; margin:0 auto; }
+
+/* font */
+@font-face{font-family:'nanum_basicB';src:url('/fonts/NanumSquareB.woff') format('woff');}
+@font-face{font-family:'nanum_basicL';src:url('/fonts/NanumSquareL.woff') format('woff');}
+@font-face{font-family:'nanum_basicR';src:url('/fonts/NanumSquareR.woff') format('woff');}
+@font-face{font-family:'nanumEB';src:url('/fonts/NanumSquareRoundEB.woff') format('woff');}
+@import url('https:/../../fonts.googleapis.com/css?family=PT+Sans+Caption');
+
+.emer {
+    font-weight: bold;
+    font-family: 'nanum_gothicB';
+    color: red !important;
+    font-size: 15px;
+    line-height:2.3em;
+    vertical-align:top;
+}

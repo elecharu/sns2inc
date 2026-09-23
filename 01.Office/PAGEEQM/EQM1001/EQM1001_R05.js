@@ -1,0 +1,156 @@
+﻿/// <reference path="../../Script/reference.js" />
+
+/* 페이지 로드 시 수행 */
+ItsPage.Load = function () {
+
+    // 2026-09-22 설비그룹별 점검계획 \그리드
+    ItsGrid.Create('grid_GRP_PLAN', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        column.create('설비그룹코드', 'PLANCD', { width: 130, align: 'center', readOnly: true }),
+        column.create('설비그룹', 'PLANNM', { width: 220, readOnly: true }),
+        column.create('점검항목수', 'PLANITEMCNT', { width: 90, align: 'right', columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: true }),
+        column.create('승인상태', 'APRVSTTNM', { width: 80, align: 'center', readOnly: true }),
+        column.create('승인자', 'APRVEMP', { width: 120, align: 'center', readOnly: true }),
+        column.create('요청일시', 'REQTIME', { width: 140, align: 'center', readOnly: true }),
+        column.create('처리일시', 'APRVTIME', { width: 140, align: 'center', readOnly: true }),
+        column.create('반려사유', 'REJREASON', { width: 260, readOnly: true }),
+        column.create('승인상태코드', 'APRVSTT', { hidden: true }),
+        column.split()
+    ]);
+
+    // 2026-09-22 설비별 점검계획 그리드
+    ItsGrid.Create('grid_EQM_PLAN', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        column.create('설비코드', 'PLANCD', { width: 130, align: 'center', readOnly: true }),
+        column.create('설비명', 'PLANNM', { width: 220, readOnly: true }),
+        column.create('점검항목수', 'PLANITEMCNT', { width: 90, align: 'right', columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: true }),
+        column.create('승인상태', 'APRVSTTNM', { width: 80, align: 'center', readOnly: true }),
+        column.create('승인자', 'APRVEMP', { width: 120, align: 'center', readOnly: true }),
+        column.create('요청일시', 'REQTIME', { width: 140, align: 'center', readOnly: true }),
+        column.create('처리일시', 'APRVTIME', { width: 140, align: 'center', readOnly: true }),
+        column.create('반려사유', 'REJREASON', { width: 260, readOnly: true }),
+        column.create('승인상태코드', 'APRVSTT', { hidden: true }),
+        column.split()
+    ]);
+
+};
+
+// 현재 탭 계획 목록 조회
+ItsButton.EventSearch = function () {
+    var tab = GetPlanTab();
+    var maria = new ItsMaria('EQM1001_R05', 'LIST_PLAN');
+    maria.AddPanel(tab.panelId);
+    maria.AddParam('PLANTP', tab.type);
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore(tab.gridId, maria.store);
+    ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
+};
+
+// 2026-09-22 설비그룹별 점검계획 탭 하단 그리드 행 선택 시 상단 패널 반려사유 텍스트박스 표시
+ItsGrid.Event('grid_GRP_PLAN').onSelect = function () {
+    ShowPlanReason('grid_GRP_PLAN', 'txt_GRP_REJREASON');
+};
+
+// 2026-09-22 설비별 점검계획 탭 하단 그리드 행 선택 시 상단 패널 반려사유 텍스트박스 표시
+ItsGrid.Event('grid_EQM_PLAN').onSelect = function () {
+    ShowPlanReason('grid_EQM_PLAN', 'txt_EQM_REJREASON');
+};
+
+// 설비그룹별 점검계획: 승인
+ItsButton.Event('btn_GRP_APPROVE').onClick = function () {
+    SavePlanStatus('A');
+};
+
+// 설비그룹별 점검계획: 반려
+ItsButton.Event('btn_GRP_REJECT').onClick = function () {
+    SavePlanStatus('R');
+};
+
+// 설비그룹별 점검계획: 승인된 계획서 출력
+ItsButton.Event('btn_GRP_PLAN_RPT').onClick = function () {
+    var rowIndex = ItsGrid.GetCurrentIndex('grid_GRP_PLAN');
+    var planCode = ItsGrid.GetValue('grid_GRP_PLAN', rowIndex, 'PLANCD');
+    var approvalStatus = ItsGrid.GetValue('grid_GRP_PLAN', rowIndex, 'APRVSTT');
+
+    if (!planCode) {
+        ItsMsg.Toast('출력할 설비그룹 점검계획을 선택해주세요.');
+        return;
+    }
+
+    if (approvalStatus != 'A') {
+        ItsMsg.Toast('승인된 설비그룹 점검계획만 출력할 수 있습니다.');
+        return;
+    }
+
+    var rpt = new ItsXtraRpt('EQM1001_S05A');
+    rpt.FileName('제조설비_정기점검계획서');
+    rpt.AddParam('EQMGRP', planCode);
+    rpt.CallPop();
+    if (rpt.isError) {
+        ItsMsg.Alert(rpt.errMessage);
+    }
+};
+
+// 설비별 점검계획: 승인
+ItsButton.Event('btn_EQM_APPROVE').onClick = function () {
+    SavePlanStatus('A');
+};
+
+// 설비별 점검계획: 반려
+ItsButton.Event('btn_EQM_REJECT').onClick = function () {
+    SavePlanStatus('R');
+};
+
+// 현재 승인관리 탭 정보
+function GetPlanTab() {
+    return ItsTab.GetIndex('tab_PLAN') == 0
+        ? { type: 'G', panelId: 'div_GRP_PLAN', gridId: 'grid_GRP_PLAN', reasonId: 'txt_GRP_REJREASON' }
+        : { type: 'E', panelId: 'div_EQM_PLAN', gridId: 'grid_EQM_PLAN', reasonId: 'txt_EQM_REJREASON' };
+}
+
+// 선택 계획의 반려사유 표시
+function ShowPlanReason(gridId, reasonId) {
+    var rowIndex = ItsGrid.GetCurrentIndex(gridId);
+    ItsText.SetValue(reasonId, ItsGrid.GetValue(gridId, rowIndex, 'REJREASON') || '');
+}
+
+
+// 선택 계획 상태 저장
+function SavePlanStatus(approvalStatus) {
+    var tab = GetPlanTab();
+    var rowIndex = ItsGrid.GetCurrentIndex(tab.gridId);
+    var planCode = ItsGrid.GetValue(tab.gridId, rowIndex, 'PLANCD');
+    var rejectionReason = ItsText.GetValue(tab.reasonId);
+
+    if (!planCode) {
+        ItsMsg.Toast('승인할 점검계획을 선택해주세요.');
+        return;
+    }
+
+    if (approvalStatus == 'R' && !rejectionReason) {
+        ItsMsg.Toast('반려 사유를 입력해주세요.');
+        return;
+    }
+
+    ItsMsg.Confirm('선택한 점검계획의 상태를 변경하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_R05', 'SAVE_PLAN_STATUS');
+        maria.AddParam('PLANTP', tab.type);
+        maria.AddParam('PLANCD', planCode);
+        maria.AddParam('APRVSTT', approvalStatus);
+        maria.AddParam('REJREASON', rejectionReason);
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
+        ItsGrid.Setkey(tab.gridId, 'PLANCD', planCode);
+        ItsButton.EventSearch();
+    }, function () {
+        ItsMsg.Toast('저장이 취소되었습니다.');
+    });
+}

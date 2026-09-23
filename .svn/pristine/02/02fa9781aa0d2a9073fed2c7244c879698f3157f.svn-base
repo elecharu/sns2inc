@@ -1,0 +1,231 @@
+﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using DevExpress.Xpf.Grid;
+using System.Data;
+using System.Collections.Generic;
+
+public static class ItsLang
+{
+    public static string LangName = "KR";
+    public static string _PageName = "";
+
+    public static void AddLangControl(HashSet<DependencyObject> ControlList, DataTable LangTable, string PageName, object obj)
+    {
+        DependencyObject dobj = obj as DependencyObject;
+        if (dobj == null) return;
+
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(dobj); i++)
+        {
+            FrameworkElement child = VisualTreeHelper.GetChild(dobj, i) as FrameworkElement;
+            if (child == null
+                || ControlList.Contains(child)
+                || child.Language.ToString().ToUpper() == "NONE") continue;
+
+            if (child is ITSLIB.ButtonList)
+            {
+                continue;
+            }
+            else if (child is Image)
+            {
+                continue;
+            }
+            else if (child is ITSLIB.Button
+                || child is ITSLIB.Check
+                || child is ITSLIB.Combo
+                || child is ITSLIB.Date
+                || child is ITSLIB.Number
+                || child is ITSLIB.OnOff
+                || child is ITSLIB.Pop
+                || child is ITSLIB.Text
+                || child is ITSLIB.Time)
+            {
+                ControlList.Add(child);
+                continue;
+            }
+            else if (child is GridControl)
+            {
+                GridControl grid = child as GridControl;
+                foreach (GridColumn column in grid.Columns)
+                {
+                    ControlList.Add(column);
+                }
+                continue;
+            }
+            else if (child is TextBlock)
+            {
+                ControlList.Add(child);
+                continue;
+            }
+            else if (child is UserControl)
+            {
+                UserControl uc = child as UserControl;
+                if (uc.Content != null && uc.Name.IndexOf("MENU") > -1)
+                {
+                    ControlList.Add(child);
+                    continue;
+                }
+            }
+
+            AddLangControl(ControlList, LangTable, PageName, child);
+        }
+    }
+
+
+    public static void LangPage(HashSet<DependencyObject> ControlList, Dictionary<DependencyObject, string> LangList, DataTable LangTable)
+    {
+        //if (ItsLang.LangName == "KR") return;
+
+        foreach (DependencyObject obj in ControlList)
+        {
+            if (obj is ITSLIB.Button)
+            {
+                ITSLIB.Button ctl = obj as ITSLIB.Button;
+                ctl.Label = LangControl(LangList, LangTable, obj, ctl.Label, ctl.LangKey);
+            }
+            else if (obj is ITSLIB.Check)
+            {
+                ITSLIB.Check ctl = obj as ITSLIB.Check;
+                ctl.Label = LangControl(LangList, LangTable, obj, ctl.Label, ctl.LangKey);
+            }
+            else if (obj is ITSLIB.Combo)
+            {
+                ITSLIB.Combo ctl = obj as ITSLIB.Combo;
+                ctl.Label = LangControl(LangList, LangTable, obj, ctl.Label, ctl.LangKey);
+            }
+            else if (obj is ITSLIB.Date)
+            {
+                ITSLIB.Date ctl = obj as ITSLIB.Date;
+                ctl.Label = LangControl(LangList, LangTable, obj, ctl.Label, ctl.LangKey);
+            }
+            else if (obj is ITSLIB.Number)
+            {
+                ITSLIB.Number ctl = obj as ITSLIB.Number;
+                ctl.Label = LangControl(LangList, LangTable, obj, ctl.Label, ctl.LangKey);
+            }
+            else if (obj is ITSLIB.OnOff)
+            {
+                ITSLIB.OnOff ctl = obj as ITSLIB.OnOff;
+                ctl.Label = LangControl(LangList, LangTable, obj, ctl.Label, ctl.LangKey);
+            }
+            else if (obj is ITSLIB.Pop)
+            {
+                ITSLIB.Pop ctl = obj as ITSLIB.Pop;
+                ctl.Label = LangControl(LangList, LangTable, obj, ctl.Label, ctl.LangKey);
+            }
+            else if (obj is ITSLIB.Text)
+            {
+                ITSLIB.Text ctl = obj as ITSLIB.Text;
+                ctl.Label = LangControl(LangList, LangTable, obj, ctl.Label, ctl.LangKey);
+            }
+            else if (obj is ITSLIB.Time)
+            {
+                ITSLIB.Time ctl = obj as ITSLIB.Time;
+                ctl.Label = LangControl(LangList, LangTable, obj, ctl.Label, ctl.LangKey);
+            }
+            else if (obj is GridColumn)
+            {
+                GridColumn ctl = obj as GridColumn;
+                // 버튼타입의 컬럼의 헤더는 언어변경 적용x
+                if((ctl as ITSLIB.Column).CellType != ItsEnums.CellTypes.Button)
+                {
+                    ctl.Header = LangControl(LangList, LangTable, obj, ctl.Header.ToString(), (ctl as ITSLIB.Column).LangKey);
+                }
+            }
+            else if (obj is Image)
+            {
+                continue;
+            }
+            else if (obj is TextBlock)
+            {
+                TextBlock ctl = obj as TextBlock;
+                ctl.Text = LangControl(LangList, LangTable, obj, ctl.Text, "");
+            }
+            else if (obj is UserControl)
+            {
+                UserControl uc = obj as UserControl;
+                if (uc.Content != null && uc.Name.IndexOf("MENU") > -1)
+                {
+                    uc.Content = LangControl(LangList, LangTable, obj, uc.Content.ToString(), "");
+                    uc.FontFamily = new FontFamily("GungsuhChe");
+                }
+            }
+        }
+
+        // langkey 지정이 안된 필드일 경우 db에 저장
+        if (_PageName != "" && LangList.Count > 0)
+        {
+            ItsMaria.Set("COMLANG", "ADDNEW");
+            ItsMaria.AddOne("PRGCD", _PageName);
+            foreach(var key in LangList.Keys)
+            {
+                try
+                {
+                    string ctlName = key.ToString().Split('.')[key.ToString().Split('.').Length - 1];
+                    if (ctlName.Length <= 10)
+                    {
+                        ItsMaria.AddList("CTLTPLIST", ctlName);
+                        ItsMaria.AddList("LABELLIST", LangList[key]);
+                    }
+                    
+                }
+                catch
+                {
+
+                }
+                
+            }
+            ItsMaria.Call();
+        }
+    }
+
+    private static string LangControl(Dictionary<DependencyObject, string> LangList, DataTable LangTable, DependencyObject ctl, string ctlText, string langKey)
+    {
+        if (ItsLang.LangName == "" || ctlText.Trim() == "") return ctlText;
+        string keyText = ctlText.Replace(" ", "");
+
+        string langText = ctlText;
+        DataRow[] rowList = LangTable.Select("LANGNM = '" + ctlText.Replace(" ", "") + "'");
+        if (rowList.Length > 0)
+        {
+            langText = rowList[0][ItsLang.LangName].ToString();
+            if (langText.Trim() == "")
+            {
+                langText = ctlText;
+            }
+        }
+        else
+        {
+            if (!LangList.ContainsKey(ctl))
+            {
+                LangList.Add(ctl, ctlText);
+            }
+        }
+        return langText;
+    }
+
+    public static DataTable GetLangTable(string PageName)
+    {
+        ItsLang._PageName = PageName;
+        ItsMaria.Set("COMLANG", "LIST");
+        ItsMaria.AddOne("PRGCD", PageName);
+        DataSet ds = ItsMaria.Call();
+        ItsLang.LangName = ds.Tables[1].Rows[0]["LANGUAGE"].ToString();
+
+        return ds.Tables[0];
+    }
+
+    //public static string GetMsg(DataTable LangTable, string langKey)
+    //{
+    //    DataRow[] rowList = ITSLIB.ItsPageBase.LangTable.Select("LANGKEY = '" + langKey + "'");
+    //    if (rowList.Length > 0)
+    //    {
+    //        langText = rowList[0][ItsLang.LangName].ToString();
+    //        if (langText.Trim() == "")
+    //        {
+    //            langText = ctlText;
+    //        }
+    //    }
+    //    return langText;
+    //}
+}

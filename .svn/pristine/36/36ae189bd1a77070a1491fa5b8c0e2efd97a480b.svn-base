@@ -1,0 +1,239 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Collections;
+using MySql.Data.MySqlClient;
+using System.IO;
+using System.Timers;
+using System.Net;
+
+
+namespace ItscoSpring
+{
+
+
+    public partial class Form1 : Form
+    {
+        private string _springPath;
+        private string saveTextPath = @"C:\ITSCO\ItsSpringPath.txt";
+        System.Timers.Timer t1;
+        
+
+        public Form1()
+        {
+            InitializeComponent();
+
+            // 중복 실행 확인
+            bool isRun = false;
+            System.Diagnostics.Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+            System.Diagnostics.Process[] processess = System.Diagnostics.Process.GetProcesses();
+            foreach (System.Diagnostics.Process process in processess)
+            {
+                if (currentProcess.Id != process.Id)
+                {
+                    if (currentProcess.ProcessName == process.ProcessName)
+                    {
+                        isRun = true;
+                        break;
+                    }
+                }
+            }
+            if (isRun)
+            {
+                MessageBox.Show("프로그램이 이미 실행중입니다.\n\n트레이 아이콘을 확인하세요.");
+                this.Close();
+            }
+            else
+            {
+                t1 = new System.Timers.Timer();
+                t1.Interval = 1000 * 1;
+                t1.Enabled = false;
+                t1.Elapsed += T1_Elapsed;
+            }
+        }
+
+        private void T1_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            t1.Stop();
+
+            DirectoryInfo springDir = new DirectoryInfo(_springPath);
+
+            if (!springDir.Exists) { t1.Start(); return; }
+
+            DirectoryInfo[] dirinfo = springDir.GetDirectories();
+
+            foreach (DirectoryInfo springInfo in dirinfo)
+            {
+                FileInfo[] springFile = springInfo.GetFiles();
+
+                foreach (FileInfo fileInfo in springFile)
+                {
+                    if (fileInfo.FullName.ToUpper().IndexOf(".DAT") > 0)
+                    {
+                        string springFullName = fileInfo.FullName;
+                        string changeFullName = "";
+                        if (fileInfo.FullName.ToUpper().IndexOf(".ZIP") <= 0)
+                        {
+                            changeFullName = springFullName + ".zip";
+                            File.Move(springFullName, changeFullName);
+                        }
+                        else
+                        {
+                            changeFullName = springFullName;
+                        }
+
+                        uploadFile(changeFullName, fileInfo.Name);
+                    }
+                }
+            }
+
+
+            // FileInfo fileInfo = new FileInfo();
+
+            t1.Start();
+        }
+
+        private void uploadFile(string springFilePath, string fileinfoName)
+        {
+            try
+            {
+                string ServerUrl = "http://mesyj.optisco.com:8001/AAABIN/";
+
+                string fileName = fileinfoName.Replace(".zip", "");
+                byte[] fileData = System.IO.File.ReadAllBytes(springFilePath);
+                string fileBase64 = Convert.ToBase64String(fileData);
+
+                StringBuilder sb = new StringBuilder();
+                byte[] byStr = Encoding.UTF8.GetBytes(fileBase64);
+                for (int i = 0; i < byStr.Length; i++)
+                {
+                    sb.Append(@"%" + Convert.ToString(byStr[i], 16));
+                }
+                fileBase64 = sb.ToString();
+
+                HttpWebRequest request = WebRequest.Create(ServerUrl + "FileUpload.aspx") as HttpWebRequest;
+                request.Method = "POST";
+                request.ContentType = "application/x-www-form-urlencoded";
+
+                string param = "FILENAME=" + fileName + "&FILEDATA=" + fileBase64;
+                byte[] paramByte = Encoding.UTF8.GetBytes(param);
+
+                Stream requestStream = request.GetRequestStream();
+                requestStream.Write(paramByte, 0, paramByte.Length);
+                requestStream.Close();
+
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                Stream responseStrem = response.GetResponseStream();
+                StreamReader responseStremReader = new StreamReader(responseStrem, Encoding.UTF8);
+
+                string fileKey = responseStremReader.ReadToEnd();
+                if (fileKey.Substring(0, 6) == "ERROR:")
+                {
+                    MessageBox.Show(fileKey.Substring(6));
+                    t1.Start();
+                    return;
+                }
+
+                ItsMaria.Set("IF_SPRING", "UP_COMFILE");
+                ItsMaria.AddOne("FILEKEY", fileKey);
+                ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    MessageBox.Show(ItsMaria.ErrMessage);
+                    t1.Start();
+                    return;
+                }
+            }
+            catch (Exception ex) { t1.Start(); }
+
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            if (File.Exists(saveTextPath))
+            {
+                _springPath = File.ReadAllText(saveTextPath, Encoding.UTF8);
+            }
+
+            patchTextBox.Text = _springPath;
+        }
+
+        private bool IsClose = false;
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (IsClose == true) return;
+
+            e.Cancel = true;
+            this.Visible = false;
+        }
+
+        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.IsClose = true;
+            this.Close();
+        }
+
+        private bool _stop = false;
+        private void btnStop_Click(object sender, EventArgs e)
+        {
+            t1.Stop();
+            _stop = true;
+
+            btnStart.Enabled = true;
+            btnStop.Enabled = false;
+
+        }
+
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            if (_springPath == "")
+            {
+                MessageBox.Show("파일경로가 지정되어 있지 않습니다.");
+                return;
+            }
+            _stop = false;
+            t1.Start();
+
+            this.Visible = false;
+            btnStart.Enabled = false;
+            btnStop.Enabled = true;
+        }
+
+        private void foldSave_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+
+            dialog.ShowDialog();
+
+            string dialogPath = dialog.SelectedPath;
+
+            string textValue = dialogPath;
+
+            if (!Directory.Exists(@"C:\ITSCO")) Directory.CreateDirectory(@"C:\ITSCO");
+
+            File.WriteAllText(saveTextPath, textValue, Encoding.UTF8);
+
+            if (textValue != "") { _springPath = File.ReadAllText(saveTextPath, Encoding.UTF8); }
+            else { _springPath = ""; }
+
+            patchTextBox.Text = _springPath;
+
+        }
+
+        private void ItsSpringIcon_Click(object sender, EventArgs e)
+        {
+            this.Visible = true;
+        }
+
+        private void ItsSpringIcon_DoubleClick(object sender, EventArgs e)
+        {
+            this.Visible = true;
+        }
+    }
+
+}

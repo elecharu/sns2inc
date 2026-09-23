@@ -1,0 +1,9 @@
+body {
+    font-size: 12px;
+}
+/*div.ItsDate_box{
+    font-size: 12px;
+}
+div.ItsDateRange_box {
+    font-size: 12px;
+}*/

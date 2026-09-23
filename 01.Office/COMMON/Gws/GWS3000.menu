@@ -1,0 +1,36 @@
+﻿<div class="Sub_left">			
+	<div class="Sub_left_top height_150">
+		<h1>일정관리</h1>
+		<button class="margin_T30 S_L_btn" onClick="location.href='/PAGEGWS/GWS3001/GWS3001_R01.aspx'"><img src="../../images/icon_23.png" /> 일정등록</button>
+			
+	</div>		
+	<div class="Sub_left_mn padding_L30 padding_B30 padding_T10 border_Tno">
+		<ul class="margin_B5">
+			<li class="padding_B10"><img src="../../images/icon_24.png" /> <span>일정</span></li>
+      <li style="cursor:pointer" onclick="scheDefault()"><div class="Sub_left_mn_in"><img src="../../images/left_icon03_1.png" /> </div>  <span>전체일정</span></li>
+			<li style="cursor:pointer" onclick="schePerson()"><div class="Sub_left_mn_in"><img src="../../images/left_icon03_1.png" /> </div>  <span>개인일정</span></li>
+			<li style="cursor:pointer" onclick="scheDepart()"><div class="Sub_left_mn_in"><img src="../../images/left_icon03_1.png" /> </div>  <span>부서일정</span></li>
+			<li style="cursor:pointer" onclick="scheCompany()"><div class="Sub_left_mn_in"><img src="../../images/left_icon03_1.png" /> </div>  <span>회사일정</span></li>
+      <li style="cursor:pointer" onclick="scheHoliday()"><div class="Sub_left_mn_in"><img src="../../images/left_icon03_1.png" /> </div>  <span>휴가일정</span></li>
+      <li style="cursor:pointer" onclick="scheStuff()"><div class="Sub_left_mn_in"><img src="../../images/left_icon03_1.png" /> </div>  <span>물품일정</span></li>
+		</ul>
+	</div>
+	<div class="Sub_left_mn">
+		<ul>
+			<li class="padding_L30  margin_B5 padding_T3" onclick="scheMy()" style="cursor:pointer">
+				<a class="Sub_left_mn_PD"><div class="Sub_left_mn_in"><img src="../../images/left_icon03_1.png" /> </div> <span>내가 포함된 일정</span></a>						
+			</li>
+		</ul>
+	</div>
+	<div class="Sub_left_mn padding_L30 padding_B30 padding_T10">
+		<ul class="margin_B5">
+			<li class="padding_B10"><img src="../../images/icon_24.png" /><span>차량 운행 일정</span></li>
+      <li style="cursor:pointer" onclick="scheAllAsset()"><div class="Sub_left_mn_in"><img src="../../images/left_icon03_1.png" /></div><span>전체 차량일정</span></li>
+      <li style="cursor:pointer" onclick="scheAsset()"><div class="Sub_left_mn_in"><img src="../../images/left_icon03_1.png" /></div>
+        <select id="menu_carcd" style="width:120px; margin-top:5px; margin-left:5px;" ></select>
+      </li>
+		</ul>
+	</div>		
+	<div class="border_T9a">
+	</div>		
+</div>

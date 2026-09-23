@@ -1,0 +1,61 @@
+﻿CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.SAL3002_S01(
+-- *****************************************************************************
+-- Comment: 수주조회
+-- Create: 2026-09-21 신정수
+-- Modify: 
+-- *****************************************************************************
+ IN $FACTORYCD VARCHAR(20), -- 법인코드
+ IN $BDVCD VARCHAR(20), -- 사업장코드
+ IN $CUSTCD VARCHAR(20), -- 거래처코드
+ IN $ITEMID VARCHAR(100), -- 제품코드 
+ IN $BRANDCD VARCHAR(20), -- 차종코드 
+ IN $MONTH VARCHAR(19), -- 수주기간
+ IN $SALODRKEY VARCHAR(20), 
+ IN $PROTOTYPEYN VARCHAR(10),
+ IN $SALODRTP VARCHAR(10),
+-- *****************************************************************************
+ IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
+PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+-- SET @DEBUGLOGYN = 'Y';
+-- *****************************************************************************
+-- DECLARE _$V01 VARCHAR(1000);
+   DECLARE _$MAX_FROM_DT VARCHAR(19);
+-- ****************************************************************************
+CASE $CALLTYPE
+-- * ***************************************************************************
+WHEN 'LIST_ORDER' THEN  -- 수주헤더 조회 
+
+  SELECT 
+    LEFT(SALODR.ODRDATE, 10) AS ODRDATE, MSTCUST.CUSTNM, SALODR.CUSTCD, SALODR.DEBC, SALODR.CURYBC,
+    SALODRD.DLVDT, SALODR.SALODRKEY, SALODR.BDVCD
+    FROM SALODR
+    JOIN SALODRD ON SALODR.SALODRKEY = SALODRD.SALODRKEY
+    LEFT JOIN MSTCUST ON SALODR.CUSTCD = MSTCUST.CUSTCD                
+    WHERE SALODR.FACTORYCD LIKE CONCAT('%', $FACTORYCD, '%')
+      AND SALODR.BDVCD LIKE CONCAT('%', $BDVCD, '%')
+      AND SALODR.CUSTCD LIKE CONCAT('%', $CUSTCD, '%')
+      AND SALODR.ODRDATE LIKE CONCAT($MONTH, '%')
+      AND SALODR.SALODRKEY LIKE CONCAT('%', $SALODRKEY, '%')
+    GROUP BY SALODR.SALODRKEY
+    ORDER BY SALODR.BDVCD, SALODR.DEBC, SALODR.ODRDATE, SALODR.CUSTCD, SALODR.SALODRKEY;
+
+-- * ***************************************************************************
+WHEN 'LIST_ORDERD' THEN -- 수주품목조회 
+
+  SELECT 
+    MSTITEM.ITEMCG, SALODR.SALODRKEY, SALODRD.ODRSEQ AS SEQ, MSTITEM.ITEMCD, MSTITEM.ITEMNM, 
+    MSTITEM.COMPANYCD,
+    MSTITEM.ITEMSPEC, SALODRD.ITEMUNIT, SALODRD.SALQTY, SALODRD.SALFUP, SALODRD.SALAMT,
+    SALODRD.SALFAMT, SALODRD.SALVAT, SALODRD.DLVDT, SALODRD.REMARK, 
+    SALODRD.RELEASEQTY, SALODR.STATBC, SALODRD.REMP, SALODRD.RTIME
+  FROM SALODRD
+  LEFT JOIN SALODR ON SALODRD.SALODRKEY = SALODR.SALODRKEY 
+  LEFT JOIN MSTITEM ON SALODRD.ITEMID = MSTITEM.ITEMID
+  WHERE SALODR.SALODRKEY = $SALODRKEY
+  ORDER BY MSTITEM.COMPANYCD, MSTITEM.ITEMCG, MSTITEM.ITEMID, MSTITEM.ITEMCD
+  ;
+
+-- ****************************************************************************
+
+END CASE;  END

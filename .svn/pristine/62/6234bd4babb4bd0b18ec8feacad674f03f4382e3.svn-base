@@ -1,0 +1,31 @@
+﻿<%-- 'CodeFile', 'Inherits' --%>
+<%@ Page Title="" Language="C#" MasterPageFile="~/Common/Master/MasterBase.master" AutoEventWireup="true" 
+    CodeFile="MST1001_S01.aspx.cs" Inherits="MST1001_S01" %>
+
+<%-- HEAD 'src' --%>
+<asp:Content ContentPlaceHolderID="CPH_HEAD" Runat="Server">
+    <script type="text/javascript" src="MST1001_S01.js?ver=<%= BasePage.srcVersion %>"></script>
+</asp:Content>
+
+<%-- SEARCH --%>
+<asp:Content ContentPlaceHolderID="CPH_SEARCH" Runat="Server"> 
+    <Its:div runat="server" Type="SearchPanel" ID="sdiv1"> 
+        <Its:combo runat="server" Label="품목유형" ID="cmb_ITEMCG" Field="ITEMCG" GPCD="*DM100" Value="DM100100"/>
+        <Its:find runat="server" Label="품목코드" GPCD="ITEMCD" Field="ITEMCD" />  
+        <Its:check runat="server" Label="종료여부" Field="ENDYN" ID="chk_ENDYN" Value="false"/>        
+    </Its:div>   
+  
+</asp:Content>
+
+<%-- BODY --%>
+<asp:Content ContentPlaceHolderID="CPH_BODY" Runat="Server">
+    <Its:div runat="server" Type="SplitLeft" LeftWidthPc="30">
+       <Its:grid runat="server" ID="grid1" />
+    </Its:div>
+
+    <Its:split runat="server" Type="Vertical"/>
+
+    <Its:div runat="server" Type="SplitRight">
+       <Its:grid runat="server" ID="grid2" />
+    </Its:div>
+</asp:Content>

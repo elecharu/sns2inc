@@ -1,0 +1,15 @@
+﻿<div class="Sub_left">			
+	<div class="Sub_left_top">
+		<h1>마이페이지</h1>
+			
+	</div>		
+	<div class="Sub_left_mn border_Tno">
+		<ul>
+			<li class="padding_L30  margin_B5 padding_T3">
+				<a href="/PAGEGWS/GWS8001/GWS8001_R01.aspx" class="Sub_left_mn_PD"><div class="Sub_left_mn_in"><img src="../../images/left_icon04_9.png"> </div><span>비밀번호변경</span></a>						
+			</li>
+		</ul>
+	</div>
+	<div class="border_T9a">
+	</div>		
+</div>

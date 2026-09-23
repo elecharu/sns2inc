@@ -1,0 +1,86 @@
+﻿div.ItsCheck {
+    float:left;
+    display:inline-block;
+    margin-top:2px;
+    margin-bottom:2px;
+    background-color:transparent;
+    height:20px;
+}
+div.ItsCheck_table {
+    background-color:transparent;
+}
+
+div.ItsCheck_button {
+    vertical-align:middle;
+    display:inline-block;
+    text-align: center;
+    padding: 0px 3px;
+    cursor:pointer;
+    width: 18px;
+}
+
+div.ItsCheck_table > span {
+    vertical-align: middle;
+    display: inline-block;
+    text-align: right;
+    background-color: transparent;
+    white-space: normal;
+    font-family: 'SpoqaHanSansNeo_M';
+    color: #565656;
+}
+div.ItsCheck_table > .ItsCheck_LeftSpan{
+    margin-left: 12px;
+}
+
+div.ItsCheck_table > .ItsCheck_RightSpan{
+    margin-right: 12px;
+}
+
+div.ItsCheck_icon > i {
+    font-size:15px;
+}
+
+div.ItsCheck_icon > .icon{
+    height: 15px;
+}
+
+div.ItsCheck_icon > .ontype_basic {
+    background: url(../images/UserControl/check_on.png) no-repeat, #FFFFFF;
+    background-size: 12px;
+}
+div.ItsCheck_icon > .ontype_red {
+    background: url(../images/UserControl/check_on_r.png) no-repeat, #FFFFFF;
+    background-size: 12px;
+}
+div.ItsCheck_icon > .ontype_green {
+    background: url(../images/UserControl/check_on_g.png) no-repeat, #FFFFFF;
+    background-size: 12px;
+}
+div.ItsCheck_icon > .ontype_white {
+    background: url(../images/UserControl/check_on_w.png) no-repeat, #FFFFFF;
+    background-size: 12px;
+}
+div.ItsCheck_icon > .ontype_yellow {
+    background: url(../images/UserControl/check_on_y.png) no-repeat, #FFFFFF;
+    background-size: 12px;
+}
+div.ItsCheck_icon > .offtype_basic {
+    background: url(../images/UserControl/check_off.png) no-repeat, #FFFFFF;
+    background-size: 12px;
+}
+div.ItsCheck_icon > .offtype_red {
+    background: url(../images/UserControl/check_off_r.png) no-repeat, #FFFFFF;
+    background-size: 12px;
+}
+div.ItsCheck_icon > .offtype_green {
+    background: url(../images/UserControl/check_off_g.png) no-repeat, #FFFFFF;
+    background-size: 12px;
+}
+div.ItsCheck_icon > .offtype_white {
+    background: url(../images/UserControl/check_off_w.png) no-repeat, #FFFFFF;
+    background-size: 12px;
+}
+div.ItsCheck_icon > .offtype_yellow {
+    background: url(../images/UserControl/check_off_y.png) no-repeat, #FFFFFF;
+    background-size: 12px;
+}

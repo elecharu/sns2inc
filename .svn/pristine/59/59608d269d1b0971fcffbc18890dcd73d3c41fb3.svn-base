@@ -1,0 +1,192 @@
+﻿<script>
+<%--if(location.href.indexOf('GWS1002_S01') == -1){
+  getcnt().then(function(resolve){
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('mail_cnt').innerHTML = resolve;
+    });
+  });
+}
+function getcnt(){
+  return new Promise(function (resolve, reject) {
+    var cnt = ItsMailService.ReceiveCount('unseen');
+  resolve(cnt);
+  });
+}--%>
+function addmailbox(){
+    var html = '<li class="position_R padding_L30 Sub_left_mn_BG4b"><img src="../../images/icon_12.png" class="margin_L15">';
+    html += '<input type="text" class="mailboxnm" onfocusout="savenm(this, \'\')">';
+    html += '<div class="position_A Top0 Rt15">';
+    html += '<img src="../../images/icon_11.png" style="cursor:pointer" onclick="void(0)">';
+		html += '</div>';
+    html += '</li>';
+  $('#custom_mailbox').append(html);
+  $('#custom_mailbox li:last-child input.mailboxnm').focus();
+}
+document.addEventListener('DOMContentLoaded', function () {
+  var myinfo = ItsMailService.GetEmpInfo();
+  var daumboxnm = myinfo.DAUMBOXNM.split("»");
+  var daumboxkey = myinfo.DAUMBOXKEY.split("»");
+  var daum = '';
+  for (var d = 0; d < daumboxnm.length -1; d++){
+      daum += '<li><a href="javascript:daummail(\'' + daumboxkey[d] + '\', \'' + daumboxnm[d] + '\')"><div class="Sub_left_mn_in"><img src="../../images/icon_02.png"></div><span>' + daumboxnm[d] + '</span></a></li>';
+  }
+  $('#daummail_ul').append(daum);
+  if(myinfo.EMPCD != null){
+    var mailboxkey = myinfo.MAILBOXKEY.split("»");
+    var mailboxnm = myinfo.MAILBOXNM.split("»");
+    var html = '';
+    for(var i = 0; i < mailboxkey.length - 1; i++){
+      html += '<li class="position_R padding_L30 Sub_left_mn_BG4b"><img src="../../images/icon_12.png" class="margin_L15">';
+      html += '<span class="mailbox margin_L10" onclick="mymailbox(\'' + mailboxkey[i] + '\')">' + mailboxnm[i] + '</span>';
+      html += '<div class="position_A Top0 Rt15">';
+      html += '<img src="../../images/icon_11.png" class="change_icon" style="cursor:pointer" onclick="changenm(this, \'' + mailboxkey[i] + '\')">';
+		  html += '</div>';
+      html += '</li>';
+    }
+    $('#custom_mailbox').append(html);
+  }else{
+    $('.p_mail').hide();
+  }
+});
+function mymailbox(mailboxkey){
+  var form = document.createElement('form');
+  var objs;
+  objs = document.createElement('input');
+  objs.setAttribute('name', 'mailboxkey');
+  objs.setAttribute('value', mailboxkey);
+  form.appendChild(objs);
+  form.setAttribute('method', 'post');
+  form.setAttribute('action', "../GWS1002/GWS1002_S07.aspx");
+  document.body.appendChild(form);
+  form.submit();
+}
+function changenm(el, mailboxkey){
+  var span = $(el).closest('li').find('.mailbox')[0];
+  var val = $(span).text();
+  span.outerHTML = '<input type="text" class="mailboxnm" onfocusout="savenm(this, \'' + mailboxkey +'\')" value="' + val + '">';
+  $(el).closest('li').find('.mailboxnm').focus();
+}
+function savenm(el, mailboxkey){
+  if(el.value){
+    if(mailboxkey == ''){
+      var maria = new ItsMaria('GWS1001_R01', 'ADD_MAILBOX');
+      maria.AddParam('MAILBOXNM', el.value);
+      maria.CallProc();
+      if(maria.isError){
+        maria.ShowErrMsg();
+        return;
+      }else{
+        el.outerHTML = '<span class="mailbox margin_L10" onclick="gomailbox(\'' + maria.store.data[0].MAILBOXKEY + '\')">' + el.value + '</span>';
+        $(el).closest('li').find('.change_icon').attr('onclick', "changenm(this, '" + maria.store.data[0].MAILBOXKEY + "')");
+      }
+    }else{
+      var maria = new ItsMaria('GWS1001_R01', 'UP_MAILBOX');
+      maria.AddParam('MAILBOXKEY', mailboxkey);
+      maria.AddParam('MAILBOXNM', el.value);
+      maria.CallProc();
+      if(maria.isError){
+        maria.ShowErrMsg();
+        return;
+      }else{
+        el.outerHTML = '<span class="mailbox margin_L10" onclick="gomailbox(\'' + mailboxkey + '\')">' + el.value + '</span>';
+    }
+    }
+    }else{
+    if(mailboxkey){
+    ItsMsg.Alert('변경할 메일함명을 입력해주세요.', function(){ el.focus(); });
+    }else{
+    $(el).closest('li').remove();
+    }
+    }
+    }
+    function setting() {
+    var form = document.createElement('form');
+    var obj;
+    obj = document.createElement('input');
+    obj.setAttribute('name', 'mailbox');
+    obj.setAttribute('value', 'Y');
+    form.appendChild(obj);
+    form.setAttribute('method', 'post');
+    form.setAttribute('action', "../GWS1003/GWS1003_R01.aspx");
+    document.body.appendChild(form);
+    form.submit();
+    }
+    function daummail(mailbox, mailboxnm) {
+    var form = document.createElement('form');
+    var obj, obj2;
+    obj = document.createElement('input');
+    obj.setAttribute('name', 'mailbox');
+    obj.setAttribute('value', mailbox);
+    form.appendChild(obj);
+    obj2 = document.createElement('input');
+    obj2.setAttribute('name', 'mailboxnm');
+    obj2.setAttribute('value', mailboxnm);
+    form.appendChild(obj2);
+    form.setAttribute('method', 'post');
+    form.setAttribute('action', "../GWS1004/GWS1004_S01.aspx");
+    document.body.appendChild(form);
+    form.submit();
+    }
+  </script>
+<div class="Sub_left">
+  <% if(Request.Cookies["MPUSERMAIL"] != null && Request.Cookies["MPUSERMAIL"].Value != "") { %>
+	<div class="Sub_left_top height_150 p_mail">
+		<h1>메일</h1>
+		<button class="margin_T30 S_L_btn" onclick="maillink('/PAGEGWS/GWS1001/GWS1001_R01.aspx')" ><img src="../../images/icon_01.png"/> 메일쓰기</button>
+	</div>
+  <div class="Sub_left_mn padding_L30 padding_B10 padding_T10 border_Tno p_mail">
+		<ul class="margin_B5">
+			<li><a href="javascript:maillink('/PAGEGWS/GWS1002/GWS1002_S01.aspx')"><div class="Sub_left_mn_in"><img src="../../images/icon_02.png"/></div><span>받은메일함</span><em class="mail_cnt"></em></a></li>
+      <li><a href="javascript:maillink('/PAGEGWS/GWS1002/GWS1002_S08.aspx')"><div class="Sub_left_mn_in"><img src="../../images/icon_03.png"/></div><span>내게쓴메일함</span></a></li>
+			<li><a href="javascript:maillink('/PAGEGWS/GWS1002/GWS1002_S02.aspx')"><div class="Sub_left_mn_in"><img src="../../images/icon_03.png"/></div><span>보낸메일함</span></a></li>
+			<li><a href="javascript:maillink('/PAGEGWS/GWS1002/GWS1002_S03.aspx')"><div class="Sub_left_mn_in"><img src="../../images/icon_04.png"/></div> <span>중요메일함</span></a></li>
+			<li><a href="javascript:maillink('/PAGEGWS/GWS1002/GWS1002_S04.aspx')"><div class="Sub_left_mn_in"><img src="../../images/icon_05.png"/></div> <span>임시보관함</span></a></li>
+			<li><a href="javascript:maillink('/PAGEGWS/GWS1002/GWS1002_S05.aspx')"><div class="Sub_left_mn_in"><img src="../../images/icon_06.png"/></div> <span>예약메일함</span></a></li>
+		</ul>
+	</div>
+	<div class="Sub_left_mn p_mail">
+		<ul id="custom_mailbox">
+			<li class="padding_L30 margin_B3 padding_T10">
+				<div class="Sub_left_mn_in"><img src="../../images/icon_08.png"/> </div> <span>내메일함</span>
+				<div class="My_mail">
+					<img src="../../images/icon_09.png"  style="cursor:pointer" onClick="javascript:mailfunction(addmailbox());"/><img src="../../images/icon_10.png"  style="cursor:pointer" onClick="javascript:mailfunction(setting())"/>
+				</div>	
+			</li>
+		</ul>
+	</div>
+	<div class="Sub_left_mn padding_L30 p_mail">
+		<ul>
+			<li class="padding_T3">
+        <a href="javascript:maillink('/PAGEGWS/GWS1002/GWS1002_S06.aspx')"><div class="Sub_left_mn_in"><img src="../../images/icon_07.png"/></div> <span>스팸메일함</span></a>
+      </li>
+			<li class="margin_B5">
+				<a href="javascript:maillink('/PAGEGWS/GWS1003/GWS1003_S01.aspx')" class="Sub_left_mn_PD"><div class="Sub_left_mn_in"><img src="../../images/icon_13.png"/> </div> <span>휴지통</span></a>						
+			</li>
+		</ul>
+	</div>
+
+  <div class="Sub_left_mn p_mail">
+    <ul>
+      <li class="padding_L30  margin_B5 padding_T3">
+        <a href="javascript:maillink('/PAGEGWS/GWS1003/GWS1003_R01.aspx')" class="Sub_left_mn_PD">
+          <div class="Sub_left_mn_in">
+            <img src="../../images/icon_14.png"/>
+          </div>
+          <span>환경설정</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+  <% } %>
+  <div class="Sub_left_mn padding_L30 padding_B10 padding_T10">
+    <ul id="daummail_ul">
+      <li style="font-size:15px; color:white; font-family:'nanum_gothic';">다음 메일<button id="daumwrite" onclick="daumwrite()">메일쓰기</button>
+    </li>
+		</ul>
+	</div>
+	<div class="border_T9a">
+	</div>
+
+
+		
+</div>

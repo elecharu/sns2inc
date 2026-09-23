@@ -1,0 +1,179 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.IO;
+using System.Xml;
+using System.Data;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using ITSLIB;
+
+namespace TML1010
+{
+    /// <summary>
+    /// R02.xaml에 대한 상호 작용 논리
+    /// </summary>
+    public partial class R02 : ITSLIB.ItsPageTml
+    {
+        ItsModelPanel MODEL_S1 = new ItsModelPanel();
+        ItsModelPanel MODEL_S2 = new ItsModelPanel();
+
+        ItsModelGrid MODEL_G1 = new ItsModelGrid();
+        ItsModelGrid MODEL_G2 = new ItsModelGrid();
+        ItsModelGrid MODEL_G3 = new ItsModelGrid();
+        
+        // 생성자
+        public R02()
+        {
+            InitializeComponent();
+
+            MODEL_S1.Binding(PANEL_S1);
+            MODEL_S1.DefaultValue("CHULDATE", DateTime.Now);
+            MODEL_S1.InitData();
+
+            MODEL_S2.Binding(PANEL_A1);
+            MODEL_S2.InitData();
+
+            MODEL_G1.Binding(GRID_G1);
+            MODEL_G2.Binding(GRID_G2);
+            MODEL_G3.Binding(GRID_G3);
+
+        }
+        //화면로딩
+        public override void EventPageLoaded()
+        {
+            base.EventPageLoaded();
+
+            PANEL_A1.Close();
+
+        }
+
+        // 이동전표 내용조회
+        private void LIST_MOVE()
+        {
+            string MOVEKEY = txt_MOVEKEY.Value;
+            txt_MOVEKEY.Value = "";
+
+            if (MOVEKEY == "")
+            {
+                ItsMsgBox.ShowErr("이동전표를 스캔해주세요.");
+                return;
+            }
+
+                        
+            ItsMaria.Set("TML1010_R02", "LIST_MOVE");
+            ItsMaria.AddOne("MOVEKEY", MOVEKEY);
+            ItsMaria.AddOne("CUSTCD", pop_CUSTCD.Value);
+
+            DataSet ds = ItsMaria.Call();
+
+            if (ItsMaria.IsError)
+            {
+                ItsMsgBox.ShowErr(ItsMaria.ErrMessage);
+                return;
+            }
+            if (ds.Tables[0].Rows.Count > 0)
+            {
+                dt_OUTDATE.Value = ds.Tables[0].Rows[0]["OUTDATE"].ToString();
+                pop_CUSTCD.Value = ds.Tables[0].Rows[0]["OUTCUST"].ToString();
+                txt_MOVEKEY1.Value = MOVEKEY;
+            }
+
+            MODEL_G1.SetData(ds.Tables[1]);
+            MODEL_G2.SetData(ds.Tables[2]);
+
+        }
+
+        private void MOVEKEY_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                LIST_MOVE();
+            }
+        }
+        public override void EventCommand(string commandName)
+        {
+            base.EventCommand(commandName);
+
+            // 이동전표 조회
+            if (commandName == "LIST_MOVE")
+            {
+                LIST_MOVE();
+            }
+            // 입고 등록 버튼
+            else if (commandName == "ADD_LOT")
+            {
+                ItsMaria.Set("TML1010_R02", "ADD_LOT");
+
+                ItsMaria.AddOne("MOVEKEY", txt_MOVEKEY1.Value);
+                ItsMaria.AddOne("GOODWARE", cmb_GOODWARE.Value);
+                ItsMaria.AddOne("BADWARE", cmb_BADWARE.Value);
+                
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ItsMsgBox.ShowErr(ItsMaria.ErrMessage);
+                    return;
+                }
+
+                ItsMsgBox.Show("입고 되었습니다.");
+
+
+                GRID_G1.Clear();
+                GRID_G2.Clear();
+
+                txt_MOVEKEY1.Value = "";
+                cmb_GOODWARE.Value = "";
+                cmb_BADWARE.Value = "";
+            }
+            // 입고 삭제 버튼
+            else if (commandName == "DEL_LOT")
+            {
+                ShowMessageBox(commandName, "삭제하시겠습니까??");
+            }
+        }
+
+
+
+        public override void EventMessageResult(string commandName)
+        {
+            base.EventMessageResult(commandName);
+
+            // 입고 삭제
+            if (commandName == "DEL_LOT")
+            {
+                ItsMaria.Set("TML1010_R02", "DEL_LOT");
+
+                ItsMaria.AddOne("MOVEKEY", txt_MOVEKEY1.Value);
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ItsMsgBox.ShowErr(ItsMaria.ErrMessage);
+                    return;
+                }
+
+                ItsMsgBox.Show("삭제가 되었습니다.");
+
+                GRID_G1.Clear();
+                GRID_G2.Clear();
+
+                txt_MOVEKEY1.Value = "";
+                cmb_GOODWARE.Value = "";
+                cmb_BADWARE.Value = "";
+            }
+        }
+    }
+}
+

@@ -1,0 +1,72 @@
+﻿<Window x:Class="TMLSTART.StartWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TMLSTART" 
+        mc:Ignorable="d" Width="400" Height="280"
+        Background="Transparent" AllowsTransparency="True" 
+        WindowStyle="None" BorderThickness="8">
+    <Window.Effect>
+        <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="1" />
+    </Window.Effect>
+    <Window.Resources>
+        <ResourceDictionary>
+            <Style x:Key="IconClose" TargetType="Canvas">
+                <Setter Property="Margin" Value="0 0 15 0"/>
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <SolidColorBrush Color="{DynamicResource MainTitleBack}"/>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="Canvas.IsMouseOver" Value="True">
+                        <Setter Property="Background">
+                            <Setter.Value>
+                                <SolidColorBrush Color="IndianRed"/>
+                            </Setter.Value>
+                        </Setter>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+    <DockPanel Background="WhiteSmoke">
+        <DockPanel x:Name="TITLE" DockPanel.Dock="Top" Background="#4472c4" Height="60">
+            <Canvas x:Name="ICON_CLOSE" DockPanel.Dock="Right" Width="24" Height="24"
+                        Style="{DynamicResource IconClose}"
+                        MouseDown="ICON_CLOSE_MouseDown">
+                <Line X1="5" Y1="5" X2="19" Y2="19" Stroke="White" StrokeThickness="4"></Line>
+                <Line X1="5" Y1="19" X2="19" Y2="5" Stroke="White" StrokeThickness="4"></Line>
+            </Canvas>
+            <UserControl Margin="50 0 0 0"
+                Background="#4472c4" MouseLeftButtonDown="TITLE_MouseLeftButtonDown">
+                <Label Foreground="White" FontSize="16"
+                    FontWeight="Bold"
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center">
+                    SMART FACTORY MES SYSTEM</Label>
+            </UserControl>
+        </DockPanel> 
+
+        <StackPanel x:Name="UPDATE" Background="WhiteSmoke" DockPanel.Dock="Top">
+            <!--
+            <TextBlock x:Name="MSG_01" Foreground="Brown" FontSize="18" Margin="60 30 0 0">Please wait for a moment</TextBlock>
+            <TextBlock x:Name="MSG_02" Foreground="Brown" FontSize="18" Margin="60 10 0 0">while program is updating</TextBlock>
+            -->
+            <TextBlock x:Name="MSG_01" Foreground="Brown" FontSize="18" Margin="60 30 0 0">프로그램을 업데이트중입니다.</TextBlock>
+            <TextBlock x:Name="MSG_02" Foreground="Brown" FontSize="18" Margin="60 10 0 0">완료될 때까지 기다려주세요.</TextBlock>
+            <TextBlock Foreground="Gray" x:Name="MSG1" FontSize="10" Margin="60 20 60 0"></TextBlock>
+            <TextBlock Foreground="Gray" x:Name="MSG2" FontSize="10" Margin="60 0 60 0"></TextBlock>
+            <TextBlock Foreground="Gray" x:Name="MSG3" FontSize="10" Margin="60 0 60 10"></TextBlock>
+        </StackPanel>
+        <UserControl 
+            Background="Silver" FontWeight="Bold"
+            FontSize="10"
+            Foreground="#666666"
+            VerticalContentAlignment="Center" 
+            HorizontalContentAlignment="Center">
+            Copyright ⓒ 2021 by ITSCO, All rights reserved.
+        </UserControl>
+    </DockPanel>
+</Window>

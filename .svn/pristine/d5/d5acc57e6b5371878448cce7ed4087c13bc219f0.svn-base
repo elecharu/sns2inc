@@ -1,0 +1,419 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using DevExpress.Xpf.Grid;
+using DevExpress.Xpf.Editors.Settings;
+using System.Windows.Markup;
+using System.IO;
+using System.Xml;
+using System.Data;
+
+namespace ITSLIB
+{
+    public class Column : GridColumn
+    {
+        public Column()
+        {
+            this.AllowEditing = DevExpress.Utils.DefaultBoolean.False;
+            // this.AllowCellMerge = false;
+            this.HorizontalHeaderContentAlignment = HorizontalAlignment.Center;
+            this.ReadOnly = true;
+            this.FilterPopupMode = FilterPopupMode.CheckedList;
+            this.Loaded += Column_Loaded;
+        }
+
+        private void Column_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Loaded -= Column_Loaded;
+
+            if (this.CellType == ItsEnums.CellTypes.ImageView)
+            {
+                ImageEditSettings imgSetting = new ImageEditSettings();
+                this.EditSettings = imgSetting;
+
+                return;
+            }
+
+            if (this.ReadOnly == true)
+            {
+                this.AllowEditing = DevExpress.Utils.DefaultBoolean.False;
+            }
+            else
+            {
+                this.AllowEditing = DevExpress.Utils.DefaultBoolean.True;
+            }
+
+            if (ButtonText.Trim().Length > 0)
+            {
+                this.Style = (Style)FindResource("BUTTON_COLUMN");
+                return;
+            }
+
+            if (CellType == ItsEnums.CellTypes.Combo)
+            {
+                this.Style = (Style)FindResource("COMBO_COLUMN");
+
+                ComboBoxEditSettings combo = new ComboBoxEditSettings();
+                combo.AutoComplete = true;
+                combo.IsTextEditable = true;
+                combo.ImmediatePopup = false;
+                combo.ValueMember = "Value";
+                combo.DisplayMember = "Label";
+                // 2020-11-11 그리드 GPCD 적용 후 ALGIN 속성값 적용 받을 수 있도록 수정
+                if (_ALGIN == "CENTER")
+                {
+                    combo.HorizontalContentAlignment = EditSettingsHorizontalAlignment.Center;
+                }
+
+                else if (_ALGIN == "RIGHT")
+                {
+                    combo.HorizontalContentAlignment = EditSettingsHorizontalAlignment.Right;
+                }
+                else
+                {
+                    combo.HorizontalContentAlignment = EditSettingsHorizontalAlignment.Left;
+                }
+
+                ItsModelCombo comboModel = Combo.GetComboList(_GPCD, _REF01, _REF02, _REF03, _REF04, _REF05);
+                DataRow newRow = comboModel.NewRow();
+                newRow[0] = "";
+                newRow[1] = "";
+                comboModel.Rows.InsertAt(newRow, 0);
+
+                combo.ItemsSource = comboModel.DefaultView;
+                this.EditSettings = combo;
+
+                return;
+            }
+
+            if (CellType == ItsEnums.CellTypes.Image)
+            {
+                this.Style = (Style)FindResource("IMAGE_COLUMN");
+                return;
+            }
+
+            if (CellType == ItsEnums.CellTypes.Pop)
+            {
+                this.Style = (Style)FindResource("POP_COLUMN");
+                return;
+            }
+
+            if (CellType == ItsEnums.CellTypes.Date)
+            {
+                this.Style = (Style)FindResource("DATE_COLUMN");
+                return;
+            }
+
+            if (CellType == ItsEnums.CellTypes.Time)
+            {
+                this.Style = (Style)FindResource("TIME_COLUMN");
+            }
+
+            if (_ShowKeyPad == "Y")
+            {
+                if (CellType == ItsEnums.CellTypes.Number)
+                {
+                    this.Style = (Style)FindResource("NUMKEY_COLUMN");
+                }
+                this.ReadOnly = false;
+                return;
+            }
+
+            if (CellType == ItsEnums.CellTypes.StdChk)
+            {
+                this.Style = (Style)FindResource("STD_COLUMN");
+            }
+        }
+
+        private string _ShowKeyPad = "N";
+        public string ShowKeyPad
+        {
+            get { return _ShowKeyPad; }
+            set
+            {
+                _ShowKeyPad = value;
+            }
+        }
+
+        private string _LangKey = "";
+        public string LangKey
+        {
+            get { return _LangKey; }
+            set
+            {
+                _LangKey = value;
+            }
+        }
+        private ItsEnums.CellTypes _CellTypes = ItsEnums.CellTypes.Text;
+
+        public ItsEnums.CellTypes CellType
+        {
+            get
+            {
+                return _CellTypes;
+            }
+            set
+            {
+                _CellTypes = value;
+            }
+        }
+
+        private string _GPCD = "";
+        public string GPCD
+        {
+            get { return _GPCD; }
+            set
+            {
+                _GPCD = value;
+                if (_GPCD != "")
+                {
+                    if (this.CellType == ItsEnums.CellTypes.Text)
+                    {
+                        this.CellType = ItsEnums.CellTypes.Combo;
+                    }
+                }
+            }
+        }
+
+        private string _TimeMask = "([0-1]\\d|2[0-3]):[0-5]\\d";
+        public string TimeMask
+        {
+            get
+            {
+                return _TimeMask;
+            }
+        }
+
+        private string _NumberMask = "###,###,###,##0";
+        public string NumberMask
+        {
+            get
+            {
+                return _NumberMask;
+            }
+        }
+
+        public string ShowSecond
+        {
+            set
+            {
+                if (value.Length > 0)
+                {
+                    this.CellType = ItsEnums.CellTypes.Time;
+                    _TimeMask = "([0-1]\\d|2[0-3]):[0-5]\\d:[0-5]\\d";
+                }
+            }
+        }
+
+        private Visibility _CodeVisible = Visibility.Collapsed;
+        public Visibility CodeVisible
+        {
+            get
+            {
+                return _CodeVisible;
+            }
+        }
+        public string ShowCode
+        {
+            set
+            {
+                if (value.Length > 0)
+                {
+                    _CodeVisible = Visibility.Visible;
+                }
+                else
+                {
+                    _CodeVisible = Visibility.Collapsed;
+                }
+            }
+        }
+
+        private string _REF01 = "";
+        public string REF01
+        {
+            get { return _REF01; }
+            set
+            {
+                _REF01 = value;
+            }
+        }
+
+        private string _REF02 = "";
+        public string REF02
+        {
+            get { return _REF02; }
+            set
+            {
+                _REF02 = value;
+            }
+        }
+
+        private string _REF03 = "";
+        public string REF03
+        {
+            get { return _REF03; }
+            set
+            {
+                _REF03 = value;
+            }
+        }
+
+        private string _REF04 = "";
+        public string REF04
+        {
+            get { return _REF04; }
+            set
+            {
+                _REF04 = value;
+            }
+        }
+
+        private string _REF05 = "";
+        public string REF05
+        {
+            get { return _REF05; }
+            set
+            {
+                _REF05 = value;
+            }
+        }
+
+        private bool _ShowAutoFilterRow = false;
+        public bool ShowAutoFilterRow
+        {
+            get { return _ShowAutoFilterRow; }
+            set
+            {
+                _ShowAutoFilterRow = value;
+            }
+        }
+
+        private string _ALGIN = "";
+        public string ALGIN
+        {
+            get { return _ALGIN; }
+            set
+            {
+                _ALGIN = value.ToUpper();
+
+                this.EditSettings = new DevExpress.Xpf.Editors.Settings.TextEditSettings();
+
+                if (_ALGIN == "LEFT")
+                {
+                    this.EditSettings.HorizontalContentAlignment = EditSettingsHorizontalAlignment.Left;
+                }
+
+                else if (_ALGIN == "RIGHT")
+                {
+                    this.EditSettings.HorizontalContentAlignment = EditSettingsHorizontalAlignment.Right;
+                }
+                else
+                {
+                    this.EditSettings.HorizontalContentAlignment = EditSettingsHorizontalAlignment.Center;
+                }
+
+
+            }
+        }
+
+        private string _TextWrap = "";
+        public string TextWrap
+        {
+            get { return _TextWrap; }
+            set
+            {
+                DevExpress.Xpf.Editors.Settings.TextEditSettings textedit = new DevExpress.Xpf.Editors.Settings.TextEditSettings();
+                textedit.TextWrapping = TextWrapping.Wrap;
+                this.EditSettings = new DevExpress.Xpf.Editors.Settings.TextEditSettings();
+                this.EditSettings = textedit;
+            }
+        }
+
+        private ItsEnums.TrueFalse _IsRowCheck = ItsEnums.TrueFalse.False;
+        public ItsEnums.TrueFalse IsRowCheck
+        {
+            get { return _IsRowCheck; }
+            set
+            {
+                _IsRowCheck = value;
+                if (_IsRowCheck == ItsEnums.TrueFalse.True)
+                {
+                    this.FieldName = "ISCHECKED";
+                    this.CellType = ItsEnums.CellTypes.Check;
+                    this.ReadOnly = false;
+                    this.Width = new GridColumnWidth(40d);
+                    this.EditFormVisible = false;
+                }
+            }
+        }
+
+        private string _NUMBER = "-1";
+        public string DecimalPoint
+        {
+            get { return _NUMBER; }
+            set
+            {
+                this.CellType = ItsEnums.CellTypes.Number;
+
+                _NUMBER = value;
+                if (_NUMBER != "-1")
+                {
+                    int point = 0;
+                    try
+                    {
+                        point = int.Parse(_NUMBER);
+                    }
+                    catch { }
+
+                    string mask = "###,###,###,##0";
+                    if (point > 0) mask = mask + "." + "0000000000".Substring(0, point);
+
+                    _NumberMask = mask;
+
+                    SpinEditSettings number = new SpinEditSettings();
+                    number.Mask = mask;
+                    number.DisplayFormat = mask;
+
+                    this.EditSettings = number;
+                }
+            }
+        }
+
+        private string _CommandName = "";
+        public string CommandName
+        {
+            get
+            {
+                return _CommandName;
+            }
+            set
+            {
+                this.CellType = ItsEnums.CellTypes.Button;
+                _CommandName = value;
+            }
+        }
+
+        private string _ButtonText = "";
+        public string ButtonText
+        {
+            get
+            {
+                return _ButtonText;
+            }
+            set
+            {
+                _ButtonText = value;
+            }
+        }
+    }
+}

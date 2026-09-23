@@ -1,0 +1,1 @@
+﻿<%@ Page Title="" Language="C#" AutoEventWireup="true" CodeFile="GetMonthlyTaxInvoicePurchaseList.aspx.cs" Inherits="GetMonthlyTaxInvoicePurchaseList" %>

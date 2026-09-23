@@ -1,0 +1,11 @@
+﻿.ItsTab {
+    /*box-sizing: initial !important;*/
+    height: 100%;
+}
+.wj-tabpanel>div>.wj-tabheaders>.wj-tabheader {
+    font-family: 'SpoqaHanSansNeo_M', 'sans-serif'; 
+    font-weight:normal;
+}
+.wj-tabpanel > div > .wj-tabpanes {
+    overflow-y:hidden;
+}

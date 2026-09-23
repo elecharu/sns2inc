@@ -1,0 +1,715 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Net.Sockets;
+using System.Net;
+using System.Threading;
+
+//기본 모듈, 해당 함수로 성우의 ItsPlcNet 함수 집합이 만들어 짐
+namespace PLC_GATHERING_Prj
+{
+    public class ItsPlc
+    {
+        public static string Write(string ip, int port, string frameType, string address, string data)
+        {
+            #region MODBUS 프레임
+            int addr = int.Parse(address.Replace("D", "").ToString());
+            if (frameType == "MODBUS")
+            {
+                TcpClient client = new TcpClient();
+                NetworkStream stream;
+
+                try
+                {
+                    client.Connect(ip, port);
+                    stream = client.GetStream();
+                }
+                catch
+                {
+                    return "C";
+                }
+
+                byte[] SendData = new byte[15];
+
+                SendData[0] = 0x00;
+                SendData[1] = 0x01;
+                SendData[2] = 0x00;
+                SendData[3] = 0x00;
+                SendData[4] = 0x00;
+                SendData[5] = 0x09;
+                SendData[6] = 0xFF;
+                SendData[7] = 0x10;
+                SendData[8] = (byte)(addr >> 8);
+                SendData[9] = (byte)(addr & 0xff);
+                SendData[10] = 0x00;
+                SendData[11] = 0x01;
+                SendData[12] = 0x02;
+                SendData[13] = (byte)(int.Parse(data) >> 8);
+                SendData[14] = (byte)(int.Parse(data) & 0xff);
+
+                try
+                {
+                    stream.Write(SendData, 0, 15);
+                }
+                catch
+                {
+                    return "F";
+                }
+
+                stream.Close();
+                client.Close();
+
+                return "T";
+            }
+            #endregion
+
+            #region XGT 프레임
+            else if (frameType == "XGT")
+            {
+                //TcpClient client = new TcpClient();
+                //NetworkStream stream;
+                Socket client;
+                IPAddress IPAddress;
+                int Port;
+                IPEndPoint IPEndPoint;
+
+                client = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                IPAddress = IPAddress.Parse(ip);
+                Port = port;
+                IPEndPoint = new IPEndPoint(IPAddress, Port);
+                try
+                {
+                    client.Connect(ip, port);
+                    //stream = client.GetStream();
+                }
+                catch { return "C"; }
+
+                byte[] appHeader = new byte[20]; //헤더
+                byte[] appInstruction = new byte[21];  //프레임 
+
+                //헤더>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                appHeader[0] = 0x4c;  //LSIS-XGT
+                appHeader[1] = 0x53;
+                appHeader[2] = 0x49;
+                appHeader[3] = 0x53;
+                appHeader[4] = 0x2d;
+                appHeader[5] = 0x58;
+                appHeader[6] = 0x47;
+                appHeader[7] = 0x54;
+                appHeader[8] = 0x00;  //예약영역
+                appHeader[9] = 0x00;
+                appHeader[10] = 0x00; //PLC INFO (클라이언트에서 -> PLC로 요청할 경우 역할 없음)
+                appHeader[11] = 0x00;
+                appHeader[12] = 0x00; //CPU INFO (Reserved 영역을 통해 XGK/XGI 시리즈임을 판단)
+                appHeader[13] = 0x33; //SOURCE OF FRAME (클라이언트->서버 0x33, 서버->클라이언트 0x11)
+                appHeader[14] = 0x00; //Invork ID (프레임순번구별, 응답프레임에 해당순번 보내줌)
+                appHeader[15] = 0x00;
+                appHeader[16] = 0x15; //Application Instruction 의 바이트 크기
+                appHeader[17] = 0x00;
+                appHeader[18] = 0x00; //FEnet Position
+                for (int i = 0; i < 19; i++)  //Application Header 의 Byte Sum
+                {
+                    if (i == 0)
+                    {
+                        appHeader[19] = appHeader[i];
+                    }
+                    else
+                    {
+                        appHeader[19] += (byte)appHeader[i];
+                    }
+                }
+
+                //프레임>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                appInstruction[0] = 0x58; //명령어(쓰기)
+                appInstruction[1] = 0x00;
+                appInstruction[2] = 0x02; //데이터 타입
+                appInstruction[3] = 0x00;
+                appInstruction[4] = 0x00; //예약영역
+                appInstruction[5] = 0x00;
+                appInstruction[6] = 0x01; //블럭수
+                appInstruction[7] = 0x00;
+                appInstruction[8] = 0x07; //변수명 길이
+                appInstruction[9] = 0x00;
+                appInstruction[10] = Encoding.ASCII.GetBytes("%DW" + address.Replace("D", "").ToString())[0]; //변수(선두 메모리 번지)
+                appInstruction[11] = Encoding.ASCII.GetBytes("%DW" + address.Replace("D", "").ToString())[1];
+                appInstruction[12] = Encoding.ASCII.GetBytes("%DW" + address.Replace("D", "").ToString())[2];
+                appInstruction[13] = Encoding.ASCII.GetBytes("%DW" + address.Replace("D", "").ToString())[3];
+                appInstruction[14] = Encoding.ASCII.GetBytes("%DW" + address.Replace("D", "").ToString())[4];
+                appInstruction[15] = Encoding.ASCII.GetBytes("%DW" + address.Replace("D", "").ToString())[5];
+                appInstruction[16] = Encoding.ASCII.GetBytes("%DW" + address.Replace("D", "").ToString())[6];
+                appInstruction[17] = 0x02; //Data 의 Byte Size
+                appInstruction[18] = 0x00;
+                appInstruction[19] = (byte)(int.Parse(data));
+                appInstruction[20] = (byte)(int.Parse(data) >> 8);
+
+                byte[] SendBuffer = new byte[41];       //전송 버퍼
+                appHeader.CopyTo(SendBuffer, 0);        //전송버퍼에 헤더탑재
+                appInstruction.CopyTo(SendBuffer, 20);  //전송버퍼에 프레임탑재
+
+                try //버퍼 데이터 전송
+                {
+                    if (client.Connected == false)
+                    {
+                        client.Connect(ip, port);
+                    }
+                    //stream.Write(SendBuffer, 0, 41);
+                    client.Send(SendBuffer, 0, 41, 0);
+                }
+                catch { return "F"; }
+
+                //stream.Close();
+                client.Close();
+
+                return "T";
+            }
+            #endregion
+
+            #region MELSEC 프레임(CPU 내장 이더넷)
+            else if (frameType == "MELSEC1")
+            {
+                Socket SocketClient;
+                IPAddress IPAddress;
+                int Port;
+                IPEndPoint IPEndPoint;
+
+                SocketClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                IPAddress = IPAddress.Parse(ip);
+                Port = port;
+                IPEndPoint = new IPEndPoint(IPAddress, Port);
+                try
+                {
+                    byte[] SendBuffer = new byte[23];
+                    SendBuffer[0] = 0x50;
+                    SendBuffer[1] = 0x00;
+                    SendBuffer[2] = 0x00;
+                    SendBuffer[3] = 0xFF;
+                    SendBuffer[4] = 0xFF;
+                    SendBuffer[5] = 0x03;
+                    SendBuffer[6] = 0x00;
+                    SendBuffer[7] = 0x0E;
+                    SendBuffer[8] = 0x00;
+                    SendBuffer[9] = 0x10;
+                    SendBuffer[10] = 0x00;
+                    SendBuffer[11] = 0x01;
+                    SendBuffer[12] = 0x14;
+                    SendBuffer[13] = 0x00;
+                    SendBuffer[14] = 0x00;
+
+                    byte[] b = BitConverter.GetBytes(int.Parse(address.Replace("D", "")));
+
+                    Array.Reverse(b);
+
+                    SendBuffer[15] = b[3];
+                    SendBuffer[16] = b[2];
+                    SendBuffer[17] = b[1];
+                    SendBuffer[18] = 0xA8;
+                    SendBuffer[19] = 0x01;
+                    SendBuffer[20] = 0x00;
+                    SendBuffer[21] = (byte)(int.Parse(data));
+                    SendBuffer[22] = (byte)((int.Parse(data) >> 8));
+
+                    SocketClient.Connect(IPEndPoint);
+                    SocketClient.Send(SendBuffer, 0, SendBuffer.Length, 0);
+                }
+                catch { return "F"; }
+                finally
+                {
+                    if (SocketClient.Connected)
+                    {
+                        SocketClient.Close();
+                    }
+                }
+
+                return "T";
+            }
+            #endregion
+
+            #region MELSEC 프레임(외장 이더넷)
+            else if (frameType == "MELSEC2")
+            {
+                Socket SocketClient;
+                IPAddress IPAddress;
+                int Port;
+                IPEndPoint IPEndPoint;
+
+                SocketClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                IPAddress = IPAddress.Parse(ip);
+                Port = port;
+                IPEndPoint = new IPEndPoint(IPAddress, Port);
+                try
+                {
+                    byte[] SendBuffer = new byte[23];
+                    SendBuffer[0] = 0x50;
+                    SendBuffer[1] = 0x00;
+                    SendBuffer[2] = 0x00;
+                    SendBuffer[3] = 0xFF;
+                    SendBuffer[4] = 0xFF;
+                    SendBuffer[5] = 0x03;
+                    SendBuffer[6] = 0x00;
+                    SendBuffer[7] = 0x0E;
+                    SendBuffer[8] = 0x00;
+                    SendBuffer[9] = 0x10;
+                    SendBuffer[10] = 0x00;
+                    SendBuffer[11] = 0x01;
+                    SendBuffer[12] = 0x14;
+                    SendBuffer[13] = 0x00;
+                    SendBuffer[14] = 0x00;
+
+                    byte[] b = BitConverter.GetBytes(int.Parse(address.Replace("D", "")));
+
+                    Array.Reverse(b);
+
+                    SendBuffer[15] = b[3];
+                    SendBuffer[16] = b[2];
+                    SendBuffer[17] = b[1];
+                    SendBuffer[18] = 0xA8;
+                    SendBuffer[19] = 0x01;
+                    SendBuffer[20] = 0x00;
+                    SendBuffer[21] = (byte)(int.Parse(data));
+                    SendBuffer[22] = (byte)((int.Parse(data) >> 8));
+
+                    SocketClient.Connect(IPEndPoint);
+                    SocketClient.Send(SendBuffer, 0, SendBuffer.Length, 0);
+                }
+                catch { return "F"; }
+                finally
+                {
+                    if (SocketClient.Connected)
+                    {
+                        SocketClient.Close();
+                    }
+                }
+
+                return "T";
+            }
+            #endregion
+
+            else
+            {
+                return "FrameType error!";
+            }
+        }
+
+        public static string Read(string ip, string port, string frameType, string firstAddress, string readCount)
+        {
+            #region MODBUS 프레임
+            if (frameType == "MODBUS")
+            {
+                string result = "";
+
+                Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                IPAddress serverIP = IPAddress.Parse(ip);
+                IPEndPoint serverEndPoint = new IPEndPoint(IPAddress.Parse(ip), int.Parse(port));
+
+                byte[] SendData = new byte[12];
+                byte[] ReceiveData = new byte[9 + int.Parse(readCount) * 2];
+
+                SendData[0] = 0x00;
+                SendData[1] = 0x01;
+                SendData[2] = 0x00;
+                SendData[3] = 0x00;
+                SendData[4] = 0x00;
+                SendData[5] = 0x06;
+                SendData[6] = 0xFF;
+                SendData[7] = 0x04;
+                SendData[8] = (byte)(int.Parse(firstAddress.Replace("D", "")) >> 8);
+                SendData[9] = (byte)(int.Parse(firstAddress.Replace("D", "")) & 0xff);
+                SendData[10] = (byte)(int.Parse(readCount) >> 8);
+                SendData[11] = (byte)(int.Parse(readCount) & 0xff);
+
+                try
+                {
+                    socket.Connect(serverEndPoint);
+                    socket.Send(SendData, 0, 12, 0);
+                    socket.ReceiveTimeout = 3000;
+                    socket.Receive(ReceiveData, 9 + int.Parse(readCount) * 2, 0);
+                }
+                catch
+                {
+                    for (int i = 0; i < int.Parse(readCount); i++)
+                    {
+                        result = result + "0_/";
+                    }
+
+                    return result + "ERROR";
+                }
+
+                for (int i = 0; i < int.Parse(readCount); i++)
+                {
+
+                    result = result + Convert.ToInt32(string.Format("{0:x2}", ReceiveData[9 + i * 2]) + string.Format("{0:x2}", ReceiveData[9 + i * 2 + 1]), 16).ToString().Trim('\0') + "_/";
+                }
+
+                socket.Close();
+
+                return result;
+
+            }
+
+            #endregion
+
+            #region XGT 프레임
+            else if (frameType == "XGT")
+            {
+                string result = "";
+
+                //if (!CmPing.TryConnect(ip, 50))
+                //{
+                //    return "";
+                //}
+                IPAddress ServerIPAddress;
+                IPEndPoint ServerIPEndPoint;
+                Socket ReadSocketClient;
+
+                ReadSocketClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                //ReadSocketClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                ServerIPAddress = IPAddress.Parse(ip);
+                ServerIPEndPoint = new IPEndPoint(ServerIPAddress, int.Parse(port));
+                ReadSocketClient.SendTimeout = 5000;
+                ReadSocketClient.ReceiveTimeout = 5000;
+                try
+                {
+                    ReadSocketClient.Connect(ServerIPEndPoint);
+                }
+                catch
+                {
+                    ReadSocketClient.Close();
+                    return "ERROR";
+                }
+
+                if (ReadSocketClient.Connected)
+                {
+                    byte[] appHeader = new byte[20]; //헤더
+                    byte[] appInstruction = new byte[19];   //프레임 
+
+                    //헤더>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                    appHeader[0] = 0x4c;  //LSIS-XGT
+                    appHeader[1] = 0x53;
+                    appHeader[2] = 0x49;
+                    appHeader[3] = 0x53;
+                    appHeader[4] = 0x2d;
+                    appHeader[5] = 0x58;
+                    appHeader[6] = 0x47;
+                    appHeader[7] = 0x54;
+
+                    appHeader[8] = 0x00;  //예약영역
+                    appHeader[9] = 0x00;
+
+                    appHeader[10] = 0x00; //PLC INFO (클라이언트에서 -> PLC로 요청할 경우 역할 없음)
+                    appHeader[11] = 0x00;
+
+                    appHeader[12] = 0x00; //CPU INFO (Reserved 영역을 통해 XGK/XGI 시리즈임을 판단)
+
+                    appHeader[13] = 0x33; //SOURCE OF FRAME (클라이언트->서버 0x33, 서버->클라이언트 0x11)
+
+                    appHeader[14] = 0x00; //Invork ID (프레임순번구별, 응답프레임에 해당순번 보내줌)
+                    appHeader[15] = 0x00;
+
+                    appHeader[16] = 0x13; //Application Instruction 의 바이트 크기
+                    appHeader[17] = 0x00;
+
+                    appHeader[18] = 0x00; //FEnet Position
+
+                    for (int i = 0; i < 19; i++)  //Application Header 의 Byte Sum
+                    {
+                        if (i == 0)
+                        {
+                            appHeader[19] = appHeader[i];
+                        }
+                        else
+                        {
+                            appHeader[19] += (byte)appHeader[i];
+                        }
+                    }
+
+                    //프레임>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                    appInstruction[0] = 0x54; //명령어(읽기)
+                    appInstruction[1] = 0x00;
+
+                    appInstruction[2] = 0x14; //데이터 타입
+                    appInstruction[3] = 0x00;
+
+                    appInstruction[4] = 0x00; //예약영역
+                    appInstruction[5] = 0x00;
+
+                    appInstruction[6] = 0x01; //블럭수
+                    appInstruction[7] = 0x00;
+
+                    appInstruction[8] = 0x07; //변수명 길이
+                    appInstruction[9] = 0x00;
+
+                    string firstAddressTemp = ("0000" + (int.Parse(firstAddress.Replace("D", "")) * 2).ToString()).Substring(("0000" + (int.Parse(firstAddress.Replace("D", "")) * 2).ToString()).Length - 4, 4);
+                    appInstruction[10] = Encoding.ASCII.GetBytes("%DB" + firstAddressTemp)[0]; //변수(선두 메모리 번지)
+                    appInstruction[11] = Encoding.ASCII.GetBytes("%DB" + firstAddressTemp)[1];
+                    appInstruction[12] = Encoding.ASCII.GetBytes("%DB" + firstAddressTemp)[2];
+                    appInstruction[13] = Encoding.ASCII.GetBytes("%DB" + firstAddressTemp)[3];
+                    appInstruction[14] = Encoding.ASCII.GetBytes("%DB" + firstAddressTemp)[4];
+                    appInstruction[15] = Encoding.ASCII.GetBytes("%DB" + firstAddressTemp)[5];
+                    appInstruction[16] = Encoding.ASCII.GetBytes("%DB" + firstAddressTemp)[6];
+
+                    appInstruction[17] = (byte)(int.Parse(readCount) * 2); //Data 의 Byte Size
+                    appInstruction[18] = (byte)((int.Parse(readCount) * 2) >> 8);
+
+                    byte[] SendBuffer = new byte[39];       //전송 버퍼
+                    appHeader.CopyTo(SendBuffer, 0);        //전송버퍼에 헤더탑재
+                    appInstruction.CopyTo(SendBuffer, 20);  //전송버퍼에 프레임탑재
+
+                    try //버퍼 데이터 전송
+                    {
+
+                        ReadSocketClient.Send(SendBuffer, 0, SendBuffer.Length, 0);
+
+                        byte[] ReceiveByte = new byte[1024]; //수신바이트배열
+
+                        ReadSocketClient.ReceiveTimeout = 3000;
+
+                        int ReceiveLength = ReadSocketClient.Receive(ReceiveByte, ReceiveByte.Length, 0); //수신데이터 길이
+
+                        if (ReceiveLength > 0) //수신된 데이터가 있을 경우
+                        {
+                            string tempTxtValueHex;
+                            for (int i = 0; i < int.Parse(readCount); i++)
+                            {
+
+                                tempTxtValueHex = string.Format("{0:x2}", ReceiveByte[32 + i * 2 + 1]) + string.Format("{0:x2}", ReceiveByte[32 + i * 2]);
+
+                                if (Convert.ToInt32(tempTxtValueHex, 16) <= 32767)
+                                {
+                                    result = result + Convert.ToInt32(tempTxtValueHex, 16).ToString() + "_/";
+                                }
+                                else
+                                {
+                                    result = result + Convert.ToInt32(tempTxtValueHex, 16).ToString() + "_/";
+                                }
+                            }
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        
+                        for (int i = 0; i < int.Parse(readCount); i++)
+                        {
+                            result = result + "0_/";
+                        }
+                        ReadSocketClient.Close();
+                        return result + ex.Message;
+                    }
+                }
+
+                ReadSocketClient.Close();
+
+                return result;
+
+            }
+            #endregion
+
+            #region MELSEC 프레임(CPU 내장 이더넷)
+            else if (frameType == "MELSEC1") 
+            {
+                string result = "";
+
+                Socket SocketClient;
+                IPAddress IPAddress;
+                int Port;
+                IPEndPoint IPEndPoint;
+
+                SocketClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                IPAddress = IPAddress.Parse(ip);
+                Port = int.Parse(port);
+                IPEndPoint = new IPEndPoint(IPAddress, Port);
+
+                try
+                {
+                    byte[] SendBuffer = new byte[21];
+                    SendBuffer[0] = 0x50;
+                    SendBuffer[1] = 0x00;
+                    SendBuffer[2] = 0x00;
+                    SendBuffer[3] = 0xFF;
+                    SendBuffer[4] = 0xFF;
+                    SendBuffer[5] = 0x03;
+                    SendBuffer[6] = 0x00;
+                    SendBuffer[7] = 0x0C;
+                    SendBuffer[8] = 0x00;
+                    SendBuffer[9] = 0x10;
+                    SendBuffer[10] = 0x00;
+                    SendBuffer[11] = 0x01;
+                    SendBuffer[12] = 0x04;
+                    SendBuffer[13] = 0x00;
+                    SendBuffer[14] = 0x00;
+
+                    byte[] b = BitConverter.GetBytes(int.Parse(firstAddress.Replace("D", "")));
+
+                    Array.Reverse(b);
+
+                    SendBuffer[15] = b[3];
+                    SendBuffer[16] = b[2];
+                    SendBuffer[17] = b[1];
+                    SendBuffer[18] = 0xA8;
+                    SendBuffer[19] = (byte)(int.Parse(readCount));
+                    SendBuffer[20] = (byte)((int.Parse(readCount)) >> 8);
+
+
+                    byte[] ReceiveByte = new byte[1024];
+
+                    SocketClient.SendTimeout = 2000;
+                    SocketClient.Connect(IPEndPoint);
+                    SocketClient.Send(SendBuffer, 0, SendBuffer.Length, 0);
+
+                    SocketClient.ReceiveTimeout = 2000;
+                    int cnt = SocketClient.Receive(ReceiveByte, ReceiveByte.Length, 0); //수신데이터 길이
+
+                    if (cnt > 11)
+                    {
+                        //if (ip == "10.201.37.13")
+                        //{
+                        //    string s = "";
+                        //    for (int i = 0; i < cnt; i++)
+                        //    {
+                        //        s = s + string.Format("{0:x2}", ReceiveByte[i]);
+                        //    }
+
+                        //    CmLog.Log("ERRCHK", DateTime.Now.ToString() + ": " + ip.ToString() + ": " + s + ":" + cnt.ToString());
+                        //}
+
+                        string tempTxtValueHex;
+
+                        for (int i = 0; i < int.Parse(readCount); i++)
+                        {
+
+                            tempTxtValueHex = string.Format("{0:x2}", ReceiveByte[11 + i * 2 + 1]) + string.Format("{0:x2}", ReceiveByte[11 + i * 2]);
+
+                            result = result + Convert.ToInt32(tempTxtValueHex, 16).ToString() + "_/";
+
+                        }
+
+                        if (ReceiveByte[9] != 0 || ReceiveByte[10] != 0)
+                        {
+                            result = result + "ERROR";
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    for (int i = 0; i < int.Parse(readCount); i++)
+                    {
+                        result = result + "0_/";
+                    }
+
+                    //CmLog.Log("MELSEC1", DateTime.Now.ToString() + "***" + ex.ToString() + "***" + result);
+
+                    return result + "ERROR";
+                }
+                finally
+                {
+                    try
+                    {
+                        SocketClient.Close();
+                    }
+                    catch { }
+                }
+
+                return result;
+            }
+            #endregion
+
+            #region MELSEC 프레임(외장이더넷)
+            else if (frameType == "MELSEC2") //CPU 내장 이더넷
+            {
+                string result = "";
+
+                Socket SocketClient;
+                IPAddress IPAddress;
+                int Port;
+                IPEndPoint IPEndPoint;
+
+                SocketClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                IPAddress = IPAddress.Parse(ip);
+                Port = int.Parse(port);
+                IPEndPoint = new IPEndPoint(IPAddress, Port);
+
+                try
+                {
+                    byte[] SendBuffer = new byte[21];
+                    SendBuffer[0] = 0x50;
+                    SendBuffer[1] = 0x00;
+                    SendBuffer[2] = 0x00;
+                    SendBuffer[3] = 0xFF;
+                    SendBuffer[4] = 0xFF;
+                    SendBuffer[5] = 0x03;
+                    SendBuffer[6] = 0x00;
+                    SendBuffer[7] = 0x0C;
+                    SendBuffer[8] = 0x00;
+                    SendBuffer[9] = 0x10;
+                    SendBuffer[10] = 0x00;
+                    SendBuffer[11] = 0x01;
+                    SendBuffer[12] = 0x04;
+                    SendBuffer[13] = 0x00;
+                    SendBuffer[14] = 0x00;
+
+                    byte[] b = BitConverter.GetBytes(int.Parse(firstAddress.Replace("D", "")));
+
+                    Array.Reverse(b);
+
+                    SendBuffer[15] = b[3];
+                    SendBuffer[16] = b[2];
+                    SendBuffer[17] = b[1];
+                    SendBuffer[18] = 0xA8;
+                    SendBuffer[19] = (byte)(int.Parse(readCount));
+                    SendBuffer[20] = (byte)((int.Parse(readCount)) >> 8);
+
+
+                    byte[] ReceiveByte = new byte[1024];
+
+                    SocketClient.Connect(IPEndPoint);
+                    SocketClient.Send(SendBuffer, 0, SendBuffer.Length, 0);
+                    int cnt = SocketClient.Receive(ReceiveByte, ReceiveByte.Length, 0); //수신데이터 길이
+
+                    if (cnt > 0)
+                    {
+                        string tempTxtValueHex;
+
+                        for (int i = 0; i < int.Parse(readCount); i++)
+                        {
+
+                            tempTxtValueHex = string.Format("{0:x2}", ReceiveByte[11 + i * 2 + 1]) + string.Format("{0:x2}", ReceiveByte[11 + i * 2]);
+
+                            result = result + Convert.ToInt32(tempTxtValueHex, 16).ToString() + "_/";
+
+                        }
+                    }
+                }
+                catch
+                {
+                    for (int i = 0; i < int.Parse(readCount); i++)
+                    {
+                        result = result + "0_/";
+                    }
+                    try
+                    {
+                        SocketClient.Close();
+                    }
+                    catch { }
+
+                    return result + "ERROR";
+                }
+                finally
+                {
+                    try
+                    {
+                        SocketClient.Close();
+                    }
+                    catch { }
+                }
+
+                return result;
+            }
+            #endregion
+
+            else
+            {
+                return "frameType error!";
+            }
+        }
+    }
+}

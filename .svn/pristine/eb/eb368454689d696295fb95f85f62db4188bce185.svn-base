@@ -1,0 +1,251 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.IO;
+using System.Xml;
+using System.Data;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using ITSLIB;
+
+namespace TML1010
+{
+    /// <summary>
+    /// R01.xaml에 대한 상호 작용 논리
+    /// </summary>
+    public partial class R01 : ITSLIB.ItsPageTml
+    {
+        ItsModelPanel MODEL_S1 = new ItsModelPanel();
+        ItsModelGrid MODEL_G1 = new ItsModelGrid();
+        ItsModelGrid MODEL_G2 = new ItsModelGrid();
+
+
+        // 생성자
+        public R01()
+        {
+            InitializeComponent();
+
+            MODEL_S1.Binding(PANEL_S1);
+            MODEL_S1.DefaultValue("SDATE", DateTime.Now);
+            MODEL_S1.DefaultValue("EDATE", DateTime.Now);
+            MODEL_S1.InitData();
+
+            MODEL_G1.Binding(GRID_G1);
+            MODEL_G1.EventRowChanged += MODEL_G1_EventRowChanged;
+
+            MODEL_G2.Binding(GRID_G2);
+        }
+
+
+        private void MODEL_G1_EventRowChanged(int rowIndex)
+        {
+            txt_LOTKEY.Value = "";
+            num_LOTQTY.Value = 0;
+
+            // 가입고 조회
+            ItsMaria.Set("TML1010_R01", "LIST_MTRINLOT");
+
+            ItsMaria.AddModel(MODEL_G1, MODEL_G1.CurrentIndex);
+
+            DataSet ds = ItsMaria.Call();
+
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            MODEL_G2.SetData(ds.Tables[0]);
+            cmb_INWARE.Value = ds.Tables[1].Rows[0]["INWARE"].ToString();
+        }
+
+
+        public override void EventPageLoaded()
+        {
+            base.EventPageLoaded();
+
+            //ItsLocalInfo.TMLCD = "TEST";
+            MODEL_S1.SetValue("SDATE", DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd"));
+                        
+        }
+
+        // 로트 스캔
+        private void LOTEKEY_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                // 해당 로트의 납품이력 찾기
+                ItsMaria.Set("TML1010_R01", "SEARCH_MTRCUSTLOT");
+
+                ItsMaria.AddOne("MTRODRDKEY", MODEL_G1.GetText(MODEL_G1.CurrentIndex, "MTRODRDKEY"));
+                ItsMaria.AddOne("LOTKEY", txt_LOTKEY.Value);
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                // 납품이력 있으면 로트수량에 납품수량 자동입력
+                if (ds.Tables[0].Rows.Count > 0)
+                {
+                    num_LOTQTY.Value = ItsData.GetDecimal(ds.Tables[0], 0, "LOTQTY");
+                }
+            }
+        }
+
+        public override void EventCommand(string commandName)
+        {
+            base.EventCommand(commandName);
+
+            // 발주 조회
+            if (commandName == "LIST_MTRODRD")
+            {
+                ItsMaria.Set("TML1010_R01", "LIST_MTRODRD");
+
+                ItsMaria.AddModel(MODEL_S1);
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_G1.SetData(ds.Tables[0]);
+            }
+            // 가입고 등록
+            else if (commandName == "ADD_MTRINLOT") {
+                ItsMaria.Set("TML1010_R01", "ADD_MTRINLOT");
+
+                string MTRODRDKEY = MODEL_G1.GetText(MODEL_G1.CurrentIndex, "MTRODRDKEY");
+
+                ItsMaria.AddOne("MTRODRDKEY", MTRODRDKEY);
+                ItsMaria.AddOne("ITEMCD", MODEL_G1.GetText(MODEL_G1.CurrentIndex, "ITEMCD"));
+                ItsMaria.AddOne("LOTKEY", txt_LOTKEY.Value);
+                ItsMaria.AddOne("LOTQTY", num_LOTQTY.Value);
+                ItsMaria.AddOne("MTRINDATE", date_MTRINDATE.Value);
+                ItsMaria.AddOne("INWARE", cmb_INWARE.Value);
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                txt_LOTKEY.Value = "";
+                num_LOTQTY.Value = 0;
+
+                MODEL_G1_EventRowChanged(MODEL_G1.CurrentIndex);    // 가입로트 리스트 새로고침
+
+                if (chk_LABEL_YN.Value) {
+                    // 라벨출력
+                    ItsBarcode barcode = new ItsBarcode(ItsData.GetText(ds.Tables[0], 0, "LABELCD"));
+
+                    barcode.SetDataTable(ds.Tables[1]);
+                    //barcode.PrinterName = ItsPrinter.DefaultPrintName;
+                    barcode.Print(false);
+                }
+
+                // ERP IF 프로시저 호출 (2026-03-05 신정수)
+                string query = "EXEC dbo.usp_z_mes_receive_301;";
+
+                ItsMssql.Query("112.216.228.3", "2433", "ITSCO_MES", "Itsco123!@#", "sea_mfg", query);
+
+                if(ItsMssql.IsError)
+                {
+                    ShowMessageBox("", ItsMssql.ErrMessage);
+                    return;
+                }
+            }
+
+            // 라벨재발행
+            else if (commandName == "LABEL_REPRINT")
+            {
+                ItsMaria.Set("TML1010_R01", "LABEL_REPRINT");
+                ItsMaria.AddOne("LOTKEY", MODEL_G2.GetText(MODEL_G2.CurrentIndex, "LOTKEY"));
+                ItsMaria.AddOne("INWARE", MODEL_G2.GetText(MODEL_G2.CurrentIndex, "INWARE"));
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                // 라벨출력 필요
+                ItsBarcode barcode = new ItsBarcode(ItsData.GetText(ds.Tables[0], 0, "LABELCD"));
+
+                barcode.SetDataTable(ds.Tables[1]);
+                //barcode.PrinterName = ItsPrinter.DefaultPrintName;
+                barcode.Print(false);
+            }
+            // 가입고 삭제
+            else if (commandName == "DEL_MTRINLOT")
+            {
+                if (MODEL_G1.GetText(MODEL_G1.CurrentIndex, "MTRODRDKEY") == "")
+                {
+                    return;
+                }
+
+                ShowMessageBox(commandName, "가입고를 삭제하시겠습니까??");
+                return;
+            }
+        }
+
+        
+        public override void EventMessageResult(string commandName)
+        {
+            base.EventMessageResult(commandName);
+
+            // 가입고 삭제
+            if (commandName == "DEL_MTRINLOT")
+            {
+                ItsMaria.Set("TML1010_R01", "DEL_MTRINLOT");
+
+                string MTRODRDKEY = MODEL_G1.GetText(MODEL_G1.CurrentIndex, "MTRODRDKEY");
+
+                ItsMaria.AddOne("ITEMCD", MODEL_G1.GetText(MODEL_G1.CurrentIndex, "ITEMCD"));
+                ItsMaria.AddOne("MTRINKEY", MODEL_G2.GetText(MODEL_G2.CurrentIndex, "MTRINKEY"));
+                ItsMaria.AddOne("LOTKEY", MODEL_G2.GetText(MODEL_G2.CurrentIndex, "LOTKEY"));
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_G1_EventRowChanged(MODEL_G1.CurrentIndex);
+
+                // ERP IF 프로시저 호출 (2026-03-05 신정수)
+                string query = "EXEC dbo.usp_z_mes_receive_301;";
+
+                ItsMssql.Query("112.216.228.3", "2433", "ITSCO_MES", "Itsco123!@#", "sea_mfg", query);
+
+                if (ItsMssql.IsError)
+                {
+                    ShowMessageBox("", ItsMssql.ErrMessage);
+                    return;
+                }
+            }
+        }
+
+    }
+}
+

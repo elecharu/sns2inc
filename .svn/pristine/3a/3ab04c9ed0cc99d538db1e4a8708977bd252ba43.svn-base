@@ -1,0 +1,254 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace ITSLIB
+{
+    /// <summary>
+    /// ItsLabelText.xaml 的交互逻辑
+    /// </summary>
+    public partial class OnOff : UserControl
+    {
+        public ItsModelPanel ModelPanel = null;
+        public OnOff()
+        {
+            InitializeComponent();
+        }
+        private string _LangKey = "";
+        public string LangKey
+        {
+            get { return _LangKey; }
+            set
+            {
+                _LangKey = value;
+            }
+        }
+        public string Label
+        {
+            get { return textBlock.Text; }
+            set { textBlock.Text = value; }
+        }
+
+        private string _OnText = "On";
+        public string OnText
+        {
+            get { return _OnText; }
+            set {
+                _OnText = value;
+                Value = Value;
+            }
+        }
+
+        private string _OffText = "Off";
+        public string OffText
+        {
+            get { return _OffText; }
+            set {
+                _OffText = value;
+                Value = Value;
+            }
+        }
+
+
+        //2020-11-27 On/Off ONOFF 색상지정 옵션 추가
+        private Brush _OnBColor = Brushes.AliceBlue;
+        public Brush OnBColor
+        {
+            get { return _OnBColor; }
+            set
+            {
+                _OnBColor = value;
+                Value = Value;
+            }
+        }
+
+        private Brush _OnRColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#4472C4"));
+        public Brush OnRColor
+        {
+            get { return _OnRColor; }
+            set
+            {
+                _OnRColor = value;
+                Value = Value;
+            }
+        }
+
+        private Brush _OffBColor = Brushes.WhiteSmoke;
+        public Brush OFFBColor
+        {
+            get { return _OffBColor; }
+            set
+            {
+                _OffBColor = value;
+                Value = Value;
+            }
+        }
+
+        private Brush _OffRColor = Brushes.Silver;
+        public Brush OffRColor
+        {
+            get { return _OffRColor; }
+            set
+            {
+                _OffRColor = value;
+                Value = Value;
+            }
+        }
+
+        public string HidenLabel
+        {
+            set
+            {
+                if (value.Length > 0)
+                {
+                    this.Width = this.Width - textBlock.Width;
+                    textBlock.Width = 0;
+                    textBlock.Visibility = Visibility.Hidden;
+                }
+            }
+        }
+
+        // 성우하이텍
+        public double SW_Cycle
+        {
+            set
+            {
+                checkCircle.Width = value;
+                checkCircle.Height = value;
+            }
+        }
+
+        public double SW_Cycle_Margin
+        {
+            set
+            {
+                Thickness margin = checkCircle.Margin;
+
+                margin.Left = value;
+                margin.Right = value;
+                margin.Top = value;
+                margin.Bottom = value;
+
+                checkCircle.SetValue(Border.MarginProperty, margin);
+            }
+        }
+
+        public double SW_Cycle_Radius
+        {
+            set
+            {
+                CornerRadius radius = checkCircle.CornerRadius;
+
+                radius.BottomLeft = value;
+                radius.BottomRight = value;
+                radius.TopLeft = value;
+                radius.TopRight = value;
+
+                checkCircle.SetValue(Border.CornerRadiusProperty, radius);
+            }
+        }
+
+        public double SW_FontSize
+        {
+            set
+            {
+                checkText.FontSize = value;
+            }
+        }
+
+        public double SW_Control_Width
+        {
+            set
+            {
+                last_textBlock.Visibility = Visibility.Hidden;
+                checkBackground.Width = value;
+            }
+        }
+
+        public double SW_Control_Height
+        {
+            set
+            {
+                this.MaxHeight = value + 4;
+                checkBackground.Height = value;
+            }
+        }
+
+        public bool Value
+        {
+            get
+            {
+                return (bool)GetValue(ValueProperty);
+            }
+            set
+            {
+                SetValue(ValueProperty, value);
+
+                if (value)
+                {
+                    // checkBackground.Background = Brushes.MintCream;
+                    // checkCircle.Background = Brushes.SeaGreen;
+                    checkBackground.Background = _OnBColor;
+                    checkCircle.Background = _OnRColor;
+                    checkCircle.SetValue(DockPanel.DockProperty, Dock.Right);
+                    checkText.SetValue(DockPanel.DockProperty, Dock.Right);
+                    checkText.TextAlignment = TextAlignment.Right;
+                    checkText.Text = OnText;
+                }
+                else
+                {
+                    //checkBackground.Background = Brushes.WhiteSmoke;
+                    //checkCircle.Background = Brushes.Silver;
+                    checkBackground.Background = _OffBColor;
+                    checkCircle.Background = _OffRColor;
+                    checkCircle.SetValue(DockPanel.DockProperty, Dock.Left);
+                    checkText.SetValue(DockPanel.DockProperty, Dock.Left);
+                    checkText.TextAlignment = TextAlignment.Left;
+                    checkText.Text = OffText;
+                }
+            }
+        }
+
+        public readonly static DependencyProperty ValueProperty =
+            DependencyProperty.Register("Value",
+                typeof(bool),
+                typeof(OnOff),
+                new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, propertyChangedCallback));
+
+        private static void propertyChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            try
+            {
+                ((OnOff)(sender)).Value = (bool)(e.NewValue);
+            }
+            catch { }
+        }
+
+        private void checkBackground_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if ((Dock)checkCircle.GetValue(DockPanel.DockProperty) == Dock.Left)
+            {
+                Value = true;
+            }
+            else
+            {
+                Value = false;
+            }
+        }
+
+        //private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        //{
+        //    Value = false;
+        //}
+    }
+}

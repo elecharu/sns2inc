@@ -1,0 +1,55 @@
+﻿<%@ Page Title="" Language="C#" MasterPageFile="~/Common/Master/MasterBase.master" AutoEventWireup="true" 
+    CodeFile="SYS3001_R01.aspx.cs" Inherits="SYS3001_R01" %>
+<asp:Content ContentPlaceHolderID="CPH_HEAD" Runat="Server">
+    <%--<link rel="stylesheet" type="text/css" href="SYS0101_R01.css" />--%>
+    <script type="text/javascript" src="SYS3001_R01.js?ver=<%= BasePage.srcVersion %>"></script>
+</asp:Content>
+
+<%-- SEARCH --%>
+<asp:Content ContentPlaceHolderID="CPH_SEARCH" runat="Server">
+    <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
+        <Its:text runat="server" Label="키워드" Field="KEYWORD" />
+    </Its:div>
+</asp:Content>
+
+<%-- BODY --%>
+<asp:Content ContentPlaceHolderID="CPH_BODY" Runat="Server">
+    <Its:div runat="server" Type="SplitSingle">
+        <Its:grid runat="server" ID="grid1" />
+    </Its:div>
+</asp:Content>
+
+<%-- POP --%>
+<asp:Content ContentPlaceHolderID="CPH_POP" runat="Server">
+    <Its:pop runat="server" ID="pop1" Type="add" Title="사용자 등록" Width="470">
+        <Its:div runat="server" Type="SplitSingle" ID="pdiv1">
+            <Its:text runat="server" Label="사용자ID" Field="USERID" />
+            <Its:find runat="server" Label="사원명" Field="EMPCD"  GPCD="EMPCD" />
+            <Its:newline runat="server" />
+            <Its:combo runat="server" Label="최초권한" Field="AUTCD" GPCD="AUTCD" />
+            <Its:check runat="server" Label="잠금여부" Field="LOCKYN" MarginLeft="93" Value="F" />
+            <Its:newline runat="server" />
+            <Its:text runat="server" Label="비밀번호" Field="PASSWORD" Type="password" />
+            <Its:text runat="server" Label="비밀번호확인" Field="CHPASSWORD" Type="password" />
+            <Its:newline runat="server" />
+            <Its:text runat="server" Label="비고" Field="REMARK" InputWidth="320" />
+        </Its:div>
+    </Its:pop>
+    <Its:pop runat="server" ID="pop2" Type="add" Title="비밀번호 변경" Width="250">
+        <Its:div runat="server" Type="SplitSingle" ID="pdiv2">
+            <Its:text runat="server" Label="변경비밀번호" Field="PASSWORD" Type="password" />
+            <Its:text runat="server" Label="비밀번호확인" Field="CHPASSWORD" Type="password" />
+        </Its:div>
+    </Its:pop>
+<%--    <Its:pop runat="server" ID="pop3" Title="그룹웨어 메일 계정관리" Width="270">
+        <Its:div runat="server" Type="SplitSingle" ID="pdiv3">
+            <Its:text runat="server" Label="사용자ID" Field="USERID" ReadOnly="true" InputWidth="160"/>
+            <Its:text runat="server" Label="사원명" Field="EMPNM" ReadOnly="true" InputWidth="160"/>
+            <Its:newline runat="server" />
+            <Its:text runat="server" Label="메일계정" Field="MAILID" ID="MAILID" InputWidth="60"/>
+            <Its:label runat="server" ID="MAILADDR" Text="" />
+            <Its:newline runat="server" />
+            <Its:button runat="server" Label="메일계정 생성" ID="CREATE_MAILID" Margin_Left="180px"/>
+        </Its:div>
+    </Its:pop>--%>
+</asp:Content>

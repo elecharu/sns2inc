@@ -1,0 +1,356 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Data;
+using ITSLIB;
+
+public class ItsMemberShip
+{
+    /// <summary>
+    /// RJSOFT: 用户代码
+    /// 用户代码只是用在判断用户的时候
+    /// </summary>
+    public static bool IsDeveloper
+    {
+        get
+        {
+            if (_IsDeveloper == "")
+            {
+                string developer = ItsData.GetScalar(ItsMaria.Query("SELECT dbo.FnGlobalValue('DeveloperID')"));
+                if (developer.ToLower() == USERID.ToLower())
+                {
+                    _IsDeveloper = "Y";
+                }
+                else
+                {
+                    _IsDeveloper = "N";
+                }
+            }
+            if (_IsDeveloper == "Y") return true; else return false;
+        }
+    }
+    private static string _IsDeveloper = "";
+
+    public static bool IsAdmin
+    {
+        get
+        {
+            if (_IsAdmin == "")
+            {
+                string admin = ItsData.GetScalar(ItsMaria.Query("SELECT dbo.FnGlobalValue('AdminID')"));
+                if (admin.ToLower() == USERID.ToLower())
+                {
+                    _IsAdmin = "Y";
+                }
+                else
+                {
+                    _IsAdmin = "N";
+                }
+            }
+            if (_IsAdmin == "Y") return true; else return false;
+        }
+    }
+    private static string _IsAdmin = "";
+
+    /// <summary>
+    /// RJSOFT: 거래처 코드
+    /// </summary>
+    public static string CustCode
+    {
+        get
+        {
+            //if (_CustCode.Length >= 6)
+            //{
+            //    return _CustCode;
+            //}
+            //else
+            //{
+            //    try
+            //    {
+            //        _CustCode = RjSecurity.DesDecrypt(System.IO.File.ReadAllText("RjConfig.CustCode.rjc", Encoding.UTF8).Trim(), "rjsoft88").Trim();
+            //        SetCustInfo(_CustCode);
+
+            //        return _CustCode;
+            //    }
+            //    catch
+            //    {
+            //        return "";
+            //    }
+            //}
+            return _CustCode;
+        }
+    }
+    private static string _CustCode = "";
+
+    /// <summary>
+    /// RJSOFT: 거래처명
+    /// </summary>
+    public static string CustName
+    {
+        get
+        {
+            if (_CustName == "")
+            {
+                SetCustInfo(CustCode);
+            }
+            return _CustName;
+        }
+    }
+    private static string _CustName = "";
+    public static string CustAddrMajor = "";
+    public static string CustAddrMinor = "";
+    public static string CustTel = "";
+    public static string CustFax = "";
+
+    private static void SetCustInfo(string custCode)
+    {
+        try
+        {
+            // string connectHome = SqlQuery.ExecuteScalar(RjServerInfo.DBConnStringHome, 30, "SELECT 'OK'").ToString();
+        }
+        catch
+        {
+            return;
+        }
+
+
+        //SqlParams sp = new SqlParams("SpSysStart", "GetRegister");
+        //sp.AddParam("CustCode", custCode);
+
+        //DataTable dt = SqlProcedure.ExecuteDataset(RjServerInfo.DBConnStringHome, 30, sp).Tables[0];
+
+        //_CustName = RjDataAccess.GetText(dt, 0, "CustName");
+        //CustTel = RjDataAccess.GetText(dt, 0, "CustTel");
+        //CustFax = RjDataAccess.GetText(dt, 0, "CustFax");
+        //CustAddrMajor = RjDataAccess.GetText(dt, 0, "CustAddrMajor");
+        //CustAddrMinor = RjDataAccess.GetText(dt, 0, "CustAddrMinor");
+    }
+
+    public static string BDVCD = "";
+    public static string USERID = "";
+    public static string EMPCD = "";
+    public static string EMPNM = "";
+    //public static string KRNM = "";
+    //public static string JPNM = "";
+    //public static string ENNM = "";
+    //public static string CNNM = "";
+    public static string DEPCD = "";
+    public static string POSCD = "";
+    public static string EMPTP = "";
+
+    public static string LoginKey
+    {
+        get
+        {
+            return _LoginKey;
+        }
+        set
+        {
+            if (value.IndexOf("RjSoftRj") != -1)
+            {
+                _LoginKey = value.Replace("RjSoftRj", "");
+            }
+        }
+    }
+    private static string _LoginKey = "";
+
+    /// <summary>
+    /// RJSOFT: 사용자 정보 가져오기 
+    /// ( 로그인 ) 성공시 사용자 아이디 리턴, 실패시 NO_USERCODE 혹은 NO_USERPASS 반환
+    /// </summary>
+    public static bool SetUserInfo(string userCode, string userPass)
+    {
+        ItsMaria.Set("ITSLOGIN", "USER_INFO");
+        ItsMaria.AddOne("LOGIN_USER", userCode);
+        ItsMaria.AddOne("LOGIN_PASS", userPass);
+        ItsMaria.AddOne("SYSURL", ItsServerInfo.ServerUrl);
+        DataTable result = ItsMaria.Call().Tables[0];
+        if (ItsMaria.IsError)
+        {
+            ItsMsgBox.ShowErr(ItsMaria.ErrMessage);
+
+            BDVCD = "A";
+            USERID = "";
+            EMPCD = "";
+            EMPNM = "";
+            //KRNM = "";
+            //ENNM = "";
+            //JPNM = "";
+            //CNNM = "";
+            DEPCD = "";
+            POSCD = "";
+            EMPTP = "";
+
+            return false;
+        }
+        else
+        {
+            BDVCD = result.Rows[0]["BDVCD"].ToString();
+            USERID = result.Rows[0]["USERID"].ToString();
+            EMPCD = result.Rows[0]["EMPCD"].ToString();
+            EMPNM = result.Rows[0]["EMPNM"].ToString();
+            //KRNM = result.Rows[0]["KRNM"].ToString();
+            //ENNM = result.Rows[0]["ENNM"].ToString();
+            //JPNM = result.Rows[0]["JPNM"].ToString();
+            //CNNM = result.Rows[0]["CNNM"].ToString();
+            DEPCD = result.Rows[0]["DEPTP"].ToString();
+            POSCD = result.Rows[0]["POSTP"].ToString();
+            EMPTP = result.Rows[0]["EMPTP"].ToString();
+
+            return true;
+        }
+    }
+    private static string _AutSearchList = "";
+    private static string _AutSaveList = "";
+    private static string _AutDeleteList = "";
+    private static string _AutAddList = "";
+    private static string _AutPrintList = "";
+    private static string _AutPreviewList = "";
+    private static string _AutCaptureList = "";
+    private static string _AutExportList = "";
+
+    private static void UpdateAutList()
+    {
+        ItsMaria.Set("ITSMAIN", "GET_AUT");
+        ItsMaria.AddOne("USERID", ItsMemberShip.USERID);
+        DataTable dt = ItsMaria.Call().Tables[0];
+        if (ItsMaria.IsError)
+        {
+            ItsMsgBox.Show(ItsMaria.ErrMessage);
+            return;
+        }
+        else
+        {
+            _AutSearchList = "," + ItsData.GetText(dt, 0, "AUTSEARCH");
+            _AutAddList = "," + ItsData.GetText(dt, 0, "AUTADD");
+            _AutSaveList = "," + ItsData.GetText(dt, 0, "AUTSAVE");
+            _AutDeleteList = "," + ItsData.GetText(dt, 0, "AUTDELETE");
+            _AutPrintList = "," + ItsData.GetText(dt, 0, "AUTPRINT");
+            _AutPreviewList = "," + ItsData.GetText(dt, 0, "AUTPREVIEW");
+            _AutCaptureList = "," + ItsData.GetText(dt, 0, "AUTCAPTURE");
+            _AutExportList = "," + ItsData.GetText(dt, 0, "AUTEXPORT");
+        }
+    }
+
+    public static bool AutSearch(string formCode)
+    {
+        if (IsAdmin || IsDeveloper) return true;
+
+        if (_AutSearchList == "")
+        {
+            UpdateAutList();
+        }
+        if (_AutSearchList.IndexOf("," + formCode + ",") > -1)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool AutAdd(string formCode)
+    {
+        if (IsAdmin || IsDeveloper) return true;
+
+        if (_AutAddList == "")
+        {
+            UpdateAutList();
+        }
+        if (_AutAddList.IndexOf("," + formCode + ",") > -1)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool AutSave(string formCode)
+    {
+        if (IsAdmin || IsDeveloper) return true;
+
+        if (_AutSaveList == "")
+        {
+            UpdateAutList();
+        }
+        if (_AutSaveList.IndexOf("," + formCode + ",") > -1)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool AutDelete(string formCode)
+    {
+        if (IsAdmin || IsDeveloper) return true;
+
+        if (_AutDeleteList == "")
+        {
+            UpdateAutList();
+        }
+        if (_AutDeleteList.IndexOf("," + formCode + ",") > -1)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool AutPrint(string formCode)
+    {
+        if (IsAdmin || IsDeveloper) return true;
+
+        if (_AutPrintList == "")
+        {
+            UpdateAutList();
+        }
+        if (_AutPrintList.IndexOf("," + formCode + ",") > -1)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool AutPreview(string formCode)
+    {
+        if (IsAdmin || IsDeveloper) return true;
+
+        if (_AutPreviewList == "")
+        {
+            UpdateAutList();
+        }
+        if (_AutPreviewList.IndexOf("," + formCode + ",") > -1)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool AutExport(string formCode)
+    {
+        if (IsAdmin || IsDeveloper) return true;
+
+        if (_AutSearchList == "")
+        {
+            UpdateAutList();
+        }
+        if (_AutExportList.IndexOf("," + formCode + ",") > -1)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool AutCapture(string formCode)
+    {
+        if (IsAdmin || IsDeveloper) return true;
+
+        if (_AutCaptureList == "")
+        {
+            UpdateAutList();
+        }
+        if (_AutCaptureList.IndexOf("," + formCode + ",") > -1)
+        {
+            return true;
+        }
+        return false;
+    }
+}
+

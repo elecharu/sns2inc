@@ -1,0 +1,72 @@
+﻿div.ItsDate {
+    display:inline-block;
+    float:left;
+    width:auto;
+    height:auto;
+    margin-right:2px;
+    background-color:transparent;
+    box-sizing: initial !important;
+}
+div.ItsDate_table {
+    display:table-cell;
+    background-color:transparent;
+    vertical-align:middle;
+    height:32px;
+    /*font-size:0px;*/
+}
+div.ItsDate_table > span {
+    vertical-align:middle;
+    display:inline-block;
+    text-align:right;
+    background-color:transparent; 
+    margin-right:4px;
+    /*font-size:12px;*/
+    white-space: normal;
+}
+div.ItsDate_box {
+    vertical-align:middle;
+    display:inline-block;
+    background-color:transparent; 
+    /*font-size:12px;*/
+}
+div.ItsDate_box > input {
+    float:left;
+    padding:4px 28px 4px 6px;
+    height:18px;
+    border:1px solid silver;
+    /*font-size:12px;*/
+    box-sizing: content-box;
+    line-height: 18px;
+}
+div.ItsDate_box > input:focus {
+    border: 1px solid gray;
+    background-color:mintcream;
+}
+
+div.ItsDate_button {
+    float:left;
+    cursor:pointer;
+    display:inline-block;
+    overflow:hidden;
+    vertical-align:middle;
+    height:28px;
+    width:22px;
+    margin-left:-24px;
+    text-align:center;
+    border-left:1px solid silver;
+}
+
+div.ItsDate_button > i {
+    margin-top: 8px;
+    font-size: 12px;
+}
+
+div.ItsDate_box.readonly input {
+    background-color:aliceblue;
+}
+div.ItsDate_box.readonly div.ItsDate_button {
+    color:silver;
+}
+.datetimepicker{
+    margin-top: 6px;
+}

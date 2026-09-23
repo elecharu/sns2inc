@@ -1,0 +1,109 @@
+﻿#ddiv_calendar { overflow-y:auto; } 
+/* 일정관리 > 풀캘린더 */
+.fc-center > * { margin-left:unset !important;}
+.fc-center h2 { display:inline-block; margin-bottom:-50px !important; font-size:28px; font-family: 'nanum_basicB'; font-weight:bolder;}
+/* 캘린더 달 이동 버튼 */
+.fc-prev-button, .fc-next-button{
+    background-color:#ffffff;
+    border:none;
+}
+
+.fc th{
+    padding:5px !important;
+}
+
+
+.fc-row.fc-widget-header {
+    background: #fcfcfc;
+    border-top: 1.5px #333 solid;
+    border-bottom: 1px #ababab solid;
+    height:40px;
+}
+
+.fc-button-primary:hover {
+    color: #384569;
+    background-color:#ffffff;
+}
+
+td.fc-widget-content {
+    border: 1px solid #0000000;
+}
+
+.fc-time{
+    font-family: 'nanum_basicB';
+    font-weight:bold;
+}
+
+.fc-title{
+    font-family: 'nanum_basicB';
+    font-weight: bold;
+    font-size :12px;
+}
+
+.fc-day-number {
+    font-size:14px;
+    font-weight:bolder;
+    font-family: 'nanum_basicB';
+}
+
+.fc-body {
+    border: 1px solid #ababab;
+}
+
+.fc-day-header{
+    /*background: #466085;*/
+    height: 30px;
+    line-height: 30px;
+}
+
+.Sub_left_mn span:hover {
+    color:#ffea00;
+}
+
+.fc-day-header span{
+    font-family: 'nanum_basicB';
+    margin-top:10px !important;
+    font-size:14px;
+}
+.fc-button-primary span { margin-bottom:10px; }
+.fc-button .fc-icon { font-size:30px; text-align:center;}
+.fc-button-primary span:before { font-size:30px;text-align:center; }
+
+/*.fc-unthemed td{
+    border: 2px solid #466085;
+}*/
+
+.fc-sat {
+    color:blue;
+}
+
+.fc-sun {
+    color:red;
+}
+
+.fc-center {
+    position: absolute; left: 50%; transform: translateX(-50%); margin-top:30px;
+}
+
+.fc-button-group {
+    margin-top:10px;
+    margin-bottom:25px;
+}
+
+.fc-button-group button{
+    background-color: #ffffff !important;
+    font-family: 'nanum_basicB';
+    color:#384569 !important;
+}
+
+.fc-button-group button:hover {
+    background-color: #384569 !important;
+    color:#ffffff !important;
+}
+
+.fc-button-active {
+    background-color: #384569 !important;
+}
+
+.fc-button-primary { color:black; background-color:unset !important; box-shadow:none !important;}
+

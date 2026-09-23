@@ -1,0 +1,856 @@
+﻿/// <reference path="../../Script/reference.js" />
+
+// 페이지 로드
+ItsPage.Load = function () {
+    // 설비그룹 점검계획 탭: 설비 목록 초기화
+    ItsGrid.Create('grid_GRP1', { isCheckBoxGrid: false, allowMerging: 'Cells' }, [
+        column.create('설비그룹', 'EQMGRPNM', { width: 120, align: 'center', allowMerging: true, readOnly: true }),
+        column.create('정기점검', 'EQM02', { width: 60, columnType: enumColumnTypes.check, readOnly: true, allowMerging: true }),
+        column.create('설비그룹코드', 'EQMGUBUN', { width: 120, align: 'center', allowMerging: true }),
+        column.create('설비코드', 'FANO', { width: 90, align: 'center' }),
+        column.create('설비명', 'EQMNM', { width: 180 }),
+        column.create('승인상태', 'APRVSTTNM', { width: 65, align: 'center', readOnly: true }),
+        column.create('반려사유', 'REJREASON', { width: 180, readOnly: true }),
+        column.split()
+    ]);
+
+    ConfigureGroupPlanGrid('grid_GRP1');
+
+    // 설비그룹 점검계획 탭: 정기점검 목록 초기화
+    ItsGrid.Create('grid_GRP2', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
+        column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
+        column.create('점검명', 'CHKKNDNM', { width: 300 }),
+        column.create('점검항목', 'CHKLOC', { width: 130, columnType: enumColumnTypes.combo, gpcd: 'CHKLOC', align: 'center' }),
+        column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', align: 'center' }),
+        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', align: 'center' }),
+        column.create('사용여부', 'USEYN', { width: 70, columnType: enumColumnTypes.check, readOnly: false }),
+        column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
+        column.split()
+    ]);
+
+    // 설비그룹 점검계획 탭: 복사 대상 그룹 목록 초기화
+    ItsGrid.Create('grid_GRP_COPY1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        column.create('설비그룹코드', 'EQMGRP', { width: 120, align: 'center' }),
+        column.create('설비그룹', 'EQMGRPNM', { width: 120, align: 'center' }),
+        column.create('정기점검 건수', 'EQM02CNT', { width: 80, align: 'right', columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+        column.create('대표설비코드', 'FANO', { hidden: true }),
+        column.split()
+    ]);
+
+    // 설비그룹 점검계획 탭: 복사 점검항목 목록 초기화
+    ItsGrid.Create('grid_GRP_COPY2', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
+        column.create('점검명', 'CHKKNDNM', { width: 300 }),
+        column.create('점검항목', 'CHKLOC', { width: 130, columnType: enumColumnTypes.combo, gpcd: 'CHKLOC', align: 'center' }),
+        column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', align: 'center' }),
+        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', align: 'center' }),
+        column.create('사용여부', 'USEYN', { width: 70, columnType: enumColumnTypes.check, readOnly: true }),
+        column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+        column.split()
+    ]);
+    // 설비별 점검계획 탭: 설비 목록 초기화
+    ItsGrid.Create('grid1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        column.create('정기점검', 'EQM02', { width: 60, columnType: enumColumnTypes.check, readOnly: true }),
+        column.create('설비코드', 'FANO', { width: 80, align: 'center' }),
+        column.create('설비명', 'EQMNM', { width: 200 }),
+        column.create('승인상태', 'APRVSTTNM', { width: 65, align: 'center', readOnly: true }),
+        column.create('반려사유', 'REJREASON', { width: 180, readOnly: true }),
+        column.split()
+    ]);
+
+    // 설비별 점검계획 탭: 정기점검 목록 초기화
+    ItsGrid.Create('grid3', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
+        column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
+        column.create('점검명', 'CHKKNDNM', { width: 300 }),
+        column.create('점검항목', 'CHKLOC', { width: 130, columnType: enumColumnTypes.combo, gpcd: 'CHKLOC', align: 'center' }),
+        column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', align: 'center' }),
+        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', align: 'center' }),
+        column.create('사용여부', 'USEYN', { width: 70, columnType: enumColumnTypes.check, readOnly: false }),
+        column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
+        column.split()
+    ]);
+
+    // 설비별 점검계획 탭: 복사 대상 설비 목록 초기화
+    ItsGrid.Create('grid7', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        column.create('설비코드', 'FANO', { width: 100, readOnly: false }),
+        column.create('설비명', 'EQMNM', { width: 150, readOnly: false }),
+        column.split()
+    ]);
+
+    // 설비별 점검계획 탭: 복사 점검항목 목록 초기화
+    ItsGrid.Create('grid8', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        column.create('점검코드', 'CHKKNDCD', { width: 70, align: 'center' }),
+        column.create('점검명', 'CHKKNDNM', { width: 300 }),
+        column.create('점검항목', 'CHKLOC', { width: 130, columnType: enumColumnTypes.combo, gpcd: 'CHKLOC', align: 'center' }),
+        column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', align: 'center' }),
+        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', align: 'center' }),
+        column.split()
+    ]);
+    // 정기점검 주기관리 탭: 연간 계획 초기화
+    ItsGrid.Create('grid9', { isCheckBoxGrid: true }, [
+        column.create('설비코드', 'FANO', { width: 100, align: 'center' }),
+        column.create('설비명', 'EQMNM', { width: 220 }),
+        column.create('설비등급', 'EQMGRADE', { width: 90, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM110', readOnly: true }),
+        column.create('년도', 'YEAR', { width: 80, align: 'center' }),
+        column.create('1월', 'M01', { width: 80, align: 'center', readOnly: true }),
+        column.create('2월', 'M02', { width: 80, align: 'center', readOnly: true }),
+        column.create('3월', 'M03', { width: 80, align: 'center', readOnly: true }),
+        column.create('4월', 'M04', { width: 80, align: 'center', readOnly: true }),
+        column.create('5월', 'M05', { width: 80, align: 'center', readOnly: true }),
+        column.create('6월', 'M06', { width: 80, align: 'center', readOnly: true }),
+        column.create('7월', 'M07', { width: 80, align: 'center', readOnly: true }),
+        column.create('8월', 'M08', { width: 80, align: 'center', readOnly: true }),
+        column.create('9월', 'M09', { width: 80, align: 'center', readOnly: true }),
+        column.create('10월', 'M10', { width: 80, align: 'center', readOnly: true }),
+        column.create('11월', 'M11', { width: 80, align: 'center', readOnly: true }),
+        column.create('12월', 'M12', { width: 80, align: 'center', readOnly: true }),
+        column.split()
+    ]);
+    // 공통 정기점검 추가 팝업: 점검항목 목록 초기화
+    ItsGrid.Create('grid10', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
+        column.create('점검코드', 'CHKKNDCD', { width: 70, align: 'center' }),
+        column.create('점검명', 'CHKKNDNM', { width: 300 }),
+        column.create('점검항목', 'CHKLOC', { width: 130, columnType: enumColumnTypes.combo, gpcd: 'CHKLOC', align: 'center' }),
+        column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', align: 'center' }),
+        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', align: 'center' }),
+        column.split()
+    ]);
+
+    // 조회년도 기본값
+    ItsCombo.SetValueByIndex('cmb_SYEAR', 4);
+
+};
+
+// 공통: 체크 행 존재 여부
+function HasCheckedRows(gridId) {
+    for (var rowIndex = 0; rowIndex < ItsGrid.Length(gridId); rowIndex++) {
+        if (ItsGrid.IsChecked(gridId, rowIndex)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// 공통: 탭별 메인 조회
+ItsButton.EventSearch = function (targetEqmGubun) {
+    var selectedTabIndex = ItsTab.GetIndex('tab1');
+
+    if (selectedTabIndex == 0) {
+        // 설비그룹 점검계획 탭: CRUD 후 대상 셀, 일반 조회 후 첫 행 포커스
+        ItsGrid.Clear('grid_GRP2');
+
+        var maria = new ItsMaria('EQM1001_R03', 'LIST_MSTEQM_GRP');
+        maria.AddPanel('div_GRP');
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsGrid.SetStore('grid_GRP1', maria.store.YnToBool('EQM02'));
+        ItsGrid.Get('grid_GRP1').autoSizeColumns();
+        FocusGroupPlanCheckCell(targetEqmGubun);
+        ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
+    }
+    else if (selectedTabIndex == 1) {
+        // 설비별 점검계획 탭: 데이터 조회
+        ItsGrid.Clear('grid1');
+        ItsGrid.Clear('grid3');
+
+        var maria = new ItsMaria('EQM1001_R03', 'LIST_MSTEQM');
+        maria.AddPanel('div_EQM');
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsGrid.SetStore('grid1', maria.store.YnToBool('EQM02'));
+        ItsGrid.Get('grid1').autoSizeColumns();
+        ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
+    }
+    else if (selectedTabIndex == 2) {
+        // 정기점검 주기관리 탭: 데이터 조회
+        ItsGrid.Clear('grid9');
+
+        var maria = new ItsMaria('EQM1001_R03', 'LIST_CYCLE_EQMCD');
+        maria.AddPanel('div_CYCLE_EQM');
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsGrid.SetStore('grid9', maria.store);
+        ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
+    }
+};
+
+// 설비그룹 점검계획 탭: 정기점검 셀 포커스
+function FocusGroupPlanCheckCell(targetEqmGubun) {
+    if (!targetEqmGubun) {
+        return;
+    }
+
+    setTimeout(function () {
+        var groupPlanGrid = ItsGrid.Get('grid_GRP1');
+        var periodicCheckColumn = groupPlanGrid.getColumn('EQM02');
+        var targetGroupRowIndex = -1;
+
+        for (var i = 0; i < groupPlanGrid.rows.length; i++) {
+            if (groupPlanGrid.rows[i].dataItem && groupPlanGrid.rows[i].dataItem.EQMGUBUN === targetEqmGubun) {
+                targetGroupRowIndex = i;
+                break;
+            }
+        }
+
+        if (targetGroupRowIndex < 0 || !periodicCheckColumn) {
+            return;
+        }
+
+        var periodicCheckColumnIndex = groupPlanGrid.columns.indexOf(periodicCheckColumn);
+        groupPlanGrid.select(targetGroupRowIndex, periodicCheckColumnIndex);
+        groupPlanGrid.scrollIntoView(targetGroupRowIndex, periodicCheckColumnIndex);
+        groupPlanGrid.focus();
+    });
+}
+
+// 설비그룹 점검계획 탭: 재조회 후 대상 정기점검 셀 포커스
+function RefreshGroupPlan(targetEqmGubun) {
+    ItsButton.EventSearch(targetEqmGubun);
+}
+
+// 설비그룹 점검계획 탭: 셀 병합 및 정렬 설정
+function ConfigureGroupPlanGrid(groupPlanGridId) {
+    var groupPlanGrid = ItsGrid.Get(groupPlanGridId);
+    var originalGetMergedRange = groupPlanGrid.getMergedRange;
+
+    groupPlanGrid.getMergedRange = function (panel, row, col, clip) {
+        var currentColumn = (col < 0) ? undefined : this.columns[col];
+        if (panel !== this.cells || currentColumn == undefined || currentColumn.binding !== 'EQM02') {
+            return originalGetMergedRange.call(this, panel, row, col, clip);
+        }
+
+        var currentGridRow = panel.rows[row];
+        if (currentGridRow == undefined || currentGridRow.dataItem == undefined) {
+            return originalGetMergedRange.call(this, panel, row, col, clip);
+        }
+
+        var currentEqmGubun = currentGridRow.dataItem.EQMGUBUN; var currentPeriodicCheckStatus = panel.getCellData(row, col, true);
+        var isSameEqmGubunAndPeriodicCheckStatus = function (targetRowIndex) {
+            var comparisonGridRow = panel.rows[targetRowIndex];
+            return comparisonGridRow != undefined
+                && comparisonGridRow.dataItem != undefined
+                && comparisonGridRow.dataItem.EQMGUBUN === currentEqmGubun
+                && panel.getCellData(targetRowIndex, col, true) === currentPeriodicCheckStatus;
+        };
+        var mergedStartRow = row;
+        var mergedEndRow = row;
+
+        while (mergedStartRow > 0 && isSameEqmGubunAndPeriodicCheckStatus(mergedStartRow - 1)) {
+            mergedStartRow--;
+        }
+
+        while (mergedEndRow < panel.rows.length - 1 && isSameEqmGubunAndPeriodicCheckStatus(mergedEndRow + 1)) {
+            mergedEndRow++;
+        }
+
+        return new wijmo.grid.CellRange(mergedStartRow, col, mergedEndRow, col);
+    };
+
+    // 설비그룹 점검계획 탭: 헤더 정렬 비활성화
+    groupPlanGrid.getColumn('EQMGRPNM').allowSorting = false;
+    if (groupPlanGrid.getColumn('EQMGUBUN')) {
+        groupPlanGrid.getColumn('EQMGUBUN').allowSorting = false;
+    }
+    groupPlanGrid.getColumn('EQM02').allowSorting = false;
+    groupPlanGrid.getColumn('FANO').allowSorting = false;
+    groupPlanGrid.getColumn('EQMNM').allowSorting = false;
+
+    // 설비그룹 점검계획 탭: 설비그룹명 셀 포커스 방지
+    groupPlanGrid.formatItem.addHandler(function (s, e) {
+        if (e.panel === s.cells && s.columns[e.col].binding === 'EQMGRPNM') {
+            e.cell.style.cursor = 'default';
+            e.cell.style.userSelect = 'none';
+        }
+    });
+
+    // 선택 이벤트는 유지
+    groupPlanGrid.selectionChanging.addHandler(function (s, e) {
+        if (s.columns[e.col] && s.columns[e.col].binding === 'EQMGRPNM') {
+            var equipmentCodeColumnIndex = s.columns.indexOf('FANO');
+            if (equipmentCodeColumnIndex > -1) {
+                e.col = equipmentCodeColumnIndex;
+                e.col2 = equipmentCodeColumnIndex;
+            }
+        }
+    });
+}
+
+
+// 설비그룹 점검계획 탭: 선택 그룹 정기점검 조회
+ItsGrid.Event('grid_GRP1').onSelect = function () {
+    var curIdx = ItsGrid.GetCurrentIndex('grid_GRP1');
+    var selectedEqmGubun = ItsGrid.GetValue('grid_GRP1', curIdx, 'EQMGUBUN');
+
+    if (!selectedEqmGubun) {
+        ItsGrid.Clear('grid_GRP2');
+        return;
+    }
+
+    var maria = new ItsMaria('EQM1001_R03', 'LIST_GRP_EQM02');
+    maria.AddParam('EQMGRP', selectedEqmGubun);
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+    ItsGrid.SetStore('grid_GRP2', maria.store.YnToBool('USEYN'));
+};
+
+// 설비그룹 점검계획 탭: 정기점검 복사 팝업
+ItsButton.Event('bdiv_GRP_btn_COPY').onClick = function () {
+    var curIdx = ItsGrid.GetCurrentIndex('grid_GRP1');
+    var selectedEqmGubun = ItsGrid.GetValue('grid_GRP1', curIdx, 'EQMGUBUN');
+
+    if (!selectedEqmGubun) {
+        ItsMsg.Toast('설비그룹을 먼저 선택해주세요.');
+        return;
+    }
+
+    ItsGrid.Clear('grid_GRP_COPY1');
+    ItsGrid.Clear('grid_GRP_COPY2');
+    ItsPop.Open('pop_GRP_EQM02_COPY');
+
+    var maria = new ItsMaria('EQM1001_R03', 'LIST_COPY_GRP_EQM02');
+    maria.AddParam('EQMGRP', selectedEqmGubun);
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore('grid_GRP_COPY1', maria.store);
+};
+
+// 설비그룹 점검계획 탭: 복사 원본 정기점검 조회
+ItsGrid.Event('grid_GRP_COPY1').onSelect = function () {
+    var sourceGroupRowIndex = ItsGrid.GetCurrentIndex('grid_GRP_COPY1');
+    var sourceEqmGubun = ItsGrid.GetValue('grid_GRP_COPY1', sourceGroupRowIndex, 'EQMGRP');
+
+    if (!sourceEqmGubun) {
+        ItsGrid.Clear('grid_GRP_COPY2');
+        return;
+    }
+
+    var maria = new ItsMaria('EQM1001_R03', 'LIST_COPY_GRP_EQM02_DTL');
+    maria.AddParam('EQMGRP', sourceEqmGubun);
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore('grid_GRP_COPY2', maria.store.YnToBool('USEYN'));
+};
+
+// 설비그룹 점검계획 탭: 정기점검 일괄 복사
+ItsButton.Event('btn_COPY_GRP_EQM02').onClick = function () {
+    var sourceGroupRowIndex = ItsGrid.GetCurrentIndex('grid_GRP_COPY1');
+    var sourceEquipmentCode = ItsGrid.GetValue('grid_GRP_COPY1', sourceGroupRowIndex, 'FANO');
+    var targetGroupRowIndex = ItsGrid.GetCurrentIndex('grid_GRP1');
+    var targetEqmGubun = ItsGrid.GetValue('grid_GRP1', targetGroupRowIndex, 'EQMGUBUN');
+
+    if (!sourceEquipmentCode) {
+        ItsMsg.Toast('복사할 설비그룹을 선택해주세요.');
+        return;
+    }
+
+    if (!targetEqmGubun) {
+        ItsMsg.Toast('설비그룹을 먼저 선택해주세요.');
+        return;
+    }
+
+    ItsMsg.Confirm('선택한 설비그룹의 정기점검 항목을 현재 설비그룹의 모든 설비로 일괄 복사하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_R03', 'COPY_GRP_EQM02');
+        maria.AddParam('EQMGRP', targetEqmGubun);
+        maria.AddParam('FANO_COPY', sourceEquipmentCode);
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsButton.Event('btn_CANCEL_GRP_COPY_EQM02').onClick();
+        ItsMsg.Toast(ItsMsg.CommonMsg.CopyComplete());
+        RefreshGroupPlan(targetEqmGubun);
+    }, function () {
+        ItsMsg.Toast('복사가 취소되었습니다.');
+    });
+};
+
+// 설비그룹 점검계획 탭: 복사 팝업 초기화
+ItsButton.Event('btn_CANCEL_GRP_COPY_EQM02').onClick = function () {
+    ItsGrid.Clear('grid_GRP_COPY1');
+    ItsGrid.Clear('grid_GRP_COPY2');
+    ItsPop.Close('pop_GRP_EQM02_COPY');
+};
+
+// 설비그룹 점검계획 탭: 정기점검 추가
+ItsButton.Event('bdiv_GRP_btn_ADD').onClick = function () {
+    var curIdx = ItsGrid.GetCurrentIndex('grid_GRP1');
+    var selectedEqmGubun = ItsGrid.GetValue('grid_GRP1', curIdx, 'EQMGUBUN');
+
+    if (!selectedEqmGubun) {
+        ItsMsg.Toast('설비그룹을 먼저 선택해주세요.');
+        return;
+    }
+
+    ItsGrid.Clear('grid10');
+    ItsPop.Open('pop_EQM02_ADD');
+
+    var maria = new ItsMaria('EQM1001_R03', 'LIST_GRP_EQM02_ADD');
+    maria.AddParam('EQMGRP', selectedEqmGubun);
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore('grid10', maria.store);
+};
+
+// 설비그룹 점검계획 탭: 정기점검 저장
+ItsButton.Event('bdiv_GRP_btn_SAVE').onClick = function () {
+    if (!HasCheckedRows('grid_GRP2')) {
+        ItsMsg.Toast('선택된 항목이 없습니다.');
+        return;
+    }
+
+    var curIdx = ItsGrid.GetCurrentIndex('grid_GRP1');
+    var selectedEqmGubun = ItsGrid.GetValue('grid_GRP1', curIdx, 'EQMGUBUN');
+
+    if (!selectedEqmGubun) {
+        ItsMsg.Toast('설비그룹을 먼저 선택해주세요.');
+        return;
+    }
+
+    var confirmationMessage = '선택하신 점검항목을 해당 설비그룹의 모든 설비에 일괄 저장하시겠습니까?';
+
+    ItsMsg.Confirm(confirmationMessage, function () {
+        var maria = new ItsMaria('EQM1001_R03', 'SAVE_GRP_EQM02');
+        maria.AddParam('EQMGRP', selectedEqmGubun);
+
+        for (var i = 0; i < ItsGrid.Length('grid_GRP2'); i++) {
+            if (ItsGrid.IsChecked('grid_GRP2', i)) {
+                maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid_GRP2', i, 'CHKKNDCD'));
+                maria.AddList('SORTNO_LIST', ItsGrid.GetValue('grid_GRP2', i, 'SORTNO'));
+                maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid_GRP2', i, 'REMARK'));
+                if (ItsGrid.GetValue('grid_GRP2', i, 'USEYN', false) == 'Y')
+                    maria.AddList('USEYN_LIST', 'Y');
+                else
+                    maria.AddList('USEYN_LIST', 'N');
+            }
+        }
+
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
+        RefreshGroupPlan(selectedEqmGubun);
+    }, function () {
+        ItsMsg.Toast('저장이 취소되었습니다.');
+    });
+};
+
+// 설비그룹 점검계획 탭: 정기점검 삭제
+ItsButton.Event('bdiv_GRP_btn_DEL').onClick = function () {
+    if (!HasCheckedRows('grid_GRP2')) {
+        ItsMsg.Toast('선택된 항목이 없습니다.');
+        return;
+    }
+
+    var curIdx = ItsGrid.GetCurrentIndex('grid_GRP1');
+    var selectedEqmGubun = ItsGrid.GetValue('grid_GRP1', curIdx, 'EQMGUBUN');
+
+    if (!selectedEqmGubun) {
+        ItsMsg.Toast('설비그룹을 먼저 선택해주세요.');
+        return;
+    }
+
+    var confirmationMessage = '선택한 점검항목을 해당 설비그룹의 모든 설비에서 일괄 삭제하시겠습니까?';
+
+    ItsMsg.Confirm(confirmationMessage, function () {
+        var maria = new ItsMaria('EQM1001_R03', 'DEL_GRP_EQM02');
+        maria.AddParam('EQMGRP', selectedEqmGubun);
+
+        for (var i = 0; i < ItsGrid.Length('grid_GRP2'); i++) {
+            if (ItsGrid.IsChecked('grid_GRP2', i)) {
+                maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid_GRP2', i, 'CHKKNDCD'));
+            }
+        }
+
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsMsg.Toast(ItsMsg.CommonMsg.DeleteComplete());
+        RefreshGroupPlan(selectedEqmGubun);
+    }, function () {
+        ItsMsg.Toast('삭제가 취소되었습니다.');
+    });
+};
+
+// 설비별 점검계획 탭: 선택 설비 정기점검 조회
+ItsGrid.Event('grid1').onSelect = function () {
+    var selectedEquipmentCode = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'FANO');
+    if (!selectedEquipmentCode) {
+        ItsGrid.Clear('grid3');
+        return;
+    }
+
+
+    var maria2 = new ItsMaria('EQM1001_R03', 'LIST_MSTEQM_EQM02');
+    maria2.AddParam('FANO', selectedEquipmentCode);
+    maria2.CallProc();
+    if (maria2.isError) {
+        maria2.ShowErrMsg();
+        return;
+    }
+    ItsGrid.SetStore('grid3', maria2.store.YnToBool('USEYN'));
+};
+
+
+// 설비별 점검계획 탭: 정기점검 추가
+ItsButton.Event('bdiv3_btn_ADD').onClick = function () {
+    var selectedEquipmentCode = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'FANO');
+    if (!selectedEquipmentCode) {
+        ItsMsg.Toast('설비를 먼저 선택해주세요.');
+        return;
+    }
+
+    ItsGrid.Clear('grid10');
+    ItsPop.Open('pop_EQM02_ADD');
+
+    var maria = new ItsMaria('EQM1001_R03', 'LIST_EQM02');
+    maria.AddParam('FANO', selectedEquipmentCode);
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore('grid10', maria.store);
+};
+
+// 설비별 점검계획 탭: 정기점검 저장
+ItsButton.Event('bdiv3_btn_SAVE').onClick = function () {
+    if (!HasCheckedRows('grid3')) {
+        ItsMsg.Toast('선택된 항목이 없습니다.');
+        return;
+    }
+
+    var selectedEquipmentCode = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'FANO');
+
+    ItsMsg.Confirm('선택하신 항목을 저장하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_R03', 'SAVE_EQM02');
+        maria.AddParam('FANO', selectedEquipmentCode);
+
+        for (var i = 0; i < ItsGrid.Length('grid3'); i++) {
+            if (ItsGrid.IsChecked('grid3', i)) {
+                maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid3', i, 'CHKKNDCD'));
+                maria.AddList('SORTNO_LIST', ItsGrid.GetValue('grid3', i, 'SORTNO'));
+                maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid3', i, 'REMARK'));
+                if (ItsGrid.GetValue('grid3', i, 'USEYN', false) == 'Y')
+                    maria.AddList('USEYN_LIST', 'Y');
+                else
+                    maria.AddList('USEYN_LIST', 'N');
+            }
+        }
+
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
+        ItsGrid.Setkey('grid1', 'FANO', selectedEquipmentCode);
+        ItsButton.EventSearch();
+    }, function () {
+        ItsMsg.Toast('저장이 취소되었습니다.');
+    });
+};
+
+// 설비별 점검계획 탭: 정기점검 삭제
+ItsButton.Event('bdiv3_btn_DEL').onClick = function () {
+    if (!HasCheckedRows('grid3')) {
+        ItsMsg.Toast('선택된 항목이 없습니다.');
+        return;
+    }
+
+    var selectedEquipmentCode = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'FANO');
+
+    ItsMsg.Confirm('선택한 항목을 삭제하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_R03', 'DEL_EQM02');
+        maria.AddParam('FANO', selectedEquipmentCode);
+
+        for (var i = 0; i < ItsGrid.Length('grid3'); i++) {
+            if (ItsGrid.IsChecked('grid3', i)) {
+                maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid3', i, 'CHKKNDCD'));
+            }
+        }
+
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsMsg.Toast(ItsMsg.CommonMsg.DeleteComplete());
+        ItsGrid.Setkey('grid1', 'FANO', selectedEquipmentCode);
+        ItsButton.EventSearch();
+    }, function () {
+        ItsMsg.Toast('삭제가 취소되었습니다.');
+    });
+};
+
+// 설비별 점검계획 탭: 정기점검 복사 팝업
+ItsButton.Event('bdiv3_btn_COPY').onClick = function () {
+    var selectedEquipmentCode = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'FANO');
+    if (!selectedEquipmentCode) {
+        ItsMsg.Toast('설비를 먼저 선택해주세요.');
+        return;
+    }
+
+    ItsGrid.Clear('grid7');
+    ItsGrid.Clear('grid8');
+    ItsPop.Open('pop_EQM02_COPY');
+
+    var maria = new ItsMaria('EQM1001_R03', 'LIST_COPY_EQM02');
+    maria.AddParam('FANO', selectedEquipmentCode);
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore('grid7', maria.store);
+};
+
+// 설비별 점검계획 탭: 복사 원본 정기점검 조회
+ItsGrid.Event('grid7').onSelect = function () {
+    var sourceEquipmentCode = ItsGrid.GetValue('grid7', ItsGrid.GetCurrentIndex('grid7'), 'FANO');
+    if (!sourceEquipmentCode) {
+        ItsGrid.Clear('grid8');
+        return;
+    }
+
+    var maria = new ItsMaria('EQM1001_R03', 'LIST_COPY_EQM02');
+    maria.AddParam('FANO', sourceEquipmentCode);
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsGrid.SetStore('grid8', maria.storeExtend1);
+};
+
+// 설비별 점검계획 탭: 정기점검 복사
+ItsButton.Event('btn_COPY_EQM02').onClick = function () {
+    var sourceEquipmentCode = ItsGrid.GetValue('grid7', ItsGrid.GetCurrentIndex('grid7'), 'FANO');
+    var targetEquipmentCode = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'FANO');
+
+    if (!sourceEquipmentCode) {
+        ItsMsg.Toast('복사 대상 설비를 선택해주세요.');
+        return;
+    }
+
+    ItsMsg.Confirm('선택한 항목을 복사하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_R03', 'COPY_EQM02');
+        maria.AddParam('FANO', targetEquipmentCode);
+        maria.AddParam('FANO_COPY', sourceEquipmentCode);
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsButton.Event('btn_CANCEL_COPY_EQM02').onClick();
+        ItsMsg.Toast(ItsMsg.CommonMsg.CopyComplete());
+        if (targetEquipmentCode) {
+            ItsGrid.Setkey('grid1', 'FANO', targetEquipmentCode);
+        }
+        ItsButton.EventSearch();
+    }, function () {
+        ItsMsg.Toast('복사가 취소되었습니다.');
+    });
+};
+
+// 설비별 점검계획 탭: 복사 팝업 초기화
+ItsButton.Event('btn_CANCEL_COPY_EQM02').onClick = function () {
+    ItsGrid.Clear('grid7');
+    ItsGrid.Clear('grid8');
+    ItsPop.Close('pop_EQM02_COPY');
+};
+
+// 정기점검 주기관리 탭
+
+// 연간 월별 점검 그리드 더블클릭 이벤트
+ItsGrid.Event('grid9').onDoubleClick = function (rowIndex, field) {
+    ItsGrid.Event('grid9').onKeydownEnter(rowIndex, field);
+};
+
+// 정기점검 주기관리 탭: 월별 점검계획 토글
+ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
+    if (field == 'M01' || field == 'M02' || field == 'M03' || field == 'M04' || field == 'M05' || field == 'M06' ||
+        field == 'M07' || field == 'M08' || field == 'M09' || field == 'M10' || field == 'M11' || field == 'M12') {
+        var monthlyPlanValue = ItsGrid.GetValue('grid9', rowIndex, field);
+
+        if (monthlyPlanValue === null || monthlyPlanValue === undefined || monthlyPlanValue === '') {
+            ItsGrid.SetValue('grid9', rowIndex, field, '●');
+        } else {
+            ItsGrid.SetValue('grid9', rowIndex, field, '');
+        }
+        ItsGrid.CheckRow('grid9', rowIndex);
+    }
+};
+
+// 정기점검 주기관리 탭: 연간 계획 저장
+ItsButton.Event('div_SAVE_CYCLE_EQM').onClick = function () {
+    if (!HasCheckedRows('grid9')) {
+        ItsMsg.Toast('선택된 항목이 없습니다.');
+        return;
+    }
+
+    ItsMsg.Confirm('선택하신 항목을 저장하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_R03', 'SAVE_CYCLE_EQMCD');
+
+        for (var i = 0; i < ItsGrid.Length('grid9'); i++) {
+            if (ItsGrid.IsChecked('grid9', i)) {
+                maria.AddList('FANO_LIST', ItsGrid.GetValue('grid9', i, 'FANO'));
+                maria.AddList('YEAR_LIST', ItsGrid.GetValue('grid9', i, 'YEAR'));
+                maria.AddList('M01_LIST', ItsGrid.GetValue('grid9', i, 'M01'));
+                maria.AddList('M02_LIST', ItsGrid.GetValue('grid9', i, 'M02'));
+                maria.AddList('M03_LIST', ItsGrid.GetValue('grid9', i, 'M03'));
+                maria.AddList('M04_LIST', ItsGrid.GetValue('grid9', i, 'M04'));
+                maria.AddList('M05_LIST', ItsGrid.GetValue('grid9', i, 'M05'));
+                maria.AddList('M06_LIST', ItsGrid.GetValue('grid9', i, 'M06'));
+                maria.AddList('M07_LIST', ItsGrid.GetValue('grid9', i, 'M07'));
+                maria.AddList('M08_LIST', ItsGrid.GetValue('grid9', i, 'M08'));
+                maria.AddList('M09_LIST', ItsGrid.GetValue('grid9', i, 'M09'));
+                maria.AddList('M10_LIST', ItsGrid.GetValue('grid9', i, 'M10'));
+                maria.AddList('M11_LIST', ItsGrid.GetValue('grid9', i, 'M11'));
+                maria.AddList('M12_LIST', ItsGrid.GetValue('grid9', i, 'M12'));
+                maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid9', i, 'REMARK'));
+            }
+        }
+
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
+        ItsGrid.Setkey('grid9', 'FANO', ItsGrid.GetValue('grid9', ItsGrid.GetCurrentIndex('grid9'), 'FANO'));
+        ItsButton.EventSearch();
+    }, function () {
+        ItsMsg.Toast('저장이 취소되었습니다.');
+    });
+};
+
+// 정기점검 주기관리 탭: 연간 계획 삭제
+ItsButton.Event('div_DEL_CYCLE_EQM').onClick = function () {
+    if (!HasCheckedRows('grid9')) {
+        ItsMsg.Toast('선택된 항목이 없습니다.');
+        return;
+    }
+
+    ItsMsg.Confirm('선택한 항목을 삭제하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_R03', 'DELETE_CYCLE_EQMCD');
+
+        for (var i = 0; i < ItsGrid.Length('grid9'); i++) {
+            if (ItsGrid.IsChecked('grid9', i)) {
+                maria.AddList('FANO_LIST', ItsGrid.GetValue('grid9', i, 'FANO'));
+                maria.AddList('YEAR_LIST', ItsGrid.GetValue('grid9', i, 'YEAR'));
+            }
+        }
+
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsMsg.Toast(ItsMsg.CommonMsg.DeleteComplete());
+        ItsGrid.Setkey('grid9', 'FANO', ItsGrid.GetValue('grid9', ItsGrid.GetCurrentIndex('grid9'), 'FANO'));
+        ItsButton.EventSearch();
+    }, function () {
+        ItsMsg.Toast('삭제가 취소되었습니다.');
+    });
+};
+
+// 공통 정기점검 항목 추가 팝업: 저장
+ItsButton.Event('btn_ADD_EQM02').onClick = function () {
+    if (!HasCheckedRows('grid10')) {
+        ItsMsg.Toast('선택된 항목이 없습니다.');
+        return;
+    }
+
+    var selectedTabIndex = ItsTab.GetIndex('tab1');
+    var maria;
+    var selectedEquipmentCode;
+
+    if (selectedTabIndex == 0) {
+        var curIdx = ItsGrid.GetCurrentIndex('grid_GRP1');
+        var selectedEqmGubun = ItsGrid.GetValue('grid_GRP1', curIdx, 'EQMGUBUN');
+        if (!selectedEqmGubun) {
+            ItsMsg.Toast('설비그룹을 먼저 선택해주세요.');
+            return;
+        }
+
+        maria = new ItsMaria('EQM1001_R03', 'REG_GRP_EQM02');
+        maria.AddParam('EQMGRP', selectedEqmGubun);
+    } else {
+        selectedEquipmentCode = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'FANO');
+        maria = new ItsMaria('EQM1001_R03', 'REG_EQM02');
+        maria.AddParam('FANO', selectedEquipmentCode);
+    }
+
+    for (var i = 0; i < ItsGrid.Length('grid10'); i++) {
+        if (ItsGrid.IsChecked('grid10', i)) {
+            maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid10', i, 'CHKKNDCD'));
+            maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid10', i, 'REMARK'));
+        }
+    }
+
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsButton.Event('btn_CANCEL_ADD_EQM02').onClick();
+    if (selectedTabIndex == 0) {
+    } else {
+    }
+    ItsMsg.Toast(ItsMsg.CommonMsg.AddComplete);
+    if (selectedTabIndex == 0) {
+        RefreshGroupPlan(selectedEqmGubun);
+    } else {
+        if (selectedEquipmentCode) {
+            ItsGrid.Setkey('grid1', 'FANO', selectedEquipmentCode);
+        }
+        ItsButton.EventSearch();
+    }
+};
+
+// 공통 정기점검 항목 추가 팝업: 초기화
+ItsButton.Event('btn_CANCEL_ADD_EQM02').onClick = function () {
+    ItsGrid.Clear('grid10');
+    ItsPop.Close('pop_EQM02_ADD');
+};

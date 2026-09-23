@@ -1,0 +1,44 @@
+﻿div.ItsTextArea {
+    display:inline-block;
+    float:left;
+    width:auto;
+    height:auto;
+    margin-right:2px;
+    background-color:transparent;
+    box-sizing: initial !important;
+}
+div.ItsTextArea_table {
+    display:table-cell;
+    background-color:transparent;
+    vertical-align:middle;
+    /*font-size:0px;*/
+    padding-top:4px;
+    padding-bottom:4px;
+}
+
+div.ItsTextArea_table > span {
+    vertical-align:middle;
+    display:inline-block;
+    text-align:right;
+    margin-right:4px;
+    background-color:transparent; 
+    /*font-size:12px;*/
+    white-space:normal;
+}
+div.ItsTextArea_table > textarea {
+    resize:none;
+    overflow:auto;
+    vertical-align:middle;
+    text-align:left;
+    padding:4px 6px 4px 6px;
+    height:16px;
+    border:1px solid silver;
+    /*font-size:12px;*/
+}
+div.ItsTextArea_table > textarea:focus {
+    border: 1px solid gray;
+    background-color:mintcream;
+}
+div.ItsTextArea_table > textarea:read-only {
+    background-color:aliceblue;
+}

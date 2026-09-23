@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.779
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailServiceDay", "MailServiceDay.csproj", "{02DF1568-15BD-43E3-B815-7342C0DA5A5A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailServiceTrigger", "..\MailServiceTrigger\MailServiceTrigger.csproj", "{E3513B3D-181F-43BE-9BD3-9CEB46A37D81}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "MailService_HOST", "..\MailService_HOST\MailService_HOST.vdproj", "{0070C055-BA48-47EC-B7F8-19AA79F8F735}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{02DF1568-15BD-43E3-B815-7342C0DA5A5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02DF1568-15BD-43E3-B815-7342C0DA5A5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02DF1568-15BD-43E3-B815-7342C0DA5A5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02DF1568-15BD-43E3-B815-7342C0DA5A5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3513B3D-181F-43BE-9BD3-9CEB46A37D81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3513B3D-181F-43BE-9BD3-9CEB46A37D81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3513B3D-181F-43BE-9BD3-9CEB46A37D81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3513B3D-181F-43BE-9BD3-9CEB46A37D81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0070C055-BA48-47EC-B7F8-19AA79F8F735}.Debug|Any CPU.ActiveCfg = Debug
+		{0070C055-BA48-47EC-B7F8-19AA79F8F735}.Release|Any CPU.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {29C48755-403E-43B6-9CF4-7C2AF97DFF40}
+	EndGlobalSection
+EndGlobal

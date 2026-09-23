@@ -1,0 +1,44 @@
+﻿div.ItsCheck {
+    display:inline-block;
+    float:left;
+    width:auto;
+    height:auto;
+    margin-right:2px;
+    background-color:transparent;
+    box-sizing: initial !important;
+}
+div.ItsCheck_table {
+    display:table-cell;
+    background-color:transparent;
+    vertical-align:middle;
+    height:32px;
+    /*font-size:0px;*/
+}
+
+div.ItsCheck_button {
+    vertical-align:middle;
+    display:inline-block;
+    text-align: center;
+    margin-right:4px;
+    margin-top:2px;
+    color:dimGray;
+    /*font-size:12px;*/
+    padding: 0px 4px; 
+    cursor:pointer;
+    width: 20px;
+}
+
+div.ItsCheck_table > span {
+    vertical-align: middle;
+    display: inline-block;
+    text-align: right;
+    margin-right: 4px;
+    background-color: transparent;
+    /*font-size: 12px;*/
+    white-space: normal;
+    margin-top:2px;
+}
+
+div.ItsCheck_icon > i {
+    font-size:30px;
+}

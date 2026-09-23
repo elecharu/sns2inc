@@ -1,0 +1,76 @@
+﻿using DevExpress.Xpf.Core.Native;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Animation;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace ITSLIB
+{
+    /// <summary>
+    /// ItsLabelText.xaml 的交互逻辑
+    /// </summary>
+    public partial class StyleTml
+    {
+
+        private void TML_POP_CLOSE_MouseLeftDown(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+        }
+
+        private void TML_POP_CLOSE_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+
+            ItsPageTml tmlPage = ItsElement.FindParent<ItsPageTml>(sender);
+
+            Border border = ItsElement.FindParent<Border>(sender);
+            if (border != null)
+            {
+                List<StackContent> sc = ItsElement.FindChild<StackContent>(border);
+                if (sc.Count > 0)
+                {
+                    sc[0].Close();
+                    if (tmlPage != null) tmlPage.EventPopClose(sc[0].Name);
+                }
+                else
+                {
+                    List<WrapContent> wc = ItsElement.FindChild<WrapContent>(border);
+                    if (wc.Count > 0)
+                    {
+                        wc[0].Close();
+                        if (tmlPage != null) tmlPage.EventPopClose(wc[0].Name);
+                    }
+                    else
+                    {
+                        List<EditContent> ec = ItsElement.FindChild<EditContent>(border);
+                        if (ec.Count > 0)
+                        {
+                            ec[0].Close();
+                            if (tmlPage != null) tmlPage.EventPopClose(ec[0].Name);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void CELLINFO_CLOSE(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+
+            Popup pop = ItsElement.FindParent<Popup>(sender);
+            pop.IsOpen = false;
+        }
+
+    }
+}

@@ -1,0 +1,55 @@
+﻿using PLC_GATHERING_Prj.ViewModel;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+
+namespace PLC_GATHERING_Prj.Model
+{
+    public class clDataView
+    {
+        static clDataView _this = new clDataView();
+
+        public static clDataView This
+        {
+            get { return _this; }
+        }
+
+        public void DataViewAdd(DataTable dt)
+        {
+            try
+            {
+                Workspace.This.PLCList = new ObservableCollection<Property.MyPLCList>();
+
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    Workspace.This.PLCList.Add(new Property.MyPLCList
+                    {
+                        EQMCD = dt.Rows[i]["EQMCD"].ToString(),
+                        EQMNM = dt.Rows[i]["EQMNM"].ToString(),
+                        PLCIP = dt.Rows[i]["PLCIP"].ToString(),
+                        PLCPORT = dt.Rows[i]["PLCPORT"].ToString(),
+                        OVERTIME = dt.Rows[i]["OVERTIME"].ToString(),
+                        STATUS = dt.Rows[i]["STATUS"].ToString(),
+                        REMARK = dt.Rows[i]["REMARK"].ToString(),
+                        EQMSTT = dt.Rows[i]["EQMSTT"].ToString(),
+                        EQMCNT = dt.Rows[i]["EQMCNT"].ToString(),
+                        WORKTIME = dt.Rows[i]["WORKTIME"].ToString()
+                    });
+                }
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    MainWindow.mainWindow.dgPLCList.ItemsSource = Workspace.This.PLCList;
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.This.DB_HistLog_Write("DataViewAdd", ex.Message);
+            }           
+        }
+    }
+}

@@ -1,0 +1,44 @@
+﻿div.ItsText {
+    float:left;
+    display:inline-block;
+    margin-top:2px;
+    margin-bottom:2px;
+    background-color:transparent;
+}
+div.ItsText_table {
+    background-color:transparent;
+}
+
+div.ItsText_table > span {
+    vertical-align:middle;
+    display:inline-block;
+    text-align:right;
+    background-color:transparent; 
+    white-space: normal;
+    font-family: 'SpoqaHanSansNeo_M';
+    color:#565656;
+}
+div.ItsText_table > input {
+    outline: none;
+    text-align:left;
+    padding:0px 4px 0px 4px;
+    vertical-align:middle;
+    height:20px;
+    border:1px solid #C0C0C0;
+    box-sizing: border-box;
+    line-height: 11px;
+    font-weight:normal;
+    font-size:12px;
+    color:#565656;
+}
+div.ItsText_table > input:focus {
+    border:1px solid #4774B9;
+}
+div.ItsText_table > input:focus:read-only {
+    border:1px solid #C0C0C0;
+}
+div.ItsText_table > input:read-only {
+    border:1px solid #C0C0C0;
+    background-color:#F0F0F0;
+    color:#565656;
+}

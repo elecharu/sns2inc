@@ -1,0 +1,477 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Net.Sockets;
+using System.Net;
+using System.Data;
+
+public class ItsPlcNet
+{
+    /// <summary>
+    /// XG 계열 프레임 쓰기
+    /// </summary>
+    public static bool Write_XG_TCP(string ip, int port, string address, string data)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        return _Write_XG(socket, ip, port, address, data);
+    }
+    public static bool Write_XG_UDP(string ip, int port, string address, string data)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        return _Write_XG(socket, ip, port, address, data);
+    }
+    private static bool _Write_XG(Socket socket, string ip, int port, string address, string data)
+    {
+        byte[] appHeader = new byte[20]; //헤더
+        byte[] appInstruction = new byte[21];  //프레임 
+
+        //헤더>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        appHeader[0] = 0x4c;  //LSIS-XGT
+        appHeader[1] = 0x53;
+        appHeader[2] = 0x49;
+        appHeader[3] = 0x53;
+        appHeader[4] = 0x2d;
+        appHeader[5] = 0x58;
+        appHeader[6] = 0x47;
+        appHeader[7] = 0x54;
+        appHeader[8] = 0x00;  //예약영역
+        appHeader[9] = 0x00;
+        appHeader[10] = 0x00; //PLC INFO (클라이언트에서 -> PLC로 요청할 경우 역할 없음)
+        appHeader[11] = 0x00;
+        appHeader[12] = 0x00; //CPU INFO (Reserved 영역을 통해 XGK/XGI 시리즈임을 판단)
+        appHeader[13] = 0x33; //SOURCE OF FRAME (클라이언트->서버 0x33, 서버->클라이언트 0x11)
+        appHeader[14] = 0x00; //Invork ID (프레임순번구별, 응답프레임에 해당순번 보내줌)
+        appHeader[15] = 0x00;
+        appHeader[16] = 0x15; //Application Instruction 의 바이트 크기
+        appHeader[17] = 0x00;
+        appHeader[18] = 0x00; //FEnet Position
+        for (int i = 0; i < 19; i++)  //Application Header 의 Byte Sum
+        {
+            if (i == 0)
+            {
+                appHeader[19] = appHeader[i];
+            }
+            else
+            {
+                appHeader[19] += (byte)appHeader[i];
+            }
+        }
+
+        //프레임>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        appInstruction[0] = 0x58; //명령어(쓰기)
+        appInstruction[1] = 0x00;
+        appInstruction[2] = 0x02; //데이터 타입
+        appInstruction[3] = 0x00;
+        appInstruction[4] = 0x00; //예약영역
+        appInstruction[5] = 0x00;
+        appInstruction[6] = 0x01; //블럭수
+        appInstruction[7] = 0x00;
+        appInstruction[8] = 0x07; //변수명 길이
+        appInstruction[9] = 0x00;
+
+        address = address.ToUpper().Replace("D", "").Replace("W", "");
+
+        appInstruction[10] = Encoding.ASCII.GetBytes("%DW" + address)[0]; //변수(선두 메모리 번지)
+        appInstruction[11] = Encoding.ASCII.GetBytes("%DW" + address)[1];
+        appInstruction[12] = Encoding.ASCII.GetBytes("%DW" + address)[2];
+        appInstruction[13] = Encoding.ASCII.GetBytes("%DW" + address)[3];
+        appInstruction[14] = Encoding.ASCII.GetBytes("%DW" + address)[4];
+        appInstruction[15] = Encoding.ASCII.GetBytes("%DW" + address)[5];
+        appInstruction[16] = Encoding.ASCII.GetBytes("%DW" + address)[6];
+        appInstruction[17] = 0x02; //Data 의 Byte Size
+        appInstruction[18] = 0x00;
+        appInstruction[19] = (byte)(int.Parse(data));
+        appInstruction[20] = (byte)(int.Parse(data) >> 8);
+
+        byte[] sendBuffer = new byte[41];       //전송 버퍼
+        appHeader.CopyTo(sendBuffer, 0);        //전송버퍼에 헤더탑재
+        appInstruction.CopyTo(sendBuffer, 20);  //전송버퍼에 프레임탑재
+
+        try //버퍼 데이터 전송
+        {
+            socket.Connect(ip, port);
+            socket.Send(sendBuffer, 0, sendBuffer.Length, 0);
+        }
+        catch { return false; }
+
+        try
+        {
+            socket.Close();
+        }
+        catch { }
+
+        return true;
+    }
+    /// <summary>
+    /// MODUAL BUS 쓰기
+    /// </summary>
+    public static bool Write_MOD_TCP(string ip, int port, string address, string data)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        return _Write_MOD(socket, ip, port, address, data);
+    }
+    public static bool Write_MOD_UDP(string ip, int port, string address, string data)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        return _Write_MOD(socket, ip, port, address, data);
+    }
+    private static bool _Write_MOD(Socket socket, string ip, int port, string address, string data)
+    {
+        return false;
+    }
+    /// <summary>
+    /// MELSEC 프레임 쓰기
+    /// </summary>
+    public static bool Write_MEL_TCP(string ip, int port, string address, string data)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        return _Write_MEL(socket, ip, port, address, data);
+    }
+    public static bool Write_MEL_UDP(string ip, int port, string address, string data)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        return _Write_MEL(socket, ip, port, address, data);
+    }
+    private static bool _Write_MEL(Socket socket, string ip, int port, string address, string data)
+    {
+        byte[] sendBuffer = new byte[23];
+        sendBuffer[0] = 0x50;
+        sendBuffer[1] = 0x00;
+        sendBuffer[2] = 0x00;
+        sendBuffer[3] = 0xFF;
+        sendBuffer[4] = 0xFF;
+        sendBuffer[5] = 0x03;
+        sendBuffer[6] = 0x00;
+        sendBuffer[7] = 0x0E;
+        sendBuffer[8] = 0x00;
+        sendBuffer[9] = 0x10;
+        sendBuffer[10] = 0x00;
+        sendBuffer[11] = 0x01;
+        sendBuffer[12] = 0x14;
+        sendBuffer[13] = 0x00;
+        sendBuffer[14] = 0x00;
+
+        byte[] b = BitConverter.GetBytes(int.Parse(address.ToUpper().Replace("D", "").Replace("W", "")));
+
+        Array.Reverse(b);
+
+        sendBuffer[15] = b[3];
+        sendBuffer[16] = b[2];
+        sendBuffer[17] = b[1];
+        sendBuffer[18] = 0xA8;
+        sendBuffer[19] = 0x01;
+        sendBuffer[20] = 0x00;
+        sendBuffer[21] = (byte)(int.Parse(data));
+        sendBuffer[22] = (byte)((int.Parse(data) >> 8));
+
+        try //버퍼 데이터 전송
+        {
+            socket.Connect(ip, port);
+            socket.Send(sendBuffer, 0, sendBuffer.Length, 0);
+        }
+        catch { return false; }
+
+        try
+        {
+            socket.Close();
+        }
+        catch { }
+
+        return true;
+    }
+    public static void Read_XG_TCP(string ip, string port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        _Read_XG(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, "D");
+    }
+    public static void Read_XG_TCP_S(string ip, string port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        _Read_XG(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, "S");
+    }
+    public static void Read_XG_UDP(string ip, string port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        _Read_XG(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, "D");
+    }
+    public static void Read_XG_UDP_S(string ip, string port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        _Read_XG(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, "S");
+    }
+    private static void _Read_XG(Socket socket, string ip, string port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd, string wordType)
+    {
+        byte[] appHeader = new byte[20]; //헤더
+        byte[] appInstruction = new byte[19];   //프레임 
+
+        //헤더>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        appHeader[0] = 0x4c;  //LSIS-XGT
+        appHeader[1] = 0x53;
+        appHeader[2] = 0x49;
+        appHeader[3] = 0x53;
+        appHeader[4] = 0x2d;
+        appHeader[5] = 0x58;
+        appHeader[6] = 0x47;
+        appHeader[7] = 0x54;
+
+        appHeader[8] = 0x00;  //예약영역
+        appHeader[9] = 0x00;
+
+        appHeader[10] = 0x00; //PLC INFO (클라이언트에서 -> PLC로 요청할 경우 역할 없음)
+        appHeader[11] = 0x00;
+
+        appHeader[12] = 0x00; //CPU INFO (Reserved 영역을 통해 XGK/XGI 시리즈임을 판단)
+
+        appHeader[13] = 0x33; //SOURCE OF FRAME (클라이언트->서버 0x33, 서버->클라이언트 0x11)
+
+        appHeader[14] = 0x00; //Invork ID (프레임순번구별, 응답프레임에 해당순번 보내줌)
+        appHeader[15] = 0x00;
+
+        appHeader[16] = 0x13; //Application Instruction 의 바이트 크기
+        appHeader[17] = 0x00;
+
+        appHeader[18] = 0x00; //FEnet Position
+
+        for (int i = 0; i < 19; i++)  //Application Header 의 Byte Sum
+        {
+            if (i == 0)
+            {
+                appHeader[19] = appHeader[i];
+            }
+            else
+            {
+                appHeader[19] += (byte)appHeader[i];
+            }
+        }
+
+        //프레임>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        appInstruction[0] = 0x54; //명령어(읽기)
+        appInstruction[1] = 0x00;
+
+        appInstruction[2] = 0x14; //데이터 타입
+        appInstruction[3] = 0x00;
+
+        appInstruction[4] = 0x00; //예약영역
+        appInstruction[5] = 0x00;
+
+        appInstruction[6] = 0x01; //블럭수
+        appInstruction[7] = 0x00;
+
+        appInstruction[8] = 0x07; //변수명 길이
+        appInstruction[9] = 0x00;
+
+        int sInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", "").Replace("M", ""));
+        int eInt = int.Parse(endAddress.ToUpper().Replace("D", "").Replace("W", "").Replace("M", ""));
+
+        //string sAddr = "0000" + sInt;
+        //sAddr = sAddr.Substring(sAddr.Length - 4, 4);
+
+        string sAddr = "0000" + (sInt * 2);
+        sAddr = sAddr.Substring(sAddr.Length - 4, 4);
+
+        appInstruction[10] = Encoding.ASCII.GetBytes("%DB" + sAddr)[0]; // 변수(선두 메모리 번지)
+        appInstruction[11] = Encoding.ASCII.GetBytes("%DB" + sAddr)[1];
+        appInstruction[12] = Encoding.ASCII.GetBytes("%DB" + sAddr)[2];
+        appInstruction[13] = Encoding.ASCII.GetBytes("%DB" + sAddr)[3];
+        appInstruction[14] = Encoding.ASCII.GetBytes("%DB" + sAddr)[4];
+        appInstruction[15] = Encoding.ASCII.GetBytes("%DB" + sAddr)[5];
+        appInstruction[16] = Encoding.ASCII.GetBytes("%DB" + sAddr)[6];
+
+        appInstruction[17] = (byte)((eInt - sInt + 1) * 2); // Data 의 Byte Size
+        appInstruction[18] = (byte)(((eInt - sInt + 1) * 2) >> 8);
+
+        byte[] sendBuffer = new byte[39];       // 전송 버퍼
+        appHeader.CopyTo(sendBuffer, 0);        // 전송버퍼에 헤더탑재
+        appInstruction.CopyTo(sendBuffer, 20);  // 전송버퍼에 프레임탑재
+
+        try //버퍼 데이터 전송
+        {
+            // Connection Timeout 부여
+            //var result = socket.BeginConnect(ip, int.Parse(port), null, null);
+            //bool success = result.AsyncWaitHandle.WaitOne(1000, true);
+            //if (success) {
+            //    socket.EndConnect(result);
+            //}
+            //else
+            //{
+            //    throw new SocketException(10060); // Connection timed out. }
+
+            //}
+            //socket.Connect()
+            socket.Connect(ip, int.Parse(port));
+            socket.SendTimeout = 2000;
+            socket.Send(sendBuffer, 0, sendBuffer.Length, 0);
+
+            byte[] receiveByte = new byte[1024];
+            socket.ReceiveTimeout = 2000;
+            int receiveLength = socket.Receive(receiveByte, receiveByte.Length, 0); //수신데이터 길이
+            if (receiveLength > 0)
+            {
+                for (int i = sInt; i <= eInt; i++)
+                {
+                    string addr = "0000" + i;
+                    addr = addr.Substring(addr.Length - 4, 4);
+                    string plckey = "";
+                    if (wordType == "M")
+                    {
+                        plckey = plccd + "M" + addr;
+                    }
+                    else if (wordType == "S")
+                    {
+                        plckey = plccd + "D" + addr;
+                    }
+                    else
+                    {
+                        plckey = plccd + "DW" + addr;
+                    }
+                    
+
+                    if (!plcdata.ContainsKey(plckey)) continue;
+
+                    string plcStr = string.Format("{0:x2}", receiveByte[32 + (i - sInt) * 2 + 1]) + string.Format("{0:x2}", receiveByte[32 + (i - sInt) * 2]);
+                    plcdata[plckey] = Convert.ToInt32(plcStr, 16).ToString();
+                }
+            }
+        }
+        catch(Exception E)
+        {
+            Console.WriteLine("Connection timed out.");
+        }
+        finally
+        {
+            socket.Close();
+        }
+    }
+
+    public static Dictionary<string, string> Read_MOD_TCP(string ip, int port, string startAddress, string endAddress)
+    {
+        return new Dictionary<string, string>();
+    }
+    public static Dictionary<string, string> Read_MOD_UDP(string ip, int port, string startAddress, string endAddress)
+    {
+        return new Dictionary<string, string>();
+    }
+    public static Dictionary<string, string> Read_MEL_TCP(string ip, int port, string startAddress, string endAddress)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        return _Read_MEL(socket, ip, port, startAddress, endAddress, true);
+    }
+    public static Dictionary<string, string> Read_MEL_UDP(string ip, int port, string startAddress, string endAddress)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        return _Read_MEL(socket, ip, port, startAddress, endAddress, true);
+    }
+    public static Dictionary<string, string> Read_MEL_TCP_CHAR(string ip, int port, string startAddress, string endAddress)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        return _Read_MEL(socket, ip, port, startAddress, endAddress, false);
+    }
+    public static Dictionary<string, string> Read_MEL_UDP_CHAR(string ip, int port, string startAddress, string endAddress)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        return _Read_MEL(socket, ip, port, startAddress, endAddress, false);
+    }
+
+    private static Dictionary<string, string> _Read_MEL(Socket socket, string ip, int port, string startAddress, string endAddress, bool isNum)
+    {
+
+        byte[] sendBuffer = new byte[21];
+        sendBuffer[0] = 0x50;
+        sendBuffer[1] = 0x00;
+        sendBuffer[2] = 0x00;
+        sendBuffer[3] = 0xFF;
+        sendBuffer[4] = 0xFF;
+        sendBuffer[5] = 0x03;
+        sendBuffer[6] = 0x00;
+        sendBuffer[7] = 0x0C;
+        sendBuffer[8] = 0x00;
+        sendBuffer[9] = 0x10;
+        sendBuffer[10] = 0x00;
+        sendBuffer[11] = 0x01;
+        sendBuffer[12] = 0x04;
+        sendBuffer[13] = 0x00;
+        sendBuffer[14] = 0x00;
+
+        int sInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", ""));
+        int eInt = int.Parse(endAddress.ToUpper().Replace("D", "").Replace("W", ""));
+
+        byte[] b = BitConverter.GetBytes(sInt);
+
+        Array.Reverse(b);
+
+        sendBuffer[15] = b[3];
+        sendBuffer[16] = b[2];
+        sendBuffer[17] = b[1];
+        sendBuffer[18] = 0xA8;
+        sendBuffer[19] = (byte)(eInt - eInt + 1);
+        sendBuffer[20] = (byte)((sInt - eInt + 1) >> 8);
+
+        // 데이터 값 영역 설정 초기값 "ERROR"
+        Dictionary<string, string> receivedData = new Dictionary<string, string>();
+        for (int i = sInt; i <= eInt; i++)
+        {
+            string key = "0000" + i;
+            key = key.Substring(key.Length - 4, 4);
+            if (startAddress.Length == 4)
+            {
+                receivedData.Add(key, "0");
+            }
+            else if (startAddress.Length == 5)
+            {
+                receivedData.Add(startAddress.Substring(0, 1) + key, "0");
+            }
+            else if (startAddress.Length > 5)
+            {
+                receivedData.Add(startAddress.Substring(0, 2) + key, "0");
+            }
+        }
+
+        try
+        {
+            socket.SendTimeout = 5000;
+            socket.Connect(ip, port);
+            socket.Send(sendBuffer, 0, sendBuffer.Length, 0);
+
+            byte[] receiveByte = new byte[1024];
+            socket.ReceiveTimeout = 5000;
+            int receiveLength = socket.Receive(receiveByte, receiveByte.Length, 0); //수신데이터 길이
+            if (receiveLength > 0)
+            {
+                for (int i = sInt; i <= eInt; i++)
+                {
+                    string plcValue = ((char)receiveByte[11 + (i - sInt) * 2]).ToString() + ((char)receiveByte[11 + (i - sInt) * 2 + 1]).ToString();
+                    if (isNum)
+                    {
+                        plcValue = string.Format("{0:x2}", receiveByte[11 + (i - sInt) * 2 + 1]) + string.Format("{0:x2}", receiveByte[11 + (i - sInt) * 2]);
+                        plcValue = Convert.ToInt32(plcValue, 16).ToString();
+                    }
+
+                    string key = "0000" + i;
+                    key = key.Substring(key.Length - 4, 4);
+
+                    if (startAddress.Length == 4)
+                    {
+                        receivedData[key] = plcValue;
+                    }
+                    else if (startAddress.Length == 5)
+                    {
+                        receivedData[startAddress.Substring(0, 1) + key] = plcValue;
+                    }
+                    else if (startAddress.Length > 5)
+                    {
+                        receivedData[startAddress.Substring(0, 2) + key] = plcValue;
+                    }
+                }
+            }
+
+        } catch { }
+
+        try
+        {
+            socket.Close();
+        }
+        catch { }
+
+        return receivedData;
+    }
+}

@@ -1,0 +1,787 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
+using System.Windows.Interop;
+using System.Runtime.InteropServices;
+using DevExpress.Xpf.Docking;
+using DevExpress.Xpf.Core;
+using System.Net;
+using System.Reflection;
+using System.Data;
+using System.Windows.Controls.Primitives;
+
+namespace ITSLIB
+{
+    /// <summary>
+    /// MainWindow.xaml 的交互逻辑
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        public DataTable LangTable = null;
+        public HashSet<DependencyObject> ControlList = new HashSet<DependencyObject>();
+        public Dictionary<DependencyObject, string> LangList = new Dictionary<DependencyObject, string>();
+
+        public MainWindow()
+        {
+            InitializeComponent();
+
+            FullScreenManager.RepairWpfWindowFullScreenBehavior(this);
+            this.Loaded += MainWindow_Loaded;
+            this.Activated += MainWindow_Activated;
+            TAB_MAIN.SelectionChanged += TAB_MAIN_SelectionChanged;
+        }
+
+        private void TAB_MAIN_SelectionChanged(object sender, DevExpress.Xpf.Core.TabControlSelectionChangedEventArgs e)
+        {
+            try
+            {
+                LABEL_TITLE.Content = (sender as DXTabControl).SelectedContainer.Tag.ToString();
+            }
+            catch { }
+        }
+
+        private WebClient webClient = new WebClient();
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Loaded -= MainWindow_Loaded;
+
+            ItsElement.OFFICE_MAIN_WINDOW = this;
+
+            if (ItsMemberShip.EMPCD == "")
+            {
+                ItsMemberShip.SetUserInfo("admin", ItsSecurity.EncMD5("1234"));
+            }
+
+            _winLeft = this.Left;
+            _winTop = this.Top;
+            _winWidth = this.Width;
+            _winHeight = this.Height;
+
+            TEXT_DATE.Text = "접속일자: " + DateTime.Now.ToString("yyyy-MM-dd");
+            TEXT_TIME.Text = "접속시간: " + DateTime.Now.ToString("HH:mm:ss");
+            TEXT_EMPNM.Text = ItsMemberShip.EMPNM;
+
+            DOCK_STATE.Height = 0;
+            ICON_MAX_MouseLeftDown(null, null);
+            ICON_MENU_MouseUp(null, null);
+
+            TAB_MAIN.Items.Clear();
+
+            SetMenu();
+
+            ICON_HOME_MouseUp(null, null);
+
+            LangTable = ItsLang.GetLangTable(this.Name);
+            ItsLang.AddLangControl(ControlList, LangTable, this.Name, this);
+            ItsLang.LangPage(ControlList, LangList, LangTable);
+        }
+
+        private DXTabItem removeTab = null;
+        private int removeIndex = -1;
+        private bool isDirectClose = false;
+        private void TAB_MAIN_TabRemoving(object sender, TabControlTabRemovingEventArgs e)
+        {
+            if (isDirectClose) return;
+
+            (e.Item as DXTabItem).Visibility = Visibility.Visible;
+            TAB_MAIN.SelectedItem = e.Item;
+
+            string menuName = (e.Item as DXTabItem).Header.ToString();
+            if (ItsMsgBox.ShowYesNo("[" + menuName + "] 를 닫으시겠습니까? "))
+            {
+                ItsMaria.Query("UPDATE COMLOG SET ETIME = GETTIME() WHERE RUNEMP = '" + ItsMemberShip.USERID + "' AND ETIME = '' AND RUNPRG = '" + (e.Item as DXTabItem).Name.Substring(4, (e.Item as DXTabItem).Name.Length-4).ToString() + "' ORDER BY RTIME DESC LIMIT 1;");
+                removeTab = null;
+                removeIndex = -1;
+            }
+            else
+            {
+                removeTab = e.Item as DXTabItem;
+                removeIndex = TAB_MAIN.IndexOf(e.Item);
+            }
+        }
+
+        private void TAB_MAIN_TabRemoved(object sender, TabControlTabRemovedEventArgs e)
+        {
+            if (isDirectClose) return;
+
+            if (removeTab != null)
+            {
+                TAB_MAIN.Items.Insert(removeIndex, removeTab);
+                removeTab.Visibility = Visibility.Visible;
+                TAB_MAIN.SelectedItem = removeTab;
+
+                removeTab = null;
+                removeIndex = -1;
+            }
+        }
+
+        private void MainWindow_Activated(object sender, EventArgs e)
+        {
+            if (_isMin) // 최소화했다가 창을 다시 띄웠을 경우
+            {
+                this.Left = _winLeft;
+                this.Top = _winTop;
+                this.Width = _winWidth;
+                this.Height = _winHeight;
+
+                _isMin = false;
+            }
+        }
+
+        private void LABEL_TITLE_MouseLeftDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ClickCount == 2)
+            {
+                if (this.WindowState == WindowState.Maximized)
+                {
+                    ICON_NOR_MouseLeftDown(null, null);
+                }
+                else
+                {
+                    ICON_MAX_MouseLeftDown(null, null);
+                }
+            }
+            if (e.ButtonState == MouseButtonState.Pressed)
+            {
+                this.DragMove();
+            }
+        }
+
+        private void ICON_HOME_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e != null && e.ChangedButton == MouseButton.Left) e.Handled = true;
+            if (e != null && e.ChangedButton != MouseButton.Left) return;
+
+            LABEL_TITLE.Content = "[SYS0000_R01] 홈";
+
+            if (TAB_MAIN.Items.Count > 0)
+            {
+                if ((TAB_MAIN.Items[0] as DXTabItem).Tag.ToString() == "HOME")
+                {
+                    TAB_MAIN.SelectedContainer = TAB_MAIN.Items[0] as DXTabItem;
+                    return;
+                }
+            }
+
+            DXTabItem HOMETAB = new DXTabItem();
+            HOMETAB.VerticalContentAlignment = VerticalAlignment.Center;
+            HOMETAB.Padding = new Thickness(5);
+            HOMETAB.Header = "HOME:홈";
+            HOMETAB.Name = "TAB_HOME";
+            HOMETAB.Tag = "HOME";
+
+            AddTabCloseContext(HOMETAB);
+
+            Frame FRAME = new Frame();
+            FRAME.Margin = new Thickness(-12);
+
+            if (ItsLocalInfo.IsRunMode)
+            {
+                try
+                {
+                    webClient.DownloadFile(ItsServerInfo.ServerUrl + "SYS0000.exe", "SYS0000.exe");
+                }
+                catch { }
+            }
+
+            Assembly pageAssembly = Assembly.LoadFrom("SYS0000.exe");
+            object assObj = pageAssembly.CreateInstance("SYS0000.R01");
+            ItsPageOffice page = assObj as ItsPageOffice;
+            page.MainWindow = this;
+            page.Name = "SYS0000_R01";
+            page.Style = (Style)FindResource("OFFICE");
+            FRAME.Navigate(page);
+
+            ItsElement.ActivePage = page;
+            HOMETAB.Content = FRAME;
+
+            TAB_MAIN.Items.Insert(0, HOMETAB);
+            TAB_MAIN.SelectedContainer = HOMETAB;
+        }
+
+        private double _winLeft = 0;
+        private double _winTop = 0;
+        private double _winWidth = 0;
+        private double _winHeight = 0;
+        private bool _isMin = false;
+        private void ICON_MIN_MouseLeftDown(object sender, MouseButtonEventArgs e)
+        {
+            if (this.WindowState != WindowState.Maximized)
+            {
+                _winLeft = this.Left;
+                _winTop = this.Top;
+                _winWidth = this.Width;
+                _winHeight = this.Height;
+            }
+            _isMin = true;
+            this.WindowState = WindowState.Minimized;
+        }
+
+        private void ICON_NOR_MouseLeftDown(object sender, MouseButtonEventArgs e)
+        {
+            this.WindowState = WindowState.Normal;
+            ICON_MAX.Visibility = Visibility.Visible;
+            ICON_NOR.Visibility = Visibility.Collapsed;
+
+            this.BorderThickness = new Thickness(8);
+        }
+
+        private void ICON_MAX_MouseLeftDown(object sender, MouseButtonEventArgs e)
+        {
+            this.WindowState = WindowState.Maximized;
+            ICON_MAX.Visibility = Visibility.Collapsed;
+            ICON_NOR.Visibility = Visibility.Visible;
+
+            this.BorderThickness = new Thickness(0);
+        }
+
+        private void ICON_CLOSE_MouseLeftDown(object sender, MouseButtonEventArgs e)
+        {
+            if (ItsMsgBox.ShowYesNo("프로그램을 닫으시겠습니까?"))
+            {
+                // MENU CLOSE 이력남기기
+                ItsMaria.Query("UPDATE COMLOG SET ETIME = GETTIME() WHERE RUNEMP = '" + ItsMemberShip.USERID + "' AND ETIME = '';");
+                this.Close();
+            }
+        }
+
+        private void ICON_CONFIG_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            CONFIG_EMPCD.Value = ItsMemberShip.EMPCD;
+            CONFIG_EMPNM.Value = ItsMemberShip.EMPNM;
+            CONFIG_USERID.Value = ItsMemberShip.USERID;
+
+            CONFIG_OLDPASS.Password = "";
+            CONFIG_NEWPASS.Password = "";
+            CONFIG_CHKPASS.Password = "";
+
+            POP_CONFIG.Show();
+            CONFIG_OLDPASS.Focus();
+        }
+
+        public void EventCommand(string commandName)
+        {
+            if (commandName == "MAIN_CONFIG_SAVE")
+            {
+
+                string oldPass = CONFIG_OLDPASS.Password;
+                string newPass = CONFIG_NEWPASS.Password;
+                string chkPass = CONFIG_CHKPASS.Password;
+                if (oldPass.Length < 4)
+                {
+                    ItsMsgBox.ShowErr("기존 비밀번호를 정확하게 입력하세요.");
+                    CONFIG_OLDPASS.Focus();
+                    return;
+                }
+
+                if (newPass.Length > 0 && newPass.Length < 4)
+                {
+                    ItsMsgBox.ShowErr("4자리이상 신규 비밀번호랑 입력하세요.");
+                    CONFIG_OLDPASS.Focus();
+                    return;
+                }
+                if (newPass.Length > 0 && newPass != chkPass)
+                {
+                    ItsMsgBox.ShowErr("확인 비밀번호랑 정확하게 입력하세요.");
+                    CONFIG_OLDPASS.Focus();
+                    return;
+                }
+
+                // 패스워드 변경
+                if (newPass.Length > 0)
+                {
+                    ItsMaria.Set("ITSMAIN", "CHANGE_PASS");
+                    ItsMaria.AddOne("USERID", ItsMemberShip.USERID);
+                    ItsMaria.AddOne("OLDPASS", ItsSecurity.EncMD5(oldPass));
+                    ItsMaria.AddOne("NEWPASS", ItsSecurity.EncMD5(newPass));
+                    ItsMaria.Call();
+                    if (ItsMaria.IsError)
+                    {
+                        ItsMsgBox.ShowErr(ItsMaria.ErrMessage);
+                        CONFIG_OLDPASS.Focus();
+                        return;
+                    }
+                }
+
+                // 기타 환경설정 처리 ( 향후 필요 시 추가 )
+                // ...
+
+                // 환경변수 창 닫기
+                POP_CONFIG.Close();
+            }
+        }
+
+        private void ICON_MENU_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e != null && e.ChangedButton == MouseButton.Left) e.Handled = true;
+            if (e != null && e.ChangedButton != MouseButton.Left) return;
+
+            MAIN_GRID.ColumnDefinitions[0].MaxWidth = 1000;
+            UC_MENU.Visibility = Visibility.Collapsed;
+
+            MENU_KEYWORD.Focus();
+        }
+
+        private void ICON_HIDE_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e != null && e.ChangedButton == MouseButton.Left) e.Handled = true;
+            if (e != null && e.ChangedButton != MouseButton.Left) return;
+
+            MAIN_GRID.ColumnDefinitions[0].MaxWidth = 0;
+            UC_MENU.Visibility = Visibility.Visible;
+        }
+
+        private DataTable _PkgMenu = null;
+        private DataTable _MyMenu = null;
+        private void SetMenu()
+        {
+            ItsMaria.Set("ITSMAIN", "MENU_LIST");
+            ItsMaria.AddOne("USERID", ItsMemberShip.USERID);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ItsMsgBox.Show(ItsMaria.ErrMessage);
+                return;
+            }
+            else
+            {
+                _PkgMenu = ds.Tables[1];
+                _MyMenu = ds.Tables[2];
+            }
+
+            PANEL_MENU_SUB0.MaxHeight = 5000;
+            for (int i = 1; i <= 9; i++)
+            {
+                (DOCK_MENU.FindName("PANEL_MENU_SUB" + i) as System.Windows.Controls.DockPanel).MaxHeight = 0;
+            }
+            (DOCK_MENU.FindName("PANEL_MENU_SEARCH") as System.Windows.Controls.DockPanel).MaxHeight = 0;
+
+            TOP_MENU0.Tag = "";
+            TOP_MENU1.Tag = "";
+            TOP_MENU2.Tag = "";
+            TOP_MENU3.Tag = "";
+            TOP_MENU4.Tag = "";
+            TOP_MENU5.Tag = "";
+            TOP_MENU6.Tag = "";
+            TOP_MENU7.Tag = "";
+            TOP_MENU8.Tag = "";
+            TOP_MENU9.Tag = "";
+
+            // 최상위 메뉴 설정
+            TOP_MENU0.Tag = "MYMENU";
+            for (int i = 1; i <= 9; i++)
+            {
+                (PANEL_MENU_PKG.FindName("TOP_MENU" + i) as UserControl).MaxHeight = 0;
+                (PANEL_MENU_PKG.FindName("TOP_MENU" + i) as UserControl).Margin = new Thickness(0);
+            }
+
+            for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+            {
+                (PANEL_MENU_PKG.FindName("TOP_MENU" + (i + 1)) as UserControl).Margin = new Thickness(3, 3, 0, 0);
+                (PANEL_MENU_PKG.FindName("TOP_MENU" + (i + 1)) as UserControl).MaxHeight = 100;
+                (PANEL_MENU_PKG.FindName("TOP_MENU" + (i + 1)) as UserControl).Tag = ds.Tables[0].Rows[i][0].ToString();
+                (PANEL_MENU_PKG.FindName("TOP_MENU" + (i + 1)) as UserControl).Content = ds.Tables[0].Rows[i][1].ToString();
+            }
+
+            // My메뉴 클릭
+            // TOP_MENU_MouseDown(TOP_MENU0, null);
+            TOP_MENU_MouseLeftDown(TOP_MENU1, null);
+        }
+
+        // PKG 메뉴 클릭 시
+        private void TOP_MENU_MouseLeftDown(object sender, MouseButtonEventArgs e)
+        {
+            for (int i = 0; i <= 9; i++)
+            {
+                (PANEL_MENU_PKG.FindName("TOP_MENU" + i) as UserControl).Background = Brushes.WhiteSmoke;
+                (PANEL_MENU_PKG.FindName("TOP_MENU" + i) as UserControl).Foreground = Brushes.Black;
+
+                (DOCK_MENU.FindName("PANEL_MENU_SUB" + i) as DockPanel).MaxHeight = 0;
+            }
+            (DOCK_MENU.FindName("PANEL_MENU_SEARCH") as DockPanel).MaxHeight = 0;
+
+            MENU_KEYWORD.Text = "";
+            MENU_KEYWORD.Focus();
+
+            UserControl topMenu = sender as UserControl;
+            //topMenu.Background = Brushes.SeaGreen;
+            topMenu.Background = new SolidColorBrush((Color)ColorConverter.ConvertFromString("DarkOrange"));
+            topMenu.Foreground = Brushes.White;
+
+            if (topMenu.Equals(TOP_MENU0)) // my메뉴일 경우
+            {
+                PANEL_MENU_SUB0.MaxHeight = 10000;
+
+                if (PANEL_MENU_SUB0.Children.Count > 1) return;
+
+                SetMenu(PANEL_MENU_SUB0, _MyMenu.Select(), _MyMenu, TOP_MENU0.Content.ToString());
+                PANEL_MENU_SUB0.Children.Add(new UserControl());
+            }
+            else
+            {
+                string pkgName = (sender as UserControl).Tag.ToString();
+                string pkgNo = (sender as UserControl).Name.Substring(8, 1);
+                string pkgContent = (sender as UserControl).Content.ToString();
+
+                DockPanel subDockMenu = DOCK_MENU.FindName("PANEL_MENU_SUB" + pkgNo) as DockPanel;
+                subDockMenu.MaxHeight = 10000;
+                DataRow[] childRowList = _PkgMenu.Select("PMENUKEY = '" + pkgName + "'");
+
+                if (subDockMenu.Children.Count > 1) return;
+
+                SetMenu(subDockMenu, childRowList, _PkgMenu, pkgContent);
+                subDockMenu.Children.Add(new UserControl());
+            }
+        }
+
+        // 하위 메뉴 추가 ( 재귀함수 )
+        private void SetMenu(DockPanel menuDock, DataRow[] rowList, DataTable menuData, string title)
+        {
+            foreach(DataRow row in rowList)
+            {
+                string menuKey = row["MENUKEY"].ToString();
+                DataRow[] childRowList = menuData.Select("PMENUKEY = '" + menuKey + "'");
+                if (childRowList.Length > 0)
+                {
+                    UserControl newMenu = new UserControl();
+                    newMenu.Style = (Style)FindResource("MENU_FOLDER");
+                    newMenu.Content = row["MENUNM"].ToString();
+                    newMenu.MouseLeftButtonDown += MENU_MouseLeftDown;
+                    menuDock.Children.Add(newMenu);
+
+                    DockPanel newDock = new DockPanel();
+                    newDock.Style = (Style)FindResource("MENU_DOCK");
+                    menuDock.Children.Add(newDock);
+
+                    SetMenu(newDock, childRowList, menuData, title + " > " + newMenu.Content);
+                }
+                else if (row["PRGCD"].ToString() != "")
+                {
+                    UserControl newMenu = new UserControl();
+                    newMenu.Tag = row["PRGCD"].ToString() + "_/_" + row["MENUNM"].ToString() + "_/_" + title + " > " + row["MENUNM"].ToString();
+                    newMenu.Style = (Style)FindResource("MENU_PAGE");
+                    newMenu.Content = row["MENUNM"].ToString();
+                    newMenu.MouseLeftButtonDown += MENU_MouseLeftDown;
+                    menuDock.Children.Add(newMenu);
+                }
+            }
+        }
+
+        // 메뉴 클릭 시 ( 페이지 로딩 혹은 폴더 열고 닫기 )
+        private void MENU_MouseLeftDown(object sender, MouseButtonEventArgs e)
+        {
+            UserControl obj = sender as UserControl;
+
+            // 페이지일 경우 직접 띄우기
+            if (obj.Tag != null && obj.Tag.ToString() != "")
+            {
+                string[] menuInfo = obj.Tag.ToString().Split(new string[] { "_/_" }, StringSplitOptions.None);
+
+                foreach (DXTabItem STAB in TAB_MAIN.Items)
+                {
+                    if (STAB.Name.Replace("TAB_", "") == menuInfo[0])
+                    {
+                        TAB_MAIN.SelectedContainer = STAB;
+                        return;
+                    }
+                }
+
+                DXTabItem NEWTAB = new DXTabItem();
+                NEWTAB.Padding = new Thickness(5);
+                string[] headerList = menuInfo[1].Split(new char[] { '>' });
+                NEWTAB.Header = headerList[headerList.Length - 1];
+                NEWTAB.Name = "TAB_" + menuInfo[0];
+                NEWTAB.Tag = "[" + menuInfo[0] + "] " + menuInfo[2];
+
+                AddTabCloseContext(NEWTAB);
+
+                LABEL_TITLE.Content = "[" + menuInfo[0] + "] " + menuInfo[2];
+
+                Frame FRAME = new Frame();
+                FRAME.Margin = new Thickness(-12);
+                try
+                {
+                    string pageName = menuInfo[0];
+
+                    if (ItsLocalInfo.IsRunMode)
+                    {
+                        try
+                        {
+                            webClient.DownloadFile(ItsServerInfo.ServerUrl + pageName.Substring(0, 7) + ".exe", pageName.Substring(0, 7) + ".exe");
+                        }
+                        catch { }
+                    }
+
+                    Assembly pageAssembly = Assembly.LoadFrom(pageName.Substring(0, 7) + ".exe");
+
+                    object assObj = pageAssembly.CreateInstance(pageName.Substring(0, 7) + "." + pageName.Substring(8));
+                    ItsPageOffice page = assObj as ItsPageOffice;
+                    page.MainWindow = this;
+                    page.Name = pageName.Substring(0, 7) + "_" + pageName.Substring(8);
+                    page.Style = (Style)FindResource("OFFICE");
+
+                    // MENU OPEN 이력남기기
+                    ItsMaria.Query("INSERT INTO COMLOG (LOGKEY, STIME, RUNEMP, RUNPRG, REMARK, RTIME, REMP, RPRG ) VALUES (GETKEY('COMLOG'), GETTIME(), '" + ItsMemberShip.USERID + "', '" + page.Name + "', '', CALLTIME(), CALLEMP(), CALLPRG());");
+
+                    ItsElement.ActivePage = page;
+
+                    FRAME.Navigate(page);
+                }
+                catch
+                {
+                    ItsMsgBox.Show(menuInfo[0] + " 를 로딩하지 못했습니다.");
+                    return;
+                }
+                NEWTAB.Content = FRAME;
+
+                TAB_MAIN.Items.Add(NEWTAB);
+                TAB_MAIN.SelectedContainer = NEWTAB;
+
+                return;
+            }
+
+            // 메뉴 폴더일 경우 하위 열고 닫기
+            DependencyObject parent = VisualTreeHelper.GetParent(obj) as DependencyObject;
+            int childCount = VisualTreeHelper.GetChildrenCount(parent);
+            bool find = false;
+            for (int i = 0; i < childCount; i++)
+            {
+                if (find)
+                {
+                    if (VisualTreeHelper.GetChild(parent, i) is DockPanel)
+                    {
+                        DockPanel dockPanel = VisualTreeHelper.GetChild(parent, i) as DockPanel;
+                        if (dockPanel.MaxHeight == 0)
+                        {
+                            dockPanel.MaxHeight = 5000;
+                        }
+                        else
+                        {
+                            dockPanel.MaxHeight = 0;
+                        }
+                    }
+                    return;
+                }
+
+                if (VisualTreeHelper.GetChild(parent, i).Equals(sender))
+                {
+                    find = true;
+                }
+            }
+        }
+
+        private void AddTabCloseContext(DXTabItem tab)
+        {
+            tab.ContextMenu = new ContextMenu();
+
+            MenuItem curTabClose = new MenuItem();
+            curTabClose.Tag = tab;
+            curTabClose.Header = "선택창 닫기";
+            curTabClose.Click += CurTabClose_Click;
+            tab.ContextMenu.Items.Add(curTabClose);
+
+            MenuItem exceptTabClose = new MenuItem();
+            exceptTabClose.Tag = tab;
+            exceptTabClose.Header = "선택창 제외하고 전부닫기";
+            exceptTabClose.Click += ExceptTabClose_Click;
+            tab.ContextMenu.Items.Add(exceptTabClose);
+
+            MenuItem allTabClose = new MenuItem();
+            allTabClose.Tag = tab;
+            allTabClose.Header = "전부닫기";
+            allTabClose.Click += AllTabClose_Click;
+            tab.ContextMenu.Items.Add(allTabClose);
+
+        }
+
+        private void CurTabClose_Click(object sender, RoutedEventArgs e)
+        {
+            object curTab = TAB_MAIN.SelectedItem;
+            object selectTab = (sender as MenuItem).Tag;
+            
+            isDirectClose = true;
+
+            // MENU CLOSE 이력남기기
+            ItsMaria.Query("UPDATE COMLOG SET ETIME = GETTIME() WHERE RUNEMP = '" + ItsMemberShip.USERID + "' AND ETIME = '' AND RUNPRG = '" + (selectTab as DXTabItem).Name.Substring(4, (selectTab as DXTabItem).Name.Length-4).ToString() + "' ORDER BY RTIME DESC LIMIT 1;");
+
+            TAB_MAIN.RemoveTabItem(selectTab);
+
+            if (curTab != null && curTab == selectTab)
+            {
+                if (TAB_MAIN.Items.Count > 0 && (TAB_MAIN.Items[0] as DXTabItem).Visibility == Visibility.Visible)
+                {
+                    TAB_MAIN.SelectedItem = TAB_MAIN.Items[0];
+                }
+            }
+            else if (curTab != null && (curTab as DXTabItem).Visibility == Visibility.Visible)
+            {
+                TAB_MAIN.SelectedItem = curTab;
+            }
+
+            isDirectClose = false;
+        }
+
+        private void ExceptTabClose_Click(object sender, RoutedEventArgs e)
+        {
+            TAB_MAIN.SelectedItem = (sender as MenuItem).Tag;
+
+            isDirectClose = true;
+
+            List<DXTabItem> removeList = new List<DXTabItem>();
+            foreach(DXTabItem tab in TAB_MAIN.Items)
+            {
+                if (tab != TAB_MAIN.SelectedItem && tab.Name != "TAB_HOME")
+                {
+                    // MENU CLOSE 이력남기기
+                    ItsMaria.Query("UPDATE COMLOG SET ETIME = GETTIME() WHERE RUNEMP = '" + ItsMemberShip.USERID + "' AND ETIME = '' AND RUNPRG = '" + tab.Name.Substring(4, tab.Name.Length-4).ToString() + "' ORDER BY RTIME DESC LIMIT 1;");
+                    removeList.Add(tab);
+                }
+            }
+
+            foreach(DXTabItem tab in removeList)
+            {
+                TAB_MAIN.RemoveTabItem(tab);
+            }
+
+            isDirectClose = false;
+        }
+
+        private void AllTabClose_Click(object sender, RoutedEventArgs e)
+        {
+            TAB_MAIN.SelectedItem = (sender as MenuItem).Tag;
+
+            isDirectClose = true;
+
+            List<DXTabItem> removeList = new List<DXTabItem>();
+            foreach (DXTabItem tab in TAB_MAIN.Items)
+            {
+                if (tab.Name != "TAB_HOME")
+                {
+                    // MENU CLOSE 이력남기기
+                    ItsMaria.Query("UPDATE COMLOG SET ETIME = GETTIME() WHERE RUNEMP = '" + ItsMemberShip.USERID + "' AND ETIME = '' AND RUNPRG = '" + tab.Name.Substring(4, tab.Name.Length - 4).ToString() + "' ORDER BY RTIME DESC LIMIT 1;");
+                    removeList.Add(tab);
+                }
+            }
+
+            foreach (DXTabItem tab in removeList)
+            {
+                TAB_MAIN.RemoveTabItem(tab);
+            }
+
+            isDirectClose = false;
+        }
+
+        private void MENU_SEARCH_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e != null && e.ChangedButton == MouseButton.Left) e.Handled = true;
+            if (e != null && e.ChangedButton != MouseButton.Left) return;
+
+            string KEYWORD = MENU_KEYWORD.Text;
+
+            for (int i = 0; i <= 9; i++)
+            {
+                (PANEL_MENU_PKG.FindName("TOP_MENU" + i) as UserControl).Background = Brushes.WhiteSmoke;
+                (PANEL_MENU_PKG.FindName("TOP_MENU" + i) as UserControl).Foreground = Brushes.Black;
+                (DOCK_MENU.FindName("PANEL_MENU_SUB" + i) as DockPanel).MaxHeight = 0;
+            }
+
+            DockPanel searchPanel = DOCK_MENU.FindName("PANEL_MENU_SEARCH") as DockPanel;
+            searchPanel.MaxHeight = 10000;
+            searchPanel.Children.Clear();
+
+            DataRow[] rowList = _PkgMenu.Select("PRGCD <> '' AND (SMENUNM LIKE '%" + KEYWORD + "%' OR PRGCD LIKE '%" + KEYWORD + "%')");
+            foreach (DataRow row in rowList)
+            {
+                UserControl newMenu = new UserControl();
+
+                string menuName = row["MENUNM"].ToString();
+
+                DockPanel childDock = null;
+                string pkgName = "";
+                menuName = GetMenuName(row["PMENUKEY"].ToString(), menuName, ref childDock, ref pkgName);
+
+                if (pkgName != "")
+                {
+                    newMenu.Tag = row["PRGCD"].ToString() + "_/_" + menuName + "_/_" + pkgName + ">" + menuName;
+                    newMenu.Style = (Style)FindResource("MENU_PAGE");
+                    newMenu.Content = menuName;
+                    newMenu.MouseLeftButtonDown += MENU_MouseLeftDown;
+                    childDock.Children.Add(newMenu);
+                }
+            }
+
+            searchPanel.Children.Add(new UserControl());
+        }
+
+        private string GetMenuName(string pMenuKey, string menuName, ref DockPanel childDock, ref string pkgName)
+        {
+            DataRow[] rowList = _PkgMenu.Select("MENUKEY = '"+ pMenuKey + "'");
+            if (rowList.Length > 0)
+            {
+                menuName = rowList[0]["MENUNM"].ToString() + ">" + menuName;
+                return GetMenuName(rowList[0]["PMENUKEY"].ToString(), menuName, ref childDock, ref pkgName);
+            }
+            else
+            {
+                UserControl topMenu = null;
+                if (TOP_MENU1.Tag.ToString() == pMenuKey) topMenu = TOP_MENU1;
+                else if (TOP_MENU2.Tag.ToString() == pMenuKey) topMenu = TOP_MENU2;
+                else if (TOP_MENU3.Tag.ToString() == pMenuKey) topMenu = TOP_MENU3;
+                else if (TOP_MENU4.Tag.ToString() == pMenuKey) topMenu = TOP_MENU4;
+                else if (TOP_MENU5.Tag.ToString() == pMenuKey) topMenu = TOP_MENU5;
+                else if (TOP_MENU6.Tag.ToString() == pMenuKey) topMenu = TOP_MENU6;
+                else if (TOP_MENU7.Tag.ToString() == pMenuKey) topMenu = TOP_MENU7;
+                else if (TOP_MENU8.Tag.ToString() == pMenuKey) topMenu = TOP_MENU8;
+                else if (TOP_MENU9.Tag.ToString() == pMenuKey) topMenu = TOP_MENU9;
+                if (topMenu == null) return menuName;
+
+                pkgName = topMenu.Content.ToString();
+
+                DockPanel searchPanel = DOCK_MENU.FindName("PANEL_MENU_SEARCH") as DockPanel;
+                foreach(object child in searchPanel.Children)
+                {
+                    DockPanel dock = child as DockPanel;
+                    if (dock != null && dock.Tag.ToString() == pMenuKey)
+                    {
+                        childDock = dock;
+                    }
+                }
+
+                if (childDock == null)
+                {
+                    UserControl newMenu = new UserControl();
+                    newMenu.Style = (Style)FindResource("MENU_FOLDER");
+                    newMenu.Content = topMenu.Content;
+                    newMenu.MouseLeftButtonDown += MENU_MouseLeftDown;
+
+                    searchPanel.Children.Add(newMenu);
+
+                    DockPanel newDock = new DockPanel();
+                    newDock.Tag = pMenuKey;
+                    newDock.Style = (Style)FindResource("MENU_DOCK");
+                    searchPanel.Children.Add(newDock);
+
+                    childDock = newDock;
+                }
+                return menuName;
+            }
+        }
+
+        private void MENU_KEYWORD_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                MENU_SEARCH_MouseUp(null, null);
+            }
+        }
+    }
+}

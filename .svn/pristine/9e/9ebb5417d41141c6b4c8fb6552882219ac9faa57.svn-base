@@ -1,0 +1,80 @@
+﻿/// <reference path="../../Script/reference.js" />
+
+/* 페이지 로드 시 수행 */
+ItsPage.Load = function () {
+
+    ItsGrid.Create('grid1', { isSubTotalGrid: true }, [
+        column.create('사업장', 'BDVCD', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'BDVCD' }),
+        column.create('지역구분', 'DEBC', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'SD300' }),        
+        column.create('수주일자', 'ODRDATE', { width: 100, align: 'center' }), 
+        column.create('납기일자', 'DLVDT', { width: 100, align: 'center' }),
+        column.create('거래처명', 'CUSTNM', { width: 200 }),        
+        column.create('통화', 'CURYBC', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'BC400' }),        
+        column.create('수주번호', 'SALODRKEY', { width: 100, align: 'center' }),
+        column.split()
+    ]);
+
+    ItsGrid.Create('grid2', { isSubTotalGrid: true }, [
+        column.create("법인", "COMPANYCD", { width: 100, align: 'center' }),
+        column.create('품목구분', 'ITEMCG', { width: 120, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM100'}),
+        column.create('품목코드', 'ITEMCD', { width: 120, align: 'center'  }),
+        column.create('품명', 'ITEMNM', { width: 180}),
+        column.create('규격', 'ITEMSPEC', { width: 120}),
+        column.create('수주단위', 'ITEMUNIT', { width: 120, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM150'}),
+        column.create('수주수량', 'SALQTY', { width: 120, align: 'center'  }),
+        column.create('단가', 'SALFUP', { width: 120, align: 'center'  }),
+        column.create('금액', 'SALFAMT', { width: 120, align: 'center'  }),
+        column.create('납기일자', 'DLVDT', { width: 120, align: 'center'  }),
+        column.create('비고', 'REMARK', { width: 120, align: 'center'  }),
+        column.create('출하수량', 'RELEASEQTY', { width: 120, align: 'center'  }),
+        column.create('진행상태', 'STATBC', { width: 120, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'SD200' }),
+        column.create('등록자', 'REMP', { width: 120, align: 'center'  }),
+        column.create('등록일', 'RTIME', { width: 120, align: 'center'  }),
+        column.split()
+    ]);
+
+    ItsDateRange.SetInitValueFrom('date_SDATE', ItsHelper.AddDay(-7, ItsHelper.GetYearMonthDay()));
+    // 2025-06-27 법인 콤보박스 값을 60으로 고정
+    ItsCombo.SetValue('sdiv1_combo_COMPANYCD', '60');
+};
+
+/* 조회 */
+ItsButton.EventSearch = function () {
+    var maria = new ItsMaria('SAL3002_S01', 'LIST_ORDER');
+    maria.AddPanel('sdiv1');
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+    ItsGrid.Clear('grid2');
+    ItsGrid.SetStore('grid1', maria.store);
+    ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
+
+    ItsGrid.Get('grid1').autoSizeColumns();
+};
+
+ItsGrid.Event('grid1').onSelect = function (rowIndex) {
+    var maria = new ItsMaria('SAL3002_S01', 'LIST_ORDERD');
+    maria.AddPanel('sdiv1');
+    maria.AddRecord('grid1', rowIndex);
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+    ItsGrid.SetStore('grid2', maria.store);
+
+    ItsGrid.Get('grid2').autoSizeColumns();
+}
+
+ItsCombo.Event('sdiv1_combo_COMPANYCD').onChanged = function (value) {
+    ItsCombo.SetRef01('sdiv1_combo_BDVCD', value);
+    ItsCombo.SetValueByIndex('sdiv1_combo_BDVCD', 0);
+
+    ItsFind.SetRef01('sdiv1_find_CUSTCD', value);
+}
+
+ItsText.Event('sdiv1_text_SALODRKEY').onKeyEnter = function () {
+    ItsButton.EventSearch();
+}

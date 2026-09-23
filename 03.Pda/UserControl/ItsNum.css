@@ -1,0 +1,93 @@
+﻿div.ItsNum {
+    display:inline-block;
+    float:left;
+    width:auto;
+    height:auto;
+    margin-right:2px;
+    background-color:transparent;
+    box-sizing: initial !important;
+}
+
+div.ItsNum_table {
+    display:table-cell;
+    background-color:transparent;
+    vertical-align:middle;
+    height:32px;
+    /*font-size:0px;*/
+}
+
+div.ItsNum_table > span {
+    vertical-align:middle;
+    display:inline-block;
+    text-align:right;
+    margin-right:4px;
+    background-color:transparent; 
+    /*font-size:12px;*/
+    white-space: normal;
+}
+
+div.ItsNum_button {
+    display:inline-block;
+    overflow:hidden;
+    vertical-align:middle;
+    height:27px;
+    width:22px;
+    /*margin-left:-23px;*/
+    margin-right:24px;
+    text-align:center;
+    border-left:1px solid silver;
+}
+
+div.ItsNum_table > input {
+    vertical-align:middle;
+    text-align:right;
+    padding:4px 28px 4px 6px;
+    height:18px;
+    border:1px solid silver;
+    /*font-size:12px;*/
+    box-sizing: content-box;
+    line-height: 18px;
+    margin-right: -28px;
+}
+div.ItsNum_table > input:focus {
+    border: 1px solid gray;
+    background-color:mintcream;
+}
+div.ItsNum_table > input:read-only {
+    background-color:aliceblue;
+}
+
+div.ItsNum_plus {
+    cursor:pointer;
+    display:block;
+    text-align:center;
+    height:13px;
+    background-color:whitesmoke;
+    font-family:'Arial Black';
+    font-size:11px;
+}
+
+div.ItsNum_plus > i {
+    position:relative;
+    /*top:-1px;*/
+}
+
+div.ItsNum_bar {
+    height:1px;
+    background-color:silver;
+}
+
+div.ItsNum_minus {
+    cursor:pointer;
+    display:block;
+    text-align:center;
+    height:11px;
+    background-color:whitesmoke;
+    font-family:'Arial Black';
+    font-size:11px;
+}
+
+div.ItsNum_minus > i {
+    position:relative;
+    top:-6px;
+}

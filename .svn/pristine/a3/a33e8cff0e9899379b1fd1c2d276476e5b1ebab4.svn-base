@@ -1,0 +1,100 @@
+﻿div.ItsCombo {
+    float:left;
+    display:inline-block;
+    width:auto;
+    height:auto;
+    margin-right:2px;
+    background-color:transparent;
+    box-sizing: initial !important;
+}
+div.ItsCombo_table {
+    display:table-cell;
+    background-color:transparent;
+    vertical-align:middle;
+    height:32px;
+    /*font-size:0px;*/
+}
+div.ItsCombo_table > span {
+    vertical-align:middle;
+    display:inline-block;
+    text-align:right;
+    background-color:transparent; 
+    margin-right:4px;
+    /*font-size:12px;*/
+    white-space: normal;
+}
+div.ItsCombo_box {
+    vertical-align:middle;
+    display:inline-block;
+    background-color:transparent; 
+    /*font-size:12px;*/
+}
+div.ItsCombo_box > input {
+    float:left;
+    padding:4px 28px 4px 6px;
+    height:18px;
+    border:1px solid silver;
+    /*font-size:12px;*/
+    box-sizing: content-box;
+    line-height: 18px;
+}
+div.ItsCombo_box > input:focus {
+    border: 1px solid gray;
+    background-color:mintcream;
+}
+
+div.ItsCombo_button {
+    float:left;
+    display:inline-block;
+    overflow:hidden;
+    vertical-align:middle;
+    height:28px;
+    width:22px;
+    margin-left:-24px;
+    text-align:center;
+    line-height:0px;
+    border-left:1px solid silver;
+}
+
+div.ItsCombo_button > i {
+    margin-top:4px;
+    font-size:14px;
+}
+
+div.ItsCombo_box > ul
+{
+    float:left;
+    visibility:hidden;
+    display:block;
+    padding:0px;
+    margin:0px;
+    margin-top:26px;
+    position:fixed;
+    list-style:none;
+    z-index:99999999;
+    max-height:200px;
+    overflow-y:auto;
+    border:1px solid silver;
+}
+div.ItsCombo_box > ul > li {
+    display:block;
+    word-wrap:unset;
+    padding-top:5px;
+    padding-left:8px;
+    vertical-align:middle;
+    background-color:white;
+    min-height:20px;
+    border-bottom:solid 1px whitesmoke;
+}
+div.ItsCombo_box > ul > li.select {
+    background-color:aliceblue;
+}
+div.ItsCombo_box > ul > li.over {
+    background-color:whitesmoke;
+}
+div.ItsCombo.readonly input {
+    background-color:aliceblue;
+}
+div.ItsCombo.readonly div.ItsCombo_button {
+    color:silver;
+}

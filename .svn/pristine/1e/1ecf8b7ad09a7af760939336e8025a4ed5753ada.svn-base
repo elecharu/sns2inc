@@ -1,0 +1,1 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="MssqlCall.aspx.cs" Inherits="MssqlCall" ValidateRequest="false" %>

@@ -1,0 +1,31 @@
+.fc-sat {
+    color: cornflowerblue;
+}
+.fc-sun {
+    color: indianred;
+}
+.fc-event {
+    background-color: cornflowerblue;
+}
+/* .fc-unthemed td .fc-sun {
+    background-color: LavenderBlush;
+}
+.fc-unthemed td .fc-sat {
+    background-color: AliceBlue;
+} */
+
+.fc-state-default.fc-corner-left {
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+}
+.fc-state-default.fc-corner-right {
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+.fc-center h2, .fc-left h2, .fc-right h2 {
+    font-family:'Malgun Gothic', 'arial', 'gulim', 'simsun', 'simhei', 'verdana', 'sans-serif';
+}
+.fc-toolbar.fc-header-toolbar {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}

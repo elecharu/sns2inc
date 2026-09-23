@@ -1,0 +1,51 @@
+﻿div.ItsRadio {
+    display: inline-block;
+    float: left;
+    cursor: pointer;
+    width: auto;
+    height: auto;
+    /*margin-left: 4px;*/
+    padding-top: 0px;
+    padding-bottom: 0px;
+    background-color: transparent;
+    vertical-align: auto;
+    color: black;
+    border: none;
+}
+
+div.ItsRadio_table {
+    display: table-cell;
+    /*padding-left: 8px;
+    padding-right: 8px;*/
+    height: 24px;
+    background-color: transparent;
+    vertical-align: middle;
+    color:black;
+    /*border: 1px solid silver;*/
+}
+span.ItsRadio_span {
+    vertical-align: middle;
+    display: inline-block;
+    text-align: right;
+    background-color: transparent;
+    font-family: 'SpoqaHanSansNeo_R';
+    white-space: normal;
+}
+
+/*div.ItsRadio:hover {
+    opacity: 0.7;
+}*/
+div.ItsRadio_disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+div.ItsRadio_table:focus {
+    opacity: 0.7;
+}
+input.ItsRadio_input{
+    margin-top: 0px !important;
+    vertical-align: middle !important;
+}
+label.ItsRadio_label{
+    vertical-align: top;
+}

@@ -1,0 +1,1 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="SetCookie.aspx.cs" Inherits="SetCookie" %>

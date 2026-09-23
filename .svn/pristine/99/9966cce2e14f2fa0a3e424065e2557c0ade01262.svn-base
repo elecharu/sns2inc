@@ -1,0 +1,1 @@
+﻿<%@ Page Title="" Language="C#" AutoEventWireup="true" CodeFile="GetCardManagementURL.aspx.cs" Inherits="GetCardManagementURL" %>

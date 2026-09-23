@@ -1,0 +1,200 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Data;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using System.Diagnostics;
+
+namespace ITSLIB
+{
+    /// <summary>
+    /// ItsLabelText.xaml 的交互逻辑
+    /// </summary>
+    public partial class Date : UserControl
+    {
+        public ItsModelPanel ModelPanel = null;
+        public Date()
+        {
+            InitializeComponent();
+            dateEdit.BorderBrush = Brushes.Silver;
+            dateEdit.BorderThickness = new Thickness(1d);
+
+            this.Loaded += Date_Loaded;
+        }
+
+        private void Date_Loaded(object sender, RoutedEventArgs e)
+        {
+            this.Loaded -= Date_Loaded;
+
+            if (Value == "")
+            {
+                try
+                {
+                    Value = DateTime.Now.ToString("yyyy-MM-dd");
+                }
+                catch { }
+            }
+            else if (int.Parse(Value.Substring(0, 4)) < 1901)
+            {
+                SetValue(ValueProperty, "");
+            }
+        }
+        private string _LangKey = "";
+        public string LangKey
+        {
+            get { return _LangKey; }
+            set
+            {
+                _LangKey = value;
+            }
+        }
+        public bool ReadOnly
+        {
+            get { return dateEdit.IsReadOnly; }
+            set
+            {
+                dateEdit.IsReadOnly = value;
+                if (value)
+                {
+                    dateEdit.Background = Brushes.LavenderBlush;
+                }
+                else
+                {
+                    dateEdit.Background = Brushes.White;
+                }
+            }
+        }
+
+        public string Label
+        {
+            get { return textBlock.Text; }
+            set { textBlock.Text = value; }
+        }
+
+        public string HidenLabel
+        {
+            set
+            {
+                if (value.Length > 0)
+                {
+                    this.Width = this.Width - textBlock.Width;
+                    textBlock.Width = 0;
+                    textBlock.Visibility = Visibility.Hidden;
+                }
+            }
+        }
+
+        public double LabelWidth
+        {
+            get { return textBlock.Width; }
+            set { textBlock.Width = value; }
+        }
+
+        public string Value
+        {
+            get
+            {
+                string date = GetValue(ValueProperty).ToString();
+                if (date == "")
+                {
+                    SetValue(ValueProperty, DateTime.Now.ToString("yyyy-MM-dd"));
+                }
+                else if (int.Parse(date.Substring(0, 4)) < 1901)
+                {
+                    SetValue(ValueProperty, "");
+                }
+
+                return GetValue(ValueProperty).ToString();
+            }
+            set
+            {
+                if (value == "") value = DateTime.Now.ToString("yyyy-MM-dd");
+                else if (int.Parse(value.Substring(0, 4)) < 1901)
+                {
+                    value = "";
+                }
+
+                SetValue(ValueProperty, value);
+            }
+        }
+
+        public readonly static DependencyProperty ValueProperty =
+            DependencyProperty.Register("Value",
+                typeof(string),
+                typeof(Date),
+                new FrameworkPropertyMetadata("", FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, valueChangedCallback));
+        private static void valueChangedCallback(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+        {
+            object editValue = ((Date)(sender)).dateEdit.EditValue;
+
+            try
+            {
+                if (editValue == null || editValue.ToString() == "" || editValue.ToString().Substring(0, 10) != e.NewValue.ToString())
+                {
+                    ((Date)(sender)).dateEdit.EditValue = e.NewValue.ToString();
+                    ((Date)(sender)).Value = e.NewValue.ToString();
+                }
+            }
+            catch { }
+        }
+
+        private void canvas_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e != null && e.ChangedButton == MouseButton.Left) e.Handled = true;
+            if (e != null && e.ChangedButton != MouseButton.Left) return;
+
+            dateEdit.IsPopupOpen = true;
+        }
+
+        private void dateEdit_GotFocus(object sender, RoutedEventArgs e)
+        {
+            dateEdit.BorderBrush = Brushes.Black;
+            dateEdit.BorderThickness = new Thickness(1.5d);
+            if (!dateEdit.IsReadOnly)
+            {
+                dateEdit.Background = Brushes.MintCream;
+                canvas.Background = Brushes.MintCream;
+            }
+        }
+
+        private void dateEdit_LostFocus(object sender, RoutedEventArgs e)
+        {
+            dateEdit.BorderBrush = Brushes.Silver;
+            dateEdit.BorderThickness = new Thickness(1d);
+            if (!dateEdit.IsReadOnly)
+            {
+                dateEdit.Background = Brushes.White;
+                canvas.Background = Brushes.White;
+            }
+        }
+
+        private void dateEdit_EditValueChanged(object sender, DevExpress.Xpf.Editors.EditValueChangedEventArgs e)
+        {
+            try
+            {
+                SetValue(ValueProperty, DateTime.Parse(e.NewValue.ToString()).ToString("yyyy-MM-dd"));
+            }
+            catch
+            {
+                SetValue(ValueProperty, "");
+            }
+        }
+
+        public new bool IsFocused
+        {
+            get
+            {
+                return dateEdit.IsFocused;
+            }
+        }
+    }
+}

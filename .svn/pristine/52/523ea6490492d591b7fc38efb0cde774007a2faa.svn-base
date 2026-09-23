@@ -1,0 +1,27 @@
+﻿.ui-dialog {
+    padding: 0px;
+}
+.ui-widget-header{
+    background:#7691d9;
+    border-color: #7691d9;
+    color: white;
+    /*font-size: 13px;*/
+    font-family: 'Malgun Gothic', 'arial', 'gulim', 'simsun', 'simhei', 'verdana', 'sans-serif';
+    font-weight: inherit;
+    border-radius:0px;
+}
+.ui-dialog-buttonset .ui-button{
+    background:transparent;
+}
+.ui-widget-overlay{
+    z-index: 900;
+}
+.ui-dialog .ui-dialog-content {
+    padding: 1px;
+    overflow: hidden;
+}
+
+.ui-dialog .ui-dialog-titlebar-close {
+    border:0px;
+    background-color:transparent;
+}

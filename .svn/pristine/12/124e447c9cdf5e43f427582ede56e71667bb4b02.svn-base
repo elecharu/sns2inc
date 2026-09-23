@@ -1,0 +1,1273 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Net.Sockets;
+using System.Net;
+using System.Data;
+using System.Windows;
+using PLC_GATHERING_Prj;
+using System.Linq;
+using PLC_GATHERING_Prj.ViewModel;
+/*
+ * 2018-03-20 성우 전용으로 수정 ( 더블워드 ) 영진, 홍성, 우성, 동아 쓰지 마세요!!(ItsPlc를 기반으로 함)
+ */
+public class ItsPlcNet
+{
+
+    /// <summary>
+    /// XG 계열 프레임 쓰기
+    /// </summary>
+    public static bool Write_XG_TCP(string ip, int port, string address, string data)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        return _Write_XG(socket, ip, port, address, data);
+    }
+    public static bool Write_XG_UDP(string ip, int port, string address, string data)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        return _Write_XG(socket, ip, port, address, data);
+    }
+    private static bool _Write_XG(Socket socket, string ip, int port, string address, string data)
+    {
+        byte[] appHeader = new byte[20]; //헤더
+        byte[] appInstruction = new byte[21];  //프레임 
+
+        //헤더>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        appHeader[0] = 0x4c;  //LSIS-XGT
+        appHeader[1] = 0x53;
+        appHeader[2] = 0x49;
+        appHeader[3] = 0x53;
+        appHeader[4] = 0x2d;
+        appHeader[5] = 0x58;
+        appHeader[6] = 0x47;
+        appHeader[7] = 0x54;
+        appHeader[8] = 0x00;  //예약영역
+        appHeader[9] = 0x00;
+        appHeader[10] = 0x00; //PLC INFO (클라이언트에서 -> PLC로 요청할 경우 역할 없음)
+        appHeader[11] = 0x00;
+        appHeader[12] = 0x00; //CPU INFO (Reserved 영역을 통해 XGK/XGI 시리즈임을 판단)
+        appHeader[13] = 0x33; //SOURCE OF FRAME (클라이언트->서버 0x33, 서버->클라이언트 0x11)
+        appHeader[14] = 0x00; //Invork ID (프레임순번구별, 응답프레임에 해당순번 보내줌)
+        appHeader[15] = 0x00;
+        appHeader[16] = 0x15; //Application Instruction 의 바이트 크기
+        appHeader[17] = 0x00;
+        appHeader[18] = 0x00; //FEnet Position
+        for (int i = 0; i < 19; i++)  //Application Header 의 Byte Sum
+        {
+            if (i == 0)
+            {
+                appHeader[19] = appHeader[i];
+            }
+            else
+            {
+                appHeader[19] += (byte)appHeader[i];
+            }
+        }
+
+        //프레임>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        appInstruction[0] = 0x58; //명령어(쓰기)
+        appInstruction[1] = 0x00;
+        appInstruction[2] = 0x02; //데이터 타입
+        appInstruction[3] = 0x00;
+        appInstruction[4] = 0x00; //예약영역
+        appInstruction[5] = 0x00;
+        appInstruction[6] = 0x01; //블럭수
+        appInstruction[7] = 0x00;
+        appInstruction[8] = 0x07; //변수명 길이
+        appInstruction[9] = 0x00;
+
+        address = address.ToUpper().Replace("D", "").Replace("W", "");
+
+        appInstruction[10] = Encoding.ASCII.GetBytes("%DW" + address)[0]; //변수(선두 메모리 번지)
+        appInstruction[11] = Encoding.ASCII.GetBytes("%DW" + address)[1];
+        appInstruction[12] = Encoding.ASCII.GetBytes("%DW" + address)[2];
+        appInstruction[13] = Encoding.ASCII.GetBytes("%DW" + address)[3];
+        appInstruction[14] = Encoding.ASCII.GetBytes("%DW" + address)[4];
+        appInstruction[15] = Encoding.ASCII.GetBytes("%DW" + address)[5];
+        appInstruction[16] = Encoding.ASCII.GetBytes("%DW" + address)[6];
+        appInstruction[17] = 0x02; //Data 의 Byte Size
+        appInstruction[18] = 0x00;
+        appInstruction[19] = (byte)(int.Parse(data));
+        appInstruction[20] = (byte)(int.Parse(data) >> 8);
+
+        byte[] sendBuffer = new byte[41];       //전송 버퍼
+        appHeader.CopyTo(sendBuffer, 0);        //전송버퍼에 헤더탑재
+        appInstruction.CopyTo(sendBuffer, 20);  //전송버퍼에 프레임탑재
+
+        try //버퍼 데이터 전송
+        {
+            socket.Connect(ip, port);
+            socket.Send(sendBuffer, 0, sendBuffer.Length, 0);
+        }
+        catch { return false; }
+
+        try
+        {
+            socket.Close();
+        }
+        catch { }
+
+        return true;
+    }
+    /// <summary>
+    /// MODUAL BUS 쓰기
+    /// </summary>
+    public static bool Write_MOD_TCP(string ip, int port, string address, string data)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        return _Write_MOD(socket, ip, port, address, data);
+    }
+    public static bool Write_MOD_UDP(string ip, int port, string address, string data)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        return _Write_MOD(socket, ip, port, address, data);
+    }
+    private static bool _Write_MOD(Socket socket, string ip, int port, string address, string data)
+    {
+        return false;
+    }
+    /// <summary>
+    /// MELSEC 프레임 쓰기
+    /// </summary>
+    public static bool Write_MEL_TCP(string ip, int port, string address, string data)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        return _Write_MEL(socket, ip, port, address, data);
+    }
+    public static bool Write_MEL_UDP(string ip, int port, string address, string data)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        return _Write_MEL(socket, ip, port, address, data);
+    }
+    private static bool _Write_MEL(Socket socket, string ip, int port, string address, string data)
+    {
+        byte[] sendBuffer = new byte[23];
+        sendBuffer[0] = 0x50;
+        sendBuffer[1] = 0x00;
+        sendBuffer[2] = 0x00;
+        sendBuffer[3] = 0xFF;
+        sendBuffer[4] = 0xFF;
+        sendBuffer[5] = 0x03;
+        sendBuffer[6] = 0x00;
+        sendBuffer[7] = 0x0E;
+        sendBuffer[8] = 0x00;
+        sendBuffer[9] = 0x10;
+        sendBuffer[10] = 0x00;
+        sendBuffer[11] = 0x01;
+        sendBuffer[12] = 0x14;
+        sendBuffer[13] = 0x00;
+        sendBuffer[14] = 0x00;
+
+        byte[] b = BitConverter.GetBytes(int.Parse(address.ToUpper().Replace("D", "").Replace("W", "")));
+
+        Array.Reverse(b);
+
+        sendBuffer[15] = b[3];
+        sendBuffer[16] = b[2];
+        sendBuffer[17] = b[1];
+        sendBuffer[18] = 0xA8;
+        sendBuffer[19] = 0x01;
+        sendBuffer[20] = 0x00;
+        sendBuffer[21] = (byte)(int.Parse(data));
+        sendBuffer[22] = (byte)((int.Parse(data) >> 8));
+
+        try //버퍼 데이터 전송
+        {
+            socket.Connect(ip, port);
+            socket.Send(sendBuffer, 0, sendBuffer.Length, 0);
+        }
+        catch { return false; }
+
+        try
+        {
+            socket.Close();
+        }
+        catch { }
+
+        return true;
+    }
+    public static void Read_XG_TCP(string ip, string port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        if (startAddress.Contains("DW")) _Read_XG_DW(socket, ip, port, startAddress, endAddress, ref plcdata, plccd);
+        else _Read_XG(socket, ip, port, startAddress, endAddress, ref plcdata, plccd);
+    }
+    public static void Read_XG_UDP(string ip, string port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        if (startAddress.Contains("DW")) _Read_XG_DW(socket, ip, port, startAddress, endAddress, ref plcdata, plccd);
+        else _Read_XG(socket, ip, port, startAddress, endAddress, ref plcdata, plccd);
+    }
+    private static void _Read_XG(Socket socket, string ip, string port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        byte[] appHeader = new byte[20]; //헤더
+        byte[] appInstruction = new byte[19];   //프레임 
+
+        //헤더>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        appHeader[0] = 0x4c;  //LSIS-XGT
+        appHeader[1] = 0x53;
+        appHeader[2] = 0x49;
+        appHeader[3] = 0x53;
+        appHeader[4] = 0x2d;
+        appHeader[5] = 0x58;
+        appHeader[6] = 0x47;
+        appHeader[7] = 0x54;
+
+        appHeader[8] = 0x00;  //예약영역
+        appHeader[9] = 0x00;
+
+        appHeader[10] = 0x00; //PLC INFO (클라이언트에서 -> PLC로 요청할 경우 역할 없음)
+        appHeader[11] = 0x00;
+
+        appHeader[12] = 0x00; //CPU INFO (Reserved 영역을 통해 XGK/XGI 시리즈임을 판단)
+
+        appHeader[13] = 0x33; //SOURCE OF FRAME (클라이언트->서버 0x33, 서버->클라이언트 0x11)
+
+        appHeader[14] = 0x00; //Invork ID (프레임순번구별, 응답프레임에 해당순번 보내줌)
+        appHeader[15] = 0x00;
+
+        appHeader[16] = 0x13; //Application Instruction 의 바이트 크기
+        appHeader[17] = 0x00;
+
+        appHeader[18] = 0x00; //FEnet Position
+
+        for (int i = 0; i < 19; i++)  //Application Header 의 Byte Sum
+        {
+            if (i == 0)
+            {
+                appHeader[19] = appHeader[i];
+            }
+            else
+            {
+                appHeader[19] += (byte)appHeader[i];
+            }
+        }
+
+        //프레임>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        appInstruction[0] = 0x54; //명령어(읽기)
+        appInstruction[1] = 0x00;
+
+        appInstruction[2] = 0x14; //데이터 타입
+        appInstruction[3] = 0x00;
+
+        appInstruction[4] = 0x00; //예약영역
+        appInstruction[5] = 0x00;
+
+        appInstruction[6] = 0x01; //블럭수
+        appInstruction[7] = 0x00;
+
+        appInstruction[8] = 0x07; //변수명 길이
+        appInstruction[9] = 0x00;
+
+        int sInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", ""));
+        int eInt = int.Parse(endAddress.ToUpper().Replace("D", "").Replace("W", ""));
+
+        //string sAddr = "0000" + sInt;
+        //sAddr = sAddr.Substring(sAddr.Length - 4, 4);
+
+        string sAddr = "0000" + (sInt * 2);
+        sAddr = sAddr.Substring(sAddr.Length - 4, 4);
+
+        appInstruction[10] = Encoding.ASCII.GetBytes("%DB" + sAddr)[0]; // 변수(선두 메모리 번지)
+        appInstruction[11] = Encoding.ASCII.GetBytes("%DB" + sAddr)[1];
+        appInstruction[12] = Encoding.ASCII.GetBytes("%DB" + sAddr)[2];
+        appInstruction[13] = Encoding.ASCII.GetBytes("%DB" + sAddr)[3];
+        appInstruction[14] = Encoding.ASCII.GetBytes("%DB" + sAddr)[4];
+        appInstruction[15] = Encoding.ASCII.GetBytes("%DB" + sAddr)[5];
+        appInstruction[16] = Encoding.ASCII.GetBytes("%DB" + sAddr)[6];
+
+        appInstruction[17] = (byte)((eInt - sInt + 1) * 2); // Data 의 Byte Size
+        appInstruction[18] = (byte)(((eInt - sInt + 1) * 2) >> 8);
+
+        byte[] sendBuffer = new byte[39];       // 전송 버퍼
+        appHeader.CopyTo(sendBuffer, 0);        // 전송버퍼에 헤더탑재
+        appInstruction.CopyTo(sendBuffer, 20);  // 전송버퍼에 프레임탑재
+
+        try //버퍼 데이터 전송
+        {
+            socket.Connect(ip, int.Parse(port));
+            socket.SendTimeout = 5000;
+            socket.Send(sendBuffer, 0, sendBuffer.Length, 0);
+
+            byte[] receiveByte = new byte[1024];
+            socket.ReceiveTimeout = 5000;
+            int receiveLength = socket.Receive(receiveByte, receiveByte.Length, 0); //수신데이터 길이
+            if (receiveLength > 0)
+            {
+                for (int i = sInt; i <= eInt; i++)
+                {
+                    string addr = "0000" + i;
+                    addr = addr.Substring(addr.Length - 4, 4);
+                    string plckey = plccd + "D" + addr;
+
+                    if (!plcdata.ContainsKey(plckey)) continue;
+
+                    //string plcStr = string.Format("{0:x2}", receiveByte[32 + (i - sInt) * 2 + 1]) + string.Format("{0:x2}", receiveByte[32 + (i - sInt) * 2]);
+                    string plcStr = string.Format("{0:x2}", receiveByte[32 + (i - sInt) * 2]);
+                    plcdata[plckey] = Convert.ToInt32(plcStr, 16).ToString();                
+                }
+            }
+        }
+        catch { }
+
+        try
+        {
+            socket.Close();
+        }
+        catch { }
+    }
+    private static void _Read_XG_DW(Socket socket, string ip, string port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        byte[] appHeader = new byte[20]; //헤더
+        byte[] appInstruction = new byte[19];   //프레임 
+
+        //헤더>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        appHeader[0] = 0x4c;  //LSIS-XGT
+        appHeader[1] = 0x53;
+        appHeader[2] = 0x49;
+        appHeader[3] = 0x53;
+        appHeader[4] = 0x2d;
+        appHeader[5] = 0x58;
+        appHeader[6] = 0x47;
+        appHeader[7] = 0x54;
+
+        appHeader[8] = 0x00;  //예약영역
+        appHeader[9] = 0x00;
+
+        appHeader[10] = 0x00; //PLC INFO (클라이언트에서 -> PLC로 요청할 경우 역할 없음)
+        appHeader[11] = 0x00;
+
+        appHeader[12] = 0x00; //CPU INFO (Reserved 영역을 통해 XGK/XGI 시리즈임을 판단)
+
+        appHeader[13] = 0x33; //SOURCE OF FRAME (클라이언트->서버 0x33, 서버->클라이언트 0x11)
+
+        appHeader[14] = 0x00; //Invork ID (프레임순번구별, 응답프레임에 해당순번 보내줌)
+        appHeader[15] = 0x00;
+
+        appHeader[16] = 0x13; //Application Instruction 의 바이트 크기
+        appHeader[17] = 0x00;
+
+        appHeader[18] = 0x00; //FEnet Position
+
+        for (int i = 0; i < 19; i++)  //Application Header 의 Byte Sum
+        {
+            if (i == 0)
+            {
+                appHeader[19] = appHeader[i];
+            }
+            else
+            {
+                appHeader[19] += (byte)appHeader[i];
+            }
+        }
+
+        //프레임>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+        appInstruction[0] = 0x54; //명령어(읽기)
+        appInstruction[1] = 0x00;
+
+        appInstruction[2] = 0x14; //데이터 타입
+        appInstruction[3] = 0x00;
+
+        appInstruction[4] = 0x00; //예약영역
+        appInstruction[5] = 0x00;
+
+        appInstruction[6] = 0x01; //블럭수
+        appInstruction[7] = 0x00;
+
+        appInstruction[8] = 0x07; //변수명 길이
+        appInstruction[9] = 0x00;
+
+        int sInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", ""));
+        int eInt = int.Parse(endAddress.ToUpper().Replace("D", "").Replace("W", ""));
+
+        //string sAddr = "0000" + sInt;
+        //sAddr = sAddr.Substring(sAddr.Length - 4, 4);
+
+        string sAddr = "0000" + (sInt * 2);
+        sAddr = sAddr.Substring(sAddr.Length - 4, 4);
+
+        appInstruction[10] = Encoding.ASCII.GetBytes("%DB" + sAddr)[0]; // 변수(선두 메모리 번지)
+        appInstruction[11] = Encoding.ASCII.GetBytes("%DB" + sAddr)[1];
+        appInstruction[12] = Encoding.ASCII.GetBytes("%DB" + sAddr)[2];
+        appInstruction[13] = Encoding.ASCII.GetBytes("%DB" + sAddr)[3];
+        appInstruction[14] = Encoding.ASCII.GetBytes("%DB" + sAddr)[4];
+        appInstruction[15] = Encoding.ASCII.GetBytes("%DB" + sAddr)[5];
+        appInstruction[16] = Encoding.ASCII.GetBytes("%DB" + sAddr)[6];
+
+        appInstruction[17] = (byte)((eInt - sInt + 1) * 2); // Data 의 Byte Size
+        appInstruction[18] = (byte)(((eInt - sInt + 1) * 2) >> 8);
+
+        byte[] sendBuffer = new byte[39];       // 전송 버퍼
+        appHeader.CopyTo(sendBuffer, 0);        // 전송버퍼에 헤더탑재
+        appInstruction.CopyTo(sendBuffer, 20);  // 전송버퍼에 프레임탑재
+
+        try //버퍼 데이터 전송
+        {         
+            socket.Connect(ip, int.Parse(port));
+            socket.SendTimeout = 5000;
+            socket.Send(sendBuffer, 0, sendBuffer.Length, 0);
+
+            byte[] receiveByte = new byte[1024];
+            socket.ReceiveTimeout = 5000;
+            int receiveLength = socket.Receive(receiveByte, receiveByte.Length, 0); //수신데이터 길이
+
+            //string plcValue = "";
+            if (receiveLength > 0)
+            {
+                for (int i = sInt; i <= eInt; i++)
+                {
+                    string addr = "0000" + i;
+                    addr = addr.Substring(addr.Length - 4, 4);
+                    string plckey = plccd + "DW" + addr;
+
+                    if (!plcdata.ContainsKey(plckey)) continue;
+
+                    //string plcValue =  string.Format("{0:x2}", receiveByte[11 + (i - sInt) * 4 + 1]) + string.Format("{0:x2}", receiveByte[11 + (i - sInt) * 4]);
+                    //string plcValue1 = string.Format("{0:x2}", receiveByte[32 + (i - sInt) * 4 + 1]) + string.Format("{0:x2}", receiveByte[32 + (i - sInt)]);
+                    //string plcValue2 = string.Format("{0:x2}", receiveByte[32 + (i - sInt) * 4 + 3]) + string.Format("{0:x2}", receiveByte[32 + (i - sInt) * 4 + 2]);
+
+                    //plcValue1 = Convert.ToInt32(plcValue1, 16).ToString();
+                    //plcValue2 = Convert.ToInt32(plcValue2, 16).ToString();
+
+                    //plcValue = plcValue1;
+
+                    //if (Convert.ToInt32(plcValue2, 16) > 0)
+                    //{
+                    //    plcValue = ((Convert.ToInt32(plcValue2, 16) * 65535) + Convert.ToInt32(plcValue1, 16)).ToString();
+                    //}
+                    string plcStr = string.Format("{0:x2}", receiveByte[32 + (i - sInt) * 2 + 1]) + string.Format("{0:x2}", receiveByte[32 + (i - sInt) * 2]);
+                    plcdata[plckey] = Convert.ToInt32(plcStr, 16).ToString();
+
+                    //Log.This.ErrLog_main(
+                    //                        "_Read_XG receivdate => " + "\r\n"
+                    //                        + plcdata[plckey] + "\r\n"
+                    //                        + plckey + "\r\n");
+                }
+            }
+        }
+        catch(Exception)
+        {
+
+        }
+
+        try
+        {
+            socket.Close();
+        }
+        catch { }
+    }
+
+    public static Dictionary<string, string> Read_MOD_TCP(string ip, int port, string startAddress, string endAddress)
+    {
+        return new Dictionary<string, string>();
+    }
+    public static Dictionary<string, string> Read_MOD_UDP(string ip, int port, string startAddress, string endAddress)
+    {
+        return new Dictionary<string, string>();
+    }
+    public static void Read_MEL_TCP(string ip, int port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        if (startAddress.Contains("DW")) _Read_MEL_DW(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, true);
+        else _Read_MEL(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, true);
+    }
+    public static void Read_MEL_UDP(string ip, int port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        if (startAddress.Contains("DW")) _Read_MEL_DW(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, true);
+        else _Read_MEL(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, true);
+    }
+    public static void Read_MEL_TCP_CHAR(string ip, int port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        if (startAddress.Contains("DW")) _Read_MEL_DW(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, false);
+        else _Read_MEL(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, false);
+    }
+    public static void Read_MEL_UDP_CHAR(string ip, int port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        if (startAddress.Contains("DW")) _Read_MEL_DW(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, false);
+        else _Read_MEL(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, false);
+    }
+    public static string Read_MEL_TCP_SW(string ip, int port, string startAddress, string endAddress, string plctype)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        Read_MEL_SW(socket, ip, port, startAddress, endAddress, plctype, false);
+        return Read_MEL_SW(socket, ip, port, startAddress, endAddress, plctype, false); ;
+    }
+    public static void Read_MEL_A(string ip, int port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        _Read_MEL_A(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, true);
+    }
+    public static void Read_NETEYE(string ip, int port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        _Read_NETEYE(socket, ip, port, startAddress, endAddress, ref plcdata, plccd, true);
+    }
+
+    private static void _Read_MEL(Socket socket, string ip, int port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd, bool isNum)
+    {
+        byte[] sendBuffer = new byte[21];
+        sendBuffer[0] = 0x50;
+        sendBuffer[1] = 0x00;
+        sendBuffer[2] = 0x00;
+        sendBuffer[3] = 0xFF;
+        sendBuffer[4] = 0xFF;
+        sendBuffer[5] = 0x03;
+        sendBuffer[6] = 0x00;
+        sendBuffer[7] = 0x0C;
+        sendBuffer[8] = 0x00;
+        sendBuffer[9] = 0x10;
+        sendBuffer[10] = 0x00;
+        sendBuffer[11] = 0x01;
+        sendBuffer[12] = 0x04;
+        sendBuffer[13] = 0x00;
+        sendBuffer[14] = 0x00;
+
+        int sInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", ""));
+        int eInt = int.Parse(endAddress.ToUpper().Replace("D", "").Replace("W", ""));
+
+        byte[] b = BitConverter.GetBytes(sInt);
+
+        Array.Reverse(b);
+
+        sendBuffer[15] = b[3];
+        sendBuffer[16] = b[2];
+        sendBuffer[17] = b[1];
+        sendBuffer[18] = 0xA8;
+        sendBuffer[19] = (byte)(eInt - sInt + 1);
+        sendBuffer[20] = (byte)((eInt - sInt + 1) >> 8);
+
+        try
+        {
+            socket.SendTimeout = 5000;
+            socket.Connect(ip, port);
+            socket.Send(sendBuffer, 0, sendBuffer.Length, 0);
+
+            byte[] receiveByte = new byte[1024];
+            socket.ReceiveTimeout = 5000;
+            int receiveLength = socket.Receive(receiveByte, receiveByte.Length, 0); //수신데이터 길이
+            if (receiveLength > 0)
+            {
+                for (int i = sInt; i <= eInt; i++)
+                {
+                    string key = "0000" + i;
+                    key = key.Substring(key.Length - 4, 4);
+                    // 2018-03-20 추가 ( dictionary 관련 ) ----------------
+                    string plckey = plccd + "D" + key;
+                    if (!plcdata.ContainsKey(plckey)) continue;
+                    //string plcValue = ((char)receiveByte[11 + (i - sInt) * 2]).ToString();
+                    string plcValue = ((char)receiveByte[11 + (i - sInt) * 2]).ToString() + ((char)receiveByte[11 + (i - sInt) * 2 + 1]).ToString();
+                    if (isNum)
+                    {
+                        //plcValue = string.Format("{0:x2}", receiveByte[11 + (i - sInt) * 2]);
+                        plcValue = string.Format("{0:x2}", receiveByte[11 + (i - sInt) * 2 + 1]) + string.Format("{0:x2}", receiveByte[11 + (i - sInt) * 2]);
+                        plcValue = Convert.ToInt32(plcValue, 16).ToString();
+                    }
+                    plcdata[plckey] = plcValue;
+                    // ---------------------------------------------------
+                }
+            }
+        }
+        catch(Exception ex)
+        {
+            MessageBox.Show(ex.Message);
+        }
+
+        try
+        {
+            socket.Close();
+        }
+        catch(Exception ex)
+        {
+            MessageBox.Show(ex.Message);
+        }
+    }
+    private static void _Read_MEL_DW(Socket socket, string ip, int port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd, bool isNum)
+    {
+        Dictionary<string, string> AA = new Dictionary<string, string>();
+
+        int sInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", ""));
+        int eInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", ""))+1;
+
+        for (int i = sInt; i <= eInt; i++)
+        {
+
+            AA.Add("D" + i, "");
+            ItsPlcNet.Read_MEL_TCP(ip, port, "D" + i, "D" + i, ref AA, null);
+        }
+
+        string BB = "";
+        string CC = "";
+
+        BB += AA["D" + sInt];
+        CC += AA["D" + eInt];
+
+        int BI = Convert.ToInt32(BB);
+        int CI = Convert.ToInt32(CC);
+
+        //BB = Convert.ToString(BI, 2);
+        //CC = Convert.ToString(CI, 2);
+
+        //string RSTR = CC + BB;
+        //int RINT = Convert.ToInt32(RSTR, 2);
+        //string RVSTR = Convert.ToString(RINT);
+
+        BB = Convert.ToString(BI, 16);
+        CC = Convert.ToString(CI, 16);
+        
+        string RVSTR = Convert.ToInt32(CC + BB, 16).ToString();
+
+        int key = sInt;
+        string plckey = plccd + "DW" + key;
+
+        plcdata[plckey] = RVSTR;
+    }
+
+    private static void _Read_MEL_A(Socket socket, string ip, int port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd, bool isNum)
+    {
+        string rtnStr = "";  // 통신결과
+        //string rtnCardName = MELSEC-A; //차종코드..?(타입설정)
+        string s_cmd = ""; //통신명령어
+        string rtnKuck = "00"; //국번호
+        string rtnAddInitial = ""; //시작이니셜
+        string rtnAddNum = ""; //시작번지
+        string rtnObtainByte = ""; //바이트수
+
+        // 데이터 파싱
+        if (startAddress.Length.Equals(6))
+        {
+            rtnAddInitial = "DW";
+        }
+        else
+        {
+            rtnAddInitial = "D";
+        }
+        rtnAddNum = startAddress.Replace("D", "").Replace("W", "");
+
+        int sInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", ""));
+        int eInt = int.Parse(endAddress.ToUpper().Replace("D", "").Replace("W", ""));
+
+        int rCount = eInt - sInt + 2;
+
+        rtnObtainByte = 0 + Convert.ToString(rCount);
+        rtnObtainByte = "05";
+
+        //Buffer
+        byte[] sendBuffer = null;
+        byte[] receiveBuffer = null;
+
+        //결과값 초기화
+        rtnStr = "";
+
+        int Convet_value = 0;
+        s_cmd = "01FF000A" + Convet_value.ToString(string.Format("{0:X}", Convert.ToInt32(rtnAddInitial[0]))) + "2000000" + Convert.ToString(Convert.ToInt32(rtnAddNum), 16) + rtnObtainByte + "00";
+
+        Socket clientSocket = null;
+        //통신용 소켓 선언
+        clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+        // 소켓통신시 값을 전송하는 최대시간 설정 1000 = 1초
+        clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, 3000);
+
+        // 소켓통신시 값이 되돌아 오는 최대시간 설정 1000 = 1초
+        clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 3000);
+
+
+        // 서버(PLC) IP 셋팅
+        IPAddress iPAddress = IPAddress.Parse(ip);
+        IPEndPoint serverEP = new IPEndPoint(iPAddress, Convert.ToInt32(port));
+
+        clientSocket.Connect(serverEP);                 //PLC에 접속
+
+        // 버퍼 할당
+        sendBuffer = new byte[2048];
+        receiveBuffer = new byte[2048];
+
+        sendBuffer = Encoding.ASCII.GetBytes(s_cmd);        // sendBuffer에 s_cmd 인코딩 후 입력
+
+        clientSocket.Send(sendBuffer);         // 소켓을 통해 sendBuffer 전송
+
+        int receivedSize = clientSocket.Receive(receiveBuffer, 2048, SocketFlags.None); //PLC에서 결과값 Receive
+
+        rtnStr = Encoding.ASCII.GetString(receiveBuffer, 0, receivedSize);              //저장된 결과값 string 형식으로 변환	
+
+        clientSocket.Close(); // 소켓 닫음
+
+        sendBuffer = null;
+        receiveBuffer = null;
+
+        //할당된 바이트수에 따른 길이 생성
+        int ret_Leng = 4 * Convert.ToInt32(rtnObtainByte);
+
+        if (rtnStr.Length >= 20)                            //20자리 이상일 경우엔 PLC와 제대로 통신이 된경우...
+        {
+            rtnStr = rtnStr.Substring(4, ret_Leng);
+        }
+
+        int j = 0;
+
+        for (int i = sInt; i <= eInt; i++)
+        {
+            string key = "0000" + i;
+            key = key.Substring(key.Length - 4, 4);
+            // 2018-03-20 추가 ( dictionary 관련 ) ----------------
+            string plckey = plccd + "D" + key;
+            if (!plcdata.ContainsKey(plckey)) continue;
+            //string plcValue = ((char)receiveByte[11 + (i - sInt) * 2]).ToString();
+            string plcValue = rtnStr.Substring(j * 4, 4);
+            plcValue = Convert.ToInt32(plcValue, 16).ToString();
+
+            plcdata[plckey] = plcValue;
+            // ---------------------------------------------------
+            j++;
+        }
+    }
+
+    private static void _Read_NETEYE(Socket socket, string ip, int port, string startAddress, string endAddress, ref Dictionary<string, string> plcdata, string plccd, bool isNum)
+    {
+        string rtnStr = "";  // 통신결과
+                                //string rtnCardName = MELSEC-A; //차종코드..?(타입설정)
+        string s_cmd = ""; //통신명령어
+        string rtnKuck = "00"; //국번호
+        string rtnAddInitial = ""; //시작이니셜
+        string rtnAddNum = ""; //시작번지
+        string rtnObtainByte = ""; //바이트수
+
+        // 데이터 파싱
+        if (startAddress.Length.Equals(6))
+        {
+            rtnAddInitial = "DW";
+        }
+        else
+        {
+            rtnAddInitial = "D";
+        }
+        rtnAddNum = startAddress.Replace("D", "").Replace("W", "");
+
+        int sInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", ""));
+        int eInt = int.Parse(endAddress.ToUpper().Replace("D", "").Replace("W", ""));
+
+        int rCount = eInt - sInt + 2;
+
+        rtnObtainByte = 0 + Convert.ToString(rCount);
+
+        //Buffer
+        byte[] sendBuffer = null;
+        byte[] receiveBuffer = null;
+
+        //결과값 초기화
+        rtnStr = "";
+
+        int Convet_value = 0;
+        s_cmd = (char)5 + "00FFWR0" + rtnAddInitial + rtnAddNum + rtnObtainByte;
+
+        Socket clientSocket = null;
+        //통신용 소켓 선언
+        clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+        // 소켓통신시 값을 전송하는 최대시간 설정 1000 = 1초
+        clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, 3000);
+
+        // 소켓통신시 값이 되돌아 오는 최대시간 설정 1000 = 1초
+        clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 3000);
+
+
+        // 서버(PLC) IP 셋팅
+        IPAddress iPAddress = IPAddress.Parse(ip);
+        IPEndPoint serverEP = new IPEndPoint(iPAddress, Convert.ToInt32(port));
+
+        clientSocket.Connect(serverEP);                 //PLC에 접속
+
+        // 버퍼 할당
+        sendBuffer = new byte[2048];
+        receiveBuffer = new byte[2048];
+
+        sendBuffer = Encoding.ASCII.GetBytes(s_cmd);        // sendBuffer에 s_cmd 인코딩 후 입력
+
+        clientSocket.Send(sendBuffer);         // 소켓을 통해 sendBuffer 전송
+
+        int receivedSize = clientSocket.Receive(receiveBuffer, 2048, SocketFlags.None); //PLC에서 결과값 Receive
+
+        rtnStr = Encoding.ASCII.GetString(receiveBuffer, 0, receivedSize);              //저장된 결과값 string 형식으로 변환	
+
+        clientSocket.Close(); // 소켓 닫음
+
+        sendBuffer = null;
+        receiveBuffer = null;
+
+        //할당된 바이트수에 따른 길이 생성
+        int ret_Leng = 4 * Convert.ToInt32(rtnObtainByte);
+
+        if (rtnStr.Length >= 20)                            //20자리 이상일 경우엔 PLC와 제대로 통신이 된경우...
+        {
+            rtnStr = rtnStr.Substring(5, ret_Leng);
+        }
+
+        int j = 0;
+
+        for (int i = sInt; i <= eInt; i++)
+        {
+            string key = "0000" + i;
+            key = key.Substring(key.Length - 4, 4);
+            // 2018-03-20 추가 ( dictionary 관련 ) ----------------
+            string plckey = plccd + "D" + key;
+            if (!plcdata.ContainsKey(plckey)) continue;
+            //string plcValue = ((char)receiveByte[11 + (i - sInt) * 2]).ToString();
+            string plcValue = rtnStr.Substring(j * 4, 4);
+            plcValue = Convert.ToInt32(plcValue, 16).ToString();
+
+            plcdata[plckey] = plcValue;
+            // ---------------------------------------------------
+            j = j + 1;
+        }
+    }
+
+    private static string GetSumCheckCode(string strInputCmd)
+    {
+        try
+        {
+            char[] arTemp = strInputCmd.ToCharArray();
+            int iTemp = 0;
+            string sTemp = "";
+            foreach (char cRecive in arTemp)
+            {
+                if (!cRecive.Equals((char)5))
+                {
+                    iTemp += Convert.ToInt32(cRecive);
+                }
+            }
+            sTemp = Convert.ToString(iTemp, 16);
+
+            return sTemp.ToUpper().Substring(sTemp.Length - 2);
+        }
+        catch
+        {
+            return "";
+        }
+    }
+    private static string Read_MEL_SW(Socket socket, string ip, int port, string startAddress, string endAddress, string plctype, bool isNum)
+    {
+        // 변수 선언
+        string rtnStr = "";  // 통신결과
+        string rtnCardName = plctype; //차종코드..?(타입설정)
+        string s_cmd = ""; //통신명령어
+        string rtnKuck = "00"; //국번호
+        string rtnAddInitial = ""; //시작이니셜
+        string rtnAddNum = ""; //시작번지
+        string rtnObtainByte = ""; //바이트수
+
+        // 데이터 파싱
+        if (startAddress.Length.Equals(6))
+        {
+            rtnAddInitial = "DW";
+        }
+        else
+        {
+            rtnAddInitial = "D";
+        }
+        rtnAddNum = startAddress.Replace("D", "").Replace("W", "");
+        rtnObtainByte = endAddress;
+
+        //Buffer
+        byte[] sendBuffer = null;
+        byte[] receiveBuffer = null;
+
+        //결과값 초기화
+        rtnStr = "";
+
+        //PLC에 각 TYPE에 따른 명령문 작성
+        if (rtnCardName == "Q")
+        {
+            s_cmd = "500000FF03FF" + rtnKuck + "0018000A04010000" + rtnAddInitial + "*" + rtnAddNum + "00" + rtnObtainByte;
+        }
+        else if (rtnCardName == "A")    //A-시리즈(cf.A-시리즈 명령어를 이용 Q-시리즈에서 사용해도 동일한 결과값을 얻을수 있다.)
+        {
+            int Convet_value = 0;
+            s_cmd = "01FF000A" + Convet_value.ToString(string.Format("{0:X}", Convert.ToInt32(rtnAddInitial[0]))) + "2000000" + Convert.ToString(Convert.ToInt32(rtnAddNum), 16) + rtnObtainByte + "00";
+        }
+        else if (rtnCardName == "NETEYE")
+        {
+            s_cmd = (char)5 + "00FFWR0" + rtnAddInitial + rtnAddNum + rtnObtainByte;
+        }
+        else if (rtnCardName == "M0J2")    //M0J2(도시락 타입)
+        {
+            s_cmd = (char)5 + rtnKuck + "FFWR0" + rtnAddInitial + rtnAddNum + rtnObtainByte;   //명령어조합=> FFWR0:시작번지가 4자리일경우
+
+            string summ = GetSumCheckCode(s_cmd);
+
+            s_cmd = s_cmd + summ;                                  //SUM CHECK CODE 할당
+        }
+        else if (rtnCardName == "MasterK")     // NEYEYE - MASTER-K 통신 데이터
+        {
+            // 블럭수(데이터영역과 번지의 길이)
+            string DataLan = string.Format("{0:00}", ("%" + rtnAddInitial + "W" + rtnAddNum).Length);
+
+            s_cmd = (char)5 + rtnKuck + "RSB" + DataLan + "%" + rtnAddInitial + "W" + rtnAddNum + rtnObtainByte + (char)4;
+
+            string summ = GetSumCheckCode(s_cmd);
+
+            s_cmd = s_cmd + summ;                                  //SUM CHECK CODE 할당
+        }
+
+        Socket clientSocket = null;
+        //통신용 소켓 선언
+        clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+        // 소켓통신시 값을 전송하는 최대시간 설정 1000 = 1초
+        clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, 40000);
+
+        // 소켓통신시 값이 되돌아 오는 최대시간 설정 1000 = 1초
+        clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 40000);
+
+
+        // 서버(PLC) IP 셋팅
+        IPAddress iPAddress = IPAddress.Parse(ip);
+        IPEndPoint serverEP = new IPEndPoint(iPAddress, Convert.ToInt32(port));
+
+        clientSocket.Connect(serverEP);                 //PLC에 접속
+
+        // 버퍼 할당
+        sendBuffer = new byte[2048];
+        receiveBuffer = new byte[2048];
+
+        sendBuffer = Encoding.ASCII.GetBytes(s_cmd);        // sendBuffer에 s_cmd 인코딩 후 입력
+
+        clientSocket.Send(sendBuffer);         // 소켓을 통해 sendBuffer 전송
+
+        int receivedSize = clientSocket.Receive(receiveBuffer, 2048, SocketFlags.None); //PLC에서 결과값 Receive
+
+        rtnStr = Encoding.ASCII.GetString(receiveBuffer, 0, receivedSize);              //저장된 결과값 string 형식으로 변환	
+
+        clientSocket.Close(); // 소켓 닫음
+
+        sendBuffer = null;
+        receiveBuffer = null;
+
+        //할당된 바이트수에 따른 길이 생성
+        int ret_Leng = 4 * Convert.ToInt32(rtnObtainByte);
+
+        if (rtnStr.Length >= 20)                            //20자리 이상일 경우엔 PLC와 제대로 통신이 된경우...
+        {
+            if (rtnCardName == "NETEYE")                //Net-Eye방식일땐 5자리에서 20자리까지 끊어서 반환
+            {
+                rtnStr = rtnStr.Substring(5, ret_Leng);
+            }
+            else if (rtnCardName == "Q")                //Q-시리즈 일경우엔 22자리에서 20자리까지 끊어서 반환
+            {
+                rtnStr = rtnStr.Substring(22, ret_Leng);
+            }
+            else if (rtnCardName == "A")                //A-시리즈
+            {
+                rtnStr = rtnStr.Substring(4, ret_Leng);
+            }
+            else if (rtnCardName == "M0J2")              //M0J2카드(도시락 타입)는 6자리에서 할당된 번지갯수 만큼 반환
+            {
+                rtnStr = rtnStr.Substring(5, ret_Leng);
+            }
+            else if (rtnCardName == "MasterK")              //Master
+            {
+                rtnStr = rtnStr.Substring(10, ret_Leng);
+            }
+        }
+        return rtnStr;              // 결과값 리턴
+    }
+
+    public static string _Read_MEL_DW_SINGLE(string ip, int port, string startAddress, string endAddress, string plccd, bool isNum)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+
+        Dictionary<string, string> AA = new Dictionary<string, string>();
+
+        int sInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", ""));
+        int eInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", "")) + 1;
+
+        for (int i = sInt; i <= eInt; i++)
+        {
+
+            AA.Add("D" + i, "");
+            ItsPlcNet.Read_MEL_TCP(ip, port, "D" + i, "D" + i, ref AA, null);
+        }
+
+        string BB = "";
+        string CC = "";
+
+        BB += AA["D" + sInt];
+        CC += AA["D" + eInt];
+
+        int BI = Convert.ToInt32(BB);
+        int CI = Convert.ToInt32(CC);
+
+        //BB = Convert.ToString(BI, 2);
+        //CC = Convert.ToString(CI, 2);
+        BB = Convert.ToString(BI, 16);
+        CC = Convert.ToString(CI, 16);
+
+        string RSTR = Convert.ToInt32(CC + BB, 16).ToString();
+
+        int key = sInt;
+        string plckey = plccd + "DW" + key;
+
+        //plcdata[plckey] = RVSTR;
+
+        return RSTR;
+    }
+
+    public static string _Read_MEL_A_SINGLE(string ip, int port, string startAddress, string endAddress,string plccd, bool isNum)
+    {
+        Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        socket.ReceiveTimeout = 3000;
+        socket.SendTimeout = 3000;
+        // 변수 선언
+        string rtnStr = "";  // 통신결과
+        //string rtnCardName = MELSEC-A; //차종코드..?(타입설정)
+        string s_cmd = ""; //통신명령어
+        string rtnKuck = "00"; //국번호
+        string rtnAddInitial = ""; //시작이니셜
+        string rtnAddNum = ""; //시작번지
+        string rtnObtainByte = ""; //바이트수
+
+        // 데이터 파싱
+        if (startAddress.Length.Equals(6))
+        {
+            rtnAddInitial = "DW";
+        }
+        else
+        {
+            rtnAddInitial = "D";
+        }
+        rtnAddNum = startAddress.Replace("D", "").Replace("W", "");
+
+        int sInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", ""));
+        int eInt = int.Parse(endAddress.ToUpper().Replace("D", "").Replace("W", ""));
+
+        int rCount = eInt - sInt + 2;
+
+        // rtnObtainByte = 0 + Convert.ToString(rCount);
+        rtnObtainByte = "05";
+
+        //Buffer
+        byte[] sendBuffer = null;
+        byte[] receiveBuffer = null;
+
+        //결과값 초기화
+        rtnStr = "";
+
+        int Convet_value = 0;
+        s_cmd = "01FF000A" + Convet_value.ToString(string.Format("{0:X}", Convert.ToInt32(rtnAddInitial[0]))) + "2000000" + Convert.ToString(Convert.ToInt32(rtnAddNum), 16) + rtnObtainByte + "00";
+        
+        Socket clientSocket = null;
+
+        // 통신연결
+        //통신용 소켓 선언
+        clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+        // 소켓통신시 값을 전송하는 최대시간 설정 1000 = 1초
+        clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, 40000);
+
+        // 소켓통신시 값이 되돌아 오는 최대시간 설정 1000 = 1초
+        clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 40000);
+
+
+        //서버(PLC) IP 셋팅
+        IPAddress iPAddress = IPAddress.Parse(ip);
+        IPEndPoint serverEP = new IPEndPoint(iPAddress, Convert.ToInt32(port));
+
+        clientSocket.Connect(serverEP);                 //PLC에 접속
+        
+        sendBuffer = new byte[2048];
+        receiveBuffer = new byte[2048];			//Receive byte배열 선언 
+        
+        sendBuffer = Encoding.ASCII.GetBytes(s_cmd);    //요청 명령어 byte배열로 변환
+
+        clientSocket.Send(sendBuffer);                  //요청 명령어 PLC로 SEND 
+
+        int receivedSize = clientSocket.Receive(receiveBuffer, 2048, SocketFlags.None); //PLC에서 결과값 Receive
+        rtnStr = Encoding.ASCII.GetString(receiveBuffer, 0, receivedSize);				//저장된 결과값 string 형식으로 변환	
+
+        // 통신해제
+        clientSocket.Close();  //소켓 close
+        clientSocket = null;
+
+        //Buffer 초기화
+        sendBuffer = null;
+        receiveBuffer = null;
+        
+        //할당된 바이트수에 따른 길이 생성
+        int ret_Leng = 4 * Convert.ToInt32(rtnObtainByte);
+
+        if (rtnStr.Length >= 20)                            //20자리 이상일 경우엔 PLC와 제대로 통신이 된경우...
+        {
+            rtnStr = rtnStr.Substring(4, ret_Leng);
+        }
+
+        int j = 0;
+        string plcValue = "";
+
+        for (int i = sInt; i <= eInt; i++)
+        {
+            string key = "0000" + i;
+            key = key.Substring(key.Length - 4, 4);
+            // 2018-03-20 추가 ( dictionary 관련 ) ----------------
+            string plckey = plccd + "D" + key;
+           // if (!plcdata.ContainsKey(plckey)) continue;
+            //string plcValue = ((char)receiveByte[11 + (i - sInt) * 2]).ToString();
+            plcValue = rtnStr.Substring(j * 4, 4);
+            plcValue = Convert.ToInt32(plcValue, 16).ToString();
+
+            //  plcdata[plckey] = plcValue;
+            // ---------------------------------------------------
+            j = j++;
+        }
+        return plcValue;
+    }
+
+    public static string _Read_NETEYE_SINGLE(string ip, int port, string startAddress, string endAddress, string plccd, bool isNum)
+    {
+        try
+        {
+            Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            socket.ReceiveTimeout = 3000;
+            socket.SendTimeout = 3000;
+            // 변수 선언
+            string rtnStr = "";  // 통신결과
+                                 //string rtnCardName = MELSEC-A; //차종코드..?(타입설정)
+            string s_cmd = ""; //통신명령어
+            string rtnKuck = "00"; //국번호
+            string rtnAddInitial = ""; //시작이니셜
+            string rtnAddNum = ""; //시작번지
+            string rtnObtainByte = ""; //바이트수
+
+            // 데이터 파싱
+            if (startAddress.Length.Equals(6))
+            {
+                rtnAddInitial = "DW";
+            }
+            else
+            {
+                rtnAddInitial = "D";
+            }
+            rtnAddNum = startAddress.Replace("D", "").Replace("W", "");
+
+            int sInt = int.Parse(startAddress.ToUpper().Replace("D", "").Replace("W", ""));
+            int eInt = int.Parse(endAddress.ToUpper().Replace("D", "").Replace("W", ""));
+
+            int rCount = eInt - sInt + 2;
+
+            rtnObtainByte = 0 + Convert.ToString(rCount);
+
+            rtnObtainByte = "05";
+
+            //Buffer
+            byte[] sendBuffer = null;
+            byte[] receiveBuffer = null;
+
+            //결과값 초기화
+            rtnStr = "";
+
+            int Convet_value = 0;
+            s_cmd = (char)5 + "00FFWR0" + rtnAddInitial + rtnAddNum + rtnObtainByte;
+
+            Socket clientSocket = null;
+            //통신용 소켓 선언
+            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
+            // 소켓통신시 값을 전송하는 최대시간 설정 1000 = 1초
+            clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, 3000);
+
+            // 소켓통신시 값이 되돌아 오는 최대시간 설정 1000 = 1초
+            clientSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 3000);
+
+            // 서버(PLC) IP 셋팅
+            IPAddress iPAddress = IPAddress.Parse(ip);
+            IPEndPoint serverEP = new IPEndPoint(iPAddress, Convert.ToInt32(port));
+
+            clientSocket.Connect(serverEP);                 //PLC에 접속
+
+            // 버퍼 할당
+            sendBuffer = new byte[2048];
+            receiveBuffer = new byte[2048];
+
+            sendBuffer = Encoding.ASCII.GetBytes(s_cmd);        // sendBuffer에 s_cmd 인코딩 후 입력
+
+            clientSocket.Send(sendBuffer);         // 소켓을 통해 sendBuffer 전송
+
+            int receivedSize = clientSocket.Receive(receiveBuffer, 2048, SocketFlags.None); //PLC에서 결과값 Receive
+
+            rtnStr = Encoding.ASCII.GetString(receiveBuffer, 0, receivedSize);              //저장된 결과값 string 형식으로 변환	
+
+            clientSocket.Close(); // 소켓 닫음
+
+            sendBuffer = null;
+            receiveBuffer = null;
+
+            //할당된 바이트수에 따른 길이 생성
+            int ret_Leng = 4 * Convert.ToInt32(rtnObtainByte);
+
+            if (rtnStr.Length >= 20)                            //20자리 이상일 경우엔 PLC와 제대로 통신이 된경우...
+            {
+                rtnStr = rtnStr.Substring(5, ret_Leng);
+            }
+
+            string plcValue = "";
+
+            int j = 0;
+
+            for (int i = sInt; i <= eInt; i++)
+            {
+                string key = "0000" + i;
+                key = key.Substring(key.Length - 4, 4);
+                // 2018-03-20 추가 ( dictionary 관련 ) ----------------
+                string plckey = plccd + "D" + key;
+                //if (!plcdata.ContainsKey(plckey)) continue;
+                //string plcValue = ((char)receiveByte[11 + (i - sInt) * 2]).ToString();
+                plcValue = rtnStr.Substring(j * 4, 4);
+                plcValue = Convert.ToInt32(plcValue, 16).ToString();
+
+                //plcdata[plckey] = plcValue;
+                // ---------------------------------------------------
+                j = j + 1;
+            }
+
+            return plcValue;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("_Read_NETEYE_SINGLE => " + ex.Message);
+            return string.Empty;
+        }            
+    }
+}   

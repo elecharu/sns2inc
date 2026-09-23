@@ -1,0 +1,1167 @@
+﻿/*.wj-flexgrid {
+    height: calc(100% - 72px);
+}*/
+
+span {
+    font-size: 14px;
+}
+
+.SplitTop .wj-flexgrid {
+    height: calc(100%) !important;
+}
+
+.SplitDown .wj-flexgrid > div   { height:calc(100%) !important; }
+
+.SplitLeft .wj-flexgrid {
+     height: calc(100%) !important; 
+}
+
+
+/****************************************************** 버튼  ***************************************************/
+div.ItsButton {
+    background-color: transparent;
+}
+div.ItsButton_table {
+    width: 150px;
+    height: 40px;
+    background: #262938;
+    border-radius: 10px;
+    border: solid 2px #262938 !important;
+}
+div.ItsButton_table span {
+    font-family: Roboto;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px;
+    color: white;
+}
+
+/*비활성화*/
+div.ItsButton_disabled > .ItsButton_table {
+    cursor:default;
+    background:#A7B6CA;
+    border:solid 2px #A7B6CA!important;
+}
+div.ItsButton_disabled span {
+    color:white !important;
+}
+
+div.ItsButton_table:focus:hover:not(.ItsButton_disabled) { 
+    border: 0px !important;
+
+}
+div.ItsButton_table:active:not(.ItsButton_disabled) {
+    background-color: #0069FF;
+}
+
+/****************************************************** 날짜  ***************************************************/
+/*(2023-02-14신정수)*/
+
+/*날짜선택부분*/
+div.ItsDate_box > input {
+    width: 130px!important;
+    height: 40px;
+
+    font-family: Roboto;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px; 
+
+    border:solid 2px #C5C5C5;
+}
+
+/*라벨부분*/
+div.ItsDate_table > span { 
+    margin-right: 20px; 
+    margin-left : 40px;    
+
+    font-family: Roboto!important;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px; 
+}
+/*달력모양버튼부분*/
+div.ItsDate_button { 
+    height:40px; 
+    width:40px; 
+    background-size: 37px;
+    border:solid 2px #C5C5C5;
+}
+
+/*이벤트*/
+div.ItsDate_box > input:hover ~ div.ItsDate_button  {
+    border: 2px solid #0069FF;
+    background: url(../../images/UserControl/ic_calendar_h.png) no-repeat, #FFFFFF;
+    background-size: 37px;
+}
+div.ItsDate_box > div.ItsDate_button:hover  {
+    border: 2px solid #0069FF;
+    background: url(../../images/UserControl/ic_calendar_h.png) no-repeat, #FFFFFF;
+    background-size: 37px;
+}
+div.ItsDate_box > input:focus ~ div.ItsDate_button  {
+    border: 2px solid #0069FF;
+    background: url(../../images/UserControl/ic_calendar_p.png) no-repeat, #FFFFFF;
+    background-size: 37px;
+    background-color:#4774B9;
+}
+div.ItsDate_box > input:read-only ~ div.ItsDate_button  {
+    border: 2px solid #C0C0C0;
+    background: url(../../images/UserControl/ic_calendar_d.png) no-repeat, #F0F0F0;
+    background-size: 37px;
+    background-color:#F0F0F0;
+}
+/****************************************************** 날짜기간  ***************************************************/
+div.ItsDateRange_table > span {
+    margin-right: 20px; 
+    margin-left : 40px;    
+
+    font-family: Roboto!important;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px; 
+}
+div.ItsDateRange_box > input.ItsDateRange_F {
+    width: 130px!important;
+    height: 40px;
+
+    font-family: Roboto;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px; 
+
+    border:solid 2px #C5C5C5;
+
+}
+div.ItsDateRange_box > input.ItsDateRange_T {
+    width: 130px!important;
+    height: 40px;
+
+    font-family: Roboto;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px; 
+
+    border:solid 2px #C5C5C5;
+}
+div.ItsDateRange_button {
+    height:40px; 
+    width:40px; 
+    background-size: 37px;
+    border:solid 2px #C5C5C5;
+}
+div.ItsDateRange_box > input:hover ~ div.ItsDateRange_button  {
+    border: 2px solid #4774B9;
+    background: url(../../images/UserControl/ic_calendar_h.png) no-repeat, #FFFFFF;
+    background-size: 37px;
+}
+div.ItsDateRange_box > div.ItsDateRange_button:hover  {
+    border: 2px solid #4774B9;
+    background: url(../../images/UserControl/ic_calendar_h.png) no-repeat, #FFFFFF;
+    background-size: 37px;
+}
+div.ItsDateRange_box > input:focus ~ div.ItsDateRange_button  {
+    border: 2px solid #4774B9;
+    background: url(../../images/UserControl/ic_calendar_p.png) no-repeat, #FFFFFF;
+    background-size: 37px;
+    background-color:#4774B9;
+}
+div.ItsDateRange_box > input:read-only ~ div.ItsDateRange_button  {
+    border: 2px solid #C0C0C0;
+    background: url(../../images/UserControl/ic_calendar_d.png) no-repeat, #F0F0F0;
+    background-size: 37px;
+    background-color:#F0F0F0;
+}
+
+/*날짜선택달력 크기조절*/
+div.ItsDateRange_box > div.ItsControl_pop {
+    width: 620px;
+}
+div.ItsDateRange_calendar_T {
+    padding-left:10px;
+}
+div.datetimepicker-inline {
+    height: 320px;
+    width: 300px;
+}
+.table-condensed {
+    height: 320px;
+    width: 300px;
+}
+
+.datetimepicker table tr td span {
+    font-family: Roboto;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+
+div.datetimepicker td, .datetimepicker th {
+    width: 30px;
+    height: 30px;
+    font-family: Roboto;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+/*버튼있는 패널*/
+div.ItsDateRange_innerbtn_div {
+    background-color: #ECECEC;
+    height: 30px;
+}
+/*왼쪽버튼*/
+div.ItsDateRange_innerbtn {
+    font-family: Roboto;
+    font-size: 10px;
+    font-weight: 700;
+    padding-left:15px;
+    padding-right:15px;
+    padding-top:5px;
+    padding-bottom:5px;
+}
+/*확인버튼*/
+div.ItsDateRange_close {
+    font-family: Roboto;
+    font-size: 10px;
+    font-weight: 700;
+    padding-left:15px;
+    padding-right:15px;
+    padding-top:5px;
+    padding-bottom:5px;
+}
+/***************************************************************************************************************/
+/****************************************************** 월조회 ***************************************************/
+/*(2023-08-24 박제홍)*/
+
+div.ItsMonth_table {
+    margin-right: 20px;
+    margin-left: 40px;
+    font-family: Roboto !important;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px;
+}
+
+    div.ItsMonth_table > span {
+        vertical-align: middle;
+        text-align: right;
+        font-family: Roboto;
+        font-weight: 400;
+        font-size: 20px;
+        background-color: transparent;
+        white-space: normal;
+        color: #565656;
+    }
+
+div.ItsMonth_box {
+    vertical-align: middle;
+    margin-left: 15px;
+}
+
+    div.ItsMonth_box > input {
+        padding: 0px 4px 0px 4px;
+        vertical-align: middle;
+        height: 40px;
+        border: 1px solid #C0C0C0;
+        border-right: 1px solid transparent;
+        box-sizing: border-box;
+        line-height: 11px;
+        font-weight: normal;
+        font-size: 20px;
+        color: #565656;
+    }
+
+        div.ItsMonth_box > input:read-only {
+            color: #A3A3A3;
+        }
+
+div.ItsMonth_button {
+    height: 40px;
+    width: 42px;
+    border: 1px solid #C0C0C0;
+    background-color: white;
+    background: url(../../images/UserControl/ic_calendar_n.png) no-repeat, #FFFFFF;
+    background-size: 40px;
+}
+
+div.ItsMonth_box > input:focus {
+    border: 1px solid #4774B9;
+}
+
+div.ItsMonth_box > input:read-only {
+    border: 1px solid #C0C0C0;
+    background-color: #F0F0F0;
+}
+
+div.ItsMonth_box > input:hover ~ div.ItsMonth_button {
+    border: 1px solid #4774B9;
+    background: url(../../images/UserControl/ic_calendar_h.png) no-repeat, #FFFFFF;
+    background-size: 40px;
+}
+
+div.ItsMonth_box > div.ItsMonth_button:hover {
+    border: 1px solid #4774B9;
+    background: url(../../images/UserControl/ic_calendar_h.png) no-repeat, #FFFFFF;
+    background-size: 40px;
+}
+
+div.ItsMonth_box > input:focus ~ div.ItsMonth_button {
+    border: 1px solid #4774B9;
+    background: url(../../images/UserControl/ic_calendar_p.png) no-repeat, #FFFFFF;
+    background-size: 40px;
+    background-color: #4774B9;
+}
+
+div.ItsMonth_box > input:read-only ~ div.ItsMonth_button {
+    border: 1px solid #C0C0C0;
+    background: url(../../images/UserControl/ic_calendar_d.png) no-repeat, #F0F0F0;
+    background-size: 40px;
+    background-color: #F0F0F0;
+}
+/***************************************************************************************************************/
+/****************************************************** 콤보박스  ***************************************************/
+/*(2023-02-13신정수)*/
+/*내용*/
+div.ItsCombo_box > input { 
+    /*width: 200px!important;*/
+    height:40px; 
+
+    font-family: Roboto;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px; 
+    border:solid 2px #C5C5C5;
+}
+/*라벨*/
+div.ItsCombo_table > span { 
+    margin-right: 20px;    
+    margin-left : 40px;    
+
+    font-family: Roboto;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px; 
+
+    width: 80px /*!important;*/
+}
+/*▼버튼*/
+div.ItsCombo_button { 
+    height:40px; 
+    width:40px; 
+    background-size: 40px; 
+    border:solid 2px #C5C5C5;
+}
+div.ItsCombo_box > ul {     
+    margin-top:40.1px;
+    /*height:500px;*/
+    max-height: 250px;
+}
+div.ItsCombo_box > ul > li { 
+    height:40px; 
+    width:100%; 
+    font-size:20px; 
+    line-height: 37px; 
+}
+
+div.ItsCombo_box > input:focus {
+    border: 2px solid #4774B9;
+}
+div.ItsCombo_box > input:focus ~ div.ItsCombo_button  {
+    border: 2px solid #4774B9;
+    background: url(../../images/UserControl/ic_drop_p.png) no-repeat, #FFFFFF;
+    background-size: 40px;
+    background-color:#4774B9;
+}
+div.ItsCombo_button:hover {
+    border: 2px solid #4774B9;
+    background: url(../../images/UserControl/ic_drop_h.png) no-repeat, #FFFFFF;
+    background-size: 40px;
+}
+div.ItsCombo_box > input:hover ~ div.ItsCombo_button  {
+    border: 2px solid #4774B9;
+    background: url(../../images/UserControl/ic_drop_h.png) no-repeat, #FFFFFF;
+    background-size: 40px;
+}
+div.ItsCombo_box > div.ItsCombo_button:hover  {
+    border: 2px solid #4774B9;
+    background: url(../../images/UserControl/ic_drop_h.png) no-repeat, #FFFFFF;
+    background-size: 40px;
+}
+
+/****************************************************** FIND 컨트롤  ***************************************************/
+/*내용*/
+div.ItsFind_box > input {
+    /*width: 200px!important;*/
+    height: 40px;
+    font-family: Roboto;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px;
+    border: solid 2px #C5C5C5;
+    
+}
+div.ItsFind_box > input.ItsFind_name {
+    height: 40px;
+    font-family: Roboto;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px;
+    border: solid 2px #C5C5C5;
+    }
+/*라벨*/
+div.ItsFind_table > span {
+    margin-right: 20px;
+    margin-left: 40px;
+    font-family: Roboto;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px;
+    width: 80px /*!important;*/
+}
+/*▼버튼*/
+div.ItsFind_button {
+    cursor: pointer;
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: middle;
+    height: 40px;
+    width: 40px;
+    text-align: center;
+    margin-left: -5px;
+    border: 1px solid #C5C5C5;
+    background-color: white;
+    background: url(../../images/UserControl/ic_search_n.png) no-repeat, #FFFFFF;
+    background-size: 40px;
+}
+div.ItsFind_box > input:hover ~ div.ItsFind_button {
+    border: 1px solid #C5C5C5;
+    background: url(../../images/UserControl/ic_search_n.png) no-repeat, #C5C5C5;
+    background-size: 40px;
+}
+
+div.ItsFind_box > div.ItsFind_button:hover {
+    border: 1px solid #C5C5C5;
+    background: url(../../images/UserControl/ic_search_n.png) no-repeat, #C5C5C5;
+    background-size: 40px;
+}
+
+div.ItsFind_box > input:focus ~ div.ItsFind_button {
+    border: 1px solid #C5C5C5;
+    background: url(../../images/UserControl/ic_search_p.png) no-repeat, #C5C5C5;
+    background-size: 40px;
+    background-color: #4774B9;
+}
+
+div.ItsFind_box > .ItsFind_code:read-only ~ ItsFind_button {
+    border: 1px solid #C0C0C0;
+    background: url(../../images/UserControl/ic_search_d.png) no-repeat, #C5C5C5;
+    background-size: 40px;
+    background-color: #F0F0F0;
+}
+
+div.ItsFind_box > div.ItsControl_pop > ul > li {
+    display: block;
+    word-wrap: unset;
+    vertical-align: middle;
+    background-color: white;
+    height: 30px;
+    min-height: 22px;
+    border-bottom: solid 1px #EDF2F8;
+    font-size: 15px;
+    padding: 3px;
+    color: #565656;
+}
+
+/****************************************************그리드******************************************************/
+/*2023-02-14 신정수*/
+.wj-cell {
+    border-right: 1px solid rgba(70, 116, 185, 0.2) /*#C6D9F1*/;
+    border-bottom: 1px solid rgba(70, 116, 185, 0.2) /*#C6D9F1*/;
+    white-space: pre;
+    background: #FFFFFF /*!important*/;
+    font-family: Roboto;
+    font-size: 17px;
+    font-weight: 400;
+    line-height: 32px;
+    letter-spacing: 0em;
+    text-align: left;
+    height: 40px;
+    border: solid 2px #DDDDDD;
+}
+/*헤더*/
+.wj-cell.wj-header {
+    background: #ECECEC !important;
+    font-weight: 700!important;
+}
+
+element.style {
+}
+.wj-control * {
+    box-sizing: inherit;
+}
+h1, h2, h3, h4, h5, dl, dt, dd, ul, li, ol, th, td, p, blockquote, form, fieldset, legend, div, body {
+    -webkit-print-color-adjust: exact;
+}
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+사용자 에이전트 스타일시트
+div {
+    display: block;
+}
+
+/*탭헤더*/
+
+.wj-tabpanel>div>.wj-tabheaders>.wj-tabheader {
+    height: 40px;
+    display:inline-grid;
+    align-content:center;
+    padding-left: 30px;
+    padding-right: 30px;
+
+    font-family: Roboto;
+    color: #959595;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 28px;
+    letter-spacing: 0em;
+    text-align: left;
+    background: #E8E8E8;
+   
+    border-top:solid 2px #E8E8E8;
+    border-left:solid 2px #E8E8E8;
+    border-right:solid 2px #E8E8E8;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+/*탭헤더 클릭시*/
+.wj-tabpanel>div>.wj-tabheaders>.wj-tabheader.wj-state-active {
+    height: 40px;
+    background: #FFFFFF;
+    display:inline-grid;
+    align-content:center;
+    padding-left: 30px;
+    padding-right: 30px;
+
+    color: #70A6F3;
+    font-family: Roboto;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 28px;
+    letter-spacing: 0em;
+    text-align: left;
+
+    border-top:solid 2px #E8E8E8;
+    border-left:solid 2px #E8E8E8;
+    border-right:solid 2px #E8E8E8;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    
+}
+
+.wj-flexgrid {
+    border-top:0px;
+}
+
+/*그리드 체크박스*/
+.wj-cell input[type=checkbox] {
+    width: 20px;
+    height: 20px;
+    margin-top: 6px;
+}
+/*체크박스 셀 선택됬을때*/
+.wj-state-selected input[type=checkbox] {
+    margin: 7px 0px 0px 2px;
+}
+
+.ItsGridButton {
+    /*color: #919191;*/
+    font-size: 20px !important;
+}
+/**************************************************** 텍스트 ******************************************************/
+/*2023-02-14 신정수*/
+/*div.ItsText_table {
+    margin-top:10px!important;
+    margin-bottom:10px!important;
+    margin-left:10px!important;
+    margin-right:10px!important;
+}*/
+
+div.ItsText_table > span {
+    font-family: Roboto;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 41px;
+
+    margin-right:10px;
+}
+div.ItsText_table > input {
+    height:40px; 
+
+    font-family: Roboto;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px; 
+}
+/*div.ItsText_table > input:focus {
+    border:1px solid #4774B9;
+}
+div.ItsText_table > input:focus:read-only {
+    border:1px solid #C0C0C0;
+}
+div.ItsText_table > input:read-only {
+    border:1px solid #C0C0C0;
+    background-color:#F0F0F0;
+    color:#565656;
+}*/
+
+/**************************************************** TEXTAREA ******************************************************/
+div.ItsTextArea_table > span {
+    font-family: Roboto;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 41px;
+    margin-right: 10px;
+}
+
+iv.ItsTextArea_table > input {
+    height: 40px;
+    font-family: Roboto;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px;
+}
+
+/**************************************************** NUM ******************************************************/
+div.ItsNum_table  > span {
+    font-family: Roboto;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 41px;
+
+    margin-right:10px;
+}
+div.ItsNum_table  > input {
+    height:40px; 
+
+    font-family: Roboto;
+    font-weight: 400;
+    font-size: 20px;
+    line-height: 35.16px; 
+}
+/**************************************************** 라벨 ******************************************************/
+div.ItsLabel_table > span {
+    font-family: Roboto;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 18px;    
+    padding-left: 5px;
+    
+    border-left: solid 7px #262938;
+}
+/**************************************************** 체크박스 ******************************************************/
+
+div.ItsCheck_button {
+    vertical-align: middle;
+    display: inline-block;
+    text-align: center;
+    padding: 0px 3px 1px 3px;
+    cursor: pointer;
+    width: 30px;
+}
+
+div.ItsCheck_table > span {
+    font-family: Roboto;
+    font-size: 18px;
+    font-weight: 700;
+    padding-top: 2px;
+}
+div.ItsCheck_table > .ItsCheck_LeftSpan{
+    margin-left: 12px;
+}
+
+div.ItsCheck_table > .ItsCheck_RightSpan{
+    margin-right: 12px;
+}
+
+div.ItsCheck_icon > i {
+    font-size:15px;
+}
+
+div.ItsCheck_icon > .icon{
+    height: 20px;
+}
+
+div.ItsCheck_icon > .ontype_basic {
+    background: url(../../images/UserControl/check_on.png?ver=1.1) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsCheck_icon > .ontype_red {
+    background: url(../../images/UserControl/check_on_r.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsCheck_icon > .ontype_green {
+    background: url(../../images/UserControl/check_on_g.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsCheck_icon > .ontype_white {
+    background: url(../../images/UserControl/check_on_w.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsCheck_icon > .ontype_yellow {
+    background: url(../../images/UserControl/check_on_y.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsCheck_icon > .offtype_basic {
+    background: url(../../images/UserControl/check_off.png?ver=1.1) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsCheck_icon > .offtype_red {
+    background: url(../../images/UserControl/check_off_r.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsCheck_icon > .offtype_green {
+    background: url(../../images/UserControl/check_off_g.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsCheck_icon > .offtype_white {
+    background: url(../../images/UserControl/check_off_w.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsCheck_icon > .offtype_yellow {
+    background: url(../../images/UserControl/check_off_y.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+/************************************************** 메세지창 ******************************************************/
+/*메세지창 헤더*/
+.ItsMsg-title {
+    font-family: Roboto;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 42px;
+}
+/*메세지창 내용*/
+.ItsMsg-text div {
+    font-family: Roboto;
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 42px;
+}
+/*버튼있는 패널*/
+.msgbox-buttons {
+    height: 60px;
+}
+/*메세지창 확인,예,아니오 버튼*/
+.msgbox-ok, .msgbox-yes, .msgbox-no {
+    width: 100px;
+    height: 40px;
+
+    font-family: Roboto;
+    font-size: 20px;
+    font-weight: 300;
+    line-height: 30px;
+}
+/************************************************** 팝업 ******************************************************/
+.ui-widget-overlay {
+    top: 0px;
+    margin: 0px;
+    width: 100%;
+}
+
+/*타이틀바*/
+.ui-dialog .ui-dialog-titlebar {
+    background: #262938;
+    border:0px;
+    border-radius:0px;
+    height:50px;
+}
+/*타이틀바 내용*/
+.ui-dialog .ui-dialog-titlebar > span {
+    font-family: Roboto;
+    font-size: 18px;
+    font-weight: 700;
+
+    margin-top: 5px;
+    margin-left: 5px;
+}
+.ui-dialog .ui-dialog-titlebar-close {
+    margin: -20px 10px 0 0;
+}
+/*타이틀바 x버튼 내용*/
+.ui-widget button {
+    font-family: Roboto;
+    font-size: 25px;
+}
+.ItsButton.addPop .ItsButton_table {
+    width: 70px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: SpoqaHanSansNeo_B;
+    margin: 10px 5px 10px auto;
+    border: 1px solid #C9C9C9 !important;
+    border-radius: 5px;
+    background-color: #262938 !important;
+    color: #565656;
+}
+
+.ItsButton.addPop .ItsButton_table:hover {
+    color: #4774B9 !important;
+    border: 1px solid #4774B9 !important;
+    text-decoration: none !important;
+}
+
+.ItsButton.addPop .ItsButton_table:active {
+    color: #FFFFFF !important;
+    border: 1px solid #4774B9 !important;
+    background-color: #4774B9 !important;
+}
+/***************************************************************************************************************/
+/*ID 선언해서 디자인 수정*/
+
+/* 생산실적등록 TML1001_R01 */
+#div1_TML1001_R01 {
+    background: #EBEEF2!important;
+}
+#div2_TML1001_R01 {
+    background: #EBEEF2!important;
+}
+
+
+#btn_IN_TML1001_R01,
+#btn_RST_TML1001_R01,
+#btn_LABEL_TML1001_R01,
+#btn_BAD_TML1001_R01,
+#btn_NON_TML1001_R01{
+    background-color:#EBEEF2;
+}
+#btn_IN_TML1001_R01     > .ItsButton_table,
+#btn_RST_TML1001_R01    > .ItsButton_table,
+#btn_LABEL_TML1001_R01  > .ItsButton_table,
+#btn_BAD_TML1001_R01    > .ItsButton_table,
+#btn_NON_TML1001_R01    > .ItsButton_table {
+    background:#FFFFFF;
+    border:solid 2px #C5C5C5!important;
+}
+#btn_IN_TML1001_R01     > .ItsButton_table:active:not(.ItsButton_disabled),
+#btn_RST_TML1001_R01    > .ItsButton_table:active:not(.ItsButton_disabled),
+#btn_LABEL_TML1001_R01  > .ItsButton_table:active:not(.ItsButton_disabled),
+#btn_BAD_TML1001_R01    > .ItsButton_table:active:not(.ItsButton_disabled),
+#btn_NON_TML1001_R01    > .ItsButton_table:active:not(.ItsButton_disabled){
+    background-color: #0069FF;
+    border: 0px !important;
+}
+/*비활성화*/
+#btn_IN_TML1001_R01.ItsButton_disabled      > .ItsButton_table > span,
+#btn_RST_TML1001_R01.ItsButton_disabled     > .ItsButton_table > span,
+#btn_LABEL_TML1001_R01.ItsButton_disabled   > .ItsButton_table > span,
+#btn_BAD_TML1001_R01.ItsButton_disabled     > .ItsButton_table > span,
+#btn_NON_TML1001_R01.ItsButton_disabled     > .ItsButton_table > span {
+    color:#C5C5C5 !important;
+}
+/***********************************************************************************************/
+/* 자재투입 등록 TML1001_R02 */
+#div0_TML1001_R02 {
+    padding-top: 43px;
+    padding-bottom: 40px;
+    padding-left: 40px;
+    padding-right: 40px;
+
+    background:#FAFAFA;
+}
+#div1_TML1001_R02 {
+    background:#DDE3EB!important;
+}
+
+#div2_TML1001_R02 {
+    background:#EBEEF2!important;
+}
+#btn_CANCEL_TML1001_R02 {
+    background-color:#EBEEF2;
+}
+#btn_CANCEL_TML1001_R02 > .ItsButton_table {
+    background:#FFFFFF;
+    border:solid 2px #C5C5C5!important;
+}
+#btn_CANCEL_TML1001_R02 > .ItsButton_table:active:not(.ItsButton_disabled) {
+    background-color: #0069FF;
+    border: 0px !important;
+}
+
+#grid_CURRENT_TML1001_R02 .wj-cell{
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 42px;
+    height: 50px;
+}
+
+/*실적등록팝업*/
+#pdiv_GOODQTY {
+    height: 150px !important;
+}
+
+#txt_GOODQTY_TML1001_R01  {
+    border:0px;
+    background:#FFFFFF;
+    font-family: Roboto;
+    font-size: 30px;
+    font-weight: 700;
+}
+#pdiv_GOODQTY .ItsNum_table span {
+    color:#969696;
+    font-family: Roboto;
+    font-weight: 700;
+}
+#txt_GOODQTY_TML1001_R01~ input {
+    border:0px;
+    background:#FFFFFF;
+    font-family: Roboto;
+    font-size: 30px;
+    font-weight: 700;
+    color:#2E2E2E;
+}
+
+
+#btn_1_TML1001_R01,
+#btn_2_TML1001_R01,
+#btn_3_TML1001_R01,
+#btn_4_TML1001_R01,
+#btn_5_TML1001_R01,
+#btn_6_TML1001_R01,
+#btn_7_TML1001_R01,
+#btn_8_TML1001_R01,
+#btn_9_TML1001_R01,
+#btn_0_TML1001_R01,
+#btn_00_TML1001_R01,
+#btn_DEL_TML1001_R01,
+#btn_CLEAR_TML1001_R01,
+#btn_ADDRST_TML1001_R01,
+#btn_ADDRST2_TML1001_R01,
+#btn_DOT_TML1001_R01 {
+    margin: 0px;
+    padding: 0px;
+}
+
+#btn_1_TML1001_R01 > .ItsButton_table,
+#btn_2_TML1001_R01 > .ItsButton_table,
+#btn_3_TML1001_R01 > .ItsButton_table,
+#btn_4_TML1001_R01 > .ItsButton_table,
+#btn_5_TML1001_R01 > .ItsButton_table,
+#btn_6_TML1001_R01 > .ItsButton_table,
+#btn_7_TML1001_R01 > .ItsButton_table,
+#btn_8_TML1001_R01 > .ItsButton_table,
+#btn_9_TML1001_R01 > .ItsButton_table,
+#btn_0_TML1001_R01 > .ItsButton_table,
+#btn_00_TML1001_R01 > .ItsButton_table,
+#btn_DEL_TML1001_R01 > .ItsButton_table,
+#btn_DOT_TML1001_R01 > .ItsButton_table {
+    background:#FFFFFF;
+    border-radius: 0px;
+    border: solid 1px #DDDDDD !important;
+}
+
+#btn_1_TML1001_R01 > .ItsButton_table > span,
+#btn_2_TML1001_R01 > .ItsButton_table > span,
+#btn_3_TML1001_R01 > .ItsButton_table > span,
+#btn_4_TML1001_R01 > .ItsButton_table > span,
+#btn_5_TML1001_R01 > .ItsButton_table > span,
+#btn_6_TML1001_R01 > .ItsButton_table > span,
+#btn_7_TML1001_R01 > .ItsButton_table > span,
+#btn_8_TML1001_R01 > .ItsButton_table > span,
+#btn_9_TML1001_R01 > .ItsButton_table > span,
+#btn_0_TML1001_R01 > .ItsButton_table > span,
+#btn_00_TML1001_R01 > .ItsButton_table > span,
+#btn_DEL_TML1001_R01 > .ItsButton_table > span,
+#btn_DOT_TML1001_R01 > .ItsButton_table > span {
+    font-family: Roboto;
+    font-size: 20px;
+    font-weight: 400;
+}
+
+#btn_CLEAR_TML1001_R01 > .ItsButton_table {
+    background:#E86161;
+    border-radius: 0px;
+    border-top: solid 1px #DDDDDD !important;
+    border-bottom: 0px !important;
+    border-left: solid 1px #DDDDDD !important;
+    border-right: solid 1px #DDDDDD !important;
+}
+
+#btn_ADDRST_TML1001_R01 > .ItsButton_table {
+    background:#35D244;
+    border-radius: 0px;
+    border-top: 0px !important;
+    border-bottom: 0px !important;
+    border-left: solid 1px #DDDDDD !important;
+    border-right: solid 1px #DDDDDD !important;
+}
+#btn_ADDRST2_TML1001_R01 > .ItsButton_table {
+    background:#35D244;
+    border-radius: 0px;
+    border-top: 0px !important;
+    border-bottom: solid 1px #DDDDDD !important;
+    border-left: solid 1px #DDDDDD !important;
+    border-right: solid 1px #DDDDDD !important;
+}
+/***********************************************************************************************/
+
+/* 불량등록 TML2001_R01 */
+#div0_TML2001_R01 {
+    padding-top: 43px;
+    padding-bottom: 40px;
+    padding-left: 40px;
+    padding-right: 40px;
+
+    background:#FAFAFA;
+}
+
+#grid_CURRENT_TML2001_R01 .wj-cell{
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 42px;
+    height: 50px;
+}
+
+#div1_TML2001_R01 {
+    background:#EBEEF2!important;
+}
+#div2_TML2001_R01 {
+    background:#EBEEF2!important;
+}
+
+
+#btn_CANCEL_TML2001_R01 {
+    background-color:#EBEEF2;
+}
+#btn_CANCEL_TML2001_R01 > .ItsButton_table {
+    background:#FFFFFF;
+    border:solid 2px #C5C5C5!important;
+}
+#btn_CANCEL_TML2001_R01 > .ItsButton_table:active:not(.ItsButton_disabled) {
+    background-color: #0069FF;
+    border: 0px !important;
+}
+/***********************************************************************************************/
+/* 비가동등록 TML3001_R01 */
+#div0_TML3001_R01 {
+    padding-top: 43px;
+    padding-bottom: 40px;
+    padding-left: 40px;
+    padding-right: 40px;
+
+    background:#FAFAFA;
+}
+
+#div1_TML3001_R01 {
+    background:#EBEEF2!important;
+}
+#div2_TML3001_R01 {
+    background:#EBEEF2!important;
+}
+
+#grid_CURRENT_TML3001_R01 .wj-cell{
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 42px;
+    height: 50px;
+}
+/***********************************************************************************************/
+/* 공정검사 등록 TML4001_R01 */
+#div1_TML4001_R01 {
+    background:#DDE3EB!important;
+}
+/* 제품검사 등록 TML4001_R02 */
+#div1_TML4001_R02 {
+    background:#DDE3EB!important;
+}
+/***********************************************************************************************/
+/* 가공후 생산실적등록 TAL1001_R02 */
+#grid_SALODRD_ROUT {
+    height: 83%;
+}
+
+#pdiv1 .ItsNum_table span {
+    margin-right: 20px;
+    margin-left: 40px;
+}
+/***************************************************************************************************************/
+.ItsFind_box > input {
+    height: 30px;
+    font-size: 14px;
+}
+.ItsFind_table > span { margin-right:20px; }
+.ItsFind_button { height:30px; width:30px; }
+.ItsFind_Pophead { height:30px; }
+.ItsFind_limit { height: 30px; }
+.ItsFind_limit > span { height: 28px; }
+.ItsControl_pop > ul > li { height:30px; }
+.ItsFind_button { background-size: 30px; }
+
+
+
+.wj-tabheaders > a { font-size: 13px; }
+
+#ddiv0 span { font-size: 14px; margin: 10px; }
+#ddiv0 .ItsGrid { font-size: 14px; height:151px!important; }
+
+#ddiv1 span { font-size:14px; margin:10px; }
+#ddiv1 .ItsCombo_box > input { height:30px; font-size:14px; }
+#ddiv1 .ItsCombo_table > span { margin-right:10px; }
+#ddiv1 .ItsCombo_button { height:30px; width:30px; background-size: 28px; }
+#ddiv1 .ItsGrid { font-size:14px; height:83px!important; }
+
+#ddiv2 span { font-size: 14px; margin: 10px; }
+#ddiv2 .ItsFileManager label { font-size: 13px; width: 60px; margin-top: 2px; }
+
+#repdiv1 .ItsDateRange_box > input { height: 30px; font-size: 14px; }
+#repdiv1 .ItsDateRange_table > span { margin-right: 20px; }
+#repdiv1 .ItsDateRange_button { height: 30px; width: 30px; background-size: 28px; }
+#repdiv1 span { font-size: 14px; margin: 10px; }
+#repdiv1 .ItsGrid { font-size: 14px; height:233px!important; }
+
+#ddiv3 span { font-size: 14px; margin: 10px; }
+#ddiv3 .ItsCombo_box > input { height: 30px; font-size: 14px; }
+#ddiv3 .ItsCombo_table > span { margin-right: 10px; }
+#ddiv3 .ItsCombo_button { height: 30px; width: 30px; background-size: 28px; }
+#ddiv3 .ItsGrid { font-size: 14px; height:83px!important; }
+
+#ddiv4 span { font-size: 14px; margin: 10px; }
+#ddiv4 .ItsFileManager label { font-size: 13px; width: 60px; margin-top: 2px; }
+
+#repdiv2 .ItsDateRange_box > input { height: 30px; font-size: 14px; }
+#repdiv2 .ItsDateRange_table > span { margin-right: 20px; }
+#repdiv2 .ItsDateRange_button { height: 30px; width: 30px; background-size: 28px; }
+#repdiv2 span { font-size: 14px; margin: 10px; }
+#repdiv2 .ItsGrid { font-size: 14px; height:233px!important; }
+
+#ddiv5 span { font-size: 14px; margin: 10px; }
+#ddiv5 .ItsCombo_box > input { height: 30px; font-size: 14px; }
+#ddiv5 .ItsCombo_table > span { margin-right: 10px; }
+#ddiv5 .ItsCombo_button { height: 30px; width: 30px; background-size: 28px; }
+#ddiv5 .ItsGrid { font-size: 14px; height:83px!important; }
+
+#ddiv6 span { font-size: 14px; margin: 10px; }
+#ddiv6 .ItsFileManager label { font-size: 13px; width: 60px; margin-top: 2px; }
+
+#repdiv3 .ItsDateRange_box > input { height: 30px; font-size: 14px; }
+#repdiv3 .ItsDateRange_table > span { margin-right: 20px; }
+#repdiv3 .ItsDateRange_button { height: 30px; width: 30px; background-size: 28px; }
+#repdiv3 span { font-size: 14px; margin: 10px; }
+#repdiv3 .ItsGrid { font-size: 14px; height:233px!important; }
+
+/*#downdiv { overflow:auto!important; }*/
+
+.select_btn {
+    height: 30px !important;
+    width: 100px;
+}
+
+#ddiv1 .wj-flexgrid { min-height:0!important; }
+
+#ddiv4 .wj-flexgrid { min-height:0!important; }
+
+#ddiv7 .wj-flexgrid { min-height:0!important; }
+

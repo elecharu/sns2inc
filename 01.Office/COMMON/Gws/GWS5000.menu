@@ -1,0 +1,65 @@
+﻿<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var maria = new ItsMaria('GWS7002_R01', 'LIST_BOARD');
+  maria.CallProc();
+  if(maria.isError){
+    maria.ShowErrMsg();
+    return;
+  }else{
+    var html = '';
+    for(var i = 0; i < maria.store.Length(); i++){
+      var data = maria.store.data[i];
+      html += '<li class="position_R padding_L30 board_list">';
+      html += '<a href="/PAGEGWS/GWS5001/GWS5001_S01.aspx?bd=' + data.BOARDTP + '" class="Sub_left_mn_PD">';
+      html += '<div class="Sub_left_mn_in"><img src="../../images/icon_12.png" class="margin_L20 margin_B20"></div>';
+      html += '<span>' + data.BOARDNAME + '</span>';
+      html += '</a>';
+      html += '</li>';
+    }
+    $('#board_title').after(html);
+  }
+});
+</script>
+<div class="Sub_left">			
+		<div class="Sub_left_top">
+			<h1>게시판</h1>
+			
+		</div>		
+		<div class="Sub_left_mn border_Tno">
+			<ul>
+				<li class="padding_L30  margin_B5 padding_T3">
+					<a href="/PAGEGWS/GWS5001/GWS5001_S01.aspx?bd=1" class="Sub_left_mn_PD"><div class="Sub_left_mn_in"><img src="../../images/left_icon04_1.png"> </div> <span>공지사항</span></a>						
+				</li>
+			</ul>
+		</div>
+		<div class="Sub_left_mn">
+			<ul>
+				<li class="padding_L30  margin_B5 padding_T3">
+					<a href="/PAGEGWS/GWS5001/GWS5001_S02.aspx" class="Sub_left_mn_PD"><div class="Sub_left_mn_in"><img src="../../images/left_icon04_2.png"> </div> <span>보고서</span></a>						
+				</li>
+			</ul>
+		</div>
+		<div class="Sub_left_mn">
+			<ul>
+				<li class="padding_L30  margin_B5 padding_T3">
+					<a href="/PAGEGWS/GWS5001/GWS5001_S03.aspx" class="Sub_left_mn_PD"><div class="Sub_left_mn_in"><img src="../../images/left_icon04_3.png"> </div> <span>차량운행일지</span></a>						
+				</li>
+			</ul>
+		</div>
+    <div class="Sub_left_mn">
+			<ul>
+				<li class="padding_L30  margin_B5 padding_T3">
+					<a href="/PAGEGWS/GWS5001/GWS5001_S04.aspx" class="Sub_left_mn_PD"><div class="Sub_left_mn_in"><img src="../../images/meal.png"> </div> <span>일일식사인원</span></a>						
+				</li>
+			</ul>
+		</div>
+		<div class="Sub_left_mn">
+			<ul>
+				<li class="padding_L30  margin_B5 padding_T3" id="board_title">
+					<div class="Sub_left_mn_in"><img src="../../images/left_icon04_4.png"> </div> <span>게시판</span>
+				</li>
+			</ul>
+		</div>
+		<div class="border_T9a">
+		</div>		
+	</div>

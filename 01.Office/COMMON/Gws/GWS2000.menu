@@ -1,0 +1,183 @@
+﻿<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (Number($('.signcnt.appr_cnt')[0].innerText) > 0) $('.signcnt.appr_cnt').show();
+    if (Number($('.signcnt.ref_cnt')[0].innerText) > 0) $('.signcnt.ref_cnt').show();
+    if (Number($('.signcnt.hold_cnt')[0].innerText) > 0) $('.signcnt.hold_cnt').show();
+    if (Number($('.signcnt.myap_cnt')[0].innerText) > 0) $('.signcnt.myap_cnt').show();
+    $('.signcnt.pre_cnt').show();
+    var maria = new ItsMaria('GWS2000_R01', 'LIST_FAV');
+    maria.CallProc();
+    if(!maria.isError){
+      var html = '';
+      for(var i = 0; i < maria.store.Length(); i++){
+        var data = maria.store.data[i];
+        html += '<li>';
+        html += '<a href="javascript:signdate('+data.SIGNDOCSEQ+')">';
+        html += '<div class="Sub_left_mn_in">';
+        html += '<img src="../../images/left_icon04_9.png" />';
+        html += '</div>';
+        html += '<span>' + data.DOCNM + '</span>';
+        html += '</a>';
+        html += '</li>';
+      }
+      if(i > 0){
+        $('.fav ul').append(html);
+        $('.fav').show();
+      }
+      var html2 = '';
+      for(var x = 0; x < maria.storeExtend1.Length(); x++){
+        var data1 = maria.storeExtend1.data[x];
+        html2 += '<li>';
+        html2 += '<a href="javascript:signbox('+data1.SIGNBOXSEQ+')">';
+        html2 += '<div class="Sub_left_mn_in">';
+        html2 += '<img src="../../images/icon_26.png" />';
+        html2 += '</div>';
+        html2 += '<span>' + data1.BOXNM + '</span>';
+        html2 += '</a>';
+        html2 += '</li>';
+      }
+      if(x > 0){
+        $('.box ul').append(html2);
+        $('.box').show();
+      }
+    }
+  });
+  function signdate(seq) {
+    var form = document.createElement('form');
+    var objs;
+    objs = document.createElement('input');
+    objs.setAttribute('name', 'seq');
+    objs.setAttribute('value', seq);
+    form.appendChild(objs);
+    form.setAttribute('method', 'post');
+    form.setAttribute('action', "/PAGEGWS/GWS2000/signdate.aspx");
+    window.open("", "signdate", "width=300,height=200,top=80,left=90,noresizable,toolbar=no,status=no,scrollbars=yes,directory=n");
+    form.setAttribute('target', 'signdate');
+    document.body.appendChild(form);
+    form.submit();
+  }
+  function signform(seq, date){
+    var form = document.createElement('form');
+    var objs, objs2;
+    objs = document.createElement('input');
+    objs.setAttribute('name', 'seq');
+    objs.setAttribute('value', seq);
+    form.appendChild(objs);
+    objs2 = document.createElement('input');
+    objs2.setAttribute('name', 'date');
+    objs2.setAttribute('value', date);
+    form.appendChild(objs2)
+    form.setAttribute('method', 'post');
+    form.setAttribute('action', "/PAGEGWS/GWS2001/GWS2001_R02.aspx");
+    document.body.appendChild(form);
+    form.submit();
+  }
+  function signbox(seq){
+    var form = document.createElement('form');
+    var objs;
+    objs = document.createElement('input');
+    objs.setAttribute('name', 'seq');
+    objs.setAttribute('value', seq);
+    form.appendChild(objs);
+    form.setAttribute('method', 'post');
+    form.setAttribute('action', "/PAGEGWS/GWS2002/GWS2002_S11.aspx");
+    document.body.appendChild(form);
+    form.submit();
+  }
+</script>
+<div class="Sub_left">			
+	<div class="Sub_left_top height_150">
+		<h1>전자결재</h1>
+		<button class="margin_T30 S_L_btn" onclick="location.href='/PAGEGWS/GWS2001/GWS2001_R01.aspx'"><img src="../../images/icon_23.png"> 기안하기</button>			
+	</div>
+  <div class="Sub_left_mn padding_L30 padding_B10 padding_T10 fav">
+    <ul class="margin_B5">
+      <li>
+        <img src="../../images/icon_24.png" />
+        <span>즐겨찾기</span>
+      </li>
+    </ul>
+  </div>
+	<div class="Sub_left_mn padding_L30 padding_B10 padding_T10">
+		<ul class="margin_B5">
+			<li><img src="../../images/icon_24.png" /> <span>결재하기</span></li>
+			<li>
+        <a href="/PAGEGWS/GWS2002/GWS2002_S01.aspx">
+          <div class="Sub_left_mn_in">
+            <img src="../../images/icon_25.png" />
+            </div>
+          <span>결재대기문서</span>
+          <span class="signcnt appr_cnt"></span>
+        </a>
+      </li>
+			<li>
+        <a href="/PAGEGWS/GWS2002/GWS2002_S02.aspx">
+          <div class="Sub_left_mn_in">
+            <img src="../../images/icon_25.png"/>
+          </div>
+          <span>수신참조문서</span>
+          <span class="signcnt ref_cnt"></span>
+        </a>
+      </li>
+      <li>
+        <a href="/PAGEGWS/GWS2002/GWS2002_S08.aspx">
+          <div class="Sub_left_mn_in">
+            <img src="../../images/icon_25.png"/>
+          </div>
+          <span>보&nbsp;&nbsp;류 &nbsp; 문&nbsp;&nbsp;서</span>
+          <span class="signcnt hold_cnt"></span>
+        </a>
+      </li>
+      <% if(Request.Cookies["MPUSERID"].Value == "m016ms"){ %>
+      <li>
+        <a href="/PAGEGWS/GWS2002/GWS2002_S07.aspx">
+          <div class="Sub_left_mn_in">
+            <img src="../../images/icon_25.png"/>
+          </div>
+          <span>결재예정문서</span>
+          <span class="signcnt pre_cnt"></span>
+        </a>
+      </li>
+      <% } %>
+		</ul>
+	</div>
+	<div class="Sub_left_mn padding_L30 padding_B20 padding_T10">
+		<ul class="margin_B5">
+			<li>
+        <img src="../../images/icon_24.png"/>
+        <span>문서함</span>
+      </li>
+			<li>
+        <a href="/PAGEGWS/GWS2002/GWS2002_S03.aspx">
+          <div class="Sub_left_mn_in">
+            <img src="../../images/icon_26.png"/>
+          </div>
+          <span>기안문서함</span>
+          <span class="signcnt myap_cnt"></span>
+        </a>
+      </li>
+      <li><a href="/PAGEGWS/GWS2002/GWS2002_S09.aspx"><div class="Sub_left_mn_in"><img src="../../images/icon_26.png"/> </div> <span>기안완료함</span></a></li>
+			<li><a href="/PAGEGWS/GWS2002/GWS2002_S05.aspx"><div class="Sub_left_mn_in"><img src="../../images/icon_26.png"/> </div> <span>결재진행함</span></a></li>
+      <li><a href="/PAGEGWS/GWS2002/GWS2002_S10.aspx"><div class="Sub_left_mn_in"><img src="../../images/icon_26.png"/> </div> <span>결재완료함</span></a></li>
+			<li><a href="/PAGEGWS/GWS2002/GWS2002_S06.aspx"><div class="Sub_left_mn_in"><img src="../../images/icon_26.png"/> </div> <span>수신참조함</span></a></li>
+			<li><a href="/PAGEGWS/GWS2002/GWS2002_S04.aspx"><div class="Sub_left_mn_in"><img src="../../images/icon_26.png"/> </div> <span>임시저장함</span></a></li>
+		</ul>
+	</div>
+  <div class="Sub_left_mn padding_L30 padding_B10 padding_T10 box">
+    <ul class="margin_B5">
+      <li>
+        <img src="../../images/icon_24.png" />
+        <span>개인문서함</span>
+      </li>
+    </ul>
+  </div>
+	<div class="Sub_left_mn">
+		<ul>
+			<li class="padding_L30  margin_B5 padding_T3">
+				<a href="/PAGEGWS/GWS2003/GWS2003_R01.aspx" class="Sub_left_mn_PD"><div class="Sub_left_mn_in"><img src="../../images/icon_14.png"> </div> <span>결재설정</span></a>						
+			</li>
+		</ul>
+	</div>
+	<div class="border_T9a">
+	</div>		
+</div>

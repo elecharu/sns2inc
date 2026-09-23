@@ -1,0 +1,25 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:its="clr-namespace:ITSLIB">
+    
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/ITSLIB;component/00_Resource/ResColors.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/ITSLIB;component/00_Style/StyleCanvas.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/ITSLIB;component/00_Style/StyleControl.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/ITSLIB;component/00_Style/StyleGrid.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/ITSLIB;component/00_Style/StyleOffice.xaml"/>
+        <ResourceDictionary Source="pack://application:,,,/ITSLIB;component/00_Style/StyleTml.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
+    
+    <!-- ############################################################### ColorList x:Key: ALL -->
+    <Style TargetType="{x:Type its:ItsPageBase}">
+        <Setter Property="Background" Value="White"/>
+    </Style>
+    <Style TargetType="{x:Type its:ItsPageOffice}">
+        <Setter Property="Background" Value="White"/>
+    </Style>
+    <Style TargetType="{x:Type its:ItsPageTml}">
+        <Setter Property="Background" Value="WhiteSmoke"/>
+    </Style>
+    
+</ResourceDictionary>

@@ -1,0 +1,1 @@
+﻿<%@ Page Title="" Language="C#" AutoEventWireup="true" CodeFile="GetBankAccountLogURL.aspx.cs" Inherits="GetBankAccountLogURL" %>

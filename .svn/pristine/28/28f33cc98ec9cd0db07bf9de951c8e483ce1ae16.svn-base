@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace PLC_GATHERING_Prj.Property
+{
+    public class MyPLCAddList
+    {
+        public string CUSTCD { get; set; }
+        public string EQMCD { get; set; }
+        public string EQMSTT { get; set; }
+        public string EQMCNT { get; set; }
+        public string WORKTIME { get; set; }
+    }
+}

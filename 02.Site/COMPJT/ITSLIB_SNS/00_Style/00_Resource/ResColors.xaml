@@ -1,0 +1,24 @@
+﻿<ResourceDictionary x:Class="ITSLIB.Resource"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:its="clr-namespace:ITSLIB">
+
+    <!-- ############################################################### ColorList x:Key: ALL -->
+    <Color x:Key="ColorMainTitle">SeaGreen</Color>
+    <Color x:Key="ColorMainBar">Silver</Color>
+    <Color x:Key="ColorIconOver">Silver</Color>
+    <Color x:Key="ColorGridSplitter">SeaGreen</Color>
+    <Color x:Key="ColorKeyPadEnter">SeaGreen</Color>
+
+    <Color x:Key="ColorButtonBackLeave">SeaGreen</Color>
+    <Color x:Key="ColorButtonBackEnter">Silver</Color>
+    <Color x:Key="ColorComButtonBackLeave">SeaGreen</Color>
+    <Color x:Key="ColorComButtonBackEnter">DarkSeaGreen</Color>
+
+    <Color x:Key="ColorButtonForeLeave">White</Color>
+    <Color x:Key="ColorButtonForeEnter">Black</Color>
+    <Color x:Key="ColorComButtonForeLeave">White</Color>
+    <Color x:Key="ColorComButtonForeEnter">Black</Color>
+
+
+</ResourceDictionary>

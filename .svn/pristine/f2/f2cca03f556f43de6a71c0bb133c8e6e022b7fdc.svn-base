@@ -1,0 +1,634 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Data.SqlClient;
+using System.Data;
+
+public class SqlParams
+{
+    private static string _ConnString = "";
+    public static string ConnString
+    {
+        get
+        {
+            if (_ConnString == "")
+            {
+                string Addr = "localhost";
+                string Port = "1433";
+                string User = "sa";
+                string Pass = "dudwls";
+                string DbName = "YJPOP";
+
+                //string[] connList = System.IO.File.ReadAllLines("MssqlConfig.txt");
+                //foreach (string conn in connList)
+                //{
+                //    if (conn.IndexOf("--host=") > -1)
+                //    {
+                //        Addr = conn.Replace("--host=", "").Trim();
+                //    }
+                //    else if (conn.IndexOf("--port=") > -1)
+                //    {
+                //        Port = conn.Replace("--port=", "").Trim();
+                //    }
+                //    else if (conn.IndexOf("--user=") > -1)
+                //    {
+                //        User = conn.Replace("--user=", "").Trim();
+                //    }
+                //    else if (conn.IndexOf("--password=") > -1)
+                //    {
+                //        Pass = conn.Replace("--password=", "").Trim();
+                //    }
+                //    else if (conn.IndexOf("--dbname=") > -1)
+                //    {
+                //        DbName = conn.Replace("--dbname=", "").Trim();
+                //    }
+                //}
+
+                StringBuilder ConnStr = new StringBuilder();
+                ConnStr.Append("Data Source=" + Addr + "," + Port + ";");
+                ConnStr.Append("Initial Catalog=" + DbName + ";");
+                ConnStr.Append("User ID=" + User + ";");
+                ConnStr.Append("Password=" + Pass + ";");
+
+                _ConnString = ConnStr.ToString();
+            }
+            return _ConnString;
+        }
+    }
+
+    private DataTable _dt;
+    private DataSet _ds;
+
+    public string ProcName
+    {
+        get { return _dt.TableName; }
+        set { _dt.TableName = value; }
+    }
+
+    public string CallType
+    {
+        get { return _dt.Rows.Find("CALLTYPE")["Value"].ToString(); }
+        set { AddOne("CALLTYPE", value); }
+    }
+
+    public void AddOne(string name, object value)
+    {
+        if (value == null)
+        {
+            value = "";
+        }
+
+        if (value.ToString().ToUpper() == "TRUE") value = "Y";
+        if (value.ToString().ToUpper() == "FALSE") value = "N";
+
+        int point = value.ToString().IndexOf("•");
+        if (point > -1)
+        {
+            value = value.ToString().Substring(0, point);
+        }
+
+        DataRow row = _dt.Rows.Find(name);
+        if (row == null)
+        {
+            row = _dt.NewRow();
+            row["Name"] = name;
+            _dt.Rows.Add(row);
+        }
+
+        row["Value"] = value;
+        row["SqlDbType"] = SqlDbType.NVarChar;
+
+    }
+
+    public void AddList(string name, object value)
+    {
+        if (value == null)
+        {
+            value = "";
+        }
+
+        if (value.ToString().ToUpper() == "TRUE") value = "Y";
+        if (value.ToString().ToUpper() == "FALSE") value = "N";
+
+        int point = value.ToString().IndexOf("•");
+        if (point > -1)
+        {
+            value = value.ToString().Substring(0, point);
+        }
+
+        DataRow row = _dt.Rows.Find(name);
+        if (row == null)
+        {
+            row = _dt.NewRow();
+            row["Name"] = name;
+            _dt.Rows.Add(row);
+        }
+
+        row["Value"] = row["Value"].ToString() + value.ToString() + "»";
+        row["SqlDbType"] = SqlDbType.NVarChar;
+
+    }
+
+    public SqlParams()
+    {
+        InitSqlParams();
+    }
+
+    private void InitSqlParams()
+    {
+        _ds = new DataSet();
+        _dt = new DataTable();
+
+        _dt.TableName = "";
+        DataColumn KeyColumn = _dt.Columns.Add("Name");
+        _dt.Columns["Name"].DataType = typeof(String);
+        _dt.Columns.Add("Value"); _dt.Columns["Value"].DataType = typeof(Object);
+        _dt.Columns.Add("SqlDbType"); _dt.Columns["SqlDbType"].DataType = typeof(SqlDbType);
+
+        _dt.PrimaryKey = new DataColumn[] { KeyColumn };
+
+        _ds.Tables.Add(_dt);
+    }
+
+    public SqlParams(string procName)
+    {
+        InitSqlParams();
+        _dt.TableName = procName;
+    }
+
+    public SqlParams(string procName, string callType)
+    {
+        InitSqlParams();
+        _dt.TableName = procName;
+        AddOne("CALLTYPE", callType);
+    }
+
+    public DataSet ToDataSet()
+    {
+        return _ds;
+    }
+
+    public override string ToString()
+    {
+        if (_dt == null) return "No Parameters";
+        if (_dt.Rows.Count == 0) return "Exec " + _dt.TableName;
+
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("Exec " + _dt.TableName + " @" + _dt.Rows[0][0].ToString() + "='" + _dt.Rows[0][1].ToString() + "'");
+
+        for (int i = 1; i < _dt.Rows.Count; i++)
+        {
+            sb.AppendLine(", @" + _dt.Rows[i][0].ToString() + "='" + _dt.Rows[i][1].ToString() + "'");
+        }
+
+        return sb.ToString();
+    }
+
+    public SqlParameter[] ToSqlParameter()
+    {
+        DataTable dt = _ds.Tables[0];
+        SqlParameter[] paramList = new SqlParameter[dt.Rows.Count];
+
+        for (int i = 0; i < dt.Rows.Count; i++)
+        {
+            SqlParameter param = new SqlParameter(dt.Rows[i][0].ToString(), dt.Rows[i][1]);
+            param.SqlDbType = (SqlDbType)dt.Rows[i][2];
+            paramList[i] = param;
+        }
+        return paramList;
+    }
+}
+
+/// <summary>
+/// 결과값
+/// </summary>
+public class SqlResult
+{
+    public static string ErrMessage = "";
+    public static bool IsError = false;
+}
+
+/// <summary>
+/// 쿼리문 날리기
+/// </summary>
+public class SqlQuery
+{
+    public static DataSet ExecuteDataset(string queryString)
+    {
+        SqlResult.ErrMessage = "";
+        SqlResult.IsError = false;
+
+        if (!IsConnect)
+        {
+            DataSet ds = new DataSet();
+            ds.Tables.Add(new DataTable());
+            return ds;
+        }
+        else
+        {
+            return SqlQuery.ExecuteDataset(SqlParams.ConnString, 600 * 1000, queryString);
+        }
+    }
+
+    public static DataSet ExecuteDataset(int commandTimeout, string queryString)
+    {
+        return ExecuteDataset(SqlParams.ConnString, commandTimeout, queryString);
+    }
+    public static DataSet ExecuteDataset(string connString, int commandTimeout, string queryString)
+    {
+        SqlResult.ErrMessage = "";
+        SqlResult.IsError = false;
+
+        DataSet ds = new DataSet();
+        SqlConnection con = new SqlConnection(connString);
+        try
+        {
+            con.Open();
+
+            SqlCommand cmd = new SqlCommand();
+            if (commandTimeout > 0) cmd.CommandTimeout = commandTimeout;
+            cmd.Connection = con;
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = queryString;
+
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(ds);
+
+            if (ds.Tables.Count == 0)
+            {
+                ds.Tables.Add(new DataTable());
+            }
+
+        }
+        catch (Exception ex)
+        {
+            con.Close();
+
+            ds = new DataSet();
+            ds.Tables.Add();
+
+            SqlException sqlEx = ex as SqlException;
+            if (sqlEx != null)
+            {
+                string errMsg = sqlEx.Message + " [ " + sqlEx.Source + " : " + sqlEx.LineNumber + " ] ";
+
+                SqlResult.ErrMessage = errMsg;
+                Console.WriteLine(errMsg);
+            }
+            else
+            {
+                string errMsg = sqlEx.Message + " [ " + ex.Source.ToString() + " : " + ex.StackTrace.ToString() + " ] ";
+                SqlResult.ErrMessage = errMsg;
+                Console.WriteLine(errMsg);
+            }
+            SqlResult.IsError = true;
+
+            return ds;
+        }
+
+        con.Close();
+
+        for (int i = 0; i < ds.Tables.Count; i++)
+        {
+            ds.Tables[i].TableName = "Table" + i;
+        }
+
+        return ds;
+    }
+
+    public static object ExecuteScalar(string queryString)
+    {
+        // SqlResult 전역 변수 초기화
+        SqlResult.ErrMessage = "";
+        SqlResult.IsError = false;
+
+        if (!IsConnect)
+        {
+            return "";
+        }
+        else
+        {
+            return ExecuteScalar(SqlParams.ConnString, 600 * 1000, queryString);
+        }
+    }
+    public static object ExecuteScalar(int commandTimeout, string queryString)
+    {
+        return ExecuteScalar(SqlParams.ConnString, commandTimeout, queryString);
+    }
+    public static object ExecuteScalar(string connString, int commandTimeout, string queryString)
+    {
+        SqlResult.ErrMessage = "";
+        SqlResult.IsError = false;
+
+        SqlConnection con = new SqlConnection(connString);
+        SqlCommand cmd = new SqlCommand();
+        object result = "";
+        try
+        {
+            con.Open();
+
+            if (commandTimeout > 0) cmd.CommandTimeout = commandTimeout;
+            cmd.Connection = con;
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = queryString;
+
+            result = cmd.ExecuteScalar();
+        }
+        catch (Exception ex)
+        {
+            con.Close();
+
+            SqlException sqlEx = ex as SqlException;
+            if (sqlEx != null)
+            {
+                SqlResult.ErrMessage = sqlEx.Message;
+                Console.WriteLine(sqlEx.Message);
+            }
+            else
+            {
+                SqlResult.ErrMessage = ex.Message;
+                Console.WriteLine(ex.Message);
+            }
+            SqlResult.IsError = true;
+
+            return "Error: " + queryString;
+        }
+
+        con.Close();
+
+        return result;
+    }
+
+    public static bool IsConnect
+    {
+        get
+        {
+            SqlConnection objConn = new SqlConnection();
+
+            objConn.ConnectionString = SqlParams.ConnString;
+
+            SqlCommand objCommand = new SqlCommand();
+            objCommand.Connection = objConn;
+            objCommand.CommandTimeout = 3;
+            objCommand.CommandText = "SELECT 'OK'";
+            objCommand.CommandType = CommandType.Text;
+
+            SqlDataAdapter objDa = new SqlDataAdapter();
+            objDa.SelectCommand = objCommand;
+
+            try
+            {
+                objDa.Fill(new DataTable());
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+}
+
+/// <summary>
+/// 프로시저 호출
+/// </summary>
+public class SqlProcedure
+{
+    public static DataSet ExecuteDataset(SqlParams sp)
+    {
+        SqlResult.ErrMessage = "";
+        SqlResult.IsError = false;
+
+        if (!IsConnect)
+        {
+            DataSet ds = new DataSet();
+            ds.Tables.Add(new DataTable());
+            return ds;
+        }
+        else
+        {
+            return SqlProcedure.ExecuteDataset(SqlParams.ConnString, 600 * 1000, sp);
+        }
+    }
+    public static DataSet ExecuteDataset(int commandTimeout, SqlParams sp)
+    {
+        return ExecuteDataset(SqlParams.ConnString, commandTimeout, sp);
+    }
+    public static DataSet ExecuteDataset(string connString, int commandTimeout, SqlParams sp)
+    {
+        SqlResult.ErrMessage = "";
+        SqlResult.IsError = false;
+
+        DataSet ds = new DataSet();
+        SqlConnection con = new SqlConnection(connString);
+        SqlCommand cmd = new SqlCommand();
+        try
+        {
+            con.Open();
+
+            if (commandTimeout > 0) cmd.CommandTimeout = commandTimeout;
+            cmd.Connection = con;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = sp.ProcName;
+
+            foreach (SqlParameter sqlParameter in sp.ToSqlParameter())
+            {
+                cmd.Parameters.Add(sqlParameter);
+            }
+
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(ds);
+
+            if (ds.Tables.Count == 0)
+            {
+                ds.Tables.Add(new DataTable());
+            }
+        }
+        catch (Exception ex)
+        {
+            con.Close();
+
+            ds = new DataSet();
+            ds.Tables.Add(new DataTable());
+
+            SqlException sqlEx = ex as SqlException;
+            if (sqlEx != null)
+            {
+                string errMsg = sqlEx.Message + " [ " + sqlEx.Procedure + " : " + (sqlEx.LineNumber + 4) + " ] ";
+
+                SqlResult.ErrMessage = errMsg;
+                Console.WriteLine(errMsg);
+            }
+            else
+            {
+                string errMsg = ex.Message + " [ " + ex.Source + " : " + ex.StackTrace + " ] ";
+
+                SqlResult.ErrMessage = errMsg;
+                Console.WriteLine(errMsg);
+            }
+            SqlResult.IsError = true;
+
+            return ds;
+        }
+
+        con.Close();
+
+        foreach (DataTable dt in ds.Tables)
+        {
+            if (dt.Rows.Count == 1)
+            {
+                string errMsg = dt.Rows[0][0].ToString();
+                if (errMsg.Length >= 11 && errMsg.Substring(0, 11) == "ErrUserMsg:")
+                {
+                    SqlResult.ErrMessage = errMsg.Substring(11);
+                    SqlResult.IsError = true;
+
+                    return ds;
+
+                }
+                else if (errMsg.Length >= 12 && errMsg.Substring(0, 12) == "ErrCatchMsg:")
+                {
+                    Console.WriteLine(errMsg.Substring(12));
+
+                    SqlResult.ErrMessage = errMsg.Substring(12);
+                    SqlResult.IsError = true;
+
+                    return ds;
+
+                }
+            }
+        }
+
+        for (int i = 0; i < ds.Tables.Count; i++)
+        {
+            ds.Tables[i].TableName = "Table" + i;
+        }
+
+        return ds;
+
+    }
+
+    public static object ExecuteScalar(SqlParams sp)
+    {
+        SqlResult.ErrMessage = "";
+        SqlResult.IsError = false;
+
+        if (!IsConnect)
+        {
+            return "";
+        }
+        else
+        {
+            return ExecuteScalar(SqlParams.ConnString, 600 * 1000, sp);
+        }
+    }
+
+    public static object ExecuteScalar(int commandTimeout, SqlParams sp)
+    {
+        return ExecuteScalar(SqlParams.ConnString, commandTimeout, sp);
+    }
+
+    public static object ExecuteScalar(string connString, int commandTimeout, SqlParams sp)
+    {
+        SqlResult.ErrMessage = "";
+        SqlResult.IsError = false;
+
+        object result = "";
+        SqlConnection con = new SqlConnection(connString);
+        SqlCommand cmd = new SqlCommand();
+        try
+        {
+            con.Open();
+
+            if (commandTimeout > 0) cmd.CommandTimeout = commandTimeout;
+            cmd.Connection = con;
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.CommandText = sp.ProcName;
+
+            foreach (SqlParameter sqlParameter in sp.ToSqlParameter())
+            {
+                cmd.Parameters.Add(sqlParameter);
+            }
+
+            result = cmd.ExecuteScalar();
+            if (result == null)
+            {
+                result = "";
+            }
+        }
+        catch (Exception ex)
+        {
+            con.Close();
+
+            SqlException sqlEx = ex as SqlException;
+            if (sqlEx != null)
+            {
+                string errMsg = sqlEx.Message + " [ " + sqlEx.Procedure + " : " + (sqlEx.LineNumber + 4) + " ]";
+
+                SqlResult.ErrMessage = errMsg;
+                Console.WriteLine(errMsg);
+            }
+            else
+            {
+                string errMsg = ex.Message + " [ " + ex.Source + " : " + ex.StackTrace + " ] ";
+
+                SqlResult.ErrMessage = errMsg;
+                Console.WriteLine(errMsg);
+            }
+            SqlResult.IsError = true;
+
+            return "Error: " + sp.ToString();
+        }
+
+        con.Close();
+
+        string resultMsg = result.ToString().Trim();
+        if (resultMsg.Length > 11 && resultMsg.Substring(0, 11) == "ErrUserMsg:")
+        {
+            SqlResult.ErrMessage = resultMsg.Substring(11);
+            SqlResult.IsError = true;
+
+            return resultMsg.Substring(11);
+        }
+        else if (resultMsg.Length > 12 && resultMsg.Substring(0, 12) == "ErrCatchMsg:")
+        {
+            Console.WriteLine(resultMsg.Substring(12));
+
+            SqlResult.ErrMessage = resultMsg.Substring(12);
+            SqlResult.IsError = true;
+
+            return resultMsg.Substring(12);
+        }
+
+        return result;
+    }
+
+    public static bool IsConnect
+    {
+        get
+        {
+            SqlConnection objConn = new SqlConnection();
+
+            objConn.ConnectionString = SqlParams.ConnString;
+
+            SqlCommand objCommand = new SqlCommand();
+            objCommand.Connection = objConn;
+            objCommand.CommandTimeout = 3;
+            objCommand.CommandText = "SELECT 'OK'";
+            objCommand.CommandType = CommandType.Text;
+
+            SqlDataAdapter objDa = new SqlDataAdapter();
+            objDa.SelectCommand = objCommand;
+
+            try
+            {
+                objDa.Fill(new DataTable());
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+}

@@ -1,0 +1,361 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Collections;
+using MySql.Data.MySqlClient;
+using System.IO;
+using System.Timers;
+using System.Net;
+
+namespace ItscoMooney
+{
+
+
+    public partial class Form1 : Form
+    {
+        private string _mooneyPath;
+        private string saveTextPath = @"C:\ITSCO\ItsMooneyPath.txt";
+        string mooneyDate;
+
+        System.Timers.Timer t1;
+        List<string> _FileList = new List<string>();
+
+
+        public Form1()
+        {
+            InitializeComponent();
+
+            // 중복 실행 확인
+            bool isRun = false;
+            System.Diagnostics.Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+            System.Diagnostics.Process[] processess = System.Diagnostics.Process.GetProcesses();
+            foreach (System.Diagnostics.Process process in processess)
+            {
+                if (currentProcess.Id != process.Id)
+                {
+                    if (currentProcess.ProcessName == process.ProcessName)
+                    {
+                        isRun = true;
+                        break;
+                    }
+                }
+            }
+            if (isRun)
+            {
+                MessageBox.Show("프로그램이 이미 실행중입니다.\n\n트레이 아이콘을 확인하세요.");
+                this.Close();
+            }
+            else
+            {
+                t1 = new System.Timers.Timer();
+                t1.Interval = 1000 * 1;
+                t1.Enabled = false;
+                t1.Elapsed += T1_Elapsed;
+            }
+        }
+
+        private void T1_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            t1.Stop();
+
+            DirectoryInfo dirInfo = new DirectoryInfo(_mooneyPath);
+            SearchFile("", dirInfo);
+
+            t1.Start();
+        }
+
+        private void SearchFile(string filePath, DirectoryInfo dInfo)
+        {
+            FileInfo[] fileList = dInfo.GetFiles();
+            foreach (FileInfo fInfo in fileList)
+            {
+                if (_stop) return;
+
+                if (fInfo.Extension.ToUpper().Replace(".", "") == "DAT") //&& Convert.ToInt32(dInfo.ToString().Substring(0, 4)) >= 2023 && Convert.ToInt32(dInfo.ToString().Substring(4, 2)) >= 5)
+                {
+                    try
+                    {
+                        // 기준일자 이후 자료만 가져오자
+                        DateTime sT = Convert.ToDateTime((dInfo.ToString().Substring(0, 4) + "-" + dInfo.ToString().Substring(4, 2) + "-01"));
+                        DateTime eT = Convert.ToDateTime("2023-04-01");
+                        int sub = DateTime.Compare(sT, eT);
+                        if (sub > 0)
+                        {
+                            string rheoFullName = fInfo.FullName;
+                            string changeFullName = "";
+
+                            //try
+                            //{
+                            //    if (fInfo.FullName.ToUpper().IndexOf(".ZIP") <= 0)
+                            //    {
+                            //        changeFullName = rheoFullName + ".zip";
+                            //        File.Copy(rheoFullName, changeFullName);
+                            //    }
+                            //    else
+                            //    {
+                            //        changeFullName = rheoFullName;
+                            //    }
+
+                            //    uploadFile(changeFullName, fInfo.Name);
+                            //    File.Delete(changeFullName);
+                            //}
+                            //catch { }
+
+                            string fileName = "Mooney/" + filePath + "/" + fInfo.Name;
+                            if (!_FileList.Contains(fileName))
+                            {
+                                UPDATE_MOONEY(filePath, fInfo);
+                                _FileList.Add(fileName);
+                            }
+                        }
+                    }
+                    catch { }
+                }
+            }
+
+            DirectoryInfo[] dirList = dInfo.GetDirectories();
+            foreach (DirectoryInfo dirInfo in dirList)
+            {
+                SearchFile(filePath + "/" + dirInfo.Name, dirInfo);
+            }
+        }
+
+        private void uploadFile(string moonyFilePath, string fileinfoName)
+        {
+            try
+            {
+                string ServerUrl = "http://daebong.optisco.com:8008/AAABIN/";
+
+                string fileName = "Mooney: " + fileinfoName.Replace(".zip", "");
+                byte[] fileData = System.IO.File.ReadAllBytes(moonyFilePath);
+                string fileBase64 = Convert.ToBase64String(fileData);
+
+                StringBuilder sb = new StringBuilder();
+                byte[] byStr = Encoding.UTF8.GetBytes(fileBase64);
+                for (int i = 0; i < byStr.Length; i++)
+                {
+                    sb.Append(@"%" + Convert.ToString(byStr[i], 16));
+                }
+                fileBase64 = sb.ToString();
+
+                HttpWebRequest request = WebRequest.Create(ServerUrl + "FileUpload.aspx") as HttpWebRequest;
+                request.Method = "POST";
+                request.ContentType = "application/x-www-form-urlencoded";
+
+                string param = "FILENAME=" + fileName + "&FILEDATA=" + fileBase64;
+                byte[] paramByte = Encoding.UTF8.GetBytes(param);
+
+                Stream requestStream = request.GetRequestStream();
+                requestStream.Write(paramByte, 0, paramByte.Length);
+                requestStream.Close();
+
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+                Stream responseStrem = response.GetResponseStream();
+                StreamReader responseStremReader = new StreamReader(responseStrem, Encoding.UTF8);
+
+                string fileKey = responseStremReader.ReadToEnd();
+                if (fileKey.Substring(0, 6) == "ERROR:")
+                {
+                    MessageBox.Show(fileKey.Substring(6));
+                    t1.Start();
+                    return;
+                }
+
+                ItsMaria.Set("IF_MOONEY", "UP_COMFILE");
+                ItsMaria.AddOne("FILEKEY", fileKey);
+                ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+
+                    MessageBox.Show(ItsMaria.ErrMessage);
+                    t1.Start();
+                    return;
+                }
+            }
+            catch(Exception ex)
+            {
+                t1.Start();
+            }
+
+        }
+
+        private void UPDATE_MOONEY(string filePath, FileInfo fInfo)
+        {
+            string[] fileDataList = System.IO.File.ReadAllLines(fInfo.FullName, Encoding.UTF8);
+
+            string fileName = filePath + "/" + fInfo.Name;
+            string LOTKEY = fileDataList[1];
+            try
+            {
+                mooneyDate = fInfo.Name.Substring(LOTKEY.Length + 1, 8);
+                mooneyDate = mooneyDate.Substring(0, 4) + "-" + mooneyDate.Substring(4, 2) + "-" + mooneyDate.Substring(6, 2);
+
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                mooneyDate = "1900-01-01";
+            }
+            if (fileDataList.Length >= 16)
+            {
+                try
+                {
+                    // 파싱 및 업로드
+                    ItsMaria.Set("IF_MOONEY", "ADD_MOONEYFILE");
+                    ItsMaria.AddOne("MOONEYDATE", mooneyDate + " " + fileDataList[11].Substring(7));
+                    ItsMaria.AddOne("FILENAME", fileName);
+                    ItsMaria.AddOne("MOONEYEMP", fileDataList[13]);
+                    ItsMaria.AddOne("MOONEYITEM", fileDataList[0]);
+                    ItsMaria.AddOne("MOONEYKEY", fileDataList[1]);
+                    ItsMaria.AddOne("MOONEYRESULT", fileDataList[2]);
+                    ItsMaria.AddOne("MOONEYNO", fileDataList[3]);
+                    ItsMaria.AddOne("D01", fileDataList[4]);
+                    ItsMaria.AddOne("D02", fileDataList[5]);
+                    ItsMaria.AddOne("D03", fileDataList[6]);
+                    ItsMaria.AddOne("REMARK", fileDataList[14]);
+                    ItsMaria.Call();
+                    if (ItsMaria.IsError)
+                    {
+                        MessageBox.Show(ItsMaria.ErrMessage);
+                        t1.Start();
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    string file = System.DateTime.Now.ToString("yyyy-MM-dd") + "ADD_MOONEY_ERR" + ".txt";
+
+                    if (!System.IO.File.Exists(file))
+                    {
+                        System.IO.File.AppendAllText(file, "\r\n" + fileName + "\r\n" + ex);
+                    }
+                    else
+                    {
+                        System.IO.File.AppendAllText(file, "\r\n" + fileName + "\r\n" + ex);
+                    }
+                }
+            }
+            else
+            {
+                ItsMaria.Set("IF_MOONEY", "ADD_FILE");
+                ItsMaria.AddOne("FILENAME", fileName);
+                try
+                { ItsMaria.AddOne("MOONEYKEY", fileDataList[1]); }
+                catch (IndexOutOfRangeException) { ItsMaria.AddOne("MOONEYKEY", ""); }
+                ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    MessageBox.Show(ItsMaria.ErrMessage);
+                    t1.Start();
+                    return;
+                }
+            }
+        }
+
+        // 로딩 시 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            if (File.Exists(saveTextPath))
+            {
+                _mooneyPath = File.ReadAllText(saveTextPath, Encoding.UTF8);
+            }
+            patchTextBox.Text = _mooneyPath;
+
+            ItsMaria.Set("IF_MOONEY", "GET_FILELIST");
+            DataTable dt = ItsMaria.Call().Tables[0];
+            if (ItsMaria.IsError)
+            {
+                MessageBox.Show(ItsMaria.ErrMessage);
+                return;
+            }
+            foreach (DataRow row in dt.Rows)
+            {
+                _FileList.Add(row["FILENAME"].ToString());
+            }
+            btnStop.Enabled = false;
+            btnStart.Select();
+        }
+
+        // 폼화면 끌때 
+        private bool IsClose = false;
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (IsClose == true) return;
+
+            e.Cancel = true;
+            this.Visible = false;
+        }
+
+        // 프로그램 종료 누를 때 
+        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.IsClose = true;
+            this.Close();
+        }
+
+        private bool _stop = false;
+        private void btnStop_Click(object sender, EventArgs e)
+        {
+            t1.Stop();
+            _stop = true;
+
+            btnStart.Enabled = true;
+            btnStop.Enabled = false;
+
+        }
+
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            if (_mooneyPath == "")
+            {
+                MessageBox.Show("파일경로가 지정되어 있지 않습니다.");
+                return;
+            }
+
+            _stop = false;
+            t1.Start();
+
+            this.Visible = false;
+            btnStart.Enabled = false;
+            btnStop.Enabled = true;
+        }
+
+        private void foldSave_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog dialog = new FolderBrowserDialog();
+
+            dialog.ShowDialog();
+
+            string dialogPath = dialog.SelectedPath;
+           
+            string textValue = dialogPath;
+
+            if(!Directory.Exists(@"C:\ITSCO")) Directory.CreateDirectory(@"C:\ITSCO");
+
+            File.WriteAllText(saveTextPath, textValue, Encoding.UTF8);
+
+            if(textValue != "") { _mooneyPath = File.ReadAllText(saveTextPath, Encoding.UTF8); }
+            else { _mooneyPath = ""; }
+
+            patchTextBox.Text = _mooneyPath;
+
+        }
+
+        private void ItsMooneyIcon_Click(object sender, EventArgs e)
+        {
+            this.Visible = true;
+        }
+
+        private void ItsMooneyIcon_DoubleClick(object sender, EventArgs e)
+        {
+            this.Visible = true;
+        }
+
+
+    }
+
+}

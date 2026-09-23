@@ -1,0 +1,82 @@
+﻿div.ItsMonth {
+    float:left;
+    display:inline-block;
+    margin-top:2px;
+    margin-bottom:2px;
+    background-color:transparent;
+}
+div.ItsMonth_table {
+    background-color:transparent;
+}
+div.ItsMonth_table > span {
+    vertical-align:middle;
+    display:inline-block;
+    text-align:right;
+    background-color:transparent; 
+    white-space: normal;
+    font-family: 'SpoqaHanSansNeo_M';
+    color:#565656;
+}
+div.ItsMonth_box {
+    vertical-align:middle;
+    display:inline-block;
+}
+div.ItsMonth_box > input {
+    outline: none;
+    padding:0px 4px 0px 4px;
+    vertical-align:middle;
+    height:20px;
+    border:1px solid #C0C0C0;
+    border-right: 1px solid transparent;
+    box-sizing: border-box;
+    line-height: 11px;
+    font-weight:normal;
+    font-size:12px;
+    color:#565656;
+}
+div.ItsMonth_box > input:read-only {
+    color:#A3A3A3;
+}
+div.ItsMonth_button {
+    cursor:pointer;
+    display:inline-block;
+    overflow:hidden;
+    vertical-align:middle;
+    height:20px;
+    width:22px;
+    text-align:center;
+    margin-left: -5px;
+    border:1px solid #C0C0C0;
+    background-color:white;
+    background: url(../images/UserControl/ic_calendar_n.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsMonth_box > input:focus {
+    border: 1px solid #4774B9;
+}
+div.ItsMonth_box > input:read-only {
+    border: 1px solid #C0C0C0;
+    background-color:#F0F0F0;
+}
+div.ItsMonth_box > input:hover ~ div.ItsMonth_button  {
+    border: 1px solid #4774B9;
+    background: url(../images/UserControl/ic_calendar_h.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsMonth_box > div.ItsMonth_button:hover  {
+    border: 1px solid #4774B9;
+    background: url(../images/UserControl/ic_calendar_h.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsMonth_box > input:focus ~ div.ItsMonth_button  {
+    border: 1px solid #4774B9;
+    background: url(../images/UserControl/ic_calendar_p.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+    background-color:#4774B9;
+}
+div.ItsMonth_box > input:read-only ~ div.ItsMonth_button  {
+    border: 1px solid #C0C0C0;
+    background: url(../images/UserControl/ic_calendar_d.png) no-repeat, #F0F0F0;
+    background-size: 20px;
+    background-color:#F0F0F0;
+}

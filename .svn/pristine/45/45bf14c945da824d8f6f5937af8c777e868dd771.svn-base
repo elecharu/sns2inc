@@ -1,0 +1,198 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
+
+namespace ITSSCHEDULER
+{
+    public partial class MainForm : Form
+    {
+        public static DataTable _EqmData = new DataTable();
+
+        public static string _ERRMSG = "";
+        public static DateTime lastTime;
+
+        System.Timers.Timer _serialTimer = new System.Timers.Timer();
+        System.Windows.Forms.Timer _formTimer = new System.Windows.Forms.Timer();
+        public MainForm()
+        {
+            InitializeComponent();
+
+            _EqmData.Columns.Add("PLCCD");
+            _EqmData.Columns.Add("PLCADDR");
+            _EqmData.Columns.Add("PLCVALUE");
+            _EqmData.Columns.Add("REMARK");
+            dataGridView1.DataSource = _EqmData;
+
+            // 중복 실행 확인
+            bool isRun = false;
+            System.Diagnostics.Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+            System.Diagnostics.Process[] processess = System.Diagnostics.Process.GetProcesses();
+            foreach (System.Diagnostics.Process process in processess)
+            {
+                if (currentProcess.Id != process.Id)
+                {
+                    if (currentProcess.ProcessName == process.ProcessName)
+                    {
+                        isRun = true;
+                        break;
+                    }
+                }
+            }
+            if (isRun)
+            {
+                MessageBox.Show("프로그램이 이미 실행중입니다.\n\n트레이 아이콘을 확인하세요.");
+                this.Close();
+            }
+            else
+            {
+                // 시리얼 설정
+                if (!System.IO.File.Exists("PLCPORT.txt"))
+                {
+                    System.IO.File.WriteAllText("PLCPORT.txt", "COM1", Encoding.UTF8);
+                }
+
+                //ItsMaria.Set("PLC_GATHERING_OMRON", "ADDR_LIST");
+                //DataSet ds = ItsMaria.Call();
+                //if (ItsMaria.IsError)
+                //{
+                //    _ERRMSG = ItsMaria.ErrMessage;
+                //    return;
+                //}
+                //else
+                //{
+                //    foreach(DataRow row in ds.Tables[0].Rows)
+                //    {
+                //        DataRow newRow = _EqmData.NewRow();
+                //        newRow["PLCCD"] = row["PLCCD"];
+                //        newRow["PLCADDR"] = row["PLCADDR"];
+                //        newRow["PLCVALUE"] = row["PLCVALUE"];
+                //        newRow["REMARK"] = row["REMARK"];
+                //        _EqmData.Rows.Add(newRow);
+                //    }
+                //}
+
+                ItsOmronSerial.serialPort.Close();
+                ItsOmronSerial.serialPort.PortName = System.IO.File.ReadAllText("PLCPORT.txt", Encoding.UTF8);
+                ItsOmronSerial.serialPort.BaudRate = 2400;
+                ItsOmronSerial.serialPort.DataBits = 7;
+                ItsOmronSerial.serialPort.RtsEnable = true;
+                ItsOmronSerial.serialPort.ReceivedBytesThreshold = 1;
+                ItsOmronSerial.serialPort.Parity = System.IO.Ports.Parity.Even;
+                ItsOmronSerial.serialPort.StopBits = System.IO.Ports.StopBits.One;
+
+
+                // PLC값 업데이트
+                _serialTimer.Interval = 100; // 5 * 1000; // 5초간격
+                _serialTimer.Elapsed += serialTimer_Elapsed;
+                _serialTimer.Enabled = true;
+                serialTimer_Elapsed(_serialTimer, null);
+                _serialTimer.Start();
+
+                // 값 화면에 표시
+                _formTimer.Interval = 1 * 1000; // 1초 간격
+                _formTimer.Enabled = true;
+                _formTimer.Start();
+            }
+        }
+
+        private void serialTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            (sender as System.Timers.Timer).Stop();
+
+            ItsOmronSerial.serialPort.Close();
+            ItsOmronSerial.serialPort.PortName = System.IO.File.ReadAllText("PLCPORT.txt", Encoding.UTF8);
+
+            // test
+            ItsOmronSerialFINS.DM_READ(ItsOmronSerial.serialPort, "D1014");
+
+            //ItsMaria.Set("PLC_GATHERING_OMRON", "UP_CUR");
+            //foreach (DataRow row in _EqmData.Rows)
+            //{
+            //    string plcAddr = row["PLCADDR"].ToString();
+            //    string plcValue = ItsOmronSerial.DM_READ(ItsOmronSerial.serialPort, plcAddr);
+            //    row["PLCVALUE"] = plcValue;
+            //    ItsMaria.AddList("ADDRLIST", plcAddr);
+            //    ItsMaria.AddList("VALUELIST", plcValue);
+            //}
+            //DataSet ds = ItsMaria.Call();
+            //if (ItsMaria.IsError)
+            //{
+            //    _ERRMSG = ItsMaria.ErrMessage;
+            //}
+            //else
+            //{
+            //    //
+            //    lastTime = DateTime.Now;
+            //}
+
+            //foreach (DataTable dt in ds.Tables)
+            //{
+            //    dt.Dispose();
+            //}
+            //ds.Dispose();
+
+            (sender as System.Timers.Timer).Start();
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            label_errmsg.Visible = false;
+        }
+        private bool IsClose = false;
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (IsClose == true) return;
+
+            e.Cancel = true;
+            this.Visible = false;
+        }
+
+        private void notifyIcon1_DoubleClick(object sender, EventArgs e)
+        {
+            this.Visible = true;
+        }
+
+        private void notifyIcon1_Click(object sender, EventArgs e)
+        {
+            this.Visible = true;
+        }
+
+        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.IsClose = true;
+            this.Close();
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            ItsOmronSerial.DM_READ(ItsOmronSerial.serialPort, "D1010");
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+    }
+}

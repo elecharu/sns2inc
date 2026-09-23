@@ -1,0 +1,1 @@
+﻿<%@ Page Title="" Language="C#" AutoEventWireup="true" CodeFile="GetMonthlyCardLog.aspx.cs" Inherits="GetMonthlyCardLog" %>

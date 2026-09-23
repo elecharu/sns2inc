@@ -1,0 +1,471 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Text;
+using System.Windows.Forms;
+
+namespace ITSSCHEDULER
+{
+    public partial class MainForm : Form
+    {
+        public static string _VALUE11 = ""; // 숙성실 온도
+        public static string _VALUE12 = ""; // 숙성실 습도
+        public static string _VALUE21 = ""; // CMB 온도
+        public static string _VALUE22 = ""; // CMB 습도
+        public static string _VALUE31 = ""; // 칭량실 온도
+        public static string _VALUE32 = ""; // 칭량실 습도
+
+        public static string _ERRMSG = "";
+
+        System.Timers.Timer _serialTimer = new System.Timers.Timer();
+        System.Windows.Forms.Timer _formTimer = new System.Windows.Forms.Timer();
+        public MainForm()
+        {
+            InitializeComponent();
+
+            // 중복 실행 확인
+            bool isRun = false;
+            System.Diagnostics.Process currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+            System.Diagnostics.Process[] processess = System.Diagnostics.Process.GetProcesses();
+            foreach (System.Diagnostics.Process process in processess)
+            {
+                if (currentProcess.Id != process.Id)
+                {
+                    if (currentProcess.ProcessName == process.ProcessName)
+                    {
+                        isRun = true;
+                        break;
+                    }
+                }
+            }
+            if (isRun)
+            {
+                MessageBox.Show("프로그램이 이미 실행중입니다.\n\n트레이 아이콘을 확인하세요.");
+                this.Close();
+            }
+            else
+            {
+                // 시리얼 설정
+                if (!System.IO.File.Exists("PLCPORT.txt"))
+                {
+                    System.IO.File.WriteAllText("PLCPORT.txt", "COM1", Encoding.UTF8);
+                }
+                ItsSerial.SerialPlc.Close();
+                ItsSerial.SerialPlc.PortName = System.IO.File.ReadAllText("PLCPORT.txt", Encoding.UTF8);
+                ItsSerial.SerialPlc.BaudRate = 38400;
+                ItsSerial.SerialPlc.DataBits = 8;
+                ItsSerial.SerialPlc.RtsEnable = false;
+                ItsSerial.SerialPlc.ReceivedBytesThreshold = 1;
+                ItsSerial.SerialPlc.Parity = System.IO.Ports.Parity.None;
+                ItsSerial.SerialPlc.StopBits = System.IO.Ports.StopBits.One;
+
+                // 온습도 업데이트
+                _serialTimer.Interval = 5 * 1000; // 10초간격
+                _serialTimer.Elapsed += serialTimer_Elapsed;
+                _serialTimer.Enabled = true;
+                serialTimer_Elapsed(_serialTimer, null);
+                _serialTimer.Start();
+
+                // 값 화면에 표시
+                _formTimer.Interval = 1 * 1000; // 1초 간격
+                _formTimer.Tick += FormTimer_Tick;
+                _formTimer.Enabled = true;
+                _formTimer.Start();
+            }
+        }
+
+        private void FormTimer_Tick(object sender, EventArgs e)
+        {
+            lbl_value11.Text = _VALUE11;
+            lbl_value12.Text = _VALUE12;
+            lbl_value21.Text = _VALUE21;
+            lbl_value22.Text = _VALUE22;
+            lbl_value31.Text = _VALUE31;
+            lbl_value32.Text = _VALUE32;
+
+            label_errmsg.Text = _ERRMSG;
+            if (label_errmsg.Text.Trim() == "")
+            {
+                label_errmsg.Visible = false;
+            }
+            else
+            {
+                label_errmsg.BringToFront();
+                label_errmsg.Visible = true;
+            }
+        }
+
+        private void serialTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            (sender as System.Timers.Timer).Stop();
+
+            decimal VALUE11 = 0m;
+            decimal VALUE12 = 0m;
+            decimal VALUE21 = 0m;
+            decimal VALUE22 = 0m;
+            decimal VALUE31 = 0m;
+            decimal VALUE32 = 0m;
+
+            ItsSerial.SerialPlc.Close();
+            ItsSerial.SerialPlc.PortName = System.IO.File.ReadAllText("PLCPORT.txt", Encoding.UTF8);
+
+            try
+            {
+                VALUE11 = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0010", 1) / 10; // 숙성실 온도
+                VALUE12 = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0020", 1) / 10; // 숙성실 습도
+
+                VALUE21 = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0030", 1) / 10; // CMB 온도
+                VALUE22 = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0040", 1) / 10; // CMB 습도
+
+                VALUE31 = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0050", 1) / 10; // 약품실 온도
+                VALUE32 = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0060", 1) / 10; // 약품실 습도
+            }
+            catch
+            {
+                _ERRMSG = "시리얼 포트를 연결할 수 없습니다. " + ItsSerial.SerialPlc.PortName;
+                (sender as System.Timers.Timer).Start();
+                return;
+            }
+
+            _VALUE11 = VALUE11.ToString("###,###,##0.0") + "℃";
+            _VALUE12 = VALUE12.ToString("###,###,##0.0") + "%";
+            _VALUE21 = VALUE21.ToString("###,###,##0.0") + "℃";
+            _VALUE22 = VALUE22.ToString("###,###,##0.0") + "%";
+            _VALUE31 = VALUE31.ToString("###,###,##0.0") + "℃";
+            _VALUE32 = VALUE32.ToString("###,###,##0.0") + "%";
+
+            ItsMaria.Set("PLC_GATHERING", "UP_CUR");
+            ItsMaria.AddOne("PLCCD", "MIX01");
+            ItsMaria.AddList("ADDRLIST", "DW0010");
+            ItsMaria.AddList("VALUELIST", VALUE11);
+            ItsMaria.AddList("ADDRLIST", "DW0020");
+            ItsMaria.AddList("VALUELIST", VALUE12);
+            ItsMaria.AddList("ADDRLIST", "DW0030");
+            ItsMaria.AddList("VALUELIST", VALUE21);
+            ItsMaria.AddList("ADDRLIST", "DW0040");
+            ItsMaria.AddList("VALUELIST", VALUE22);
+            ItsMaria.AddList("ADDRLIST", "DW0050");
+            ItsMaria.AddList("VALUELIST", VALUE31);
+            ItsMaria.AddList("ADDRLIST", "DW0060");
+            ItsMaria.AddList("VALUELIST", VALUE32);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                _ERRMSG = "MariaDB에 온습도정보를 업데이트하지 못했습니다. " + ItsMaria.Addr + "," + ItsMaria.Port;
+            }
+            else
+            {
+                _ERRMSG = "";
+            }
+
+            foreach (DataTable dt in ds.Tables)
+            {
+                dt.Dispose();
+            }
+            ds.Dispose();
+
+            (sender as System.Timers.Timer).Start();
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            panel_config.Visible = false;
+            label_errmsg.Visible = false;
+        }
+        private bool IsClose = false;
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (IsClose == true) return;
+
+            e.Cancel = true;
+            this.Visible = false;
+        }
+
+        private void notifyIcon1_DoubleClick(object sender, EventArgs e)
+        {
+            this.Visible = true;
+        }
+
+        private void notifyIcon1_Click(object sender, EventArgs e)
+        {
+            this.Visible = true;
+        }
+
+        private void closeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.IsClose = true;
+            this.Close();
+        }
+
+        private void btnConfig_Click(object sender, EventArgs e)
+        {
+            _serialTimer.Stop();
+
+            _ERRMSG = "";
+
+            panel_config.BringToFront();
+            panel_config.Dock = DockStyle.Fill;
+            panel_config.Visible = true;
+
+            GetStt();
+        }
+
+        private void btnConfigClose_Click(object sender, EventArgs e)
+        {
+            panel_config.Visible = false;
+
+            _serialTimer.Start();
+            serialTimer_Elapsed(_serialTimer, null);
+        }
+
+        private void btnConfigSave_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("온습도 임계값을 수정하시겠습니까?", "ITSCO", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                ItsMaria.Set("PLC_GATHERING", "UP_CUR");
+                ItsMaria.AddOne("PLCCD", "MIX01");
+
+                ItsSerial.SerialPlc.Close();
+                ItsSerial.SerialPlc.PortName = System.IO.File.ReadAllText("PLCPORT.txt", Encoding.UTF8);
+
+                bool isOk = true;
+                if (isOk == true)
+                {
+                    isOk = ItsSerial.Write(ItsSerial.SerialPlc, "DW0101", ((int)(NUM_11B.Value * 10)).ToString());
+                    ItsMaria.AddList("ADDRLIST", "DW0101");
+                    ItsMaria.AddList("VALUELIST", NUM_11B.Value);
+                }
+                if (isOk == true)
+                {
+                    ItsSerial.Write(ItsSerial.SerialPlc, "DW0102", ((int)(NUM_11T.Value * 10)).ToString());
+                    ItsMaria.AddList("ADDRLIST", "DW0102");
+                    ItsMaria.AddList("VALUELIST", NUM_11T.Value);
+                }
+                if (isOk == true)
+                {
+                    ItsSerial.Write(ItsSerial.SerialPlc, "DW0103", ((int)(NUM_12B.Value * 10)).ToString());
+                    ItsMaria.AddList("ADDRLIST", "DW0103");
+                    ItsMaria.AddList("VALUELIST", NUM_12B.Value);
+                }
+                if (isOk == true)
+                {
+                    ItsSerial.Write(ItsSerial.SerialPlc, "DW0104", ((int)(NUM_12T.Value * 10)).ToString());
+                    ItsMaria.AddList("ADDRLIST", "DW0104");
+                    ItsMaria.AddList("VALUELIST", NUM_12T.Value);
+                }
+                if (isOk == true)
+                {
+                    ItsSerial.Write(ItsSerial.SerialPlc, "DW0111", ((int)(NUM_21B.Value * 10)).ToString());
+                    ItsMaria.AddList("ADDRLIST", "DW0111");
+                    ItsMaria.AddList("VALUELIST", NUM_21B.Value);
+                }
+                if (isOk == true)
+                {
+                    ItsSerial.Write(ItsSerial.SerialPlc, "DW0112", ((int)(NUM_21T.Value * 10)).ToString());
+                    ItsMaria.AddList("ADDRLIST", "DW0112");
+                    ItsMaria.AddList("VALUELIST", NUM_21T.Value);
+                }
+                if (isOk == true)
+                {
+                    ItsSerial.Write(ItsSerial.SerialPlc, "DW0113", ((int)(NUM_22B.Value * 10)).ToString());
+                    ItsMaria.AddList("ADDRLIST", "DW0113");
+                    ItsMaria.AddList("VALUELIST", NUM_22B.Value);
+                }
+                if (isOk == true)
+                {
+                    ItsSerial.Write(ItsSerial.SerialPlc, "DW0114", ((int)(NUM_22T.Value * 10)).ToString());
+                    ItsMaria.AddList("ADDRLIST", "DW0114");
+                    ItsMaria.AddList("VALUELIST", NUM_22T.Value);
+                }
+                if (isOk == true)
+                {
+                    ItsSerial.Write(ItsSerial.SerialPlc, "DW0121", ((int)(NUM_31B.Value * 10)).ToString());
+                    ItsMaria.AddList("ADDRLIST", "DW0121");
+                    ItsMaria.AddList("VALUELIST", NUM_31B.Value);
+                }
+                if (isOk == true)
+                {
+                    ItsSerial.Write(ItsSerial.SerialPlc, "DW0122", ((int)(NUM_31T.Value * 10)).ToString());
+                    ItsMaria.AddList("ADDRLIST", "DW0122");
+                    ItsMaria.AddList("VALUELIST", NUM_31T.Value);
+                }
+                if (isOk == true)
+                {
+                    ItsSerial.Write(ItsSerial.SerialPlc, "DW0123", ((int)(NUM_32B.Value * 10)).ToString());
+                    ItsMaria.AddList("ADDRLIST", "DW0123");
+                    ItsMaria.AddList("VALUELIST", NUM_32B.Value);
+                }
+                if (isOk == true)
+                {
+                    ItsSerial.Write(ItsSerial.SerialPlc, "DW0124", ((int)(NUM_32T.Value * 10)).ToString());
+                    ItsMaria.AddList("ADDRLIST", "DW0124");
+                    ItsMaria.AddList("VALUELIST", NUM_32T.Value);
+                }
+
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    _ERRMSG = "MariaDB에 온습도정보를 업데이트하지 못했습니다. " + ItsMaria.Addr + "," + ItsMaria.Port;
+                }
+
+                if (isOk == true)
+                {
+                    _ERRMSG = "";
+                    btnConfigClose_Click(null, null);
+                }
+                else
+                {
+                    _ERRMSG = "임계값을 저장하지 못했습니다. \n\n시리얼포트 연결을 확인하세요.";
+                }
+            }
+        }
+
+        private void btnOnOff1_Click(object sender, EventArgs e)
+        {
+            ItsSerial.SerialPlc.Close();
+            ItsSerial.SerialPlc.PortName = System.IO.File.ReadAllText("PLCPORT.txt", Encoding.UTF8);
+
+            if (stt1.Tag.ToString() == "on")
+            {
+                ItsSerial.Write(ItsSerial.SerialPlc, "DW0105", "0");
+                stt1.Text = "꺼짐";
+                stt1.Tag = "off";
+                btnOnOff1.Text = "Off";
+                btnOnOff1.BackColor = Color.DarkGray;
+            }
+            else
+            {
+                ItsSerial.Write(ItsSerial.SerialPlc, "DW0105", "1");
+                stt1.Text = "켜짐";
+                stt1.Tag = "on";
+                btnOnOff1.Text = "On";
+                btnOnOff1.BackColor = Color.Red;
+            }
+        }
+
+        private void btnOnOff2_Click(object sender, EventArgs e)
+        {
+            ItsSerial.SerialPlc.Close();
+            ItsSerial.SerialPlc.PortName = System.IO.File.ReadAllText("PLCPORT.txt", Encoding.UTF8);
+
+            if (stt2.Tag.ToString() == "on")
+            {
+                ItsSerial.Write(ItsSerial.SerialPlc, "DW0115", "0");
+                stt2.Text = "꺼짐";
+                stt2.Tag = "off";
+                btnOnOff2.Text = "Off";
+                btnOnOff2.BackColor = Color.DarkGray;
+            }
+            else
+            {
+                ItsSerial.Write(ItsSerial.SerialPlc, "DW0115", "1");
+                stt2.Text = "켜짐";
+                stt2.Tag = "on";
+                btnOnOff2.Text = "On";
+                btnOnOff2.BackColor = Color.Red;
+            }
+        }
+
+        private void btnOnOff3_Click(object sender, EventArgs e)
+        {
+            ItsSerial.SerialPlc.Close();
+            ItsSerial.SerialPlc.PortName = System.IO.File.ReadAllText("PLCPORT.txt", Encoding.UTF8);
+
+            if (stt3.Tag.ToString() == "on")
+            {
+                ItsSerial.Write(ItsSerial.SerialPlc, "DW0125", "0");
+                stt3.Text = "꺼짐";
+                stt3.Tag = "off";
+                btnOnOff3.Text = "Off";
+                btnOnOff3.BackColor = Color.DarkGray;
+            }
+            else
+            {
+                ItsSerial.Write(ItsSerial.SerialPlc, "DW0125", "1");
+                stt3.Text = "켜짐";
+                stt3.Tag = "on";
+                btnOnOff3.Text = "On";
+                btnOnOff3.BackColor = Color.Red;
+            }
+        }
+
+        private void GetStt()
+        {
+            ItsSerial.SerialPlc.Close();
+            ItsSerial.SerialPlc.PortName = System.IO.File.ReadAllText("PLCPORT.txt", Encoding.UTF8);
+
+            try
+            {
+                NUM_11B.Value = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0101", 1) / 10; // 숙성실 하한온도
+                NUM_11T.Value = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0102", 1) / 10; // 숙성실 상한온도
+                NUM_12B.Value = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0103", 1) / 10; // 숙성실 하한습도
+                NUM_12T.Value = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0104", 1) / 10; // 숙성실 상한습도
+
+                NUM_21B.Value = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0111", 1) / 10; // CMB 하한온도
+                NUM_21T.Value = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0112", 1) / 10; // CMB 상한온도
+                NUM_22B.Value = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0113", 1) / 10; // CMB 하한습도
+                NUM_22T.Value = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0114", 1) / 10; // CMB 상한습도
+
+                NUM_31B.Value = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0121", 1) / 10; // 약품실 하한온도
+                NUM_31T.Value = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0122", 1) / 10; // 약품실 상한온도
+                NUM_32B.Value = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0123", 1) / 10; // 약품실 하한습도
+                NUM_32T.Value = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0124", 1) / 10; // 약품실 상한습도
+
+                decimal sttValue1 = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0105", 1) / 10;
+                if (sttValue1 > 0m)
+                {
+                    stt1.Text = "켜짐";
+                    stt1.Tag = "on";
+                    btnOnOff1.Text = "On";
+                    btnOnOff1.BackColor = Color.Red;
+                }
+                else
+                {
+                    stt1.Text = "꺼짐";
+                    stt1.Tag = "off";
+                    btnOnOff1.Text = "Off";
+                    btnOnOff1.BackColor = Color.DarkGray;
+                }
+
+                decimal sttValue2 = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0115", 1) / 10;
+                if (sttValue2 > 0m)
+                {
+                    stt2.Text = "켜짐";
+                    stt2.Tag = "on";
+                    btnOnOff2.Text = "On";
+                    btnOnOff2.BackColor = Color.Red;
+                }
+                else
+                {
+                    stt2.Text = "꺼짐";
+                    stt2.Tag = "off";
+                    btnOnOff2.Text = "Off";
+                    btnOnOff2.BackColor = Color.DarkGray;
+                }
+
+                decimal sttValue3 = ItsSerial.ReadHex(ItsSerial.SerialPlc, "DW0125", 1) / 10;
+                if (sttValue3 > 0m)
+                {
+                    stt3.Text = "켜짐";
+                    stt3.Tag = "on";
+                    btnOnOff3.Text = "On";
+                    btnOnOff3.BackColor = Color.Red;
+                }
+                else
+                {
+                    stt3.Text = "꺼짐";
+                    stt3.Tag = "off";
+                    btnOnOff3.Text = "Off";
+                    btnOnOff3.BackColor = Color.DarkGray;
+                }
+            }
+            catch
+            {
+                _ERRMSG = "시리얼 포트를 연결할 수 없습니다. " + ItsSerial.SerialPlc.PortName;
+            }
+        }
+
+    }
+}

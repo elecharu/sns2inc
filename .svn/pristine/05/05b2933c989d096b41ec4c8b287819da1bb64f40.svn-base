@@ -1,0 +1,105 @@
+﻿div.ItsDateRange {
+    display:inline-block;
+    float:left;
+    width:auto;
+    height:auto;
+    margin-right:2px;
+    background-color:transparent;
+    box-sizing: initial !important;
+}
+div.ItsDateRange_table {
+    display:table-cell;
+    background-color:transparent;
+    vertical-align:middle;
+    height:32px;
+    /*font-size:0px;*/
+}
+div.ItsDateRange_table > span {
+    vertical-align:middle;
+    display:inline-block;
+    text-align:right;
+    background-color:transparent; 
+    margin-right:4px;
+    /*font-size:12px;*/
+    white-space: normal;
+}
+div.ItsDateRange_box {
+    vertical-align:middle;
+    display:inline-block;
+    background-color:transparent; 
+    /*font-size:12px;*/
+}
+div.ItsDateRange_box > input {
+    float:left;
+    padding:2px 28px 2px 6px;
+    height:24px;
+    border:1px solid silver;
+    /*font-size:12px;*/
+    box-sizing: content-box;
+    line-height: 18px;
+}
+div.ItsDateRange_box > input:focus {
+    border: 1px solid gray;
+    background-color:mintcream;
+}
+div.ItsDateRange_box > input.ItsDateRange_F {
+    padding:2px 6px 2px 6px;
+}
+div.ItsDateRange_box > input.ItsDateRange_T {
+    padding:2px 6px 2px 6px;
+    margin-left:-1px;
+}
+
+div.ItsDateRange_button {
+    float:left;
+    cursor:pointer;
+    display:inline-block;
+    overflow:hidden;
+    vertical-align:middle;
+    height:30px;
+    width:22px;
+    margin-left:-1px;
+    text-align:center;
+    border:1px solid silver;
+    box-sizing: border-box;
+}
+
+div.ItsDateRange_button > i {
+    margin-top: 8px;
+    font-size: 12px;
+}
+
+div.ItsDateRange_box > div.ItsControl_pop
+{
+    visibility:visible;
+    padding:0px;
+    margin:0px;
+    margin-top:25px;
+    position:fixed;
+    list-style:none;
+    z-index:99999999;
+    max-height:600px;
+    overflow-y:auto;
+    background-color:white;
+    border:1px solid silver;
+}
+
+div.ItsDateRange_box.readonly input {
+    background-color:aliceblue;
+}
+div.ItsDateRange_box.readonly div.ItsDateRange_button {
+    color:silver;
+}
+
+div.ItsDateRange_close {
+    display: inline-block;
+    padding: 2px 10px;
+    color:white;
+    background-color: steelblue;
+    display: inline-block;
+    cursor:pointer;
+}
+
+div.ItsDateRange_calendar_F, div.ItsDateRange_calendar_T {
+    display:inline-block;
+}

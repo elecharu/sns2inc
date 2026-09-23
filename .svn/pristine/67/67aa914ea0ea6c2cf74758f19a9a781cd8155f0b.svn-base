@@ -1,0 +1,361 @@
+﻿<ResourceDictionary x:Class="ITSLIB.StyleOffice"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:dx="http://schemas.devexpress.com/winfx/2008/xaml/core" 
+                    xmlns:dxe="http://schemas.devexpress.com/winfx/2008/xaml/editors"
+                    xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+                    xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
+                    xmlns:dxgt="http://schemas.devexpress.com/winfx/2008/xaml/grid/themekeys"
+                    xmlns:its="clr-namespace:ITSLIB">
+
+    <!-- ############################################################### GridSplitter x:Key: ALL -->
+    <Style TargetType="{x:Type GridSplitter}">
+        <Setter Property="VerticalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="ResizeBehavior" Value="PreviousAndNext"/>
+        <Setter Property="Background">
+            <Setter.Value>
+                <SolidColorBrush Color="{DynamicResource ColorMainTitle}"/>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="GridSplitter.IsMouseOver" Value="True">
+                <Setter Property="Background">
+                    <Setter.Value>
+                        <SolidColorBrush Color="IndianRed"/>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ############################################################### listview x:Key: ALL -->
+    <Style x:Key="TOP_MENU" TargetType="{x:Type UserControl}">
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="Gray"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Width" Value="110"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Margin" Value="3 3 0 0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="Black"/>
+                <Setter Property="Foreground" Value="SeaGreen"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="MENU_DOCK" TargetType="{x:Type DockPanel}">
+        <Setter Property="Margin" Value="15 0 0 0"/>
+        <Setter Property="DockPanel.Dock" Value="Top"/>
+    </Style>
+    <Style x:Key="MENU_STACK" TargetType="{x:Type StackPanel}">
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="Silver"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="MENU_FOLDER" TargetType="{x:Type UserControl}">
+        <Setter Property="Background" Value="SeaGreen"/>
+        <Setter Property="DockPanel.Dock" Value="Top"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Height" Value="25"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="UserControl">
+                    <StackPanel Style="{DynamicResource MENU_STACK}">
+                        <Canvas Width="16" Height="16" Margin="5 0 5 0">
+                            <Line X1="1" Y1="0" X2="1" Y2="13" Stroke="SeaGreen" StrokeThickness="2"/>
+                            <Line X1="13" Y1="2" X2="13" Y2="13" Stroke="SeaGreen" StrokeThickness="2"/>
+                            <Line X1="0" Y1="13" X2="14" Y2="13" Stroke="SeaGreen" StrokeThickness="2"/>
+                            <Line X1="0" Y1="1" X2="5" Y2="1" Stroke="SeaGreen" StrokeThickness="2"/>
+                            <Line X1="6" Y1="3" X2="14" Y2="3" Stroke="SeaGreen" StrokeThickness="2"/>
+                            <Line X1="4" Y1="0.5" X2="7" Y2="3.5" Stroke="SeaGreen" StrokeThickness="2"/>
+                            <Line X1="9" Y1="5.5" X2="9" Y2="14" Stroke="SeaGreen" StrokeThickness="12"/>
+                        </Canvas>
+                        <ContentPresenter VerticalAlignment="Center"></ContentPresenter>
+                    </StackPanel>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="SeaGreen"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="MENU_PAGE" TargetType="{x:Type UserControl}">
+        <Setter Property="Background" Value="SeaGreen"/>
+        <Setter Property="DockPanel.Dock" Value="Top"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Height" Value="25"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="UserControl">
+                    <StackPanel Style="{DynamicResource MENU_STACK}">
+                        <Canvas Width="16" Height="16" Margin="5 0 5 0">
+                            <Line X1="1" Y1="1" X2="15" Y2="1" Stroke="SeaGreen" StrokeThickness="1.5"/>
+                            <Line X1="2" Y1="0" X2="2" Y2="16" Stroke="SeaGreen" StrokeThickness="1.5"/>
+                            <Line X1="14" Y1="0" X2="14" Y2="16" Stroke="SeaGreen" StrokeThickness="1.5"/>
+                            <Line X1="1" Y1="15" X2="15" Y2="15" Stroke="SeaGreen" StrokeThickness="1.5"/>
+                            <Line X1="4" Y1="5" X2="12" Y2="5" Stroke="SeaGreen" StrokeThickness="1.5"/>
+                            <Line X1="4" Y1="8" X2="12" Y2="8" Stroke="SeaGreen" StrokeThickness="1.5"/>
+                            <Line X1="4" Y1="11" X2="12" Y2="11" Stroke="SeaGreen" StrokeThickness="1.5"/>
+                        </Canvas>
+                        <ContentPresenter VerticalAlignment="Center"></ContentPresenter>
+                    </StackPanel>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="SeaGreen"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- ############################################################### Expender -->
+    <Style x:Key="SEARCH" TargetType="{x:Type UserControl}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="UserControl">
+                    <Expander Foreground="White"
+                              Background="SeaGreen"
+                              BorderBrush="SeaGreen"
+                              BorderThickness="1"
+                              IsExpanded="True"
+                              Padding="0 1.5 0 0"
+                              Margin="1.5">
+                        <Expander.HeaderTemplate>
+                            <DataTemplate>
+                                <Border Height="24" Background="SeaGreen" BorderThickness="1">
+                                    <TextBlock Text="{Binding}" 
+                                               Margin="10 0 0 0"
+                                               VerticalAlignment="Center"
+                                               Foreground="White"
+                                               FontSize="12" 
+                                               FontWeight="Bold"
+                                               Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, 
+                                                       AncestorType={x:Type Expander}}, Path=ActualWidth}"
+                                               TextWrapping="Wrap"/>
+                                </Border>
+                            </DataTemplate>
+                        </Expander.HeaderTemplate>
+                        <UserControl Background="MintCream"
+                                     BorderThickness="0"
+                                     Padding="1.5">
+                            <ContentPresenter></ContentPresenter>
+                        </UserControl>
+                    </Expander>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ADD" TargetType="{x:Type UserControl}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="UserControl">
+                    <StackPanel>
+                        <Border BorderThickness="1" BorderBrush="SeaGreen" Margin="1">
+                            <DockPanel Background="#ECECEC">
+                                <UserControl Height="5" Background="Pink" DockPanel.Dock="Top"></UserControl>
+                                <UserControl DockPanel.Dock="Bottom">
+                                    <WrapPanel Background="WhiteSmoke">
+                                        <UserControl Width="50"></UserControl>
+                                        <its:Button Width="100" Label="초기화" BackColor="#333333" CommandName="INIT_ITEM_VALUE"></its:Button>
+                                        <UserControl Width="110"></UserControl>
+                                        <its:Button Width="100" Label="추가" CommandName="NEW_ITEM_ADD"></its:Button>
+                                        <UserControl Width="10"></UserControl>
+                                        <its:Button Width="100" Label="취소" CommandName="NEW_ITEM_CANCEL"></its:Button>
+                                    </WrapPanel>
+                                </UserControl>
+                                <ContentPresenter DockPanel.Dock="Top"></ContentPresenter>
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ADD_V" TargetType="{x:Type UserControl}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="UserControl">
+                    <StackPanel>
+                        <Border BorderThickness="1" BorderBrush="SeaGreen" Margin="1">
+                            <DockPanel Background="#ECECEC">
+                                <UserControl Width="5" Background="Pink" DockPanel.Dock="Left"></UserControl>
+                                <UserControl DockPanel.Dock="Bottom">
+                                    <WrapPanel Background="WhiteSmoke">
+                                        <UserControl Width="50"></UserControl>
+                                        <its:Button Width="100" Label="초기화" BackColor="#333333" CommandName="INIT_ITEM_VALUE"></its:Button>
+                                        <UserControl Width="110"></UserControl>
+                                        <its:Button Width="100" Label="추가" CommandName="NEW_ITEM_ADD"></its:Button>
+                                        <UserControl Width="10"></UserControl>
+                                        <its:Button Width="100" Label="취소" CommandName="NEW_ITEM_CANCEL"></its:Button>
+                                    </WrapPanel>
+                                </UserControl>
+                                <ContentPresenter DockPanel.Dock="Top"></ContentPresenter>
+                            </DockPanel>
+                        </Border>
+                    </StackPanel>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="GRID" TargetType="{x:Type UserControl}">
+        <Setter Property="DockPanel.Dock" Value="Top"/>
+        <Setter Property="Foreground" Value="Black"/>
+        <Setter Property="Background" Value="White"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="2"/>
+        <Setter Property="Margin" Value="1.5"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="UserControl">
+                    <ContentPresenter></ContentPresenter>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ############################################################### MainGrid x:Key: PageMain -->
+    <Style x:Key="OFFICE" TargetType="{x:Type its:ItsPageBase}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="its:ItsPageBase">
+                    <Grid>
+                        <ContentPresenter></ContentPresenter>
+                        <Border BorderBrush="Silver" BorderThickness="0" Margin="20 2 0 0" VerticalAlignment="Top">
+                            <StackPanel Orientation="Horizontal">
+                                <its:ButtonCommon x:Name="COMMON_BUTTON_SEARCH" Label="조회" Type="Search" />
+                                <its:ButtonCommon x:Name="COMMON_BUTTON_ADD" Label="추가" Type="Add" />
+                                <its:ButtonCommon x:Name="COMMON_BUTTON_SAVE" Label="저장" Type="Save" />
+                                <its:ButtonCommon x:Name="COMMON_BUTTON_DELETE" Label="삭제" Type="Delete" />
+                                <its:ButtonCommon x:Name="COMMON_BUTTON_PRINT" Label="출력" Type="Print"/>
+                                <its:ButtonCommon x:Name="COMMON_BUTTON_CAPTURE" Label="화면캡처" Type="Capture"/>
+                                <its:ButtonCommon x:Name="COMMON_BUTTON_EXPORT" Label="내보내기" Type="Export"/>
+                                <Popup IsOpen="False" 
+                                       VerticalOffset="-100"
+                                       HorizontalOffset="-100"
+                                       StaysOpen="False">
+                                    <its:PopContent x:Name="POPCOLUMN_pop"
+                                        Title="" 
+                                        TitleColor="SeaGreen"
+                                        IconType="Info">
+                                        <DockPanel FocusManager.IsFocusScope="True">
+                                            <Grid DockPanel.Dock="Top" Background="SeaGreen">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="150"/>
+                                                    <ColumnDefinition Width="25"/>
+                                                    <ColumnDefinition Width="2"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="2"/>
+                                                    <ColumnDefinition Width="70"/>
+                                                    <ColumnDefinition Width="2"/>
+                                                    <ColumnDefinition Width="40"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox Margin="2 1 2 2" x:Name="POPCOLUMN_Keyword" Height="22" Grid.Column="0"/>
+                                                <UserControl Grid.Column="1"
+                                                         Background="Transparent"
+                                                         x:Name="POPCOLUMN_Icon"
+                                                         Width="20" Height="20">
+                                                    <Canvas x:Name="canvasSearch"
+                                                            Width="16" 
+                                                            Height="16"
+                                                            HorizontalAlignment="Right"
+                                                            Margin="3 2 3 3">
+                                                        <Ellipse Width="14" Height="14" Stroke="White" StrokeThickness="2"></Ellipse>
+                                                        <Line X1="11" Y1="11" X2="16" Y2="16" Stroke="White" StrokeThickness="2"></Line>
+                                                    </Canvas>
+                                                </UserControl>
+                                                <DockPanel Grid.Column="2" Background="White"></DockPanel>
+                                                <UserControl x:Name="POPCOLUMN_Select" Height="26" Grid.Column="3" Background="DarkOrange">
+                                                    <Canvas Height="16" Width="50" Background="Transparent">
+                                                        <Line X1="3" Y1="5" X2="6" Y2="13" Stroke="White" StrokeThickness="2"></Line>
+                                                        <Line X1="5" Y1="13" X2="16" Y2="3" Stroke="White" StrokeThickness="2"></Line>
+                                                        <TextBlock Canvas.Left="20" Foreground="White" FontWeight="Bold">선택</TextBlock>
+                                                    </Canvas>
+                                                </UserControl>
+                                                <DockPanel Grid.Column="4" Background="White"></DockPanel>
+                                                <UserControl x:Name="POPCOLUMN_Clear" Height="26" Grid.Column="5" Background="DarkOrange">
+                                                    <Canvas Height="16" Width="50" Background="Transparent">
+                                                        <Line X1="3" Y1="6" X2="6" Y2="1" Stroke="White" StrokeThickness="2"></Line>
+                                                        <Line X1="5" Y1="2" X2="13" Y2="2" Stroke="White" StrokeThickness="2"></Line>
+                                                        <Line X1="13" Y1="1" X2="13" Y2="8" Stroke="White" StrokeThickness="2"></Line>
+                                                        <Line X1="3" Y1="5" X2="3" Y2="13" Stroke="White" StrokeThickness="2"></Line>
+                                                        <Line X1="2" Y1="13" X2="8" Y2="13" Stroke="White" StrokeThickness="2"></Line>
+                                                        <Line X1="9" Y1="9" X2="16" Y2="16" Stroke="White" StrokeThickness="2"></Line>
+                                                        <Line X1="9" Y1="16" X2="16" Y2="9" Stroke="White" StrokeThickness="2"></Line>
+                                                        <TextBlock Canvas.Left="20" Foreground="White" FontWeight="Bold">지우기</TextBlock>
+                                                    </Canvas>
+                                                </UserControl>
+                                                <DockPanel Grid.Column="6" Background="White"></DockPanel>
+                                                <UserControl x:Name="POPCOLUMN_Close" Height="26" Grid.Column="7" Background="IndianRed">
+                                                    <Canvas Height="16" Width="16" Background="Transparent">
+                                                        <Line X1="3" Y1="3" X2="13" Y2="13" Stroke="White" StrokeThickness="3"></Line>
+                                                        <Line X1="3" Y1="13" X2="13" Y2="3" Stroke="White" StrokeThickness="3"></Line>
+                                                    </Canvas>
+                                                </UserControl>
+                                            </Grid>
+                                            <its:Grid Height="400" x:Name="POPCOLUMN_Grid"/>
+                                        </DockPanel>
+                                    </its:PopContent>
+                                </Popup>
+                                <Popup IsOpen="False" 
+                                       VerticalOffset="-100"
+                                       HorizontalOffset="-100"
+                                       StaysOpen="True"
+                                       Placement="Mouse">
+                                    <its:PopContent x:Name="POP_CELL_CALC"
+                                        Title="선택 셀 정보" 
+                                        IconType="Info">
+                                        <StackPanel>
+                                            <StackPanel Margin="10 10 10 0" Background="AliceBlue">
+                                                <its:Number Label="선택셀" x:Name="CELLINFO_SEL_COUNT"
+                                                        DecimalPoint="0" Margin="0 0 20 0"
+                                                        Unit="EA "
+                                                        ReadOnly="True"/>
+                                                <its:Number Label="숫자셀" x:Name="CELLINFO_NUM_COUNT"
+                                                        Unit="EA " Margin="0 0 20 0"
+                                                        DecimalPoint="0" 
+                                                        ReadOnly="True"/>
+                                            </StackPanel>
+                                            <StackPanel Margin="10 10 10 0" Background="MintCream">
+                                                <its:Number Label="합계값" x:Name="CELLINFO_SUM_VALUE"
+                                                        DecimalPoint="2" Margin="0 0 20 0"
+                                                        ReadOnly="True"/>
+                                                <its:Number Label="평균값" x:Name="CELLINFO_AVE_VALUE"
+                                                        DecimalPoint="2" Margin="0 0 20 0"
+                                                        ReadOnly="True"/>
+                                            </StackPanel>
+                                            <StackPanel Margin="10 10 10 10" Background="#ECECEC">
+                                                <its:Number Label="최소값" x:Name="CELLINFO_MIN_VALUE"
+                                                        DecimalPoint="2" Margin="0 0 20 0"
+                                                        ReadOnly="True"/>
+                                                <its:Number Label="최대값" x:Name="CELLINFO_MAX_VALUE"
+                                                        DecimalPoint="2" Margin="0 0 20 0"
+                                                        ReadOnly="True"/>
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </its:PopContent>
+                                </Popup>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.779
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailServiceHour", "MailServiceHour.csproj", "{5B2DCFA8-E87A-413A-95C8-335820E4F085}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "MailService_USER", "MailService_USER\MailService_USER.vdproj", "{1B8185C5-320A-4AC1-9934-426B68C92E4C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5B2DCFA8-E87A-413A-95C8-335820E4F085}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B2DCFA8-E87A-413A-95C8-335820E4F085}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B2DCFA8-E87A-413A-95C8-335820E4F085}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B2DCFA8-E87A-413A-95C8-335820E4F085}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B8185C5-320A-4AC1-9934-426B68C92E4C}.Debug|Any CPU.ActiveCfg = Debug
+		{1B8185C5-320A-4AC1-9934-426B68C92E4C}.Release|Any CPU.ActiveCfg = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {16FF47B7-0AE8-400E-8E00-6213D439D6EE}
+	EndGlobalSection
+EndGlobal

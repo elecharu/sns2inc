@@ -1,0 +1,25 @@
+﻿div.ItsLabel {
+    display:inline-block;
+    float:left;
+    width:auto;
+    height:auto;
+    margin-right:2px;
+    background-color:transparent;
+    box-sizing: initial !important;
+}
+div.ItsLabel_table {
+    display:table-cell;
+    background-color:transparent;
+    vertical-align:middle;
+    height:32px;
+    /*font-size:0px;*/
+}
+div.ItsLabel_table > span {
+    vertical-align:middle;
+    display:inline-block;
+    text-align:right;
+    margin-right:4px;
+    background-color:transparent; 
+    /*font-size:12px;*/
+    white-space: normal;
+}

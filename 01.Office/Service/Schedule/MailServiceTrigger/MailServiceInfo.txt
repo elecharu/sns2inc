@@ -1,0 +1,11 @@
+﻿### for mysql mariaDb. 동일.
+DbServer: "115.93.139.173"
+DbPort: "33061"
+DbUser: "root"
+DbPass: "mesyj78()"
+DbName: "MES_YJ"
+### 메일 접속 정보
+HOST: "mail.yeungjin.co.kr"
+## PORT
+SMTP: "25"
+IMAP: "143"

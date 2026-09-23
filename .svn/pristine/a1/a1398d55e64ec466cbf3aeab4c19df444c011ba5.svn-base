@@ -1,0 +1,134 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Data;
+using System.Reflection;
+using System.Threading;
+using System.Windows;
+
+namespace PLC_GATHERING_Prj
+{
+    public class Workspace
+    {
+        static Workspace _this = new Workspace();
+
+        public static Workspace This
+        {
+            get { return _this; }
+        }
+
+        public ObservableCollection<Property.MyPLCList> PLCList;
+        public ObservableCollection<Property.MyPLCAddList> PLCSTATEList;
+
+        public Dictionary<string, string> status = new Dictionary<string, string>();
+        public Dictionary<string, DataSet> _GlobalSet = new Dictionary<string, DataSet>();
+        public Dictionary<string, string> plcdata = new Dictionary<string, string>();
+        public Dictionary<string, string> plcdata1 = new Dictionary<string, string>();
+
+        public Thread MainTimeThread;
+        public Thread PLCListThread;
+        public Thread[] PLCAddListThread;
+        public Thread DBMaintimer;
+        public Thread RestThread; //카운터 초기화 스레드
+
+        public string CUSTCD = string.Empty;
+
+        public void LoadSetting()
+        {
+            ItsMaria.Set("PLC_GATHERING", "LIST_PLC");
+
+            DataSet ds = ItsMaria.Call();
+
+            if (ds.Tables[1].Rows.Count > 0)
+            {
+                for (int i = 0; i < ds.Tables[1].Rows.Count; i++)
+                {
+                    MainWindow.mainWindow.cbMachin.Items.Add(ds.Tables[1].Rows[i]["MACHIN_LIST"]);
+                }
+
+                MainWindow.mainWindow.cbMachin.SelectedIndex = 0;
+            }
+            else
+            {
+                MainWindow.mainWindow.cbMachin.ItemsSource = null;
+            }
+
+            RestThread = new Thread(ViewModel.clThread.This.PLC_RESET);
+            RestThread.IsBackground = true;
+            RestThread.Start();
+
+            MainTimeThread = new Thread(ViewModel.clThread.This.MainTimeMathod);
+            MainTimeThread.IsBackground = true;
+            MainTimeThread.Start();
+
+            DBMaintimer = new Thread(ViewModel.clThread.This.PLCListUpdate);
+            DBMaintimer.IsBackground = true;
+            DBMaintimer.Start();
+
+            DB_VERSION_CHECK();
+        }
+
+        public string Version()
+        {
+            AssemblyName assemblyName = Assembly.GetExecutingAssembly().GetName();
+
+            Version assemblyVersion = assemblyName.Version;
+
+            return assemblyVersion.ToString();
+        }
+
+        public void DB_VERSION_CHECK()
+        {
+            ItsMariaThread itsMariaThread = new ItsMariaThread();
+
+            DataSet ds = itsMariaThread.Query(
+                "SELECT VERSION FROM PROGRAM_VERSION WHERE CUSTCD = '" + Workspace.This.CUSTCD + "';");
+
+            if (ds.Tables[0].Rows.Count == 0)
+            {
+                itsMariaThread = new ItsMariaThread();
+
+                itsMariaThread.Query(
+                                    "INSERT INTO PROGRAM_VERSION(CUSTCD, VERSION, UPDATETIME)" +
+                                    "VALUES('" + Workspace.This.CUSTCD + "', '" + Version() + "', '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "');"
+                                    );
+            }
+            else
+            {
+                if (ds.Tables[0].Rows[0][0].ToString() != Version())
+                {
+                    itsMariaThread = new ItsMariaThread();
+
+                    itsMariaThread.Query(
+                                        "UPDATE PROGRAM_VERSION " +
+                                        "SET VERSION = '" + Version() + "' " +
+                                        "WHERE CUSTCD = '" + Workspace.This.CUSTCD + "';"
+                                        );
+                }
+            }
+        }
+
+        public void DB_USEYN_CHECK(bool flag)
+        {
+            ItsMariaThread itsMariaThread = new ItsMariaThread();
+
+            if (flag)
+            {
+                itsMariaThread.Query(
+                                   "UPDATE PROGRAM_VERSION " +
+                                   "SET USEYN = 'Y', STARTTIME = '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "', " +
+                                   "ENDTIME = ''" +
+                                   "WHERE CUSTCD = '" + Workspace.This.CUSTCD + "';"
+                                   );
+            }
+            else
+            {
+                itsMariaThread.Query(
+                                   "UPDATE PROGRAM_VERSION " +
+                                   "SET USEYN = 'N', ENDTIME = '" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "' " +
+                                   "WHERE CUSTCD = '" + Workspace.This.CUSTCD + "';"
+                                   );
+            }
+        }
+    }
+}

@@ -1,0 +1,103 @@
+﻿div.ItsOnoff {
+    display:inline-block;
+    float:left;
+    width:auto;
+    height:auto;
+    margin-right:2px;
+    background-color:transparent;
+    box-sizing: initial !important;
+    /*width:200px;*/
+}
+div.ItsOnoff_table {
+    display:table-cell;
+    background-color:transparent;
+    vertical-align:middle;
+    height:22px;
+    /*font-size:0px;*/
+}
+
+div.ItsOnoff_button {
+    /*height: 21px;*/
+    vertical-align:middle;
+    display:inline-block;
+    text-align: center;
+    margin-right:4px;
+    background-color:#4774B9; 
+    color:dimGray;
+    /*font-size:12px;*/
+    padding: 0px 1px 0px 1px;
+    border-radius: 12px;
+    border: 1.5px solid #d0d0d0;
+    cursor:pointer;
+}
+
+.ItsOnoff_button > strong{
+    text-align:left;
+}
+
+p.ItsOnoff_button_on {
+    
+    vertical-align: middle;
+    display: inline-block;
+    text-align: center;
+    margin: 0px 2px 0px 0px;
+    background-color: white;
+    color: white;
+    /*font-size: 12px;*/
+    padding: 0px 2px;
+    border-radius: 13px;
+    cursor: pointer;
+}
+p.ItsOnoff_button_off {
+    
+    vertical-align: middle;
+    display: inline-block;
+    text-align: center;
+    margin: 0px 0px 0px 2px;
+    background-color: white;
+    color: white;
+    /*font-size: 12px;*/
+    padding: 0px 2px;
+    border-radius: 13px;
+    cursor: pointer;
+}
+div.ItsOnoff_table > span {
+    vertical-align: middle;
+    display: inline-block;
+    text-align: right;
+    margin-right: 4px;
+    background-color: transparent;
+    white-space: normal;
+    font-family: 'SpoqaHanSansNeo_M';
+    color:#565656;
+}
+span.ItsOnoff_button_onText{
+    margin: 0px 3px;
+    padding: 1px 0px;
+    color: white;
+    font-weight: bold;
+    font-family: 'SpoqaHanSansNeo_M';
+    vertical-align: middle;
+    display: inline-block;
+}
+span.ItsOnoff_button_offText{
+    margin: 0px 3px;
+    padding: 1px 0px;
+    color: white;
+    font-weight: bold;
+    font-family: 'SpoqaHanSansNeo_M';
+    vertical-align: middle;
+    display: inline-block;
+}
+div.ItsOnoff_on{
+    vertical-align:middle;
+    height:18px;
+    display:table-cell;
+    float: left;
+}
+div.ItsOnoff_off{
+    vertical-align:middle;
+    height:18px;
+    display:table-cell;
+    float: right;
+}

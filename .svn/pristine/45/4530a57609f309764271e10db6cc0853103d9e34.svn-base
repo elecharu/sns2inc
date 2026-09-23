@@ -1,0 +1,290 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.IO;
+using System.Data;
+using MySql.Data.MySqlClient;
+using System.Reflection;
+using System.Security;
+using System.Security.Cryptography;
+
+public static class ItsMaria
+{
+
+    private static string _Addr = "112.216.70.42";
+    private static string _Port = "33061";
+    private static string _DbName = "MES_DB";
+    private static string _User = "root";
+    private static string _Pass = "mesdb78()";
+    private static string _PrgTitle = "itscoMooney";
+    private static string _MsgTitle = "itscoMooney";
+
+    private static string _ConnString = "";
+
+    //public static string Addr { get { _SetConn(); return _Addr; } }
+    //public static string Port { get { _SetConn(); return _Port; } }
+    //public static string DbName { get { _SetConn(); return _DbName; } }
+    //public static string User { get { _SetConn(); return _User; } }
+    //public static string Pass { get { _SetConn(); return _Pass; } }
+    //public static string PrgTitle { get { _SetConn(); return _PrgTitle; } }
+    //public static string MsgTitle { get { _SetConn(); return _MsgTitle; } }
+
+    //public static void _PutConfig(string addr, string port, string user, string pass, string dbname)
+    //{
+    //    _Addr = addr;
+    //    _Port = port;
+    //    _User = user;
+    //    _Pass = pass;
+    //    _DbName = dbname;
+    //}
+
+    public static string ConnString
+    {
+        get
+        {
+            if (_ConnString == "")
+            {
+                //_SetConn();
+                _ConnString = String.Format("server={0};port={1};uid={2};pwd={3};database={4}", _Addr, _Port, _User, _Pass, _DbName);
+            }
+            return _ConnString;
+        }
+    }
+    //private static void _SetConn()
+    //{
+    //    if (_Addr == "")
+    //    {
+    //        try
+    //        {
+    //            string[] mariaConnStr = File.ReadAllLines("D:\\SOURCE\\ITS_MOBILE_DA_VA.1.0\\bin\\maria.config", Encoding.UTF8);
+    //            foreach (string str in mariaConnStr)
+    //            {
+    //                if (str.IndexOf("--addr:") > -1) _Addr = DecDES(str.Replace("--addr:", "").Trim());
+    //                else if (str.IndexOf("--port:") > -1) _Port = DecDES(str.Replace("--port:", "").Trim());
+    //                else if (str.IndexOf("--user:") > -1) _User = DecDES(str.Replace("--user:", "").Trim());
+    //                else if (str.IndexOf("--password:") > -1) _Pass = DecDES(str.Replace("--password:", "").Trim());
+    //                else if (str.IndexOf("--dbname:") > -1) _DbName = DecDES(str.Replace("--dbname:", "").Trim());
+    //                else if (str.IndexOf("--program_title:") > -1) _PrgTitle = DecDES(str.Replace("--program_title:", "").Trim());
+    //                else if (str.IndexOf("--message_title:") > -1) _MsgTitle = DecDES(str.Replace("--message_title:", "").Trim());
+    //            }
+    //        }
+    //        catch
+    //        {
+    //            _Addr = "ERROR";
+    //            _ConnString = "ERROR: Not found MariaDB config file ( maria.config )";
+    //        }
+    //    }
+    //}
+
+    private static string _ProcName = "";
+    private static string _CallType = "";
+    private static Dictionary<string, string> _OneParams = null;
+    private static Dictionary<string, StringBuilder> _ListParams = null;
+
+    public static void Set(string procName, string callType)
+    {
+        _ProcName = procName;
+        _CallType = callType;
+
+        _OneParams = new Dictionary<string, string>();
+        _ListParams = new Dictionary<string, StringBuilder>();
+
+        //_OneParams.Add("CALLEMP", "");
+        //_OneParams.Add("CALLPRG", "");
+        //_OneParams.Add("CALLHOST", "");
+        //_OneParams.Add("CALLIP", "");
+        //_OneParams.Add("CALLMAC", "");
+
+    }
+
+    public static void AddOne(string name, object value)
+    {
+        if (value.ToString().ToUpper() == "TRUE") value = "Y";
+        if (value.ToString().ToUpper() == "FALSE") value = "N";
+
+        int point = value.ToString().IndexOf("•");
+        if (point > -1)
+        {
+            value = value.ToString().Substring(0, point);
+        }
+
+        if (_OneParams.ContainsKey(name.ToUpper()))
+        {
+            _OneParams[name.ToUpper()] = value.ToString();
+        }
+        else
+        {
+            _OneParams.Add(name.ToUpper(), value.ToString());
+        }
+    }
+
+    public static void AddList(string name, object value)
+    {
+        if (value.ToString().ToUpper() == "TRUE") value = "Y";
+        if (value.ToString().ToUpper() == "FALSE") value = "N";
+
+        int point = value.ToString().IndexOf("•");
+        if (point > -1)
+        {
+            value = value.ToString().Substring(0, point);
+        }
+
+        StringBuilder sb = null;
+
+        if (_ListParams.ContainsKey(name.ToUpper()))
+        {
+            sb = _ListParams[name.ToUpper()];
+        }
+        else
+        {
+            sb = new StringBuilder();
+            _ListParams.Add(name.ToUpper(), sb);
+        }
+        sb.Append(value.ToString() + "»");
+    }
+    public static bool IsError = false;
+    public static string ErrMessage = "";
+    public static string DebugMessage = "";
+    public static DataSet Call()
+    {
+        return _Query(Get(), ConnString, 300);
+    }
+    public static DataSet Call(int timeout)
+    {
+        return _Query(Get(), ConnString, timeout);
+    }
+    public static DataSet Call(string addr, string port, string user, string pass, string dbName, int timeout)
+    {
+        string connString = String.Format("server={0};port={1};uid={2};pwd={3};database={4}", addr, port, user, pass, dbName);
+        return _Query(Get(), connString, timeout);
+    }
+    public static DataSet Query(string query)
+    {
+        return _Query(query, ConnString, 300);
+    }
+    public static DataSet Query(string query, int timeout)
+    {
+        return _Query(query, ConnString, timeout);
+    }
+    public static DataSet Query(string query, string addr, string port, string user, string pass, string dbName, int timeout)
+    {
+        string connString = String.Format("server={0};port={1};uid={2};pwd={3};database={4}", addr, port, user, pass, dbName);
+        return _Query(query, connString, timeout);
+    }
+    private static DataSet _Query(string query, string connString, int timeout)
+    {
+        IsError = false;
+        ErrMessage = "";
+        DebugMessage = "";
+
+        DataSet ds = new DataSet();
+        if (connString == "" || ItsMaria._Addr == "ERROR")
+        {
+            DataTable dt = new DataTable();
+            ds.Tables.Add(dt);
+
+            IsError = true;
+            ErrMessage = "Client: connString is empty !!";
+            return ds;
+        }
+
+        MySqlConnection mariaConn = new MySqlConnection(connString);
+
+        try
+        {
+            mariaConn.Open();
+
+            MySqlCommand mariaCmd = new MySqlCommand();
+            mariaCmd.Connection = mariaConn;
+            mariaCmd.CommandText = query;
+            mariaCmd.CommandType = CommandType.Text;
+            mariaCmd.CommandTimeout = timeout;
+
+            MySqlDataAdapter mariaAdapter = new MySqlDataAdapter(mariaCmd);
+            mariaAdapter.Fill(ds);
+
+            if (ds.Tables.Count > 0 && ds.Tables[ds.Tables.Count - 1].Rows[0][0].ToString() == "_ERR_")
+            {
+                IsError = true;
+                ErrMessage = ds.Tables[ds.Tables.Count - 1].Rows[0][1].ToString();
+                DebugMessage = ds.Tables[ds.Tables.Count - 1].Rows[0][2].ToString();
+            }
+            else if (ds.Tables.Count > 0)
+            {
+                try
+                {
+                    DebugMessage = ds.Tables[ds.Tables.Count - 1].Rows[0][2].ToString();
+                }
+                catch { }
+            }
+
+            mariaConn.Close();
+            return ds;
+        }
+        catch (Exception ex)
+        {
+            try
+            {
+                mariaConn.Close();
+            }
+            catch { }
+
+            DataTable dt = new DataTable();
+            ds.Tables.Add(dt);
+
+            IsError = true;
+            ErrMessage = "Client: " + ex.Message;
+            return ds;
+        }
+    }
+
+    public static string Get()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("CALL COMCALLC ('" + _ProcName + "', '" + _CallType + "', 'Y',");
+
+        StringBuilder param = new StringBuilder();
+        param.Append("┃");
+        foreach (string name in _OneParams.Keys)
+        {
+            param.Append(name + "»" + _OneParams[name] + "┃");
+        }
+
+        foreach (string name in _ListParams.Keys)
+        {
+            param.Append(name + "»" + _ListParams[name] + "┃");
+        }
+
+        sb.Append("'" + param.ToString() + "'");
+        sb.Append(");");
+        return sb.ToString();
+    }
+
+    public static string DecDES(string str)
+    {
+        return DecDES(str, ">ITS1005");
+    }
+    public static string DecDES(string str, string key)
+    {
+        byte[] keyByte = (new UTF8Encoding()).GetBytes(key);
+        if (keyByte.Length != 8)
+        {
+            return "Key length must be 8 byte.";
+        }
+
+        if (str.Trim().Length < 12) return "";
+        byte[] encData = Convert.FromBase64String(str);
+        DESCryptoServiceProvider des = new DESCryptoServiceProvider();
+        des.Key = keyByte;
+        des.IV = keyByte;
+        ICryptoTransform desdecrypt = des.CreateDecryptor();
+        MemoryStream ms = new MemoryStream();
+        CryptoStream cs = new CryptoStream(ms, desdecrypt,
+            CryptoStreamMode.Write);
+        cs.Write(encData, 0, encData.Length);
+        cs.FlushFinalBlock();
+
+        byte[] strByte = ms.ToArray();
+        return (new UTF8Encoding()).GetString(strByte, 0, strByte.Length);
+    }
+}

@@ -1,0 +1,1 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="XtraReport.aspx.cs" Inherits="XtraReport" %>

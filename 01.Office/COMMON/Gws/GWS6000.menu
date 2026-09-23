@@ -1,0 +1,22 @@
+﻿<div class="Sub_left">			
+	<div class="Sub_left_top">
+		<h1>주소록</h1>
+			
+	</div>		
+	<div class="Sub_left_mn border_Tno">
+		<ul>
+			<li class="padding_L30  margin_B5 padding_T3">
+				<a href="/PAGEGWS/GWS6001/GWS6001_S01.aspx" class="Sub_left_mn_PD"><div class="Sub_left_mn_in"><img src="../../images/left_icon04_7.png"/> </div><span>공용주소록</span></a>						
+			</li>
+		</ul>
+	</div>
+	<div class="Sub_left_mn">
+		<ul>
+			<li class="padding_L30  margin_B5 padding_T3">
+				<a href="/PAGEGWS/GWS6001/GWS6001_S02.aspx" class="Sub_left_mn_PD"><div class="Sub_left_mn_in"><img src="../../images/left_icon04_7.png"/> </div> <span>개인주소록</span></a>						
+			</li>
+		</ul>
+	</div>
+	<div class="border_T9a">
+	</div>		
+</div>

@@ -1,0 +1,174 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.IO;
+using System.Data;
+using System.Data.SqlClient;
+
+public static class ItsMssql
+{
+    private static string _Url = "";
+    private static string _Addr = "";
+    private static string _Port = "";
+    private static string _DbName = "";
+    private static string _User = "";
+    private static string _Pass = "";
+
+    private static string _ConnString = "";
+
+    public static string Url
+    {
+        get
+        {
+            if (_Url == "")
+            {
+                try
+                {
+                    _Url = File.ReadAllLines("downurl.config", Encoding.UTF8)[0];
+                    if (_Url.Substring(Url.Length - 1, 1) != "/")
+                    {
+                        _Url += "/";
+                    }
+                }
+                catch
+                {
+                    _Url = "ERROR: Not found URL config file ( downurl.config )";
+                }
+            }
+            return _Url;
+        }
+    }
+
+    public static string Addr { get { _SetConn(); return _Addr; } }
+    public static string Port { get { _SetConn(); return _Port; } }
+    public static string DbName { get { _SetConn(); return _DbName; } }
+    public static string User { get { _SetConn(); return _User; } }
+    public static string Pass { get { _SetConn(); return _Pass; } }
+
+    public static string ConnString
+    {
+        get
+        {
+            if (_ConnString == "")
+            {
+                _SetConn();
+                _ConnString = String.Format("Data Source={0},port={1};Initial Catalog={2};User ID={3};Password={4};", _Addr, _Port, _DbName, _User, _Pass);
+            }
+            return _ConnString;
+        }
+    }
+    private static void _SetConn()
+    {
+        if (_Addr == "")
+        {
+            try
+            {
+                string connStr = File.ReadAllText("mssql.config");
+                connStr = ItsSecurity.DecDES(connStr);
+                string[] configList = connStr.Split(new char[] { '┃' });
+                _Addr = configList[0];
+                _Port = configList[1];
+                _DbName = configList[2];
+                _User = configList[3];
+                _Pass = configList[4];
+            }
+            catch
+            {
+                _Addr = "ERROR";
+                _ConnString = "ERROR: Not found MSSQL config file ( mssql.config )";
+            }
+        }
+    }
+
+    private static string _ProcName = "";
+    private static string _CallType = "";
+    private static List<StringBuilder> _Params = null;
+    private static List<string> _ListNames = null;
+    public static void Set(string procName, string callType)
+    {
+        _ProcName = procName;
+        _CallType = callType;
+        _Params = new List<StringBuilder>();
+        _ListNames = new List<string>();
+    }
+    public static void AddOne(string name, object value)
+    {
+        if (_Params.Count == 0) _Params.Add(new StringBuilder());
+        _Params[0].AppendLine(",@" + name + " = N'" + value.ToString() + "'");
+    }
+    public static void AddList(string name, object value)
+    {
+        if (_Params.Count == 0) _Params.Add(new StringBuilder());
+        if (!_ListNames.Contains(name))
+        {
+            _ListNames.Add(name);
+            _Params.Add(new StringBuilder());
+        }
+        int index = _ListNames.IndexOf(name);
+        _Params[index + 1].Append(value.ToString() + "»");
+    }
+    public static bool IsError = false;
+    public static string ErrMessage = "";
+    public static DataSet Call()
+    {
+        return _Call(ConnString, 300);
+    }
+    public static DataSet Call(int timeout)
+    {
+        return _Call(ConnString, timeout);
+    }
+    public static DataSet Call(string addr, string port, string user, string pass, string dbName, int timeout)
+    {
+        string connString = String.Format("server={0};port={1};uid={2};pwd={3};database={4}", addr, port, user, pass, dbName);
+        return _Call(connString, timeout);
+    }
+    private static DataSet _Call(string connString, int timeout)
+    {
+        IsError = false;
+        ErrMessage = "";
+
+        string query = Get();
+        DataSet ds = new DataSet();
+        SqlConnection mssqlConn = new SqlConnection(connString);
+
+        try
+        {
+            mssqlConn.Open();
+
+            SqlCommand cmd = new SqlCommand();
+            cmd.CommandTimeout = timeout;
+            cmd.Connection = mssqlConn;
+            cmd.CommandType = CommandType.Text;
+            cmd.CommandText = query;
+
+            SqlDataAdapter da = new SqlDataAdapter(cmd);
+            da.Fill(ds);
+
+            IsError = false;
+            ErrMessage = "";
+            return ds;
+        }
+        catch (System.Exception ex)
+        {
+            DataTable dt = new DataTable();
+            ds.Tables.Add(dt);
+
+            IsError = true;
+            ErrMessage = "Client: " + ex.Message;
+            return ds;
+        }
+    }
+    public static string Get()
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("EXEC " + _ProcName + " @CALLTYPE = N'" + _CallType + "'");
+        sb.Append(_Params[0].ToString());
+
+        for (int i = 1; i < _Params.Count; i++)
+        {
+            sb.AppendLine(",@" + _ListNames[i-1] + " = N'" + _Params[i].ToString() + "'"); 
+        }
+        return sb.ToString();
+    }
+}

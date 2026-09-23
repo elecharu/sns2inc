@@ -1,0 +1,194 @@
+﻿div.ItsFind {
+    float:left;
+    display:inline-block;
+    margin-top:2px;
+    margin-bottom:2px;
+    background-color:transparent;
+}
+div.ItsFind_table {
+    background-color:transparent;
+}
+div.ItsFind_table > span {
+    vertical-align:middle;
+    display:inline-block;
+    text-align:right;
+    background-color:transparent; 
+    white-space: normal;
+    font-family: 'SpoqaHanSansNeo_M';
+    color:#565656;
+}
+div.ItsFind_box {
+    vertical-align:middle;
+    display:inline-block;
+}
+div.ItsFind_box > input {
+    outline: none;
+    padding:0px 4px 0px 4px;
+    vertical-align:middle;
+    height:20px;
+    border:1px solid #C0C0C0;
+    border-right: 1px solid transparent;
+    box-sizing: border-box;
+    line-height: 11px;
+    font-weight:normal;
+    font-size:12px;
+    color:#565656;
+}
+div.ItsFind_box > input.ItsFind_name {
+    outline: none;
+    padding:0px 4px 0px 4px;
+    vertical-align:middle;
+    height:20px;
+    background-color:#F0F0F0;
+    border:1px solid #C0C0C0;
+    border-right: 1px solid transparent;
+    box-sizing: border-box;
+    line-height: 11px;
+    font-weight:normal;
+    font-size:12px;
+    color:#565656;
+}
+div.ItsFind_button {
+    cursor:pointer;
+    display:inline-block;
+    overflow:hidden;
+    vertical-align:middle;
+    height:20px;
+    width:22px;
+    text-align:center;
+    margin-left: -5px;
+    border:1px solid #C0C0C0;
+    background-color:white;
+    background: url(../images/UserControl/ic_search_n.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsFind_box > input:focus {
+    border: 1px solid #4774B9;
+}
+div.ItsFind_box > div.ItsControl_pop > ul > li.select {
+    background-color:#EDF2F8;
+}
+div.ItsFind_box > div.ItsControl_pop > ul > li.over {
+    background-color:#EDF2F8;
+}
+div.ItsFind.readonly input {
+    background-color:#F0F0F0 !important;
+}
+div.ItsFind_box > .ItsFind_code:read-only {
+    color:#A3A3A3;
+}
+div.ItsFind_box > input:hover ~ div.ItsFind_button  {
+    border: 1px solid #4774B9;
+    background: url(../images/UserControl/ic_search_h.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsFind_box > div.ItsFind_button:hover  {
+    border: 1px solid #4774B9;
+    background: url(../images/UserControl/ic_search_h.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+}
+div.ItsFind_box > input:focus ~ div.ItsFind_button  {
+    border: 1px solid #4774B9;
+    background: url(../images/UserControl/ic_search_p.png) no-repeat, #FFFFFF;
+    background-size: 20px;
+    background-color:#4774B9;
+}
+div.ItsFind_box > .ItsFind_code:read-only ~ ItsFind_button  {
+    border: 1px solid #C0C0C0;
+    background: url(../images/UserControl/ic_search_d.png) no-repeat, #F0F0F0;
+    background-size: 20px;
+    background-color:#F0F0F0;
+}  
+div.ItsFind_box > div.ItsControl_pop
+{
+    display:none;
+    padding:0px;
+    margin:0px;
+    margin-top:3px;
+    position:fixed;
+    list-style:none;
+    z-index:99999999;
+    border:1px solid #4774B9;
+    border-radius:3px;
+    /*font-size:12px;*/
+    background-color:#4774B9;
+}
+
+div.ItsFind_box > div.ItsControl_pop > ul
+{
+    padding:0px;
+    margin:0px;
+    list-style:none;
+    max-height:220px;
+    overflow-y:auto;
+    background-color:white;
+}
+
+div.ItsFind_box > div.ItsControl_pop > ul > li {
+    display: block;
+    word-wrap: unset;
+    vertical-align: middle;
+    background-color: white;
+    height: 22px;
+    min-height: 22px;
+    border-bottom: solid 1px #EDF2F8;
+    font-size:12px;
+    padding:3px;
+    color:#565656;
+}
+div.ItsFind_box > div.ItsControl_pop span.list {
+    display:inline-block;
+    overflow-x:hidden;
+    vertical-align:top;
+
+}
+div.ItsFind_box > div.ItsControl_pop span.no {
+    display:inline-block;
+    width:30px;
+    text-align:center;
+    overflow-x:hidden;
+    vertical-align:top;
+}
+
+div.ItsFind_limit {
+    vertical-align:middle;
+    background-color:#4774B9;
+    height: 24px;
+}
+div.ItsFind_limit > span {
+    display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+    margin: 4px 0px 4px 8px;
+    padding: 2px 6px 0px 6px;
+    height: 17px;
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: 30px;
+    color: white;
+    font-size: 10px;
+    cursor: pointer;
+}
+div.ItsFind_limit > span.select {
+    background-color:#F3994F;
+    color:white;
+}
+div.ItsFind_limit > a {
+    color:white;
+    padding: 5px;
+    vertical-align:middle;
+    cursor:pointer;
+}
+div.ItsFind_limit > input {
+    width:45px;
+    height:20px;
+    vertical-align:middle;
+    text-align:center;
+}
+.ItsFind_Pophead {
+    background-color:#4774B9;
+    color:white;
+    font-size: 12px;
+    font-weight: normal;
+    height: 24px;
+    padding: 3px;
+}
