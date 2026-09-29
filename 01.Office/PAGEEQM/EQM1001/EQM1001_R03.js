@@ -726,7 +726,7 @@ ItsButton.Event('btn_OPEN_CYCLE_BATCH').onClick = function () {
 function SetAllMonthButton(isAll) {
     $('#btn_ALL_MONTH').text(isAll ? '전체 해제' : '전체 선택')
         .css(isAll ? { 'border-color': '#d32f2f', 'background': '#ffebee', 'color': '#d32f2f' }
-                   : { 'border-color': '#1976d2', 'background': '#e3f2fd', 'color': '#1976d2' });
+            : { 'border-color': '#1976d2', 'background': '#e3f2fd', 'color': '#1976d2' });
 }
 
 // 2026-09-29 [정기점검 주기관리 탭] 전체 선택/해제 토글 버튼 클릭
