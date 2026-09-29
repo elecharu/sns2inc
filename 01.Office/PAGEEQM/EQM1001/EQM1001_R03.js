@@ -2,19 +2,15 @@
 
 // 페이지 로드
 ItsPage.Load = function () {
-    // 설비그룹 점검계획 탭: 설비 목록 초기화
-    ItsGrid.Create('grid_GRP1', { isCheckBoxGrid: false, allowMerging: 'Cells' }, [
-        column.create('설비그룹', 'EQMGRPNM', { width: 120, align: 'center', allowMerging: true, readOnly: true }),
-        column.create('정기점검', 'EQM02', { width: 60, columnType: enumColumnTypes.check, readOnly: true, allowMerging: true }),
-        column.create('설비그룹코드', 'EQMGUBUN', { width: 120, align: 'center', allowMerging: true }),
-        // column.create('설비코드', 'FANO', { width: 90, align: 'center' }),
-        // column.create('설비명', 'EQMNM', { width: 180 }),
+    // 2026-09-23 설비그룹 점검계획 탭: 좌측 설비그룹 목록 초기화 (설비그룹코드 1행 단위로 그룹 승인상태·반려사유 표시)
+    ItsGrid.Create('grid_GRP1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        column.create('설비그룹코드', 'EQMGUBUN', { width: 120, align: 'center' }),
+        column.create('설비그룹', 'EQMGRPNM', { width: 120, align: 'center' }),
+        column.create('정기점검', 'EQM02', { width: 60, columnType: enumColumnTypes.check, readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 65, align: 'center', readOnly: true }),
         column.create('반려사유', 'REJREASON', { width: 180, readOnly: true }),
         column.split()
     ]);
-
-    // ConfigureGroupPlanGrid('grid_GRP1');
 
     // 설비그룹 점검계획 탭: 정기점검 목록 초기화
     ItsGrid.Create('grid_GRP2', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
@@ -220,74 +216,6 @@ function FocusGroupPlanCheckCell(targetEqmGubun) {
 function RefreshGroupPlan(targetEqmGubun) {
     ItsButton.EventSearch(targetEqmGubun);
 }
-
-// 설비그룹 점검계획 탭: 셀 병합 및 정렬 설정
-function ConfigureGroupPlanGrid(groupPlanGridId) {
-    var groupPlanGrid = ItsGrid.Get(groupPlanGridId);
-    var originalGetMergedRange = groupPlanGrid.getMergedRange;
-
-    groupPlanGrid.getMergedRange = function (panel, row, col, clip) {
-        var currentColumn = (col < 0) ? undefined : this.columns[col];
-        if (panel !== this.cells || currentColumn == undefined || currentColumn.binding !== 'EQM02') {
-            return originalGetMergedRange.call(this, panel, row, col, clip);
-        }
-
-        var currentGridRow = panel.rows[row];
-        if (currentGridRow == undefined || currentGridRow.dataItem == undefined) {
-            return originalGetMergedRange.call(this, panel, row, col, clip);
-        }
-
-        var currentEqmGubun = currentGridRow.dataItem.EQMGUBUN; var currentPeriodicCheckStatus = panel.getCellData(row, col, true);
-        var isSameEqmGubunAndPeriodicCheckStatus = function (targetRowIndex) {
-            var comparisonGridRow = panel.rows[targetRowIndex];
-            return comparisonGridRow != undefined
-                && comparisonGridRow.dataItem != undefined
-                && comparisonGridRow.dataItem.EQMGUBUN === currentEqmGubun
-                && panel.getCellData(targetRowIndex, col, true) === currentPeriodicCheckStatus;
-        };
-        var mergedStartRow = row;
-        var mergedEndRow = row;
-
-        while (mergedStartRow > 0 && isSameEqmGubunAndPeriodicCheckStatus(mergedStartRow - 1)) {
-            mergedStartRow--;
-        }
-
-        while (mergedEndRow < panel.rows.length - 1 && isSameEqmGubunAndPeriodicCheckStatus(mergedEndRow + 1)) {
-            mergedEndRow++;
-        }
-
-        return new wijmo.grid.CellRange(mergedStartRow, col, mergedEndRow, col);
-    };
-
-    // 설비그룹 점검계획 탭: 헤더 정렬 비활성화
-    groupPlanGrid.getColumn('EQMGRPNM').allowSorting = false;
-    if (groupPlanGrid.getColumn('EQMGUBUN')) {
-        groupPlanGrid.getColumn('EQMGUBUN').allowSorting = false;
-    }
-    groupPlanGrid.getColumn('EQM02').allowSorting = false;
-    groupPlanGrid.getColumn('FANO').allowSorting = false;
-    groupPlanGrid.getColumn('EQMNM').allowSorting = false;
-
-    // 설비그룹 점검계획 탭: 설비그룹명 셀 포커스 방지
-    groupPlanGrid.formatItem.addHandler(function (s, e) {
-        if (e.panel === s.cells && s.columns[e.col].binding === 'EQMGRPNM') {
-            e.cell.style.cursor = 'default';
-            e.cell.style.userSelect = 'none';
-        }
-    });
-
-    // 선택 이벤트는 유지
-    groupPlanGrid.selectionChanging.addHandler(function (s, e) {
-        if (s.columns[e.col] && s.columns[e.col].binding === 'EQMGRPNM') {
-            var equipmentCodeColumnIndex = s.columns.indexOf('FANO');
-            if (equipmentCodeColumnIndex > -1) {
-                e.col = equipmentCodeColumnIndex;
-                e.col2 = equipmentCodeColumnIndex;
-            }
-        }
-    });
-}
-
 
 // 설비그룹 점검계획 탭: 선택 그룹 정기점검 조회
 ItsGrid.Event('grid_GRP1').onSelect = function () {

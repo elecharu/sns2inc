@@ -8,6 +8,8 @@
 -- 			2026-09-21 					한성수	설비그룹 정기점검 조회·CRUD 불필요 조인 및 IFNULL 조건 단순화
 -- 			2026-09-22 					한성수	설비그룹 재조회 선택 키를 EQMGUBUN 기준으로 정리
 -- 			2026-09-23 					한성수	정기점검 주기관리 설비등급 조회 추가
+-- 			2026-09-23 					한성수	설비그룹 점검계획 조회를 설비그룹코드 단위로 변경 및 그룹 승인상태·반려사유 표시
+-- 			2026-09-23 					한성수	설비그룹 점검계획 조회 사용 설비그룹(COMTYPE.USEYN = 'Y')만 조회 및 그룹 단위 사전집계 튜닝
 -- *****************************************************************************
   IN $FANO              VARCHAR(20),
   IN $FANO_COPY         VARCHAR(20),
@@ -68,32 +70,35 @@ CASE $CALLTYPE
 -- ============================================================================
 -- 01. 설비그룹 점검계획 탭: FM116 설비그룹 목록, 그룹 정기점검 조회·추가·저장·삭제 및 그룹별 복사
 -- ============================================================================
-WHEN 'LIST_MSTEQM_GRP' THEN -- 2026-09-21 설비그룹 점검계획 조회
+WHEN 'LIST_MSTEQM_GRP' THEN -- 2026-09-21 설비그룹 점검계획 조회 / 2026-09-23 설비그룹코드 1행 단위로 그룹 승인상태·반려사유 조회
 
   SELECT
-    MSTEQM.FANO,
-    MSTEQM.EQMNM,
-    MSTEQM.EQMGUBUN,
+    GRP_EQM.EQMGUBUN,
     COMTYPE.TPNM AS EQMGRPNM,
     COMTYPE.SORTNO AS EQMGRPSORTNO,
     CASE WHEN GRP_EQM02.EQMGUBUN IS NULL THEN 'N' ELSE 'Y' END AS EQM02,
-    CASE EQM_APRV.APRVSTT
+    CASE GRP_APRV.APRVSTT
       WHEN 'A' THEN '승인'
       WHEN 'R' THEN '반려'
       ELSE '대기'
     END AS APRVSTTNM,
-    COALESCE(EQM_APRV.APRVSTT, '') AS APRVSTT,
-    COALESCE(EQM_APRV.REJREASON, '') AS REJREASON
-  FROM MSTEQM
-  INNER JOIN COMTYPE
-    ON COMTYPE.GPCD = 'FM116'
-   AND COMTYPE.TPCD = MSTEQM.EQMGUBUN
+    COALESCE(GRP_APRV.APRVSTT, '') AS APRVSTT,
+    COALESCE(GRP_APRV.REJREASON, '') AS REJREASON
+  FROM COMTYPE
+  -- 2026-09-23 사용 설비가 있는 설비그룹코드만 1행으로 사전 추출 (설비 단위 행 증식 방지)
+  INNER JOIN (
+    SELECT DISTINCT
+      MSTEQM.EQMGUBUN
+    FROM MSTEQM
+    WHERE MSTEQM.USEYN = 'Y'
+  ) GRP_EQM
+    ON GRP_EQM.EQMGUBUN = COMTYPE.TPCD
   LEFT JOIN COMTYPE SELECTED_COMTYPE
     ON SELECTED_COMTYPE.GPCD = 'FM116'
    AND SELECTED_COMTYPE.TPCD = $EQMGRP
-  LEFT JOIN EQMPLAN_APRV EQM_APRV
-    ON EQM_APRV.PLANTP = 'E'
-   AND EQM_APRV.PLANCD = MSTEQM.FANO
+  LEFT JOIN EQMPLAN_APRV GRP_APRV
+    ON GRP_APRV.PLANTP = 'G'
+   AND GRP_APRV.PLANCD = GRP_EQM.EQMGUBUN
   LEFT JOIN (
     SELECT DISTINCT
       MSTEQM.EQMGUBUN
@@ -104,20 +109,15 @@ WHEN 'LIST_MSTEQM_GRP' THEN -- 2026-09-21 설비그룹 점검계획 조회
      AND CHKPLANEQM.USEYN = 'Y'
     WHERE MSTEQM.USEYN = 'Y'
   ) GRP_EQM02
-    ON GRP_EQM02.EQMGUBUN = MSTEQM.EQMGUBUN
-  WHERE MSTEQM.USEYN = 'Y'
+    ON GRP_EQM02.EQMGUBUN = GRP_EQM.EQMGUBUN
+  WHERE COMTYPE.GPCD = 'FM116'
+    AND COMTYPE.USEYN = 'Y'
     AND (
       $EQMGRP IS NULL
       OR $EQMGRP = ''
       OR COMTYPE.TPNM = SELECTED_COMTYPE.TPNM
     )
-    AND (
-      $FANO IS NULL
-      OR $FANO = ''
-      OR MSTEQM.FANO LIKE CONCAT('%', $FANO, '%')
-      OR MSTEQM.EQMNM LIKE CONCAT('%', $FANO, '%')
-    )
-  ORDER BY COMTYPE.SORTNO, MSTEQM.EQMGUBUN, MSTEQM.FANO
+  ORDER BY COMTYPE.SORTNO, GRP_EQM.EQMGUBUN
   ;
 -- ****************************************************************************
 WHEN 'LIST_GRP_EQM02' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선택 설비그룹의 등록 정기점검 항목 조회

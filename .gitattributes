@@ -1,0 +1,2 @@
+# Windows 에서 체크아웃/수정해도 macOS 에서 bash 스크립트가 깨지지 않도록 LF 고정
+*.sh text eol=lf

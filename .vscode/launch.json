@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch IIS Express & Chrome",
+      "name": "Launch Web Server & Chrome",
       "type": "chrome",
       "request": "launch",
       "url": "http://localhost:${config:iisexpress.port}/",
@@ -10,8 +10,8 @@
       "runtimeArgs": [
         "--incognito"
       ],
-      "preLaunchTask": "Start IIS Express",
-      "postDebugTask": "Stop IIS Express"
+      "preLaunchTask": "Start Web Server",
+      "postDebugTask": "Stop Web Server"
     }
   ]
 }

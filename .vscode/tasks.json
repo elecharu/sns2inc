@@ -2,15 +2,27 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Start IIS Express",
+      "label": "Start Web Server",
       "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/.vscode/start-iis.ps1"
-      ],
+      // Windows: IIS Express
+      "windows": {
+        "command": "powershell",
+        "args": [
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          "${workspaceFolder}/.vscode/start-iis.ps1"
+        ]
+      },
+      // macOS: Docker 컨테이너 안의 Mono XSP4
+      "osx": {
+        "command": "bash",
+        "args": [
+          "${workspaceFolder}/.vscode/xsp.sh",
+          "start",
+          "${config:iisexpress.port}"
+        ]
+      },
       "isBackground": true,
       "problemMatcher": {
         "owner": "iisexpress",
@@ -19,8 +31,8 @@
         },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "^Starting IIS Express \\.\\.\\.",
-          "endsPattern": "^IIS Express is running\\."
+          "beginsPattern": "^Starting (IIS Express|XSP) \\.\\.\\.",
+          "endsPattern": "^(IIS Express is running\\.|Listening on port: \\d+)"
         }
       },
       "runOptions": {
@@ -34,13 +46,22 @@
       }
     },
     {
-      "label": "Stop IIS Express",
+      "label": "Stop Web Server",
       "type": "shell",
-      "command": "powershell",
-      "args": [
-        "-Command",
-        "Get-Process iisexpress -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 1"
-      ],
+      "windows": {
+        "command": "powershell",
+        "args": [
+          "-Command",
+          "Get-Process iisexpress -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 1"
+        ]
+      },
+      "osx": {
+        "command": "bash",
+        "args": [
+          "${workspaceFolder}/.vscode/xsp.sh",
+          "stop"
+        ]
+      },
       "presentation": {
         "reveal": "silent",
         "panel": "shared",
