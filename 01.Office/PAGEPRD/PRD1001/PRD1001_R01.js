@@ -1,0 +1,124 @@
+﻿
+
+/// <reference path="../../Script/reference.js" />
+
+/* 페이지 접근 시 수행 */
+ItsPage.Load = function () {
+
+    ItsGrid.Create('grid1', { isCheckBoxGrid: true, isSubTotalGrid: true }, [
+        column.create('라인', 'LINE', { width: 80, align: 'center' }),
+
+        column.create('품목ID', 'ITEMID', { width: 100, align: 'center', hidden: true }),
+        column.create('품목코드', 'ITEMCD', { width: 150 }),
+        column.create('품명', 'ITEMNM', { width: 200 }),    
+        column.create('규격', 'ITEMSPEC', { width: 200 }),
+        column.create('단가', 'SALFUP', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+        column.create('UPH', 'UPH', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+        column.create('생산라인수', 'COUNT_LINE', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+        column.create('근무시간', 'WORKHOURS', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+        column.create('제품재고', 'SUMQTY', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+
+        column.band('생산CAPA', {}, [
+            column.create('수량', 'CAPAQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0 }),       
+            column.create('금액(원)', 'CAPAAMT', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0 }),       
+        ]),
+
+        column.band('판매계획', {}, [
+            column.create('수량', 'ODRQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+            column.create('금액(원)', 'ODRAMT', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+        ]),
+
+        column.band('생산계획', {}, [
+            column.create('수량', 'PLANQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
+            column.create('금액(원)', 'PLANAMT', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+            column.create('부하율', 'LOADFACTOR', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 1 }),
+            column.create('근무일수', 'WORKDAYS_EXPECTED', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 1 }),
+        ]),
+
+        column.split()
+    ]);
+
+
+    ItsCombo.SetValue('sdiv1_cmb_FACTORYCD', '07');
+};
+
+/* 조회 */
+ItsButton.EventSearch = function () {
+    ItsGrid.Clear('grid1');
+
+    var maria = new ItsMaria('PRD1001_R01', 'LIST_MONTHPLAN');
+    maria.AddPanel('sdiv1');
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    // N월 계획 확정유무 체크값 표기
+    ItsDisplay.SetValue('sdiv1_lbl_TITLE', maria.store.data[0]["TITLE"]);
+
+    ItsGrid.SetStore('grid1', maria.store);
+    //ItsGrid.Get('grid1').autoSizeColumns();
+
+    ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
+};
+
+
+// 월간 생산계획 저장
+ItsButton.EventSave = function () {
+    ItsMsg.Confirm(ItsMonth.GetValue('sdiv1_mon_SMONTH') + " 월 생산계획을 저장하시겠습니까?", function () {
+        var maria = new ItsMaria('PRD1001_R01', 'SAVE_PRDPLAN_M');
+
+        maria.AddParam('SMONTH', ItsMonth.GetValue('sdiv1_mon_SMONTH'));
+
+        for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+            if (ItsGrid.IsChecked('grid1', i)) {
+                maria.AddList('ITEMID_LIST', ItsGrid.GetValue('grid1', i, 'ITEMID'));
+                maria.AddList('SALFUP_LIST', ItsGrid.GetValue('grid1', i, 'SALFUP'));
+                maria.AddList('UPH_LIST', ItsGrid.GetValue('grid1', i, 'UPH'));
+                maria.AddList('COUNTLINE_LIST', ItsGrid.GetValue('grid1', i, 'COUNT_LINE'));
+                maria.AddList('WORKHOURS_LIST', ItsGrid.GetValue('grid1', i, 'WORKHOURS'));
+                maria.AddList('SUMQTY_LIST', ItsGrid.GetValue('grid1', i, 'SUMQTY'));
+                maria.AddList('CAPAQTY_LIST', ItsGrid.GetValue('grid1', i, 'CAPAQTY'));
+                maria.AddList('ODRQTY_LIST', ItsGrid.GetValue('grid1', i, 'ODRQTY'));
+                maria.AddList('PLANQTY_LIST', ItsGrid.GetValue('grid1', i, 'PLANQTY'));
+            }
+        }
+
+        maria.CallProc();
+
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsButton.EventSearch();
+    })
+}
+
+
+//// 계획확정 - 수정X
+//ItsButton.Event('btn_MPLAN_CONFIRM').onClick = function () {
+//    ItsMsg.Confirm(ItsMonth.GetValue('sdiv1_mon_SMONTH') + " 월계획을 확정처리 합니다.", function () {
+//        var maria = new ItsMaria('PRD1001_R01', 'CONF_MONTHPLAN');
+//        maria.AddPanel('sdiv1');
+//        maria.CallProc();
+//        if (maria.isError) {
+//            maria.ShowErrMsg();
+//            return;
+//        }
+//    })
+//}
+
+//// 확정취소
+//ItsButton.Event('btn_MPLAN_CANCEL').onClick = function () {
+//    ItsMsg.Confirm(ItsMonth.GetValue('sdiv1_mon_SMONTH') + " 월계획을 확정취소 합니다.", function () {
+//        var maria = new ItsMaria('PRD1001_R01', 'CANC_MONTHPLAN');
+//        maria.AddPanel('sdiv1');
+//        maria.CallProc();
+//        if (maria.isError) {
+//            maria.ShowErrMsg();
+//            return;
+//        }
+//    })
+//}
