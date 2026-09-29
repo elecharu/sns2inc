@@ -3,7 +3,7 @@
 /* 페이지 로드 시 수행 */
 ItsPage.Load = function () {
 
-    // 2026-09-22 설비그룹별 점검계획 그리드
+    // 설비그룹별 점검계획 그리드
     ItsGrid.Create('grid_GRP_PLAN', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('설비그룹코드', 'PLANCD', { width: 130, align: 'center', readOnly: true }),
         column.create('설비그룹', 'PLANNM', { width: 220, readOnly: true }),
@@ -17,7 +17,7 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
-    // 2026-09-22 설비별 점검계획 그리드
+    // 설비별 점검계획 그리드
     ItsGrid.Create('grid_EQM_PLAN', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('설비코드', 'PLANCD', { width: 130, align: 'center', readOnly: true }),
         column.create('설비명', 'PLANNM', { width: 220, readOnly: true }),
@@ -49,12 +49,12 @@ ItsButton.EventSearch = function () {
     ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
 };
 
-// 2026-09-22 설비그룹별 점검계획 탭 하단 그리드 행 선택 시 상단 패널 반려사유 텍스트박스 표시
+// 설비그룹별 점검계획 탭 하단 그리드 행 선택 시 상단 패널 반려사유 텍스트박스 표시
 ItsGrid.Event('grid_GRP_PLAN').onSelect = function () {
     ShowPlanReason('grid_GRP_PLAN', 'txt_GRP_REJREASON');
 };
 
-// 2026-09-22 설비별 점검계획 탭 하단 그리드 행 선택 시 상단 패널 반려사유 텍스트박스 표시
+// 설비별 점검계획 탭 하단 그리드 행 선택 시 상단 패널 반려사유 텍스트박스 표시
 ItsGrid.Event('grid_EQM_PLAN').onSelect = function () {
     ShowPlanReason('grid_EQM_PLAN', 'txt_EQM_REJREASON');
 };
@@ -111,7 +111,7 @@ function GetPlanTab() {
         : { type: 'E', panelId: 'div_EQM_PLAN', gridId: 'grid_EQM_PLAN', reasonId: 'txt_EQM_REJREASON' };
 }
 
-// 2026-09-29 선택 계획이 반려 상태인 경우에만 상단 패널 반려사유 표시
+// 선택 계획의 반려사유 표시
 function ShowPlanReason(gridId, reasonId) {
     var rowIndex = ItsGrid.GetCurrentIndex(gridId);
     var approvalStatus = ItsGrid.GetValue(gridId, rowIndex, 'APRVSTT');
@@ -120,7 +120,7 @@ function ShowPlanReason(gridId, reasonId) {
 }
 
 
-// 2026-09-29 선택 계획 승인/반려 상태 저장 및 확인 팝업창 분기 처리
+// 선택 계획 상태 저장
 function SavePlanStatus(approvalStatus) {
     var tab = GetPlanTab();
     var rowIndex = ItsGrid.GetCurrentIndex(tab.gridId);
