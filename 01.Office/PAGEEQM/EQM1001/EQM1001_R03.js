@@ -632,19 +632,189 @@ ItsGrid.Event('grid9').onDoubleClick = function (rowIndex, field) {
     ItsGrid.Event('grid9').onKeydownEnter(rowIndex, field);
 };
 
-// 정기점검 주기관리 탭: 월별 점검계획 토글
+// 2026-09-29 [정기점검 주기관리 탭] Delete/Backspace 키로 선택 월 셀 점검자 삭제
+ItsGrid.Event('grid9').onKeydown = function (rowIndex, field, keyCode) {
+    if (keyCode === 46 || keyCode === 8) { // 46: Delete, 8: Backspace
+        if (field == 'M01' || field == 'M02' || field == 'M03' || field == 'M04' || field == 'M05' || field == 'M06' ||
+            field == 'M07' || field == 'M08' || field == 'M09' || field == 'M10' || field == 'M11' || field == 'M12') {
+            var val = (ItsGrid.GetValue('grid9', rowIndex, field) || '').toString().trim();
+            if (val !== '') {
+                ItsGrid.SetValue('grid9', rowIndex, field, '');
+                ItsGrid.CheckRow('grid9', rowIndex);
+            }
+        }
+    }
+};
+
+// 2026-09-29 [정기점검 주기관리 탭] 선택 점검자명을 월별 셀에 설정 또는 토글 삭제
 ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
     if (field == 'M01' || field == 'M02' || field == 'M03' || field == 'M04' || field == 'M05' || field == 'M06' ||
         field == 'M07' || field == 'M08' || field == 'M09' || field == 'M10' || field == 'M11' || field == 'M12') {
-        var monthlyPlanValue = ItsGrid.GetValue('grid9', rowIndex, field);
+        var cellVal = (ItsGrid.GetValue('grid9', rowIndex, field) || '').toString().trim();
+        var empNm = (ItsFind.GetNameValue('find_EMP') || ItsFind.GetValue('find_EMP') || '').trim();
 
-        if (monthlyPlanValue === null || monthlyPlanValue === undefined || monthlyPlanValue === '') {
-            ItsGrid.SetValue('grid9', rowIndex, field, '●');
-        } else {
+        // 점검자 미선택 시
+        if (!empNm) {
+            if (cellVal !== '') {
+                ItsGrid.SetValue('grid9', rowIndex, field, '');
+                ItsGrid.CheckRow('grid9', rowIndex);
+            } else {
+                ItsMsg.Toast('점검자를 선택하거나, [일괄 주기설정] 기능을 이용해주세요.');
+            }
+            return;
+        }
+
+        // 동일 점검자 토글 삭제, 다른 점검자 설정
+        if (cellVal === empNm) {
             ItsGrid.SetValue('grid9', rowIndex, field, '');
+        } else {
+            ItsGrid.SetValue('grid9', rowIndex, field, empNm);
         }
         ItsGrid.CheckRow('grid9', rowIndex);
     }
+};
+
+// 2026-09-29 [정기점검 주기관리 탭] 일괄 주기설정 팝업 열기
+ItsButton.Event('btn_OPEN_CYCLE_BATCH').onClick = function () {
+    if (!HasCheckedRows('grid9')) {
+        ItsMsg.Toast('선택된 설비가 없습니다. 그리드에서 대상 설비를 체크해주세요.');
+        return;
+    }
+
+    var empNm = (ItsFind.GetNameValue('find_EMP') || ItsFind.GetValue('find_EMP') || '').trim();
+    if (!empNm) {
+        ItsMsg.Toast('점검자를 먼저 선택해주세요.');
+        return;
+    }
+
+    // 선택 설비 수 및 기존 등록 월 확인
+    var cnt = 0;
+    var existMonths = {};
+    var existCnt = 0;
+    var arrMonth = ['M01', 'M02', 'M03', 'M04', 'M05', 'M06', 'M07', 'M08', 'M09', 'M10', 'M11', 'M12'];
+
+    for (var i = 0; i < ItsGrid.Length('grid9'); i++) {
+        if (ItsGrid.IsChecked('grid9', i)) {
+            cnt++;
+            for (var m = 0; m < arrMonth.length; m++) {
+                var field = arrMonth[m];
+                var val = (ItsGrid.GetValue('grid9', i, field) || '').toString().trim();
+                if (val !== '' && !existMonths[field]) {
+                    existMonths[field] = true;
+                    existCnt++;
+                }
+            }
+        }
+    }
+    $('#lbl_BATCH_CNT').text(cnt);
+
+    // 기존 등록된 월이 있으면 해당 월만 선택, 없으면 전체 선택
+    if (existCnt > 0) {
+        $('.chk_MONTH').each(function () {
+            $(this).prop('checked', !!existMonths[$(this).val()]);
+        });
+        SetAllMonthButton(existCnt === arrMonth.length);
+    } else {
+        $('.chk_MONTH').prop('checked', true);
+        SetAllMonthButton(true);
+    }
+
+    ItsPop.Open('pop_CYCLE_BATCH');
+};
+
+// 2026-09-29 [정기점검 주기관리 탭] 전체 선택/해제 버튼 상태 설정
+function SetAllMonthButton(isAll) {
+    $('#btn_ALL_MONTH').text(isAll ? '전체 해제' : '전체 선택')
+        .css(isAll ? { 'border-color': '#d32f2f', 'background': '#ffebee', 'color': '#d32f2f' }
+                   : { 'border-color': '#1976d2', 'background': '#e3f2fd', 'color': '#1976d2' });
+}
+
+// 2026-09-29 [정기점검 주기관리 탭] 전체 선택/해제 토글 버튼 클릭
+$(document).on('click', '#btn_ALL_MONTH', function () {
+    var totalCnt = $('.chk_MONTH').length;
+    var chkCnt = $('.chk_MONTH:checked').length;
+    var isCheck = (chkCnt < totalCnt);
+
+    $('.chk_MONTH').prop('checked', isCheck);
+    SetAllMonthButton(isCheck);
+});
+
+// 2026-09-29 [정기점검 주기관리 탭] 월 체크박스 상태 변경 시 토글 버튼 동기화
+$(document).on('change', '.chk_MONTH', function () {
+    var totalCnt = $('.chk_MONTH').length;
+    var chkCnt = $('.chk_MONTH:checked').length;
+    SetAllMonthButton(chkCnt === totalCnt);
+});
+
+// 2026-09-29 [정기점검 주기관리 탭] 일괄 설정 팝업 닫기
+ItsButton.Event('btn_CLOSE_BATCH').onClick = function () {
+    ItsPop.Close('pop_CYCLE_BATCH');
+};
+
+// 2026-09-29 [정기점검 주기관리 탭] 일괄 주기설정 점검자 등록/변경 및 즉시 저장
+ItsButton.Event('btn_SAVE_BATCH').onClick = function () {
+    var empNm = (ItsFind.GetNameValue('find_EMP') || ItsFind.GetValue('find_EMP') || '').trim();
+    if (!empNm) {
+        ItsMsg.Toast('등록할 점검자를 먼저 선택해주세요.');
+        return;
+    }
+
+    var arrSelMonth = [];
+    $('.chk_MONTH:checked').each(function () {
+        arrSelMonth.push($(this).val());
+    });
+
+    if (arrSelMonth.length === 0) {
+        ItsMsg.Toast('적용할 대상 월을 1개 이상 선택해주세요.');
+        return;
+    }
+
+    // 선택 설비 월별 점검자 바인딩
+    var saveCnt = 0;
+    for (var i = 0; i < ItsGrid.Length('grid9'); i++) {
+        if (ItsGrid.IsChecked('grid9', i)) {
+            saveCnt++;
+            for (var m = 0; m < arrSelMonth.length; m++) {
+                ItsGrid.SetValue('grid9', i, arrSelMonth[m], empNm);
+            }
+            ItsGrid.CheckRow('grid9', i);
+        }
+    }
+
+    ItsPop.Close('pop_CYCLE_BATCH');
+
+    // 연간 점검계획 즉시 저장
+    var maria = new ItsMaria('EQM1001_R03', 'SAVE_CYCLE_EQMCD');
+
+    for (var i = 0; i < ItsGrid.Length('grid9'); i++) {
+        if (ItsGrid.IsChecked('grid9', i)) {
+            maria.AddList('FANO_LIST', ItsGrid.GetValue('grid9', i, 'FANO'));
+            maria.AddList('YEAR_LIST', ItsGrid.GetValue('grid9', i, 'YEAR'));
+            maria.AddList('M01_LIST', ItsGrid.GetValue('grid9', i, 'M01'));
+            maria.AddList('M02_LIST', ItsGrid.GetValue('grid9', i, 'M02'));
+            maria.AddList('M03_LIST', ItsGrid.GetValue('grid9', i, 'M03'));
+            maria.AddList('M04_LIST', ItsGrid.GetValue('grid9', i, 'M04'));
+            maria.AddList('M05_LIST', ItsGrid.GetValue('grid9', i, 'M05'));
+            maria.AddList('M06_LIST', ItsGrid.GetValue('grid9', i, 'M06'));
+            maria.AddList('M07_LIST', ItsGrid.GetValue('grid9', i, 'M07'));
+            maria.AddList('M08_LIST', ItsGrid.GetValue('grid9', i, 'M08'));
+            maria.AddList('M09_LIST', ItsGrid.GetValue('grid9', i, 'M09'));
+            maria.AddList('M10_LIST', ItsGrid.GetValue('grid9', i, 'M10'));
+            maria.AddList('M11_LIST', ItsGrid.GetValue('grid9', i, 'M11'));
+            maria.AddList('M12_LIST', ItsGrid.GetValue('grid9', i, 'M12'));
+            maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid9', i, 'REMARK'));
+        }
+    }
+
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    ItsMsg.Toast(saveCnt + '대 설비의 일괄 주기설정이 정상 등록되었습니다.');
+    ItsGrid.Setkey('grid9', 'FANO', ItsGrid.GetValue('grid9', ItsGrid.GetCurrentIndex('grid9'), 'FANO'));
+    ItsButton.EventSearch();
 };
 
 // 정기점검 주기관리 탭: 연간 계획 저장
