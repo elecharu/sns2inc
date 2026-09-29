@@ -8,8 +8,8 @@
 -- 			2026-09-21 					한성수	설비그룹 정기점검 조회·CRUD 불필요 조인 및 IFNULL 조건 단순화
 -- 			2026-09-22 					한성수	설비그룹 재조회 선택 키를 EQMGUBUN 기준으로 정리
 -- 			2026-09-23 					한성수	정기점검 주기관리 설비등급 조회 추가
--- 			2026-09-23 					한성수	설비그룹 점검계획 조회를 설비그룹코드 단위로 변경 및 그룹 승인상태·반려사유 표시
--- 			2026-09-23 					한성수	설비그룹 점검계획 조회 사용 설비그룹(COMTYPE.USEYN = 'Y')만 조회 및 그룹 단위 사전집계 튜닝
+-- 			2026-09-29 					한성수	설비그룹 점검계획 조회를 설비그룹코드 단위로 변경 및 그룹 승인상태·반려사유 표시
+-- 			2026-09-29 					한성수	설비그룹 점검계획 조회 사용 설비그룹(COMTYPE.USEYN = 'Y')만 조회 및 그룹 단위 사전집계 튜닝
 -- *****************************************************************************
   IN $FANO              VARCHAR(20),
   IN $FANO_COPY         VARCHAR(20),
@@ -66,11 +66,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 
 CASE $CALLTYPE
 -- *****************************************************************************
-
--- ============================================================================
--- 01. 설비그룹 점검계획 탭: FM116 설비그룹 목록, 그룹 정기점검 조회·추가·저장·삭제 및 그룹별 복사
--- ============================================================================
-WHEN 'LIST_MSTEQM_GRP' THEN -- 2026-09-21 설비그룹 점검계획 조회 / 2026-09-23 설비그룹코드 1행 단위로 그룹 승인상태·반려사유 조회
+WHEN 'LIST_MSTEQM_GRP' THEN -- 설비그룹 점검계획 조회
 
   SELECT
     GRP_EQM.EQMGUBUN,
@@ -85,7 +81,7 @@ WHEN 'LIST_MSTEQM_GRP' THEN -- 2026-09-21 설비그룹 점검계획 조회 / 202
     COALESCE(GRP_APRV.APRVSTT, '') AS APRVSTT,
     COALESCE(GRP_APRV.REJREASON, '') AS REJREASON
   FROM COMTYPE
-  -- 2026-09-23 사용 설비가 있는 설비그룹코드만 1행으로 사전 추출 (설비 단위 행 증식 방지)
+  -- 사용 설비가 있는 설비그룹 추출
   INNER JOIN (
     SELECT DISTINCT
       MSTEQM.EQMGUBUN
@@ -119,8 +115,8 @@ WHEN 'LIST_MSTEQM_GRP' THEN -- 2026-09-21 설비그룹 점검계획 조회 / 202
     )
   ORDER BY COMTYPE.SORTNO, GRP_EQM.EQMGUBUN
   ;
--- ****************************************************************************
-WHEN 'LIST_GRP_EQM02' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선택 설비그룹의 등록 정기점검 항목 조회
+-- *****************************************************************************
+WHEN 'LIST_GRP_EQM02' THEN -- 설비그룹 정기점검 항목 조회
 
   SELECT
     CHKPLANEQM.CHKKNDCD,
@@ -145,7 +141,7 @@ WHEN 'LIST_GRP_EQM02' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선택 �
   ;
 
 -- *****************************************************************************
-WHEN 'LIST_GRP_EQM02_ADD' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선택 설비그룹에 미등록된 정기점검 항목 조회
+WHEN 'LIST_GRP_EQM02_ADD' THEN -- 설비그룹 미등록 정기점검 항목 조회
 
   SELECT
     MSTCHKKND.CHKKNDCD,
@@ -173,7 +169,7 @@ WHEN 'LIST_GRP_EQM02_ADD' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선�
   ;
 
 -- *****************************************************************************
-WHEN 'REG_GRP_EQM02' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선택 설비그룹의 모든 설비에 정기점검 신규 추가
+WHEN 'REG_GRP_EQM02' THEN -- 설비그룹 정기점검 항목 등록
 
   IF $EQMGRP IS NULL OR $EQMGRP = '' THEN
     CALL COMERR('설비그룹을 지정해주세요.');
@@ -215,7 +211,7 @@ WHEN 'REG_GRP_EQM02' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선택 �
   END WHILE;
 
 -- *****************************************************************************
-WHEN 'SAVE_GRP_EQM02' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선택 설비그룹의 정기점검 항목 일괄 저장
+WHEN 'SAVE_GRP_EQM02' THEN -- 설비그룹 정기점검 항목 저장
 
   IF $EQMGRP IS NULL OR $EQMGRP = '' THEN
     CALL COMERR('설비그룹을 지정해주세요.');
@@ -248,7 +244,7 @@ WHEN 'SAVE_GRP_EQM02' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선택 �
   END WHILE;
 
 -- *****************************************************************************
-WHEN 'DEL_GRP_EQM02' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선택 설비그룹의 정기점검 항목 일괄 삭제
+WHEN 'DEL_GRP_EQM02' THEN -- 설비그룹 정기점검 항목 삭제
 
   IF $EQMGRP IS NULL OR $EQMGRP = '' THEN
     CALL COMERR('설비그룹을 지정해주세요.');
@@ -271,7 +267,7 @@ WHEN 'DEL_GRP_EQM02' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선택 �
   END WHILE;
 
 -- *****************************************************************************
-WHEN 'LIST_COPY_GRP_EQM02' THEN -- 2026-09-21 설비그룹 정기점검 복사 팝업의 복사 가능한 원본 설비그룹 목록 조회
+WHEN 'LIST_COPY_GRP_EQM02' THEN -- 설비그룹 복사 원본 목록 조회
 
   SELECT
     MSTEQM.EQMGUBUN AS EQMGRP,
@@ -291,8 +287,8 @@ WHEN 'LIST_COPY_GRP_EQM02' THEN -- 2026-09-21 설비그룹 정기점검 복사 �
   ORDER BY COMTYPE.SORTNO, MSTEQM.EQMGUBUN
   ;
 
--- ****************************************************************************
-WHEN 'LIST_COPY_GRP_EQM02_DTL' THEN -- 2026-09-21 선택한 원본 설비그룹의 정기점검 항목 미리보기 조회
+-- *****************************************************************************
+WHEN 'LIST_COPY_GRP_EQM02_DTL' THEN -- 설비그룹 복사 상세 항목 조회
 
   SELECT
     CHKPLANEQM.CHKKNDCD,
@@ -314,8 +310,8 @@ WHEN 'LIST_COPY_GRP_EQM02_DTL' THEN -- 2026-09-21 선택한 원본 설비그룹�
   ORDER BY MIN(CHKPLANEQM.SORTNO), CHKPLANEQM.CHKKNDCD
   ;
 
--- *********************************************************************************
-WHEN 'COPY_GRP_EQM02' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선택한 원본 설비그룹의 정기점검 항목을 대상 설비그룹 전체에 복사
+-- *****************************************************************************
+WHEN 'COPY_GRP_EQM02' THEN -- 설비그룹 정기점검 항목 복사
 
   IF $EQMGRP IS NULL OR $EQMGRP = '' THEN
     CALL COMERR('설비그룹을 지정해주세요.');
@@ -391,11 +387,7 @@ WHEN 'COPY_GRP_EQM02' THEN -- 2026-09-21 설비그룹 점검계획 탭: 선택�
   DROP TEMPORARY TABLE IF EXISTS TMP_COPY_EQM02;
 
 -- *****************************************************************************
-
--- ============================================================================
--- 02. 설비별 점검계획 탭: 설비 목록, 정기점검 조회·추가·저장·삭제 및 설비별 복사
--- ============================================================================
-WHEN 'LIST_MSTEQM' THEN -- 2026-09-16 좌측 설비목록 그리드(grid1) 조회 (MSTEQM.FANO 사용)     
+WHEN 'LIST_MSTEQM' THEN -- 설비 목록 조회
 
   SELECT 
     MSTEQM.FANO,
@@ -421,7 +413,7 @@ WHEN 'LIST_MSTEQM' THEN -- 2026-09-16 좌측 설비목록 그리드(grid1) 조�
   ;
 
 -- *****************************************************************************
-WHEN 'LIST_MSTEQM_EQM02' THEN -- 2026-09-16 우측 하단 정기점검 그리드(grid3) 등록 점검종류 목록 조회 ($FANO 조건)
+WHEN 'LIST_MSTEQM_EQM02' THEN -- 설비별 정기점검 항목 조회
   SELECT 
     CHKPLANEQM.CHKKNDCD,
     MSTCHKKND.CHKKNDNM,
@@ -440,8 +432,8 @@ WHEN 'LIST_MSTEQM_EQM02' THEN -- 2026-09-16 우측 하단 정기점검 그리드
   ORDER BY  CHKPLANEQM.SORTNO
   ;
 
--- ****************************************************************************
-WHEN 'LIST_EQM02' THEN -- 정기점검 조회문
+-- *****************************************************************************
+WHEN 'LIST_EQM02' THEN -- 설비별 미등록 정기점검 항목 조회
 
   SELECT 
     MSTCHKKND.CHKKNDCD,
@@ -463,8 +455,8 @@ WHEN 'LIST_EQM02' THEN -- 정기점검 조회문
   ORDER BY MSTCHKKND.SORTNO
   ;
 
--- *********************************************************************************
-WHEN 'REG_EQM02' THEN -- 정기점검 신규 추가
+-- *****************************************************************************
+WHEN 'REG_EQM02' THEN -- 설비별 정기점검 항목 등록
 
   CALL EQM1001_R05('', '', 'E', $FANO, '', '', 'REQUEST_PLAN', '');
   
@@ -487,8 +479,8 @@ WHEN 'REG_EQM02' THEN -- 정기점검 신규 추가
       CALLTIME(), CALLEMP(), CALLPRG()
     );     
   END WHILE;
--- ****************************************************************************
-WHEN 'SAVE_EQM02' THEN  -- 정기점검 저장버튼
+-- *****************************************************************************
+WHEN 'SAVE_EQM02' THEN -- 설비별 정기점검 항목 저장
 
   CALL EQM1001_R05('', '', 'E', $FANO, '', '', 'REQUEST_PLAN', '');
   
@@ -510,8 +502,8 @@ WHEN 'SAVE_EQM02' THEN  -- 정기점검 저장버튼
      AND CHKTP = '02'
     ;
   END WHILE;
--- ****************************************************************************
-WHEN 'DEL_EQM02' THEN -- 정기점검 삭제
+-- *****************************************************************************
+WHEN 'DEL_EQM02' THEN -- 설비별 정기점검 항목 삭제
 
   CALL EQM1001_R05('', '', 'E', $FANO, '', '', 'REQUEST_PLAN', '');
   
@@ -524,8 +516,8 @@ WHEN 'DEL_EQM02' THEN -- 정기점검 삭제
     AND CHKTP = '02';    
   END WHILE;
 
--- ****************************************************************************
-WHEN 'LIST_COPY_EQM02' THEN -- 2026-09-16 정기점검 복사 팝업 좌측 설비목록 그리드(grid7) 조회 (MSTEQM.FANO 사용)
+-- *****************************************************************************
+WHEN 'LIST_COPY_EQM02' THEN -- 설비별 복사 원본 목록 조회
 
   SELECT 
     MSTEQM.FANO,
@@ -553,18 +545,17 @@ WHEN 'LIST_COPY_EQM02' THEN -- 2026-09-16 정기점검 복사 팝업 좌측 설�
   ORDER BY  CHKPLANEQM.SORTNO
   ;
 
--- ****************************************************************************
-WHEN 'COPY_EQM02' THEN  -- 정기점검 복사
+-- *****************************************************************************
+WHEN 'COPY_EQM02' THEN -- 설비별 정기점검 항목 복사
 
   CALL EQM1001_R05('', '', 'E', $FANO, '', '', 'REQUEST_PLAN', '');
 
-  SET _$CHKKNDCD_LIST = IFNULL((SELECT GROUP_CONCAT(CHKKNDCD ORDER BY SORTNO ASC SEPARATOR '»')      -- 필요한 자재코드 리스트 담기
+  SET _$CHKKNDCD_LIST = IFNULL((SELECT GROUP_CONCAT(CHKKNDCD ORDER BY SORTNO ASC SEPARATOR '»')
                                 FROM CHKPLANEQM
                                 WHERE EQMCD = $FANO_COPY
                                   AND CHKTP = '02')                              
                              , '');
   
-  -- 기존에 있던 일상점검 삭제
   DELETE FROM CHKPLANEQM 
   WHERE EQMCD = $FANO  
   AND CHKTP = '02'; 
@@ -591,11 +582,7 @@ WHEN 'COPY_EQM02' THEN  -- 정기점검 복사
   END WHILE;
 
 -- *****************************************************************************
-
--- ============================================================================
--- 03. 정기점검 주기관리 탭: 설비별 연간 월별 정기점검 계획 조회·저장·삭제
--- ============================================================================
-WHEN 'LIST_CYCLE_EQMCD' THEN  -- 2026-09-16 정기점검 주기관리 탭: 그리드(grid9) 설비별 월별 점검계획 조회 (MSTEQM.FANO 사용)
+WHEN 'LIST_CYCLE_EQMCD' THEN -- 설비별 월별 점검계획 조회
   
   IF $SYEAR = '' THEN
     CALL COMERR('조회년도를 지정해주세요.');
@@ -641,9 +628,9 @@ WHEN 'LIST_CYCLE_EQMCD' THEN  -- 2026-09-16 정기점검 주기관리 탭: 그�
 
   GROUP BY MSTEQM.FANO
   ORDER BY MSTEQM.FANO;
--- 
--- *********************************************************************************
-WHEN 'SAVE_CYCLE_EQMCD' THEN
+
+-- *****************************************************************************
+WHEN 'SAVE_CYCLE_EQMCD' THEN -- 설비별 월별 점검계획 저장
   WHILE LENGTH($FANO_LIST) > 0 DO
     CALL COMSPLIT($FANO_LIST, _$FANO);
     CALL COMSPLIT($YEAR_LIST, _$YEAR);
@@ -743,8 +730,8 @@ WHEN 'SAVE_CYCLE_EQMCD' THEN
       END IF;
     END IF;
   END WHILE;
--- *********************************************************************************
-WHEN 'DELETE_CYCLE_EQMCD' THEN
+-- *****************************************************************************
+WHEN 'DELETE_CYCLE_EQMCD' THEN -- 설비별 월별 점검계획 삭제
 
   WHILE LENGTH($FANO_LIST) > 0 DO
     CALL COMSPLIT($FANO_LIST, _$FANO);
@@ -774,5 +761,5 @@ WHEN 'DELETE_CYCLE_EQMCD' THEN
     AND CHKTP = '02';
   END WHILE;
 
--- ****************************************************************************
+-- *****************************************************************************
 END CASE; END
