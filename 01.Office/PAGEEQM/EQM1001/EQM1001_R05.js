@@ -8,6 +8,9 @@ ItsPage.Load = function () {
         column.create('설비그룹코드', 'PLANCD', { width: 130, align: 'center', readOnly: true }),
         column.create('설비그룹', 'PLANNM', { width: 220, readOnly: true }),
         column.create('점검항목수', 'PLANITEMCNT', { width: 90, align: 'right', columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: true }),
+        // 2026-09-30 [설비그룹별 점검계획 탭] 이번에 승인·반려할 REV와 개정내용 (진행 중 REV가 없으면 현재 승인 REV)
+        column.create('REV', 'REVNM', { width: 70, align: 'center', readOnly: true }),
+        column.create('개정내용', 'REMARK', { width: 260, readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 80, align: 'center', readOnly: true }),
         column.create('승인자', 'APRVEMP', { width: 120, align: 'center', readOnly: true }),
         column.create('요청일시', 'REQTIME', { width: 140, align: 'center', readOnly: true }),
@@ -22,6 +25,9 @@ ItsPage.Load = function () {
         column.create('설비코드', 'PLANCD', { width: 130, align: 'center', readOnly: true }),
         column.create('설비명', 'PLANNM', { width: 220, readOnly: true }),
         column.create('점검항목수', 'PLANITEMCNT', { width: 90, align: 'right', columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: true }),
+        // 2026-09-30 [설비별 점검계획 탭] 이번에 승인·반려할 REV와 개정내용 (진행 중 REV가 없으면 현재 승인 REV)
+        column.create('REV', 'REVNM', { width: 70, align: 'center', readOnly: true }),
+        column.create('개정내용', 'REMARK', { width: 260, readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 80, align: 'center', readOnly: true }),
         column.create('승인자', 'APRVEMP', { width: 120, align: 'center', readOnly: true }),
         column.create('요청일시', 'REQTIME', { width: 140, align: 'center', readOnly: true }),
@@ -121,10 +127,13 @@ function ShowPlanReason(gridId, reasonId) {
 
 
 // 2026-09-29 선택 계획 승인/반려 상태 저장 및 확인 팝업창 분기 처리
+// 2026-09-30 승인 전 개정내용 확인, 확인 팝업창·완료 토스트에 REV 번호 표시
 function SavePlanStatus(approvalStatus) {
     var tab = GetPlanTab();
     var rowIndex = ItsGrid.GetCurrentIndex(tab.gridId);
     var planCode = ItsGrid.GetValue(tab.gridId, rowIndex, 'PLANCD');
+    var revNm = ItsGrid.GetValue(tab.gridId, rowIndex, 'REVNM') || '';
+    var remark = ItsGrid.GetValue(tab.gridId, rowIndex, 'REMARK') || '';
     var rejectionReason = approvalStatus == 'R' ? ItsText.GetValue(tab.reasonId) : '';
     var isApprove = approvalStatus == 'A';
     var actionName = isApprove ? '승인' : '반려';
@@ -139,7 +148,12 @@ function SavePlanStatus(approvalStatus) {
         return;
     }
 
-    ItsMsg.Confirm('선택한 점검계획을 ' + actionName + '하시겠습니까?', function () {
+    if (isApprove && !remark) {
+        ItsMsg.Toast('개정내용이 없는 REV는 승인할 수 없습니다.');
+        return;
+    }
+
+    ItsMsg.Confirm('선택한 점검계획' + (revNm ? '(' + revNm + ')' : '') + '을 ' + actionName + '하시겠습니까?', function () {
         var maria = new ItsMaria('EQM1001_R05', 'SAVE_PLAN_STATUS');
         maria.AddParam('PLANTP', tab.type);
         maria.AddParam('PLANCD', planCode);
@@ -151,7 +165,7 @@ function SavePlanStatus(approvalStatus) {
             return;
         }
 
-        ItsMsg.Toast(actionName + ' 처리가 완료되었습니다.');
+        ItsMsg.Toast((revNm ? revNm + ' ' : '') + actionName + ' 처리가 완료되었습니다.');
         ItsText.SetValue(tab.reasonId, '');
         ItsGrid.Setkey(tab.gridId, 'PLANCD', planCode);
         ItsButton.EventSearch();

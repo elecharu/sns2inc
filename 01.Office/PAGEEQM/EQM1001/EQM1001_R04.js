@@ -113,6 +113,7 @@ ItsGrid.Event('grid1').onDoubleClick = function (rowindex, field) {
 // 2026-09-16 정기점검 등록 모달(pop1) 상단 패널 초기화 및 해당 설비의 점검항목 목록(grid2) 조회
 var LIST_CHKPLANEQM_EQM02 = function (EQMCD, YYYYMM) {
     ItsPage.InitData('pdiv1');
+    ShowPlanRev([]);
 
     var maria = new ItsMaria('EQM1001_R04', 'LIST_CHKPLANEQM_EQM02');
 
@@ -129,7 +130,18 @@ var LIST_CHKPLANEQM_EQM02 = function (EQMCD, YYYYMM) {
     ItsText.SetValue('txt_YYYYMM', YYYYMM);
 
     ItsGrid.SetStore('grid2', maria.store);
+    ShowPlanRev(maria.store.data);
 };
+
+// 2026-09-30 정기점검 등록 모달(pop1) 적용 REV 표시 및 저장용 REV 번호 보관, 새 REV가 승인 대기 중이면 안내 문구 표시
+function ShowPlanRev(rows) {
+    var row = rows.length > 0 ? rows[0] : {};
+    var revNm = row.REVNM || '';
+
+    ItsText.SetValue('pop1_txt_REVNM', revNm);
+    ItsText.SetValue('pop1_txt_REVNUM', row.REVNUM == undefined ? '' : String(row.REVNUM));
+    ItsLabel.SetText('pop1_lbl_REV_INFO', row.PENDREVNM ? row.PENDREVNM + ' 승인 대기 중 — 승인 전까지 ' + revNm + ' 항목으로 점검합니다.' : '');
+}
 
 // 2026-09-16 정기점검 수정 모달(pop2) 상단 패널(pdiv3) 및 해당월 점검실적 항목(grid3) 조회
 var SEARCH_CHKRSTEQM = function (EQMCD, YYYYMM) {
@@ -150,6 +162,8 @@ var SEARCH_CHKRSTEQM = function (EQMCD, YYYYMM) {
 
     ItsPage.SetStore('pdiv3', maria.store.data[0]);
     ItsText.SetValue('pop2_txt_YYYYMM', YYYYMM);
+    // 2026-09-30 정기점검 수정 모달(pop2) 실적에 기록된 적용 REV 표시 (REV 관리 이전 실적은 빈 값)
+    ItsText.SetValue('pop2_txt_REVNM', maria.store.data.length > 0 ? (maria.store.data[0].REVNM || '') : '');
     ItsGrid.SetStore('grid3', maria.storeExtend1);
 };
 

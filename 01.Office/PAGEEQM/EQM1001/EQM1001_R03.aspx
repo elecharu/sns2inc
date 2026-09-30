@@ -26,9 +26,25 @@
                 <Its:split runat="server" Type="Vertical" />            
 
                 <Its:div runat="server" Type="SplitRight">
+                    <%-- 2026-09-30 설비그룹 점검계획 탭: 우측 상단 개정 이력(REV) 그리드, 우측 하단 선택한 REV의 점검 항목 --%>
+                    <Its:div runat="server" Type="SplitTop" TopHeightPc="40">
+                        <Its:div runat="server" Type="SplitTop" TopHeightPc="17">
+                            <Its:label runat="server" Text="■ 개정 이력 (REV)" Bold="true" MarginLeft="10"/>
+                            <Its:button runat="server" Label="개정내용 저장" ID="btn_GRP_REV_SAVE" MarginLeft="40" BackColor="CustomButton" />
+                        </Its:div>
+
+                        <Its:split runat="server" Type="Horizon" Resizeable="false" />
+
+                        <Its:div runat="server" Type="SplitDown">
+                            <Its:grid runat="server" ID="grid_GRP_REV" />
+                        </Its:div>
+                    </Its:div>
+
+                    <Its:split runat="server" Type="Horizon" />
+
                     <Its:div runat="server" Type="SplitDown">
-                        <Its:div runat="server" Type="SplitTop" TopHeightPc="7">
-                            <Its:label runat="server" Text="■ 정기점검" Bold="true" MarginLeft="10"/>
+                        <Its:div runat="server" Type="SplitTop" TopHeightPc="12">
+                            <Its:label runat="server" Text="■ 정기점검" Bold="true" MarginLeft="10" ID="lbl_GRP_ITEM"/>
                             <Its:button runat="server" Label="복사" ID="bdiv_GRP_btn_COPY" MarginLeft="40" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="추가" ID="bdiv_GRP_btn_ADD" MarginLeft="10" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="저장" ID="bdiv_GRP_btn_SAVE" MarginLeft="10" BackColor="CustomButton" />
@@ -61,13 +77,30 @@
                 <Its:split runat="server" Type="Vertical" />            
 
                 <Its:div runat="server" Type="SplitRight">              
+                    <%-- 2026-09-30 설비별 점검계획 탭: 우측 상단 개정 이력(REV) 그리드, 우측 하단 선택한 REV의 점검 항목 --%>
+                    <Its:div runat="server" Type="SplitTop" TopHeightPc="40">
+                        <Its:div runat="server" Type="SplitTop" TopHeightPc="17">
+                            <Its:label runat="server" Text="■ 개정 이력 (REV)" Bold="true" MarginLeft="10"/>
+                            <Its:button runat="server" Label="개정내용 저장" ID="btn_EQM_REV_SAVE" MarginLeft="40" BackColor="CustomButton" />
+                        </Its:div>
+
+                        <Its:split runat="server" Type="Horizon" Resizeable="false" />
+
+                        <Its:div runat="server" Type="SplitDown">
+                            <Its:grid runat="server" ID="grid_EQM_REV" />
+                        </Its:div>
+                    </Its:div>
+
+                    <Its:split runat="server" Type="Horizon" />
+
                     <Its:div runat="server" Type="SplitDown">
-                        <Its:div runat="server" Type="SplitTop" TopHeightPc="7">
-                            <Its:label runat="server" Text="■ 정기점검" Bold="true" MarginLeft="10"/>
+                        <Its:div runat="server" Type="SplitTop" TopHeightPc="12">
+                            <Its:label runat="server" Text="■ 정기점검" Bold="true" MarginLeft="10" ID="lbl_EQM_ITEM"/>
                             <Its:button runat="server" Label="복사" ID="bdiv3_btn_COPY" MarginLeft="40" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="추가" ID="bdiv3_btn_ADD" MarginLeft="10" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="저장" ID="bdiv3_btn_SAVE" MarginLeft="10" BackColor="CustomButton" />
                             <Its:button runat="server" Label="삭제" ID="bdiv3_btn_DEL" MarginLeft="10" BackColor="CustomButton3" />
+                            <Its:label runat="server" Text="※ 설비별 수정은 소속 설비그룹 계획서도 함께 승인 대기가 됩니다." ID="lbl_EQM_REV_INFO" ForeColor="BlueDark1" MarginLeft="20"/>
                         </Its:div>
 
                         <Its:split runat="server" Type="Horizon" Resizeable="false" />
