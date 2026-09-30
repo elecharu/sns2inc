@@ -138,7 +138,7 @@ function ShowPlanRev(rows) {
     var row = rows.length > 0 ? rows[0] : {};
     var revNm = row.REVNM || '';
 
-    ItsText.SetValue('pop1_txt_REVNM', revNm);
+    ItsLabel.SetText('pop1_lbl_REVNM', revNm ? '적용 REV : ' + revNm : '');
     ItsText.SetValue('pop1_txt_REVNUM', row.REVNUM == undefined ? '' : String(row.REVNUM));
     ItsLabel.SetText('pop1_lbl_REV_INFO', row.PENDREVNM ? row.PENDREVNM + ' 승인 대기 중 — 승인 전까지 ' + revNm + ' 항목으로 점검합니다.' : '');
 }
@@ -163,7 +163,8 @@ var SEARCH_CHKRSTEQM = function (EQMCD, YYYYMM) {
     ItsPage.SetStore('pdiv3', maria.store.data[0]);
     ItsText.SetValue('pop2_txt_YYYYMM', YYYYMM);
     // 2026-09-30 정기점검 수정 모달(pop2) 실적에 기록된 적용 REV 표시 (REV 관리 이전 실적은 빈 값)
-    ItsText.SetValue('pop2_txt_REVNM', maria.store.data.length > 0 ? (maria.store.data[0].REVNM || '') : '');
+    var revNm = maria.store.data.length > 0 ? (maria.store.data[0].REVNM || '') : '';
+    ItsLabel.SetText('pop2_lbl_REVNM', revNm ? '적용 REV : ' + revNm : '');
     ItsGrid.SetStore('grid3', maria.storeExtend1);
 };
 

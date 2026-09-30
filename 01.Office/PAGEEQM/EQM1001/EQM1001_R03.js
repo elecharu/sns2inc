@@ -18,7 +18,7 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid_GRP_REV', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('REV', 'REVNM', { width: 70, align: 'center', readOnly: true }),
         column.create('상태', 'APRVSTTNM', { width: 60, align: 'center', readOnly: true }),
-        column.create('개정내용', 'REMARK', { width: 260 }),
+        column.create('개정내용', 'REMARK', { width: 260, readOnly: false }),
         column.create('작성자', 'REQEMP', { width: 80, align: 'center', readOnly: true }),
         column.create('수정일시', 'REQTIME', { width: 130, align: 'center', readOnly: true }),
         column.create('승인자', 'APRVEMP', { width: 80, align: 'center', readOnly: true }),
@@ -77,7 +77,7 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid_EQM_REV', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('REV', 'REVNM', { width: 70, align: 'center', readOnly: true }),
         column.create('상태', 'APRVSTTNM', { width: 60, align: 'center', readOnly: true }),
-        column.create('개정내용', 'REMARK', { width: 260 }),
+        column.create('개정내용', 'REMARK', { width: 260, readOnly: false }),
         column.create('작성자', 'REQEMP', { width: 80, align: 'center', readOnly: true }),
         column.create('수정일시', 'REQTIME', { width: 130, align: 'center', readOnly: true }),
         column.create('승인자', 'APRVEMP', { width: 80, align: 'center', readOnly: true }),
@@ -170,6 +170,8 @@ ItsButton.EventSearch = function (targetEqmGubun) {
         // 설비그룹 점검계획 탭: CRUD 후 대상 셀, 일반 조회 후 첫 행 포커스
         ItsGrid.Clear('grid_GRP_REV');
         ItsGrid.Clear('grid_GRP2');
+        // 2026-09-30 [설비그룹 점검계획 탭] 이전 REV 조회 중 재조회해도 정기점검 버튼·제목·편집 상태 초기화 (조회 0건 대비)
+        SetPlanEditButton('G', true, '');
 
         var maria = new ItsMaria('EQM1001_R03', 'LIST_MSTEQM_GRP');
         maria.AddPanel('div_GRP');
@@ -189,6 +191,8 @@ ItsButton.EventSearch = function (targetEqmGubun) {
         ItsGrid.Clear('grid1');
         ItsGrid.Clear('grid_EQM_REV');
         ItsGrid.Clear('grid3');
+        // 2026-09-30 [설비별 점검계획 탭] 이전 REV 조회 중 재조회해도 정기점검 버튼·제목·편집 상태 초기화 (조회 0건 대비)
+        SetPlanEditButton('E', true, '');
 
         var maria = new ItsMaria('EQM1001_R03', 'LIST_MSTEQM');
         maria.AddPanel('div_EQM');
@@ -263,6 +267,7 @@ ItsGrid.Event('grid_GRP1').onSelect = function () {
     if (!selectedEqmGubun) {
         ItsGrid.Clear('grid_GRP_REV');
         ItsGrid.Clear('grid_GRP2');
+        SetPlanEditButton('G', true, '');
         return;
     }
 
@@ -472,6 +477,7 @@ ItsGrid.Event('grid1').onSelect = function () {
     if (!selectedEquipmentCode) {
         ItsGrid.Clear('grid_EQM_REV');
         ItsGrid.Clear('grid3');
+        SetPlanEditButton('E', true, '');
         return;
     }
 
@@ -1031,6 +1037,7 @@ function SearchPlanRevItem(planTp, planCd, rowIndex) {
 
     if (!planCd) {
         ItsGrid.Clear(itemGridId);
+        SetPlanEditButton(planTp, true, '');
         return;
     }
 
@@ -1123,16 +1130,16 @@ ItsGrid.Event('grid_EQM_REV').onSelect = function (rowIndex, field) {
     SearchPlanRevItem('E', GetPlanCd('E'), rowIndex);
 };
 
-// 2026-09-30 [설비그룹 점검계획 탭] 승인된 REV 행은 개정내용 수정 불가
+// 2026-09-30 [설비그룹 점검계획 탭] 개정내용은 새로 등록된 진행 중(대기·반려) REV 행(맨 위)에서만 입력, 승인된 REV 행은 수정 불가
 ItsGrid.Event('grid_GRP_REV').onBeginningEdit = function (rowIndex, field, value) {
-    if (ItsGrid.GetValue('grid_GRP_REV', rowIndex, 'APRVSTT') == 'A') {
+    if (field != 'REMARK' || rowIndex != 0 || ItsGrid.GetValue('grid_GRP_REV', rowIndex, 'APRVSTT') == 'A') {
         throw '';
     }
 };
 
-// 2026-09-30 [설비별 점검계획 탭] 승인된 REV 행은 개정내용 수정 불가
+// 2026-09-30 [설비별 점검계획 탭] 개정내용은 새로 등록된 진행 중(대기·반려) REV 행(맨 위)에서만 입력, 승인된 REV 행은 수정 불가
 ItsGrid.Event('grid_EQM_REV').onBeginningEdit = function (rowIndex, field, value) {
-    if (ItsGrid.GetValue('grid_EQM_REV', rowIndex, 'APRVSTT') == 'A') {
+    if (field != 'REMARK' || rowIndex != 0 || ItsGrid.GetValue('grid_EQM_REV', rowIndex, 'APRVSTT') == 'A') {
         throw '';
     }
 };
