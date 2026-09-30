@@ -659,7 +659,7 @@ ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
                 ItsGrid.SetValue('grid9', rowIndex, field, '');
                 ItsGrid.CheckRow('grid9', rowIndex);
             } else {
-                ItsMsg.Toast('점검자를 선택하거나, [일괄 주기설정] 기능을 이용해주세요.');
+                ItsMsg.Toast('점검자를 선택해주세요.');
             }
             return;
         }
