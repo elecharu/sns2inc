@@ -12,6 +12,7 @@
 -- 			2026-09-29 					한성수	설비그룹 점검계획 조회 사용 설비그룹(COMTYPE.USEYN = 'Y')만 조회 및 그룹 단위 사전집계 튜닝
 -- 			2026-09-30 					한성수	설비그룹·설비 현재 승인 리비전(REV) 조회 추가, 주기관리 승인 확인을 승인 리비전 기준으로 변경 및 승인 테이블 이름 변경
 -- 			2026-09-30 					한성수	정기점검 항목·주기관리 조회에 점검항목·점검방법·점검값구분·설비등급 코드명 반환 추가 (화면 콤보 목록 조회 제거)
+-- 			2026-10-01 					한성수	주기관리 조회·저장·삭제에 설비그룹이 없는 설비 포함 (설비 승인만 확인, 설비그룹이 있으면 설비그룹 승인도 확인)
 -- *****************************************************************************
   IN $FANO              VARCHAR(20),
   IN $FANO_COPY         VARCHAR(20),
@@ -654,8 +655,8 @@ WHEN 'LIST_CYCLE_EQMCD' THEN -- 설비별 월별 점검계획 조회
         AND CHKPLANEQM_YEARPLAN.YEAR = $SYEAR
   LEFT JOIN CHKPLANEQM
          ON CHKPLANEQM.EQMCD = MSTEQM.FANO
-  -- 설비그룹·설비 모두 승인 리비전이 있는 설비
-  INNER JOIN (
+  -- 설비 승인 리비전이 있는 설비 (설비그룹이 있으면 설비그룹 승인 리비전도 필요, 설비그룹이 없는 설비는 설비 승인만 확인)
+  LEFT JOIN (
     SELECT MSTEQMREV_HEADER.PLANCD
     FROM MSTEQMREV_HEADER
     WHERE MSTEQMREV_HEADER.PLANTP = 'G'
@@ -673,6 +674,7 @@ WHEN 'LIST_CYCLE_EQMCD' THEN -- 설비별 월별 점검계획 조회
     ON EQM_REV.PLANCD = MSTEQM.FANO
  
   WHERE MSTEQM.USEYN = 'Y'
+    AND (IFNULL(MSTEQM.EQMGUBUN, '') = '' OR GRP_REV.PLANCD IS NOT NULL)
     AND (MSTEQM.FANO LIKE CONCAT('%', $FANO, '%') OR MSTEQM.EQMNM LIKE CONCAT('%', $FANO, '%'))
     AND CHKPLANEQM.CHKTP = '02'
 
@@ -700,7 +702,7 @@ WHEN 'SAVE_CYCLE_EQMCD' THEN -- 설비별 월별 점검계획 저장
 
     SELECT COUNT(*) INTO _$PLANAPRV_CNT
     FROM MSTEQM
-    INNER JOIN MSTEQMREV_HEADER GRP_REV
+    LEFT JOIN MSTEQMREV_HEADER GRP_REV
       ON GRP_REV.PLANTP = 'G'
      AND GRP_REV.PLANCD = MSTEQM.EQMGUBUN
      AND GRP_REV.APRVSTT = 'A'
@@ -709,7 +711,8 @@ WHEN 'SAVE_CYCLE_EQMCD' THEN -- 설비별 월별 점검계획 저장
      AND EQM_REV.PLANCD = MSTEQM.FANO
      AND EQM_REV.APRVSTT = 'A'
     WHERE MSTEQM.FANO = _$FANO
-      AND MSTEQM.USEYN = 'Y';
+      AND MSTEQM.USEYN = 'Y'
+      AND (IFNULL(MSTEQM.EQMGUBUN, '') = '' OR GRP_REV.PLANCD IS NOT NULL);
 
     IF _$PLANAPRV_CNT = 0 THEN
       CALL COMERR('승인된 정기점검 계획만 주기관리할 수 있습니다.');
@@ -789,7 +792,7 @@ WHEN 'DELETE_CYCLE_EQMCD' THEN -- 설비별 월별 점검계획 삭제
 
     SELECT COUNT(*) INTO _$PLANAPRV_CNT
     FROM MSTEQM
-    INNER JOIN MSTEQMREV_HEADER GRP_REV
+    LEFT JOIN MSTEQMREV_HEADER GRP_REV
       ON GRP_REV.PLANTP = 'G'
      AND GRP_REV.PLANCD = MSTEQM.EQMGUBUN
      AND GRP_REV.APRVSTT = 'A'
@@ -798,7 +801,8 @@ WHEN 'DELETE_CYCLE_EQMCD' THEN -- 설비별 월별 점검계획 삭제
      AND EQM_REV.PLANCD = MSTEQM.FANO
      AND EQM_REV.APRVSTT = 'A'
     WHERE MSTEQM.FANO = _$FANO
-      AND MSTEQM.USEYN = 'Y';
+      AND MSTEQM.USEYN = 'Y'
+      AND (IFNULL(MSTEQM.EQMGUBUN, '') = '' OR GRP_REV.PLANCD IS NOT NULL);
 
     IF _$PLANAPRV_CNT = 0 THEN
       CALL COMERR('승인된 정기점검 계획만 주기관리할 수 있습니다.');
