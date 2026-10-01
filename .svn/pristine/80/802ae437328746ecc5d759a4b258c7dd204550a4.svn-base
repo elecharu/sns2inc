@@ -1,0 +1,243 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.IO;
+using System.Xml;
+using System.Data;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using ITSLIB;
+using DevExpress.Xpf.Grid;
+
+namespace TML1010
+{
+    /// <summary>
+    /// R01.xaml에 대한 상호 작용 논리
+    /// </summary>
+    public partial class R03 : ITSLIB.ItsPageTml
+    {
+        ItsModelPanel MODEL_S1 = new ItsModelPanel();
+        ItsModelPanel MODEL_A1 = new ItsModelPanel();
+        ItsModelPanel MODEL_A2 = new ItsModelPanel();
+
+        ItsModelGrid MODEL_G1 = new ItsModelGrid();
+        ItsModelGrid MODEL_G2 = new ItsModelGrid();
+        ItsModelGrid MODEL_G3 = new ItsModelGrid();
+
+
+        // 생성자
+        public R03()
+        {
+            InitializeComponent();
+
+            MODEL_S1.Binding(PANEL_S1);
+            MODEL_S1.DefaultValue("SDATE", DateTime.Now);
+            MODEL_S1.DefaultValue("EDATE", DateTime.Now);
+            MODEL_S1.InitData();
+
+            MODEL_A1.Binding(PANEL_A1);
+            MODEL_A1.InitData();
+            MODEL_A1.EventValueChanged += MODEL_A1_EventValueChanged;
+
+            MODEL_A2.Binding(PANEL_A2);
+            MODEL_A2.InitData();
+
+            MODEL_G1.Binding(GRID_G1);
+            MODEL_G2.Binding(GRID_G2);
+            MODEL_G3.Binding(GRID_G3);
+        }
+
+        private void MODEL_A1_EventValueChanged(string fieldName)
+        {
+            if (fieldName == "MITEMID")
+            {
+                ItsMaria.Set("TML1010_R03", "LIST_LOT_RST");
+
+                ItsMaria.AddModel(MODEL_A1);
+                ItsMaria.AddModel(MODEL_A2);
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_G2.SetData(ds.Tables[0]);
+                (GRID_G2.View as TableView).BestFitColumns();
+                MODEL_G3.SetData(ds.Tables[1]);
+                (GRID_G3.View as TableView).BestFitColumns();
+            }
+        }
+
+        public override void EventPageLoaded()
+        {
+            base.EventPageLoaded();
+
+            //if (ItsLocalInfo.TMLOSCYN == "Y")
+            //{
+            //    ItsLocalInfo.TMLCD = "jj04N";
+
+            //    string INIT = ItsData.GetScalar(ItsMaria.Query("SELECT CUSTCD FROM MSTEMP_OSC WHERE FACTORYCD = '07' AND EMPNO = '" + ItsLocalInfo.TMLCD + "';"));
+            //    MODEL_S1.SetValue("CUSTCD", INIT);
+            //}
+            //else
+            //{
+            //    pop_CUSTCD.ReadOnly = false;
+            //}
+
+            MODEL_S1.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));
+            MODEL_S1.SetValue("EDATE", DateTime.Now.AddMonths(1).AddDays(-DateTime.Now.Day).ToString("yyyy-MM-dd"));
+
+            PANEL_A1.Close();
+        }
+
+        public override void EventCommand(string commandName)
+        {
+            base.EventCommand(commandName);
+
+            // 납품 조회
+            if (commandName == "LIST_LOT")
+            {
+                ItsMaria.Set("TML1010_R03", "LIST_LOT");
+
+                ItsMaria.AddModel(MODEL_S1);
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_G1.SetData(ds.Tables[0]);
+                (GRID_G1.View as TableView).BestFitColumns();
+            }
+            else if (commandName == "btn_ADD_RST")
+            {
+                string citemid = MODEL_G1.GetText(MODEL_G1.CurrentIndex, "ITEMID");
+                MODEL_A1.SetValue("CITEMID", citemid);
+                MODEL_A1.SetRef01("MITEMID", citemid);
+                GetCurrentShift();
+                PANEL_A1.Show();
+            }
+            else if (commandName == "ADD_RST")
+            {
+                ShowMessageBox(commandName, "실적 등록을 하시겠습니까?");
+                return;
+            }
+            else if (commandName == "DEL_RST")
+            {
+                ShowMessageBox(commandName, "실적 삭제 하시겠습니까?");
+                return;
+            }
+        }
+        
+        public override void EventMessageResult(string commandName)
+        {
+            base.EventMessageResult(commandName);
+
+            if (commandName == "ADD_RST")
+            {
+                ItsMaria.Set("TML1010_R03", "ADD_RST");
+
+                ItsMaria.AddModel(MODEL_A1);
+                ItsMaria.AddModel(MODEL_A2);
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_A2.InitData();
+                GetCurrentShift();
+
+                MODEL_G2.SetData(ds.Tables[0]);
+                (GRID_G2.View as TableView).BestFitColumns();
+                MODEL_G3.SetData(ds.Tables[1]);
+                (GRID_G3.View as TableView).BestFitColumns();
+            }
+            else if (commandName == "DEL_RST")
+            {
+                ItsMaria.Set("TML1010_R03", "DEL_RST");
+
+                ItsMaria.AddModel(MODEL_A1);
+                ItsMaria.AddModel(MODEL_A2);
+                ItsMaria.AddOne("PRDRSTKEY", MODEL_G3.GetValue(MODEL_G3.CurrentIndex, "PRDRSTKEY"));
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_A2.InitData();
+                GetCurrentShift();
+
+                MODEL_G2.SetData(ds.Tables[0]);
+                (GRID_G2.View as TableView).BestFitColumns();
+                MODEL_G3.SetData(ds.Tables[1]);
+                (GRID_G3.View as TableView).BestFitColumns();
+            }
+        }
+
+        public override void EventPopClose(string panelName)
+        {
+            base.EventPopClose(panelName);
+
+            if (panelName == "PANEL_A1")
+            {
+                MODEL_A1.InitData();
+                MODEL_A2.InitData();
+                MODEL_G2.InitData();
+                MODEL_G3.InitData();
+
+                EventCommand("LIST_LOT");
+            }
+        }
+
+        private void GetCurrentShift()
+        {
+            TimeSpan now = DateTime.Now.TimeOfDay;
+
+            TimeSpan dayStart = new TimeSpan(6, 0, 0);
+            TimeSpan dayEnd = new TimeSpan(16, 0, 0);
+
+            TimeSpan nightStart = new TimeSpan(16, 0, 0);
+            TimeSpan nightEnd = new TimeSpan(2, 0, 0);
+
+            // 주간 : 06:00 ~ 16:00
+            if (now >= dayStart && now < dayEnd)
+            {
+                MODEL_A2.SetValue("WGTP", "PP161100N");
+                MODEL_A2.SetValue("STIME", "06:00");
+                MODEL_A2.SetValue("ETIME", "16:00");
+            }
+
+            // 야간 : 16:00 ~ 02:00
+            if (now >= nightStart || now < nightEnd)
+            {
+                MODEL_A2.SetValue("WGTP", "PP161102N");
+                MODEL_A2.SetValue("STIME", "16:00");
+                MODEL_A2.SetValue("ETIME", "02:00");
+            }
+        }
+    }
+}
+
