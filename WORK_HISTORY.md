@@ -17,6 +17,14 @@
 
 ## 🕒 2026-10-01 (목) 작업 내역
 
+### 2. EQM1001_R04 정기점검 등록 팝업에 주기관리 지정 점검자 기본 표시
+- **수정/대상 파일**: [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js)
+- **배경 및 원인**: R03 주기관리에서 월별 점검자를 지정했는데 R04 '점검필요' 클릭 시 등록 팝업 점검자 칸이 비어 있음. 주기관리는 월 칸에 점검자명을 저장하고 R04 점검자 찾기는 사원코드 필요
+- **작업 상세 내용**:
+  - LIST_CHKPLANEQM_EQM02에서 해당 년월($YYYYMM)의 CHKPLANEQM_YEARPLAN 월 칸 값을 읽어 사원코드 일치 → 이름 1명 일치 순으로 사원코드를 찾아 PLANEMPCD·PLANEMPNM 반환(동명이인·미등록 이름은 코드 비움). 화면은 계획 년월 전달, PLANEMPCD가 있으면 점검자 기본값 지정, 이름만 있으면 직접 선택 안내. 입력값 목록 변경 없음(SYSTEM_PARAMETERS 재등록 불필요)
+- **검증 결과**: 로컬 MariaDB 10.6: 이름 1명·사원코드 저장·동명이인·없는 이름·미지정·앞뒤 공백·10/12월·계획 없는 년도 8가지 통과. 오프라인 렌더 + 실제 공통 스크립트: 년월 전달, 점검자 E01 자동 지정, 동명이인 안내, 미지정 시 이전 값 남지 않음, 저장 요청에 EMPCD·REVCD 포함, 콘솔 오류 0건
+
+
 ### 2. 설비그룹이 없는 설비도 정기점검 주기관리·정기점검 등록 대상에 포함
 - **수정/대상 파일**: [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql)
 - **배경 및 원인**: A-002(EQMGUBUN 빈 값)을 정기점검 추가·설비 승인했는데 주기관리 탭에 안 보임. 주기관리·R04가 설비그룹 승인 REV를 INNER JOIN으로 요구해 그룹 없는 설비는 항상 제외됨. 사용자 기준: 승인된 그룹의 설비와 그룹 없는 설비 모두 주기관리 대상
@@ -241,6 +249,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js) | R04 등록 팝업 점검자 기본값 | 로컬 MariaDB 10.6: 이름 1명·사원코드 저장·동명이인·없는 이름·미지정·앞뒤 공백·10/12월·계획 없는 년도 8가지 통과. 오프라인 렌더 + 실제 공통 스크립트: 년월 전달, 점검자 E01 자동 지정, 동명이인 안내, 미지정 시 이전 값 남지 않음, 저장 요청에 EMPCD·REVCD 포함, 콘솔 오류 0건 |
 | **완료** | [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql) | 그룹 없는 설비 주기관리 포함 | 로컬 MariaDB 10.6(실제 GETKEY, 새 REVCD 구조): 주기관리 목록에 그룹승인 설비·그룹 빈값·그룹 NULL 설비 표시, 그룹 미승인·설비 미승인·항목 없는 설비 제외, 그룹 없는 설비 주기 저장·R04 목록(점검필요)·등록 팝업·등록·수정 조회·수정·삭제 정상, 그룹 미승인 설비 저장·팝업·등록 차단, 그룹 승인 후 표시 |
 | **완료** | [MES_SNS2_EQM1001_PLAN_REV_REVCD.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV_REVCD.sql) | REVCD 실제 GETKEY 재검증 | 실제 GETKEY 정의 + COMKEY로 로컬 MariaDB 10.6 재검증: 운영 데이터 변환(8건 발번, 중복 0), 그룹 수정 시 소속 설비 3대 한 문장 발번 중복 없음, 그룹 승인 승인본, R04 팝업·등록·조회(REVCD 기록), 키 종류별 순번 분리(CHKRSTKEY 4·REVCD 11), 신규 설치 PLAN_REV→INIT 및 재실행 무변화(불필요 발번 없음) |
 | **완료** | [MES_SNS2_EQM1001_PLAN_REV_REVCD.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV_REVCD.sql)(신규), [MES_SNS2_EQM1001_PLAN_REV.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV.sql), [MES_SNS2_EQM1001_PLAN_REV_INIT.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV_INIT.sql), [MES_SNS2_EQM1001_PLAN_REV_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV_SYSTEM_PARAMETERS.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql), [MES_SNS2_EQM1001_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R05.sql), [EQM1001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js) | REVCD 전환 | 로컬 MariaDB 10.6 3단계 검증: ①구 구조+운영 데이터 전환(헤더 7/7 발번, 승인본 13→11 그룹 합침·고아 정리, 실적 3/3 연결, REVNUM 삭제, 확인 SELECT 0건) ②새 프로시저 흐름(R04 목록·팝업·등록·수정조회, 잘못된 키 4종 차단, R03 수정→발번→승인→승인본, 이력 항목 조회) ③신규 설치 PLAN_REV→INIT 및 INIT 재실행 무변화. R04.aspx 오프라인 렌더 200 |

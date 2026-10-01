@@ -8,6 +8,7 @@
 -- 			2026-09-30 					한성수	설비 승인 리비전(REV) 승인본 기준 점검 및 점검실적 적용 리비전 기록
 -- 			2026-10-01 					한성수	리비전 키(REVCD) 기준 승인본 조회 및 점검실적 적용 리비전 기록 ($REVNUM → $REVCD)
 -- 			2026-10-01 					한성수	설비그룹이 없는 설비도 설비 승인만으로 정기점검 조회·등록·수정·삭제 가능
+-- 			2026-10-01 					한성수	정기점검 등록 팝업에 주기관리에서 지정한 해당 월 점검자 반환
 -- *****************************************************************************
   IN $SYEAR         VARCHAR(50),
   IN $YYYYMM         VARCHAR(50),
@@ -58,6 +59,9 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$REVNUM       INT;
   DECLARE _$PENDREVNUM   INT;
   DECLARE _$REVCD        VARCHAR(20);
+  DECLARE _$PLANEMP      VARCHAR(100);
+  DECLARE _$PLANEMPCD    VARCHAR(20);
+  DECLARE _$PLANEMP_CNT  INT DEFAULT 0;
 
 CASE $CALLTYPE
 -- ****************************************************************************
@@ -365,6 +369,34 @@ WHEN 'LIST_CHKPLANEQM_EQM02' THEN -- 정기점검계획 조회 (설비 승인 �
                         AND MSTEQMREV_HEADER.APRVSTT <> 'A'
                       LIMIT 1);
 
+  -- 주기관리에서 지정한 해당 월 점검자 (월 칸에 점검자명 저장, 사원코드로 저장된 경우도 처리, 동명이인이면 지정하지 않음)
+  SET _$PLANEMP = (SELECT ELT(CAST(RIGHT($YYYYMM, 2) AS UNSIGNED),
+                              CHKPLANEQM_YEARPLAN.MONTH_01, CHKPLANEQM_YEARPLAN.MONTH_02, CHKPLANEQM_YEARPLAN.MONTH_03,
+                              CHKPLANEQM_YEARPLAN.MONTH_04, CHKPLANEQM_YEARPLAN.MONTH_05, CHKPLANEQM_YEARPLAN.MONTH_06,
+                              CHKPLANEQM_YEARPLAN.MONTH_07, CHKPLANEQM_YEARPLAN.MONTH_08, CHKPLANEQM_YEARPLAN.MONTH_09,
+                              CHKPLANEQM_YEARPLAN.MONTH_10, CHKPLANEQM_YEARPLAN.MONTH_11, CHKPLANEQM_YEARPLAN.MONTH_12)
+                   FROM CHKPLANEQM_YEARPLAN
+                   WHERE CHKPLANEQM_YEARPLAN.EQMCD = $EQMCD
+                     AND CHKPLANEQM_YEARPLAN.YEAR = LEFT($YYYYMM, 4)
+                     AND CHKPLANEQM_YEARPLAN.CHKTP = '02'
+                   LIMIT 1);
+  SET _$PLANEMP = TRIM(COALESCE(_$PLANEMP, ''));
+
+  IF _$PLANEMP <> '' THEN
+    SET _$PLANEMPCD = (SELECT MSTEMP.EMPCD FROM MSTEMP WHERE MSTEMP.EMPCD = _$PLANEMP LIMIT 1);
+
+    IF _$PLANEMPCD IS NULL THEN
+      SELECT COUNT(*), MIN(MSTEMP.EMPCD)
+        INTO _$PLANEMP_CNT, _$PLANEMPCD
+      FROM MSTEMP
+      WHERE MSTEMP.EMPNM = _$PLANEMP;
+
+      IF _$PLANEMP_CNT <> 1 THEN
+        SET _$PLANEMPCD = NULL;
+      END IF;
+    END IF;
+  END IF;
+
   SELECT
     MSTEQMREV_DETAIL.EQMCD,
     MSTEQMREV_DETAIL.CHKKNDCD,
@@ -377,7 +409,9 @@ WHEN 'LIST_CHKPLANEQM_EQM02' THEN -- 정기점검계획 조회 (설비 승인 �
     _$REVCD AS REVCD,
     _$REVNUM AS REVNUM,
     CONCAT('REV.', _$REVNUM) AS REVNM,
-    COALESCE(CONCAT('REV.', _$PENDREVNUM), '') AS PENDREVNM
+    COALESCE(CONCAT('REV.', _$PENDREVNUM), '') AS PENDREVNM,
+    COALESCE(_$PLANEMPCD, '') AS PLANEMPCD,
+    _$PLANEMP AS PLANEMPNM
   FROM MSTEQMREV_DETAIL
   WHERE MSTEQMREV_DETAIL.REVCD = _$REVCD
   ORDER BY MSTEQMREV_DETAIL.SORTNO

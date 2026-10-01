@@ -118,6 +118,8 @@ var LIST_CHKPLANEQM_EQM02 = function (EQMCD, YYYYMM) {
     var maria = new ItsMaria('EQM1001_R04', 'LIST_CHKPLANEQM_EQM02');
 
     maria.AddParam('EQMCD', EQMCD);
+    // 2026-10-01 [정기점검 등록 팝업] 주기관리 점검자 조회용 계획 년월 전달
+    maria.AddParam('YYYYMM', YYYYMM);
 
     maria.CallProc();
 
@@ -131,7 +133,19 @@ var LIST_CHKPLANEQM_EQM02 = function (EQMCD, YYYYMM) {
 
     ItsGrid.SetStore('grid2', maria.store);
     ShowPlanRev(maria.store.data);
+    ShowPlanEmp(maria.store.data);
 };
+
+// 2026-10-01 정기점검 등록 모달(pop1) 주기관리에서 지정한 해당 월 점검자를 기본 점검자로 표시
+function ShowPlanEmp(rows) {
+    var row = rows.length > 0 ? rows[0] : {};
+
+    if (row.PLANEMPCD) {
+        ItsFind.SetValue('pop1_find_EMPCD', row.PLANEMPCD);
+    } else if (row.PLANEMPNM) {
+        ItsMsg.Toast('주기관리 점검자(' + row.PLANEMPNM + ')를 사원 목록에서 하나로 찾지 못했습니다. 점검자를 직접 선택해주세요.');
+    }
+}
 
 // 2026-09-30 정기점검 등록 모달(pop1) 적용 REV 표시 및 저장용 REV 번호 보관, 새 REV가 승인 대기 중이면 안내 문구 표시
 function ShowPlanRev(rows) {
