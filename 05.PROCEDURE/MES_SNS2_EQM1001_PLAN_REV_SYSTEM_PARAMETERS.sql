@@ -1,15 +1,17 @@
 ﻿-- *****************************************************************************
 -- Comment: EQM1001_R05·R04 COMCALLC 파라미터 메타데이터 재등록
 -- Create:  2026-09-30  한성수  점검계획 리비전(REV) 관리 입력값 추가에 따른 재등록 (R05: $REVNUM·$REMARK, R04: $REVNUM)
+-- Modify:  2026-10-01  한성수  R04 입력값 이름 변경 ($REVNUM → $REVCD)에 따른 재등록, 백업본은 없을 때만 생성
 -- *****************************************************************************
 -- 백업본 생성은 프로시저 교체 전에, 삭제·재등록은 각 프로시저 교체 직후에 실행합니다.
+-- 이미 실행한 DB에서 리비전 키(REVCD) 전환만 하는 경우 EQM1001_R04 부분만 다시 실행합니다. (R05 입력값은 변경 없음)
 -- EQM1001_R03은 입력값이 바뀌지 않아 재등록하지 않습니다.
 
 -- *****************************************************************************
 -- EQM1001_R05
 
 -- 백업본 생성 (프로시저 교체 전)
-CREATE TABLE MES_SNS2.SYSTEM_PARAMETERS_BAK_EQM1001_R05 AS
+CREATE TABLE IF NOT EXISTS MES_SNS2.SYSTEM_PARAMETERS_BAK_EQM1001_R05 AS
 SELECT * FROM MES_SNS2.SYSTEM_PARAMETERS
  WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
    AND SPECIFIC_NAME = 'EQM1001_R05';
@@ -37,7 +39,7 @@ SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
 -- EQM1001_R04
 
 -- 백업본 생성 (프로시저 교체 전)
-CREATE TABLE MES_SNS2.SYSTEM_PARAMETERS_BAK_EQM1001_R04 AS
+CREATE TABLE IF NOT EXISTS MES_SNS2.SYSTEM_PARAMETERS_BAK_EQM1001_R04 AS
 SELECT * FROM MES_SNS2.SYSTEM_PARAMETERS
  WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
    AND SPECIFIC_NAME = 'EQM1001_R04';
@@ -54,7 +56,7 @@ SELECT *
  WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
    AND SPECIFIC_NAME = 'EQM1001_R04';
 
--- 파라미터 확인 (22건: 16번 $REVNUM, 21번 $CALLTYPE, 22번 $KEYWORD)
+-- 파라미터 확인 (22건: 16번 $REVCD, 21번 $CALLTYPE, 22번 $KEYWORD)
 SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
   FROM MES_SNS2.SYSTEM_PARAMETERS
  WHERE SPECIFIC_SCHEMA = 'MES_SNS2'

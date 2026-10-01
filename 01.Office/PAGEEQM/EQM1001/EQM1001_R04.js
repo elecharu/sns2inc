@@ -139,7 +139,8 @@ function ShowPlanRev(rows) {
     var revNm = row.REVNM || '';
 
     ItsLabel.SetText('pop1_lbl_REVNM', revNm ? '적용 REV : ' + revNm : '');
-    ItsText.SetValue('pop1_txt_REVNUM', row.REVNUM == undefined ? '' : String(row.REVNUM));
+    // 2026-10-01 [정기점검 등록 팝업] 저장 시 적용 리비전 키(REVCD) 전달
+    ItsText.SetValue('pop1_txt_REVCD', row.REVCD || '');
     ItsLabel.SetText('pop1_lbl_REV_INFO', row.PENDREVNM ? row.PENDREVNM + ' 승인 대기 중 — 승인 전까지 ' + revNm + ' 항목으로 점검합니다.' : '');
 }
 

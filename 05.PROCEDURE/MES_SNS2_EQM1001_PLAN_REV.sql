@@ -1,8 +1,10 @@
 ﻿-- *****************************************************************************
 -- Comment: 설비점검계획 리비전 관리 테이블 생성, 점검실적 적용 리비전 컬럼 추가, 승인 테이블 이름 변경
 -- Create:  2026-09-30  한성수  설비그룹·설비별 정기점검 계획 REV 관리 신규 생성
+-- Modify:  2026-10-01  한성수  리비전 키(REVCD) PK 적용 (헤더: REVCD, 디테일: REVCD·CHKKNDCD), 점검실적 적용 리비전을 REVCD로 변경
 -- *****************************************************************************
 CREATE TABLE IF NOT EXISTS `MES_SNS2`.`MSTEQMREV_HEADER` (
+  `REVCD`      varchar(20)    NOT NULL DEFAULT '' COMMENT '리비전키 (GETKEY(''REVCD''))',
   `PLANTP`     char(1)        NOT NULL DEFAULT '' COMMENT 'G: 설비그룹, E: 설비',
   `PLANCD`     varchar(50)    NOT NULL DEFAULT '' COMMENT '설비그룹코드 또는 설비코드',
   `REVNUM`     int(11)        NOT NULL DEFAULT 0  COMMENT '리비전 번호 (0: 제정)',
@@ -21,15 +23,17 @@ CREATE TABLE IF NOT EXISTS `MES_SNS2`.`MSTEQMREV_HEADER` (
   `MTIME`      varchar(19)    NOT NULL DEFAULT '' COMMENT '수정시간',
   `MEMP`       varchar(20)    NOT NULL DEFAULT '' COMMENT '수정자',
   `MPRG`       varchar(100)   NOT NULL DEFAULT '' COMMENT '수정프로그램',
-  PRIMARY KEY (`PLANTP`, `PLANCD`, `REVNUM`),
+  PRIMARY KEY (`REVCD`),
+  UNIQUE KEY `UX_MSTEQMREV_HEADER_REV` (`PLANTP`, `PLANCD`, `REVNUM`),
   KEY `IX_MSTEQMREV_HEADER_STT` (`PLANTP`, `APRVSTT`, `PLANCD`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='설비점검계획 리비전 관리(헤더)';
 
 CREATE TABLE IF NOT EXISTS `MES_SNS2`.`MSTEQMREV_DETAIL` (
+  `REVCD`      varchar(20)    NOT NULL DEFAULT '' COMMENT '리비전키',
   `PLANTP`     char(1)        NOT NULL DEFAULT '' COMMENT 'G: 설비그룹, E: 설비',
   `PLANCD`     varchar(50)    NOT NULL DEFAULT '' COMMENT '설비그룹코드 또는 설비코드',
   `REVNUM`     int(11)        NOT NULL DEFAULT 0  COMMENT '승인된 리비전 번호',
-  `EQMCD`      varchar(20)    NOT NULL DEFAULT '' COMMENT '설비코드',
+  `EQMCD`      varchar(20)    NOT NULL DEFAULT '' COMMENT '설비코드 (설비그룹 승인본은 빈 값)',
   `CHKKNDCD`   varchar(20)    NOT NULL DEFAULT '' COMMENT '항목키',
   `CHKCYCLE`   varchar(10)    NOT NULL DEFAULT '' COMMENT '점검주기',
   `SORTNO`     decimal(20,0)  NOT NULL DEFAULT 0  COMMENT '정렬순서',
@@ -44,11 +48,11 @@ CREATE TABLE IF NOT EXISTS `MES_SNS2`.`MSTEQMREV_DETAIL` (
   `MTIME`      varchar(19)    NOT NULL DEFAULT '' COMMENT '수정시간',
   `MEMP`       varchar(20)    NOT NULL DEFAULT '' COMMENT '수정자',
   `MPRG`       varchar(100)   NOT NULL DEFAULT '' COMMENT '수정프로그램',
-  PRIMARY KEY (`PLANTP`, `PLANCD`, `REVNUM`, `EQMCD`, `CHKKNDCD`)
+  PRIMARY KEY (`REVCD`, `CHKKNDCD`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC COMMENT='설비점검계획 리비전 관리(디테일)';
 
 ALTER TABLE `MES_SNS2`.`CHKRSTEQM`
-  ADD COLUMN IF NOT EXISTS `REVNUM` int(11) NULL DEFAULT NULL COMMENT '적용 설비 리비전 번호' AFTER `CHKCYCLE`;
+  ADD COLUMN IF NOT EXISTS `REVCD` varchar(20) NULL DEFAULT NULL COMMENT '적용 설비 리비전키' AFTER `CHKCYCLE`;
 
 RENAME TABLE `MES_SNS2`.`EQMPLAN_APRV` TO `MES_SNS2`.`CHKPLANEQM_APRV`;
 ALTER TABLE `MES_SNS2`.`CHKPLANEQM_APRV` COMMENT = '설비점검계획 승인 관리';

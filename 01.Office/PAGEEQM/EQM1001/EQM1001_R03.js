@@ -33,9 +33,10 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid_GRP2', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 300 }),
-        column.create('점검항목', 'CHKLOC', { width: 130, columnType: enumColumnTypes.combo, gpcd: 'CHKLOC', align: 'center' }),
-        column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', align: 'center' }),
-        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', align: 'center' }),
+        // 2026-09-30 [화면 로드 최적화] 점검항목·점검방법·점검값구분은 프로시저에서 받은 코드명으로 표시 (콤보 목록 조회 제거)
+        column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
+        column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
+        column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
         column.create('사용여부', 'USEYN', { width: 70, columnType: enumColumnTypes.check, readOnly: false }),
         column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
         column.split()
@@ -54,9 +55,10 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid_GRP_COPY2', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 300 }),
-        column.create('점검항목', 'CHKLOC', { width: 130, columnType: enumColumnTypes.combo, gpcd: 'CHKLOC', align: 'center' }),
-        column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', align: 'center' }),
-        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', align: 'center' }),
+        // 2026-09-30 [화면 로드 최적화] 점검항목·점검방법·점검값구분은 프로시저에서 받은 코드명으로 표시 (콤보 목록 조회 제거)
+        column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
+        column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
+        column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
         column.create('사용여부', 'USEYN', { width: 70, columnType: enumColumnTypes.check, readOnly: true }),
         column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.split()
@@ -92,9 +94,10 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid3', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 300 }),
-        column.create('점검항목', 'CHKLOC', { width: 130, columnType: enumColumnTypes.combo, gpcd: 'CHKLOC', align: 'center' }),
-        column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', align: 'center' }),
-        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', align: 'center' }),
+        // 2026-09-30 [화면 로드 최적화] 점검항목·점검방법·점검값구분은 프로시저에서 받은 코드명으로 표시 (콤보 목록 조회 제거)
+        column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
+        column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
+        column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
         column.create('사용여부', 'USEYN', { width: 70, columnType: enumColumnTypes.check, readOnly: false }),
         column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
         column.split()
@@ -111,16 +114,18 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid8', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 70, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 300 }),
-        column.create('점검항목', 'CHKLOC', { width: 130, columnType: enumColumnTypes.combo, gpcd: 'CHKLOC', align: 'center' }),
-        column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', align: 'center' }),
-        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', align: 'center' }),
+        // 2026-09-30 [화면 로드 최적화] 점검항목·점검방법·점검값구분은 프로시저에서 받은 코드명으로 표시 (콤보 목록 조회 제거)
+        column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
+        column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
+        column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
         column.split()
     ]);
     // 정기점검 주기관리 탭: 연간 계획 초기화
     ItsGrid.Create('grid9', { isCheckBoxGrid: true }, [
         column.create('설비코드', 'FANO', { width: 100, align: 'center' }),
         column.create('설비명', 'EQMNM', { width: 220 }),
-        column.create('설비등급', 'EQMGRADE', { width: 90, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM110', readOnly: true }),
+        // 2026-09-30 [정기점검 주기관리 탭] 설비등급은 프로시저에서 받은 코드명으로 표시 (콤보 목록 조회 제거)
+        column.create('설비등급', 'EQMGRADENM', { width: 90, align: 'center', readOnly: true }),
         column.create('년도', 'YEAR', { width: 80, align: 'center' }),
         column.create('1월', 'M01', { width: 80, align: 'center', readOnly: true }),
         column.create('2월', 'M02', { width: 80, align: 'center', readOnly: true }),
@@ -140,9 +145,10 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid10', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 70, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 300 }),
-        column.create('점검항목', 'CHKLOC', { width: 130, columnType: enumColumnTypes.combo, gpcd: 'CHKLOC', align: 'center' }),
-        column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', align: 'center' }),
-        column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', align: 'center' }),
+        // 2026-09-30 [화면 로드 최적화] 점검항목·점검방법·점검값구분은 프로시저에서 받은 코드명으로 표시 (콤보 목록 조회 제거)
+        column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
+        column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
+        column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
         column.split()
     ]);
 

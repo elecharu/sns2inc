@@ -32,7 +32,8 @@
             <Its:find runat="server" Label="점검자" ID="pop1_find_EMPCD" Field="EMPCD" GPCD="EMPCD"   InputWidth="110" />
             <%-- 2026-09-30 정기점검 등록 팝업: 적용 REV 표시(라벨이라 저장 값에 포함되지 않음), 저장 시 적용 REV 번호 전달, 새 REV 승인 대기 안내 --%>
             <Its:label runat="server" Text="" ID="pop1_lbl_REVNM" Bold="true" MarginLeft="10"/>
-            <Its:text runat="server" Label="REV번호" ID="pop1_txt_REVNUM" Field="REVNUM" Hidden="true"/>
+            <%-- 2026-10-01 정기점검 등록 팝업: 저장 시 적용 리비전 키(REVCD) 전달 --%>
+            <Its:text runat="server" Label="REV키" ID="pop1_txt_REVCD" Field="REVCD" Hidden="true"/>
             <Its:label runat="server" Text="" ID="pop1_lbl_REV_INFO" ForeColor="Danger" MarginLeft="10"/>
             <Its:newline runat="server" />
             <Its:textarea runat="server" Label="문제점" ID="pop1_txtarea_PROBLEM" Field="PROBLEM" InputWidth="345" />
