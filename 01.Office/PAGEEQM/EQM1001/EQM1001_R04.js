@@ -104,8 +104,10 @@ ItsGrid.Event('grid1').onDoubleClick = function (rowindex, field) {
 
     if (MONTH != '') {
         if (CellValue == '점검필요') {
-            LIST_CHKPLANEQM_EQM02(EQMCD, YEAR + '-' + MONTH);
-            ItsPop.Open('pop1');
+            // 2026-10-02 [메인 그리드] 점검항목 조회 오류(승인 계획 없음 등) 시 정기점검 등록 팝업을 열지 않음
+            if (LIST_CHKPLANEQM_EQM02(EQMCD, YEAR + '-' + MONTH)) {
+                ItsPop.Open('pop1');
+            }
         }
         else if (CellValue == '점검완료') {
             SEARCH_CHKRSTEQM(EQMCD, YEAR + '-' + MONTH);
@@ -130,7 +132,8 @@ var LIST_CHKPLANEQM_EQM02 = function (EQMCD, YYYYMM) {
 
     if (maria.isError) {
         maria.ShowErrMsg();
-        return;
+        // 2026-10-02 [정기점검 등록 팝업] 조회 실패 시 팝업 열지 않도록 결과 반환
+        return false;
     }
 
     ItsFind.SetValue('pop1_find_EQMCD', EQMCD);
@@ -141,6 +144,7 @@ var LIST_CHKPLANEQM_EQM02 = function (EQMCD, YYYYMM) {
     ShowPlanRev(maria.store.data);
     // 2026-10-01 [정기점검 등록 팝업] 주기관리에서 지정한 해당 월 점검자 기본 지정
     ShowPlanEmp(maria.store.data);
+    return true;
 };
 
 // 2026-10-01 정기점검 등록 모달(pop1) 주기관리에서 지정한 해당 월 점검자를 기본 점검자로 표시

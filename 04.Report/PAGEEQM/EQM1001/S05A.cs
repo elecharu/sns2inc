@@ -18,14 +18,19 @@ namespace XtraRpt
         {
             InitializeComponent();
 
-            string eqmGroupCode = param.ContainsKey("EQMGRP") ? param["EQMGRP"] : "";
-            if (string.IsNullOrEmpty(eqmGroupCode))
+            // 2026-10-02 계획서 구분(PLANTP) 추가: G 설비그룹(EQMGRP), E 설비(FANO), 구분이 없으면 기존처럼 설비그룹
+            string planType = param.ContainsKey("PLANTP") && param["PLANTP"] == "E" ? "E" : "G";
+            string planCode = planType == "E"
+                ? (param.ContainsKey("FANO") ? param["FANO"] : "")
+                : (param.ContainsKey("EQMGRP") ? param["EQMGRP"] : "");
+            if (string.IsNullOrEmpty(planCode))
             {
-                throw new InvalidOperationException("설비그룹을 선택해주세요.");
+                throw new InvalidOperationException(planType == "E" ? "설비를 선택해주세요." : "설비그룹을 선택해주세요.");
             }
 
             ItsMaria maria = CreateMaria("EQM1001_R05", "CALL_PLAN_RPT");
-            maria.AddParam("EQMGRP", eqmGroupCode);
+            maria.AddParam("PLANTP", planType);
+            maria.AddParam(planType == "E" ? "FANO" : "EQMGRP", planCode);
             DataSet dataSet = maria.CallProc();
             if (maria.IsError)
             {
@@ -39,9 +44,11 @@ namespace XtraRpt
 
             DataRow planHeader = dataSet.Tables[0].Rows[0];
             DataTable planItems = dataSet.Tables[1].Copy();
+            // 2026-10-02 하단 개정 이력 (최근 승인 4건, 최신순)
+            DataTable revHistory = dataSet.Tables.Count > 2 ? dataSet.Tables[2] : null;
             AddBlankRows(planItems, 12);
 
-            BuildReport(planHeader, planItems);
+            BuildReport(planHeader, planItems, revHistory);
         }
 
         private static ItsMaria CreateMaria(string procedureName, string callType)
@@ -55,7 +62,7 @@ namespace XtraRpt
             return maria;
         }
 
-        private void BuildReport(DataRow planHeader, DataTable planItems)        {
+        private void BuildReport(DataRow planHeader, DataTable planItems, DataTable revHistory)        {
             Dpi = 100F;
             PaperKind = PaperKind.A4;
             PageWidth = 827;
@@ -79,7 +86,8 @@ namespace XtraRpt
             pageHeader.Controls.Add(CreatePlanInfo(planHeader));
             pageHeader.Controls.Add(CreateDetailHeader());
             detail.Controls.Add(CreateDetailRow());
-            reportFooter.Controls.AddRange(CreateConfirmationControls());
+            // 2026-10-02 하단 개정 이력 칸에 승인 이력 표시
+            reportFooter.Controls.AddRange(CreateConfirmationControls(revHistory));
             pageFooter.Controls.Add(CreateFooterLabel());
 
             DataSource = planItems;
@@ -100,9 +108,10 @@ namespace XtraRpt
         private XRTable CreatePlanInfo(DataRow row)
         {
             XRTable table = CreateTable(0F, 37F, ReportWidth, 75F, 9F);
-            table.Rows.Add(CreateInfoRow("설비명", Value(row, "EQMGRPNM"), "설비규격", Value(row, "EQMSPEC")));
+            // 2026-10-02 상단 설비 정보: 설비명(설비그룹명 또는 설비명), 적용LINE은 작업장명으로 표시
+            table.Rows.Add(CreateInfoRow("설비명", Value(row, "EQMNM"), "설비규격", Value(row, "EQMSPEC")));
             table.Rows.Add(CreateInfoRow("설비번호", Value(row, "EQMCD"), "점검일자", ""));
-            table.Rows.Add(CreateInfoRow("적용LINE", Value(row, "LINECD"), "적용공정", Value(row, "PROCESSNM")));
+            table.Rows.Add(CreateInfoRow("적용LINE", Value(row, "LINENM"), "적용공정", Value(row, "PROCESSNM")));
             return table;
         }
 
@@ -146,7 +155,7 @@ namespace XtraRpt
             return table;
         }
 
-        private XRControl[] CreateConfirmationControls()
+        private XRControl[] CreateConfirmationControls(DataTable revHistory)
         {
             const float y = 4F;
             const float height = 120F;
@@ -172,13 +181,19 @@ namespace XtraRpt
             controls.Add(CreateFooterBox(confirmWidth + inspectorWidth, y + signatureHeaderHeight, managerWidth, height - signatureHeaderHeight, "", false));
             controls.Add(CreateFooterBox(historyX, y, historyLabelWidth, height, "개\r\n정\r\n이\r\n력", true));
 
+            // 2026-10-02 개정 이력: 머리글 바로 위 칸부터 오래된 순으로 채우고 위로 갈수록 최신 (No는 REV 번호, 이력은 승인일자·개정내용)
+            int historyCnt = revHistory == null ? 0 : Math.Min(revHistory.Rows.Count, 4);
             for (int rowIndex = 0; rowIndex < 4; rowIndex++)
             {
                 float rowY = y + (revisionRowHeight * rowIndex);
-                controls.Add(CreateFooterBox(revisionX, rowY, revisionNoWidth, revisionRowHeight, (4 - rowIndex).ToString(), false));
-                controls.Add(CreateFooterBox(revisionX + revisionNoWidth, rowY, revisionContentWidth, revisionRowHeight, "", false));
-                controls.Add(CreateFooterBox(revisionX + revisionNoWidth + revisionContentWidth, rowY, writerWidth, revisionRowHeight, "", false));
-                controls.Add(CreateFooterBox(revisionX + revisionNoWidth + revisionContentWidth + writerWidth, rowY, approverWidth, revisionRowHeight, "", false));
+                int historyIndex = rowIndex - (4 - historyCnt);
+                DataRow history = historyIndex >= 0 ? revHistory.Rows[historyIndex] : null;
+                string revNo = history != null ? Value(history, "REVNUM") : "";
+                string revText = history != null ? (Value(history, "REVDATE") + " " + Value(history, "REMARK")).Trim() : "";
+                controls.Add(CreateFooterBox(revisionX, rowY, revisionNoWidth, revisionRowHeight, revNo, false));
+                controls.Add(CreateFooterBox(revisionX + revisionNoWidth, rowY, revisionContentWidth, revisionRowHeight, revText, false));
+                controls.Add(CreateFooterBox(revisionX + revisionNoWidth + revisionContentWidth, rowY, writerWidth, revisionRowHeight, history != null ? Value(history, "REQEMPNM") : "", false));
+                controls.Add(CreateFooterBox(revisionX + revisionNoWidth + revisionContentWidth + writerWidth, rowY, approverWidth, revisionRowHeight, history != null ? Value(history, "APRVEMPNM") : "", false));
             }
 
             float headerY = y + (revisionRowHeight * 4);

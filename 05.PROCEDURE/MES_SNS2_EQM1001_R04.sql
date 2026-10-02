@@ -11,6 +11,7 @@
 -- 			2026-10-01 					한성수	정기점검 등록 팝업에 주기관리에서 지정한 해당 월 점검자 반환
 -- 			2026-10-02 					한성수	정기점검 수정 조회 항목 결과에 실적의 적용 리비전(REVNM) 반환
 -- 			2026-10-02 					한성수	조회 성능 개선 (월별 점검실적 확인을 연도별 1회 집계로 변경), 수정 조회 실적을 정기점검으로 한정
+-- 			2026-10-02 					한성수	정기점검 등록 시 같은 달 중복 등록 및 주기관리 점검자가 없는 달 등록 불가
 -- *****************************************************************************
   IN $SYEAR           VARCHAR(50),
   IN $YYYYMM          VARCHAR(50),
@@ -274,6 +275,34 @@ WHEN 'ADD_CHKRSTEQM' THEN -- 정기점검 등록
     CALL COMERR('승인된 정기점검 계획만 처리할 수 있습니다.');
     LEAVE PROC;
   END IF;
+
+  -- 주기관리에서 점검자가 지정된 달만 등록 (팝업을 연 뒤 계획이 빠진 경우 차단)
+  SET _$PLANEMP = (SELECT ELT(CAST(RIGHT($YYYYMM, 2) AS UNSIGNED),
+                              CHKPLANEQM_YEARPLAN.MONTH_01, CHKPLANEQM_YEARPLAN.MONTH_02, CHKPLANEQM_YEARPLAN.MONTH_03,
+                              CHKPLANEQM_YEARPLAN.MONTH_04, CHKPLANEQM_YEARPLAN.MONTH_05, CHKPLANEQM_YEARPLAN.MONTH_06,
+                              CHKPLANEQM_YEARPLAN.MONTH_07, CHKPLANEQM_YEARPLAN.MONTH_08, CHKPLANEQM_YEARPLAN.MONTH_09,
+                              CHKPLANEQM_YEARPLAN.MONTH_10, CHKPLANEQM_YEARPLAN.MONTH_11, CHKPLANEQM_YEARPLAN.MONTH_12)
+                   FROM CHKPLANEQM_YEARPLAN
+                   WHERE CHKPLANEQM_YEARPLAN.EQMCD = $EQMCD
+                     AND CHKPLANEQM_YEARPLAN.YEAR = LEFT($YYYYMM, 4)
+                   ORDER BY (CHKPLANEQM_YEARPLAN.CHKTP = '02') DESC
+                   LIMIT 1);
+
+  IF COALESCE(_$PLANEMP, '') = '' THEN
+    CALL COMERR('주기관리에서 점검자가 지정된 달만 정기점검을 등록할 수 있습니다. 화면을 다시 조회해주세요.');
+    LEAVE PROC;
+  END IF;
+
+  -- 같은 달 정기점검 중복 등록 차단
+  IF EXISTS (SELECT 1
+             FROM CHKRSTEQM
+             WHERE CHKRSTEQM.EQMCD = $EQMCD
+               AND CHKRSTEQM.CHKTP = '02'
+               AND LEFT(CHKRSTEQM.BASEDATE, 7) = $YYYYMM) THEN
+    CALL COMERR('이미 등록된 정기점검이 있습니다. 화면을 다시 조회해주세요.');
+    LEAVE PROC;
+  END IF;
+
   SET _$CHKRSTKEY = GETKEY('CHKRSTKEY'); 
 
 

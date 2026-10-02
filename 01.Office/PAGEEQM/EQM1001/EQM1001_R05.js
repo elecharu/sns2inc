@@ -37,6 +37,10 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
+    // 2026-10-02 [두 탭 조회 필터] 승인상태 콤보 목록 (W: 대기 = 승인·반려가 아닌 계획)
+    ItsCombo.SetListByArr('cmb_GRP_APRVSTT', ['전체', '대기', '승인', '반려'], ['', 'W', 'A', 'R']);
+    ItsCombo.SetListByArr('cmb_EQM_APRVSTT', ['전체', '대기', '승인', '반려'], ['', 'W', 'A', 'R']);
+
 };
 
 // 현재 탭 계획 목록 조회
@@ -94,6 +98,32 @@ ItsButton.Event('btn_GRP_PLAN_RPT').onClick = function () {
     var rpt = new ItsXtraRpt('EQM1001_S05A');
     rpt.FileName('제조설비_정기점검계획서');
     rpt.AddParam('EQMGRP', planCode);
+    rpt.CallPop();
+    if (rpt.isError) {
+        ItsMsg.Alert(rpt.errMessage);
+    }
+};
+
+// 2026-10-02 [설비별 점검계획 탭] 승인된 설비 점검계획서 출력 (최신 승인 REV 기준)
+ItsButton.Event('btn_EQM_PLAN_RPT').onClick = function () {
+    var rowIndex = ItsGrid.GetCurrentIndex('grid_EQM_PLAN');
+    var planCode = ItsGrid.GetValue('grid_EQM_PLAN', rowIndex, 'PLANCD');
+    var aprvStt = ItsGrid.GetValue('grid_EQM_PLAN', rowIndex, 'APRVSTT');
+
+    if (!planCode) {
+        ItsMsg.Toast('출력할 설비 점검계획을 선택해주세요.');
+        return;
+    }
+
+    if (aprvStt != 'A') {
+        ItsMsg.Toast('승인된 설비 점검계획만 출력할 수 있습니다.');
+        return;
+    }
+
+    var rpt = new ItsXtraRpt('EQM1001_S05A');
+    rpt.FileName('제조설비_정기점검계획서_' + planCode);
+    rpt.AddParam('PLANTP', 'E');
+    rpt.AddParam('FANO', planCode);
     rpt.CallPop();
     if (rpt.isError) {
         ItsMsg.Alert(rpt.errMessage);

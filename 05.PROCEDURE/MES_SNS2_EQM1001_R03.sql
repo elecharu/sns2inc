@@ -16,6 +16,7 @@
 -- 			2026-10-02 					한성수	주기관리 월별 점검자를 사원코드로 저장·조회 (월 칸은 사원명 표시, MxxCD는 저장값, 기존 사원명 저장값은 그대로 표시)
 -- 			2026-10-02 					한성수	조회 성능 개선 (주기관리 조회 정기점검 설비 사전집계, 미등록 항목 조회 교차조인 제거, 설비별 복사 일괄 등록)
 -- 			2026-10-02 					한성수	주기관리 저장·삭제 시 정기점검 실적이 있는 월은 점검자 변경·삭제 불가
+-- 			2026-10-02 					한성수	주기관리 조회 대상을 정기점검 등록과 같게 변경 (설비의 최신 승인 리비전에 정기점검 항목이 있는 설비)
 -- *****************************************************************************
   IN $FANO           VARCHAR(20),
   IN $FANO_COPY      VARCHAR(20),
@@ -667,15 +668,7 @@ WHEN 'LIST_CYCLE_EQMCD' THEN -- 설비별 월별 점검계획 조회
   LEFT JOIN CHKPLANEQM_YEARPLAN 
          ON CHKPLANEQM_YEARPLAN.EQMCD = MSTEQM.FANO
         AND CHKPLANEQM_YEARPLAN.YEAR = $SYEAR
-  -- 정기점검 항목이 있는 설비
-  INNER JOIN (
-    SELECT CHKPLANEQM.EQMCD
-    FROM CHKPLANEQM
-    WHERE CHKPLANEQM.CHKTP = '02'
-    GROUP BY CHKPLANEQM.EQMCD
-  ) EQM02
-    ON EQM02.EQMCD = MSTEQM.FANO
-  -- 설비 승인 리비전이 있는 설비 (설비그룹이 있으면 설비그룹 승인 리비전도 필요)
+  -- 설비의 최신 승인 리비전에 정기점검 항목이 있고, 설비그룹이 있으면 설비그룹 승인 리비전도 있는 설비 (정기점검 등록 대상과 동일)
   LEFT JOIN (
     SELECT MSTEQMREV_HEADER.PLANCD
     FROM MSTEQMREV_HEADER
@@ -685,11 +678,22 @@ WHEN 'LIST_CYCLE_EQMCD' THEN -- 설비별 월별 점검계획 조회
   ) GRP_REV
     ON GRP_REV.PLANCD = MSTEQM.EQMGUBUN
   INNER JOIN (
-    SELECT MSTEQMREV_HEADER.PLANCD
-    FROM MSTEQMREV_HEADER
-    WHERE MSTEQMREV_HEADER.PLANTP = 'E'
-      AND MSTEQMREV_HEADER.APRVSTT = 'A'
-    GROUP BY MSTEQMREV_HEADER.PLANCD
+    SELECT EQM_LAST.PLANCD
+    FROM (
+      SELECT MSTEQMREV_HEADER.PLANCD,
+             MAX(MSTEQMREV_HEADER.REVNUM) AS REVNUM
+      FROM MSTEQMREV_HEADER
+      WHERE MSTEQMREV_HEADER.PLANTP = 'E'
+        AND MSTEQMREV_HEADER.APRVSTT = 'A'
+      GROUP BY MSTEQMREV_HEADER.PLANCD
+    ) EQM_LAST
+    INNER JOIN MSTEQMREV_HEADER LAST_REV
+      ON LAST_REV.PLANTP = 'E'
+     AND LAST_REV.PLANCD = EQM_LAST.PLANCD
+     AND LAST_REV.REVNUM = EQM_LAST.REVNUM
+    INNER JOIN MSTEQMREV_DETAIL
+      ON MSTEQMREV_DETAIL.REVCD = LAST_REV.REVCD
+    GROUP BY EQM_LAST.PLANCD
   ) EQM_REV
     ON EQM_REV.PLANCD = MSTEQM.FANO
  
