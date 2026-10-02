@@ -2,29 +2,30 @@
 -- *****************************************************************************
 -- Comment: 설비점검계획 승인관리
 -- Create:  2026-09-22  한성수  설비그룹·설비별 정기점검 계획 승인, 반려 및 계획서 출력 데이터 조회
--- 			2026-09-23	한성수  승인자 조회 추가 
+-- Modify:		2026-09-23	한성수  승인자 조회 추가
 -- 			2026-09-29	한성수  반려 시 승인자 비움 처리 및 설비별 승인자 조회 추가
 -- 			2026-09-30	한성수  점검계획 리비전(REV) 이력·항목 조회, 개정내용 저장, 승인 시 승인본 저장 추가 및 승인 테이블 이름 변경
 -- 			2026-09-30	한성수  리비전 승인본 항목 조회에 점검항목·점검방법·점검값구분 코드명 반환 추가
 -- 			2026-10-01	한성수  설비그룹 승인 시 반려된 소속 설비가 있으면 승인 불가 및 해당 설비 안내
 -- 			2026-10-01	한성수  리비전 키(REVCD) 발번 및 승인본을 리비전 키 기준으로 저장·조회, 설비그룹 승인본은 점검항목 단위로 저장
+-- 			2026-10-02	한성수  Modify 이력 표기 및 파라미터·변수 선언 정렬
 -- *****************************************************************************
-  IN $EQMGRP       VARCHAR(50),
-  IN $FANO          VARCHAR(50),
-  IN $PLANTP        CHAR(1),
-  IN $PLANCD        VARCHAR(50),
-  IN $APRVSTT       CHAR(1),
-  IN $REJREASON     VARCHAR(1000),
-  IN $REVNUM        VARCHAR(20),
-  IN $REMARK        VARCHAR(1000),
+  IN $EQMGRP     VARCHAR(50),
+  IN $FANO       VARCHAR(50),
+  IN $PLANTP     CHAR(1),
+  IN $PLANCD     VARCHAR(50),
+  IN $APRVSTT    CHAR(1),
+  IN $REJREASON  VARCHAR(1000),
+  IN $REVNUM     VARCHAR(20),
+  IN $REMARK     VARCHAR(1000),
 
 -- *****************************************************************************
-  IN $CALLTYPE      VARCHAR(50),
-  IN $KEYWORD       VARCHAR(1000)
+  IN $CALLTYPE   VARCHAR(50),
+  IN $KEYWORD    VARCHAR(1000)
 )
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 -- *****************************************************************************
-  DECLARE _$APRVSTT CHAR(1);
+  DECLARE _$APRVSTT        CHAR(1);
   DECLARE _$UNAPPROVED_CNT INT DEFAULT 0;
   DECLARE _$REVNUM         INT;
   DECLARE _$REVCD          VARCHAR(20);

@@ -117,6 +117,7 @@ ItsGrid.Event('grid1').onDoubleClick = function (rowindex, field) {
 // 2026-09-16 정기점검 등록 모달(pop1) 상단 패널 초기화 및 해당 설비의 점검항목 목록(grid2) 조회
 var LIST_CHKPLANEQM_EQM02 = function (EQMCD, YYYYMM) {
     ItsPage.InitData('pdiv1');
+    // 2026-09-30 [정기점검 등록 팝업] 이전에 연 팝업의 적용 REV·승인 대기 안내 초기화
     ShowPlanRev([]);
 
     var maria = new ItsMaria('EQM1001_R04', 'LIST_CHKPLANEQM_EQM02');
@@ -136,7 +137,9 @@ var LIST_CHKPLANEQM_EQM02 = function (EQMCD, YYYYMM) {
     ItsText.SetValue('txt_YYYYMM', YYYYMM);
 
     ItsGrid.SetStore('grid2', maria.store);
+    // 2026-09-30 [정기점검 등록 팝업] 적용 REV 보관 및 승인 대기 안내 표시
     ShowPlanRev(maria.store.data);
+    // 2026-10-01 [정기점검 등록 팝업] 주기관리에서 지정한 해당 월 점검자 기본 지정
     ShowPlanEmp(maria.store.data);
 };
 
@@ -180,6 +183,8 @@ var SEARCH_CHKRSTEQM = function (EQMCD, YYYYMM) {
 
     ItsPage.SetStore('pdiv3', maria.store.data[0]);
     ItsText.SetValue('pop2_txt_YYYYMM', YYYYMM);
+    // 2026-09-30 정기점검 수정 모달(pop2) 실적에 기록된 적용 REV 표시 (REV 관리 이전 실적은 빈 값)
+    // 2026-10-02 [정기점검 수정 팝업] 적용 REV는 상단 라벨 대신 항목 그리드(grid3) '적용 REV' 칸에 표시
     ItsGrid.SetStore('grid3', maria.storeExtend1);
 };
 

@@ -10,25 +10,26 @@
 -- 			2026-10-01 					한성수	설비그룹이 없는 설비도 설비 승인만으로 정기점검 조회·등록·수정·삭제 가능
 -- 			2026-10-01 					한성수	정기점검 등록 팝업에 주기관리에서 지정한 해당 월 점검자 반환
 -- 			2026-10-02 					한성수	정기점검 수정 조회 항목 결과에 실적의 적용 리비전(REVNM) 반환
+-- 			2026-10-02 					한성수	파라미터·변수 선언 정렬, 표준 구분선 및 단건 조회 LIMIT 1 적용
 -- *****************************************************************************
-  IN $SYEAR         VARCHAR(50),
-  IN $YYYYMM         VARCHAR(50),
+  IN $SYEAR           VARCHAR(50),
+  IN $YYYYMM          VARCHAR(50),
 
-  IN $EQMCD         VARCHAR(20),
-  IN $CHKRSTKEY     VARCHAR(20),
-  IN $CHKKNDCD_LIST MEDIUMTEXT,
-  IN $CHKKNDNM_LIST MEDIUMTEXT,
-  IN $CHKLOC_LIST   MEDIUMTEXT,
-  IN $CHKMTH_LIST   MEDIUMTEXT,
-  IN $CHKVALTP_LIST MEDIUMTEXT,
-  IN $CHKCYCLE_LIST MEDIUMTEXT,
-  IN $CHKVALUE_LIST MEDIUMTEXT,
+  IN $EQMCD           VARCHAR(20),
+  IN $CHKRSTKEY       VARCHAR(20),
+  IN $CHKKNDCD_LIST   MEDIUMTEXT,
+  IN $CHKKNDNM_LIST   MEDIUMTEXT,
+  IN $CHKLOC_LIST     MEDIUMTEXT,
+  IN $CHKMTH_LIST     MEDIUMTEXT,
+  IN $CHKVALTP_LIST   MEDIUMTEXT,
+  IN $CHKCYCLE_LIST   MEDIUMTEXT,
+  IN $CHKVALUE_LIST   MEDIUMTEXT,
     
-  IN $BASEDATE      VARCHAR(50),
-  IN $EMPCD         VARCHAR(20),
-  IN $PROBLEM       VARCHAR(1000),
-  IN $SOLUTION      VARCHAR(1000),
-  IN $REVCD         VARCHAR(20),
+  IN $BASEDATE        VARCHAR(50),
+  IN $EMPCD           VARCHAR(20),
+  IN $PROBLEM         VARCHAR(1000),
+  IN $SOLUTION        VARCHAR(1000),
+  IN $REVCD           VARCHAR(20),
 
   
   IN $CHKRSTKEY_LIST  MEDIUMTEXT,
@@ -42,20 +43,20 @@ IN  $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 -- SET @DEBUGLOGYN = 'Y'; 
 -- *****************************************************************************
-  DECLARE _$CHKKNDCD  VARCHAR(100);
-  DECLARE _$CHKKNDNM  VARCHAR(100);
-  DECLARE _$CHKLOC    VARCHAR(100);
-  DECLARE _$CHKMTH    VARCHAR(100);
-  DECLARE _$CHKVALTP  VARCHAR(100);
-  DECLARE _$CHKCYCLE  VARCHAR(100);
-  DECLARE _$CHKVALUE  VARCHAR(100);
-  DECLARE _$CHKRSTKEY VARCHAR(100);
+  DECLARE _$CHKKNDCD     VARCHAR(100);
+  DECLARE _$CHKKNDNM     VARCHAR(100);
+  DECLARE _$CHKLOC       VARCHAR(100);
+  DECLARE _$CHKMTH       VARCHAR(100);
+  DECLARE _$CHKVALTP     VARCHAR(100);
+  DECLARE _$CHKCYCLE     VARCHAR(100);
+  DECLARE _$CHKVALUE     VARCHAR(100);
+  DECLARE _$CHKRSTKEY    VARCHAR(100);
 
-  DECLARE _$EMPCD     VARCHAR(20);
-  DECLARE _$PROBLEM   VARCHAR(1000);
-  DECLARE _$SOLUTION  VARCHAR(1000);
+  DECLARE _$EMPCD        VARCHAR(20);
+  DECLARE _$PROBLEM      VARCHAR(1000);
+  DECLARE _$SOLUTION     VARCHAR(1000);
 
-  DECLARE _$SORTNO    DECIMAL(20, 8);
+  DECLARE _$SORTNO       DECIMAL(20, 8);
   DECLARE _$PLANAPRV_CNT INT DEFAULT 0;
   DECLARE _$REVNUM       INT;
   DECLARE _$PENDREVNUM   INT;
@@ -333,7 +334,7 @@ WHEN 'LIST_CYCLE_EQMCD' THEN  -- 정기점검 계획조회
     
   GROUP BY MSTEQM.FANO
   ORDER BY MSTEQM.FANO;
--- * ***************************************************************************
+-- *****************************************************************************
 WHEN 'LIST_CHKPLANEQM_EQM02' THEN -- 정기점검계획 조회 (설비 승인 리비전 승인본)
 
   -- 적용 리비전: 설비의 승인된 최신 리비전 (설비그룹도 승인 리비전이 있어야 함)
@@ -360,7 +361,8 @@ WHEN 'LIST_CHKPLANEQM_EQM02' THEN -- 정기점검계획 조회 (설비 승인 �
   FROM MSTEQMREV_HEADER
   WHERE MSTEQMREV_HEADER.PLANTP = 'E'
     AND MSTEQMREV_HEADER.PLANCD = $EQMCD
-    AND MSTEQMREV_HEADER.REVNUM = _$REVNUM;
+    AND MSTEQMREV_HEADER.REVNUM = _$REVNUM
+  LIMIT 1;
 
   -- 진행 중(대기·반려)인 다음 리비전 안내용
   SET _$PENDREVNUM = (SELECT MSTEQMREV_HEADER.REVNUM
@@ -370,7 +372,7 @@ WHEN 'LIST_CHKPLANEQM_EQM02' THEN -- 정기점검계획 조회 (설비 승인 �
                         AND MSTEQMREV_HEADER.APRVSTT <> 'A'
                       LIMIT 1);
 
-  -- 주기관리에서 지정한 해당 월 점검자 (월 칸에 점검자명 저장, 사원코드로 저장된 경우도 처리, 동명이인이면 지정하지 않음)
+  -- 주기관리에서 지정한 해당 월 점검자 (사원코드 우선, 예전 사원명 저장값은 사원 1명과 일치할 때만)
   SET _$PLANEMP = (SELECT ELT(CAST(RIGHT($YYYYMM, 2) AS UNSIGNED),
                               CHKPLANEQM_YEARPLAN.MONTH_01, CHKPLANEQM_YEARPLAN.MONTH_02, CHKPLANEQM_YEARPLAN.MONTH_03,
                               CHKPLANEQM_YEARPLAN.MONTH_04, CHKPLANEQM_YEARPLAN.MONTH_05, CHKPLANEQM_YEARPLAN.MONTH_06,
@@ -490,7 +492,7 @@ WHEN 'ADD_CHKRSTEQM' THEN -- 정기점검 등록
     CALL COMSPLIT($CHKCYCLE_LIST, _$CHKCYCLE);  
     CALL COMSPLIT($CHKVALUE_LIST, _$CHKVALUE);
    
-    SET _$SORTNO = (SELECT SORTNO FROM MSTEQMREV_DETAIL WHERE REVCD = $REVCD AND CHKKNDCD = _$CHKKNDCD); 
+    SET _$SORTNO = (SELECT SORTNO FROM MSTEQMREV_DETAIL WHERE REVCD = $REVCD AND CHKKNDCD = _$CHKKNDCD LIMIT 1); 
          
     INSERT INTO CHKRSTEQMKND (
     CHKRSTKEY, CHKKNDCD, CHKKNDNM, CHKLOC, 
@@ -504,7 +506,7 @@ WHEN 'ADD_CHKRSTEQM' THEN -- 정기점검 등록
   
   END WHILE;
 
--- * ***************************************************************************
+-- *****************************************************************************
 WHEN 'SEARCH_CHKRSTEQM' THEN  -- 해당월의 정기점검 조회
 
   IF $EQMCD = '' THEN

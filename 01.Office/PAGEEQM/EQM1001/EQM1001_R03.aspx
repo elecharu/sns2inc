@@ -100,6 +100,7 @@
                             <Its:button runat="server" Label="추가" ID="bdiv3_btn_ADD" MarginLeft="10" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="저장" ID="bdiv3_btn_SAVE" MarginLeft="10" BackColor="CustomButton" />
                             <Its:button runat="server" Label="삭제" ID="bdiv3_btn_DEL" MarginLeft="10" BackColor="CustomButton3" />
+                            <%-- 2026-09-30 설비별 점검계획 탭: 설비 수정 시 소속 설비그룹 계획서도 승인 대기가 된다는 안내 --%>
                             <Its:label runat="server" Text="※ 설비별 수정은 소속 설비그룹 계획서도 함께 승인 대기가 됩니다." ID="lbl_EQM_REV_INFO" ForeColor="BlueDark1" MarginLeft="20"/>
                         </Its:div>
 

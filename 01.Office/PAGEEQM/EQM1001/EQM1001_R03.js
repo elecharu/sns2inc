@@ -139,6 +139,19 @@ ItsPage.Load = function () {
         column.create('10월', 'M10', { width: 80, align: 'center', readOnly: true }),
         column.create('11월', 'M11', { width: 80, align: 'center', readOnly: true }),
         column.create('12월', 'M12', { width: 80, align: 'center', readOnly: true }),
+        // 2026-10-02 [정기점검 주기관리 탭] 월별 점검자 사원코드 (저장값, 월 칸은 사원명 표시)
+        column.create('1월점검자', 'M01CD', { hidden: true }),
+        column.create('2월점검자', 'M02CD', { hidden: true }),
+        column.create('3월점검자', 'M03CD', { hidden: true }),
+        column.create('4월점검자', 'M04CD', { hidden: true }),
+        column.create('5월점검자', 'M05CD', { hidden: true }),
+        column.create('6월점검자', 'M06CD', { hidden: true }),
+        column.create('7월점검자', 'M07CD', { hidden: true }),
+        column.create('8월점검자', 'M08CD', { hidden: true }),
+        column.create('9월점검자', 'M09CD', { hidden: true }),
+        column.create('10월점검자', 'M10CD', { hidden: true }),
+        column.create('11월점검자', 'M11CD', { hidden: true }),
+        column.create('12월점검자', 'M12CD', { hidden: true }),
         column.split()
     ]);
     // 공통 정기점검 추가 팝업: 점검항목 목록 초기화
@@ -174,6 +187,7 @@ ItsButton.EventSearch = function (targetEqmGubun) {
 
     if (selectedTabIndex == 0) {
         // 설비그룹 점검계획 탭: CRUD 후 대상 셀, 일반 조회 후 첫 행 포커스
+        // 2026-09-30 [설비그룹 점검계획 탭] 재조회 시 개정 이력(REV) 그리드 초기화
         ItsGrid.Clear('grid_GRP_REV');
         ItsGrid.Clear('grid_GRP2');
         // 2026-09-30 [설비그룹 점검계획 탭] 이전 REV 조회 중 재조회해도 정기점검 버튼·제목·편집 상태 초기화 (조회 0건 대비)
@@ -194,7 +208,7 @@ ItsButton.EventSearch = function (targetEqmGubun) {
     }
     else if (selectedTabIndex == 1) {
         // 설비별 점검계획 탭: 데이터 조회
-        ItsGrid.Clear('grid1');
+        // 2026-10-02 [설비별 점검계획 탭] 저장·추가 후 재조회 시 선택 설비(Setkey)가 빈 목록에 소모되지 않도록 설비 목록은 미리 비우지 않음 (조회 결과로 교체)
         ItsGrid.Clear('grid_EQM_REV');
         ItsGrid.Clear('grid3');
         // 2026-09-30 [설비별 점검계획 탭] 이전 REV 조회 중 재조회해도 정기점검 버튼·제목·편집 상태 초기화 (조회 0건 대비)
@@ -261,6 +275,7 @@ function FocusGroupPlanCheckCell(targetEqmGubun) {
 // 설비그룹 점검계획 탭: 재조회 후 대상 정기점검 셀 포커스
 function RefreshGroupPlan(targetEqmGubun) {
     ItsButton.EventSearch(targetEqmGubun);
+    // 2026-09-30 [설비그룹 점검계획 탭] 재조회 후 개정 이력(REV) 그리드 맨 위 REV로 포커스
     FocusPlanRev('G');
 }
 
@@ -546,6 +561,7 @@ ItsButton.Event('bdiv3_btn_SAVE').onClick = function () {
         ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
         ItsGrid.Setkey('grid1', 'FANO', selectedEquipmentCode);
         ItsButton.EventSearch();
+        // 2026-09-30 [설비별 점검계획 탭] 재조회 후 개정 이력(REV) 그리드 맨 위 REV로 포커스
         FocusPlanRev('E');
     }, function () {
         ItsMsg.Toast('저장이 취소되었습니다.');
@@ -579,6 +595,7 @@ ItsButton.Event('bdiv3_btn_DEL').onClick = function () {
         ItsMsg.Toast(ItsMsg.CommonMsg.DeleteComplete());
         ItsGrid.Setkey('grid1', 'FANO', selectedEquipmentCode);
         ItsButton.EventSearch();
+        // 2026-09-30 [설비별 점검계획 탭] 재조회 후 개정 이력(REV) 그리드 맨 위 REV로 포커스
         FocusPlanRev('E');
     }, function () {
         ItsMsg.Toast('삭제가 취소되었습니다.');
@@ -653,6 +670,7 @@ ItsButton.Event('btn_COPY_EQM02').onClick = function () {
             ItsGrid.Setkey('grid1', 'FANO', targetEquipmentCode);
         }
         ItsButton.EventSearch();
+        // 2026-09-30 [설비별 점검계획 탭] 재조회 후 개정 이력(REV) 그리드 맨 위 REV로 포커스
         FocusPlanRev('E');
     }, function () {
         ItsMsg.Toast('복사가 취소되었습니다.');
@@ -680,7 +698,8 @@ ItsGrid.Event('grid9').onKeydown = function (rowIndex, field, keyCode) {
             field == 'M07' || field == 'M08' || field == 'M09' || field == 'M10' || field == 'M11' || field == 'M12') {
             var val = (ItsGrid.GetValue('grid9', rowIndex, field) || '').toString().trim();
             if (val !== '') {
-                ItsGrid.SetValue('grid9', rowIndex, field, '');
+                // 2026-10-02 [정기점검 주기관리 탭] 월 칸 점검자명·사원코드 함께 삭제
+                SetCycleEmp(rowIndex, field, '', '');
                 ItsGrid.CheckRow('grid9', rowIndex);
             }
         }
@@ -692,12 +711,14 @@ ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
     if (field == 'M01' || field == 'M02' || field == 'M03' || field == 'M04' || field == 'M05' || field == 'M06' ||
         field == 'M07' || field == 'M08' || field == 'M09' || field == 'M10' || field == 'M11' || field == 'M12') {
         var cellVal = (ItsGrid.GetValue('grid9', rowIndex, field) || '').toString().trim();
-        var empNm = (ItsFind.GetNameValue('find_EMP') || ItsFind.GetValue('find_EMP') || '').trim();
+        // 2026-10-02 [정기점검 주기관리 탭] 월 칸 저장값(사원코드)과 선택 점검자 사원코드·사원명
+        var cellCd = (ItsGrid.GetValue('grid9', rowIndex, field + 'CD') || '').toString().trim();
+        var emp = GetCycleEmp();
 
         // 점검자 미선택 시
-        if (!empNm) {
+        if (!emp.cd) {
             if (cellVal !== '') {
-                ItsGrid.SetValue('grid9', rowIndex, field, '');
+                SetCycleEmp(rowIndex, field, '', '');
                 ItsGrid.CheckRow('grid9', rowIndex);
             } else {
                 ItsMsg.Toast('점검자를 선택해주세요.');
@@ -705,15 +726,27 @@ ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
             return;
         }
 
-        // 동일 점검자 토글 삭제, 다른 점검자 설정
-        if (cellVal === empNm) {
-            ItsGrid.SetValue('grid9', rowIndex, field, '');
+        // 2026-10-02 [정기점검 주기관리 탭] 동일 점검자(사원코드 기준, 동명이인 구분) 토글 삭제, 다른 점검자 설정
+        if (cellCd === emp.cd) {
+            SetCycleEmp(rowIndex, field, '', '');
         } else {
-            ItsGrid.SetValue('grid9', rowIndex, field, empNm);
+            SetCycleEmp(rowIndex, field, emp.cd, emp.nm);
         }
         ItsGrid.CheckRow('grid9', rowIndex);
     }
 };
+
+// 2026-10-02 [정기점검 주기관리 탭] 선택한 점검자 사원코드·사원명 (사원명이 없으면 사원코드)
+function GetCycleEmp() {
+    var cd = (ItsFind.GetValue('find_EMP') || '').trim();
+    return { cd: cd, nm: cd ? ((ItsFind.GetNameValue('find_EMP') || '').trim() || cd) : '' };
+}
+
+// 2026-10-02 [정기점검 주기관리 탭] 월 칸에 점검자 설정 (화면은 사원명, 저장은 사원코드)
+function SetCycleEmp(rowIndex, field, empCd, empNm) {
+    ItsGrid.SetValue('grid9', rowIndex, field, empNm);
+    ItsGrid.SetValue('grid9', rowIndex, field + 'CD', empCd);
+}
 
 // 2026-09-29 [정기점검 주기관리 탭] 일괄 주기설정 팝업 열기
 ItsButton.Event('btn_OPEN_CYCLE_BATCH').onClick = function () {
@@ -816,7 +849,8 @@ ItsButton.Event('btn_SAVE_BATCH').onClick = function () {
         if (ItsGrid.IsChecked('grid9', i)) {
             saveCnt++;
             for (var m = 0; m < arrSelMonth.length; m++) {
-                ItsGrid.SetValue('grid9', i, arrSelMonth[m], empNm);
+                // 2026-10-02 [일괄 주기설정 팝업] 선택 월에 점검자명·사원코드 함께 설정
+                SetCycleEmp(i, arrSelMonth[m], ItsFind.GetValue('find_EMP').trim(), empNm);
             }
             ItsGrid.CheckRow('grid9', i);
         }
@@ -825,24 +859,25 @@ ItsButton.Event('btn_SAVE_BATCH').onClick = function () {
     ItsPop.Close('pop_CYCLE_BATCH');
 
     // 연간 점검계획 즉시 저장
+    // 2026-10-02 [일괄 주기설정 팝업] 월별 점검자는 사원코드(MxxCD) 저장
     var maria = new ItsMaria('EQM1001_R03', 'SAVE_CYCLE_EQMCD');
 
     for (var i = 0; i < ItsGrid.Length('grid9'); i++) {
         if (ItsGrid.IsChecked('grid9', i)) {
             maria.AddList('FANO_LIST', ItsGrid.GetValue('grid9', i, 'FANO'));
             maria.AddList('YEAR_LIST', ItsGrid.GetValue('grid9', i, 'YEAR'));
-            maria.AddList('M01_LIST', ItsGrid.GetValue('grid9', i, 'M01'));
-            maria.AddList('M02_LIST', ItsGrid.GetValue('grid9', i, 'M02'));
-            maria.AddList('M03_LIST', ItsGrid.GetValue('grid9', i, 'M03'));
-            maria.AddList('M04_LIST', ItsGrid.GetValue('grid9', i, 'M04'));
-            maria.AddList('M05_LIST', ItsGrid.GetValue('grid9', i, 'M05'));
-            maria.AddList('M06_LIST', ItsGrid.GetValue('grid9', i, 'M06'));
-            maria.AddList('M07_LIST', ItsGrid.GetValue('grid9', i, 'M07'));
-            maria.AddList('M08_LIST', ItsGrid.GetValue('grid9', i, 'M08'));
-            maria.AddList('M09_LIST', ItsGrid.GetValue('grid9', i, 'M09'));
-            maria.AddList('M10_LIST', ItsGrid.GetValue('grid9', i, 'M10'));
-            maria.AddList('M11_LIST', ItsGrid.GetValue('grid9', i, 'M11'));
-            maria.AddList('M12_LIST', ItsGrid.GetValue('grid9', i, 'M12'));
+            maria.AddList('M01_LIST', ItsGrid.GetValue('grid9', i, 'M01CD'));
+            maria.AddList('M02_LIST', ItsGrid.GetValue('grid9', i, 'M02CD'));
+            maria.AddList('M03_LIST', ItsGrid.GetValue('grid9', i, 'M03CD'));
+            maria.AddList('M04_LIST', ItsGrid.GetValue('grid9', i, 'M04CD'));
+            maria.AddList('M05_LIST', ItsGrid.GetValue('grid9', i, 'M05CD'));
+            maria.AddList('M06_LIST', ItsGrid.GetValue('grid9', i, 'M06CD'));
+            maria.AddList('M07_LIST', ItsGrid.GetValue('grid9', i, 'M07CD'));
+            maria.AddList('M08_LIST', ItsGrid.GetValue('grid9', i, 'M08CD'));
+            maria.AddList('M09_LIST', ItsGrid.GetValue('grid9', i, 'M09CD'));
+            maria.AddList('M10_LIST', ItsGrid.GetValue('grid9', i, 'M10CD'));
+            maria.AddList('M11_LIST', ItsGrid.GetValue('grid9', i, 'M11CD'));
+            maria.AddList('M12_LIST', ItsGrid.GetValue('grid9', i, 'M12CD'));
             maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid9', i, 'REMARK'));
         }
     }
@@ -866,24 +901,25 @@ ItsButton.Event('div_SAVE_CYCLE_EQM').onClick = function () {
     }
 
     ItsMsg.Confirm('선택하신 항목을 저장하시겠습니까?', function () {
+        // 2026-10-02 [정기점검 주기관리 탭] 월별 점검자는 사원코드(MxxCD) 저장
         var maria = new ItsMaria('EQM1001_R03', 'SAVE_CYCLE_EQMCD');
 
         for (var i = 0; i < ItsGrid.Length('grid9'); i++) {
             if (ItsGrid.IsChecked('grid9', i)) {
                 maria.AddList('FANO_LIST', ItsGrid.GetValue('grid9', i, 'FANO'));
                 maria.AddList('YEAR_LIST', ItsGrid.GetValue('grid9', i, 'YEAR'));
-                maria.AddList('M01_LIST', ItsGrid.GetValue('grid9', i, 'M01'));
-                maria.AddList('M02_LIST', ItsGrid.GetValue('grid9', i, 'M02'));
-                maria.AddList('M03_LIST', ItsGrid.GetValue('grid9', i, 'M03'));
-                maria.AddList('M04_LIST', ItsGrid.GetValue('grid9', i, 'M04'));
-                maria.AddList('M05_LIST', ItsGrid.GetValue('grid9', i, 'M05'));
-                maria.AddList('M06_LIST', ItsGrid.GetValue('grid9', i, 'M06'));
-                maria.AddList('M07_LIST', ItsGrid.GetValue('grid9', i, 'M07'));
-                maria.AddList('M08_LIST', ItsGrid.GetValue('grid9', i, 'M08'));
-                maria.AddList('M09_LIST', ItsGrid.GetValue('grid9', i, 'M09'));
-                maria.AddList('M10_LIST', ItsGrid.GetValue('grid9', i, 'M10'));
-                maria.AddList('M11_LIST', ItsGrid.GetValue('grid9', i, 'M11'));
-                maria.AddList('M12_LIST', ItsGrid.GetValue('grid9', i, 'M12'));
+                maria.AddList('M01_LIST', ItsGrid.GetValue('grid9', i, 'M01CD'));
+                maria.AddList('M02_LIST', ItsGrid.GetValue('grid9', i, 'M02CD'));
+                maria.AddList('M03_LIST', ItsGrid.GetValue('grid9', i, 'M03CD'));
+                maria.AddList('M04_LIST', ItsGrid.GetValue('grid9', i, 'M04CD'));
+                maria.AddList('M05_LIST', ItsGrid.GetValue('grid9', i, 'M05CD'));
+                maria.AddList('M06_LIST', ItsGrid.GetValue('grid9', i, 'M06CD'));
+                maria.AddList('M07_LIST', ItsGrid.GetValue('grid9', i, 'M07CD'));
+                maria.AddList('M08_LIST', ItsGrid.GetValue('grid9', i, 'M08CD'));
+                maria.AddList('M09_LIST', ItsGrid.GetValue('grid9', i, 'M09CD'));
+                maria.AddList('M10_LIST', ItsGrid.GetValue('grid9', i, 'M10CD'));
+                maria.AddList('M11_LIST', ItsGrid.GetValue('grid9', i, 'M11CD'));
+                maria.AddList('M12_LIST', ItsGrid.GetValue('grid9', i, 'M12CD'));
                 maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid9', i, 'REMARK'));
             }
         }
@@ -985,6 +1021,7 @@ ItsButton.Event('btn_ADD_EQM02').onClick = function () {
             ItsGrid.Setkey('grid1', 'FANO', selectedEquipmentCode);
         }
         ItsButton.EventSearch();
+        // 2026-09-30 [설비별 점검계획 탭] 재조회 후 개정 이력(REV) 그리드 맨 위 REV로 포커스
         FocusPlanRev('E');
     }
 };
