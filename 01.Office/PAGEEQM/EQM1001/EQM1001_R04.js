@@ -196,14 +196,7 @@ var SEARCH_CHKRSTEQM = function (EQMCD, YYYYMM) {
 
 // 2026-09-16 정기점검 등록 모달(pop1) 상단 입력값 및 그리드(grid2) 점검값 저장
 ItsPop.Event('pop1').onAddBtnClick = function () {
-    var CHKPLANEQM = ItsGrid.Length('grid2');
-
-    if (CHKPLANEQM == 0) {
-        ItsMsg.Toast('해당설비의 정기점검 계획이 존재하지 않습니다.');
-        ItsPop.Event('pop1').onCancelBtnClick();
-        return;
-    }
-
+    // 2026-10-02 [정기점검 등록 팝업] 점검 항목 유무·점검값 필수 확인은 프로시저(ADD_CHKRSTEQM)에서 처리
     var maria = new ItsMaria('EQM1001_R04', 'ADD_CHKRSTEQM');
 
     maria.AddPanel('pdiv1');
@@ -239,6 +232,7 @@ ItsPop.Event('pop1').onCancelBtnClick = function () {
 
 // 2026-09-16 정기점검 수정 모달(pop2) 상단 수정값 및 그리드(grid3) 점검값 저장
 ItsPop.Event('pop2').onAddBtnClick = function () {
+    // 2026-10-02 [정기점검 수정 팝업] 점검값 필수 확인은 프로시저(SAVE_CHKRSTEQM)에서 처리
     var maria = new ItsMaria('EQM1001_R04', 'SAVE_CHKRSTEQM');
 
     maria.AddPanel('pdiv3');

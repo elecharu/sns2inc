@@ -348,16 +348,7 @@ ItsButton.Event('btn_COPY_GRP_EQM02').onClick = function () {
     var targetGroupRowIndex = ItsGrid.GetCurrentIndex('grid_GRP1');
     var targetEqmGubun = ItsGrid.GetValue('grid_GRP1', targetGroupRowIndex, 'EQMGUBUN');
 
-    if (!sourceEquipmentCode) {
-        ItsMsg.Toast('복사할 설비그룹을 선택해주세요.');
-        return;
-    }
-
-    if (!targetEqmGubun) {
-        ItsMsg.Toast('설비그룹을 먼저 선택해주세요.');
-        return;
-    }
-
+    // 2026-10-02 [설비그룹 복사 팝업] 복사 원본·대상 설비그룹 지정 확인은 프로시저(COPY_GRP_EQM02)에서 처리
     ItsMsg.Confirm('선택한 설비그룹의 정기점검 항목을 현재 설비그룹의 모든 설비로 일괄 복사하시겠습니까?', function () {
         var maria = new ItsMaria('EQM1001_R03', 'COPY_GRP_EQM02');
         maria.AddParam('EQMGRP', targetEqmGubun);
@@ -417,11 +408,7 @@ ItsButton.Event('bdiv_GRP_btn_SAVE').onClick = function () {
     var curIdx = ItsGrid.GetCurrentIndex('grid_GRP1');
     var selectedEqmGubun = ItsGrid.GetValue('grid_GRP1', curIdx, 'EQMGUBUN');
 
-    if (!selectedEqmGubun) {
-        ItsMsg.Toast('설비그룹을 먼저 선택해주세요.');
-        return;
-    }
-
+    // 2026-10-02 [설비그룹 점검계획 탭] 설비그룹 지정 확인은 프로시저(SAVE_GRP_EQM02)에서 처리
     var confirmationMessage = '선택하신 점검항목을 해당 설비그룹의 모든 설비에 일괄 저장하시겠습니까?';
 
     ItsMsg.Confirm(confirmationMessage, function () {
@@ -462,11 +449,7 @@ ItsButton.Event('bdiv_GRP_btn_DEL').onClick = function () {
     var curIdx = ItsGrid.GetCurrentIndex('grid_GRP1');
     var selectedEqmGubun = ItsGrid.GetValue('grid_GRP1', curIdx, 'EQMGUBUN');
 
-    if (!selectedEqmGubun) {
-        ItsMsg.Toast('설비그룹을 먼저 선택해주세요.');
-        return;
-    }
-
+    // 2026-10-02 [설비그룹 점검계획 탭] 설비그룹 지정 확인은 프로시저(DEL_GRP_EQM02)에서 처리
     var confirmationMessage = '선택한 점검항목을 해당 설비그룹의 모든 설비에서 일괄 삭제하시겠습니까?';
 
     ItsMsg.Confirm(confirmationMessage, function () {
@@ -649,11 +632,7 @@ ItsButton.Event('btn_COPY_EQM02').onClick = function () {
     var sourceEquipmentCode = ItsGrid.GetValue('grid7', ItsGrid.GetCurrentIndex('grid7'), 'FANO');
     var targetEquipmentCode = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'FANO');
 
-    if (!sourceEquipmentCode) {
-        ItsMsg.Toast('복사 대상 설비를 선택해주세요.');
-        return;
-    }
-
+    // 2026-10-02 [설비별 복사 팝업] 복사 원본·대상 설비 지정 확인은 프로시저(COPY_EQM02)에서 처리
     ItsMsg.Confirm('선택한 항목을 복사하시겠습니까?', function () {
         var maria = new ItsMaria('EQM1001_R03', 'COPY_EQM02');
         maria.AddParam('FANO', targetEquipmentCode);
@@ -983,10 +962,7 @@ ItsButton.Event('btn_ADD_EQM02').onClick = function () {
     if (selectedTabIndex == 0) {
         var curIdx = ItsGrid.GetCurrentIndex('grid_GRP1');
         var selectedEqmGubun = ItsGrid.GetValue('grid_GRP1', curIdx, 'EQMGUBUN');
-        if (!selectedEqmGubun) {
-            ItsMsg.Toast('설비그룹을 먼저 선택해주세요.');
-            return;
-        }
+        // 2026-10-02 [정기점검 추가 팝업] 설비그룹 지정 확인은 프로시저(REG_GRP_EQM02)에서 처리
 
         maria = new ItsMaria('EQM1001_R03', 'REG_GRP_EQM02');
         maria.AddParam('EQMGRP', selectedEqmGubun);
@@ -1131,16 +1107,14 @@ function SavePlanRev(planTp) {
 
     ItsGrid.FinishEditing(gridId);
 
-    if (!planCd || ItsGrid.Length(gridId) == 0 || ItsGrid.GetValue(gridId, 0, 'APRVSTT') == 'A') {
-        ItsMsg.Toast('진행 중인 REV가 없습니다. 정기점검을 수정하면 새 REV가 생깁니다.');
-        return;
-    }
+    // 2026-10-02 [개정 이력 그리드] 진행 중 REV 확인은 프로시저(SAVE_PLAN_REV)에서 처리 (REV가 없으면 빈 값 전달)
+    var hasRev = ItsGrid.Length(gridId) > 0;
 
     var maria = new ItsMaria('EQM1001_R05', 'SAVE_PLAN_REV');
     maria.AddParam('PLANTP', planTp);
-    maria.AddParam('PLANCD', planCd);
-    maria.AddParam('REVNUM', ItsGrid.GetValue(gridId, 0, 'REVNUM'));
-    maria.AddParam('REMARK', ItsGrid.GetValue(gridId, 0, 'REMARK') || '');
+    maria.AddParam('PLANCD', planCd || '');
+    maria.AddParam('REVNUM', hasRev ? ItsGrid.GetValue(gridId, 0, 'REVNUM') : '');
+    maria.AddParam('REMARK', hasRev ? (ItsGrid.GetValue(gridId, 0, 'REMARK') || '') : '');
     maria.CallProc();
     if (maria.isError) {
         maria.ShowErrMsg();

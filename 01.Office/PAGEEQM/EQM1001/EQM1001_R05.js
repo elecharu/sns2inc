@@ -80,18 +80,13 @@ ItsButton.Event('btn_GRP_REJECT').onClick = function () {
 };
 
 // 설비그룹별 점검계획: 승인된 계획서 출력
+// 2026-10-02 [설비그룹별 점검계획 탭] 승인상태와 상관없이 계획서 출력 (승인 제한 제거)
 ItsButton.Event('btn_GRP_PLAN_RPT').onClick = function () {
     var rowIndex = ItsGrid.GetCurrentIndex('grid_GRP_PLAN');
     var planCode = ItsGrid.GetValue('grid_GRP_PLAN', rowIndex, 'PLANCD');
-    var approvalStatus = ItsGrid.GetValue('grid_GRP_PLAN', rowIndex, 'APRVSTT');
 
     if (!planCode) {
         ItsMsg.Toast('출력할 설비그룹 점검계획을 선택해주세요.');
-        return;
-    }
-
-    if (approvalStatus != 'A') {
-        ItsMsg.Toast('승인된 설비그룹 점검계획만 출력할 수 있습니다.');
         return;
     }
 
@@ -104,19 +99,13 @@ ItsButton.Event('btn_GRP_PLAN_RPT').onClick = function () {
     }
 };
 
-// 2026-10-02 [설비별 점검계획 탭] 승인된 설비 점검계획서 출력 (최신 승인 REV 기준)
+// 2026-10-02 [설비별 점검계획 탭] 설비 점검계획서 출력 (승인상태와 상관없이 출력, 승인 REV는 승인본·대기·반려는 현재 계획)
 ItsButton.Event('btn_EQM_PLAN_RPT').onClick = function () {
     var rowIndex = ItsGrid.GetCurrentIndex('grid_EQM_PLAN');
     var planCode = ItsGrid.GetValue('grid_EQM_PLAN', rowIndex, 'PLANCD');
-    var aprvStt = ItsGrid.GetValue('grid_EQM_PLAN', rowIndex, 'APRVSTT');
 
     if (!planCode) {
         ItsMsg.Toast('출력할 설비 점검계획을 선택해주세요.');
-        return;
-    }
-
-    if (aprvStt != 'A') {
-        ItsMsg.Toast('승인된 설비 점검계획만 출력할 수 있습니다.');
         return;
     }
 
@@ -163,25 +152,11 @@ function SavePlanStatus(approvalStatus) {
     var rowIndex = ItsGrid.GetCurrentIndex(tab.gridId);
     var planCode = ItsGrid.GetValue(tab.gridId, rowIndex, 'PLANCD');
     var revNm = ItsGrid.GetValue(tab.gridId, rowIndex, 'REVNM') || '';
-    var remark = ItsGrid.GetValue(tab.gridId, rowIndex, 'REMARK') || '';
     var rejectionReason = approvalStatus == 'R' ? ItsText.GetValue(tab.reasonId) : '';
     var isApprove = approvalStatus == 'A';
     var actionName = isApprove ? '승인' : '반려';
 
-    if (!planCode) {
-        ItsMsg.Toast(actionName + '할 점검계획을 선택해주세요.');
-        return;
-    }
-
-    if (!isApprove && !rejectionReason) {
-        ItsMsg.Toast('반려 사유를 입력해주세요.');
-        return;
-    }
-
-    if (isApprove && !remark) {
-        ItsMsg.Toast('개정내용이 없는 REV는 승인할 수 없습니다.');
-        return;
-    }
+    // 2026-10-02 [승인·반려 버튼] 대상 선택·반려사유·개정내용 확인은 프로시저(SAVE_PLAN_STATUS)에서 처리
 
     ItsMsg.Confirm('선택한 점검계획' + (revNm ? '(' + revNm + ')' : '') + '을 ' + actionName + '하시겠습니까?', function () {
         var maria = new ItsMaria('EQM1001_R05', 'SAVE_PLAN_STATUS');

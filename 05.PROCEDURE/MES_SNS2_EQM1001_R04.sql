@@ -12,6 +12,7 @@
 -- 			2026-10-02 					한성수	정기점검 수정 조회 항목 결과에 실적의 적용 리비전(REVNM) 반환
 -- 			2026-10-02 					한성수	조회 성능 개선 (월별 점검실적 확인을 연도별 1회 집계로 변경), 수정 조회 실적을 정기점검으로 한정
 -- 			2026-10-02 					한성수	정기점검 등록 시 같은 달 중복 등록 및 주기관리 점검자가 없는 달 등록 불가
+-- 			2026-10-02 					한성수	정기점검 등록·수정 시 점검 항목 유무와 점검값 필수 확인 (화면 확인을 프로시저로 이동)
 -- *****************************************************************************
   IN $SYEAR           VARCHAR(50),
   IN $YYYYMM          VARCHAR(50),
@@ -65,6 +66,9 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$PLANEMP      VARCHAR(100);
   DECLARE _$PLANEMPCD    VARCHAR(20);
   DECLARE _$PLANEMP_CNT  INT DEFAULT 0;
+  DECLARE _$NAME_LIST    MEDIUMTEXT;
+  DECLARE _$VALUE_LIST   MEDIUMTEXT;
+  DECLARE _$ROWNO        INT DEFAULT 0;
 
 CASE $CALLTYPE
 -- ****************************************************************************
@@ -250,6 +254,26 @@ WHEN 'ADD_CHKRSTEQM' THEN -- 정기점검 등록
     LEAVE PROC;
   END IF;
 
+  -- 점검 항목이 없거나 점검값이 빈 항목이 있으면 등록·저장 불가
+  IF COALESCE($CHKKNDCD_LIST, '') = '' THEN
+    CALL COMERR('정기점검 항목이 없습니다. 정기점검 계획을 확인해주세요.');
+    LEAVE PROC;
+  END IF;
+
+  SET _$NAME_LIST  = $CHKKNDNM_LIST;
+  SET _$VALUE_LIST = $CHKVALUE_LIST;
+  SET _$ROWNO      = 0;
+  WHILE LENGTH(_$NAME_LIST) > 0 DO
+    CALL COMSPLIT(_$NAME_LIST, _$CHKKNDNM);
+    CALL COMSPLIT(_$VALUE_LIST, _$CHKVALUE);
+    SET _$ROWNO = _$ROWNO + 1;
+
+    IF TRIM(COALESCE(_$CHKVALUE, '')) = '' THEN
+      CALL COMERR(CONCAT(_$ROWNO, '번째 항목(', COALESCE(_$CHKKNDNM, ''), ')의 점검값을 입력해주세요.'));
+      LEAVE PROC;
+    END IF;
+  END WHILE;
+
   IF COALESCE($REVCD, '') = '' THEN
     CALL COMERR('적용 REV가 없습니다. 정기점검 등록 창을 다시 열어주세요.');
     LEAVE PROC;
@@ -428,6 +452,26 @@ WHEN 'SAVE_CHKRSTEQM' THEN -- 정기점검 수정
     CALL COMERR('점검자를 선택해주세요.');
     LEAVE PROC;
   END IF;
+
+  -- 점검 항목이 없거나 점검값이 빈 항목이 있으면 등록·저장 불가
+  IF COALESCE($CHKKNDCD_LIST, '') = '' THEN
+    CALL COMERR('정기점검 항목이 없습니다. 정기점검 계획을 확인해주세요.');
+    LEAVE PROC;
+  END IF;
+
+  SET _$NAME_LIST  = $CHKKNDNM_LIST;
+  SET _$VALUE_LIST = $CHKVALUE_LIST;
+  SET _$ROWNO      = 0;
+  WHILE LENGTH(_$NAME_LIST) > 0 DO
+    CALL COMSPLIT(_$NAME_LIST, _$CHKKNDNM);
+    CALL COMSPLIT(_$VALUE_LIST, _$CHKVALUE);
+    SET _$ROWNO = _$ROWNO + 1;
+
+    IF TRIM(COALESCE(_$CHKVALUE, '')) = '' THEN
+      CALL COMERR(CONCAT(_$ROWNO, '번째 항목(', COALESCE(_$CHKKNDNM, ''), ')의 점검값을 입력해주세요.'));
+      LEAVE PROC;
+    END IF;
+  END WHILE;
 
   SELECT COUNT(*) INTO _$PLANAPRV_CNT
   FROM CHKRSTEQM
