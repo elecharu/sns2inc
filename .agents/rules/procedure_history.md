@@ -1,4 +1,8 @@
-﻿# Stored Procedure History Comment Rule (1일 1행 원칙)
+﻿---
+trigger: always_on
+---
+
+# Stored Procedure History Comment Rule (1일 1행 원칙)
 
 데이터베이스 저장 프로시저(`.sql`) 최상단 이력 주석(Comment / Modify) 작성 시 가독성 및 이력 추적성을 극대화하기 위해 다음 원칙을 준수합니다.
 
