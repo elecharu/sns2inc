@@ -1,11 +1,11 @@
 ﻿
 
 <%-- PAGE --%>
-<%@ Page Title="" Language="C#" MasterPageFile="~/Common/Master/MasterBase.master" AutoEventWireup="true" CodeFile="PRD1001_R01.aspx.cs" Inherits="PRD1001_R01" %>
+<%@ Page Title="" Language="C#" MasterPageFile="~/Common/Master/MasterBase.master" AutoEventWireup="true" CodeFile="PRD1001_R02.aspx.cs" Inherits="PRD1001_R02" %>
 
 <%-- HEAD --%>
 <asp:Content ContentPlaceHolderID="CPH_HEAD" runat="Server">
-    <script type="text/javascript" src="PRD1001_R01.js?ver=<%= BasePage.srcVersion %>"></script>
+    <script type="text/javascript" src="PRD1001_R02.js?ver=<%= BasePage.srcVersion %>"></script>
 </asp:Content>
 
 <asp:Content ContentPlaceHolderID="CPH_CUSTOM_BUTTON" runat="server">
@@ -16,7 +16,7 @@
 <%-- SEARCH PANEL --%>
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
-        <Its:dateRange runat="server" Label="조회일자" FieldFrom="SDATE" FieldTo="EDATE" />
+        <Its:month runat="server" Label="조회년월" Field="SMONTH" ID="sdiv1_mon_SMONTH" />
         <%--<Its:combo runat="server" Label="법인" InputWidth="130" Field="COMPANYCD" GPCD="COMPANYCD" ID="sdiv1_cmb_COMPANYCD" />--%>
         <Its:combo runat="server" Label="공장" Field="FACTORYCD" GPCD="FACTORYCD" ID="sdiv1_cmb_FACTORYCD" ReadOnly="true" Value="07"/>        
         <Its:find runat="server" Label="품목코드" Field="ITEMID" GPCD="ITEMID" ID="sdiv1_find_ITEMID" />

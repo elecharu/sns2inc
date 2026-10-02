@@ -1,0 +1,71 @@
+﻿<its:ItsPageTml xmlns:c1="http://schemas.componentone.com/winfx/2006/xaml"  
+                x:Class="TML1010.S02"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:TML1010"
+      xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
+      Width="900" Height="480">
+    <Canvas Background="WhiteSmoke">
+
+        <UserControl Canvas.Left="0" Canvas.Top="0" Style="{DynamicResource TML_PANEL}">
+            <its:WrapContent x:Name="PANEL_S1" Width="900" Height="30">
+                <its:Date Label="생산일자" Value="{Binding SDATE}"/>
+                <its:Date Label="" LabelWidth="0" Width="120" Value="{Binding EDATE}"/>
+                <its:Pop GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ShowKeyPad="True" x:Name="pop_CUSTCD"/>
+                <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True"/>
+                <its:Button Label="조회" Width="80" CommandName="SEL_RST"/>
+            </its:WrapContent>
+        </UserControl>
+        <UserControl Canvas.Left="0" Canvas.Top="30" Style="{DynamicResource TML_GRID}">
+            <its:Grid x:Name="GRID_G1" Width="900" Height="450">
+                <its:Grid.Columns>
+                    <its:Column Width="130" FieldName="PRDRSTKEY" Header="실적번호" ALGIN="Center"/>
+                    <its:Column Width="57" FieldName="RSTTIME" Header="생산일자" ALGIN="Center"/>
+                    <its:Column Width="120" FieldName="ITEMID" Header="품목ID" ALGIN="Center" Visible="False"/>
+                    <its:Column Width="120" FieldName="ITEMCD" Header="품목코드" ALGIN="Center"/>
+                    <its:Column Width="210" FieldName="ITEMNM" Header="품명" />
+                    <its:Column Width="40" FieldName="ITEMUNIT" Header="단위" ALGIN="Center" GPCD="DM150"/>
+                    <its:Column Width="90" FieldName="GOODQTY" Header="생산수량"  ALGIN="Right" DecimalPoint="0"/>
+                    <its:Column Width="90" FieldName="SAMPLEQTY" Header="시편수량"  ALGIN="Right" DecimalPoint="0"/>
+                    <its:Column Width="60" Header="생산실적 조회" CellType="Button" ButtonText="⌕" CommandName="SEL_RST_DETAIL"/>
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+        <UserControl Canvas.Left="50" Canvas.Top="50" Style="{DynamicResource TML_POP}" Width="800" Height="400" Visibility="Visible">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30" />
+                    <RowDefinition Height="145" />
+                    <RowDefinition Height="145" />
+                </Grid.RowDefinitions>
+                <its:WrapContent x:Name="PANEL_A1" Grid.Row="0">
+                    <its:Text Label="실적번호" ReadOnly="True" Value="{Binding PRDRSTKEY}" Width="200"/>
+                    <its:Date Label="생산일자" ReadOnly="True" Value="{Binding RSTIME}"/>
+                    <its:Pop Label="품목" GPCD="ITEMID" ReadOnly="True" Value="{Binding ITEMID}"/>
+                    <its:Number Label="생산수량" ReadOnly="True" Value="{Binding GOODQTY}" Width="150" DecimalPoint="0"/>
+                </its:WrapContent>
+                <its:WrapContent Grid.Row="1">
+                    <its:Grid x:Name="GRID_G2" Width="800" Height="145">
+                        <its:Column Width="100" FieldName="LOTKEY" Header="LOT 번호" ALGIN="Center"/>
+                        <its:Column Width="120" FieldName="HEATNO" Header="HEATNO" ALGIN="Center"/>
+                        <its:Column Width="120" FieldName="ITEMCD" Header="품목코드" ALGIN="Center"/>
+                        <its:Column Width="210" FieldName="ITEMNM" Header="품명" />
+                        <its:Column Width="90" FieldName="GOODQTY" Header="수량" ALGIN="Right" DecimalPoint="0"/>
+                        <its:Column Width="90" Header="양품실적삭제" CellType="Button" ButtonText="🗑︎" CommandName="DEL_RSTLOT"/>
+                    </its:Grid>
+                </its:WrapContent>
+                <its:WrapContent Grid.Row="2">
+                    <its:Grid x:Name="GRID_G3" Width="800" Height="145">
+                        <its:Column Width="100" FieldName="LOTKEY" Header="LOT 번호" ALGIN="Center"/>
+                        <its:Column Width="120" FieldName="ITEMCD" Header="품목코드" ALGIN="Center"/>
+                        <its:Column Width="210" FieldName="ITEMNM" Header="품명" />
+                        <its:Column Width="90" FieldName="SAMPLEQTY" Header="시편수량" ALGIN="Right" DecimalPoint="0"/>
+                        <its:Column Width="90" Header="시편실적삭제" CellType="Button" ButtonText="🗑︎" CommandName="DEL_RSTSAMPLE"/>
+                    </its:Grid>
+                </its:WrapContent>
+            </Grid>
+        </UserControl>
+    </Canvas>
+</its:ItsPageTml>

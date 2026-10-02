@@ -1,0 +1,40 @@
+﻿
+
+/// <reference path="../../Script/reference.js" />
+
+/* 페이지 접근 시 수행 */
+ItsPage.Load = function () {
+
+    ItsGrid.Create('grid1', { isCheckBoxGrid: false, isSubTotalGrid: true }, [
+        column.create('작업장', 'LINENM', { width: 80, align: 'center' }),
+        column.create('품목ID', 'ITEMID', { width: 100, align: 'center' }),
+        column.create('품목코드', 'ITEMCD', { width: 150 }),
+        column.create('품명', 'ITEMNM', { width: 200 }),    
+        column.create('규격', 'ITEMSPEC', { width: 200 }),
+        column.create('공정', 'PRCNM', { width: 100 }),
+        column.create('라인', 'EQMNM', { width: 100 }),
+
+        column.split()
+    ]);
+
+
+};
+
+/* 조회 */
+ItsButton.EventSearch = function () {
+    ItsGrid.Clear('grid1');
+
+    var maria = new ItsMaria('PRD1001_R02', 'LIST_WEEKPLAN');
+    maria.AddPanel('sdiv1');
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+
+    ItsGrid.SetStore('grid1', maria.store.YnToBool('APPYN').YnToBool('STOCKYN'));
+    //ItsGrid.Get('grid1').autoSizeColumns();    
+
+    ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
+};
