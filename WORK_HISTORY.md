@@ -17,7 +17,14 @@
 
 ## 🕒 2026-10-02 (금) 작업 내역
 
-### 1. Antigravity IDE 소스 제어 AI 커밋 메시지 자동 한글 번역 패치
+### 1. Antigravity 커밋 메시지 자동 생성 한국어 적용
+- **수정/대상 파일**: AGENTS.md
+- **배경 및 원인**: 사용자 제보: Antigravity IDE 커밋 메시지 자동 생성 결과가 계속 영어. 원인 확인: 생성 기능(antigravity.generateCommitMessage, 모델 gemini-3.5-flash-lite)의 기본 지시문에 영어 예시가 고정되어 있고, 사용자 지침은 '일부만 관련될 수 있음'으로 덧붙여짐. .vscode/settings.json의 github.copilot.chat.commitMessageGeneration.instructions는 GitHub Copilot 전용 설정이라 Antigravity에 적용되지 않음. Antigravity 내장 문서상 항상 적용되는 디렉터리 규칙은 GEMINI.md·AGENTS.md이며 저장소에 없었음
+- **작업 상세 내용**:
+  - 저장소 루트에 AGENTS.md 신규 작성: .agents/rules 준수 안내, 커밋 메시지 생성 규칙(한국어 필수, 한국어·영어 병기 지시, <type>: <한글 요약>, type 목록, 올바른 예·잘못된 예, commit_message.md 참조). UTF-8 BOM·CRLF
+- **검증 결과**: AGENTS.md BOM·CRLF·중복 CR 0건, git 무시 대상 아님. 실제 생성 결과는 Antigravity에서 창 다시 불러오기 후 사용자 확인 필요
+
+### 2. Antigravity IDE 소스 제어 AI 커밋 메시지 자동 한글 번역 패치
 - **수정/대상 파일**: `C:\Users\DK\AppData\Local\Programs\Antigravity IDE\resources\app\extensions\antigravity\dist\extension.js`
 - **배경 및 원인**:
   - 소스 제어 창에서 AI 커밋 메시지 생성 버튼(✨) 클릭 시, Antigravity IDE 내부 언어 서버(Language Server)가 워크스페이스 규칙 파일을 참조하지 않고 하드코딩된 영문 프롬프트를 사용하여 항상 영문(`feat: add TML1010 module for material inventory and production result management`)으로 출력되는 문제 발생.
@@ -29,7 +36,7 @@
   - `node -c extension.js` 구문 검사 무결성 통과.
   - `feat: add TML1010 module for material inventory and production result management` ➔ `feat: 자재 재고 및 생산 결과 관리를 위한 TML1010 모듈 추가` 변환 검증 완료.
 
-### 2. AI Git 커밋 메시지 한글 생성 규칙 제정 및 환경 설정
+### 3. AI Git 커밋 메시지 한글 생성 규칙 제정 및 환경 설정
 - **수정/대상 파일**: .agents/rules/commit_message.md, C:\Users\DK\.gemini\config\rules\commit_message.md, .vscode/settings.json, C:\Users\DK\AppData\Roaming\Antigravity IDE\User\settings.json
 - **배경 및 원인**: 사용자 요청: IDE 소스 제어 창의 AI 커밋 메시지 생성 기능 사용 시 항상 영어로 출력되던 문제를 해결하고, `feat: REV 버전관리 기능 추가`와 같이 Conventional Commits 형식의 한글 커밋 메시지가 자동 생성되도록 설정.
 - **작업 상세 내용**:
@@ -439,6 +446,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | AGENTS.md | Antigravity 커밋 메시지 자동 생성 한국어 적용 | AGENTS.md BOM·CRLF·중복 CR 0건, git 무시 대상 아님. 실제 생성 결과는 Antigravity에서 창 다시 불러오기 후 사용자 확인 필요 |
 | **완료** | C:\Users\DK\AppData\Local\Programs\Antigravity IDE\resources\app\extensions\antigravity\dist\extension.js | 소스 제어 AI 커밋 메시지 한글 자동 변환 패치 | extension.js doGenerateCommitMessage 내 한글 자동 변환 로직 주입 및 구문 검사 통과. 창 다시 로드 후 즉시 한글 출력 확인 가능 |
 | **완료** | .agents/rules/commit_message.md, C:\Users\DK\.gemini\config\rules\commit_message.md | AI Git 커밋 메시지 한글 생성 규칙 제정 및 환경 설정 | Conventional Commits 기반 한글 커밋 메시지 규칙 신규 제정 및 IDE 설정 반영. BOM·CRLF 정상 |
 | **완료** | .agents/rules/Optimization.md, .agents/rules/aspx_cs_comment.md | 규칙 문서 날짜 주석 적용 대상에 주요 기능 C# 소스 추가 | 두 파일 BOM·CRLF·중복 CR 0건, 줄바꿈 제외 변경 11줄 추가·8줄 삭제 |
