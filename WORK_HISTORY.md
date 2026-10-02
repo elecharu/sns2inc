@@ -17,6 +17,16 @@
 
 ## 🕒 2026-10-02 (금) 작업 내역
 
+### 1. 프로시저 최상단 Modify 이력 1일 1행 통합 및 규칙화
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, .agents/rules/procedure_history.md, .agents/rules/procedure.md
+- **배경 및 원인**: 프로시저 최상단 Modify 이력이 동일 일자에 여러 줄로 나열되어 가독성을 저해하던 문제를 해결하기 위해 하루당 1행으로 간결히 통합하고, 이를 프로젝트 규칙으로 공식화.
+- **작업 상세 내용**:
+  - `MES_SNS2_EQM1001_R03.sql`, `R04.sql`, `R05.sql` 최상단 Modify 이력 내 동일 일자 다중 행을 핵심 키워드 중심의 1일 1행으로 압축 정리 및 탭 열 정렬 표준화.
+  - `.agents/rules/procedure_history.md` 규칙 파일 신규 추가: 1일 1행 통합 기록 원칙, 간결한 핵심 요약 가이드, 포맷 표준 및 내부 쿼리 라인 날짜 금지 명시.
+  - `.agents/rules/procedure.md` 섹션 2에 1일 1행 원칙 연계 보완.
+- **검증 결과**: 전 파일 UTF-8 with BOM 및 Windows CRLF 개행 무결성 확인 완료. 중복 CR(`\r\r\n`) 0건.
+
+
 ### 2. EQM1001_R04 수정 완료 알림 확인 후 팝업 닫기
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js
 - **배경 및 원인**: 사용자 요청: '수정되었습니다.' 알림이 뜨는 동시에 뒤의 수정 팝업이 닫힘. 알림에서 확인을 누를 때 닫히도록
@@ -380,6 +390,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, .agents/rules/procedure_history.md | 프로시저 최상단 Modify 이력 1일 1행 통합 및 규칙화 | 프로시저 최상단 이력 날짜별 1행 통합 정리 및 규칙 문서(.agents/rules/procedure_history.md) 신규 제정. BOM·CRLF 정상 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js | EQM1001_R04 수정 완료 알림 확인 후 팝업 닫기 | 오프라인 화면(실제 공통 스크립트): 저장 직후 알림 표시·수정 팝업 유지, 알림 확인 클릭 후 수정 팝업 닫힘·목록 재조회 호출 확인. JS 문법·BOM·CRLF 정상 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js | EQM1001_R04 정기점검 수정 완료 후 팝업 자동 닫기 | JS 문법·BOM·CRLF 정상 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.js, 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql | EQM1001 등록·저장 버튼 값 검증을 프로시저로 이동 | 로컬 MariaDB 10.6: 등록 항목 없음·빈 점검값(2번째·공백) 차단 및 등록 전 실적 0건 유지, 0 포함 정상 등록, 수정 빈 값 차단·정상 수정, R03 복사 대상·원본 없음, 그룹 복사·저장 그룹 없음, R05 승인 대상 없음·반려사유 없음·진행 중 REV 없음 안내 정상. JS 문법·BOM·CRLF 정상 |
