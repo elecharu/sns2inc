@@ -1,0 +1,36 @@
+﻿<its:ItsPageTml xmlns:c1="http://schemas.componentone.com/winfx/2006/xaml"  
+                x:Class="TML1010.S03"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:TML1010"
+      xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
+      Width="900" Height="480">
+    <Canvas Background="WhiteSmoke">
+        <UserControl Canvas.Left="0" Canvas.Top="0" Style="{DynamicResource TML_PANEL}">
+            <its:WrapContent x:Name="PANEL_S1" Width="900" Height="30">
+                <its:Pop GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ShowKeyPad="True" x:Name="pop_CUSTCD"/>
+                <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True"/>
+                <UserControl Width="20"/>
+                <its:Button Label="조 회" Width="80" CommandName="LIST_OSC_LOT"/>
+            </its:WrapContent>
+        </UserControl>
+        <UserControl Canvas.Left="0" Canvas.Top="30" Style="{DynamicResource TML_GRID}">
+            <its:Grid x:Name="GRID_G1" Width="900" Height="450">
+                <its:Grid.Columns>
+                    <its:Column Width="150" FieldName="WARECD" Header="창고" ALGIN="Center" GPCD="WARECD"/>
+                    <its:Column Width="120" FieldName="ITEMID" Header="품목ID" ALGIN="Center" Visible="False"/>
+                    <its:Column Width="120" FieldName="ITEMCD" Header="품목코드" ALGIN="Center"/>
+                    <its:Column Width="210" FieldName="ITEMNM" Header="품명" />
+                    <its:Column Width="80" FieldName="ITEMCG" Header="품목유형" ALGIN="Center" GPCD="DM100"/>
+                    <its:Column Width="40" FieldName="ITEMSPEC" Header="규격" ALGIN="Center"/>
+                    <its:Column Width="80" FieldName="LOTKEY" Header="로트번호" ALGIN="Center"/>
+                    <its:Column Width="80" FieldName="LOTQTY" Header="수량" CellType="Number" DecimalPoint="0"/>
+                    <its:Column Width="40" FieldName="ITEMUNIT" Header="단위" ALGIN="Center" GPCD="DM150"/>
+                    <its:Column Width="80" FieldName="LOTTP" Header="재고구분" ALGIN="Center" GPCD="LOTTP"/>
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+    </Canvas>
+</its:ItsPageTml>
