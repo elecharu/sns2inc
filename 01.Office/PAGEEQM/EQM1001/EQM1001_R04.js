@@ -254,10 +254,11 @@ ItsPop.Event('pop2').onAddBtnClick = function () {
         return;
     }
 
-    ItsMsg.Alert("수정되었습니다.");
-    // 2026-10-02 [정기점검 수정 팝업] 수정 완료 후 팝업 닫고 메인 목록 재조회
-    ItsPop.Close('pop2');
-    ItsButton.EventSearch();
+    // 2026-10-02 [정기점검 수정 팝업] '수정되었습니다.' 알림에서 확인을 누르면 팝업 닫고 메인 목록 재조회
+    ItsMsg.Alert("수정되었습니다.", function () {
+        ItsPop.Close('pop2');
+        ItsButton.EventSearch();
+    });
 };
 
 // 2026-09-16 정기점검 수정 모달(pop2) 현재 점검실적 삭제
