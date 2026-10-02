@@ -17,6 +17,14 @@
 
 ## 🕒 2026-10-02 (금) 작업 내역
 
+### 2. 규칙 문서 날짜 주석 적용 대상에 주요 기능 C# 소스 추가
+- **수정/대상 파일**: .agents/rules/Optimization.md, .agents/rules/aspx_cs_comment.md
+- **배경 및 원인**: 사용자 결정: S05A.cs처럼 주요 기능을 구현하는 C# 소스도 .js와 같이 날짜 주석을 남김. 규칙 문서는 '날짜 주석은 .js에만'으로 되어 있어 문구 수정 요청
+- **작업 상세 내용**:
+  - Optimization.md 2절: 제목·필수 작성 대상·기존 주석 삭제 금지·요약에 주요 기능 C# 소스(.cs, 리포트 등, .aspx.cs 제외) 추가. aspx_cs_comment.md: 제목, 2절(적용 대상과 .aspx.cs 제외 명시, .cs도 기존 날짜 주석 보존), 3절 요약표에 주요 기능 .cs 행 추가. .aspx·.aspx.cs 주석 금지와 .sql 1일 1행 규칙은 그대로. 인코딩 규칙에 맞춰 두 파일 LF→CRLF
+- **검증 결과**: 두 파일 BOM·CRLF·중복 CR 0건, 줄바꿈 제외 변경 11줄 추가·8줄 삭제
+
+
 ### 1. EQM1001_R04.js SVN 버전 충돌 해결 및 최신본 통합
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js
 - **배경 및 원인**: SVN 업데이트 과정에서 이전 리비전(r124/r133)과 로컬 최신 수정본(.mine) 간 충돌 마커(`<<<<<<< .mine`, `>>>>>>> .r133`) 발생.
@@ -409,6 +417,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | .agents/rules/Optimization.md, .agents/rules/aspx_cs_comment.md | 규칙 문서 날짜 주석 적용 대상에 주요 기능 C# 소스 추가 | 두 파일 BOM·CRLF·중복 CR 0건, 줄바꿈 제외 변경 11줄 추가·8줄 삭제 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js | EQM1001_R04.js SVN 버전 충돌 해결 및 최신본 통합 | .mine 최신 로직 기준으로 충돌 마커 전면 해소, 임시 파일 정리, 문법/BOM/CRLF 정상 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.aspx, .agents/rules/aspx_cs_comment.md | ASP.NET (.aspx, .aspx.cs) 주석 작성 금지 및 .js 한정 주석 규칙화 | .aspx 화면 마크업 날짜 주석 전면 제거 및 규칙 문서(.agents/rules/aspx_cs_comment.md) 신규 제정. BOM·CRLF 정상 |
 | **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, .agents/rules/procedure_history.md | 프로시저 최상단 Modify 이력 1일 1행 통합 및 규칙화 | 프로시저 최상단 이력 날짜별 1행 통합 정리 및 규칙 문서(.agents/rules/procedure_history.md) 신규 제정. BOM·CRLF 정상 |
