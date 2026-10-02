@@ -1,7 +1,12 @@
-{
+﻿{
     "svn.ignoreMissingSvnWarning": true,
     "iisexpress.port": "55085",
     "csharp-dev-tools.solutionViewer.selectedWorkspaceSolutions": [
         "01.Office/ItsWeb.sln"
+    ],
+    "github.copilot.chat.commitMessageGeneration.instructions": [
+        {
+            "text": "Always write the commit message summary in Korean using Conventional Commits format (e.g., 'feat: REV 버전관리 기능 추가', 'fix: 점검값 유효성 검사 오류 수정'). Do not use English."
+        }
     ]
 }

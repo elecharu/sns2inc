@@ -17,6 +17,16 @@
 
 ## 🕒 2026-10-02 (금) 작업 내역
 
+### 1. AI Git 커밋 메시지 한글 생성 규칙 제정 및 환경 설정
+- **수정/대상 파일**: .agents/rules/commit_message.md, C:\Users\DK\.gemini\config\rules\commit_message.md, .vscode/settings.json, C:\Users\DK\AppData\Roaming\Antigravity IDE\User\settings.json
+- **배경 및 원인**: 사용자 요청: IDE 소스 제어 창의 AI 커밋 메시지 생성 기능 사용 시 항상 영어로 출력되던 문제를 해결하고, `feat: REV 버전관리 기능 추가`와 같이 Conventional Commits 형식의 한글 커밋 메시지가 자동 생성되도록 설정.
+- **작업 상세 내용**:
+  - Antigravity IDE 언어 서버의 커밋 메시지 생성 프롬프트 및 사용자 규칙(Guidelines) 주입 파이프라인 분석.
+  - 워크스페이스(`.agents/rules/commit_message.md`) 및 글로벌(`C:\Users\DK\.gemini\config\rules\commit_message.md`)에 한글 커밋 메시지 강제 규칙 신규 제정 (Conventional Commits 접두사 + 한글 요약 표준화).
+  - Antigravity 사용자 설정 및 워크스페이스 설정(`settings.json`)에 AI 커밋 메시지 생성 가이드라인 옵션 추가.
+- **검증 결과**: 전 파일 UTF-8 with BOM 및 Windows CRLF 개행 무결성 확인 완료 (중복 CR 0건).
+
+
 ### 2. 규칙 문서 날짜 주석 적용 대상에 주요 기능 C# 소스 추가
 - **수정/대상 파일**: .agents/rules/Optimization.md, .agents/rules/aspx_cs_comment.md
 - **배경 및 원인**: 사용자 결정: S05A.cs처럼 주요 기능을 구현하는 C# 소스도 .js와 같이 날짜 주석을 남김. 규칙 문서는 '날짜 주석은 .js에만'으로 되어 있어 문구 수정 요청
@@ -417,6 +427,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | .agents/rules/commit_message.md, C:\Users\DK\.gemini\config\rules\commit_message.md | AI Git 커밋 메시지 한글 생성 규칙 제정 및 환경 설정 | Conventional Commits 기반 한글 커밋 메시지 규칙 신규 제정 및 IDE 설정 반영. BOM·CRLF 정상 |
 | **완료** | .agents/rules/Optimization.md, .agents/rules/aspx_cs_comment.md | 규칙 문서 날짜 주석 적용 대상에 주요 기능 C# 소스 추가 | 두 파일 BOM·CRLF·중복 CR 0건, 줄바꿈 제외 변경 11줄 추가·8줄 삭제 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js | EQM1001_R04.js SVN 버전 충돌 해결 및 최신본 통합 | .mine 최신 로직 기준으로 충돌 마커 전면 해소, 임시 파일 정리, 문법/BOM/CRLF 정상 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.aspx, .agents/rules/aspx_cs_comment.md | ASP.NET (.aspx, .aspx.cs) 주석 작성 금지 및 .js 한정 주석 규칙화 | .aspx 화면 마크업 날짜 주석 전면 제거 및 규칙 문서(.agents/rules/aspx_cs_comment.md) 신규 제정. BOM·CRLF 정상 |
