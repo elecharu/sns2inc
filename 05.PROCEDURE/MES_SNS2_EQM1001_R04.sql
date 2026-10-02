@@ -10,6 +10,7 @@
 -- 			2026-10-01 					한성수	설비그룹이 없는 설비도 설비 승인만으로 정기점검 조회·등록·수정·삭제 가능
 -- 			2026-10-01 					한성수	정기점검 등록 팝업에 주기관리에서 지정한 해당 월 점검자 반환
 -- 			2026-10-02 					한성수	정기점검 수정 조회 항목 결과에 실적의 적용 리비전(REVNM) 반환
+-- 			2026-10-02 					한성수	조회 성능 개선 (월별 점검실적 확인을 연도별 1회 집계로 변경), 수정 조회 실적을 정기점검으로 한정
 -- *****************************************************************************
   IN $SYEAR           VARCHAR(50),
   IN $YYYYMM          VARCHAR(50),
@@ -67,7 +68,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 CASE $CALLTYPE
 -- ****************************************************************************
 WHEN 'LIST_CYCLE_EQMCD' THEN  -- 정기점검 계획조회
-  -- 주기관리 탭은 계획 월 셀에 점검자명을 저장하므로 값이 있는 월을 점검 계획 월로 판단
+  -- 주기관리 점검자가 지정된 월을 점검 계획 월로 판단하고, 그 달 정기점검 실적이 있으면 점검완료
   
   IF $SYEAR = '' THEN
     CALL COMERR('조회년도를 지정해주세요.');
@@ -79,226 +80,33 @@ WHEN 'LIST_CYCLE_EQMCD' THEN  -- 정기점검 계획조회
     MSTEQM.FANO AS EQMCD,
     MSTEQM.EQMNM,
     $SYEAR AS YEAR,
-    CASE WHEN (CHKPLANEQM_YEARPLAN.MONTH_01 <> '') 
-              AND EXISTS (SELECT CHKRSTKEY 
-                          FROM CHKRSTEQM 
-                          WHERE CHKTP = '02' 
-                            AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                            AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-01')
-                          )
-         THEN '점검완료'
-         WHEN (CHKPLANEQM_YEARPLAN.MONTH_01 <> '') 
-              AND NOT EXISTS (SELECT CHKRSTKEY 
-                              FROM CHKRSTEQM 
-                              WHERE CHKTP = '02' 
-                                AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                                AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-01')
-                              )
-         THEN '점검필요'
-         ELSE ''
-    END AS M01,
-    CASE WHEN (CHKPLANEQM_YEARPLAN.MONTH_02 <> '') 
-              AND EXISTS (SELECT CHKRSTKEY 
-                          FROM CHKRSTEQM 
-                          WHERE CHKTP = '02' 
-                            AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                            AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-02')
-                          )
-         THEN '점검완료'
-         WHEN (CHKPLANEQM_YEARPLAN.MONTH_02 <> '') 
-              AND NOT EXISTS (SELECT CHKRSTKEY 
-                              FROM CHKRSTEQM 
-                              WHERE CHKTP = '02' 
-                                AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                                AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-02')
-                              )
-         THEN '점검필요'
-         ELSE ''
-    END AS M02,
-    CASE WHEN (CHKPLANEQM_YEARPLAN.MONTH_03 <> '') 
-              AND EXISTS (SELECT CHKRSTKEY 
-                          FROM CHKRSTEQM 
-                          WHERE CHKTP = '02' 
-                            AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                            AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-03')
-                          )
-         THEN '점검완료'
-         WHEN (CHKPLANEQM_YEARPLAN.MONTH_03 <> '') 
-              AND NOT EXISTS (SELECT CHKRSTKEY 
-                              FROM CHKRSTEQM 
-                              WHERE CHKTP = '02' 
-                                AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                                AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-03')
-                              )
-         THEN '점검필요'
-         ELSE ''
-    END AS M03,
-    CASE WHEN (CHKPLANEQM_YEARPLAN.MONTH_04 <> '') 
-              AND EXISTS (SELECT CHKRSTKEY 
-                          FROM CHKRSTEQM 
-                          WHERE CHKTP = '02' 
-                            AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                            AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-04')
-                          )
-         THEN '점검완료'
-         WHEN (CHKPLANEQM_YEARPLAN.MONTH_04 <> '') 
-              AND NOT EXISTS (SELECT CHKRSTKEY 
-                              FROM CHKRSTEQM 
-                              WHERE CHKTP = '02' 
-                                AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                                AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-04')
-                              )
-         THEN '점검필요'
-         ELSE ''
-    END AS M04,
-    CASE WHEN (CHKPLANEQM_YEARPLAN.MONTH_05 <> '') 
-              AND EXISTS (SELECT CHKRSTKEY 
-                          FROM CHKRSTEQM 
-                          WHERE CHKTP = '02' 
-                            AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                            AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-05')
-                          )
-         THEN '점검완료'
-         WHEN (CHKPLANEQM_YEARPLAN.MONTH_05 <> '') 
-              AND NOT EXISTS (SELECT CHKRSTKEY 
-                              FROM CHKRSTEQM 
-                              WHERE CHKTP = '02' 
-                                AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                                AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-05')
-                              )
-         THEN '점검필요'
-         ELSE ''
-    END AS M05,
-    CASE WHEN (CHKPLANEQM_YEARPLAN.MONTH_06 <> '') 
-              AND EXISTS (SELECT CHKRSTKEY 
-                          FROM CHKRSTEQM 
-                          WHERE CHKTP = '02' 
-                            AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                            AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-06')
-                          )
-         THEN '점검완료'
-         WHEN (CHKPLANEQM_YEARPLAN.MONTH_06 <> '') 
-              AND NOT EXISTS (SELECT CHKRSTKEY 
-                              FROM CHKRSTEQM 
-                              WHERE CHKTP = '02' 
-                                AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                                AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-06')
-                              )
-         THEN '점검필요'
-         ELSE ''
-    END AS M06,
-    CASE WHEN (CHKPLANEQM_YEARPLAN.MONTH_07 <> '') 
-              AND EXISTS (SELECT CHKRSTKEY 
-                          FROM CHKRSTEQM 
-                          WHERE CHKTP = '02' 
-                            AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                            AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-07')
-                          )
-         THEN '점검완료'
-         WHEN (CHKPLANEQM_YEARPLAN.MONTH_07 <> '') 
-              AND NOT EXISTS (SELECT CHKRSTKEY 
-                              FROM CHKRSTEQM 
-                              WHERE CHKTP = '02' 
-                                AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                                AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-07')
-                              )
-         THEN '점검필요'
-         ELSE ''
-    END AS M07,
-    CASE WHEN (CHKPLANEQM_YEARPLAN.MONTH_08 <> '') 
-              AND EXISTS (SELECT CHKRSTKEY 
-                          FROM CHKRSTEQM 
-                          WHERE CHKTP = '02' 
-                            AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                            AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-08')
-                          )
-         THEN '점검완료'
-         WHEN (CHKPLANEQM_YEARPLAN.MONTH_08 <> '') 
-              AND NOT EXISTS (SELECT CHKRSTKEY 
-                              FROM CHKRSTEQM 
-                              WHERE CHKTP = '02' 
-                                AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                                AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-08')
-                              )
-         THEN '점검필요'
-         ELSE ''
-    END AS M08,
-    CASE WHEN (CHKPLANEQM_YEARPLAN.MONTH_09 <> '') 
-              AND EXISTS (SELECT CHKRSTKEY 
-                          FROM CHKRSTEQM 
-                          WHERE CHKTP = '02' 
-                            AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                            AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-09')
-                          )
-         THEN '점검완료'
-         WHEN (CHKPLANEQM_YEARPLAN.MONTH_09 <> '') 
-              AND NOT EXISTS (SELECT CHKRSTKEY 
-                              FROM CHKRSTEQM 
-                              WHERE CHKTP = '02' 
-                                AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                                AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-09')
-                              )
-         THEN '점검필요'
-         ELSE ''
-    END AS M09,
-    CASE WHEN (CHKPLANEQM_YEARPLAN.MONTH_10 <> '') 
-              AND EXISTS (SELECT CHKRSTKEY 
-                          FROM CHKRSTEQM 
-                          WHERE CHKTP = '02' 
-                            AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                            AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-10')
-                          )
-         THEN '점검완료'
-         WHEN (CHKPLANEQM_YEARPLAN.MONTH_10 <> '') 
-              AND NOT EXISTS (SELECT CHKRSTKEY 
-                              FROM CHKRSTEQM 
-                              WHERE CHKTP = '02' 
-                                AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                                AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-10')
-                              )
-         THEN '점검필요'
-         ELSE ''
-    END AS M10,
-    CASE WHEN (CHKPLANEQM_YEARPLAN.MONTH_11 <> '') 
-              AND EXISTS (SELECT CHKRSTKEY 
-                          FROM CHKRSTEQM 
-                          WHERE CHKTP = '02' 
-                            AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                            AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-11')
-                          )
-         THEN '점검완료'
-         WHEN (CHKPLANEQM_YEARPLAN.MONTH_11 <> '') 
-              AND NOT EXISTS (SELECT CHKRSTKEY 
-                              FROM CHKRSTEQM 
-                              WHERE CHKTP = '02' 
-                                AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                                AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-11')
-                              )
-         THEN '점검필요'
-         ELSE ''
-    END AS M11,
-    CASE WHEN (CHKPLANEQM_YEARPLAN.MONTH_12 <> '') 
-              AND EXISTS (SELECT CHKRSTKEY 
-                          FROM CHKRSTEQM 
-                          WHERE CHKTP = '02' 
-                            AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                            AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-12')
-                          )
-         THEN '점검완료'
-         WHEN (CHKPLANEQM_YEARPLAN.MONTH_12 <> '') 
-              AND NOT EXISTS (SELECT CHKRSTKEY 
-                              FROM CHKRSTEQM 
-                              WHERE CHKTP = '02' 
-                                AND CHKRSTEQM.EQMCD = MSTEQM.FANO 
-                                AND LEFT(CHKRSTEQM.BASEDATE, 7) = CONCAT($SYEAR, '-12')
-                              )
-         THEN '점검필요'
-         ELSE ''
-    END AS M12
+    CASE WHEN CHKPLANEQM_YEARPLAN.MONTH_01 <> '' THEN IF(FIND_IN_SET('01', RST.RSTMM), '점검완료', '점검필요') ELSE '' END AS M01,
+    CASE WHEN CHKPLANEQM_YEARPLAN.MONTH_02 <> '' THEN IF(FIND_IN_SET('02', RST.RSTMM), '점검완료', '점검필요') ELSE '' END AS M02,
+    CASE WHEN CHKPLANEQM_YEARPLAN.MONTH_03 <> '' THEN IF(FIND_IN_SET('03', RST.RSTMM), '점검완료', '점검필요') ELSE '' END AS M03,
+    CASE WHEN CHKPLANEQM_YEARPLAN.MONTH_04 <> '' THEN IF(FIND_IN_SET('04', RST.RSTMM), '점검완료', '점검필요') ELSE '' END AS M04,
+    CASE WHEN CHKPLANEQM_YEARPLAN.MONTH_05 <> '' THEN IF(FIND_IN_SET('05', RST.RSTMM), '점검완료', '점검필요') ELSE '' END AS M05,
+    CASE WHEN CHKPLANEQM_YEARPLAN.MONTH_06 <> '' THEN IF(FIND_IN_SET('06', RST.RSTMM), '점검완료', '점검필요') ELSE '' END AS M06,
+    CASE WHEN CHKPLANEQM_YEARPLAN.MONTH_07 <> '' THEN IF(FIND_IN_SET('07', RST.RSTMM), '점검완료', '점검필요') ELSE '' END AS M07,
+    CASE WHEN CHKPLANEQM_YEARPLAN.MONTH_08 <> '' THEN IF(FIND_IN_SET('08', RST.RSTMM), '점검완료', '점검필요') ELSE '' END AS M08,
+    CASE WHEN CHKPLANEQM_YEARPLAN.MONTH_09 <> '' THEN IF(FIND_IN_SET('09', RST.RSTMM), '점검완료', '점검필요') ELSE '' END AS M09,
+    CASE WHEN CHKPLANEQM_YEARPLAN.MONTH_10 <> '' THEN IF(FIND_IN_SET('10', RST.RSTMM), '점검완료', '점검필요') ELSE '' END AS M10,
+    CASE WHEN CHKPLANEQM_YEARPLAN.MONTH_11 <> '' THEN IF(FIND_IN_SET('11', RST.RSTMM), '점검완료', '점검필요') ELSE '' END AS M11,
+    CASE WHEN CHKPLANEQM_YEARPLAN.MONTH_12 <> '' THEN IF(FIND_IN_SET('12', RST.RSTMM), '점검완료', '점검필요') ELSE '' END AS M12
   FROM MSTEQM
   LEFT JOIN CHKPLANEQM_YEARPLAN 
          ON CHKPLANEQM_YEARPLAN.EQMCD = MSTEQM.FANO
         AND CHKPLANEQM_YEARPLAN.YEAR = $SYEAR
+  -- 조회년도 정기점검 실적이 있는 월 (예: 01,03)
+  LEFT JOIN (
+    SELECT
+      CHKRSTEQM.EQMCD,
+      GROUP_CONCAT(DISTINCT SUBSTRING(CHKRSTEQM.BASEDATE, 6, 2)) AS RSTMM
+    FROM CHKRSTEQM
+    WHERE CHKRSTEQM.CHKTP = '02'
+      AND CHKRSTEQM.BASEDATE LIKE CONCAT($SYEAR, '-%')
+    GROUP BY CHKRSTEQM.EQMCD
+  ) RST
+    ON RST.EQMCD = MSTEQM.FANO
   -- 설비의 최신 승인 리비전에 정기점검 항목이 있고, 설비그룹이 있으면 설비그룹 승인 리비전도 있는 설비 (개정 중에도 직전 승인본으로 점검)
   LEFT JOIN (
     SELECT MSTEQMREV_HEADER.PLANCD
@@ -330,7 +138,6 @@ WHEN 'LIST_CYCLE_EQMCD' THEN  -- 정기점검 계획조회
   WHERE MSTEQM.USEYN = 'Y'
     AND (IFNULL(MSTEQM.EQMGUBUN, '') = '' OR GRP_REV.PLANCD IS NOT NULL)
     AND (MSTEQM.FANO LIKE CONCAT('%', $EQMCD, '%') OR MSTEQM.EQMNM LIKE CONCAT('%', $EQMCD, '%'))
-    
   GROUP BY MSTEQM.FANO
   ORDER BY MSTEQM.FANO;
 -- *****************************************************************************
@@ -531,7 +338,7 @@ WHEN 'SEARCH_CHKRSTEQM' THEN  -- 해당월의 정기점검 조회
     CALL COMERR('승인된 정기점검 계획만 처리할 수 있습니다.');
     LEAVE PROC;
   END IF;
-  SET _$CHKRSTKEY = IFNULL((SELECT CHKRSTKEY FROM CHKRSTEQM WHERE EQMCD = $EQMCD AND LEFT(BASEDATE,7) = $YYYYMM ORDER BY BASEDATE, CHKRSTKEY LIMIT 1), '');
+  SET _$CHKRSTKEY = IFNULL((SELECT CHKRSTKEY FROM CHKRSTEQM WHERE EQMCD = $EQMCD AND CHKTP = '02' AND LEFT(BASEDATE,7) = $YYYYMM ORDER BY BASEDATE, CHKRSTKEY LIMIT 1), '');
 
 
   SELECT 

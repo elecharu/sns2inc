@@ -17,6 +17,30 @@
 
 ## 🕒 2026-10-02 (금) 작업 내역
 
+### 2. EQM1001_R03 주기관리 정기점검 실적 있는 월 잠금
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql
+- **배경 및 원인**: 사용자 제보: 주기관리에서 삭제 후 다른 점검자로 다시 넣으면 R04에 이전 점검 실적이 점검완료로 다시 보임. 원인: 주기관리 삭제는 CHKPLANEQM_YEARPLAN만 지우고 CHKRSTEQM 실적은 남으며, R04는 계획 월 + 해당 월 정기점검 실적 존재만으로 점검완료 판단. 사용자 선택: 실적 있는 월 잠금
+- **작업 상세 내용**:
+  - SAVE_CYCLE_EQMCD: 기존 점검자가 있던 월을 다른 점검자로 바꾸거나 비울 때 그 월에 정기점검 실적(CHKTP 02)이 있으면 COMERR로 차단하고 해당 월 안내. 점검자가 없던 월에 새로 지정하는 것은 허용(계획이 없으면 R04에서 실적을 열어 삭제할 수 없으므로). DELETE_CYCLE_EQMCD: 점검자가 지정된 월 중 실적이 있는 월이 있으면 차단. 안내: 설비 정기점검 등록에서 해당 월 점검 실적을 먼저 삭제. 화면 변경 없음, 파라미터 변경 없음
+- **검증 결과**: 로컬 MariaDB 10.6 10개 경우 확인: 실적 월 삭제·변경·비움 차단, 실적 없는 월 변경·삭제 허용, 예전 사원명 저장 월 변경 허용, 일상점검 실적은 영향 없음, 계획 없던 실적 월에 새로 지정 허용 후 삭제 차단. BOM·CRLF 정상
+
+
+### 2. EQM1001_R03·R04 프로시저 성능 개선 범위 축소
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql
+- **배경 및 원인**: 사용자 요청: 직전 성능 개선 중 효과가 작은 변경은 되돌리고 꼭 필요한 5개만 유지 (기존 쿼리 형태 보존)
+- **작업 상세 내용**:
+  - 유지: R04 LIST_CYCLE_EQMCD 월별 실적 1회 집계, R04 SEARCH_CHKRSTEQM 정기점검 실적만 조회, R03 LIST_CYCLE_EQMCD 정기점검 설비 사전집계 조인, R03 LIST_GRP_EQM02_ADD 교차조인 제거, R03 COPY_EQM02 일괄 등록. 원복: R03 REG_GRP_EQM02·LIST_MSTEQM·SAVE_CYCLE_EQMCD, R04 LIST_CHKPLANEQM_EQM02·미사용 변수 선언, R05 전체(변경 없음). Modify 이력 문구도 유지 항목 기준으로 수정
+- **검증 결과**: 로컬 MariaDB 10.6 수정 전·후 54개 시나리오 결과 동일(의도한 SEARCH_CHKRSTEQM 일상점검 제외만 차이). 설비 2,000·실적 100,000건 기준 R04 주기 조회 297.7초→0.27초, R03 주기 조회 5.26초→0.30초, 미등록 항목 1,010ms→10ms. BOM·CRLF 정상
+
+
+### 2. EQM1001_R03·R04·R05 프로시저 조회 성능 개선
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql
+- **배경 및 원인**: 사용자 요청: 세 프로시저의 불필요한 쿼리·조인·탐색 정리로 SQL 성능 향상
+- **작업 상세 내용**:
+  - R04 LIST_CYCLE_EQMCD: 월별 점검실적 확인 상관 서브쿼리 24개(설비마다 CHKRSTEQM 반복 탐색)를 조회년도 정기점검 실적 1회 집계(GROUP_CONCAT 월 목록 + FIND_IN_SET)로 변경. R04 LIST_CHKPLANEQM_EQM02: 적용 리비전 MAX 조회 후 REVCD 재조회 2회를 1회로. R04 SEARCH_CHKRSTEQM: 실적 키 조회를 정기점검(CHKTP '02')으로 한정(일상점검 실적이 먼저 잡히던 문제 수정). R04 미사용 변수 3개 제거. R03 LIST_GRP_EQM02_ADD: 점검항목×설비 교차조인·COUNT DISTINCT를 그룹 설비 수·항목별 등록 설비 수 사전집계 비교로. R03 LIST_MSTEQM·LIST_CYCLE_EQMCD: 설비×점검항목 조인 후 그룹화를 정기점검 설비 사전집계 조인으로. R03 REG_GRP_EQM02: 정렬순서 최대값 집계를 해당 설비그룹 설비로 한정. R03 COPY_EQM02: 항목마다 SELECT 5회+INSERT 반복을 INSERT SELECT 1회로(미사용 변수 2개 제거, GROUP_CONCAT 길이 제한 문제도 해소). R03 SAVE_CYCLE_EQMCD: 저장 후 빈 값 재조회·삭제 대신 입력값이 모두 비면 바로 삭제. R05 LIST_PLAN: 항목 수를 설비그룹·설비 단위로 먼저 집계해 9개 컬럼 GROUP BY 제거. R05 CALL_PLAN_RPT 항목·LIST_PLAN_REV_ITEM: 이미 1행 단위라 불필요한 GROUP BY 제거. R03 LIST_MSTEQM_GRP는 변경 시 오히려 느려져 원래대로 유지. 파라미터 변경 없음
+- **검증 결과**: 로컬 MariaDB 10.6에 수정 전·후 프로시저를 같은 데이터로 54개 조회·저장 시나리오 실행: 결과 동일(의도한 SEARCH_CHKRSTEQM 일상점검 제외만 차이). 설비 2,000·계획 60,000·실적 100,000건 기준 R04 주기 조회 297.7초→0.24초, R03 주기 조회 5.26초→0.27초, 미등록 항목 1,010ms→8.5ms, 설비 목록 137→18ms, R05 그룹 목록 101→13ms·설비 목록 67→19ms. BOM·CRLF·SQL 내부 날짜 0건 확인
+
+
 ### 2. EQM1001_R03·R04·R05 .agents 규칙 점검 및 정비
 - **수정/대상 파일**: [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [EQM1001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [EQM1001_R05.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R05.aspx), [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql), [MES_SNS2_EQM1001_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R05.sql)
 - **배경 및 원인**: 사용자 요청: R03·R04·R05 화면·프로시저가 .agents 규칙(coding_convention·Optimization·procedure·encoding·common_component)을 지키는지 전수 점검 후 수정
@@ -300,6 +324,9 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql | EQM1001_R03 주기관리 정기점검 실적 있는 월 잠금 | 로컬 MariaDB 10.6 10개 경우 확인: 실적 월 삭제·변경·비움 차단, 실적 없는 월 변경·삭제 허용, 예전 사원명 저장 월 변경 허용, 일상점검 실적은 영향 없음, 계획 없던 실적 월에 새로 지정 허용 후 삭제 차단. BOM·CRLF 정상 |
+| **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql | EQM1001_R03·R04 프로시저 성능 개선 범위 축소 | 로컬 MariaDB 10.6 수정 전·후 54개 시나리오 결과 동일(의도한 SEARCH_CHKRSTEQM 일상점검 제외만 차이). 설비 2,000·실적 100,000건 기준 R04 주기 조회 297.7초→0.27초, R03 주기 조회 5.26초→0.30초, 미등록 항목 1,010ms→10ms. BOM·CRLF 정상 |
+| **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql | EQM1001_R03·R04·R05 프로시저 조회 성능 개선 | 로컬 MariaDB 10.6에 수정 전·후 프로시저를 같은 데이터로 54개 조회·저장 시나리오 실행: 결과 동일(의도한 SEARCH_CHKRSTEQM 일상점검 제외만 차이). 설비 2,000·계획 60,000·실적 100,000건 기준 R04 주기 조회 297.7초→0.24초, R03 주기 조회 5.26초→0.27초, 미등록 항목 1,010ms→8.5ms, 설비 목록 137→18ms, R05 그룹 목록 101→13ms·설비 목록 67→19ms. BOM·CRLF·SQL 내부 날짜 0건 확인 |
 | **완료** | [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [EQM1001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [EQM1001_R05.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R05.aspx), [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql), [MES_SNS2_EQM1001_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R05.sql) | R03·R04·R05 규칙 정비 | 점검: ES6 문법·번호 주석·배너·srcVersion 변경·SQL 내부 날짜·WHERE 절 상관 서브쿼리 0건. 파라미터 R03 24·R04 22·R05 10 동일. 로컬 MariaDB 10.6(실제 GETKEY) 3개 프로시저 컴파일 및 복사·승인·주기 저장·점검자 지정·점검 등록·수정 조회 정상. R03·R04·R05 오프라인 렌더 200, JS 문법 정상, 전 파일 BOM·CRLF·중복 CR 0 |
 | **완료** | [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R03.sql), [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js) | 주기관리 점검자 사원코드 저장 | 로컬 MariaDB 10.6: 사원코드 저장(E01·20001010·202507065), 조회 시 사원명 표시·코드 반환, 예전 이름 저장값 표시 유지, R04 팝업 2월 20001010·3월 202507065 정확히 지정. 오프라인 렌더 + 실제 공통 스크립트: 점검자 지정·동명이인 교체(토글 아님)·같은 사람 토글 삭제·Delete 삭제, 저장/일괄저장 요청에 사원코드 전달, 콘솔 오류 0건 |
 | **완료** | [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js) | R03 설비별 선택 유지 | 오프라인 렌더 + 실제 공통 스크립트: 수정 전 A-003 추가 후 A-001 선택(재현), 수정 후 추가 A-003·저장 A-005 유지, REV·항목 재조회 정상, 일반 조회는 첫 행, 콘솔 오류 0건 |
