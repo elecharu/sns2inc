@@ -9,6 +9,7 @@
 -- 			2026-10-01 					한성수	리비전 키(REVCD) 기준 승인본 조회 및 점검실적 적용 리비전 기록 ($REVNUM → $REVCD)
 -- 			2026-10-01 					한성수	설비그룹이 없는 설비도 설비 승인만으로 정기점검 조회·등록·수정·삭제 가능
 -- 			2026-10-01 					한성수	정기점검 등록 팝업에 주기관리에서 지정한 해당 월 점검자 반환
+-- 			2026-10-02 					한성수	정기점검 수정 조회 항목 결과에 실적의 적용 리비전(REVNM) 반환
 -- *****************************************************************************
   IN $SYEAR         VARCHAR(50),
   IN $YYYYMM         VARCHAR(50),
@@ -378,7 +379,7 @@ WHEN 'LIST_CHKPLANEQM_EQM02' THEN -- 정기점검계획 조회 (설비 승인 �
                    FROM CHKPLANEQM_YEARPLAN
                    WHERE CHKPLANEQM_YEARPLAN.EQMCD = $EQMCD
                      AND CHKPLANEQM_YEARPLAN.YEAR = LEFT($YYYYMM, 4)
-                     AND CHKPLANEQM_YEARPLAN.CHKTP = '02'
+                   ORDER BY (CHKPLANEQM_YEARPLAN.CHKTP = '02') DESC
                    LIMIT 1);
   SET _$PLANEMP = TRIM(COALESCE(_$PLANEMP, ''));
 
@@ -558,8 +559,13 @@ WHEN 'SEARCH_CHKRSTEQM' THEN  -- 해당월의 정기점검 조회
     CHKRSTEQMKND.CHKLOC,
     CHKRSTEQMKND.CHKMTH,
     CHKRSTEQMKND.CHKVALTP,
-    CHKRSTEQMKND.CHKVALUE
+    CHKRSTEQMKND.CHKVALUE,
+    COALESCE(CONCAT('REV.', RST_REV.REVNUM), '') AS REVNM
   FROM CHKRSTEQMKND
+  INNER JOIN CHKRSTEQM
+    ON CHKRSTEQM.CHKRSTKEY = CHKRSTEQMKND.CHKRSTKEY
+  LEFT JOIN MSTEQMREV_HEADER RST_REV
+    ON RST_REV.REVCD = CHKRSTEQM.REVCD
   WHERE CHKRSTEQMKND.CHKRSTKEY = _$CHKRSTKEY  
   ORDER BY CHKRSTEQMKND.SORTNO
   ;

@@ -45,6 +45,8 @@ ItsPage.Load = function () {
     });
 
     ItsGrid.Create('grid2', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        // 2026-10-02 [정기점검 등록 팝업] 이번 점검에 적용할 REV를 항목 그리드 칸으로 표시
+        column.create('적용 REV', 'REVNM', { width: 70, align: 'center', readOnly: true }),
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 290, readOnly: true }),
         column.create('점검항목', 'CHKLOC', { width: 110, columnType: enumColumnTypes.combo, gpcd: "CHKLOC", readOnly: true }),
@@ -55,6 +57,8 @@ ItsPage.Load = function () {
     ]);
 
     ItsGrid.Create('grid3', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        // 2026-10-02 [정기점검 수정 팝업] 실적에 기록된 적용 REV를 항목 그리드 칸으로 표시 (REV 관리 이전 실적은 빈 값)
+        column.create('적용 REV', 'REVNM', { width: 70, align: 'center', readOnly: true }),
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 290, readOnly: true }),
         column.create('점검항목', 'CHKLOC', { width: 110, columnType: enumColumnTypes.combo, gpcd: "CHKLOC", readOnly: true }),
@@ -152,7 +156,6 @@ function ShowPlanRev(rows) {
     var row = rows.length > 0 ? rows[0] : {};
     var revNm = row.REVNM || '';
 
-    ItsLabel.SetText('pop1_lbl_REVNM', revNm ? '적용 REV : ' + revNm : '');
     // 2026-10-01 [정기점검 등록 팝업] 저장 시 적용 리비전 키(REVCD) 전달
     ItsText.SetValue('pop1_txt_REVCD', row.REVCD || '');
     ItsLabel.SetText('pop1_lbl_REV_INFO', row.PENDREVNM ? row.PENDREVNM + ' 승인 대기 중 — 승인 전까지 ' + revNm + ' 항목으로 점검합니다.' : '');
@@ -177,9 +180,6 @@ var SEARCH_CHKRSTEQM = function (EQMCD, YYYYMM) {
 
     ItsPage.SetStore('pdiv3', maria.store.data[0]);
     ItsText.SetValue('pop2_txt_YYYYMM', YYYYMM);
-    // 2026-09-30 정기점검 수정 모달(pop2) 실적에 기록된 적용 REV 표시 (REV 관리 이전 실적은 빈 값)
-    var revNm = maria.store.data.length > 0 ? (maria.store.data[0].REVNM || '') : '';
-    ItsLabel.SetText('pop2_lbl_REVNM', revNm ? '적용 REV : ' + revNm : '');
     ItsGrid.SetStore('grid3', maria.storeExtend1);
 };
 

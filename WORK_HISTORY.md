@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-10-01
+> **최종 갱신일**: 2026-10-02
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -15,7 +15,26 @@
 
 ---
 
+## 🕒 2026-10-02 (금) 작업 내역
+
+### 1. EQM1001_R04 등록·수정 팝업 적용 REV를 그리드 칸으로 이동
+- **수정/대상 파일**: [EQM1001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql)
+- **배경 및 원인**: 적용할·적용된 REV가 팝업 상단 라벨로 따로 있어 UI/UX가 어색하다는 요청
+- **작업 상세 내용**:
+  - pop1_lbl_REVNM·pop2_lbl_REVNM 라벨 제거, grid2·grid3 맨 앞에 '적용 REV'(REVNM) 칸 추가. SEARCH_CHKRSTEQM 항목 결과에 실적의 REVNM 반환(CHKRSTEQM·헤더 조인). 승인 대기 안내(빨간 문구)와 저장용 REVCD 숨김칸은 유지. 입력값 변경 없음
+- **검증 결과**: 로컬 MariaDB 10.6: 수정 조회 항목별 REV.1 반환, REV 적용 전 실적은 빈 값. 오프라인 렌더 + 실제 공통 스크립트: 등록 팝업 '적용 REV' 칸 REV.1·REVCD 보관·대기 안내 유지, 수정 팝업 '적용 REV' 칸 REV.0, 라벨 제거, 콘솔 오류 0건
+---
+
+
 ## 🕒 2026-10-01 (목) 작업 내역
+
+### 2. EQM1001_R04 등록 팝업 점검자 조회를 목록과 같은 주기관리 행 기준으로 수정
+- **수정/대상 파일**: [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql)
+- **배경 및 원인**: 사용자 보고: 점검필요 클릭 시 점검자가 여전히 안 보임. 점검자 조회만 CHKPLANEQM_YEARPLAN.CHKTP='02' 행을 요구해, 목록(구분 무관)과 읽는 행이 다를 수 있었음
+- **작업 상세 내용**:
+  - LIST_CHKPLANEQM_EQM02 점검자 조회에서 CHKTP='02' 필터 제거, '02' 행 우선(ORDER BY) 후 1건. 실서버 반영·화면 캐시·동명이인 여부는 사용자 확인 필요
+- **검증 결과**: 로컬 MariaDB 10.6: 구분 빈 값 행만 있는 설비 E01 지정, 빈 값·'02' 행 공존 시 '02' 행(E02) 지정
+
 
 ### 2. EQM1001_R04 정기점검 등록 팝업에 주기관리 지정 점검자 기본 표시
 - **수정/대상 파일**: [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js)
@@ -249,6 +268,8 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | [EQM1001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql) | R04 적용 REV 그리드 칸 | 로컬 MariaDB 10.6: 수정 조회 항목별 REV.1 반환, REV 적용 전 실적은 빈 값. 오프라인 렌더 + 실제 공통 스크립트: 등록 팝업 '적용 REV' 칸 REV.1·REVCD 보관·대기 안내 유지, 수정 팝업 '적용 REV' 칸 REV.0, 라벨 제거, 콘솔 오류 0건 |
+| **진행 중** | [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql) | R04 점검자 기본값 원인 확인 | 로컬 MariaDB 10.6: 구분 빈 값 행만 있는 설비 E01 지정, 빈 값·'02' 행 공존 시 '02' 행(E02) 지정 |
 | **완료** | [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js) | R04 등록 팝업 점검자 기본값 | 로컬 MariaDB 10.6: 이름 1명·사원코드 저장·동명이인·없는 이름·미지정·앞뒤 공백·10/12월·계획 없는 년도 8가지 통과. 오프라인 렌더 + 실제 공통 스크립트: 년월 전달, 점검자 E01 자동 지정, 동명이인 안내, 미지정 시 이전 값 남지 않음, 저장 요청에 EMPCD·REVCD 포함, 콘솔 오류 0건 |
 | **완료** | [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql) | 그룹 없는 설비 주기관리 포함 | 로컬 MariaDB 10.6(실제 GETKEY, 새 REVCD 구조): 주기관리 목록에 그룹승인 설비·그룹 빈값·그룹 NULL 설비 표시, 그룹 미승인·설비 미승인·항목 없는 설비 제외, 그룹 없는 설비 주기 저장·R04 목록(점검필요)·등록 팝업·등록·수정 조회·수정·삭제 정상, 그룹 미승인 설비 저장·팝업·등록 차단, 그룹 승인 후 표시 |
 | **완료** | [MES_SNS2_EQM1001_PLAN_REV_REVCD.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV_REVCD.sql) | REVCD 실제 GETKEY 재검증 | 실제 GETKEY 정의 + COMKEY로 로컬 MariaDB 10.6 재검증: 운영 데이터 변환(8건 발번, 중복 0), 그룹 수정 시 소속 설비 3대 한 문장 발번 중복 없음, 그룹 승인 승인본, R04 팝업·등록·조회(REVCD 기록), 키 종류별 순번 분리(CHKRSTKEY 4·REVCD 11), 신규 설치 PLAN_REV→INIT 및 재실행 무변화(불필요 발번 없음) |
