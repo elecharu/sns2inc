@@ -26,7 +26,6 @@
                 <Its:split runat="server" Type="Vertical" />            
 
                 <Its:div runat="server" Type="SplitRight">
-                    <%-- 2026-09-30 설비그룹 점검계획 탭: 우측 상단 개정 이력(REV) 그리드, 우측 하단 선택한 REV의 점검 항목 --%>
                     <Its:div runat="server" Type="SplitTop" TopHeightPc="40">
                         <Its:div runat="server" Type="SplitTop" TopHeightPc="17">
                             <Its:label runat="server" Text="■ 개정 이력 (REV)" Bold="true" MarginLeft="10"/>
@@ -77,7 +76,6 @@
                 <Its:split runat="server" Type="Vertical" />            
 
                 <Its:div runat="server" Type="SplitRight">              
-                    <%-- 2026-09-30 설비별 점검계획 탭: 우측 상단 개정 이력(REV) 그리드, 우측 하단 선택한 REV의 점검 항목 --%>
                     <Its:div runat="server" Type="SplitTop" TopHeightPc="40">
                         <Its:div runat="server" Type="SplitTop" TopHeightPc="17">
                             <Its:label runat="server" Text="■ 개정 이력 (REV)" Bold="true" MarginLeft="10"/>
@@ -100,7 +98,6 @@
                             <Its:button runat="server" Label="추가" ID="bdiv3_btn_ADD" MarginLeft="10" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="저장" ID="bdiv3_btn_SAVE" MarginLeft="10" BackColor="CustomButton" />
                             <Its:button runat="server" Label="삭제" ID="bdiv3_btn_DEL" MarginLeft="10" BackColor="CustomButton3" />
-                            <%-- 2026-09-30 설비별 점검계획 탭: 설비 수정 시 소속 설비그룹 계획서도 승인 대기가 된다는 안내 --%>
                             <Its:label runat="server" Text="※ 설비별 수정은 소속 설비그룹 계획서도 함께 승인 대기가 됩니다." ID="lbl_EQM_REV_INFO" ForeColor="BlueDark1" MarginLeft="20"/>
                         </Its:div>
 
@@ -116,7 +113,6 @@
         
         <%-- 정기점검 주기관리 탭: 화면 영역 --%>
         <Its:div runat="server" Type="SplitSingle" TabTitle="정기점검 주기관리">
-            <%-- 2026-09-29 정기점검 주기관리 탭: 점검자 및 일괄주기설정 버튼 추가, UI/UX 간소화 --%>
             <Its:div runat="server" Type="SplitTop" TopHeightPc="4" BackColor="White" ID="div_CYCLE_EQM">
                 <Its:combo runat="server" Label="조회년도" ID="cmb_SYEAR" Field="SYEAR" GPCD="YEAR" REF01="-4" REF02="0" MarginLeft="10" MarginTop="6" LabelWidth="60" />
                 <Its:find runat="server" Label="설비" Field="FANO" GPCD="EQMCD" ID="find1" MarginLeft="15" MarginTop="6" LabelWidth="38" />
@@ -172,7 +168,6 @@
         </Its:div>
     </Its:pop>    
 
-    <%-- 2026-09-21 설비그룹 정기점검 복사: 설비별 복사 모달과 분리하여 설비그룹과 그룹별 점검항목을 조회 --%>
     <Its:pop runat="server" ID="pop_GRP_EQM02_COPY" Title="설비그룹 정기점검 복사" Width="1200" Height="500">
         <Its:div runat="server" Type="SplitTop" TopHeightPc="90">
             <Its:div runat="server" Type="SplitLeft" LeftWidthPc="30">
@@ -194,7 +189,6 @@
         </Its:div>
     </Its:pop>
 
-    <%-- 2026-09-29 정기점검 주기관리 탭: 여러 설비 일괄 주기설정 및 점검자 일괄 등록/변경 모달 --%>
     <Its:pop runat="server" ID="pop_CYCLE_BATCH" Title="정기점검 일괄 주기설정" Width="640" Height="300">
         <div style="padding: 12px 18px; font-size: 12px; color: #333; line-height: 1.6;">
             <!-- 상단 요약 안내 -->
@@ -204,7 +198,6 @@
                 <span style="color: #666; margin-left: 15px; font-size: 11px;">※ 그리드에서 체크된 모든 설비에 일괄 적용됩니다.</span>
             </div>
 
-            <!-- 2026-09-29 [정기점검 주기관리 탭] 적용 대상 월 선택 헤더 및 전체 선택/해제 토글 버튼 -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <span style="font-weight: bold; color: #444;">적용 대상 월 선택:</span>
                 <button type="button" id="btn_ALL_MONTH" style="padding: 4px 12px; font-size: 11px; font-weight: bold; cursor: pointer; border: 1px solid #d32f2f; background: #ffebee; color: #d32f2f; border-radius: 3px;">전체 해제</button>

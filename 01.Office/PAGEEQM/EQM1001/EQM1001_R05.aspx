@@ -13,7 +13,6 @@
         <Its:div runat="server" Type="SplitSingle" TabTitle="설비그룹별 점검계획">
             <Its:div runat="server" Type="SplitTop" TopHeightPc="3" BackColor="White" ID="div_GRP_PLAN">
                 <Its:find runat="server" Label="설비그룹" Field="EQMGRP" GPCD="FM116" ID="find_GRP" MarginLeft="-25" MarginTop="3" InputWidth="120" NameWidth="150" />
-                <%-- 2026-10-02 설비그룹별 점검계획 탭: 승인상태(전체·대기·승인·반려) 조회 필터 --%>
                 <Its:combo runat="server" Label="승인상태" Field="APRVSTT" ID="cmb_GRP_APRVSTT" MarginLeft="20" MarginTop="3" InputWidth="80" />
                 <Its:text runat="server" Label="반려사유" Field="REJREASON" ID="txt_GRP_REJREASON" MarginLeft="20" MarginTop="3" InputWidth="300" />
                 <Its:button runat="server" Label="승인" ID="btn_GRP_APPROVE" MarginLeft="20" MarginTop="3" BackColor="CustomButton" />
@@ -32,12 +31,10 @@
         <Its:div runat="server" Type="SplitSingle" TabTitle="설비별 점검계획">
             <Its:div runat="server" Type="SplitTop" TopHeightPc="3" BackColor="White" ID="div_EQM_PLAN">
                 <Its:find runat="server" Label="설비" Field="FANO" GPCD="EQMCD" ID="find_EQMCD" MarginLeft="-25" MarginTop="3" InputWidth="100" NameWidth="180" />
-                <%-- 2026-10-02 설비별 점검계획 탭: 승인상태(전체·대기·승인·반려) 조회 필터 --%>
                 <Its:combo runat="server" Label="승인상태" Field="APRVSTT" ID="cmb_EQM_APRVSTT" MarginLeft="20" MarginTop="3" InputWidth="80" />
                 <Its:text runat="server" Label="반려사유" Field="REJREASON" ID="txt_EQM_REJREASON" MarginLeft="20" MarginTop="3" InputWidth="300" />
                 <Its:button runat="server" Label="승인" ID="btn_EQM_APPROVE" MarginLeft="20" MarginTop="3" BackColor="CustomButton" />
                 <Its:button runat="server" Label="반려" ID="btn_EQM_REJECT" MarginLeft="10" MarginTop="3" BackColor="CustomButton3" />
-                <%-- 2026-10-02 설비별 점검계획 탭: 승인된 설비 점검계획서 출력 --%>
                 <Its:button runat="server" Label="계획서 출력" ID="btn_EQM_PLAN_RPT" Float="right" MarginRight="10" MarginTop="3" BackColor="CustomButton2" />
             </Its:div>
 

@@ -17,7 +17,26 @@
 
 ## 🕒 2026-10-02 (금) 작업 내역
 
-### 1. 프로시저 최상단 Modify 이력 1일 1행 통합 및 규칙화
+### 1. EQM1001_R04.js SVN 버전 충돌 해결 및 최신본 통합
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js
+- **배경 및 원인**: SVN 업데이트 과정에서 이전 리비전(r124/r133)과 로컬 최신 수정본(.mine) 간 충돌 마커(`<<<<<<< .mine`, `>>>>>>> .r133`) 발생.
+- **작업 상세 내용**:
+  - 로컬 최신 개발본(.mine)의 핵심 로직(등록 팝업 오픈 조건 판정, 프로시저 유효성 검증 분기, 수정 완료 확인 콜백 닫기/재조회 등)을 기준으로 충돌 마커 전면 해소 및 단일 최신본으로 통합.
+  - 충돌로 생성된 SVN 임시 파일(`.mine`, `.r124`, `.r133`) 정리.
+- **검증 결과**: 충돌 마커 0건 확인, Node.js 구문 검사(`node -c`) 정상 통과, UTF-8 with BOM 및 Windows CRLF 개행 무결성 확인 완료 (중복 CR 0건).
+
+
+### 2. ASP.NET (.aspx, .aspx.cs) 주석 작성 금지 및 .js 한정 주석 규칙화
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.aspx, .agents/rules/aspx_cs_comment.md, .agents/rules/Optimization.md
+- **배경 및 원인**: 사용자 요청: `.aspx`, `.aspx.cs` 파일에 날짜별 주석이 누적되면서 마크업 구조가 복잡해지므로 주석 추가를 일체 금지하고, 기존 날짜 주석 규칙은 `.js` 파일에만 적용하도록 규칙 제정 및 기존 화면 주석 정리.
+- **작업 상세 내용**:
+  - `EQM1001_R03.aspx`, `R04.aspx`, `R05.aspx` 화면 마크업 내에 추가되어 있던 날짜 주석(`<-- 2026-xx-xx ... -->`, `<%-- 2026-xx-xx ... --%>`) 전면 제거 및 순수 태그 구조 정돈.
+  - `.agents/rules/aspx_cs_comment.md` 규칙 파일 신규 추가: `.aspx`, `.aspx.cs` 주석 추가 절대 금지, 날짜 주석은 `.js` 파일에만 한정 적용, 파일 종류별 주석 기준표 명시.
+  - `.agents/rules/Optimization.md` 섹션 2 개정: 날짜 주석을 `.js` 한정으로 변경하고 `.aspx`, `.aspx.cs` 주석 금지 규칙 명시.
+- **검증 결과**: 대상 화면 파일 내 날짜 주석 0건 확인 완료. 전 파일 UTF-8 with BOM 및 Windows CRLF 개행 무결성 확인 완료 (중복 CR 0건).
+
+
+### 2. 프로시저 최상단 Modify 이력 1일 1행 통합 및 규칙화
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, .agents/rules/procedure_history.md, .agents/rules/procedure.md
 - **배경 및 원인**: 프로시저 최상단 Modify 이력이 동일 일자에 여러 줄로 나열되어 가독성을 저해하던 문제를 해결하기 위해 하루당 1행으로 간결히 통합하고, 이를 프로젝트 규칙으로 공식화.
 - **작업 상세 내용**:
@@ -390,6 +409,8 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js | EQM1001_R04.js SVN 버전 충돌 해결 및 최신본 통합 | .mine 최신 로직 기준으로 충돌 마커 전면 해소, 임시 파일 정리, 문법/BOM/CRLF 정상 |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.aspx, .agents/rules/aspx_cs_comment.md | ASP.NET (.aspx, .aspx.cs) 주석 작성 금지 및 .js 한정 주석 규칙화 | .aspx 화면 마크업 날짜 주석 전면 제거 및 규칙 문서(.agents/rules/aspx_cs_comment.md) 신규 제정. BOM·CRLF 정상 |
 | **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, .agents/rules/procedure_history.md | 프로시저 최상단 Modify 이력 1일 1행 통합 및 규칙화 | 프로시저 최상단 이력 날짜별 1행 통합 정리 및 규칙 문서(.agents/rules/procedure_history.md) 신규 제정. BOM·CRLF 정상 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js | EQM1001_R04 수정 완료 알림 확인 후 팝업 닫기 | 오프라인 화면(실제 공통 스크립트): 저장 직후 알림 표시·수정 팝업 유지, 알림 확인 클릭 후 수정 팝업 닫힘·목록 재조회 호출 확인. JS 문법·BOM·CRLF 정상 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js | EQM1001_R04 정기점검 수정 완료 후 팝업 자동 닫기 | JS 문법·BOM·CRLF 정상 |
