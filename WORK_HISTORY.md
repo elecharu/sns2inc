@@ -17,6 +17,14 @@
 
 ## 🕒 2026-10-06 (화) 작업 내역
 
+### 2. EQM1001_R01 화면 및 프로시저 수리유형 명칭 원복
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql
+- **배경 및 원인**: 설비이력관리(EQM1001_R01) 화면의 콤보 라벨 및 메인 그리드 컬럼명이 '고장원인구분'으로 변경되었던 부분을 기존 명칭인 '수리유형'으로 원복 요청
+- **작업 상세 내용**:
+  - 1. EQM1001_R01.aspx 팝업 콤보(pop1_com_ISSUE) 라벨을 '수리유형'으로 원복. 2. EQM1001_R01.js 메인 그리드(grid1) 컬럼명을 '수리유형'으로 원복 및 주석 갱신. 3. MES_SNS2_EQM1001_R01.sql 검증 오류 메시지를 '수리유형을 선택하세요.'로 원복 및 최상단 1일 1행 Modify 주석 갱신. 4. 전 파일 UTF-8 with BOM 및 CRLF 개행 유지
+- **검증 결과**: IIS Express 200 OK 확인, 렌더링된 HTML 내 '수리유형' 포함 및 '고장원인구분' 미포함 검증 완료, 전 파일 UTF-8 with BOM 무결성 확인
+
+
 ### 2. EQM1001_R04 프로시저 월별 점검상태 REV 버전 표기 포맷 간결화 (REV.0, REV.1 등)
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql
 - **배경 및 원인**: 정기점검 등록/조회(R04) 화면 메인 그리드 월별 점검상태의 REV 버전을 두 자리 패딩(REV.00) 대신 REV.0, REV.1과 같이 자연스러운 REVNUM 원본 형식으로 표시 요청
@@ -513,6 +521,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql | EQM1001_R01 수리유형 명칭 원복 완료, 렌더링 200 OK 검증 완료 | IIS Express 200 OK 확인, 렌더링된 HTML 내 '수리유형' 포함 및 '고장원인구분' 미포함 검증 완료, 전 파일 UTF-8 with BOM 무결성 확인 |
 | **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql | EQM1001_R04 프로시저 REV 표기 간결화 완료 (서버 DB 직접 반영 금지 원칙 준수) | SQL 소스 파일 UTF-8 with BOM 및 CRLF 무결성 확인, IIS Express 200 OK 정상 서빙 확인 |
 | **완료** | 01.Office/PAGEMST/MST3001/MST3001_R03 (aspx, aspx.cs, js), 01.Office/PAGETOL/TOL0003/TOL0003_R05 (aspx, aspx.cs, js) | MST3001_R03 및 TOL0003_R05 표준화 완료, IIS Express 200 OK 서빙 확인 | IIS Express(http://localhost:55085/) 호출 검증 결과 MST3001_R03.aspx 및 TOL0003_R05.aspx 모두 200 OK 정상 서빙 확인, 전 파일 UTF-8 with BOM 및 CRLF 무결성 검증 완료 |
 | **완료** | [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql) | EQM1001_R04 월별 점검상태 REV 버전 표기 및 컬럼 확장 완료 | IIS Express 200 OK 확인, 브라우저 렌더링 검증 결과 점검완료(초록)/점검필요(파랑) 색상 적용 및 pop1/pop2 더블클릭 오픈 정상 동작 확인 완료 |

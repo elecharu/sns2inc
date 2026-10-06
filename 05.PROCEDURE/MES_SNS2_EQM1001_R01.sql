@@ -4,7 +4,7 @@
 -- Create: 	2025-06-24  	생성 			이대규
 -- Modify: 	2026-09-16 		마이그레이션	한성수
 -- 			2026-09-16 					한성수	MSTEQM.FANO(설비코드) 컬럼 바인딩 변경 및 구분선/코드 정렬
--- 			2026-10-06 					한성수	작업자 검색·이력 누락 보완, 날짜·입력 검증 및 부품 미사용 로직 정리
+-- 			2026-10-06 					한성수	작업자 검색·이력 누락 보완, 수리유형 등 입력값 검증 및 부품 미사용 정리
 -- *****************************************************************************
   IN $SDATE            VARCHAR(10),     -- 조회 시작일자
   IN $EDATE            VARCHAR(10),     -- 조회 종료일자
@@ -158,7 +158,7 @@ WHEN 'ADD_EQMREP' THEN  -- 팝업창 설비이력 저장
     LEAVE PROC;
   END IF;
   IF NOT EXISTS (SELECT 1 FROM COMTYPE WHERE GPCD = 'ISSUE' AND TPCD = $ISSUE) THEN
-    CALL COMERR('고장원인구분을 선택하세요.');
+    CALL COMERR('수리유형을 선택하세요.');
     LEAVE PROC;
   END IF;
 
@@ -299,7 +299,7 @@ WHEN 'SAVE_EQMREP' THEN  -- 수정 후 저장
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM COMTYPE WHERE GPCD = 'ISSUE' AND TPCD = _$ISSUE) THEN
-      CALL COMERR('고장원인구분을 선택하세요.');
+      CALL COMERR('수리유형을 선택하세요.');
       LEAVE PROC;
     END IF;
 
