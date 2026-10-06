@@ -4,6 +4,7 @@
 -- Create: 	2025-06-24  	생성 			이대규
 -- Modify: 	2026-09-16 		마이그레이션	한성수
 -- 			2026-09-16 					한성수	MSTEQM.FANO(설비코드) 컬럼 바인딩 변경 및 구분선/코드 정렬
+-- 			2026-10-06 					한성수	작업자 검색·이력 누락 보완, 날짜·입력 검증 및 부품 미사용 로직 정리
 -- *****************************************************************************
   IN $SDATE            VARCHAR(10),     -- 조회 시작일자
   IN $EDATE            VARCHAR(10),     -- 조회 종료일자
@@ -52,7 +53,8 @@
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 -- SET @DEBUGLOGYN = 'Y';
 -- *****************************************************************************
-  DECLARE _$EMPCD       VARCHAR(20);
+  DECLARE _$EMPCD       VARCHAR(100);
+  DECLARE _$EMPCD_LIST  MEDIUMTEXT;
   DECLARE _$REPSDAYTIME VARCHAR(20);
   DECLARE _$REGDAYTIME  VARCHAR(20);
   DECLARE _$REPEDAYTIME VARCHAR(20);
@@ -65,8 +67,6 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$REPETIME    VARCHAR(100);
   DECLARE _$REPUTIME    DECIMAL(20, 8);
   DECLARE _$EQMCD       VARCHAR(100);
-  DECLARE _$PARTCD      VARCHAR(100);
-  DECLARE _$PARTQTY     DECIMAL(20, 8);
   DECLARE _$REPAMT      DECIMAL(20, 8);
   DECLARE _$REPCUST     VARCHAR(100);
   DECLARE _$ISSUE       VARCHAR(100);
@@ -81,11 +81,11 @@ WHEN 'LIST_EQMREP' THEN  -- 설비이력조회
   SELECT
     EQMREP.EQMREPKEY,                    -- 설비수리키
     LEFT(EQMREP.REGTIME, 10)  AS REGDAY, -- 등록일자
-    RIGHT(EQMREP.REGTIME, 5)  AS REGTIME,-- 등록시간
+    SUBSTRING(EQMREP.REGTIME, 12, 5)  AS REGTIME,-- 등록시간
     LEFT(EQMREP.REPSTIME, 10) AS REPSDAY,-- 발생일자
-    RIGHT(EQMREP.REPSTIME, 5) AS REPSTIME,-- 발생시간
+    SUBSTRING(EQMREP.REPSTIME, 12, 5) AS REPSTIME,-- 발생시간
     LEFT(EQMREP.REPETIME, 10) AS REPEDAY,-- 완료일자
-    RIGHT(EQMREP.REPETIME, 5) AS REPETIME,-- 완료시간
+    SUBSTRING(EQMREP.REPETIME, 12, 5) AS REPETIME,-- 완료시간
     EQMREP.REPUTIME,                     -- 소요일
     EQMREP.EQMCD,                        -- 설비코드
     MSTEQM.EQMNM,                        -- 설비명
@@ -96,45 +96,53 @@ WHEN 'LIST_EQMREP' THEN  -- 설비이력조회
     EQMREP.HANDLE,
     EQMREP.REMARK
   FROM EQMREP
-  JOIN MSTEQM ON MSTEQM.FANO = EQMREP.EQMCD
-  WHERE LEFT(EQMREP.REGTIME, 10) BETWEEN $SDATE AND $EDATE
+  LEFT JOIN MSTEQM ON MSTEQM.FANO = EQMREP.EQMCD
+  LEFT JOIN (
+    SELECT DISTINCT EQMREPKEY
+    FROM EQMREP_EMP
+    WHERE EMPCD = $EMPCD
+  ) REPEMP ON REPEMP.EQMREPKEY = EQMREP.EQMREPKEY
+  WHERE EQMREP.REGTIME BETWEEN CONCAT($SDATE, ' 00:00') AND CONCAT($EDATE, ' 23:59:59')
     AND EQMREP.EQMCD LIKE CONCAT('%', $EQMCD, '%')
-    AND EQMREP.EMPCD LIKE CONCAT('%', $EMPCD, '%')
+    AND ($EMPCD = '' OR REPEMP.EQMREPKEY IS NOT NULL)
     AND EQMREP.EQMREPTP = 'EQM01'
-  ORDER BY EQMREP.REGTIME;
+  ORDER BY EQMREP.REGTIME, EQMREP.EQMREPKEY;
 
 -- *****************************************************************************
 WHEN 'LIST_EMPCD' THEN  -- 설비이력 관련 작업자 조회
   SELECT
     EQMREP_EMP.EQMREPKEY,
     EQMREP_EMP.EMPCD,
-    MSTEMP.EMPNM
+    IFNULL(MSTEMP.EMPNM, EQMREP_EMP.EMPCD) AS EMPNM
   FROM EQMREP_EMP
-  JOIN MSTEMP ON MSTEMP.EMPCD = EQMREP_EMP.EMPCD
-  WHERE EQMREP_EMP.EQMREPKEY = $EQMREPKEY;
+  LEFT JOIN MSTEMP ON MSTEMP.EMPCD = EQMREP_EMP.EMPCD
+  WHERE EQMREP_EMP.EQMREPKEY = $EQMREPKEY
+  ORDER BY EQMREP_EMP.EMPCD;
 
 -- *****************************************************************************
 WHEN 'ADD_EQMREP' THEN  -- 팝업창 설비이력 저장
-  IF $EQMCD = '' THEN
+  SET $REPEDAY = TRIM(IFNULL($REPEDAY, ''));
+  SET $REPETIME = TRIM(IFNULL($REPETIME, ''));
+  IF TRIM(IFNULL($EQMCD, '')) = '' THEN
     CALL COMERR('설비코드를 입력하세요.');
     LEAVE PROC;
   END IF;
 
-  IF $REGDAY = '' THEN
+  IF TRIM(IFNULL($REGDAY, '')) = '' THEN
     CALL COMERR('등록일자를 입력하세요.');
     LEAVE PROC;
   ELSE
-    IF $REGTIME = '' THEN
+    IF TRIM(IFNULL($REGTIME, '')) = '' THEN
       CALL COMERR('등록시간을 입력하세요.');
       LEAVE PROC;
     END IF;
   END IF;
 
-  IF $REPSDAY = '' THEN
+  IF TRIM(IFNULL($REPSDAY, '')) = '' THEN
     CALL COMERR('발생일자를 입력하세요.');
     LEAVE PROC;
   ELSE
-    IF $REPSTIME = '' THEN
+    IF TRIM(IFNULL($REPSTIME, '')) = '' THEN
       CALL COMERR('발생시간을 입력하세요.');
       LEAVE PROC;
     END IF;
@@ -145,11 +153,68 @@ WHEN 'ADD_EQMREP' THEN  -- 팝업창 설비이력 저장
     LEAVE PROC;
   END IF;
 
-  SET $EQMREPKEY = GETKEY('EQMREPKEY');
+  IF TRIM(IFNULL($REPCUST, '')) = '' THEN
+    CALL COMERR('수리업체를 입력하세요.');
+    LEAVE PROC;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM COMTYPE WHERE GPCD = 'ISSUE' AND TPCD = $ISSUE) THEN
+    CALL COMERR('고장원인구분을 선택하세요.');
+    LEAVE PROC;
+  END IF;
 
-  SET _$REGDAYTIME  = IFNULL(CONCAT($REGDAY, ' ', $REGTIME), '');
-  SET _$REPSDAYTIME = IFNULL(CONCAT($REPSDAY, ' ', $REPSTIME), '');
-  SET _$REPEDAYTIME = IFNULL(CONCAT($REPEDAY, ' ', $REPETIME), '');
+  IF NOT EXISTS (SELECT 1 FROM MSTEQM WHERE FANO = $EQMCD) THEN
+    CALL COMERR('등록된 설비를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($EMPCD_LIST, '') = '' THEN
+    CALL COMERR('작업자를 추가해주세요.');
+    LEAVE PROC;
+  END IF;
+  SET _$EMPCD_LIST = $EMPCD_LIST;
+  WHILE LENGTH(_$EMPCD_LIST) > 0 DO
+    CALL COMSPLIT(_$EMPCD_LIST, _$EMPCD);
+    IF NOT EXISTS (SELECT 1 FROM MSTEMP WHERE EMPCD = _$EMPCD) THEN
+      CALL COMERR('등록된 작업자를 선택하세요.');
+      LEAVE PROC;
+    END IF;
+  END WHILE;
+
+  IF CHAR_LENGTH($REPCUST) > 100 OR CHAR_LENGTH($MALFUNCTION) > 100
+    OR CHAR_LENGTH($HANDLE) > 100 OR CHAR_LENGTH($REMARK) > 100 THEN
+    CALL COMERR('수리업체, 고장원인, 처리내용, 비고는 각각 100자 이내로 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  SET _$REGDAYTIME = CONCAT($REGDAY, ' ', $REGTIME);
+  SET _$REPSDAYTIME = CONCAT($REPSDAY, ' ', $REPSTIME);
+  SET _$REPEDAYTIME = CASE WHEN $REPEDAY = '' THEN '' ELSE CONCAT($REPEDAY, ' ', $REPETIME) END;
+
+  IF $REGTIME NOT REGEXP '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+    OR $REPSTIME NOT REGEXP '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+    OR $REGDAY NOT REGEXP '^[1-9][0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'
+    OR $REPSDAY NOT REGEXP '^[1-9][0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'
+    OR DAY(STR_TO_DATE($REGDAY, '%Y-%m-%d')) > DAY(LAST_DAY(CONCAT(LEFT($REGDAY, 7), '-01')))
+    OR DAY(STR_TO_DATE($REPSDAY, '%Y-%m-%d')) > DAY(LAST_DAY(CONCAT(LEFT($REPSDAY, 7), '-01'))) THEN
+    CALL COMERR('등록일시와 발생일시를 올바르게 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF _$REPEDAYTIME <> '' THEN
+    IF $REPETIME NOT REGEXP '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+      OR $REPEDAY NOT REGEXP '^[1-9][0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'
+      OR DAY(STR_TO_DATE($REPEDAY, '%Y-%m-%d')) > DAY(LAST_DAY(CONCAT(LEFT($REPEDAY, 7), '-01'))) THEN
+      CALL COMERR('완료일시를 올바르게 입력하세요.');
+      LEAVE PROC;
+    END IF;
+    IF _$REPEDAYTIME < _$REPSDAYTIME THEN
+      CALL COMERR('완료일시는 발생일시 이후로 입력하세요.');
+      LEAVE PROC;
+    END IF;
+  END IF;
+  SET _$REPUTIME = CASE WHEN _$REPEDAYTIME = '' THEN 0 ELSE DATEDIFF($REPEDAY, $REPSDAY) + 1 END;
+
+  SET $EQMREPKEY = GETKEY('EQMREPKEY');
 
   INSERT INTO EQMREP (
     EQMREPKEY, EQMCD, EQMREPTP,
@@ -159,7 +224,7 @@ WHEN 'ADD_EQMREP' THEN  -- 팝업창 설비이력 저장
     RTIME, REMP, RPRG
   ) VALUES (
     $EQMREPKEY, $EQMCD, 'EQM01',
-    _$REGDAYTIME, _$REPSDAYTIME, _$REPEDAYTIME, $REPUTIME,
+    _$REGDAYTIME, _$REPSDAYTIME, _$REPEDAYTIME, _$REPUTIME,
     $REPAMT, $REPCUST, CALLEMP(),
     $HANDLE, $MALFUNCTION, $ISSUE, $REMARK,
     CALLTIME(), CALLEMP(), CALLPRG()
@@ -195,23 +260,25 @@ WHEN 'SAVE_EQMREP' THEN  -- 수정 후 저장
     CALL COMSPLIT($MALFUNCTION_LIST, _$MALFUNCTION);
     CALL COMSPLIT($HANDLE_LIST, _$HANDLE);
     CALL COMSPLIT($REMARK_LIST, _$REMARK);
+    SET _$REPEDAY = TRIM(IFNULL(_$REPEDAY, ''));
+    SET _$REPETIME = TRIM(IFNULL(_$REPETIME, ''));
 
-    IF _$REGDAY = '' THEN
+    IF TRIM(IFNULL(_$REGDAY, '')) = '' THEN
       CALL COMERR('등록일자를 입력하세요.');
       LEAVE PROC;
     END IF;
 
-    IF _$REGTIME = '' THEN
+    IF TRIM(IFNULL(_$REGTIME, '')) = '' THEN
       CALL COMERR('등록일시를 입력하세요.');
       LEAVE PROC;
     END IF;
 
-    IF _$REPSDAY = '' THEN
+    IF TRIM(IFNULL(_$REPSDAY, '')) = '' THEN
       CALL COMERR('발생일자를 입력하세요.');
       LEAVE PROC;
     END IF;
 
-    IF _$REPSTIME = '' THEN
+    IF TRIM(IFNULL(_$REPSTIME, '')) = '' THEN
       CALL COMERR('발생일시를 입력하세요.');
       LEAVE PROC;
     END IF;
@@ -221,29 +288,64 @@ WHEN 'SAVE_EQMREP' THEN  -- 수정 후 저장
       LEAVE PROC;
     END IF;
 
-    IF _$EQMCD = '' THEN
+    IF TRIM(IFNULL(_$EQMCD, '')) = '' THEN
       CALL COMERR('설비를 입력하세요.');
       LEAVE PROC;
     END IF;
 
-    IF _$PARTCD = '' THEN
-      CALL COMERR('부품을 입력하세요.');
-      LEAVE PROC;
-    END IF;
-
-    IF _$REPCUST = '' THEN
+    IF TRIM(IFNULL(_$REPCUST, '')) = '' THEN
       CALL COMERR('수리 업체를 입력하세요.');
       LEAVE PROC;
     END IF;
 
-    IF _$ISSUE = '' THEN
-      CALL COMERR('수리 유형을 입력하세요.');
+    IF NOT EXISTS (SELECT 1 FROM COMTYPE WHERE GPCD = 'ISSUE' AND TPCD = _$ISSUE) THEN
+      CALL COMERR('고장원인구분을 선택하세요.');
       LEAVE PROC;
     END IF;
 
-    SET _$REGDAYTIME  = IFNULL(CONCAT(_$REGDAY, ' ', _$REGTIME), '');
-    SET _$REPSDAYTIME = IFNULL(CONCAT(_$REPSDAY, ' ', _$REPSTIME), '');
-    SET _$REPEDAYTIME = IFNULL(CONCAT(_$REPEDAY, ' ', _$REPETIME), '');
+    IF NOT EXISTS (SELECT 1 FROM EQMREP WHERE EQMREPKEY = _$EQMREPKEY AND EQMREPTP = 'EQM01') THEN
+      CALL COMERR('수리이력을 다시 조회한 후 저장하세요.');
+      LEAVE PROC;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM MSTEQM WHERE FANO = _$EQMCD)
+      AND NOT EXISTS (SELECT 1 FROM EQMREP WHERE EQMREPKEY = _$EQMREPKEY AND EQMCD = _$EQMCD) THEN
+      CALL COMERR('등록된 설비를 선택하세요.');
+      LEAVE PROC;
+    END IF;
+
+    IF CHAR_LENGTH(_$REPCUST) > 100 OR CHAR_LENGTH(_$MALFUNCTION) > 100
+      OR CHAR_LENGTH(_$HANDLE) > 100 OR CHAR_LENGTH(_$REMARK) > 100 THEN
+      CALL COMERR('수리업체, 고장원인, 처리내용, 비고는 각각 100자 이내로 입력하세요.');
+      LEAVE PROC;
+    END IF;
+
+    SET _$REGDAYTIME = CONCAT(_$REGDAY, ' ', _$REGTIME);
+    SET _$REPSDAYTIME = CONCAT(_$REPSDAY, ' ', _$REPSTIME);
+    SET _$REPEDAYTIME = CASE WHEN _$REPEDAY = '' THEN '' ELSE CONCAT(_$REPEDAY, ' ', _$REPETIME) END;
+
+    IF _$REGTIME NOT REGEXP '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+      OR _$REPSTIME NOT REGEXP '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+      OR _$REGDAY NOT REGEXP '^[1-9][0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'
+      OR _$REPSDAY NOT REGEXP '^[1-9][0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'
+      OR DAY(STR_TO_DATE(_$REGDAY, '%Y-%m-%d')) > DAY(LAST_DAY(CONCAT(LEFT(_$REGDAY, 7), '-01')))
+      OR DAY(STR_TO_DATE(_$REPSDAY, '%Y-%m-%d')) > DAY(LAST_DAY(CONCAT(LEFT(_$REPSDAY, 7), '-01'))) THEN
+      CALL COMERR('등록일시와 발생일시를 올바르게 입력하세요.');
+      LEAVE PROC;
+    END IF;
+
+    IF _$REPEDAYTIME <> '' THEN
+      IF _$REPETIME NOT REGEXP '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$'
+        OR _$REPEDAY NOT REGEXP '^[1-9][0-9]{3}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$'
+        OR DAY(STR_TO_DATE(_$REPEDAY, '%Y-%m-%d')) > DAY(LAST_DAY(CONCAT(LEFT(_$REPEDAY, 7), '-01'))) THEN
+        CALL COMERR('완료일시를 올바르게 입력하세요.');
+        LEAVE PROC;
+      END IF;
+      IF _$REPEDAYTIME < _$REPSDAYTIME THEN
+        CALL COMERR('완료일시는 발생일시 이후로 입력하세요.');
+        LEAVE PROC;
+      END IF;
+    END IF;
+    SET _$REPUTIME = CASE WHEN _$REPEDAYTIME = '' THEN 0 ELSE DATEDIFF(_$REPEDAY, _$REPSDAY) + 1 END;
 
     UPDATE EQMREP SET
       EQMCD       = _$EQMCD,
@@ -253,7 +355,6 @@ WHEN 'SAVE_EQMREP' THEN  -- 수정 후 저장
       REPUTIME    = _$REPUTIME,
       REPAMT      = _$REPAMT,
       REPCUST     = _$REPCUST,
-      EMPCD       = CALLEMP(),
       HANDLE      = _$HANDLE,
       MALFUNCTION = _$MALFUNCTION,
       ISSUE       = _$ISSUE,
@@ -261,7 +362,7 @@ WHEN 'SAVE_EQMREP' THEN  -- 수정 후 저장
       MTIME       = CALLTIME(),
       MEMP        = CALLEMP(),
       MPRG        = CALLPRG()
-    WHERE EQMREPKEY = _$EQMREPKEY;
+    WHERE EQMREPKEY = _$EQMREPKEY AND EQMREPTP = 'EQM01';
   END WHILE;
 
 -- *****************************************************************************
@@ -274,7 +375,15 @@ WHEN 'DELETE_EQMREP' THEN  -- 설비이력 삭제
 
 -- *****************************************************************************
 WHEN 'SAVE_EMPCD' THEN  -- 작업자 사원 추가
-  IF (SELECT 1 FROM EQMREP_EMP WHERE EQMREPKEY = $EQMREPKEY AND EMPCD = $EMPCD) THEN
+  IF NOT EXISTS (SELECT 1 FROM EQMREP WHERE EQMREPKEY = $EQMREPKEY AND EQMREPTP = 'EQM01') THEN
+    CALL COMERR('수리이력을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM MSTEMP WHERE EMPCD = $EMPCD) THEN
+    CALL COMERR('등록된 작업자를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+  IF EXISTS (SELECT 1 FROM EQMREP_EMP WHERE EQMREPKEY = $EQMREPKEY AND EMPCD = $EMPCD) THEN
     CALL COMERR('이미 추가되어 있는 사원정보입니다.');
     LEAVE PROC;
   END IF;

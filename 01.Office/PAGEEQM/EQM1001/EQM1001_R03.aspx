@@ -27,7 +27,7 @@
 
                 <Its:div runat="server" Type="SplitRight">
                     <Its:div runat="server" Type="SplitTop" TopHeightPc="40">
-                        <Its:div runat="server" Type="SplitTop" TopHeightPc="17">
+                        <Its:div runat="server" Type="SplitTop">
                             <Its:label runat="server" Text="■ 개정 이력 (REV)" Bold="true" MarginLeft="10"/>
                             <Its:button runat="server" Label="개정내용 저장" ID="btn_GRP_REV_SAVE" MarginLeft="40" BackColor="CustomButton" />
                         </Its:div>
@@ -42,7 +42,7 @@
                     <Its:split runat="server" Type="Horizon" />
 
                     <Its:div runat="server" Type="SplitDown">
-                        <Its:div runat="server" Type="SplitTop" TopHeightPc="12">
+                        <Its:div runat="server" Type="SplitTop">
                             <Its:label runat="server" Text="■ 정기점검" Bold="true" MarginLeft="10" ID="lbl_GRP_ITEM"/>
                             <Its:button runat="server" Label="복사" ID="bdiv_GRP_btn_COPY" MarginLeft="40" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="추가" ID="bdiv_GRP_btn_ADD" MarginLeft="10" BackColor="CustomButton2" />
@@ -77,7 +77,7 @@
 
                 <Its:div runat="server" Type="SplitRight">              
                     <Its:div runat="server" Type="SplitTop" TopHeightPc="40">
-                        <Its:div runat="server" Type="SplitTop" TopHeightPc="17">
+                        <Its:div runat="server" Type="SplitTop">
                             <Its:label runat="server" Text="■ 개정 이력 (REV)" Bold="true" MarginLeft="10"/>
                             <Its:button runat="server" Label="개정내용 저장" ID="btn_EQM_REV_SAVE" MarginLeft="40" BackColor="CustomButton" />
                         </Its:div>
@@ -92,7 +92,7 @@
                     <Its:split runat="server" Type="Horizon" />
 
                     <Its:div runat="server" Type="SplitDown">
-                        <Its:div runat="server" Type="SplitTop" TopHeightPc="12">
+                        <Its:div runat="server" Type="SplitTop">
                             <Its:label runat="server" Text="■ 정기점검" Bold="true" MarginLeft="10" ID="lbl_EQM_ITEM"/>
                             <Its:button runat="server" Label="복사" ID="bdiv3_btn_COPY" MarginLeft="40" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="추가" ID="bdiv3_btn_ADD" MarginLeft="10" BackColor="CustomButton2" />

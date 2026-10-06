@@ -8,15 +8,15 @@ ItsPage.Load = function () {
         column.create('설비그룹', 'EQMGRPNM', { width: 120, align: 'center' }),
         column.create('정기점검', 'EQM02', { width: 60, columnType: enumColumnTypes.check, readOnly: true }),
         // 2026-09-30 [설비그룹 점검계획 탭] 좌측 목록 현재 승인 REV 컬럼
-        column.create('REV', 'REVNM', { width: 60, align: 'center', readOnly: true }),
-        column.create('승인상태', 'APRVSTTNM', { width: 65, align: 'center', readOnly: true }),
+        column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
+        column.create('승인상태', 'APRVSTTNM', { width: 70, align: 'center', readOnly: true }),
         column.create('반려사유', 'REJREASON', { width: 180, readOnly: true }),
         column.split()
     ]);
 
     // 2026-09-30 [설비그룹 점검계획 탭] 우측 상단 개정 이력(REV) 그리드 초기화
     ItsGrid.Create('grid_GRP_REV', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        column.create('REV', 'REVNM', { width: 70, align: 'center', readOnly: true }),
+        column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('상태', 'APRVSTTNM', { width: 60, align: 'center', readOnly: true }),
         column.create('개정내용', 'REMARK', { width: 260, readOnly: false }),
         column.create('작성자', 'REQEMP', { width: 80, align: 'center', readOnly: true }),
@@ -69,7 +69,7 @@ ItsPage.Load = function () {
         column.create('설비코드', 'FANO', { width: 80, align: 'center' }),
         column.create('설비명', 'EQMNM', { width: 200 }),
         // 2026-09-30 [설비별 점검계획 탭] 좌측 목록 현재 승인 REV 컬럼 (현장 점검 기준)
-        column.create('REV', 'REVNM', { width: 60, align: 'center', readOnly: true }),
+        column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 65, align: 'center', readOnly: true }),
         column.create('반려사유', 'REJREASON', { width: 180, readOnly: true }),
         column.split()
@@ -77,7 +77,7 @@ ItsPage.Load = function () {
 
     // 2026-09-30 [설비별 점검계획 탭] 우측 상단 개정 이력(REV) 그리드 초기화
     ItsGrid.Create('grid_EQM_REV', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        column.create('REV', 'REVNM', { width: 70, align: 'center', readOnly: true }),
+        column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('상태', 'APRVSTTNM', { width: 60, align: 'center', readOnly: true }),
         column.create('개정내용', 'REMARK', { width: 260, readOnly: false }),
         column.create('작성자', 'REQEMP', { width: 80, align: 'center', readOnly: true }),
@@ -202,7 +202,7 @@ ItsButton.EventSearch = function (targetEqmGubun) {
         }
 
         ItsGrid.SetStore('grid_GRP1', maria.store.YnToBool('EQM02'));
-        ItsGrid.Get('grid_GRP1').autoSizeColumns();
+        // ItsGrid.Get('grid_GRP1').autoSizeColumns();
         FocusGroupPlanCheckCell(targetEqmGubun);
         ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
     }
@@ -223,7 +223,7 @@ ItsButton.EventSearch = function (targetEqmGubun) {
         }
 
         ItsGrid.SetStore('grid1', maria.store.YnToBool('EQM02'));
-        ItsGrid.Get('grid1').autoSizeColumns();
+        // ItsGrid.Get('grid1').autoSizeColumns();
         ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
     }
     else if (selectedTabIndex == 2) {

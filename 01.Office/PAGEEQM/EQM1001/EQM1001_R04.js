@@ -8,23 +8,24 @@ ItsPage.Load = function () {
         column.create('설비명', 'EQMNM', { width: 250 }),
         column.create('년도', 'YEAR', { width: 80, align: 'center' }),
 
-        column.create('1월', 'M01', { width: 80, align: 'center', readOnly: true }),
-        column.create('2월', 'M02', { width: 80, align: 'center', readOnly: true }),
-        column.create('3월', 'M03', { width: 80, align: 'center', readOnly: true }),
-        column.create('4월', 'M04', { width: 80, align: 'center', readOnly: true }),
-        column.create('5월', 'M05', { width: 80, align: 'center', readOnly: true }),
-        column.create('6월', 'M06', { width: 80, align: 'center', readOnly: true }),
-        column.create('7월', 'M07', { width: 80, align: 'center', readOnly: true }),
-        column.create('8월', 'M08', { width: 80, align: 'center', readOnly: true }),
-        column.create('9월', 'M09', { width: 80, align: 'center', readOnly: true }),
-        column.create('10월', 'M10', { width: 80, align: 'center', readOnly: true }),
-        column.create('11월', 'M11', { width: 80, align: 'center', readOnly: true }),
-        column.create('12월', 'M12', { width: 80, align: 'center', readOnly: true }),
+        column.create('1월', 'M01', { width: 105, align: 'center', readOnly: true }),
+        column.create('2월', 'M02', { width: 105, align: 'center', readOnly: true }),
+        column.create('3월', 'M03', { width: 105, align: 'center', readOnly: true }),
+        column.create('4월', 'M04', { width: 105, align: 'center', readOnly: true }),
+        column.create('5월', 'M05', { width: 105, align: 'center', readOnly: true }),
+        column.create('6월', 'M06', { width: 105, align: 'center', readOnly: true }),
+        column.create('7월', 'M07', { width: 105, align: 'center', readOnly: true }),
+        column.create('8월', 'M08', { width: 105, align: 'center', readOnly: true }),
+        column.create('9월', 'M09', { width: 105, align: 'center', readOnly: true }),
+        column.create('10월', 'M10', { width: 105, align: 'center', readOnly: true }),
+        column.create('11월', 'M11', { width: 105, align: 'center', readOnly: true }),
+        column.create('12월', 'M12', { width: 105, align: 'center', readOnly: true }),
 
         column.split()
     ]);
 
     // 2026-09-16 메인 그리드(grid1) 1~12월 점검상태(점검필요/점검완료) 텍스트 색상 지정 및 클릭 이벤트 바인딩
+    // 2026-10-06 [메인 그리드] REV 버전 포함 점검상태(점검필요·점검완료) 텍스트 색상 분기 처리
     ItsGrid.Get('grid1').formatItem.addHandler(function (s, e) {
         if ((s.columns[e.col].binding == 'M01' || s.columns[e.col].binding == 'M02' || s.columns[e.col].binding == 'M03' || s.columns[e.col].binding == 'M04' || s.columns[e.col].binding == 'M05'
             || s.columns[e.col].binding == 'M06' || s.columns[e.col].binding == 'M07' || s.columns[e.col].binding == 'M08' || s.columns[e.col].binding == 'M09' || s.columns[e.col].binding == 'M10'
@@ -33,11 +34,11 @@ ItsPage.Load = function () {
             && e.panel != s.columnFooters) {    // 총계 제외
 
             var html = e.cell.innerHTML;
-            var value = ItsGrid.GetValue('grid1', e.row, s.columns[e.col].binding);
+            var value = ItsGrid.GetValue('grid1', e.row, s.columns[e.col].binding) || '';
 
             var color = '#337ab7';
 
-            if (value == '점검완료')
+            if (value.indexOf('점검완료') >= 0)
                 color = '#1DDB16';
 
             e.cell.innerHTML = '<a href="javascript:void(0);" style="color:' + color + '" onclick="ItsGrid.Event(\'grid1\').onDoubleClick(' + e.row + ',\'' + s.columns[e.col].binding + '\'); return false;">' + html + '</a>';
@@ -46,7 +47,7 @@ ItsPage.Load = function () {
 
     ItsGrid.Create('grid2', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         // 2026-10-02 [정기점검 등록 팝업] 이번 점검에 적용할 REV를 항목 그리드 칸으로 표시
-        column.create('적용 REV', 'REVNM', { width: 70, align: 'center', readOnly: true }),
+        column.create('적용 REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 290, readOnly: true }),
         column.create('점검항목', 'CHKLOC', { width: 110, columnType: enumColumnTypes.combo, gpcd: "CHKLOC", readOnly: true }),
@@ -58,7 +59,7 @@ ItsPage.Load = function () {
 
     ItsGrid.Create('grid3', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         // 2026-10-02 [정기점검 수정 팝업] 실적에 기록된 적용 REV를 항목 그리드 칸으로 표시 (REV 관리 이전 실적은 빈 값)
-        column.create('적용 REV', 'REVNM', { width: 70, align: 'center', readOnly: true }),
+        column.create('적용 REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 290, readOnly: true }),
         column.create('점검항목', 'CHKLOC', { width: 110, columnType: enumColumnTypes.combo, gpcd: "CHKLOC", readOnly: true }),
@@ -91,8 +92,9 @@ ItsButton.EventSearch = function () {
 };
 
 // 2026-09-16 메인 그리드(grid1) 특정 월 점검상태 클릭 시 점검등록(pop1) 또는 점검수정(pop2) 팝업 오픈
+// 2026-10-06 [메인 그리드] REV 버전 포함 점검상태(점검필요·점검완료) 더블클릭 팝업 분기 처리
 ItsGrid.Event('grid1').onDoubleClick = function (rowindex, field) {
-    var CellValue = ItsGrid.GetValue('grid1', rowindex, field);
+    var CellValue = ItsGrid.GetValue('grid1', rowindex, field) || '';
     var EQMCD = ItsGrid.GetValue('grid1', rowindex, 'EQMCD');
     var YEAR = ItsGrid.GetValue('grid1', rowindex, 'YEAR');
     var MONTH = '';
@@ -103,13 +105,13 @@ ItsGrid.Event('grid1').onDoubleClick = function (rowindex, field) {
     }
 
     if (MONTH != '') {
-        if (CellValue == '점검필요') {
+        if (CellValue.indexOf('점검필요') >= 0) {
             // 2026-10-02 [메인 그리드] 점검항목 조회 오류(승인 계획 없음 등) 시 정기점검 등록 팝업을 열지 않음
             if (LIST_CHKPLANEQM_EQM02(EQMCD, YEAR + '-' + MONTH)) {
                 ItsPop.Open('pop1');
             }
         }
-        else if (CellValue == '점검완료') {
+        else if (CellValue.indexOf('점검완료') >= 0) {
             SEARCH_CHKRSTEQM(EQMCD, YEAR + '-' + MONTH);
             ItsPop.Open('pop2');
         }

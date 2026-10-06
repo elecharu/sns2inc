@@ -16,16 +16,30 @@ namespace XtraRpt
         {
             InitializeComponent();
 
+            // 2026-10-06 이력카드 출력에 현재 프로젝트 DB 연결 설정 적용
             ItsMaria maria = new ItsMaria("EQM1001_S01", "CALL_RPT");
+            maria.DbServer = "211.43.15.98";
+            maria.DbPort = "33061";
+            maria.DbUser = "root";
+            maria.DbPass = ItsSecurity.DecDES("f4jHrVI/NLGr48fLMegkWw==");
+            maria.DbName = "MES_SNS2";
             var eqmcd = param.ContainsKey("EQMCD") ? param["EQMCD"] : (param.ContainsKey("FANO") ? param["FANO"] : "");
+            if (string.IsNullOrEmpty(eqmcd))
+            {
+                throw new InvalidOperationException("설비를 선택해주세요.");
+            }
             maria.AddParam("EQMCD", eqmcd);
-            maria.AddParam("FANO", eqmcd);
 
             DataSet ds = maria.CallProc();
             if (maria.IsError)
             {
-                Console.WriteLine(maria.ErrMessage);
-                return;
+                throw new InvalidOperationException(maria.ErrMessage);
+            }
+
+            // 2026-10-06 설비 정보가 없는 이력카드는 빈 PDF 대신 오류 안내
+            if (ds == null || ds.Tables.Count < 2 || ds.Tables[0].Rows.Count == 0)
+            {
+                throw new InvalidOperationException("출력할 설비 정보가 없습니다. 설비마스터를 확인해주세요.");
             }
 
             // 로고 이미지 로드

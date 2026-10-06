@@ -1,6 +1,4 @@
-﻿<%-- EQM0403_R01: 금형이력관리 --%>
-
-<%-- PAGE --%>
+﻿<%-- PAGE --%>
 <%@ Page Title="" Language="C#" MasterPageFile="~/Common/Master/MasterBase.master" AutoEventWireup="true" CodeFile="EQM1001_R01.aspx.cs" Inherits="EQM1001_R01" %>
 
 <%-- HEAD --%>
@@ -13,7 +11,6 @@
     <Its:div runat="server" ID="sdiv1" Type="SearchPanel">
         <Its:dateRange runat="server" Label="등록일자" ID="date_SEARCH" FieldFrom="SDATE" FieldTo="EDATE" />
         <Its:find runat="server" Label="설비코드" ID="find_code" GPCD="EQMCD" Field="EQMCD" />
-        <%--<Its:combo runat="server" Label="수리유형" ID="cmb_TOOLREPTP" Field="EQMREPTP" GPCD="*EQMREPTP" />--%>
         <Its:find runat="server" Label="작업자" ID="find_EMP" GPCD="EMPCD" Field="EMPCD" InputWidth="70" NameWidth="160" />
     </Its:div>
 </asp:Content>
@@ -56,7 +53,7 @@
             
             <Its:text runat="server" Label="수리업체" ID="pop1_txt_REPCUST" Field="REPCUST" InputWidth="315" />
             <Its:num runat="server" Label="수리금액(만원)" ID="pop1_num_REPAMT" Field="REPAMT" Value="0" />
-            <Its:combo runat="server" Label="수리유형" ID="pop1_com_ISSUE" Field="ISSUE" GPCD="ISSUE" />
+            <Its:combo runat="server" Label="고장원인구분" ID="pop1_com_ISSUE" Field="ISSUE" GPCD="ISSUE" />
             <Its:newline runat="server" />
             <Its:textarea runat="server" Label="고장원인" ID="pop1_txtarea_MALFUNCTION" Field="MALFUNCTION" InputWidth="723" />
             <Its:newline runat="server" />

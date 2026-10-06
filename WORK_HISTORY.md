@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-10-02
+> **최종 갱신일**: 2026-10-06
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -14,6 +14,73 @@
 4. **대화 기록 및 불러오기 연계**: 모든 사용자 요청 및 작업 결과는 본 문서에 실시간 동기화되어, 새 세션이나 나중에 작업 재개 시 "불러오기"를 통해 이전 맥락을 100% 이어받습니다.
 
 ---
+
+## 🕒 2026-10-06 (화) 작업 내역
+
+### 2. EQM1001_R04 프로시저 월별 점검상태 REV 버전 표기 포맷 간결화 (REV.0, REV.1 등)
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql
+- **배경 및 원인**: 정기점검 등록/조회(R04) 화면 메인 그리드 월별 점검상태의 REV 버전을 두 자리 패딩(REV.00) 대신 REV.0, REV.1과 같이 자연스러운 REVNUM 원본 형식으로 표시 요청
+- **작업 상세 내용**:
+  - 프로시저(MES_SNS2_EQM1001_R04.sql) LIST_CYCLE_EQMCD 분기에서 LPAD 서식을 제거하여 '점검완료 (REV.X)', '점검필요 (REV.X)' 형식으로 반환하도록 수정하고 최상단 Modify 이력 1일 1행 갱신
+- **검증 결과**: SQL 소스 파일 UTF-8 with BOM 및 CRLF 무결성 확인, IIS Express 200 OK 정상 서빙 확인
+
+
+### 2. MST3001_R03 및 TOL0003_R05 타 프로젝트 복사 파일 아키텍처 및 코딩 컨벤션 표준화
+- **수정/대상 파일**: 01.Office/PAGEMST/MST3001/MST3001_R03 (aspx, aspx.cs, js), 01.Office/PAGETOL/TOL0003/TOL0003_R05 (aspx, aspx.cs, js)
+- **배경 및 원인**: 타 프로젝트에서 신규 도입한 설비부품 관리(MST3001_R03) 및 금형점검·등급관리(TOL0003_R05) 화면 세트를 현재 MES 솔루션 표준 구조, 네이밍/주석 규칙, 인코딩에 맞추어 전환 요청
+- **작업 상세 내용**:
+  - 1. MST3001_R03: .aspx 인위적 주석 제거 및 마크업 정리, .js grid1 오타 수정, 외부 IP 하드코딩 제거, iframe 팝업 스타일 오타 수정, 표준 날짜 주석 작성. 2. TOL0003_R05: .aspx 인위적 주석 제거, 표준 섹션 주석(PAGE, POP) 적용, InputWidth 공백 정규화, .js 과도한 배너 구분선 제거, enumColumnTypes.date 오타 수정, 필수값 알림 오타 및 설비->금형 명칭 정정, 암묵적 전역함수 표준화, parent.wait 안전 방어 처리, ToYn 통일, 2026-10-06 날짜 주석 적용. 3. 전 파일 UTF-8 with BOM 및 Windows CRLF 개행 통일
+- **검증 결과**: IIS Express(http://localhost:55085/) 호출 검증 결과 MST3001_R03.aspx 및 TOL0003_R05.aspx 모두 200 OK 정상 서빙 확인, 전 파일 UTF-8 with BOM 및 CRLF 무결성 검증 완료
+
+
+### 2. EQM1001_R04 메인 그리드 월별 점검상태(점검필요·점검완료)에 두 자리 REV 버전 표기 및 컬럼 너비 확장
+- **수정/대상 파일**: [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql)
+- **배경 및 원인**: 정기점검 등록/조회 화면(R04)의 메인 그리드(1~12월) 점검상태(점검필요, 점검완료) 표시 시 각 점검건에 적용된 REV 버전을 식별할 수 있도록 요청
+- **작업 상세 내용**:
+  - 프로시저(MES_SNS2_EQM1001_R04.sql)의 LIST_CYCLE_EQMCD 분기에서 월별 실적의 REV 버전 및 최신 승인 REV 번호를 2자리로 포맷팅하여 '점검완료 (REV.XX)' 및 '점검필요 (REV.XX)'로 반환하도록 개선하고, 클라이언트 스크립트(EQM1001_R04.js)에서 1~12월 컬럼 너비를 105px로 확장하며 상태값 포함 여부(indexOf)로 색상 및 더블클릭 팝업 분기를 정상 처리하도록 수정
+- **검증 결과**: IIS Express 200 OK 확인, 브라우저 렌더링 검증 결과 점검완료(초록)/점검필요(파랑) 색상 적용 및 pop1/pop2 더블클릭 오픈 정상 동작 확인 완료
+
+
+### 2. EQM1001_R03 우측 그리드 헤더 버튼-컬럼 간 과도한 여백 제거 및 BOM 정규화
+- **수정/대상 파일**: [EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx)
+- **배경 및 원인**: 우측 그리드(개정 이력, 정기점검)의 버튼 영역과 하단 컬럼 헤더 간 50px 이상의 불필요한 흰색 공백 발생 및 ASP.NET 파서 오류로 인한 미반영 문제
+- **작업 상세 내용**:
+  - 설비그룹 및 설비별 탭의 개정 이력(Line 30, 80) 및 정기점검(Line 45, 95) 버튼 패널의 TopHeightPc(17%, 12%) 속성 제거, UTF-8 with BOM 인코딩 정규화
+- **검증 결과**: IIS Express 200 OK 확인, 브라우저 렌더링 측정 결과 버튼-헤더 간 간격이 4.67px로 밀착되고 패널 높이가 24px로 최적화됨을 실측 확인
+
+
+### 2. EQM1001_R01·S01 실제 DB 구조 확인 및 화면·프로시저 보완
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, EQM1001_R01.js, EQM1001_S01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql, MES_SNS2_EQM1001_S01.sql, 04.Report/PAGEEQM/EQM1001/S01A.cs
+- **배경 및 원인**: 개발 중 변경된 DB 컬럼·공통코드·실제 데이터를 SELECT로 확인 요청. 실제 MariaDB 10.2.15에서 6개 테이블 199개 컬럼, 설비 1345건·수리이력 4건·작업자 연결 5건 확인. INNER JOIN으로 설비마스터 없는 BENDING_01 이력 1건 누락, 작업자 검색은 등록자 기준, 구입금액 BUYFAMT NULL 시 BUYAMT 미반영 발견
+- **작업 상세 내용**:
+  - R01 작업자 연결 테이블 기준 검색·LEFT JOIN 이력 보존·19자리 일시 HH:mm 분리·등록자 보존·부품 미사용 코드 제거·작업자 신규 행 저장/미저장 행 삭제·월 경계 소요일 계산 수정. DB에서 날짜·작업자·고장원인구분·100자 입력 검증 및 소요일 재계산. ISSUE 화면 명칭을 고장원인구분으로 정정. S01 구입금액 국내/외화 매핑·작업자 집계/코드 대체·빈 처리내용 대체·보전구분 내부코드 미표시·순번 정렬·이전 PDF 초기화. S01A 프로젝트 DB 설정 및 빈 PDF 대신 오류 안내. 두 aspx.cs와 S01.aspx는 변경 필요 없음. 프로시저 입력 시그니처 R01 40개/S01 3개 유지
+- **검증 결과**: 실서버 수정 조회문 SELECT 4종 실행: 전체 이력 4건, TEST_EMP01 참여 이력 2건, A-001 구입금액 6,000,000(KRW) 및 작업자 2명 반환. 격리된 로컬 MariaDB 10.2.44에서 46개 DB 시나리오 통과, Node 화면 이벤트 23개 통과, JavaScript 문법 정상. MSBuild 15 Release 빌드 성공. BOM·CRLF 정상. 실제 서버 DDL/DML·리포트 배포 및 실제 브라우저 CRUD는 수행하지 않음
+
+
+### 3. MTR0001_R01 기존 메뉴 데이터 삭제 SQL 작성
+- **수정/대상 파일**: [MES_SNS2_MTR0001_R01_MENU_CLEANUP.sql](D:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R01_MENU_CLEANUP.sql)
+- **배경 및 원인**: 마이그레이션 더미 데이터로 MTR0001_R01 메뉴 추가가 불가능하다는 사용자 보고; 실DB 데이터와 ADD_MENU 본문 미확인
+- **작업 상세 내용**:
+  - 메뉴관리 SYS1003_R01의 ADD_MENU 호출과 기존 메뉴 등록 SQL의 SYSMENU.PRGCD 매핑 확인; 대상 사전 조회 및 완전 일치 조건 삭제, 삭제 건수와 잔여 건수 조회 작성; SYSPRG 및 권한 유지
+- **검증 결과**: 정적 검증: 삭제 테이블 1개 및 PRGCD 완전 일치, SQL BOM/CRLF 정상; 실제 DB 미실행, 재등록 결과는 사용자 실행 후 확인 필요
+
+
+### 2. EQM1001_R03 우측 헤더 버튼-그리드 간 불필요 여백 제거
+- **수정/대상 파일**: [EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx)
+- **배경 및 원인**: 우측 개정 이력 및 정기점검 헤더 패널의 과도한 높이 할당(TopHeightPc: 17%, 12%)으로 인해 상단 버튼과 하단 그리드 컬럼 헤더 사이에 30~50px 이상의 흰색 공백 여백 발생
+- **작업 상세 내용**:
+  - 설비그룹(탭1) 및 설비별(탭2) 점검계획 우측 상단(개정 이력)과 하단(정기점검)의 버튼 패널 4곳에서 TopHeightPc 속성을 제거하여 표준 화면과 동일하게 컨텐츠 높이에 맞춰 그리드가 밀착되도록 수정
+- **검증 결과**: UTF-8 with BOM 및 CRLF 개행 무결성 확인, git diff 검증 완료
+
+
+### 1. EQM1001_R03·R04·R05 REV 컬럼 너비 100 통일 및 R03 autoSizeColumns 해제
+- **수정/대상 파일**: [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [EQM1001_R05.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R05.js)
+- **배경 및 원인**: R03 조회 후 autoSizeColumns로 인한 REV 컬럼 축소 방지 및 R03·R04·R05 화면 전반의 REV 버전 컬럼 너비 100 일관성 유지
+- **작업 상세 내용**:
+  - EQM1001_R03 조회 시 autoSizeColumns 호출 주석 처리 및 4개 그리드 REV 너비 100 유지, EQM1001_R04 등록·수정 팝업(grid2, grid3) 적용 REV 너비 100 조정, EQM1001_R05 계획 승인(grid_GRP_PLAN, grid_EQM_PLAN) REV 너비 100 통일
+- **검증 결과**: 3개 파일 UTF-8 with BOM 및 CRLF 개행 무결성 확인, git diff 정상 반영 완료
+---
+
 
 ## 🕒 2026-10-02 (금) 작업 내역
 
@@ -446,6 +513,14 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql | EQM1001_R04 프로시저 REV 표기 간결화 완료 (서버 DB 직접 반영 금지 원칙 준수) | SQL 소스 파일 UTF-8 with BOM 및 CRLF 무결성 확인, IIS Express 200 OK 정상 서빙 확인 |
+| **완료** | 01.Office/PAGEMST/MST3001/MST3001_R03 (aspx, aspx.cs, js), 01.Office/PAGETOL/TOL0003/TOL0003_R05 (aspx, aspx.cs, js) | MST3001_R03 및 TOL0003_R05 표준화 완료, IIS Express 200 OK 서빙 확인 | IIS Express(http://localhost:55085/) 호출 검증 결과 MST3001_R03.aspx 및 TOL0003_R05.aspx 모두 200 OK 정상 서빙 확인, 전 파일 UTF-8 with BOM 및 CRLF 무결성 검증 완료 |
+| **완료** | [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql) | EQM1001_R04 월별 점검상태 REV 버전 표기 및 컬럼 확장 완료 | IIS Express 200 OK 확인, 브라우저 렌더링 검증 결과 점검완료(초록)/점검필요(파랑) 색상 적용 및 pop1/pop2 더블클릭 오픈 정상 동작 확인 완료 |
+| **완료** | [EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx) | EQM1001_R03 우측 그리드 헤더 영역 공백 여백 제거 및 UTF-8 BOM 정상화 완료 | IIS Express 200 OK 확인, 브라우저 렌더링 측정 결과 버튼-헤더 간 간격이 4.67px로 밀착되고 패널 높이가 24px로 최적화됨을 실측 확인 |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, EQM1001_R01.js, EQM1001_S01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql, MES_SNS2_EQM1001_S01.sql, 04.Report/PAGEEQM/EQM1001/S01A.cs | 로컬 소스 수정 및 검증 완료. 실서버에 R01·S01 프로시저 교체와 빌드된 EQM1001.exe 배포 필요. 설비마스터 없는 기존 이력 1건과 완료시간 역전 기존 이력 1건은 SELECT 확인만 진행하여 원본 데이터 보존 | 실서버 수정 조회문 SELECT 4종 실행: 전체 이력 4건, TEST_EMP01 참여 이력 2건, A-001 구입금액 6,000,000(KRW) 및 작업자 2명 반환. 격리된 로컬 MariaDB 10.2.44에서 46개 DB 시나리오 통과, Node 화면 이벤트 23개 통과, JavaScript 문법 정상. MSBuild 15 Release 빌드 성공. BOM·CRLF 정상. 실제 서버 DDL/DML·리포트 배포 및 실제 브라우저 CRUD는 수행하지 않음 |
+| **대기** | [MES_SNS2_MTR0001_R01_MENU_CLEANUP.sql](D:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R01_MENU_CLEANUP.sql) | SQL 작성 완료, 사용자 대상 확인 및 DB 실행 후 메뉴 재등록 확인 대기 | 정적 검증: 삭제 테이블 1개 및 PRGCD 완전 일치, SQL BOM/CRLF 정상; 실제 DB 미실행, 재등록 결과는 사용자 실행 후 확인 필요 |
+| **완료** | [EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx) | EQM1001_R03 헤더 패널 공백 여백 제거 완료 | UTF-8 with BOM 및 CRLF 개행 무결성 확인, git diff 검증 완료 |
+| **완료** | [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [EQM1001_R05.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R05.js) | REV 컬럼 너비 100 통일 및 R03 autoSizeColumns 해제 | 3개 파일 UTF-8 with BOM 및 CRLF 개행 무결성 확인, git diff 정상 반영 완료 |
 | **완료** | AGENTS.md | Antigravity 커밋 메시지 자동 생성 한국어 적용 | AGENTS.md BOM·CRLF·중복 CR 0건, git 무시 대상 아님. 실제 생성 결과는 Antigravity에서 창 다시 불러오기 후 사용자 확인 필요 |
 | **완료** | C:\Users\DK\AppData\Local\Programs\Antigravity IDE\resources\app\extensions\antigravity\dist\extension.js | 소스 제어 AI 커밋 메시지 한글 자동 변환 패치 | extension.js doGenerateCommitMessage 내 한글 자동 변환 로직 주입 및 구문 검사 통과. 창 다시 로드 후 즉시 한글 출력 확인 가능 |
 | **완료** | .agents/rules/commit_message.md, C:\Users\DK\.gemini\config\rules\commit_message.md | AI Git 커밋 메시지 한글 생성 규칙 제정 및 환경 설정 | Conventional Commits 기반 한글 커밋 메시지 규칙 신규 제정 및 IDE 설정 반영. BOM·CRLF 정상 |

@@ -9,7 +9,7 @@ ItsPage.Load = function () {
         column.create('설비그룹', 'PLANNM', { width: 220, readOnly: true }),
         column.create('점검항목수', 'PLANITEMCNT', { width: 90, align: 'right', columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: true }),
         // 2026-09-30 [설비그룹별 점검계획 탭] 이번에 승인·반려할 REV와 개정내용 (진행 중 REV가 없으면 현재 승인 REV)
-        column.create('REV', 'REVNM', { width: 70, align: 'center', readOnly: true }),
+        column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('개정내용', 'REMARK', { width: 260, readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 80, align: 'center', readOnly: true }),
         column.create('승인자', 'APRVEMP', { width: 120, align: 'center', readOnly: true }),
@@ -26,7 +26,7 @@ ItsPage.Load = function () {
         column.create('설비명', 'PLANNM', { width: 220, readOnly: true }),
         column.create('점검항목수', 'PLANITEMCNT', { width: 90, align: 'right', columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: true }),
         // 2026-09-30 [설비별 점검계획 탭] 이번에 승인·반려할 REV와 개정내용 (진행 중 REV가 없으면 현재 승인 REV)
-        column.create('REV', 'REVNM', { width: 70, align: 'center', readOnly: true }),
+        column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('개정내용', 'REMARK', { width: 260, readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 80, align: 'center', readOnly: true }),
         column.create('승인자', 'APRVEMP', { width: 120, align: 'center', readOnly: true }),

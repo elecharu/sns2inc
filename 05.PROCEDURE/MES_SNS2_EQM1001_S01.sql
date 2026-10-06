@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_S01`(
+﻿CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_S01`(
 -- *****************************************************************************
 -- Comment: 이력카드 
 -- Create: 	2025-07-04  	생성 			이대규
@@ -6,6 +6,7 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_S01`(
 -- 			2026-09-17 					한성수	설비이력카드(QSP-4111-03) 표준 양식 맞춤 데이터 컬럼 확장
 -- 			2026-09-17 					한성수	수리시간(분) 계산 로직 변경 및 보전구분 기본값 공백 처리
 -- 			2026-09-17 					한성수	컬럼 매핑 단순화(IFNULL/GPCD 통일) 및 구매가격 기본값(0(KRW)) 적용
+-- 			2026-10-06 					한성수	구입금액·작업자·보전구분 매핑 보완 및 수리이력 정렬 안정화
 -- *****************************************************************************
   IN $EQMCD            VARCHAR(20),     -- 설비코드
 
@@ -42,9 +43,11 @@ WHEN 'CALL_RPT' THEN  -- 이력카드 출력 리포트 데이터 조회
     IFNULL(MSTEQM.EPOWER, '')                                      AS EPOWER,      -- 사용전력(KVA)
     ''                                                             AS VOLT,        -- 전압(V)
     IFNULL(NULLIF(GPCD('FM110', MSTEQM.EQMGRADE), ''), MSTEQM.EQMGRADE)           AS EQMGRADE,    -- 설비등급
-    IFNULL((SELECT CUSTNM FROM MSTCUST WHERE CUSTCD = MSTEQM.OWNCUST), MSTEQM.OWNCUST) AS BUYCUST,     -- 구입회사  (소유회사?)
+    COALESCE(NULLIF(MSTCUST.CUSTNM, ''), MSTEQM.OWNCUST, '') AS BUYCUST,     -- 구입회사  (소유회사?)
     IFNULL(DATE_FORMAT(MSTEQM.SETDATE, '%Y년 %m월 %d일'), '')       AS SETDATE,     -- 설치일자
-    CONCAT(FORMAT(IFNULL(MSTEQM.BUYFAMT, 0), 0), '(', IFNULL(NULLIF(GPCD('BC400', MSTEQM.CURY_BC), ''), 'KRW'), ')') AS BUYAMT, -- 구입금액
+    CONCAT(FORMAT(COALESCE(MSTEQM.BUYFAMT, MSTEQM.BUYAMT, 0), 0), '(',
+      CASE WHEN MSTEQM.BUYFAMT IS NULL THEN 'KRW'
+        ELSE IFNULL(NULLIF(GPCD('BC400', MSTEQM.CURY_BC), ''), 'KRW') END, ')') AS BUYAMT, -- 구입금액
     IFNULL(NULLIF(GPCD('MD111', MSTEQM.OWN_DIV), ''), MSTEQM.OWN_DIV)             AS OWN_DIV,     -- 소유구분
     IFNULL(MSTEQM.USETYPE, '')                                     AS USETYPE,     -- 가공아이템
     IFNULL(NULLIF(GPCD('FM100', MSTEQM.EQMTP), ''), MSTEQM.EQMTP)                 AS EQMTP,       -- 공정구분
@@ -54,32 +57,37 @@ WHEN 'CALL_RPT' THEN  -- 이력카드 출력 리포트 데이터 조회
     ''                                                             AS FILEPATH,    -- 도해사진1
     ''                                                             AS FILEPATH2    -- 도해사진2
   FROM MSTEQM
+  LEFT JOIN MSTCUST ON MSTCUST.CUSTCD = MSTEQM.OWNCUST
   WHERE MSTEQM.FANO = $EQMCD
   LIMIT 1;
 
   -- [1] 이력카드 하단 검교정 및 수리현황 정보
-  SET @ROWNUM := 0;
-
   SELECT 
-    @ROWNUM := @ROWNUM + 1                                         AS NO,
+    ROW_NUMBER() OVER (ORDER BY EQMREP.REGTIME, EQMREP.EQMREPKEY)                                         AS NO,
     IFNULL(DATE_FORMAT(EQMREP.REGTIME, '%Y년 %m월'), '')            AS REPDATE,         -- 수리일
-    IFNULL(EQMREP.HANDLE, IFNULL(EQMREP.MALFUNCTION, ''))          AS REPKND_CONTENTS, -- 교정 및 수리내용
+    COALESCE(NULLIF(EQMREP.HANDLE, ''), EQMREP.MALFUNCTION, '')          AS REPKND_CONTENTS, -- 교정 및 수리내용
     CASE 
       WHEN TIMESTAMPDIFF(MINUTE, EQMREP.REPSTIME, EQMREP.REPETIME) > 0 
       THEN FORMAT(TIMESTAMPDIFF(MINUTE, EQMREP.REPSTIME, EQMREP.REPETIME), 0)
       ELSE ''
     END                                                            AS REPTIME,         -- 수리시간(분)
-    IFNULL((
-      SELECT GROUP_CONCAT(MSTEMP.EMPNM SEPARATOR ', ')
-      FROM EQMREP_EMP
-      JOIN MSTEMP ON MSTEMP.EMPCD = EQMREP_EMP.EMPCD
-      WHERE EQMREP_EMP.EQMREPKEY = EQMREP.EQMREPKEY
-    ), IFNULL(EQMREP.EMPCD, ''))                                   AS EMPNAME,         -- 수리인원
-    IFNULL(NULLIF(GPCD('FM300', EQMREP.EQMREPTP), ''), EQMREP.EQMREPTP)           AS MAINT_DIV,       -- 보전구분
+    COALESCE(REPEMP.EMPNM, MSTEMP.EMPNM, EQMREP.EMPCD, '')                                   AS EMPNAME,         -- 수리인원
+    IFNULL(MAINT.TPNM, '')           AS MAINT_DIV,       -- 보전구분
     IFNULL(EQMREP.REMARK, '')                                      AS REMARK           -- 비고
   FROM EQMREP
+  LEFT JOIN (
+    SELECT EQMREP_EMP.EQMREPKEY,
+      GROUP_CONCAT(IFNULL(MSTEMP.EMPNM, EQMREP_EMP.EMPCD) ORDER BY EQMREP_EMP.EMPCD SEPARATOR ', ') AS EMPNM
+    FROM EQMREP_EMP
+    INNER JOIN EQMREP ON EQMREP.EQMREPKEY = EQMREP_EMP.EQMREPKEY AND EQMREP.EQMCD = $EQMCD
+    LEFT JOIN MSTEMP ON MSTEMP.EMPCD = EQMREP_EMP.EMPCD
+    GROUP BY EQMREP_EMP.EQMREPKEY
+  ) REPEMP ON REPEMP.EQMREPKEY = EQMREP.EQMREPKEY
+  LEFT JOIN MSTEMP ON MSTEMP.EMPCD = EQMREP.EMPCD
+  LEFT JOIN COMTYPE MAINT ON MAINT.GPCD = 'FM300' AND MAINT.TPCD = EQMREP.EQMREPTP
   WHERE EQMREP.EQMCD = $EQMCD
-  ORDER BY EQMREP.REGTIME;
+    AND EQMREP.EQMREPTP = 'EQM01'
+  ORDER BY EQMREP.REGTIME, EQMREP.EQMREPKEY;
 
 -- *****************************************************************************
 END CASE;
