@@ -17,6 +17,94 @@
 
 ## 🕒 2026-10-06 (화) 작업 내역
 
+### 2. EQM1001_R03 계획서 출력의 구 리포트 실행 파일 교체
+- **수정/대상 파일**: 01.Office/Reports/EQM1001.exe·pdb, 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe·pdb, WORK_HISTORY.md
+- **배경 및 원인**: 계획서 출력에서 설비그룹 선택 안내 발생. R03 화면은 PLANCD·REVNUM을 정상 전송하지만 로컬 실행 EXE가 EQMGRP·FANO를 요구하고 R05 CALL_PLAN_RPT를 호출하는 구버전인 것을 IL 메타데이터로 확인
+- **작업 상세 내용**:
+  - 최신 S05A·Program 소스로 Report 프로젝트 Release 재빌드. PLANCD·REVNUM 및 R03 CALL_PLAN_RPT 소비를 새 EXE 메타데이터에서 확인 후 로컬 Office Reports 및 Release 실행 파일·심볼 동기화. 기존 EXE·PDB 임시 감사 경로 백업. JS·ASPX·공통 컴포넌트·프로시저·srcVersion 변경 불필요
+- **검증 결과**: MSBuild 오류0. 실제 ItsRpt.js 직렬화 및 R03 PrintPlanRev 사용한 전달·미선택 검증8건 통과. DB 연결만 테스트 대체한 임시 S05A로 그룹·설비 REV0/REV3 PDF4건 생성 및 R03/PLANCD/REVNUM 전달 확인. 최종 EXE 해시 일치. 실제 DB·실제 서버 파일 미변경, 실서버 PDF 출력 미실행
+
+
+### 2. EQM1001 계획·리비전·승인이력 4개 테이블 실제 DB 구조 검증
+- **수정/대상 파일**: WORK_HISTORY.md (실제 DB SELECT 검증, 업무 소스 변경 없음)
+- **배경 및 원인**: 사용자가 HEADER·DETAIL·APRV·CHKPLANEQM의 최신 컬럼 적용 상태 확인 요청
+- **작업 상세 내용**:
+  - 실제 information_schema 87행 및 데이터 정합성 25항목, DETAIL 참조 루틴 2개 조회. HEADER 19컬럼/REVCD PK/계획별 REV UNIQUE 정상. DETAIL 19컬럼으로 PLANTP·PLANCD·REVNUM·EQMCD 삭제 미반영, 최신 R03 INSERT 후 66행의 구 중복 컬럼이 기본값임. APRV 18컬럼/APRVKEY PK/REVCD 인덱스 및 GETKEY 등록 정상, RTIME·REMP·RPRG의 기존 기본값은 큰따옴표로 로컬 빈 문자열과 다름. CHKPLANEQM 13컬럼/설비·항목 PK 정상, 현재 MSTEQM에 없는 6설비코드의 계획 31건 확인. 최신 R03/R04 실제 본문과 로컬 SQL 동일. CREATE TABLE IF NOT EXISTS는 기존 DETAIL 구조를 변경하지 않으므로 PLAN_REV_NORMALIZE 별도 실행 필요
+- **검증 결과**: SELECT만 사용. HEADER 199/DETAIL 607/APRV 196/계획 643행. DETAIL의 HEADER 미연결 0, APRV 빈키·키형식·상태·HEADER 연결·계획 식별 불일치 각 0. DETAIL 중복 컬럼 불일치 66건 전부 빈값·0 기본값, 승인 스냅샷과 HEADER 연결 유지. 계획 CHKTP01 17/02 626, 설비 미연결31/점검항목 미연결0. 실제 DB DDL/DML·공통 함수 실행 없음
+
+
+### 2. EQM1001_R03 빈 개정내용 승인·반려 차단 및 저장 버튼 색상 구분
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 05.Procedure/MES_SNS2_EQM1001_R03.sql
+- **배경 및 원인**: 대기 REV의 개정내용이 없는데 반려가 가능했고 개정내용 저장과 승인 버튼 색상이 동일했음
+- **작업 상세 내용**:
+  - 공통 승인·반려 버튼 처리에서 공백·미입력 차단 안내 추가, SAVE_PLAN_STATUS의 승인 전용 빈 개정내용 검증을 승인·반려 공통으로 확대, 설비그룹·설비별 개정내용 저장 버튼을 CustomButton2 파란색으로 변경, 미저장 내용·구버전 REV 검증 및 srcVersion 유지
+- **검증 결과**: 선 검증 후 반영: JS 모의 UI 44건 및 격리 MariaDB 10.2 승인·반려 회귀 검증 47건 합계 91건 통과. JS 문법·ASPX 버튼 속성·파라미터 유지·BOM CRLF 확인. 실제 서버 DB와 배포 파일 미변경
+
+
+### 2. EQM1001 REV DETAIL 정규화 및 승인이력 APRVKEY 전환
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 05.Procedure/MES_SNS2_EQM1001_R04.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_REV.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_REV_INIT.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_REV_REVCD.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_APRV_HISTORY.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_REV_NORMALIZE.sql
+- **배경 및 원인**: DETAIL의 PLANTP·PLANCD·REVNUM 등 HEADER 중복 정보 제거 및 CHKPLANEQM_APRV PK를 GETKEY(APRVKEY)로 생성하도록 요청
+- **작업 상세 내용**:
+  - 실제 DETAIL541건 SELECT 점검에서 HEADER 고아·중복값 불일치·EQMCD 파생값 불일치 모두0건. DETAIL PLANTP·PLANCD·REVNUM·EQMCD 제거 및 REVCD·CHKKNDCD PK 유지. R03 승인본 INSERT와 최초 이관/신규 생성 SQL 수정. R04 설비코드는 이미 HEADER로 검증한 조회 대상 EQMCD 반환하여 추가 JOIN 없이 기존 그리드 반환 형식 유지. APRVKEY VARCHAR20 PK와 GETKEY(APRVKEY) 발번 적용, 이력은 APRVTIME·APRVKEY 최신순 및 REV 조회 인덱스 정리. 구 계획별 PK·중간 APRVID·신규 구조 모두 지원하는 전환 SQL 및 HEADER 없는 DETAIL 사전 차단 추가. 구 REVCD 이관 파일은 역사적 구 구조 참조를 유지하고 최신 정규화 적용 순서 명시. 상태/요청 이력 데이터와 승인 스냅샷 보존. JS·ASPX·리포트 및 입력 파라미터 변경 없음. 공통 GETKEY 수정 없음
+- **검증 결과**: 격리 MariaDB10.2 및 실제 GETKEY 정의 복제로 승인/이력/출력31건, 테이블 전환·재실행·기존 키/기록 보존·고아 차단13건, R04 승인본/점검 등록/중복 방지10건, 신규 스키마/최초 이관3건, 주기관리·완료월 잠금26건 총83건 통과. R03·R04 입력 파라미터 동일 및 수정 분기3개 한정 확인. 7개 SQL UTF8 BOM/CRLF 검증. 실제 DB는 SELECT만 사용하고 GETKEY 직접 호출이나 DDL/DML 없음
+
+
+### 2. EQM1001_R03 리비전 승인·반려·계획서 출력 이관 및 처리 이력 팝업
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql, 05.Procedure/MES_SNS2_EQM1001_R05.sql, 05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_APRV_HISTORY.sql, 04.Report/PAGEEQM/EQM1001/S05A.cs
+- **배경 및 원인**: R05 승인·반려·출력을 R03 개정 이력 영역으로 옮기고 선택 REV의 CHKPLANEQM_APRV 이력을 공통 팝업으로 조회 요청. 기존 승인 테이블은 PLANTP·PLANCD PK와 REVCD 부재로 누적 이력 저장 불가
+- **작업 상세 내용**:
+  - 두 탭 개정내용 저장 옆 승인·반려·출력 배치, REV 그리드 이력 버튼 및 Its:pop/ItsPop 기반 조회·반려사유 팝업 추가. R03 SAVE_PLAN_STATUS/CALL_PLAN_RPT/LIST_PLAN_APRV 이관, 선택 최신 REV 및 저장된 개정내용 확인, 승인본 스냅샷과 그룹·소속 설비 처리별 누적 기록. CHKPLANEQM_APRV APRVID·REVCD 추가 및 PK 전환/REV 인덱스/기존 기록 보존 SQL 작성. 상태는 REV_HEADER 유지, 이력은 APRV 누적. 과거 이력은 상태·처리시간이 정확히 일치하는 REV만 연결하며 불명확한 처리자는 임의 표시하지 않음. R05는 조회만 유지하고 기존 동작 제거. S05A는 명칭/양식 유지하고 R03 선택 REV 데이터 사용. R03 파라미터30개 메타데이터 갱신. 기존 R03 주기관리 모든 분기와 R04 승인 실행 제한 유지
+- **검증 결과**: 선검증 후 반영. 격리 MariaDB10.2 승인·반려·선택 REV 출력28건, 주기관리/완료월 잠금26건, 이력 전환/재실행/기존 데이터 보존8건, JS 이벤트/클릭 행/선택 복원/에러/버전/컨트롤23건 총85건 통과. 실제 스키마와 현행 R03은 SELECT로만 확인. 스테이징·최종 MSBuild 빌드 오류0. 기존 R03 분기 동일 및 UTF8 BOM/CRLF 검증. 실제 배포 화면·PDF 실행은 서버 반영 후 확인 필요
+
+
+### 2. EQM1001_R03 주기관리 승인 제한 제거
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql
+- **배경 및 원인**: 주기 조회는 사용 중인 모든 설비를 대상으로 하고 주기 저장에서 승인계획 검증을 제거하도록 요청
+- **작업 상세 내용**:
+  - LIST_CYCLE_EQMCD 승인 REV 관련 JOIN 4개 및 그룹 승인 조건 제거, USEYN=Y와 연도별 정기점검 주기 LEFT JOIN만 유지. SAVE_CYCLE_EQMCD 및 DELETE_CYCLE_EQMCD는 사용 중인 설비 여부만 검증하며 완료실적 월 잠금 유지. R04 실제 점검의 승인 검증과 페이지 ASPX/JS 및 파라미터는 변경 없음
+- **검증 결과**: 격리 MariaDB 10.2에서 프로시저 컴파일 및 26개 조회·저장·삭제·완료월 잠금·R04 승인 회귀검증 통과. 실제 DB SELECT로 활성 설비 1143개와 조회 1143행, 키 중복 없음 및 30개 컬럼 확인. 선검증 후 반영, UTF-8 BOM/CRLF 및 파라미터 동일 검증
+
+
+### 2. EQM1001 설비그룹 최신 REV 표시 및 승인 구조 단순화
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql;05.Procedure/MES_SNS2_EQM1001_R05.sql;05.Procedure/MES_SNS2_EQM1001_PLAN_REV.sql;05.Procedure/MES_SNS2_EQM1001_PLAN_REV_INIT.sql;01.Office/PAGEEQM/EQM1001/EQM1001_R03.js;05.Procedure/MES_SNS2_EQM1001_PLAN_APRV.sql 삭제
+- **배경 및 원인**: 별도 승인 테이블과 REV 헤더의 중복 관리 및 다중 조인, 설비그룹 체크박스 제거·최신 REV 표시 요청
+- **작업 상세 내용**:
+  - 승인 상태와 요청·처리정보를 REV 헤더로 통합하고 중복 승인 저장·삭제 제거; 설비그룹 정기점검 체크박스·변환 제거 및 그룹코드 포커스 복원; 최신 REV와 상태 조회, REV 없으면 상태 공란; 그룹조회 JOIN 6→3, 전체 R03 51→42·R05 24→21; 그룹 대상 상수·복사 원본·등록 항목/순서 조회 중복 조인 축소; 정기점검 주기 조회 CHKTP=02 제한으로 불필요 외부 GROUP BY 제거; 구 승인 테이블 생성 스크립트 삭제·기존 이관 스크립트 일회성 용도 명시; 창작업본 CHKPLANEQM 및 승인 보존본 REV_DETAIL 유지
+- **검증 결과**: 격리 MariaDB 10.2 DB 테스트 94건 및 JS 모의 테스트 20건 통과; 실제 DB SELECT로 그룹 14건 최신 REV·상태 대조 및 기존 설비·승인관리 조회 결과 검증; 가상 REV 10만 건에서 느린 윈도 함수·행별 lookup 제외하고 집계/유일키 조인 유지; 파라미터 수·순서 유지, BOM·CRLF·node 문법검사 통과; 실제 서버 DDL/DML 없음
+
+
+### 2. [EQM1001_R03/R04/R05] 최신 서버 반영 확인 및 프로시저 조회 최적화
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql
+- **배경 및 원인**: 사용자가 최신 이관 버전 반영 후 정확한 적용 확인과 3개 프로시저 성능·가독성 개선 요청. 작업 시작 시 서버 세 프로시저 본문이 로컬과 일치, SYSTEM_PARAMETERS와 정보 스키마 입력값이 R03 28개·R04 22개·R05 10개로 일치, 다른 페이지 호출 0건 확인
+- **작업 상세 내용**:
+  - R03 REV 상세는 REVCD·CHKKNDCD PK로 항목이 유일하므로 MIN/MAX/GROUP BY 중복 집계 제거. R03 주기관리 2곳 및 R04 점검 CRUD 4곳의 승인 검증을 COUNT 전체 계산에서 단독 IF NOT EXISTS로 변경(SELECT WHERE 상관 서브쿼리 사용 없음). R04 최신 승인 REVCD·REVNUM 조회를 2회에서 1회로 통합, 미사용 지역변수 제거. R05 그룹·설비 항목 수를 선집계하고 승인정보 JOIN 뒤 넓은 GROUP BY 제거, 설비 항목 수는 PK 유일성을 활용한 COUNT(*) 사용. 입력 파라미터 및 반환 컬럼·오류 문구·기존 승인/REV/점검 보호 흐름 유지. 날짜별 이력 1행 통합
+- **검증 결과**: 실제 DB SELECT/EXPLAIN으로 최신 배포 정의·메타데이터·키 확인. 변경 전후 그룹 목록 13건·설비 목록 126건·REV 상세 4건 동일. 격리 MariaDB 10.2에서 최적화 3개+기존 비교용 3개 전체 컴파일. 기존 CRUD/승인 34개+추가 R04/주기관리/결과 비교 35개=69개 통과. 실제 조회 소규모 측정(한 연결, 쿼리별 워밍업 1회 제외 6회) 중앙값 그룹24.92→18.04ms, 설비29.83→20.77ms(왕복·전송 포함 참고값, 운영 성능 보장 아님). BOM/CRLF 검증. 실제 서버 DB 데이터·정의·인덱스 변경 없음, 브라우저 CRUD 미실행
+
+
+### 2. [EQM1001_R03/R04/R05] 페이지·프로시저 호출 일치 점검
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.js, 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, WORK_HISTORY.md
+- **배경 및 원인**: 다른 페이지 프로시저 참조가 남아 있는지 확인 및 페이지명과 프로시저명을 일치시키라는 요청
+- **작업 상세 내용**:
+  - 현재 로컬 호출 33개 전수 확인(R03 25개·23분기, R04 6개·6분기, R05 2개·2분기): 모두 자기 페이지 프로시저 호출, 각 분기 존재. SQL 선언명·내부 호출·코드비하인드 클래스·스크립트 연결 일치. R05 계획서 S05A도 R05 CALL_PLAN_RPT 사용. COMERR·COMSPLIT 공통 호출 유지. 앞선 이관이 로컬에 완료되어 추가 기능 소스 변경 없음. 실제 DB에는 R03→R05 호출 8개 및 R05의 REQUEST_PLAN/REV 3개 분기가 이전 상태로 남아 있음
+- **검증 결과**: JS 3개 구문 검사 및 로컬 호출·분기·페이지 이름 검사 통과. 실제 서버는 루틴/메타데이터 SELECT만 실행. 서버 R03에서 로컬 REV 3분기 누락 및 등록 파라미터 24개(최신 28개 필요) 확인. R04 22개·R05 10개 파라미터는 로컬과 일치. 실제 서버 수정 없음
+
+
+### 2. [EQM1001_R03/R05] 최신 REV 요청일시 표시 및 페이지별 프로시저 분리
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql, 05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV_SYSTEM_PARAMETERS.sql
+- **배경 및 원인**: R05 요청일시는 계획 수정 때 삭제되는 CHKPLANEQM_APRV에서 조회하여 공란. R03 REV 저장·조회 및 CRUD 승인 요청 생성까지 R05에 있어 페이지와 프로시저 책임 불일치. 실제 DB FM116I2E0N REV.1에는 2026-10-06 13:32:48 기록됨
+- **작업 상세 내용**:
+  - R03에 LIST_PLAN_REV·LIST_PLAN_REV_ITEM·SAVE_PLAN_REV 이동, JS 세 호출을 R03으로 변경. CRUD 8개 분기의 승인 요청 생성·초기화를 R03 공통 영역으로 이동하여 R05 의존 제거. R03 PLANTP·PLANCD·REVNUM·REMARK 입력 추가(24→28), 전용 파라미터 백업·재등록 SQL 추가. R05 LIST_PLAN 두 탭은 최신 REV 헤더 요청일시를 우선 조회하고 기존 승인테이블 시간은 이전 데이터 보완용. 승인·반려 및 그룹 일괄 처리 시 원래 요청자·요청일시·요청프로그램 유지, 처리일시는 별도 저장. R05 승인·반려·출력 유지
+- **검증 결과**: 실제 서버는 SELECT만 실행: 테이블 컬럼·키·루틴·파라미터 확인, 수정 SELECT 그룹 1건(대기 REV.1 요청일시 정상), 설비 126건 정상. 격리 MariaDB 10.2에서 전체 R03/R05 컴파일과 원래 파라미터 백업·재등록 검증. DB 회귀 34개+JS 호출 10개=44개 통과. CRUD 8개 분기·그룹 일괄 승인/반려·승인본 보존·재승인 요청정보·오류 입력·이전 데이터 보완 확인. JS 구문 및 BOM/CRLF 검증. 실제 서버 프로시저/메타데이터 미반영, 실제 브라우저 저장 미검증
+
+
+### 2. [EQM1001_R03] 개정내용 저장 시 작성자·수정일시 자동 기록
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql
+- **배경 및 원인**: R03 REV 그리드는 REQEMP·REQTIME을 표시하지만 SAVE_PLAN_REV는 MEMP·MTIME만 갱신하여 기존 이력의 작성자와 수정일시가 빈 값으로 남음. 실제 DB에서도 해당 빈 값과 수정 감사 필드만 기록된 행 확인
+- **작업 상세 내용**:
+  - 개정내용 저장 시 REQEMP=CALLEMP(), REQTIME=CALLTIME(), REQPRG=CALLPRG() 갱신. 기존 MEMP·MTIME·MPRG 기록 유지. UPDATE에도 승인본 제외 조건 추가. 두 탭의 공통 프로시저·기존 조회 바인딩 활용, JS·테이블·프로시저 인자 변경 없음
+- **검증 결과**: 실제 DB 스키마·데이터·배포 프로시저를 SELECT로 확인. 격리 MariaDB 10.2에서 전체 프로시저 컴파일 및 14개 검증 통과(그룹·설비별 저장, 재저장 사용자·시간, 반려상태 유지, 승인본 보호, 입력 오류). LIST_PLAN_REV 작성자명·시간 반환 확인. BOM·CRLF 검증. 실제 서버 DB 변경 및 브라우저 저장 테스트 없음
+
+
 ### 2. EQM1001_R01 화면 및 프로시저 수리유형 명칭 원복
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql
 - **배경 및 원인**: 설비이력관리(EQM1001_R01) 화면의 콤보 라벨 및 메인 그리드 컬럼명이 '고장원인구분'으로 변경되었던 부분을 기존 명칭인 '수리유형'으로 원복 요청
@@ -521,6 +609,17 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 01.Office/Reports/EQM1001.exe·pdb, 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe·pdb, WORK_HISTORY.md | 로컬 실행 파일 수정 완료. 실제 운영 환경 적용 시 최신 01.Office/Reports/EQM1001.exe 반영 필요 | MSBuild 오류0. 실제 ItsRpt.js 직렬화 및 R03 PrintPlanRev 사용한 전달·미선택 검증8건 통과. DB 연결만 테스트 대체한 임시 S05A로 그룹·설비 REV0/REV3 PDF4건 생성 및 R03/PLANCD/REVNUM 전달 확인. 최종 EXE 해시 일치. 실제 DB·실제 서버 파일 미변경, 실서버 PDF 출력 미실행 |
+| **검증 완료** | WORK_HISTORY.md (실제 DB SELECT 검증, 업무 소스 변경 없음) | 사용자 반영 필요: PLAN_REV_NORMALIZE로 DETAIL 4중복 컬럼 제거. APRV 감사컬럼 기본값 3개 및 미연결 설비 계획 데이터는 추가 정리 검토 | SELECT만 사용. HEADER 199/DETAIL 607/APRV 196/계획 643행. DETAIL의 HEADER 미연결 0, APRV 빈키·키형식·상태·HEADER 연결·계획 식별 불일치 각 0. DETAIL 중복 컬럼 불일치 66건 전부 빈값·0 기본값, 승인 스냅샷과 HEADER 연결 유지. 계획 CHKTP01 17/02 626, 설비 미연결31/점검항목 미연결0. 실제 DB DDL/DML·공통 함수 실행 없음 |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 05.Procedure/MES_SNS2_EQM1001_R03.sql | 로컬 수정 완료, 실제 DB R03 프로시저 전체 반영은 사용자 진행 | 선 검증 후 반영: JS 모의 UI 44건 및 격리 MariaDB 10.2 승인·반려 회귀 검증 47건 합계 91건 통과. JS 문법·ASPX 버튼 속성·파라미터 유지·BOM CRLF 확인. 실제 서버 DB와 배포 파일 미변경 |
+| **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql, 05.Procedure/MES_SNS2_EQM1001_R04.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_REV.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_REV_INIT.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_REV_REVCD.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_APRV_HISTORY.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_REV_NORMALIZE.sql | 로컬 반영 완료. 실제 DB 변경 없음. 기존 DB 반영: PLAN_REV_NORMALIZE → 최신 PLAN_APRV_HISTORY → R03·R04 전체 프로시저 교체. R03 메타데이터는 기존 안내30개 유지(아직 미등록이면 R03_SYSTEM_PARAMETERS 실행). 구 REV_INIT/REV_REVCD는 해당 구 구조의 최초 이관에만 사용하며 정규화 후 재실행 금지 | 격리 MariaDB10.2 및 실제 GETKEY 정의 복제로 승인/이력/출력31건, 테이블 전환·재실행·기존 키/기록 보존·고아 차단13건, R04 승인본/점검 등록/중복 방지10건, 신규 스키마/최초 이관3건, 주기관리·완료월 잠금26건 총83건 통과. R03·R04 입력 파라미터 동일 및 수정 분기3개 한정 확인. 7개 SQL UTF8 BOM/CRLF 검증. 실제 DB는 SELECT만 사용하고 GETKEY 직접 호출이나 DDL/DML 없음 |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql, 05.Procedure/MES_SNS2_EQM1001_R05.sql, 05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_APRV_HISTORY.sql, 04.Report/PAGEEQM/EQM1001/S05A.cs | 로컬 반영 완료, 실제 DB DDL/DML 및 서버 배포 없음. 반영 순서: PLAN_APRV_HISTORY SQL → R03·R05 프로시저 전체 교체 → R03_SYSTEM_PARAMETERS 재등록(30개) → R03·R05 페이지 및 S05A 리포트 빌드/배포. 기존 PLAN_REV_INIT은 이력 전환 후 재실행 금지 | 선검증 후 반영. 격리 MariaDB10.2 승인·반려·선택 REV 출력28건, 주기관리/완료월 잠금26건, 이력 전환/재실행/기존 데이터 보존8건, JS 이벤트/클릭 행/선택 복원/에러/버전/컨트롤23건 총85건 통과. 실제 스키마와 현행 R03은 SELECT로만 확인. 스테이징·최종 MSBuild 빌드 오류0. 기존 R03 분기 동일 및 UTF8 BOM/CRLF 검증. 실제 배포 화면·PDF 실행은 서버 반영 후 확인 필요 |
+| **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql | 로컬 수정 완료. 사용자가 R03 프로시저를 서버에 재반영해야 하며 실제 DB 직접 변경 없음 | 격리 MariaDB 10.2에서 프로시저 컴파일 및 26개 조회·저장·삭제·완료월 잠금·R04 승인 회귀검증 통과. 실제 DB SELECT로 활성 설비 1143개와 조회 1143행, 키 중복 없음 및 30개 컬럼 확인. 선검증 후 반영, UTF-8 BOM/CRLF 및 파라미터 동일 검증 |
+| **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql;05.Procedure/MES_SNS2_EQM1001_R05.sql;05.Procedure/MES_SNS2_EQM1001_PLAN_REV.sql;05.Procedure/MES_SNS2_EQM1001_PLAN_REV_INIT.sql;01.Office/PAGEEQM/EQM1001/EQM1001_R03.js;05.Procedure/MES_SNS2_EQM1001_PLAN_APRV.sql 삭제 | 로컬 소스 완료. 사용자가 R03/R05를 함께 반영해야 함. 기존 운영 승인 테이블은 서버의 구 프로시저가 사용 중이므로 물리 삭제하지 않음. 신규 DB는 PLAN_REV.sql만 사용, 이미 REV 이관된 운영 DB는 PLAN_REV_INIT.sql 재실행 불필요. | 격리 MariaDB 10.2 DB 테스트 94건 및 JS 모의 테스트 20건 통과; 실제 DB SELECT로 그룹 14건 최신 REV·상태 대조 및 기존 설비·승인관리 조회 결과 검증; 가상 REV 10만 건에서 느린 윈도 함수·행별 lookup 제외하고 집계/유일키 조인 유지; 파라미터 수·순서 유지, BOM·CRLF·node 문법검사 통과; 실제 서버 DDL/DML 없음 |
+| **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql | 최적화본은 로컬 SQL 3개에만 반영. 서버에는 R03/R04/R05 프로시저 수정본 재적용 필요. 파라미터 규격은 유지하여 SYSTEM_PARAMETERS 재등록 및 JS 배포 변경 불필요 | 실제 DB SELECT/EXPLAIN으로 최신 배포 정의·메타데이터·키 확인. 변경 전후 그룹 목록 13건·설비 목록 126건·REV 상세 4건 동일. 격리 MariaDB 10.2에서 최적화 3개+기존 비교용 3개 전체 컴파일. 기존 CRUD/승인 34개+추가 R04/주기관리/결과 비교 35개=69개 통과. 실제 조회 소규모 측정(한 연결, 쿼리별 워밍업 1회 제외 6회) 중앙값 그룹24.92→18.04ms, 설비29.83→20.77ms(왕복·전송 포함 참고값, 운영 성능 보장 아님). BOM/CRLF 검증. 실제 서버 DB 데이터·정의·인덱스 변경 없음, 브라우저 CRUD 미실행 |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.js, 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, WORK_HISTORY.md | 서버 반영 대기: MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql 백업 구간 → 최신 R03/R05 프로시저 교체 → 같은 등록 SQL 재등록 구간(28건) → R03.js 배포. R04 추가 변경 불필요 | JS 3개 구문 검사 및 로컬 호출·분기·페이지 이름 검사 통과. 실제 서버는 루틴/메타데이터 SELECT만 실행. 서버 R03에서 로컬 REV 3분기 누락 및 등록 파라미터 24개(최신 28개 필요) 확인. R04 22개·R05 10개 파라미터는 로컬과 일치. 실제 서버 수정 없음 |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql, 05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV_SYSTEM_PARAMETERS.sql | 적용 순서: R03 전용 파라미터 SQL의 백업 구간 실행 → R03·R05 프로시저 교체 → 같은 SQL의 삭제·재등록/확인 구간 실행(28건) → R03.js 배포. R05 입력값은 그대로 10개 | 실제 서버는 SELECT만 실행: 테이블 컬럼·키·루틴·파라미터 확인, 수정 SELECT 그룹 1건(대기 REV.1 요청일시 정상), 설비 126건 정상. 격리 MariaDB 10.2에서 전체 R03/R05 컴파일과 원래 파라미터 백업·재등록 검증. DB 회귀 34개+JS 호출 10개=44개 통과. CRUD 8개 분기·그룹 일괄 승인/반려·승인본 보존·재승인 요청정보·오류 입력·이전 데이터 보완 확인. JS 구문 및 BOM/CRLF 검증. 실제 서버 프로시저/메타데이터 미반영, 실제 브라우저 저장 미검증 |
+| **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql | 사용자가 EQM1001_R05 프로시저 수정본 반영 후 기존 빈 이력은 개정내용 재저장 필요 | 실제 DB 스키마·데이터·배포 프로시저를 SELECT로 확인. 격리 MariaDB 10.2에서 전체 프로시저 컴파일 및 14개 검증 통과(그룹·설비별 저장, 재저장 사용자·시간, 반려상태 유지, 승인본 보호, 입력 오류). LIST_PLAN_REV 작성자명·시간 반환 확인. BOM·CRLF 검증. 실제 서버 DB 변경 및 브라우저 저장 테스트 없음 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql | EQM1001_R01 수리유형 명칭 원복 완료, 렌더링 200 OK 검증 완료 | IIS Express 200 OK 확인, 렌더링된 HTML 내 '수리유형' 포함 및 '고장원인구분' 미포함 검증 완료, 전 파일 UTF-8 with BOM 무결성 확인 |
 | **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql | EQM1001_R04 프로시저 REV 표기 간결화 완료 (서버 DB 직접 반영 금지 원칙 준수) | SQL 소스 파일 UTF-8 with BOM 및 CRLF 무결성 확인, IIS Express 200 OK 정상 서빙 확인 |
 | **완료** | 01.Office/PAGEMST/MST3001/MST3001_R03 (aspx, aspx.cs, js), 01.Office/PAGETOL/TOL0003/TOL0003_R05 (aspx, aspx.cs, js) | MST3001_R03 및 TOL0003_R05 표준화 완료, IIS Express 200 OK 서빙 확인 | IIS Express(http://localhost:55085/) 호출 검증 결과 MST3001_R03.aspx 및 TOL0003_R05.aspx 모두 200 OK 정상 서빙 확인, 전 파일 UTF-8 with BOM 및 CRLF 무결성 검증 완료 |

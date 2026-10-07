@@ -6,8 +6,7 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid_GRP1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('설비그룹코드', 'EQMGUBUN', { width: 120, align: 'center' }),
         column.create('설비그룹', 'EQMGRPNM', { width: 120, align: 'center' }),
-        column.create('정기점검', 'EQM02', { width: 60, columnType: enumColumnTypes.check, readOnly: true }),
-        // 2026-09-30 [설비그룹 점검계획 탭] 좌측 목록 현재 승인 REV 컬럼
+        // 2026-09-30 [설비그룹 점검계획 탭] 좌측 목록 최신 REV 컬럼
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 70, align: 'center', readOnly: true }),
         column.create('반려사유', 'REJREASON', { width: 180, readOnly: true }),
@@ -24,6 +23,8 @@ ItsPage.Load = function () {
         column.create('승인자', 'APRVEMP', { width: 80, align: 'center', readOnly: true }),
         column.create('처리일시', 'APRVTIME', { width: 130, align: 'center', readOnly: true }),
         column.create('반려사유', 'REJREASON', { width: 200, readOnly: true }),
+        // 2026-10-06 개정 이력: 선택 REV 승인·반려 이력 버튼
+        column.create('승인/반려 이력', 'APRVHISTORY', { width: 100, columnType: enumColumnTypes.button, iconCls: 'fa-search', readOnly: true }),
         column.create('REV번호', 'REVNUM', { hidden: true }),
         column.create('상태코드', 'APRVSTT', { hidden: true }),
         column.split()
@@ -85,6 +86,8 @@ ItsPage.Load = function () {
         column.create('승인자', 'APRVEMP', { width: 80, align: 'center', readOnly: true }),
         column.create('처리일시', 'APRVTIME', { width: 130, align: 'center', readOnly: true }),
         column.create('반려사유', 'REJREASON', { width: 200, readOnly: true }),
+        // 2026-10-06 개정 이력: 선택 REV 승인·반려 이력 버튼
+        column.create('승인/반려 이력', 'APRVHISTORY', { width: 100, columnType: enumColumnTypes.button, iconCls: 'fa-search', readOnly: true }),
         column.create('REV번호', 'REVNUM', { hidden: true }),
         column.create('상태코드', 'APRVSTT', { hidden: true }),
         column.split()
@@ -165,6 +168,16 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
+    // 2026-10-06 승인·반려 이력 팝업: 처리 기록 조회 전용
+    ItsGrid.Create('grid_PLAN_APRV', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
+        column.create('REV', 'REVNM', { width: 90, align: 'center', readOnly: true }),
+        column.create('처리', 'APRVSTTNM', { width: 70, align: 'center', readOnly: true }),
+        column.create('처리자', 'APRVEMP', { width: 100, align: 'center', readOnly: true }),
+        column.create('처리일시', 'APRVTIME', { width: 150, align: 'center', readOnly: true }),
+        column.create('반려사유', 'REJREASON', { width: 480, readOnly: true }),
+        column.split()
+    ]);
+
     // 조회년도 기본값
     ItsCombo.SetValueByIndex('cmb_SYEAR', 4);
 
@@ -201,9 +214,8 @@ ItsButton.EventSearch = function (targetEqmGubun) {
             return;
         }
 
-        ItsGrid.SetStore('grid_GRP1', maria.store.YnToBool('EQM02'));
-        // ItsGrid.Get('grid_GRP1').autoSizeColumns();
-        FocusGroupPlanCheckCell(targetEqmGubun);
+        ItsGrid.SetStore('grid_GRP1', maria.store);
+        FocusGroupPlanRow(targetEqmGubun);
         ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
     }
     else if (selectedTabIndex == 1) {
@@ -243,36 +255,32 @@ ItsButton.EventSearch = function (targetEqmGubun) {
     }
 };
 
-// 설비그룹 점검계획 탭: 정기점검 셀 포커스
-function FocusGroupPlanCheckCell(targetEqmGubun) {
+// 2026-10-06 설비그룹 점검계획 탭: 체크박스 제거 후 선택한 그룹코드에 포커스
+function FocusGroupPlanRow(targetEqmGubun) {
     if (!targetEqmGubun) {
         return;
     }
 
     setTimeout(function () {
-        var groupPlanGrid = ItsGrid.Get('grid_GRP1');
-        var periodicCheckColumn = groupPlanGrid.getColumn('EQM02');
-        var targetGroupRowIndex = -1;
-
-        for (var i = 0; i < groupPlanGrid.rows.length; i++) {
-            if (groupPlanGrid.rows[i].dataItem && groupPlanGrid.rows[i].dataItem.EQMGUBUN === targetEqmGubun) {
-                targetGroupRowIndex = i;
-                break;
-            }
-        }
-
-        if (targetGroupRowIndex < 0 || !periodicCheckColumn) {
+        var grid = ItsGrid.Get('grid_GRP1');
+        var col = grid.getColumn('EQMGUBUN');
+        if (!col) {
             return;
         }
 
-        var periodicCheckColumnIndex = groupPlanGrid.columns.indexOf(periodicCheckColumn);
-        groupPlanGrid.select(targetGroupRowIndex, periodicCheckColumnIndex);
-        groupPlanGrid.scrollIntoView(targetGroupRowIndex, periodicCheckColumnIndex);
-        groupPlanGrid.focus();
+        for (var i = 0; i < grid.rows.length; i++) {
+            if (grid.rows[i].dataItem && grid.rows[i].dataItem.EQMGUBUN === targetEqmGubun) {
+                var colIdx = grid.columns.indexOf(col);
+                grid.select(i, colIdx);
+                grid.scrollIntoView(i, colIdx);
+                grid.focus();
+                return;
+            }
+        }
     });
 }
 
-// 설비그룹 점검계획 탭: 재조회 후 대상 정기점검 셀 포커스
+// 설비그룹 점검계획 탭: 재조회 후 대상 그룹코드 포커스
 function RefreshGroupPlan(targetEqmGubun) {
     ItsButton.EventSearch(targetEqmGubun);
     // 2026-09-30 [설비그룹 점검계획 탭] 재조회 후 개정 이력(REV) 그리드 맨 위 REV로 포커스
@@ -1022,9 +1030,10 @@ function GetPlanCd(planTp) {
 }
 
 // 2026-09-30 [설비그룹·설비별 점검계획 탭] 우측 상단 REV 목록 조회 (REV가 있으면 맨 위 REV 선택 이벤트로 정기점검 조회, 없으면 작업본 바로 조회)
+// 2026-10-06 [개정 이력] R03 전용 프로시저로 REV 조회·저장 처리
 function SearchPlanRev(planTp, planCd) {
     var gridId = planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV';
-    var maria = new ItsMaria('EQM1001_R05', 'LIST_PLAN_REV');
+    var maria = new ItsMaria('EQM1001_R03', 'LIST_PLAN_REV');
     maria.AddParam('PLANTP', planTp);
     maria.AddParam('PLANCD', planCd);
     maria.CallProc();
@@ -1048,6 +1057,7 @@ function SearchPlanRev(planTp, planCd) {
 }
 
 // 2026-09-30 [설비그룹·설비별 점검계획 탭] 선택한 REV의 우측 하단 정기점검 조회 (맨 위 REV: 작업본 편집, 이전 REV: 승인본 조회 전용)
+// 2026-10-06 [개정 이력] R03 전용 프로시저로 REV 조회·저장 처리
 function SearchPlanRevItem(planTp, planCd, rowIndex) {
     var revGridId = planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV';
     var itemGridId = planTp == 'G' ? 'grid_GRP2' : 'grid3';
@@ -1061,7 +1071,7 @@ function SearchPlanRevItem(planTp, planCd, rowIndex) {
     }
 
     if (!isEdit) {
-        maria = new ItsMaria('EQM1001_R05', 'LIST_PLAN_REV_ITEM');
+        maria = new ItsMaria('EQM1001_R03', 'LIST_PLAN_REV_ITEM');
         maria.AddParam('PLANTP', planTp);
         maria.AddParam('PLANCD', planCd);
         maria.AddParam('REVNUM', ItsGrid.GetValue(revGridId, rowIndex, 'REVNUM'));
@@ -1101,6 +1111,7 @@ function SetPlanEditButton(planTp, isEdit, revNm) {
 }
 
 // 2026-09-30 [설비그룹·설비별 점검계획 탭] 우측 상단 진행 중(대기·반려) REV 개정내용 저장
+// 2026-10-06 [개정 이력] R03 전용 프로시저로 REV 조회·저장 처리
 function SavePlanRev(planTp) {
     var gridId = planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV';
     var planCd = GetPlanCd(planTp);
@@ -1110,7 +1121,7 @@ function SavePlanRev(planTp) {
     // 2026-10-02 [개정 이력 그리드] 진행 중 REV 확인은 프로시저(SAVE_PLAN_REV)에서 처리 (REV가 없으면 빈 값 전달)
     var hasRev = ItsGrid.Length(gridId) > 0;
 
-    var maria = new ItsMaria('EQM1001_R05', 'SAVE_PLAN_REV');
+    var maria = new ItsMaria('EQM1001_R03', 'SAVE_PLAN_REV');
     maria.AddParam('PLANTP', planTp);
     maria.AddParam('PLANCD', planCd || '');
     maria.AddParam('REVNUM', hasRev ? ItsGrid.GetValue(gridId, 0, 'REVNUM') : '');
@@ -1184,3 +1195,127 @@ ItsButton.Event('btn_GRP_REV_SAVE').onClick = function () {
 ItsButton.Event('btn_EQM_REV_SAVE').onClick = function () {
     SavePlanRev('E');
 };
+
+// 2026-10-06 개정 이력: 선택한 리비전 정보
+function GetPlanRev(planTp, rowIndex) {
+    var gridId = planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV';
+    ItsGrid.FinishEditing(gridId);
+    var idx = rowIndex == undefined ? ItsGrid.GetCurrentIndex(gridId) : rowIndex;
+    if (idx < 0 || idx >= ItsGrid.Length(gridId) || !GetPlanCd(planTp)) {
+        ItsMsg.Toast('리비전을 선택해주세요.');
+        return null;
+    }
+    return {
+        planTp: planTp,
+        planCd: GetPlanCd(planTp),
+        revNum: ItsGrid.GetValue(gridId, idx, 'REVNUM'),
+        revNm: ItsGrid.GetValue(gridId, idx, 'REVNM'),
+        remark: ItsGrid.GetValue(gridId, idx, 'REMARK') || ''
+    };
+}
+
+// 2026-10-06 개정 이력: 승인 확인 및 반려사유 팝업
+var planReject = null;
+function SavePlanStatus(planTp, aprvStt) {
+    var rev = GetPlanRev(planTp);
+    if (!rev) {
+        return;
+    }
+    // 2026-10-06 개정 이력: 개정내용이 없으면 승인·반려 차단
+    if (!rev.remark.trim()) {
+        ItsMsg.Toast('개정내용을 입력하고 [개정내용 저장] 후 승인·반려해주세요.');
+        return;
+    }
+    if (aprvStt == 'R') {
+        planReject = rev;
+        ItsText.SetValue('txt_PLAN_REJREASON', '');
+        ItsLabel.SetText('lbl_PLAN_REJECT', rev.planCd + ' / ' + rev.revNm);
+        ItsPop.Open('pop_PLAN_REJECT');
+        return;
+    }
+    SavePlanRevStatus(rev, aprvStt, '');
+}
+
+// 2026-10-06 개정 이력: 선택 REV 승인·반려 저장 후 대상 목록 갱신
+function SavePlanRevStatus(rev, aprvStt, reason) {
+    var actNm = aprvStt == 'A' ? '승인' : '반려';
+    ItsMsg.Confirm(rev.planCd + ' ' + rev.revNm + '을 ' + actNm + '하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_R03', 'SAVE_PLAN_STATUS');
+        maria.AddParam('PLANTP', rev.planTp);
+        maria.AddParam('PLANCD', rev.planCd);
+        maria.AddParam('REVNUM', rev.revNum);
+        maria.AddParam('REMARK', rev.remark);
+        maria.AddParam('APRVSTT', aprvStt);
+        maria.AddParam('REJREASON', reason);
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsPop.Close('pop_PLAN_REJECT');
+        ItsGrid.Setkey(rev.planTp == 'G' ? 'grid_GRP1' : 'grid1', rev.planTp == 'G' ? 'EQMGUBUN' : 'FANO', rev.planCd);
+        ItsButton.EventSearch(rev.planTp == 'G' ? rev.planCd : undefined);
+        ItsMsg.Toast(rev.revNm + ' ' + actNm + ' 처리가 완료되었습니다.');
+    });
+}
+
+// 2026-10-06 개정 이력: 버튼을 누른 행의 승인·반려 기록 조회
+function SearchPlanAprv(planTp, rowIndex) {
+    var rev = GetPlanRev(planTp, rowIndex);
+    if (!rev) {
+        return;
+    }
+    ItsGrid.Clear('grid_PLAN_APRV');
+    var maria = new ItsMaria('EQM1001_R03', 'LIST_PLAN_APRV');
+    maria.AddParam('PLANTP', rev.planTp);
+    maria.AddParam('PLANCD', rev.planCd);
+    maria.AddParam('REVNUM', rev.revNum);
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+    ItsGrid.SetStore('grid_PLAN_APRV', maria.store);
+    ItsLabel.SetText('lbl_PLAN_APRV', rev.planCd + ' / ' + rev.revNm + ' / 처리 이력 ' + maria.store.Length() + '건');
+    ItsPop.Open('pop_PLAN_APRV');
+}
+
+// 2026-10-06 개정 이력: 선택 REV 계획서 출력
+function PrintPlanRev(planTp) {
+    var rev = GetPlanRev(planTp);
+    if (!rev) {
+        return;
+    }
+    var rpt = new ItsXtraRpt('EQM1001_S05A');
+    rpt.FileName('제조설비_정기점검계획서_' + rev.planCd + '_' + rev.revNm);
+    rpt.AddParam('PLANTP', rev.planTp);
+    rpt.AddParam('PLANCD', rev.planCd);
+    rpt.AddParam('REVNUM', rev.revNum);
+    rpt.CallPop();
+    if (rpt.isError) {
+        ItsMsg.Alert(rpt.errMessage);
+    }
+}
+
+// 2026-10-06 설비그룹 점검계획 탭: 승인·반려·계획서 출력 및 이력 버튼
+ItsButton.Event('btn_GRP_APPROVE').onClick = function () { SavePlanStatus('G', 'A'); };
+ItsButton.Event('btn_GRP_REJECT').onClick = function () { SavePlanStatus('G', 'R'); };
+ItsButton.Event('btn_GRP_PLAN_RPT').onClick = function () { PrintPlanRev('G'); };
+ItsGrid.Event('grid_GRP_REV').onButtonClick = function (rowIndex, field) {
+    if (field == 'APRVHISTORY') { SearchPlanAprv('G', rowIndex); }
+};
+
+// 2026-10-06 설비별 점검계획 탭: 승인·반려·계획서 출력 및 이력 버튼
+ItsButton.Event('btn_EQM_APPROVE').onClick = function () { SavePlanStatus('E', 'A'); };
+ItsButton.Event('btn_EQM_REJECT').onClick = function () { SavePlanStatus('E', 'R'); };
+ItsButton.Event('btn_EQM_PLAN_RPT').onClick = function () { PrintPlanRev('E'); };
+ItsGrid.Event('grid_EQM_REV').onButtonClick = function (rowIndex, field) {
+    if (field == 'APRVHISTORY') { SearchPlanAprv('E', rowIndex); }
+};
+
+// 2026-10-06 반려 팝업: 사유 저장 및 닫기
+ItsButton.Event('btn_PLAN_REJECT_SAVE').onClick = function () {
+    if (planReject) { SavePlanRevStatus(planReject, 'R', ItsText.GetValue('txt_PLAN_REJREASON')); }
+};
+ItsButton.Event('btn_PLAN_REJECT_CANCEL').onClick = function () { ItsPop.Close('pop_PLAN_REJECT'); };
+ItsPop.Event('pop_PLAN_REJECT').onPopClosed = function () { planReject = null; };

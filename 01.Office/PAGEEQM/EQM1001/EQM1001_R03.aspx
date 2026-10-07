@@ -29,7 +29,10 @@
                     <Its:div runat="server" Type="SplitTop" TopHeightPc="40">
                         <Its:div runat="server" Type="SplitTop">
                             <Its:label runat="server" Text="■ 개정 이력 (REV)" Bold="true" MarginLeft="10"/>
-                            <Its:button runat="server" Label="개정내용 저장" ID="btn_GRP_REV_SAVE" MarginLeft="40" BackColor="CustomButton" />
+                            <Its:button runat="server" Label="개정내용 저장" ID="btn_GRP_REV_SAVE" MarginLeft="40" BackColor="CustomButton2" />
+                            <Its:button runat="server" Label="승인" ID="btn_GRP_APPROVE" MarginLeft="10" BackColor="CustomButton" />
+                            <Its:button runat="server" Label="반려" ID="btn_GRP_REJECT" MarginLeft="10" BackColor="CustomButton3" />
+                            <Its:button runat="server" Label="계획서 출력" ID="btn_GRP_PLAN_RPT" Width="100" MarginLeft="10" BackColor="CustomButton2" />
                         </Its:div>
 
                         <Its:split runat="server" Type="Horizon" Resizeable="false" />
@@ -79,7 +82,10 @@
                     <Its:div runat="server" Type="SplitTop" TopHeightPc="40">
                         <Its:div runat="server" Type="SplitTop">
                             <Its:label runat="server" Text="■ 개정 이력 (REV)" Bold="true" MarginLeft="10"/>
-                            <Its:button runat="server" Label="개정내용 저장" ID="btn_EQM_REV_SAVE" MarginLeft="40" BackColor="CustomButton" />
+                            <Its:button runat="server" Label="개정내용 저장" ID="btn_EQM_REV_SAVE" MarginLeft="40" BackColor="CustomButton2" />
+                            <Its:button runat="server" Label="승인" ID="btn_EQM_APPROVE" MarginLeft="10" BackColor="CustomButton" />
+                            <Its:button runat="server" Label="반려" ID="btn_EQM_REJECT" MarginLeft="10" BackColor="CustomButton3" />
+                            <Its:button runat="server" Label="계획서 출력" ID="btn_EQM_PLAN_RPT" Width="100" MarginLeft="10" BackColor="CustomButton2" />
                         </Its:div>
 
                         <Its:split runat="server" Type="Horizon" Resizeable="false" />
@@ -135,6 +141,28 @@
 
 <%-- POP --%>
 <asp:Content ContentPlaceHolderID="CPH_POP" runat="server">
+    <Its:pop runat="server" ID="pop_PLAN_APRV" Title="리비전 승인·반려 이력" Width="1000" Height="450">
+        <Its:div runat="server" Type="SplitTop">
+            <Its:label runat="server" ID="lbl_PLAN_APRV" Text="" Bold="true" MarginLeft="10" />
+        </Its:div>
+        <Its:split runat="server" Type="Horizon" Resizeable="false" />
+        <Its:div runat="server" Type="SplitDown">
+            <Its:grid runat="server" ID="grid_PLAN_APRV" />
+        </Its:div>
+    </Its:pop>
+
+    <Its:pop runat="server" ID="pop_PLAN_REJECT" Title="점검계획 반려" Width="600" Height="190">
+        <Its:div runat="server" Type="SplitTop" TopHeightPc="70">
+            <Its:label runat="server" ID="lbl_PLAN_REJECT" Text="" Bold="true" MarginLeft="10" />
+            <Its:text runat="server" Label="반려사유" ID="txt_PLAN_REJREASON" Field="REJREASON" MarginLeft="10" InputWidth="430" />
+        </Its:div>
+        <Its:split runat="server" Type="Horizon" Resizeable="false" />
+        <Its:div runat="server" Type="SplitDown">
+            <Its:button runat="server" Label="반려" ID="btn_PLAN_REJECT_SAVE" Width="90" MarginLeft="200" BackColor="CustomButton3" />
+            <Its:button runat="server" Label="취소" ID="btn_PLAN_REJECT_CANCEL" Width="90" MarginLeft="10" BackColor="CustomButton2" />
+        </Its:div>
+    </Its:pop>
+
 
     <Its:pop runat="server" ID="pop_EQM02_ADD" Title="정기점검항목 추가" Width="900" Height="500">
         <Its:div runat="server" Type="SplitTop" ID="Div1" TopHeightPc="93">

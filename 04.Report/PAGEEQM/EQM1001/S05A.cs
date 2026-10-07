@@ -20,17 +20,17 @@ namespace XtraRpt
 
             // 2026-10-02 계획서 구분(PLANTP) 추가: G 설비그룹(EQMGRP), E 설비(FANO), 구분이 없으면 기존처럼 설비그룹
             string planType = param.ContainsKey("PLANTP") && param["PLANTP"] == "E" ? "E" : "G";
-            string planCode = planType == "E"
-                ? (param.ContainsKey("FANO") ? param["FANO"] : "")
-                : (param.ContainsKey("EQMGRP") ? param["EQMGRP"] : "");
+            // 2026-10-06 R03에서 선택한 계획코드·REV로 출력
+            string planCode = param.ContainsKey("PLANCD") ? param["PLANCD"] : "";
             if (string.IsNullOrEmpty(planCode))
             {
                 throw new InvalidOperationException(planType == "E" ? "설비를 선택해주세요." : "설비그룹을 선택해주세요.");
             }
 
-            ItsMaria maria = CreateMaria("EQM1001_R05", "CALL_PLAN_RPT");
+            ItsMaria maria = CreateMaria("EQM1001_R03", "CALL_PLAN_RPT");
             maria.AddParam("PLANTP", planType);
-            maria.AddParam(planType == "E" ? "FANO" : "EQMGRP", planCode);
+            maria.AddParam("PLANCD", planCode);
+            maria.AddParam("REVNUM", param.ContainsKey("REVNUM") ? param["REVNUM"] : "");
             DataSet dataSet = maria.CallProc();
             if (maria.IsError)
             {
