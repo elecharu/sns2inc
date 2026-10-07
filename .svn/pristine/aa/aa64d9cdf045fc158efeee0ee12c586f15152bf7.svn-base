@@ -1,0 +1,325 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.IO;
+using System.Xml;
+using System.Data;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using ITSLIB;
+using System.IO.Ports;
+using System.Windows.Threading;
+using DevExpress.Xpf.Grid;
+using System.Globalization;
+using DevExpress.XtraReports.UI;
+
+namespace TML1020
+{
+    /// <summary>
+    /// R01_JY2.xaml에 대한 상호 작용 논리
+    /// </summary>
+    public partial class R01 : ITSLIB.ItsPageTml
+    {
+        ItsModelPanel MODEL_S1 = new ItsModelPanel();
+        ItsModelPanel MODEL_S2 = new ItsModelPanel();
+        ItsModelPanel MODEL_S3 = new ItsModelPanel();
+
+        ItsModelPanel MODEL_A1 = new ItsModelPanel();
+        ItsModelPanel MODEL_A3 = new ItsModelPanel();
+
+        ItsModelGrid MODEL_G1 = new ItsModelGrid();
+        ItsModelGrid MODEL_G2 = new ItsModelGrid();
+        ItsModelGrid MODEL_G3 = new ItsModelGrid();
+        ItsModelGrid MODEL_G4 = new ItsModelGrid();
+
+        public R01()
+        {
+            InitializeComponent();
+
+            MODEL_S1.Binding(PANEL_S1);
+            MODEL_S1.InitData();
+
+            MODEL_S2.Binding(PANEL_S2);
+            MODEL_S2.InitData();
+
+            MODEL_S3.Binding(PANEL_S3);
+            MODEL_S3.InitData();
+
+            MODEL_A1.Binding(PANEL_A1);
+            MODEL_A1.InitData();
+
+            MODEL_A3.Binding(PANEL_A3);
+            MODEL_A3.InitData();
+
+            MODEL_G1.Binding(GRID_G1);
+            MODEL_G1.InitData();
+
+            MODEL_G2.Binding(GRID_G2);
+            MODEL_G2.InitData();
+
+            MODEL_G3.Binding(GRID_G3);
+            MODEL_G3.InitData();
+            MODEL_G3.EventRowChanged += MODEL_G3_EventRowChanged;
+
+            MODEL_G4.Binding(GRID_G4);
+            MODEL_G4.InitData();
+
+        }
+
+        private void MODEL_G3_EventRowChanged(int rowIndex)
+        {
+            MODEL_G4.InitData();
+
+            ItsMaria.Set("TML1020_R01", "LIST_MTRINLOT");
+            ItsMaria.AddOne("MTRODRKEY", MODEL_G3.GetValue(rowIndex, "MTRODRKEY"));
+            ItsMaria.AddOne("MTRODRSEQ", MODEL_G3.GetValue(rowIndex, "MTRODRSEQ"));
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            MODEL_G4.SetData(ds.Tables[0]);
+            MODEL_S3.SetData(ds.Tables[1]);
+            cb_INWARE.Value = ds.Tables[1].Rows[0]["WARECD"].ToString();
+        }
+
+        public override void EventPageLoaded()
+        {
+            base.EventPageLoaded();
+            PANEL_A1.Close();
+            PANEL_S2.Close();
+
+            DateTime today = DateTime.Today;
+
+            DateTime firstDay = new DateTime(today.Year, today.Month, 1);
+            DateTime lastDay = new DateTime(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
+
+            string first = firstDay.ToString("yyyy-MM-dd");
+            string last = lastDay.ToString("yyyy-MM-dd");
+
+            MODEL_S2.SetValue("SDATE", first);
+            MODEL_S2.SetValue("EDATE", last);
+        }
+
+        public override void EventCommand(string commandName)
+        {
+            base.EventCommand(commandName);
+
+            if (commandName == "SEL_INVOICEKEY")
+            {
+                if (MODEL_S1.GetValue("INVOICEKEY").ToString() == "")
+                {
+                    ShowMessageBox("", "거래명세서 번호를 스캔하세요.");
+                    return;
+                }
+
+                LIST_INVOICEKEY(true);
+            }
+            else if (commandName == "ADD_MTRIN")
+            {
+                ShowMessageBox("ADD_MTRIN", "입고 등록하시겠습니까?");
+            }
+            else if(commandName == "SEL_MTRIN")
+            {
+                ItsMaria.Set("TML1020_R01", "LIST_MTRIN");
+                ItsMaria.AddModel(MODEL_S1);
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_G1.SetData(ds.Tables[0]);
+            }
+            else if (commandName == "LIST_MTRINLOT")
+            {
+                if (MODEL_G1.GetValue(MODEL_G1.CurrentIndex, "INVOICEKEY").ToString() == "")
+                {
+                    ShowMessageBox("", "거래명세서 번호가 없습니다.");
+                    return;
+                }
+
+                LIST_INVOICEKEY(false);
+            }
+            else if (commandName == "DEL_MTRIN")
+            {
+                ShowMessageBox("DEL_MTRIN", "입고 취소하시겠습니까?");
+            }
+            else if (commandName == "ADD_MTRODR_IN")
+            {
+                PANEL_S2.Show();
+            }
+            else if(commandName == "LIST_MTRODRD")
+            {
+                ItsMaria.Set("TML1020_R01", "LIST_MTRODRD");
+                ItsMaria.AddModel(MODEL_S2);
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_G3.SetData(ds.Tables[0]);
+            }
+            else if (commandName == "ADD_MTRINLOT")
+            {
+                string msg =
+                    "아래 정보로 입고 등록하시겠습니까?\n\n" +
+                    "입고일자 : " + MODEL_S3.GetValue("MTRINDATE").ToString() + "\n" +
+                    "로트수량 : " + MODEL_S3.GetValue("LOTQTY").ToString() + "\n" +
+                    "입고창고 : " + MODEL_S3.GetValue("INWARE").ToString();
+
+                ShowMessageBox("ADD_MTRINLOT", msg);
+            }
+            else if (commandName == "DEL_MTRINLOT")
+            {
+                ShowMessageBox("DEL_MTRINLOT", "입고 취소하시겠습니까?");
+            }
+        }
+
+        public override void EventMessageResult(string commandName)
+        {
+            base.EventMessageResult(commandName);
+
+            if (commandName == "ADD_MTRIN")
+            {
+                ItsMaria.Set("TML1020_R01", "ADD_MTRIN");
+
+                ItsMaria.AddModel(MODEL_A1);
+                ItsMaria.AddModel(MODEL_A3);
+
+                for (int i = 0; i < MODEL_G2.Rows.Count; i++)
+                {
+                    ItsMaria.AddList("LOTKEY_LIST", MODEL_G2.GetText(i, "LOTKEY"));
+                }
+
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                PANEL_A1.Close();
+            }
+            else if(commandName == "DEL_MTRIN")
+            {
+                ItsMaria.Set("TML1020_R01", "DEL_MTRIN");
+
+                ItsMaria.AddOne("INVOICEKEY", MODEL_G1.GetValue(MODEL_G1.CurrentIndex, "INVOICEKEY"));
+                ItsMaria.AddOne("MTRINKEY", MODEL_G1.GetValue(MODEL_G1.CurrentIndex, "MTRINKEY"));
+
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                EventCommand("SEL_MTRIN");
+            }
+            else if (commandName == "ADD_MTRINLOT")
+            {
+                ItsMaria.Set("TML1020_R01", "ADD_MTRINLOT");
+
+                ItsMaria.AddOne("MTRODRKEY", MODEL_G3.GetValue(MODEL_G3.CurrentIndex, "MTRODRKEY"));
+                ItsMaria.AddOne("MTRODRSEQ", MODEL_G3.GetValue(MODEL_G3.CurrentIndex, "MTRODRSEQ"));
+                ItsMaria.AddModel(MODEL_S3);
+
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                EventCommand("LIST_MTRODRD");
+            }
+            else if (commandName == "DEL_MTRINLOT")
+            {
+                ItsMaria.Set("TML1020_R01", "DEL_MTRINLOT");
+
+                ItsMaria.AddOne("MTRINKEY", MODEL_G4.GetValue(MODEL_G4.CurrentIndex, "MTRINKEY"));
+                ItsMaria.AddOne("LOTKEY", MODEL_G4.GetValue(MODEL_G4.CurrentIndex, "LOTKEY"));
+
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                EventCommand("LIST_MTRODRD");
+            }
+        }
+
+        private void Text_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                if (MODEL_S1.GetValue("INVOICEKEY").ToString() == "")
+                {
+                    ShowMessageBox("", "거래명세서 번호를 스캔하세요.");
+                    return;
+                }
+
+                LIST_INVOICEKEY(true);
+            }
+        }
+
+        private void LIST_INVOICEKEY(bool flag_view)
+        {
+            if (flag_view)
+            {
+                btnADD_MTRIN.Visibility = Visibility.Visible;
+                cbMATERWARECD.Visibility = Visibility.Visible;
+                cbPRODUCTWARECD.Visibility = Visibility.Visible;
+                cbGOODSWARECD.Visibility = Visibility.Visible;
+                cbTESTWARECD.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                btnADD_MTRIN.Visibility = Visibility.Collapsed;
+                cbMATERWARECD.Visibility = Visibility.Collapsed;
+                cbPRODUCTWARECD.Visibility = Visibility.Collapsed;
+                cbGOODSWARECD.Visibility = Visibility.Collapsed;
+                cbTESTWARECD.Visibility = Visibility.Collapsed;
+            }
+
+            ItsMaria.Set("TML1020_R01", "LIST_INVOICE");
+            ItsMaria.AddOne("INVOICEKEY", MODEL_S1.GetValue("INVOICEKEY"));
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            MODEL_A1.InitData();
+            MODEL_A1.SetData(ds.Tables[0]);
+            MODEL_G2.SetData(ds.Tables[1]);
+
+            cbMATERWARECD.Value = ds.Tables[2].Rows[0]["MATERWARECD"].ToString();
+            cbPRODUCTWARECD.Value = ds.Tables[2].Rows[0]["PRODUCTWARECD"].ToString();
+            cbGOODSWARECD.Value = ds.Tables[2].Rows[0]["GOODSWARECD"].ToString();
+            cbTESTWARECD.Value = ds.Tables[2].Rows[0]["TESTWARECD"].ToString();
+
+            PANEL_A1.Show();
+
+            MODEL_S1.SetValue("INVOICEKEY", "");
+        }
+    }
+}

@@ -29,7 +29,7 @@
                     <Its:div runat="server" Type="SplitTop" TopHeightPc="40">
                         <Its:div runat="server" Type="SplitTop">
                             <Its:label runat="server" Text="■ 개정 이력 (REV)" Bold="true" MarginLeft="10"/>
-                            <Its:button runat="server" Label="개정내용 저장" ID="btn_GRP_REV_SAVE" MarginLeft="40" BackColor="CustomButton2" />
+                            <Its:button runat="server" Label="개정내용 저장·재요청" ID="btn_GRP_REV_SAVE" Width="150" MarginLeft="40" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="승인" ID="btn_GRP_APPROVE" MarginLeft="10" BackColor="CustomButton" />
                             <Its:button runat="server" Label="반려" ID="btn_GRP_REJECT" MarginLeft="10" BackColor="CustomButton3" />
                             <Its:button runat="server" Label="계획서 출력" ID="btn_GRP_PLAN_RPT" Width="100" MarginLeft="10" BackColor="CustomButton2" />
@@ -82,7 +82,7 @@
                     <Its:div runat="server" Type="SplitTop" TopHeightPc="40">
                         <Its:div runat="server" Type="SplitTop">
                             <Its:label runat="server" Text="■ 개정 이력 (REV)" Bold="true" MarginLeft="10"/>
-                            <Its:button runat="server" Label="개정내용 저장" ID="btn_EQM_REV_SAVE" MarginLeft="40" BackColor="CustomButton2" />
+                            <Its:button runat="server" Label="개정내용 저장·재요청" ID="btn_EQM_REV_SAVE" Width="150" MarginLeft="40" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="승인" ID="btn_EQM_APPROVE" MarginLeft="10" BackColor="CustomButton" />
                             <Its:button runat="server" Label="반려" ID="btn_EQM_REJECT" MarginLeft="10" BackColor="CustomButton3" />
                             <Its:button runat="server" Label="계획서 출력" ID="btn_EQM_PLAN_RPT" Width="100" MarginLeft="10" BackColor="CustomButton2" />
@@ -104,7 +104,7 @@
                             <Its:button runat="server" Label="추가" ID="bdiv3_btn_ADD" MarginLeft="10" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="저장" ID="bdiv3_btn_SAVE" MarginLeft="10" BackColor="CustomButton" />
                             <Its:button runat="server" Label="삭제" ID="bdiv3_btn_DEL" MarginLeft="10" BackColor="CustomButton3" />
-                            <Its:label runat="server" Text="※ 설비별 수정은 소속 설비그룹 계획서도 함께 승인 대기가 됩니다." ID="lbl_EQM_REV_INFO" ForeColor="BlueDark1" MarginLeft="20"/>
+                            <Its:label runat="server" Text="※ 설비별 수정 후 소속 설비그룹 개정내용도 저장·재요청해주세요." ID="lbl_EQM_REV_INFO" ForeColor="BlueDark1" MarginLeft="20"/>
                         </Its:div>
 
                         <Its:split runat="server" Type="Horizon" Resizeable="false" />
