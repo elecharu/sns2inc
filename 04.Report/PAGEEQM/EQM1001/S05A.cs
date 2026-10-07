@@ -199,6 +199,7 @@ namespace XtraRpt
             controls.Add(CreateFooterBox(historyX, y, historyLabelWidth, height, "개\r\n정\r\n이\r\n력", true));
 
             // 2026-10-02 개정 이력: 머리글 바로 위 칸부터 오래된 순으로 채우고 위로 갈수록 최신 (No는 REV 번호, 이력은 승인일자·개정내용)
+            // 2026-10-07 개정 이력: 각 리비전의 상태(승인·반려·대기)를 포함하여 전체 상태 표시
             int historyCnt = revHistory == null ? 0 : Math.Min(revHistory.Rows.Count, 4);
             for (int rowIndex = 0; rowIndex < 4; rowIndex++)
             {
@@ -206,6 +207,9 @@ namespace XtraRpt
                 int historyIndex = rowIndex - (4 - historyCnt);
                 DataRow history = historyIndex >= 0 ? revHistory.Rows[historyIndex] : null;
                 string revNo = history != null ? Value(history, "REVNUM") : "";
+                // string status = history != null ? Value(history, "APRVSTTNM") : "";
+                // string statusTag = string.IsNullOrEmpty(status) ? "" : "[" + status + "] ";
+                // string revText = history != null ? (statusTag + Value(history, "REVDATE") + " " + Value(history, "REMARK")).Trim() : "";
                 string revText = history != null ? (Value(history, "REVDATE") + " " + Value(history, "REMARK")).Trim() : "";
                 controls.Add(CreateFooterBox(revisionX, rowY, revisionNoWidth, revisionRowHeight, revNo, false));
                 controls.Add(CreateFooterBox(revisionX + revisionNoWidth, rowY, revisionContentWidth, revisionRowHeight, revText, false));
@@ -221,7 +225,7 @@ namespace XtraRpt
             return controls.ToArray();
         }
 
-        // 2026-10-07 계획서 개정이력: 나머지 전체 이력을 행 단위로 이어서 출력
+        // 2026-10-07 계획서 개정이력: 나머지 전체 이력을 행 단위로 이어서 출력 (상태 컬럼 포함)
         private XtraReport CreateHistoryReport(DataTable history)
         {
             XtraReport report = new XtraReport();
@@ -234,22 +238,24 @@ namespace XtraRpt
             header.Controls.Add(CreateFooterBox(0F, 0F, ReportWidth, 26F, "개정 이력 (이어서)", false));
             XRTable table = CreateTable(0F, 26F, ReportWidth, 28F, 9F);
             XRTableRow row = new XRTableRow();
-            row.Cells.Add(CreateCell("REV", 60F, true));
-            row.Cells.Add(CreateCell("개정일자", 100F, true));
-            row.Cells.Add(CreateCell("개정내용", 391F, true));
-            row.Cells.Add(CreateCell("작성", 90F, true));
-            row.Cells.Add(CreateCell("승인", 90F, true));
+            row.Cells.Add(CreateCell("REV", 50F, true));
+            row.Cells.Add(CreateCell("상태", 55F, true));
+            row.Cells.Add(CreateCell("개정일자", 90F, true));
+            row.Cells.Add(CreateCell("개정내용", 376F, true));
+            row.Cells.Add(CreateCell("작성", 80F, true));
+            row.Cells.Add(CreateCell("승인", 80F, true));
             table.Rows.Add(row);
             header.Controls.Add(table);
             DetailBand detail = new DetailBand();
             detail.HeightF = 28F;
             table = CreateTable(0F, 0F, ReportWidth, 28F, 8.5F);
             row = new XRTableRow();
-            row.Cells.Add(CreateDataCell("REVNUM", 60F, TextAlignment.MiddleCenter));
-            row.Cells.Add(CreateDataCell("REVDATE", 100F, TextAlignment.MiddleCenter));
-            row.Cells.Add(CreateDataCell("REMARK", 391F, TextAlignment.MiddleLeft));
-            row.Cells.Add(CreateDataCell("REQEMPNM", 90F, TextAlignment.MiddleCenter));
-            row.Cells.Add(CreateDataCell("APRVEMPNM", 90F, TextAlignment.MiddleCenter));
+            row.Cells.Add(CreateDataCell("REVNUM", 50F, TextAlignment.MiddleCenter));
+            row.Cells.Add(CreateDataCell("APRVSTTNM", 55F, TextAlignment.MiddleCenter));
+            row.Cells.Add(CreateDataCell("REVDATE", 90F, TextAlignment.MiddleCenter));
+            row.Cells.Add(CreateDataCell("REMARK", 376F, TextAlignment.MiddleLeft));
+            row.Cells.Add(CreateDataCell("REQEMPNM", 80F, TextAlignment.MiddleCenter));
+            row.Cells.Add(CreateDataCell("APRVEMPNM", 80F, TextAlignment.MiddleCenter));
             table.Rows.Add(row);
             detail.Controls.Add(table);
             report.Bands.AddRange(new Band[] { header, detail });

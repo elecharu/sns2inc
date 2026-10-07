@@ -1333,6 +1333,7 @@ function PrintPlanRev(planTp) {
     }
     var planCd = GetPlanCd(planTp);
     if (!planCd) {
+        ItsMsg.Toast(planTp == 'G' ? '설비그룹을 선택해주세요.' : '설비를 선택해주세요.');
         return;
     }
     var rpt = new ItsXtraRpt('EQM1001_S05A');
