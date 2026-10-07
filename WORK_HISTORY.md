@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-10-06
+> **최종 갱신일**: 2026-10-07
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -14,6 +14,81 @@
 4. **대화 기록 및 불러오기 연계**: 모든 사용자 요청 및 작업 결과는 본 문서에 실시간 동기화되어, 새 세션이나 나중에 작업 재개 시 "불러오기"를 통해 이전 맥락을 100% 이어받습니다.
 
 ---
+
+## 🕒 2026-10-07 (수) 작업 내역
+
+### 2. EQM1001_R03 주기 저장 승인계획 검증 제거 상태 확인
+- **수정/대상 파일**: WORK_HISTORY.md (R03.js·로컬 R03.sql·실제 서버 프로시저 검토, 업무 소스 변경 없음)
+- **배경 및 원인**: 사용자가 주기 저장에서 승인된 정기점검계획 확인 검증이 제거되었는지 확인 요청
+- **작업 상세 내용**:
+  - 일반 저장 및 일괄 주기설정은 SAVE_CYCLE_EQMCD 공통 분기를 사용하며 JS에도 승인 제한 없음. 로컬 및 실제 서버 해당 분기가 동일하고 승인상태·HEADER·DETAIL·APRV 참조/검증 없음. 주기 저장은 사용중 설비 확인과 점검실적이 있는 월의 점검자 변경/삭제 차단만 유지. 실제 YEARPLAN 트리거0 확인
+- **검증 결과**: 실제 서버 정의·트리거는 SELECT만 확인. 격리 MariaDB 전체컴파일 및 계획/REV/승인본 모두없는 상태 저장·대기/반려/승인 상태 저장·비사용/미지정설비 차단·실적월 변경 차단·일반/일괄 JS경로·트리거 없음10건 통과. 로컬/서버 주기저장 분기 정규화 비교일치. 실제 서버 저장/DML 및 업무 소스 변경 없음
+
+
+### 2. EQM1001_R03 개정이력 REV별 최종 상태 한 건 출력
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, WORK_HISTORY.md
+- **배경 및 원인**: 사용자 최종 기준: 대기·반려도 포함하되 동일 REV의 여러 승인/대기/반려 처리 로그를 나열하지 않고 마지막 상태의 개정내역 한 건만 표시
+- **작업 상세 내용**:
+  - CALL_PLAN_RPT 개정이력은 HEADER의 고유 PLANTP/PLANCD/REVNUM 행을 직접 조회하며 승인 필터 제거. APRV 로그는 JOIN하지 않으므로 동일 REV 다중 처리에도 한 건. 승인·반려는 최종 처리일, 대기는 요청일 표시, 승인자 칸은 승인 상태일 때만 표시. 과거 REV 선택 무관 전체 REV·최신 계획·4건 초과 다음 페이지 유지. 변경은 출력 이력 SELECT와 Modify 주석뿐
+- **검증 결과**: 선 검증 후 반영: 격리 MariaDB 전체 프로시저 컴파일·양탭 혼재60개 REV 한 번씩·과거/미선택/최신 선택·같은 REV의 반려→대기→승인 변경 후1건·다중 APRV 로그 중복 없음·대기만 있어도 표시·상태별 날짜·승인자18건 통과. 최신 계획 및 CRUD 분기·파라미터30 동일, BOM CRLF·저장파일 일치 확인. 실제 DB/서버·JS·보고서 바이너리 변경 없음, PDF 재실행 없음
+
+
+### 2. EQM1001_R03 계획서 개정이력 승인 REV만 한 건씩 표시
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, WORK_HISTORY.md
+- **배경 및 원인**: 사용자 정정: PDF 개정이력에는 승인·대기·반려 전체가 아니라 승인된 REV만 번호당 한 건 표시
+- **작업 상세 내용**:
+  - CALL_PLAN_RPT 마지막 이력 SELECT에 HEADER.APRVSTT=A 조건 추가. 승인일자·승인자 CASE를 직접 조회로 단순화. 승인 로그 테이블이 아닌 HEADER의 고유 리비전에서 조회하여 여러 승인/반려 로그가 있어도 중복 없음. 양 탭 동일 적용. 과거 REV 선택 무관 전체 승인 이력·최신 계획·4건 초과 이어서 출력 유지. JS·보고서·바이너리 변경 불필요
+- **검증 결과**: 선 검증 후 로컬 SQL 반영. 격리 MariaDB 전체 컴파일, 양 탭 혼재60중 승인20만 조회·과거/미선택/최신 REV 무관·REV 고유·승인일자·중복 로그·전체 승인60·승인 없음 등14건 통과. 변경은 이력 SELECT와 Modify 주석뿐, 기존 최신 계획·CRUD·파라미터30 보존, UTF8 BOM CRLF 및 적용파일 일치 확인. 실제 DB 반영 및 브라우저/PDF 재실행 없음
+
+
+### 2. EQM1001_R03 선택 설비그룹·설비 최신 계획 및 전체 개정이력 출력
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql, 04.Report/PAGEEQM/EQM1001/S05A.cs, 01.Office/Reports/EQM1001.exe·pdb, 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe·pdb, WORK_HISTORY.md
+- **배경 및 원인**: 선택 REV 전달 및 CALL_PLAN_RPT의 해당 REV 이하·승인본 필터·LIMIT4, 보고서4행 제한으로 과거 REV 클릭 시 이후 이력 누락
+- **작업 상세 내용**:
+  - 두 탭 출력은 좌측 EQMGUBUN/FANO와 PLANTP만 전달. SQL은 대상 최신 REV 기준 계획 내용, 승인·대기·반려 모든 개정이력 전체 조회. 하단 기존4칸 양식 유지하며 초과 이력은 SubBand·서브리포트로 다음 페이지에 이어서 각 이력을 한 번씩 표시. 신규 JOIN/테이블 없음. 로컬 보고서 EXE/PDB 재빌드·동기화, srcVersion·공통 컴포넌트·CRUD·승인별 행 선택 유지
+- **검증 결과**: 선 검증 후 반영: 실제 ItsRpt 직렬화·두 탭 과거/최신/미선택 REV·좌측선택 변경·미선택10, 격리 MariaDB 전체 컴파일·REV1/0/99/공란/잘못된값 무관 최신 계획·승인본·전체60이력·검증16, 테스트 DB만 대체한 실제 S05A PDF3/4/5/60건 양탭8개 전부 각 이력1회·페이지1/1/2/3 확인 및 PNG 시각 검증. 실제 DB SELECT 양탭 각REV0~3 전체4건 반환2, 합계36건. MSBuild 오류0, 최신 바이너리 IL의 REVNUM 입력 제거 및 전체 이력메서드 확인, BOM CRLF·적용파일/바이너리 해시 확인. 실제 DB DDL/DML·서버 반영·실브라우저 미실행
+
+
+### 2. EQM1001_R03 양 탭 REV 미등록 승인상태 공란 및 최신 REV 기준 통일
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, WORK_HISTORY.md
+- **배경 및 원인**: 설비별 LIST_MSTEQM에 REV 없는 경우 공란 분기가 누락되고 REV 표시는 직전 승인본·상태는 최신본으로 달라 공란 REV에 대기가 표시됨. 실제 서버 정의 SELECT에서도 확인, 그룹 분기는 공란 조건 정상
+- **작업 상세 내용**:
+  - 설비별 REVNM을 최신 PLAN_REV.REVNUM으로 변경, REVCD 미등록이면 APRVSTTNM 공란 처리. 불필요한 승인 REV 집계 제거. 설비그룹 동일 기준 검증. 실제 CRUD와 JS·srcVersion·공통 컴포넌트 변경 없음. 동일 날짜 Modify 한 줄 통합
+- **검증 결과**: 선 검증 후 반영: 격리 MariaDB 전체 컴파일 및 두 탭 REV 없음·REV0 대기·NULL 상태·승인·반려·승인 후 신규 대기/반려·최신 승인 등 포함22건 통과. 실제 SELECT 설비1143/그룹14 유지, 설비996/그룹7 미등록 상태 공란, 기존 식별키·이름·상태코드·반려사유·정렬 동일, 최신 REV 표시29개 정상화. 변경 범위 LIST_MSTEQM만·파라미터30·BOM CRLF 확인. 실제 DB 반영·브라우저 실화면 테스트 미실행
+
+
+### 2. EQM1001_R03 표시 체크박스 잔여 코드·JOIN 제거 및 중복 등록 보완
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql, WORK_HISTORY.md
+- **배경 및 원인**: 사용자가 설비별 정기점검 표시 체크박스 삭제 후 불필요한 부분 제거 및 CRUD 검증까지 요청
+- **작업 상세 내용**:
+  - JS의 주석 처리된 EQM02 컬럼·autoSizeColumns 코드, YnToBool(EQM02) 변환, 추가 완료 후 빈 탭 분기 제거. LIST_MSTEQM의 EQM02 반환값과 전용 CHKPLANEQM DISTINCT 파생 JOIN 제거. 격리 CRUD 검증 중 발견한 기존 REG_EQM02 재등록 중복키 오류는 ON DUPLICATE KEY UPDATE CHKKNDCD=VALUES(CHKKNDCD)로 기존 값을 바꾸지 않고 처리. 다른 SQL 분기·파라미터30·FANO 선택 복원·점검항목 선택 체크박스·srcVersion 유지
+- **검증 결과**: 검증 후 반영: 실제 DB SELECT 전후1143개 고유 설비의 나머지 모든 필드·정렬 동일. JS 모의 UI56, 격리 MariaDB10.2 프로시저 컴파일·조회·CRUD·그룹CRUD·실행계획17, 중복 요청·기존 데이터 불변2 합계75건 통과. EXPLAIN에서 표시용 CHKPLANEQM 접근 제거 확인. 실제 CHKPLANEQM 트리거0 SELECT 확인. 수정 전후 파라미터 동일, SQL 변경은 LIST_MSTEQM/REG_EQM02 두 분기뿐. BOM CRLF·저장파일 해시 확인. 실제 DB DDL/DML 및 서버 파일 반영 없음, 실브라우저 동작 미실행
+
+
+### 2. EQM1001_R03 설비별 정기점검 표시 체크박스 제거 영향 검증
+- **수정/대상 파일**: WORK_HISTORY.md (R03.js·aspx·sql 검토, 업무 소스 변경 없음)
+- **배경 및 원인**: 사용자가 설비별 목록 grid1의 읽기 전용 EQM02 정기점검 체크박스를 삭제할 때 관련 기능에 문제가 있는지 확인 요청
+- **작업 상세 내용**:
+  - 현재 컬럼 선언이 이미 주석 처리되어 grid1에 EQM02가 생성되지 않음을 확인. 설비 선택·리비전·승인/반려·출력·등록/저장/삭제/복사는 FANO를 사용하며, CRUD 항목 선택은 grid3/grid10 체크박스 사용. 고정 컬럼 번호나 EQM02 셀 참조 없음. 잔여 JS YnToBool(EQM02) 및 LIST_MSTEQM의 EQM02 표시값/CHKPLANEQM 파생 JOIN은 표시 전용으로 확인하여 후속 정리 후보로 기록
+- **검증 결과**: 현재 파일 그대로 JS 모의 동작 검증54건 통과(기존44+체크박스 없는 설비 선택·추가·등록·저장·삭제·복사·미선택10). 공통 Store 변환 및 ItsGrid 바인딩 소스 확인, LIST_MSTEQM 참조자는 R03.js뿐임. 실제 DB 호출·브라우저 실화면 테스트·업무 소스 변경 없음
+
+
+### 2. SQL 규칙의 보존 조건 제외 및 JOIN 가독성 기준 강화
+- **수정/대상 파일**: .agents/rules/sql_structure.md, .agents/rules/procedure.md, .agents/rules/validation.md, WORK_HISTORY.md
+- **배경 및 원인**: 사용자가 직전 추가 규칙의 승인본·이력·조회 조건 보존 항목을 제외하고 누구나 이해할 수 있는 간단한 JOIN 구조를 요구
+- **작업 상세 내용**:
+  - 규칙 소개·procedure 연결 문구의 보존 조건 및 승인본 유지 전용 항목 제거. 특정 승인 업무 예시는 일반 원본 테이블·기능 검증으로 변경. 기준 테이블에서 식별키로 직접 연결, 중복·우회 JOIN 및 중첩 조회 지양, 짧고 역할이 분명한 별칭, 일관된 조건 배치와 설명보다 구조 단순화 기준 추가. 기존 업무 소스와 테이블은 변경하지 않음
+- **검증 결과**: 선 검증 후 규칙 반영. 보존 항목 제거 여부, 규칙 frontmatter·문서 링크·50줄 이내·BOM CRLF 검증, 실제 저장 파일 해시 일치 확인
+
+
+### 1. 불필요한 JOIN·중복 컬럼 방지 SQL 구조 규칙 추가
+- **수정/대상 파일**: .agents/rules/sql_structure.md, .agents/rules/procedure.md, .agents/rules/validation.md, WORK_HISTORY.md
+- **배경 및 원인**: 불필요한 JOIN과 테이블 참조로 프로시저가 길어지는 문제를 반복하지 않도록 사용자 요청으로 프로젝트 규칙 강화
+- **작업 상세 내용**:
+  - 기존 .agents 형식(always_on)으로 SQL 구조 규칙 신설. 실제 컬럼·키·행 단위 확인, JOIN 목적과 행 필터·중복 검토, 중복 참조 제거, 확정 그룹코드 직접 필터, 필요한 COMTYPE 조회 보존, 상관 쿼리·DISTINCT 우회 금지, HEADER 식별정보 중복 방지, 승인본 DETAIL 보존, 상태 원본 분리, 불필요한 객체 생성 억제, NULL 처리 간소화, 실행계획·결과 검증 및 전환 SQL 반영 구분 명시. procedure 및 validation에 필수 참조 연결
+- **검증 결과**: 임시 규칙 작성 후 기존 문서 비교 및 충돌 검토 완료. 새 규칙 50줄 이내, frontmatter·상대 링크·UTF8 BOM·CRLF 검증. 저장 후 3개 파일 해시 일치 확인. 문서 변경만 수행, 업무 소스·DB 미변경
+---
+
 
 ## 🕒 2026-10-06 (화) 작업 내역
 
@@ -609,6 +684,15 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | WORK_HISTORY.md (R03.js·로컬 R03.sql·실제 서버 프로시저 검토, 업무 소스 변경 없음) | 주기 저장 승인 제한 제거는 실제 서버까지 확인 완료. 직전 계획서 개정이력 관련 로컬 SQL 반영은 별도 사용자 배포 대상 | 실제 서버 정의·트리거는 SELECT만 확인. 격리 MariaDB 전체컴파일 및 계획/REV/승인본 모두없는 상태 저장·대기/반려/승인 상태 저장·비사용/미지정설비 차단·실적월 변경 차단·일반/일괄 JS경로·트리거 없음10건 통과. 로컬/서버 주기저장 분기 정규화 비교일치. 실제 서버 저장/DML 및 업무 소스 변경 없음 |
+| **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql, WORK_HISTORY.md | 로컬 SQL 수정 완료. 서버 EQM1001_R03 전체 프로시저 반영 필요 | 선 검증 후 반영: 격리 MariaDB 전체 프로시저 컴파일·양탭 혼재60개 REV 한 번씩·과거/미선택/최신 선택·같은 REV의 반려→대기→승인 변경 후1건·다중 APRV 로그 중복 없음·대기만 있어도 표시·상태별 날짜·승인자18건 통과. 최신 계획 및 CRUD 분기·파라미터30 동일, BOM CRLF·저장파일 일치 확인. 실제 DB/서버·JS·보고서 바이너리 변경 없음, PDF 재실행 없음 |
+| **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql, WORK_HISTORY.md | 로컬 수정 완료. 서버 EQM1001_R03 프로시저 전체 반영 필요. 직전 턴 배포한 JS/보고서 실행파일은 추가 변경 없음 | 선 검증 후 로컬 SQL 반영. 격리 MariaDB 전체 컴파일, 양 탭 혼재60중 승인20만 조회·과거/미선택/최신 REV 무관·REV 고유·승인일자·중복 로그·전체 승인60·승인 없음 등14건 통과. 변경은 이력 SELECT와 Modify 주석뿐, 기존 최신 계획·CRUD·파라미터30 보존, UTF8 BOM CRLF 및 적용파일 일치 확인. 실제 DB 반영 및 브라우저/PDF 재실행 없음 |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql, 04.Report/PAGEEQM/EQM1001/S05A.cs, 01.Office/Reports/EQM1001.exe·pdb, 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe·pdb, WORK_HISTORY.md | 로컬 수정 완료. 서버 반영 시 R03.js·EQM1001_R03 전체 프로시저·01.Office/Reports/EQM1001.exe를 함께 반영 필요 | 선 검증 후 반영: 실제 ItsRpt 직렬화·두 탭 과거/최신/미선택 REV·좌측선택 변경·미선택10, 격리 MariaDB 전체 컴파일·REV1/0/99/공란/잘못된값 무관 최신 계획·승인본·전체60이력·검증16, 테스트 DB만 대체한 실제 S05A PDF3/4/5/60건 양탭8개 전부 각 이력1회·페이지1/1/2/3 확인 및 PNG 시각 검증. 실제 DB SELECT 양탭 각REV0~3 전체4건 반환2, 합계36건. MSBuild 오류0, 최신 바이너리 IL의 REVNUM 입력 제거 및 전체 이력메서드 확인, BOM CRLF·적용파일/바이너리 해시 확인. 실제 DB DDL/DML·서버 반영·실브라우저 미실행 |
+| **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql, WORK_HISTORY.md | 로컬 수정 완료. 실제 서버 EQM1001_R03 전체 프로시저는 사용자 반영 필요 | 선 검증 후 반영: 격리 MariaDB 전체 컴파일 및 두 탭 REV 없음·REV0 대기·NULL 상태·승인·반려·승인 후 신규 대기/반려·최신 승인 등 포함22건 통과. 실제 SELECT 설비1143/그룹14 유지, 설비996/그룹7 미등록 상태 공란, 기존 식별키·이름·상태코드·반려사유·정렬 동일, 최신 REV 표시29개 정상화. 변경 범위 LIST_MSTEQM만·파라미터30·BOM CRLF 확인. 실제 DB 반영·브라우저 실화면 테스트 미실행 |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql, WORK_HISTORY.md | 로컬 JS·R03 SQL 반영 완료. 사용자 실제 DB R03 프로시저 전체 반영 필요(파라미터 변경 없음) | 검증 후 반영: 실제 DB SELECT 전후1143개 고유 설비의 나머지 모든 필드·정렬 동일. JS 모의 UI56, 격리 MariaDB10.2 프로시저 컴파일·조회·CRUD·그룹CRUD·실행계획17, 중복 요청·기존 데이터 불변2 합계75건 통과. EXPLAIN에서 표시용 CHKPLANEQM 접근 제거 확인. 실제 CHKPLANEQM 트리거0 SELECT 확인. 수정 전후 파라미터 동일, SQL 변경은 LIST_MSTEQM/REG_EQM02 두 분기뿐. BOM CRLF·저장파일 해시 확인. 실제 DB DDL/DML 및 서버 파일 반영 없음, 실브라우저 동작 미실행 |
+| **검증 완료** | WORK_HISTORY.md (R03.js·aspx·sql 검토, 업무 소스 변경 없음) | 체크박스 삭제 자체는 기능 영향 없음. 완전 정리 시 주석 선언·YnToBool 변환·SQL 표시값 및 전용 JOIN을 함께 제거 가능 | 현재 파일 그대로 JS 모의 동작 검증54건 통과(기존44+체크박스 없는 설비 선택·추가·등록·저장·삭제·복사·미선택10). 공통 Store 변환 및 ItsGrid 바인딩 소스 확인, LIST_MSTEQM 참조자는 R03.js뿐임. 실제 DB 호출·브라우저 실화면 테스트·업무 소스 변경 없음 |
+| **완료** | .agents/rules/sql_structure.md, .agents/rules/procedure.md, .agents/rules/validation.md, WORK_HISTORY.md | 앞으로 SQL을 최소 참조와 직관적인 데이터 연결 흐름으로 작성 | 선 검증 후 규칙 반영. 보존 항목 제거 여부, 규칙 frontmatter·문서 링크·50줄 이내·BOM CRLF 검증, 실제 저장 파일 해시 일치 확인 |
+| **완료** | .agents/rules/sql_structure.md, .agents/rules/procedure.md, .agents/rules/validation.md, WORK_HISTORY.md | 추후 모든 프로시저 작성·수정·최적화 시 sql_structure.md 기준 적용 | 임시 규칙 작성 후 기존 문서 비교 및 충돌 검토 완료. 새 규칙 50줄 이내, frontmatter·상대 링크·UTF8 BOM·CRLF 검증. 저장 후 3개 파일 해시 일치 확인. 문서 변경만 수행, 업무 소스·DB 미변경 |
 | **완료** | 01.Office/Reports/EQM1001.exe·pdb, 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe·pdb, WORK_HISTORY.md | 로컬 실행 파일 수정 완료. 실제 운영 환경 적용 시 최신 01.Office/Reports/EQM1001.exe 반영 필요 | MSBuild 오류0. 실제 ItsRpt.js 직렬화 및 R03 PrintPlanRev 사용한 전달·미선택 검증8건 통과. DB 연결만 테스트 대체한 임시 S05A로 그룹·설비 REV0/REV3 PDF4건 생성 및 R03/PLANCD/REVNUM 전달 확인. 최종 EXE 해시 일치. 실제 DB·실제 서버 파일 미변경, 실서버 PDF 출력 미실행 |
 | **검증 완료** | WORK_HISTORY.md (실제 DB SELECT 검증, 업무 소스 변경 없음) | 사용자 반영 필요: PLAN_REV_NORMALIZE로 DETAIL 4중복 컬럼 제거. APRV 감사컬럼 기본값 3개 및 미연결 설비 계획 데이터는 추가 정리 검토 | SELECT만 사용. HEADER 199/DETAIL 607/APRV 196/계획 643행. DETAIL의 HEADER 미연결 0, APRV 빈키·키형식·상태·HEADER 연결·계획 식별 불일치 각 0. DETAIL 중복 컬럼 불일치 66건 전부 빈값·0 기본값, 승인 스냅샷과 HEADER 연결 유지. 계획 CHKTP01 17/02 626, 설비 미연결31/점검항목 미연결0. 실제 DB DDL/DML·공통 함수 실행 없음 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 05.Procedure/MES_SNS2_EQM1001_R03.sql | 로컬 수정 완료, 실제 DB R03 프로시저 전체 반영은 사용자 진행 | 선 검증 후 반영: JS 모의 UI 44건 및 격리 MariaDB 10.2 승인·반려 회귀 검증 47건 합계 91건 통과. JS 문법·ASPX 버튼 속성·파라미터 유지·BOM CRLF 확인. 실제 서버 DB와 배포 파일 미변경 |

@@ -66,7 +66,6 @@ ItsPage.Load = function () {
     ]);
     // 설비별 점검계획 탭: 설비 목록 초기화
     ItsGrid.Create('grid1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        column.create('정기점검', 'EQM02', { width: 60, columnType: enumColumnTypes.check, readOnly: true }),
         column.create('설비코드', 'FANO', { width: 80, align: 'center' }),
         column.create('설비명', 'EQMNM', { width: 200 }),
         // 2026-09-30 [설비별 점검계획 탭] 좌측 목록 현재 승인 REV 컬럼 (현장 점검 기준)
@@ -219,7 +218,7 @@ ItsButton.EventSearch = function (targetEqmGubun) {
         ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
     }
     else if (selectedTabIndex == 1) {
-        // 설비별 점검계획 탭: 데이터 조회
+        // 2026-10-07 설비별 점검계획 탭: 표시 체크박스 변환 없이 조회
         // 2026-10-02 [설비별 점검계획 탭] 저장·추가 후 재조회 시 선택 설비(Setkey)가 빈 목록에 소모되지 않도록 설비 목록은 미리 비우지 않음 (조회 결과로 교체)
         ItsGrid.Clear('grid_EQM_REV');
         ItsGrid.Clear('grid3');
@@ -234,8 +233,7 @@ ItsButton.EventSearch = function (targetEqmGubun) {
             return;
         }
 
-        ItsGrid.SetStore('grid1', maria.store.YnToBool('EQM02'));
-        // ItsGrid.Get('grid1').autoSizeColumns();
+        ItsGrid.SetStore('grid1', maria.store);
         ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
     }
     else if (selectedTabIndex == 2) {
@@ -994,9 +992,6 @@ ItsButton.Event('btn_ADD_EQM02').onClick = function () {
     }
 
     ItsButton.Event('btn_CANCEL_ADD_EQM02').onClick();
-    if (selectedTabIndex == 0) {
-    } else {
-    }
     ItsMsg.Toast(ItsMsg.CommonMsg.AddComplete);
     if (selectedTabIndex == 0) {
         RefreshGroupPlan(selectedEqmGubun);
@@ -1280,17 +1275,22 @@ function SearchPlanAprv(planTp, rowIndex) {
     ItsPop.Open('pop_PLAN_APRV');
 }
 
-// 2026-10-06 개정 이력: 선택 REV 계획서 출력
+// 2026-10-06 개정 이력: 계획서 출력
+// 2026-10-07 설비그룹·설비별 점검계획 탭: 선택 대상의 최신 계획·전체 개정이력 출력
 function PrintPlanRev(planTp) {
-    var rev = GetPlanRev(planTp);
-    if (!rev) {
+    var gridId = planTp == 'G' ? 'grid_GRP1' : 'grid1';
+    if (ItsGrid.GetCurrentIndex(gridId) < 0) {
+        ItsMsg.Toast(planTp == 'G' ? '설비그룹을 선택해주세요.' : '설비를 선택해주세요.');
+        return;
+    }
+    var planCd = GetPlanCd(planTp);
+    if (!planCd) {
         return;
     }
     var rpt = new ItsXtraRpt('EQM1001_S05A');
-    rpt.FileName('제조설비_정기점검계획서_' + rev.planCd + '_' + rev.revNm);
-    rpt.AddParam('PLANTP', rev.planTp);
-    rpt.AddParam('PLANCD', rev.planCd);
-    rpt.AddParam('REVNUM', rev.revNum);
+    rpt.FileName('제조설비_정기점검계획서_' + planCd);
+    rpt.AddParam('PLANTP', planTp);
+    rpt.AddParam('PLANCD', planCd);
     rpt.CallPop();
     if (rpt.isError) {
         ItsMsg.Alert(rpt.errMessage);

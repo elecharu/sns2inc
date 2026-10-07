@@ -20,7 +20,8 @@ namespace XtraRpt
 
             // 2026-10-02 계획서 구분(PLANTP) 추가: G 설비그룹(EQMGRP), E 설비(FANO), 구분이 없으면 기존처럼 설비그룹
             string planType = param.ContainsKey("PLANTP") && param["PLANTP"] == "E" ? "E" : "G";
-            // 2026-10-06 R03에서 선택한 계획코드·REV로 출력
+            // 2026-10-06 R03에서 선택한 계획코드로 출력
+            // 2026-10-07 선택 대상의 최신 계획·전체 개정이력 출력
             string planCode = param.ContainsKey("PLANCD") ? param["PLANCD"] : "";
             if (string.IsNullOrEmpty(planCode))
             {
@@ -30,7 +31,6 @@ namespace XtraRpt
             ItsMaria maria = CreateMaria("EQM1001_R03", "CALL_PLAN_RPT");
             maria.AddParam("PLANTP", planType);
             maria.AddParam("PLANCD", planCode);
-            maria.AddParam("REVNUM", param.ContainsKey("REVNUM") ? param["REVNUM"] : "");
             DataSet dataSet = maria.CallProc();
             if (maria.IsError)
             {
@@ -44,7 +44,7 @@ namespace XtraRpt
 
             DataRow planHeader = dataSet.Tables[0].Rows[0];
             DataTable planItems = dataSet.Tables[1].Copy();
-            // 2026-10-02 하단 개정 이력 (최근 승인 4건, 최신순)
+            // 2026-10-02 하단 개정 이력 (최신순)
             DataTable revHistory = dataSet.Tables.Count > 2 ? dataSet.Tables[2] : null;
             AddBlankRows(planItems, 12);
 
@@ -88,6 +88,23 @@ namespace XtraRpt
             detail.Controls.Add(CreateDetailRow());
             // 2026-10-02 하단 개정 이력 칸에 승인 이력 표시
             reportFooter.Controls.AddRange(CreateConfirmationControls(revHistory));
+            // 2026-10-07 하단 4건을 넘는 개정이력은 다음 페이지에 이어서 출력
+            if (revHistory != null && revHistory.Rows.Count > 4)
+            {
+                DataTable history = revHistory.Clone();
+                for (int idx = 4; idx < revHistory.Rows.Count; idx++)
+                {
+                    history.ImportRow(revHistory.Rows[idx]);
+                }
+                SubBand historyBand = new SubBand();
+                historyBand.HeightF = 30F;
+                historyBand.PageBreak = PageBreak.BeforeBand;
+                XRSubreport subreport = new XRSubreport();
+                subreport.SizeF = new SizeF(ReportWidth, 30F);
+                subreport.ReportSource = CreateHistoryReport(history);
+                historyBand.Controls.Add(subreport);
+                reportFooter.SubBands.Add(historyBand);
+            }
             pageFooter.Controls.Add(CreateFooterLabel());
 
             DataSource = planItems;
@@ -202,6 +219,41 @@ namespace XtraRpt
             controls.Add(CreateFooterBox(revisionX + revisionNoWidth + revisionContentWidth, headerY, writerWidth, revisionHeaderHeight, "작성", false));
             controls.Add(CreateFooterBox(revisionX + revisionNoWidth + revisionContentWidth + writerWidth, headerY, approverWidth, revisionHeaderHeight, "승인", false));
             return controls.ToArray();
+        }
+
+        // 2026-10-07 계획서 개정이력: 나머지 전체 이력을 행 단위로 이어서 출력
+        private XtraReport CreateHistoryReport(DataTable history)
+        {
+            XtraReport report = new XtraReport();
+            report.Dpi = 100F;
+            report.Margins = new Margins(0, 0, 0, 0);
+            report.DataSource = history;
+            GroupHeaderBand header = new GroupHeaderBand();
+            header.HeightF = 54F;
+            header.RepeatEveryPage = true;
+            header.Controls.Add(CreateFooterBox(0F, 0F, ReportWidth, 26F, "개정 이력 (이어서)", false));
+            XRTable table = CreateTable(0F, 26F, ReportWidth, 28F, 9F);
+            XRTableRow row = new XRTableRow();
+            row.Cells.Add(CreateCell("REV", 60F, true));
+            row.Cells.Add(CreateCell("개정일자", 100F, true));
+            row.Cells.Add(CreateCell("개정내용", 391F, true));
+            row.Cells.Add(CreateCell("작성", 90F, true));
+            row.Cells.Add(CreateCell("승인", 90F, true));
+            table.Rows.Add(row);
+            header.Controls.Add(table);
+            DetailBand detail = new DetailBand();
+            detail.HeightF = 28F;
+            table = CreateTable(0F, 0F, ReportWidth, 28F, 8.5F);
+            row = new XRTableRow();
+            row.Cells.Add(CreateDataCell("REVNUM", 60F, TextAlignment.MiddleCenter));
+            row.Cells.Add(CreateDataCell("REVDATE", 100F, TextAlignment.MiddleCenter));
+            row.Cells.Add(CreateDataCell("REMARK", 391F, TextAlignment.MiddleLeft));
+            row.Cells.Add(CreateDataCell("REQEMPNM", 90F, TextAlignment.MiddleCenter));
+            row.Cells.Add(CreateDataCell("APRVEMPNM", 90F, TextAlignment.MiddleCenter));
+            table.Rows.Add(row);
+            detail.Controls.Add(table);
+            report.Bands.AddRange(new Band[] { header, detail });
+            return report;
         }
 
         private XRLabel CreateFooterBox(float x, float y, float width, float height, string text, bool isLabel)
