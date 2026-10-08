@@ -730,7 +730,7 @@ WHEN 'SAVE_PLAN_REV' THEN -- 개정내용 저장 및 승인 재요청
   ORDER BY REVNUM DESC LIMIT 1 FOR UPDATE;
 
   IF _$REVNUM IS NULL OR _$REVNUM <> CAST($REVNUM AS UNSIGNED) OR _$APRVSTT = 'A' THEN
-    CALL COMERR('최신 대기·반려 REV만 저장·재요청할 수 있습니다.');
+    CALL COMERR('최신 대기 REV만 개정내용을 저장할 수 있습니다.');
     LEAVE PROC;
   END IF;
   IF TRIM(COALESCE($REMARK, '')) = '' THEN
@@ -863,9 +863,9 @@ WHEN 'SAVE_PLAN_STATUS' THEN -- 점검계획 승인 상태 저장
       AND MSTEQM.USEYN = 'Y';
 
     IF _$REJECT_CNT > 0 THEN
-      CALL COMERR(CONCAT('재요청이 필요한 설비가 있어 설비그룹을 승인할 수 없습니다. [', _$REJECT_EQM,
+      CALL COMERR(CONCAT('저장이 필요한 설비가 있어 설비그룹을 승인할 수 없습니다. [', _$REJECT_EQM,
                          CASE WHEN _$REJECT_CNT > 5 THEN CONCAT(' 외 ', _$REJECT_CNT - 5, '대') ELSE '' END,
-                         '] 반려 사유와 변경 내용을 확인하고 그룹 [개정내용 저장·재요청] 후 다시 승인해주세요.'));
+                         '] 변경 내용을 확인하고 그룹 [개정내용 저장] 후 다시 승인해주세요.'));
       LEAVE PROC;
     END IF;
   END IF;

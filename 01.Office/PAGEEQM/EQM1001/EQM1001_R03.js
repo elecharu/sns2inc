@@ -1133,7 +1133,7 @@ function SetPlanEditButton(planTp, isEdit, revNm) {
     ItsLabel.SetText(planTp == 'G' ? 'lbl_GRP_ITEM' : 'lbl_EQM_ITEM', title);
 }
 
-// 2026-09-30 [설비그룹·설비별 점검계획 탭] 우측 상단 진행 중(대기·반려) REV 개정내용 저장
+// 2026-09-30 [설비그룹·설비별 점검계획 탭] 우측 상단 진행 중 REV 개정내용 저장
 // 2026-10-06 [개정 이력] R03 전용 프로시저로 REV 조회·저장 처리
 function SavePlanRev(planTp) {
     var gridId = planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV';
@@ -1142,7 +1142,7 @@ function SavePlanRev(planTp) {
     // 2026-10-02 [개정 이력 그리드] 진행 중 REV 확인은 프로시저(SAVE_PLAN_REV)에서 처리 (REV가 없으면 빈 값 전달)
     var rev = GetLatestPlanRev(planTp);
 
-    // 2026-10-07 설비그룹·설비별 점검계획 탭: 저장으로 보완된 계획 재요청, 선택 위치 유지
+    // 2026-10-07 설비그룹·설비별 점검계획 탭: 개정내용 저장, 선택 위치 유지
     var save = function () {
         var maria = new ItsMaria('EQM1001_R03', 'SAVE_PLAN_REV');
         maria.AddParam('PLANTP', planTp);
@@ -1154,15 +1154,12 @@ function SavePlanRev(planTp) {
             maria.ShowErrMsg();
             return;
         }
-        ItsMsg.Toast('개정내용 저장 및 승인 재요청이 완료되었습니다.');
+        ItsMsg.Toast('개정내용 저장이 완료되었습니다.');
         RefreshPlanRev(planTp, planCd);
     };
     if (planTp == 'G') {
-        // 2026-10-08 [설비그룹 점검계획 탭] 개정내용 저장 및 소속 설비 계획 승인 재요청 확인 메시지 간소화
-        ItsMsg.Confirm('개정내용 저장 및 소속 설비 계획을 승인 재요청하시겠습니까?', save);
-    } else if (rev && rev.APRVSTT == 'R') {
-        // 2026-10-08 [설비별 점검계획 탭] 반려 계획 승인 재요청 확인 메시지 간소화
-        ItsMsg.Confirm('보완한 계획을 승인 재요청하시겠습니까?', save);
+        // 2026-10-08 [설비그룹 점검계획 탭] 개정내용 저장 확인 메시지
+        ItsMsg.Confirm('개정내용 저장하시겠습니까?', save);
     } else {
         save();
     }
@@ -1190,7 +1187,7 @@ ItsGrid.Event('grid_EQM_REV').onSelect = function (rowIndex, field) {
     SearchPlanRevItem('E', GetPlanCd('E'), rowIndex);
 };
 
-// 2026-09-30 [설비그룹 점검계획 탭] 개정내용은 새로 등록된 진행 중(대기·반려) REV 행(맨 위)에서만 입력, 승인된 REV 행은 수정 불가
+// 2026-09-30 [설비그룹 점검계획 탭] 개정내용은 새로 등록된 진행 중(대기) REV 행(맨 위)에서만 입력, 승인된 REV 행은 수정 불가
 ItsGrid.Event('grid_GRP_REV').onBeginningEdit = function (rowIndex, field, value) {
     var rev = GetLatestPlanRev('G');
     if (!rev || field != 'REMARK' || ItsGrid.GetValue('grid_GRP_REV', rowIndex, 'REVNUM') != rev.REVNUM || rev.APRVSTT == 'A') {
@@ -1198,7 +1195,7 @@ ItsGrid.Event('grid_GRP_REV').onBeginningEdit = function (rowIndex, field, value
     }
 };
 
-// 2026-09-30 [설비별 점검계획 탭] 개정내용은 새로 등록된 진행 중(대기·반려) REV 행(맨 위)에서만 입력, 승인된 REV 행은 수정 불가
+// 2026-09-30 [설비별 점검계획 탭] 개정내용은 새로 등록된 진행 중(대기) REV 행(맨 위)에서만 입력, 승인된 REV 행은 수정 불가
 ItsGrid.Event('grid_EQM_REV').onBeginningEdit = function (rowIndex, field, value) {
     var rev = GetLatestPlanRev('E');
     if (!rev || field != 'REMARK' || ItsGrid.GetValue('grid_EQM_REV', rowIndex, 'REVNUM') != rev.REVNUM || rev.APRVSTT == 'A') {

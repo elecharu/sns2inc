@@ -22,8 +22,8 @@
 - **배경 및 원인**: 개정이력(REV) 영역에서 반려 기능 삭제 요청 (설비별/설비그룹 반려 버튼 및 반려 팝업, 프로시저의 반려 처리 로직 일괄 삭제)
 - **작업 상세 내용**:
   - ASPX: 설비그룹 및 설비별 개정이력 패널의 반려 버튼(`btn_GRP_REJECT`, `btn_EQM_REJECT`) 삭제, 점검계획 반려 팝업(`pop_PLAN_REJECT`) 마크업 삭제 (주석 없이 순수 태그 정리)
-  - JS: `SavePlanStatus` 및 `SavePlanRevStatus`를 승인 전용으로 단순화, `planReject` 전역 변수 및 반려 분기/팝업 오픈 로직 제거, `btn_GRP_REJECT`/`btn_EQM_REJECT`/`btn_PLAN_REJECT_SAVE`/`btn_PLAN_REJECT_CANCEL`/`pop_PLAN_REJECT` 이벤트 핸들러 일괄 삭제
-  - SQL: `SAVE_PLAN_STATUS` 분기에서 반려 상태(`$APRVSTT = 'R'`) 및 반려 사유 검증/저장 로직 제거, 승인 전용 상태 저장으로 단순화, 안내 문구 정돈('승인·반려' -> '승인'), 최상단 Modify 이력 1일 1행 통합 갱신
+  - JS: `SavePlanStatus` 및 `SavePlanRevStatus`를 승인 전용으로 단순화, `planReject` 전역 변수 및 반려 분기/팝업 오픈 로직 제거, `SavePlanRev` 내 잔여 반려 분기(`rev.APRVSTT == 'R'`) 및 재요청 확인창 제거 후 단순 저장으로 정리, `btn_GRP_REJECT`/`btn_EQM_REJECT`/`btn_PLAN_REJECT_SAVE`/`btn_PLAN_REJECT_CANCEL`/`pop_PLAN_REJECT` 이벤트 핸들러 일괄 삭제
+  - SQL: `SAVE_PLAN_STATUS` 분기에서 반려 상태(`$APRVSTT = 'R'`) 및 반려 사유 검증/저장 로직 제거, `SAVE_PLAN_REV` 오류 문구 간소화, 승인 전용 상태 저장으로 단순화, 안내 문구 정돈('승인·반려' -> '승인'), 최상단 Modify 이력 1일 1행 통합 갱신
 - **검증 결과**: Node.js 구문 검사(`node -c`) 통과, MSBuild 컴파일 에러 0건, 인코딩 검사 통과(전체 파일 UTF-8 with BOM, CRLF 개행 일치, `\r\r\n` 0건), 실제 서버 DB 직접 변경 없음
 
 ### 2. [EQM1001_R03] 리비전 승인·반려 이력 버튼(APRVHISTORY) 및 관련 로직/프로시저 삭제
