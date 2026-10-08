@@ -326,7 +326,8 @@ ItsButton.Event('btn_COPY_GRP_EQM02').onClick = function () {
     var targetEqmGubun = ItsGrid.GetValue('grid_GRP1', targetGroupRowIndex, 'EQMGUBUN');
 
     // 2026-10-02 [설비그룹 복사 팝업] 복사 원본·대상 설비그룹 지정 확인은 프로시저(COPY_GRP_EQM02)에서 처리
-    ItsMsg.Confirm('선택한 설비그룹의 정기점검 항목을 현재 설비그룹의 모든 설비로 일괄 복사하시겠습니까?', function () {
+    // 2026-10-08 [설비그룹 복사 팝업] 정기점검 일괄 복사 확인 메시지 간소화
+    ItsMsg.Confirm('선택한 설비그룹의 점검항목을 일괄 복사하시겠습니까?', function () {
         var maria = new ItsMaria('EQM1001_R03', 'COPY_GRP_EQM02');
         maria.AddParam('EQMGRP', targetEqmGubun);
         maria.AddParam('FANO_COPY', sourceEquipmentCode);
@@ -386,7 +387,8 @@ ItsButton.Event('bdiv_GRP_btn_SAVE').onClick = function () {
     var selectedEqmGubun = ItsGrid.GetValue('grid_GRP1', curIdx, 'EQMGUBUN');
 
     // 2026-10-02 [설비그룹 점검계획 탭] 설비그룹 지정 확인은 프로시저(SAVE_GRP_EQM02)에서 처리
-    var confirmationMessage = '선택하신 점검항목을 해당 설비그룹의 모든 설비에 일괄 저장하시겠습니까?';
+    // 2026-10-08 [설비그룹 점검계획 탭] 정기점검 일괄 저장 확인 메시지 간소화
+    var confirmationMessage = '선택한 점검항목을 일괄 저장하시겠습니까?';
 
     ItsMsg.Confirm(confirmationMessage, function () {
         var maria = new ItsMaria('EQM1001_R03', 'SAVE_GRP_EQM02');
@@ -427,7 +429,8 @@ ItsButton.Event('bdiv_GRP_btn_DEL').onClick = function () {
     var selectedEqmGubun = ItsGrid.GetValue('grid_GRP1', curIdx, 'EQMGUBUN');
 
     // 2026-10-02 [설비그룹 점검계획 탭] 설비그룹 지정 확인은 프로시저(DEL_GRP_EQM02)에서 처리
-    var confirmationMessage = '선택한 점검항목을 해당 설비그룹의 모든 설비에서 일괄 삭제하시겠습니까?';
+    // 2026-10-08 [설비그룹 점검계획 탭] 정기점검 일괄 삭제 확인 메시지 간소화
+    var confirmationMessage = '선택한 점검항목을 일괄 삭제하시겠습니까?';
 
     ItsMsg.Confirm(confirmationMessage, function () {
         var maria = new ItsMaria('EQM1001_R03', 'DEL_GRP_EQM02');
@@ -699,7 +702,8 @@ function SetCycleEmp(rowIndex, field, empCd, empNm) {
 // 2026-09-29 [정기점검 주기관리 탭] 일괄 주기설정 팝업 열기
 ItsButton.Event('btn_OPEN_CYCLE_BATCH').onClick = function () {
     if (!HasCheckedRows('grid9')) {
-        ItsMsg.Toast('선택된 설비가 없습니다. 그리드에서 대상 설비를 체크해주세요.');
+        // 2026-10-08 [정기점검 주기관리 탭] 대상 설비 미체크 알림 메시지 간소화
+        ItsMsg.Toast('대상 설비를 체크해주세요.');
         return;
     }
 
@@ -1168,9 +1172,11 @@ function SavePlanRev(planTp) {
         RefreshPlanRev(planTp, planCd);
     };
     if (planTp == 'G') {
-        ItsMsg.Confirm('개정내용을 저장하고 소속 설비의 최신 미승인 계획도 함께 재요청합니다. 반려 사유와 보완 내용을 확인하셨습니까?', save);
+        // 2026-10-08 [설비그룹 점검계획 탭] 개정내용 저장 및 소속 설비 계획 승인 재요청 확인 메시지 간소화
+        ItsMsg.Confirm('개정내용 저장 및 소속 설비 계획을 승인 재요청하시겠습니까?', save);
     } else if (rev && rev.APRVSTT == 'R') {
-        ItsMsg.Confirm('반려 사유에 따라 보완한 계획을 다시 승인 요청하시겠습니까?', save);
+        // 2026-10-08 [설비별 점검계획 탭] 반려 계획 승인 재요청 확인 메시지 간소화
+        ItsMsg.Confirm('보완한 계획을 승인 재요청하시겠습니까?', save);
     } else {
         save();
     }
@@ -1183,7 +1189,8 @@ function FocusPlanRev(planTp) {
     var rev = GetLatestPlanRev(planTp);
     if (rev && rev.APRVSTT != 'A') {
         ItsGrid.Focus(gridId, grid.collectionView.items.indexOf(rev), 'REMARK');
-        ItsMsg.Toast('개정내용을 입력한 뒤 [개정내용 저장·재요청]을 눌러주세요.');
+        // 2026-10-08 [설비그룹·설비별 점검계획 탭] 정기점검 저장 후 개정내용 입력 유도 알림 간소화
+        ItsMsg.Toast('개정내용을 입력 후 저장해주세요.');
     }
 }
 
@@ -1264,7 +1271,8 @@ function SavePlanStatus(planTp, aprvStt) {
     }
     // 2026-10-06 개정 이력: 개정내용이 없으면 승인·반려 차단
     if (!rev.remark.trim()) {
-        ItsMsg.Toast('개정내용을 입력하고 [개정내용 저장] 후 승인·반려해주세요.');
+        // 2026-10-08 [개정 이력] 개정내용 미입력 승인·반려 차단 안내 메시지 간소화
+        ItsMsg.Toast('개정내용 저장 후 승인·반려해주세요.');
         return;
     }
     if (aprvStt == 'R') {
