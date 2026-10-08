@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:TML1010"
              xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
-             StartupUri="R03.xaml">
+             StartupUri="S03.xaml">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
