@@ -17,6 +17,15 @@
 
 ## 🕒 2026-10-08 (목) 작업 내역
 
+### 2. [EQM1001_R03] 개정 이력(REV) 반려 버튼 및 반려 로직/프로시저 삭제
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql
+- **배경 및 원인**: 개정이력(REV) 영역에서 반려 기능 삭제 요청 (설비별/설비그룹 반려 버튼 및 반려 팝업, 프로시저의 반려 처리 로직 일괄 삭제)
+- **작업 상세 내용**:
+  - ASPX: 설비그룹 및 설비별 개정이력 패널의 반려 버튼(`btn_GRP_REJECT`, `btn_EQM_REJECT`) 삭제, 점검계획 반려 팝업(`pop_PLAN_REJECT`) 마크업 삭제 (주석 없이 순수 태그 정리)
+  - JS: `SavePlanStatus` 및 `SavePlanRevStatus`를 승인 전용으로 단순화, `planReject` 전역 변수 및 반려 분기/팝업 오픈 로직 제거, `btn_GRP_REJECT`/`btn_EQM_REJECT`/`btn_PLAN_REJECT_SAVE`/`btn_PLAN_REJECT_CANCEL`/`pop_PLAN_REJECT` 이벤트 핸들러 일괄 삭제
+  - SQL: `SAVE_PLAN_STATUS` 분기에서 반려 상태(`$APRVSTT = 'R'`) 및 반려 사유 검증/저장 로직 제거, 승인 전용 상태 저장으로 단순화, 안내 문구 정돈('승인·반려' -> '승인'), 최상단 Modify 이력 1일 1행 통합 갱신
+- **검증 결과**: Node.js 구문 검사(`node -c`) 통과, MSBuild 컴파일 에러 0건, 인코딩 검사 통과(전체 파일 UTF-8 with BOM, CRLF 개행 일치, `\r\r\n` 0건), 실제 서버 DB 직접 변경 없음
+
 ### 2. [EQM1001_R03] 리비전 승인·반려 이력 버튼(APRVHISTORY) 및 관련 로직/프로시저 삭제
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 05.Procedure/MES_SNS2_EQM1001_R03.sql, docs/EQM1001_R03_R04_SQL_정리검토_20261008.md
 - **배경 및 원인**: 설비점검계획(EQM1001_R03) 개정 이력 그리드 내 승인/반려 이력 조회 버튼(APRVHISTORY) 제거 및 연관된 JS 함수·그리드·팝업 마크업, 프로시저 분기(LIST_PLAN_APRV) 일괄 삭제 요청
@@ -933,6 +942,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql | 개정이력(REV) 반려 버튼(btn_EQM_REJECT, btn_GRP_REJECT), 반려 팝업(pop_PLAN_REJECT) 및 관련 JS 로직/프로시저 분기 일괄 삭제 완료 | Node.js 구문 검사 통과, MSBuild 컴파일 에러 0건, UTF-8 with BOM 및 CRLF 정규화 검증 완료, 실제 서버 DB 미반영 (사용자 반영 필요) |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 05.Procedure/MES_SNS2_EQM1001_R03.sql, docs/EQM1001_R03_R04_SQL_정리검토_20261008.md | 리비전 승인·반려 이력 버튼(APRVHISTORY) 및 관련 JS 함수/팝업/프로시저(LIST_PLAN_APRV) 일괄 삭제 완료 | Node.js 구문 검사 통과, MSBuild 컴파일 에러 0건, UTF-8 with BOM 및 CRLF 정규화 검증 완료, 실제 서버 DB 미반영 (사용자 반영 필요) |
 | **분석 완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql, MES_SNS2_EQM1001_R04.sql 및 실제 DB 7개 테이블 (조회·분석만 수행) | 그룹/설비 독립 REV 및 승인본 합성 설계 제안 완료; 구현 미진행 | 실제 DB SELECT로 140개 컬럼 및 고유키 확인: HEADER REVCD PK와 PLANTP/PLANCD/REVNUM UNIQUE, DETAIL REVCD/CHKKNDCD PK, 실적 HEADER REVCD 단일 컬럼, 실적 DETAIL CHKRSTKEY/CHKKNDCD PK. 현재 소스와 R02/R05 등 연관 참조 확인. 설계 분석만 수행, 구현·DB DDL/DML·서버 반영 없음 |
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql | 로컬 R03 중복 검증 제거 완료; 실제 DB 반영은 사용자 진행 | 격리 MariaDB 10.2.44에서 수정 전후 전체 R03 컴파일 성공. 90개 NULL·빈 값·공백·잘못된 값·대소문자 입력 비교 및 설비그룹/설비별 승인·반려·출력 비교 포함 102건 통과. 저장 상태·승인본·이력·오류 메시지 동일. 파라미터 30개와 분기 유지, BOM·CRLF 및 당일 이력 한 줄 검증 후 로컬 반영. 실제 DB·서버 반영 없음 |

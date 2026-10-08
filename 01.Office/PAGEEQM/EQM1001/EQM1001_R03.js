@@ -1248,51 +1248,40 @@ function GetPlanRev(planTp, rowIndex) {
     };
 }
 
-// 2026-10-06 개정 이력: 승인 확인 및 반려사유 팝업
-var planReject = null;
-function SavePlanStatus(planTp, aprvStt) {
+// 2026-10-06 개정 이력: 승인 확인
+function SavePlanStatus(planTp) {
     var rev = GetPlanRev(planTp);
     if (!rev) {
         return;
     }
-    // 2026-10-06 개정 이력: 개정내용이 없으면 승인·반려 차단
+    // 2026-10-06 개정 이력: 개정내용이 없으면 승인 차단
     if (!rev.remark.trim()) {
-        // 2026-10-08 [개정 이력] 개정내용 미입력 승인·반려 차단 안내 메시지 간소화
-        ItsMsg.Toast('개정내용 저장 후 승인·반려해주세요.');
+        ItsMsg.Toast('개정내용 저장 후 승인해주세요.');
         return;
     }
-    if (aprvStt == 'R') {
-        planReject = rev;
-        ItsText.SetValue('txt_PLAN_REJREASON', '');
-        ItsLabel.SetText('lbl_PLAN_REJECT', rev.planCd + ' / ' + rev.revNm);
-        ItsPop.Open('pop_PLAN_REJECT');
-        return;
-    }
-    SavePlanRevStatus(rev, aprvStt, '');
+    SavePlanRevStatus(rev);
 }
 
-// 2026-10-06 개정 이력: 선택 REV 승인·반려 저장 후 대상 목록 갱신
-function SavePlanRevStatus(rev, aprvStt, reason) {
-    var actNm = aprvStt == 'A' ? '승인' : '반려';
-    ItsMsg.Confirm(rev.planCd + ' ' + rev.revNm + '을 ' + actNm + '하시겠습니까?', function () {
+// 2026-10-06 개정 이력: 선택 REV 승인 저장 후 대상 목록 갱신
+function SavePlanRevStatus(rev) {
+    ItsMsg.Confirm(rev.planCd + ' ' + rev.revNm + '을 승인하시겠습니까?', function () {
         var maria = new ItsMaria('EQM1001_R03', 'SAVE_PLAN_STATUS');
         maria.AddParam('PLANTP', rev.planTp);
         maria.AddParam('PLANCD', rev.planCd);
         maria.AddParam('REVNUM', rev.revNum);
         maria.AddParam('REMARK', rev.remark);
-        maria.AddParam('APRVSTT', aprvStt);
-        maria.AddParam('REJREASON', reason);
+        maria.AddParam('APRVSTT', 'A');
+        maria.AddParam('REJREASON', '');
         maria.CallProc();
         if (maria.isError) {
             maria.ShowErrMsg();
             return;
         }
-        ItsPop.Close('pop_PLAN_REJECT');
         // 2026-10-07 개정 이력: 선택 위치를 유지하며 처리한 REV만 갱신
         if (RefreshPlanRev(rev.planTp, rev.planCd)) {
             SearchPlanRevItem(rev.planTp, rev.planCd, ItsGrid.GetCurrentIndex(rev.planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV'));
         }
-        ItsMsg.Toast(rev.revNm + ' ' + actNm + ' 처리가 완료되었습니다.');
+        ItsMsg.Toast(rev.revNm + ' 승인 처리가 완료되었습니다.');
     });
 }
 
@@ -1319,19 +1308,10 @@ function PrintPlanRev(planTp) {
     }
 }
 
-// 2026-10-06 설비그룹 점검계획 탭: 승인·반려·계획서 출력 버튼
-ItsButton.Event('btn_GRP_APPROVE').onClick = function () { SavePlanStatus('G', 'A'); };
-ItsButton.Event('btn_GRP_REJECT').onClick = function () { SavePlanStatus('G', 'R'); };
+// 2026-10-06 설비그룹 점검계획 탭: 승인·계획서 출력 버튼
+ItsButton.Event('btn_GRP_APPROVE').onClick = function () { SavePlanStatus('G'); };
 ItsButton.Event('btn_GRP_PLAN_RPT').onClick = function () { PrintPlanRev('G'); };
 
-// 2026-10-06 설비별 점검계획 탭: 승인·반려·계획서 출력 버튼
-ItsButton.Event('btn_EQM_APPROVE').onClick = function () { SavePlanStatus('E', 'A'); };
-ItsButton.Event('btn_EQM_REJECT').onClick = function () { SavePlanStatus('E', 'R'); };
+// 2026-10-06 설비별 점검계획 탭: 승인·계획서 출력 버튼
+ItsButton.Event('btn_EQM_APPROVE').onClick = function () { SavePlanStatus('E'); };
 ItsButton.Event('btn_EQM_PLAN_RPT').onClick = function () { PrintPlanRev('E'); };
-
-// 2026-10-06 반려 팝업: 사유 저장 및 닫기
-ItsButton.Event('btn_PLAN_REJECT_SAVE').onClick = function () {
-    if (planReject) { SavePlanRevStatus(planReject, 'R', ItsText.GetValue('txt_PLAN_REJREASON')); }
-};
-ItsButton.Event('btn_PLAN_REJECT_CANCEL').onClick = function () { ItsPop.Close('pop_PLAN_REJECT'); };
-ItsPop.Event('pop_PLAN_REJECT').onPopClosed = function () { planReject = null; };

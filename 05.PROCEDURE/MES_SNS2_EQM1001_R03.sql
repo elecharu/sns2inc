@@ -13,7 +13,7 @@
 -- 			2026-10-02 					한성수	주기관리 점검자 사원코드화·실적 월 잠금·승인본 대상 통일, 복사 검증 및 성능 개선
 -- 			2026-10-06 					한성수	REV·승인·출력 R03 통합, 그룹 체크 제거·최신 REV 조회, DETAIL 중복 컬럼 제거·APRVKEY 이력 발번, 주기 승인 제한 해제·빈 개정내용 승인/반려 차단
 -- 			2026-10-07 					한성수	설비별 정리·중복 방지, 보완 재요청·일괄 승인, 주기 성능개선, 계획서 출력 최신 REV 자동선택·전체 이력화
--- 			2026-10-08 					한성수	비사용 점검항목 재추가 지원·승인 검증 정리, 리비전 승인·반려 이력(LIST_PLAN_APRV) 제거
+-- 			2026-10-08 					한성수	비사용 점검항목 재추가 지원·승인 검증 정리, 승인/반려 이력 및 개정이력 반려 기능 제거
 -- *****************************************************************************
   IN $FANO           VARCHAR(20),
   IN $FANO_COPY      VARCHAR(20),
@@ -765,9 +765,9 @@ WHEN 'SAVE_PLAN_REV' THEN -- 개정내용 저장 및 승인 재요청
     AND (MSTEQMREV_HEADER.REVCD = _$REVCD
       OR ($PLANTP = 'G' AND MSTEQMREV_HEADER.PLANTP = 'E' AND MSTEQM.EQMGUBUN = $PLANCD AND MSTEQM.USEYN = 'Y'));
 -- *****************************************************************************
-WHEN 'SAVE_PLAN_STATUS' THEN -- 점검계획 승인/반려 상태 저장
+WHEN 'SAVE_PLAN_STATUS' THEN -- 점검계획 승인 상태 저장
   IF COALESCE($PLANCD, '') = '' THEN
-    CALL COMERR('승인·반려할 점검계획을 선택해주세요.');
+    CALL COMERR('승인할 점검계획을 선택해주세요.');
     LEAVE PROC;
   END IF;
 
@@ -776,18 +776,13 @@ WHEN 'SAVE_PLAN_STATUS' THEN -- 점검계획 승인/반려 상태 저장
     LEAVE PROC;
   END IF;
 
-  IF $APRVSTT IS NULL OR $APRVSTT NOT IN ('A', 'R') THEN
+  IF $APRVSTT IS NULL OR $APRVSTT <> 'A' THEN
     CALL COMERR('승인 상태가 올바르지 않습니다.');
     LEAVE PROC;
   END IF;
 
-  IF $APRVSTT = 'R' AND TRIM(COALESCE($REJREASON, '')) = '' THEN
-    CALL COMERR('반려 사유를 입력해주세요.');
-    LEAVE PROC;
-  END IF;
-
   IF COALESCE($REVNUM, '') NOT REGEXP '^[0-9]+$' THEN
-    CALL COMERR('승인·반려할 REV를 선택해주세요.');
+    CALL COMERR('승인할 REV를 선택해주세요.');
     LEAVE PROC;
   END IF;
 
@@ -805,12 +800,12 @@ WHEN 'SAVE_PLAN_STATUS' THEN -- 점검계획 승인/반려 상태 저장
   LIMIT 1 FOR UPDATE;
 
   IF _$REVNUM IS NOT NULL AND _$REVNUM <> CAST($REVNUM AS UNSIGNED) THEN
-    CALL COMERR('최신 REV만 승인·반려할 수 있습니다. 다시 조회해주세요.');
+    CALL COMERR('최신 REV만 승인할 수 있습니다. 다시 조회해주세요.');
     LEAVE PROC;
   END IF;
 
   IF _$REVNUM IS NULL OR _$APRVSTT = 'A' THEN
-    CALL COMERR('진행 중인 개정이 없습니다. 점검계획을 수정한 뒤 승인·반려해주세요.');
+    CALL COMERR('진행 중인 개정이 없습니다. 점검계획을 수정한 뒤 승인해주세요.');
     LEAVE PROC;
   END IF;
 
@@ -829,7 +824,7 @@ WHEN 'SAVE_PLAN_STATUS' THEN -- 점검계획 승인/반려 상태 저장
   END IF;
 
   IF TRIM(COALESCE(_$REMARK, '')) = '' THEN
-    CALL COMERR('개정내용을 입력하고 [개정내용 저장] 후 승인·반려해주세요.');
+    CALL COMERR('개정내용을 입력하고 [개정내용 저장] 후 승인해주세요.');
     LEAVE PROC;
   END IF;
 
@@ -930,15 +925,15 @@ WHEN 'SAVE_PLAN_STATUS' THEN -- 점검계획 승인/반려 상태 저장
     END IF;
   END IF;
 
-  -- 승인·반려 기록은 리비전별로 누적하고 현재 상태는 헤더에서 관리
+  -- 승인 기록은 리비전별로 누적하고 현재 상태는 헤더에서 관리
   INSERT INTO CHKPLANEQM_APRV (
     APRVKEY, REVCD, PLANTP, PLANCD, APRVSTT, REQTIME, REQEMP, REQPRG,
     APRVTIME, APRVEMP, APRVPRG, REJREASON, RTIME, REMP, RPRG
   )
   SELECT
-    GETKEY('APRVKEY'), MSTEQMREV_HEADER.REVCD, MSTEQMREV_HEADER.PLANTP, MSTEQMREV_HEADER.PLANCD, $APRVSTT,
+    GETKEY('APRVKEY'), MSTEQMREV_HEADER.REVCD, MSTEQMREV_HEADER.PLANTP, MSTEQMREV_HEADER.PLANCD, 'A',
     MSTEQMREV_HEADER.REQTIME, MSTEQMREV_HEADER.REQEMP, MSTEQMREV_HEADER.REQPRG,
-    CALLTIME(), CALLEMP(), CALLPRG(), CASE WHEN $APRVSTT = 'R' THEN $REJREASON ELSE '' END,
+    CALLTIME(), CALLEMP(), CALLPRG(), '',
     CALLTIME(), CALLEMP(), CALLPRG()
   FROM MSTEQMREV_HEADER
   LEFT JOIN MSTEQM
@@ -963,12 +958,12 @@ WHEN 'SAVE_PLAN_STATUS' THEN -- 점검계획 승인/반려 상태 저장
    AND NEXT_REV.PLANCD = MSTEQMREV_HEADER.PLANCD
    AND NEXT_REV.REVNUM > MSTEQMREV_HEADER.REVNUM
   SET
-    MSTEQMREV_HEADER.APRVSTT   = $APRVSTT,
-    MSTEQMREV_HEADER.REMARK    = CASE WHEN $APRVSTT = 'A' AND MSTEQMREV_HEADER.REMARK = '' THEN _$REMARK ELSE MSTEQMREV_HEADER.REMARK END,
+    MSTEQMREV_HEADER.APRVSTT   = 'A',
+    MSTEQMREV_HEADER.REMARK    = CASE WHEN MSTEQMREV_HEADER.REMARK = '' THEN _$REMARK ELSE MSTEQMREV_HEADER.REMARK END,
     MSTEQMREV_HEADER.APRVTIME  = CALLTIME(),
-    MSTEQMREV_HEADER.APRVEMP   = CASE WHEN $APRVSTT = 'A' THEN CALLEMP() ELSE '' END,
+    MSTEQMREV_HEADER.APRVEMP   = CALLEMP(),
     MSTEQMREV_HEADER.APRVPRG   = CALLPRG(),
-    MSTEQMREV_HEADER.REJREASON = CASE WHEN $APRVSTT = 'R' THEN $REJREASON ELSE '' END,
+    MSTEQMREV_HEADER.REJREASON = '',
     MSTEQMREV_HEADER.MTIME     = CALLTIME(),
     MSTEQMREV_HEADER.MEMP      = CALLEMP(),
     MSTEQMREV_HEADER.MPRG      = CALLPRG()
