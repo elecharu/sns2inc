@@ -141,16 +141,6 @@
 
 <%-- POP --%>
 <asp:Content ContentPlaceHolderID="CPH_POP" runat="server">
-    <Its:pop runat="server" ID="pop_PLAN_APRV" Title="리비전 승인·반려 이력" Width="1000" Height="450">
-        <Its:div runat="server" Type="SplitTop">
-            <Its:label runat="server" ID="lbl_PLAN_APRV" Text="" Bold="true" MarginLeft="10" />
-        </Its:div>
-        <Its:split runat="server" Type="Horizon" Resizeable="false" />
-        <Its:div runat="server" Type="SplitDown">
-            <Its:grid runat="server" ID="grid_PLAN_APRV" />
-        </Its:div>
-    </Its:pop>
-
     <Its:pop runat="server" ID="pop_PLAN_REJECT" Title="점검계획 반려" Width="600" Height="190">
         <Its:div runat="server" Type="SplitTop" TopHeightPc="70">
             <Its:label runat="server" ID="lbl_PLAN_REJECT" Text="" Bold="true" MarginLeft="10" />

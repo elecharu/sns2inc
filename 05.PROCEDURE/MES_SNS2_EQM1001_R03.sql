@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R03`(
+﻿CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R03`(
 -- *****************************************************************************
 -- Comment: 설비점검계획 
 -- Create: 	2025-06-27  	생성 			이대규
@@ -13,7 +13,7 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R03`(
 -- 			2026-10-02 					한성수	주기관리 점검자 사원코드화·실적 월 잠금·승인본 대상 통일, 복사 검증 및 성능 개선
 -- 			2026-10-06 					한성수	REV·승인·출력 R03 통합, 그룹 체크 제거·최신 REV 조회, DETAIL 중복 컬럼 제거·APRVKEY 이력 발번, 주기 승인 제한 해제·빈 개정내용 승인/반려 차단
 -- 			2026-10-07 					한성수	설비별 정리·중복 방지, 보완 재요청·일괄 승인, 주기 성능개선, 계획서 출력 최신 REV 자동선택·전체 이력화
--- 			2026-10-08 					한성수	설비그룹·설비별 비사용 정기점검 항목 재추가 지원, 승인·출력 중복 검증 제거
+-- 			2026-10-08 					한성수	비사용 점검항목 재추가 지원·승인 검증 정리, 리비전 승인·반려 이력(LIST_PLAN_APRV) 제거
 -- *****************************************************************************
   IN $FANO           VARCHAR(20),
   IN $FANO_COPY      VARCHAR(20),
@@ -976,32 +976,6 @@ WHEN 'SAVE_PLAN_STATUS' THEN -- 점검계획 승인/반려 상태 저장
     AND MSTEQMREV_HEADER.APRVSTT <> 'A'
     AND ((MSTEQMREV_HEADER.PLANTP = $PLANTP AND MSTEQMREV_HEADER.PLANCD = $PLANCD)
       OR ($PLANTP = 'G' AND MSTEQMREV_HEADER.PLANTP = 'E' AND MSTEQM.EQMGUBUN = $PLANCD AND MSTEQM.USEYN = 'Y'));
-
--- *****************************************************************************
-WHEN 'LIST_PLAN_APRV' THEN -- 선택 리비전 승인·반려 이력 조회
-  IF COALESCE($PLANTP, '') NOT IN ('G', 'E') OR COALESCE($PLANCD, '') = ''
-     OR COALESCE($REVNUM, '') NOT REGEXP '^[0-9]+$' THEN
-    CALL COMERR('이력을 조회할 REV를 선택해주세요.');
-    LEAVE PROC;
-  END IF;
-
-  SET _$REVCD = (SELECT REVCD FROM MSTEQMREV_HEADER
-                WHERE PLANTP = $PLANTP AND PLANCD = $PLANCD AND REVNUM = $REVNUM LIMIT 1);
-
-  SELECT
-    CONCAT('REV.', $REVNUM) AS REVNM,
-    CASE CHKPLANEQM_APRV.APRVSTT WHEN 'A' THEN '승인' WHEN 'R' THEN '반려' END AS APRVSTTNM,
-    COALESCE(MSTEMP.EMPNM, CHKPLANEQM_APRV.APRVEMP) AS APRVEMP,
-    CHKPLANEQM_APRV.APRVTIME,
-    CHKPLANEQM_APRV.REJREASON
-  FROM CHKPLANEQM_APRV
-  LEFT JOIN MSTEMP
-    ON MSTEMP.EMPCD = CHKPLANEQM_APRV.APRVEMP
-  WHERE CHKPLANEQM_APRV.REVCD = _$REVCD
-    AND CHKPLANEQM_APRV.PLANTP = $PLANTP
-    AND CHKPLANEQM_APRV.PLANCD = $PLANCD
-    AND CHKPLANEQM_APRV.APRVSTT IN ('A', 'R')
-  ORDER BY CHKPLANEQM_APRV.APRVTIME DESC, CHKPLANEQM_APRV.APRVKEY DESC;
 
 -- *****************************************************************************
 WHEN 'CALL_PLAN_RPT' THEN -- 점검계획서 출력 데이터 조회 (설비그룹·설비, 승인상태와 무관)

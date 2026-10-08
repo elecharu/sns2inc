@@ -23,8 +23,6 @@ ItsPage.Load = function () {
         column.create('승인자', 'APRVEMP', { width: 80, align: 'center', readOnly: true }),
         column.create('처리일시', 'APRVTIME', { width: 130, align: 'center', readOnly: true }),
         column.create('반려사유', 'REJREASON', { width: 200, readOnly: true }),
-        // 2026-10-06 개정 이력: 선택 REV 승인·반려 이력 버튼
-        column.create('승인/반려 이력', 'APRVHISTORY', { width: 100, columnType: enumColumnTypes.button, iconCls: 'fa-search', readOnly: true }),
         column.create('REV번호', 'REVNUM', { hidden: true }),
         column.create('상태코드', 'APRVSTT', { hidden: true }),
         column.split()
@@ -85,8 +83,6 @@ ItsPage.Load = function () {
         column.create('승인자', 'APRVEMP', { width: 80, align: 'center', readOnly: true }),
         column.create('처리일시', 'APRVTIME', { width: 130, align: 'center', readOnly: true }),
         column.create('반려사유', 'REJREASON', { width: 200, readOnly: true }),
-        // 2026-10-06 개정 이력: 선택 REV 승인·반려 이력 버튼
-        column.create('승인/반려 이력', 'APRVHISTORY', { width: 100, columnType: enumColumnTypes.button, iconCls: 'fa-search', readOnly: true }),
         column.create('REV번호', 'REVNUM', { hidden: true }),
         column.create('상태코드', 'APRVSTT', { hidden: true }),
         column.split()
@@ -164,16 +160,6 @@ ItsPage.Load = function () {
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
-        column.split()
-    ]);
-
-    // 2026-10-06 승인·반려 이력 팝업: 처리 기록 조회 전용
-    ItsGrid.Create('grid_PLAN_APRV', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        column.create('REV', 'REVNM', { width: 90, align: 'center', readOnly: true }),
-        column.create('처리', 'APRVSTTNM', { width: 70, align: 'center', readOnly: true }),
-        column.create('처리자', 'APRVEMP', { width: 100, align: 'center', readOnly: true }),
-        column.create('처리일시', 'APRVTIME', { width: 150, align: 'center', readOnly: true }),
-        column.create('반려사유', 'REJREASON', { width: 480, readOnly: true }),
         column.split()
     ]);
 
@@ -1310,27 +1296,6 @@ function SavePlanRevStatus(rev, aprvStt, reason) {
     });
 }
 
-// 2026-10-06 개정 이력: 버튼을 누른 행의 승인·반려 기록 조회
-function SearchPlanAprv(planTp, rowIndex) {
-    var rev = GetPlanRev(planTp, rowIndex);
-    if (!rev) {
-        return;
-    }
-    ItsGrid.Clear('grid_PLAN_APRV');
-    var maria = new ItsMaria('EQM1001_R03', 'LIST_PLAN_APRV');
-    maria.AddParam('PLANTP', rev.planTp);
-    maria.AddParam('PLANCD', rev.planCd);
-    maria.AddParam('REVNUM', rev.revNum);
-    maria.CallProc();
-    if (maria.isError) {
-        maria.ShowErrMsg();
-        return;
-    }
-    ItsGrid.SetStore('grid_PLAN_APRV', maria.store);
-    ItsLabel.SetText('lbl_PLAN_APRV', rev.planCd + ' / ' + rev.revNm + ' / 처리 이력 ' + maria.store.Length() + '건');
-    ItsPop.Open('pop_PLAN_APRV');
-}
-
 // 2026-10-06 개정 이력: 계획서 출력
 // 2026-10-07 설비그룹·설비별 점검계획 탭: 선택 대상의 최신 계획·전체 개정이력 출력
 function PrintPlanRev(planTp) {
@@ -1354,21 +1319,15 @@ function PrintPlanRev(planTp) {
     }
 }
 
-// 2026-10-06 설비그룹 점검계획 탭: 승인·반려·계획서 출력 및 이력 버튼
+// 2026-10-06 설비그룹 점검계획 탭: 승인·반려·계획서 출력 버튼
 ItsButton.Event('btn_GRP_APPROVE').onClick = function () { SavePlanStatus('G', 'A'); };
 ItsButton.Event('btn_GRP_REJECT').onClick = function () { SavePlanStatus('G', 'R'); };
 ItsButton.Event('btn_GRP_PLAN_RPT').onClick = function () { PrintPlanRev('G'); };
-ItsGrid.Event('grid_GRP_REV').onButtonClick = function (rowIndex, field) {
-    if (field == 'APRVHISTORY') { SearchPlanAprv('G', rowIndex); }
-};
 
-// 2026-10-06 설비별 점검계획 탭: 승인·반려·계획서 출력 및 이력 버튼
+// 2026-10-06 설비별 점검계획 탭: 승인·반려·계획서 출력 버튼
 ItsButton.Event('btn_EQM_APPROVE').onClick = function () { SavePlanStatus('E', 'A'); };
 ItsButton.Event('btn_EQM_REJECT').onClick = function () { SavePlanStatus('E', 'R'); };
 ItsButton.Event('btn_EQM_PLAN_RPT').onClick = function () { PrintPlanRev('E'); };
-ItsGrid.Event('grid_EQM_REV').onButtonClick = function (rowIndex, field) {
-    if (field == 'APRVHISTORY') { SearchPlanAprv('E', rowIndex); }
-};
 
 // 2026-10-06 반려 팝업: 사유 저장 및 닫기
 ItsButton.Event('btn_PLAN_REJECT_SAVE').onClick = function () {

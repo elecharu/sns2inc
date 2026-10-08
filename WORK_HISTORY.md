@@ -17,6 +17,16 @@
 
 ## 🕒 2026-10-08 (목) 작업 내역
 
+### 2. [EQM1001_R03] 리비전 승인·반려 이력 버튼(APRVHISTORY) 및 관련 로직/프로시저 삭제
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 05.Procedure/MES_SNS2_EQM1001_R03.sql, docs/EQM1001_R03_R04_SQL_정리검토_20261008.md
+- **배경 및 원인**: 설비점검계획(EQM1001_R03) 개정 이력 그리드 내 승인/반려 이력 조회 버튼(APRVHISTORY) 제거 및 연관된 JS 함수·그리드·팝업 마크업, 프로시저 분기(LIST_PLAN_APRV) 일괄 삭제 요청
+- **작업 상세 내용**:
+  - JS: `grid_GRP_REV` 및 `grid_EQM_REV`에서 `APRVHISTORY` 버튼 컬럼 제거, 이력 팝업 전용 그리드 `grid_PLAN_APRV` 생성문 삭제, 이력 조회 함수 `SearchPlanAprv` 삭제, 두 REV 그리드의 `onButtonClick` 핸들러 삭제
+  - ASPX: `pop_PLAN_APRV` (리비전 승인·반려 이력) 팝업 마크업 태그 삭제 (주석 추가 없이 순수 태그 정리)
+  - SQL: `MES_SNS2_EQM1001_R03.sql`에서 `WHEN 'LIST_PLAN_APRV' THEN` 분기 전체 삭제, 최상단 Modify 이력에 1일 1행 원칙에 맞추어 통합 갱신 (`리비전 승인·반려 이력(LIST_PLAN_APRV) 제거`)
+  - 문서: `docs/EQM1001_R03_R04_SQL_정리검토_20261008.md` 분기 호출 목록에서 `LIST_PLAN_APRV` 삭제 및 사유 반영
+- **검증 결과**: Node.js 구문 검사(`node -c`) 통과, MSBuild C# 솔루션 컴파일 오류 0건, 인코딩 검사 통과(전체 파일 UTF-8 with BOM, CRLF 개행 일치, `\r\r\n` 0건), 실제 서버 DB 직접 변경 없음
+
 ### 2. [EQM1001] 설비그룹·설비 REV 독립 관리 구조 분석
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, MES_SNS2_EQM1001_R04.sql 및 실제 DB 7개 테이블 (조회·분석만 수행)
 - **배경 및 원인**: 설비별 계획 수정 시 그룹 REV도 영향을 받는 구조를 개선하고 점검 시 그룹·설비 최신 승인 계획을 함께 적용하는 설계 요청
@@ -923,6 +933,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 05.Procedure/MES_SNS2_EQM1001_R03.sql, docs/EQM1001_R03_R04_SQL_정리검토_20261008.md | 리비전 승인·반려 이력 버튼(APRVHISTORY) 및 관련 JS 함수/팝업/프로시저(LIST_PLAN_APRV) 일괄 삭제 완료 | Node.js 구문 검사 통과, MSBuild 컴파일 에러 0건, UTF-8 with BOM 및 CRLF 정규화 검증 완료, 실제 서버 DB 미반영 (사용자 반영 필요) |
 | **분석 완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql, MES_SNS2_EQM1001_R04.sql 및 실제 DB 7개 테이블 (조회·분석만 수행) | 그룹/설비 독립 REV 및 승인본 합성 설계 제안 완료; 구현 미진행 | 실제 DB SELECT로 140개 컬럼 및 고유키 확인: HEADER REVCD PK와 PLANTP/PLANCD/REVNUM UNIQUE, DETAIL REVCD/CHKKNDCD PK, 실적 HEADER REVCD 단일 컬럼, 실적 DETAIL CHKRSTKEY/CHKKNDCD PK. 현재 소스와 R02/R05 등 연관 참조 확인. 설계 분석만 수행, 구현·DB DDL/DML·서버 반영 없음 |
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql | 로컬 R03 중복 검증 제거 완료; 실제 DB 반영은 사용자 진행 | 격리 MariaDB 10.2.44에서 수정 전후 전체 R03 컴파일 성공. 90개 NULL·빈 값·공백·잘못된 값·대소문자 입력 비교 및 설비그룹/설비별 승인·반려·출력 비교 포함 102건 통과. 저장 상태·승인본·이력·오류 메시지 동일. 파라미터 30개와 분기 유지, BOM·CRLF 및 당일 이력 한 줄 검증 후 로컬 반영. 실제 DB·서버 반영 없음 |
 | **완료** | .agents/rules/procedure.md | 프로시저 중복 검증 방지 규칙 추가 완료 | 현재 R03 두 분기의 조건을 소스로 확인. 기존 procedure.md 내용은 보존하고 새 절만 추가했음을 비교 검증. UTF-8 BOM·CRLF 정상 |
