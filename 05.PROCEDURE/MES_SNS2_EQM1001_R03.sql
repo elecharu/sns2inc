@@ -13,6 +13,7 @@
 -- 			2026-10-02 					한성수	주기관리 점검자 사원코드화·실적 월 잠금·승인본 대상 통일, 복사 검증 및 성능 개선
 -- 			2026-10-06 					한성수	REV·승인·출력 R03 통합, 그룹 체크 제거·최신 REV 조회, DETAIL 중복 컬럼 제거·APRVKEY 이력 발번, 주기 승인 제한 해제·빈 개정내용 승인/반려 차단
 -- 			2026-10-07 					한성수	설비별 정리·중복 방지, 보완 재요청·일괄 승인, 주기 성능개선, 계획서 출력 최신 REV 자동선택·전체 이력화
+-- 			2026-10-08 					한성수	계획서 개정이력 최신 4건 제한
 -- *****************************************************************************
   IN $FANO           VARCHAR(20),
   IN $FANO_COPY      VARCHAR(20),
@@ -1060,7 +1061,7 @@ WHEN 'CALL_PLAN_RPT' THEN -- 점검계획서 출력 데이터 조회 (설비그�
     ORDER BY PLAN_ITEM.SORTNO, PLAN_ITEM.CHKKNDCD;
   END IF;
 
-  -- 개정 이력 (전체 리비전별 최종 상태 한 건씩)
+  -- 개정 이력 (최신 4개 리비전의 최종 상태)
   SELECT
     MSTEQMREV_HEADER.REVNUM,
     LEFT(CASE WHEN MSTEQMREV_HEADER.APRVSTT = 'A' THEN MSTEQMREV_HEADER.APRVTIME ELSE MSTEQMREV_HEADER.REQTIME END, 10) AS REVDATE,
@@ -1080,7 +1081,8 @@ WHEN 'CALL_PLAN_RPT' THEN -- 점검계획서 출력 데이터 조회 (설비그�
     ON APRV_EMP.EMPCD = MSTEQMREV_HEADER.APRVEMP
   WHERE MSTEQMREV_HEADER.PLANTP = _$PLANTP
     AND MSTEQMREV_HEADER.PLANCD = _$PLANCD
-  ORDER BY MSTEQMREV_HEADER.REVNUM DESC;
+  ORDER BY MSTEQMREV_HEADER.REVNUM DESC
+  LIMIT 4;
 
 -- *****************************************************************************
 WHEN 'LIST_CYCLE_EQMCD' THEN -- 설비별 월별 점검계획 조회

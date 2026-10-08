@@ -88,23 +88,7 @@ namespace XtraRpt
             detail.Controls.Add(CreateDetailRow());
             // 2026-10-02 하단 개정 이력 칸에 승인 이력 표시
             reportFooter.Controls.AddRange(CreateConfirmationControls(revHistory));
-            // 2026-10-07 하단 4건을 넘는 개정이력은 다음 페이지에 이어서 출력
-            if (revHistory != null && revHistory.Rows.Count > 4)
-            {
-                DataTable history = revHistory.Clone();
-                for (int idx = 4; idx < revHistory.Rows.Count; idx++)
-                {
-                    history.ImportRow(revHistory.Rows[idx]);
-                }
-                SubBand historyBand = new SubBand();
-                historyBand.HeightF = 30F;
-                historyBand.PageBreak = PageBreak.BeforeBand;
-                XRSubreport subreport = new XRSubreport();
-                subreport.SizeF = new SizeF(ReportWidth, 30F);
-                subreport.ReportSource = CreateHistoryReport(history);
-                historyBand.Controls.Add(subreport);
-                reportFooter.SubBands.Add(historyBand);
-            }
+            // 2026-10-08 계획서 하단 개정이력은 최신 4건만 표시
             pageFooter.Controls.Add(CreateFooterLabel());
 
             DataSource = planItems;
@@ -223,43 +207,6 @@ namespace XtraRpt
             controls.Add(CreateFooterBox(revisionX + revisionNoWidth + revisionContentWidth, headerY, writerWidth, revisionHeaderHeight, "작성", false));
             controls.Add(CreateFooterBox(revisionX + revisionNoWidth + revisionContentWidth + writerWidth, headerY, approverWidth, revisionHeaderHeight, "승인", false));
             return controls.ToArray();
-        }
-
-        // 2026-10-07 계획서 개정이력: 나머지 전체 이력을 행 단위로 이어서 출력 (상태 컬럼 포함)
-        private XtraReport CreateHistoryReport(DataTable history)
-        {
-            XtraReport report = new XtraReport();
-            report.Dpi = 100F;
-            report.Margins = new Margins(0, 0, 0, 0);
-            report.DataSource = history;
-            GroupHeaderBand header = new GroupHeaderBand();
-            header.HeightF = 54F;
-            header.RepeatEveryPage = true;
-            header.Controls.Add(CreateFooterBox(0F, 0F, ReportWidth, 26F, "개정 이력 (이어서)", false));
-            XRTable table = CreateTable(0F, 26F, ReportWidth, 28F, 9F);
-            XRTableRow row = new XRTableRow();
-            row.Cells.Add(CreateCell("REV", 50F, true));
-            row.Cells.Add(CreateCell("상태", 55F, true));
-            row.Cells.Add(CreateCell("개정일자", 90F, true));
-            row.Cells.Add(CreateCell("개정내용", 376F, true));
-            row.Cells.Add(CreateCell("작성", 80F, true));
-            row.Cells.Add(CreateCell("승인", 80F, true));
-            table.Rows.Add(row);
-            header.Controls.Add(table);
-            DetailBand detail = new DetailBand();
-            detail.HeightF = 28F;
-            table = CreateTable(0F, 0F, ReportWidth, 28F, 8.5F);
-            row = new XRTableRow();
-            row.Cells.Add(CreateDataCell("REVNUM", 50F, TextAlignment.MiddleCenter));
-            row.Cells.Add(CreateDataCell("APRVSTTNM", 55F, TextAlignment.MiddleCenter));
-            row.Cells.Add(CreateDataCell("REVDATE", 90F, TextAlignment.MiddleCenter));
-            row.Cells.Add(CreateDataCell("REMARK", 376F, TextAlignment.MiddleLeft));
-            row.Cells.Add(CreateDataCell("REQEMPNM", 80F, TextAlignment.MiddleCenter));
-            row.Cells.Add(CreateDataCell("APRVEMPNM", 80F, TextAlignment.MiddleCenter));
-            table.Rows.Add(row);
-            detail.Controls.Add(table);
-            report.Bands.AddRange(new Band[] { header, detail });
-            return report;
         }
 
         private XRLabel CreateFooterBox(float x, float y, float width, float height, string text, bool isLabel)

@@ -14,6 +14,7 @@
         <Its:div runat="server" Type="SplitSingle" TabTitle="설비그룹 점검계획">         
             <Its:div runat="server" Type="SplitTop" TopHeightPc="4" BackColor="White" ID="div_GRP">
                 <Its:find runat="server" Label="설비그룹" Field="EQMGRP" GPCD="FM116" ID="find_GRP" MarginLeft="10" MarginTop="6" LabelWidth="60" InputWidth="120" NameWidth="150"/>
+                <Its:button runat="server" Label="계획서 출력" ID="btn_GRP_PLAN_RPT" Width="100" Float="right" MarginRight="10" MarginTop="6" BackColor="CustomButton2" />
             </Its:div>
             
             <Its:split runat="server" Type="Horizon" Resizeable="false"/>                
@@ -32,7 +33,6 @@
                             <Its:button runat="server" Label="개정내용 저장" ID="btn_GRP_REV_SAVE" MarginLeft="40" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="승인" ID="btn_GRP_APPROVE" MarginLeft="10" BackColor="CustomButton" />
                             <Its:button runat="server" Label="반려" ID="btn_GRP_REJECT" MarginLeft="10" BackColor="CustomButton3" />
-                            <Its:button runat="server" Label="계획서 출력" ID="btn_GRP_PLAN_RPT" Width="100" MarginLeft="10" BackColor="CustomButton2" />
                         </Its:div>
 
                         <Its:split runat="server" Type="Horizon" Resizeable="false" />
@@ -67,6 +67,7 @@
         <Its:div runat="server" Type="SplitSingle" TabTitle="설비별 점검계획">         
             <Its:div runat="server" Type="SplitTop" TopHeightPc="4" BackColor="White" ID="div_EQM">
                 <Its:find runat="server" Label="설비" Field="FANO" GPCD="EQMCD" ID="find_EQMCD" MarginLeft="10" MarginTop="6" LabelWidth="38" InputWidth="80" NameWidth="150"/>                      
+                <Its:button runat="server" Label="계획서 출력" ID="btn_EQM_PLAN_RPT" Width="100" Float="right" MarginRight="10" MarginTop="6" BackColor="CustomButton2" />
             </Its:div>
             
             <Its:split runat="server" Type="Horizon" Resizeable="false"/>                
@@ -85,7 +86,6 @@
                             <Its:button runat="server" Label="개정내용 저장" ID="btn_EQM_REV_SAVE" MarginLeft="40" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="승인" ID="btn_EQM_APPROVE" MarginLeft="10" BackColor="CustomButton" />
                             <Its:button runat="server" Label="반려" ID="btn_EQM_REJECT" MarginLeft="10" BackColor="CustomButton3" />
-                            <Its:button runat="server" Label="계획서 출력" ID="btn_EQM_PLAN_RPT" Width="100" MarginLeft="10" BackColor="CustomButton2" />
                         </Its:div>
 
                         <Its:split runat="server" Type="Horizon" Resizeable="false" />
