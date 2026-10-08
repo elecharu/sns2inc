@@ -66,6 +66,7 @@
         <Its:div runat="server" Type="SplitSingle" TabTitle="설비별 점검계획">         
             <Its:div runat="server" Type="SplitTop" TopHeightPc="4" BackColor="White" ID="div_EQM">
                 <Its:find runat="server" Label="설비" Field="FANO" GPCD="EQMCD" ID="find_EQMCD" MarginLeft="10" MarginTop="6" LabelWidth="38" InputWidth="80" NameWidth="150"/>                      
+                <Its:find runat="server" Label="설비그룹" Field="EQMGRP" GPCD="FM116" ID="find_EQM_GRP" MarginLeft="15" MarginTop="6" LabelWidth="60" InputWidth="120" NameWidth="150"/>
                 <Its:button runat="server" Label="계획서 출력" ID="btn_EQM_PLAN_RPT" Width="100" Float="right" MarginRight="10" MarginTop="6" BackColor="CustomButton2" />
             </Its:div>
             

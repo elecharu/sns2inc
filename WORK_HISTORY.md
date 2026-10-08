@@ -17,6 +17,24 @@
 
 ## 🕒 2026-10-08 (목) 작업 내역
 
+### 1. [MST1002_R06] 생산설비정보 그리드 설비그룹코드 표시·설비그룹코드명 hidden 및 프로시저 컬럼 반환 추가
+- **수정/대상 파일**: 01.Office/PAGEMST/MST1002/MST1002_R06.js, 05.Procedure/MES_SNS2_MST1002_R06.sql
+- **배경 및 원인**: 생산설비정보(MST1002_R06) 화면의 그리드에서 설비코드(FANO) 앞에 설비그룹코드(EQMGUBUN)와 설비그룹코드명(EQMGRPNM) 컬럼을 추가하되, 상단 검색 패널 필터는 추가하지 않고 설비그룹코드명은 hidden 처리하도록 요청. 백엔드 프로시저 MES_SNS2_MST1002_R06.sql의 SEL_EQM 분기에서도 설비그룹코드·명 함께 조회하도록 수정 요청.
+- **작업 상세 내용**:
+  - JS: `MST1002_R06.js`의 `grid1` 초기화 컬럼에서 설비소분류(`EQMGROUP3`) 뒤, 설비코드(`FANO`) 바로 앞에 `EQMGUBUN`('설비그룹코드', width: 100, align: 'center') 표시 및 `EQMGRPNM`('설비그룹코드명', hidden: true) 컬럼 선언 추가. 신규 변경 위치 날짜 주석 작성 (`Optimization.md` 준수).
+  - ASPX: 사용자 요청에 따라 검색 패널(`sdiv1`)에 신규 필터를 추가하지 않고 기존 검색 조건 유지.
+  - SQL: `MES_SNS2_MST1002_R06.sql`의 `WHEN 'SEL_EQM' THEN` 분기에 `COMTYPE` (`GPCD = 'FM116' AND TPCD = A.EQMGUBUN`) LEFT JOIN 추가 및 `COALESCE(A.EQMGUBUN, '') AS EQMGUBUN`, `COALESCE(COMTYPE.TPNM, '') AS EQMGRPNM` 반환 컬럼 추가. 최상단 Modify 주석 1일 1행 원칙에 따라 작성 (`procedure.md`, `procedure_history.md` 준수).
+- **검증 결과**: Node.js 구문 검사(`node -c`) 통과, MSBuild C# 솔루션 컴파일 에러 0건 성공, 인코딩 검사 통과(전체 파일 UTF-8 with BOM, CRLF 개행 일치, `\r\r\n` 0건), 실제 서버 DB 직접 변경 없음
+
+### 2. [EQM1001_R03] 설비별 점검계획 탭 설비그룹코드 표시·설비그룹명 hidden 및 설비그룹 필터링 추가
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql
+- **배경 및 원인**: "설비별 점검계획" 탭 좌측 그리드(grid1)에서 설비코드(FANO) 옆에 해당하는 설비의 설비그룹코드(EQMGUBUN) 표시 및 설비그룹명(EQMGRPNM) hidden 컬럼 선언, 상단 검색 영역(div_EQM)에 설비그룹 필터링(find_EQM_GRP) 추가 요청. 프로시저 MES_SNS2_EQM1001_R03.sql의 LIST_MSTEQM 분기에서도 설비그룹코드·명 반환 및 $EQMGRP 검색 조건 추가 요청.
+- **작업 상세 내용**:
+  - ASPX: `div_EQM` 패널 내 `find_EQMCD` 옆에 설비그룹 찾기 컨트롤(`find_EQM_GRP`, Field="EQMGRP", GPCD="FM116") 추가 배치 (주석 추가 없이 순수 태그 작성, `aspx_cs_comment.md` 준수).
+  - JS: `EQM1001_R03.js`의 `grid1` 초기화 컬럼에서 `FANO` 옆에 `EQMGUBUN`('설비그룹코드', width: 100, align: 'center') 컬럼 추가 및 `EQMGRPNM`('설비그룹명', hidden: true) 컬럼 선언 추가. 신규 변경 위치 날짜 주석 작성 (`Optimization.md` 준수).
+  - SQL: `MES_SNS2_EQM1001_R03.sql`의 `WHEN 'LIST_MSTEQM' THEN` 분기에 `COMTYPE` (`GPCD = 'FM116' AND TPCD = MSTEQM.EQMGUBUN`) LEFT JOIN 추가, `COALESCE(MSTEQM.EQMGUBUN, '') AS EQMGUBUN`, `COALESCE(COMTYPE.TPNM, '') AS EQMGRPNM` 반환 컬럼 추가, WHERE 절에 `$EQMGRP` 검색 필터링(`MSTEQM.EQMGUBUN LIKE ... OR COMTYPE.TPNM LIKE ...`) 추가. 최상단 Modify 주석 1일 1행 원칙에 따라 갱신.
+- **검증 결과**: Node.js 구문 검사(`node -c`) 통과, MSBuild C# 솔루션 컴파일 에러 0건 성공, 인코딩 검사 통과(전체 파일 UTF-8 with BOM, CRLF 개행 일치, `\r\r\n` 0건), 실제 서버 DB 직접 변경 없음
+
 ### 2. [EQM1001_R03] 개정 이력(REV) 반려 버튼 및 반려 로직/프로시저 삭제
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql
 - **배경 및 원인**: 개정이력(REV) 영역에서 반려 기능 삭제 요청 (설비별/설비그룹 반려 버튼 및 반려 팝업, 프로시저의 반려 처리 로직 일괄 삭제)
@@ -942,6 +960,8 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 01.Office/PAGEMST/MST1002/MST1002_R06.js, 05.Procedure/MES_SNS2_MST1002_R06.sql | 생산설비정보(MST1002_R06) 그리드 설비코드 앞 설비그룹코드 표시·설비그룹코드명 hidden 컬럼 추가 및 프로시저(SEL_EQM) 컬럼 반환 반영 완료 | Node.js 구문 검사 통과, MSBuild 컴파일 에러 0건, UTF-8 with BOM 및 CRLF 정규화 검증 완료, 실제 서버 DB 미반영 (사용자 반영 필요) |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql | 설비별 점검계획 탭 설비그룹코드 표시, 설비그룹명 hidden 선언, 상단 설비그룹 필터(find_EQM_GRP) 추가 및 프로시저(LIST_MSTEQM) 컬럼 반환·검색조건 반영 완료 | Node.js 구문 검사 통과, MSBuild 컴파일 에러 0건, UTF-8 with BOM 및 CRLF 정규화 검증 완료, 실제 서버 DB 미반영 (사용자 반영 필요) |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql | 개정이력(REV) 반려 버튼(btn_EQM_REJECT, btn_GRP_REJECT), 반려 팝업(pop_PLAN_REJECT) 및 관련 JS 로직/프로시저 분기 일괄 삭제 완료 | Node.js 구문 검사 통과, MSBuild 컴파일 에러 0건, UTF-8 with BOM 및 CRLF 정규화 검증 완료, 실제 서버 DB 미반영 (사용자 반영 필요) |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 05.Procedure/MES_SNS2_EQM1001_R03.sql, docs/EQM1001_R03_R04_SQL_정리검토_20261008.md | 리비전 승인·반려 이력 버튼(APRVHISTORY) 및 관련 JS 함수/팝업/프로시저(LIST_PLAN_APRV) 일괄 삭제 완료 | Node.js 구문 검사 통과, MSBuild 컴파일 에러 0건, UTF-8 with BOM 및 CRLF 정규화 검증 완료, 실제 서버 DB 미반영 (사용자 반영 필요) |
 | **분석 완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql, MES_SNS2_EQM1001_R04.sql 및 실제 DB 7개 테이블 (조회·분석만 수행) | 그룹/설비 독립 REV 및 승인본 합성 설계 제안 완료; 구현 미진행 | 실제 DB SELECT로 140개 컬럼 및 고유키 확인: HEADER REVCD PK와 PLANTP/PLANCD/REVNUM UNIQUE, DETAIL REVCD/CHKKNDCD PK, 실적 HEADER REVCD 단일 컬럼, 실적 DETAIL CHKRSTKEY/CHKKNDCD PK. 현재 소스와 R02/R05 등 연관 참조 확인. 설계 분석만 수행, 구현·DB DDL/DML·서버 반영 없음 |

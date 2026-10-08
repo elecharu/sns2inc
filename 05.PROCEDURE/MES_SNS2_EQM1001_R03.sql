@@ -13,7 +13,7 @@
 -- 			2026-10-02 					한성수	주기관리 점검자 사원코드화·실적 월 잠금·승인본 대상 통일, 복사 검증 및 성능 개선
 -- 			2026-10-06 					한성수	REV·승인·출력 R03 통합, 그룹 체크 제거·최신 REV 조회, DETAIL 중복 컬럼 제거·APRVKEY 이력 발번, 주기 승인 제한 해제·빈 개정내용 승인/반려 차단
 -- 			2026-10-07 					한성수	설비별 정리·중복 방지, 보완 재요청·일괄 승인, 주기 성능개선, 계획서 출력 최신 REV 자동선택·전체 이력화
--- 			2026-10-08 					한성수	비사용 점검항목 재추가 지원·승인 검증 정리, 승인/반려 이력 및 개정이력 반려 기능 제거
+-- 			2026-10-08 					한성수	비사용 점검항목 재추가·승인 검증 정리, 승인/반려 이력 및 개정반려 제거, 설비별 점검계획 설비그룹코드·설비그룹명 반환 및 그룹 검색조건 추가
 -- *****************************************************************************
   IN $FANO           VARCHAR(20),
   IN $FANO_COPY      VARCHAR(20),
@@ -441,6 +441,8 @@ WHEN 'LIST_MSTEQM' THEN -- 설비 목록 조회
 
   SELECT
     MSTEQM.FANO,
+    COALESCE(MSTEQM.EQMGUBUN, '') AS EQMGUBUN,
+    COALESCE(COMTYPE.TPNM, '') AS EQMGRPNM,
     MSTEQM.EQMNM,
     COALESCE(CONCAT('REV.', PLAN_REV.REVNUM), '') AS REVNM,
     CASE
@@ -452,6 +454,9 @@ WHEN 'LIST_MSTEQM' THEN -- 설비 목록 조회
     COALESCE(PLAN_REV.APRVSTT, '') AS APRVSTT,
     CASE WHEN PLAN_REV.APRVSTT = 'R' THEN PLAN_REV.REJREASON ELSE '' END AS REJREASON
   FROM MSTEQM
+  LEFT JOIN COMTYPE
+    ON COMTYPE.GPCD = 'FM116'
+   AND COMTYPE.TPCD = MSTEQM.EQMGUBUN
   LEFT JOIN (
     SELECT PLANCD, MAX(REVNUM) AS REVNUM
     FROM MSTEQMREV_HEADER
@@ -464,7 +469,8 @@ WHEN 'LIST_MSTEQM' THEN -- 설비 목록 조회
    AND PLAN_REV.PLANCD = LAST_REV.PLANCD
    AND PLAN_REV.REVNUM = LAST_REV.REVNUM
   WHERE MSTEQM.USEYN = 'Y'
-    AND (MSTEQM.FANO LIKE CONCAT('%', $FANO, '%') OR MSTEQM.EQMNM LIKE CONCAT('%', $FANO, '%'))
+    AND (COALESCE($EQMGRP, '') = '' OR MSTEQM.EQMGUBUN LIKE CONCAT('%', $EQMGRP, '%') OR COMTYPE.TPNM LIKE CONCAT('%', $EQMGRP, '%'))
+    AND (COALESCE($FANO, '') = '' OR MSTEQM.FANO LIKE CONCAT('%', $FANO, '%') OR MSTEQM.EQMNM LIKE CONCAT('%', $FANO, '%'))
   ORDER BY MSTEQM.FANO;
 
 -- *****************************************************************************

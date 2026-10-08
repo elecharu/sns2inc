@@ -62,9 +62,11 @@ ItsPage.Load = function () {
         column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.split()
     ]);
-    // 설비별 점검계획 탭: 설비 목록 초기화
+    // 2026-10-08 [설비별 점검계획 탭] 좌측 그리드 설비코드 옆 설비그룹코드 표시 및 설비그룹명 히든 선언
     ItsGrid.Create('grid1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('설비코드', 'FANO', { width: 80, align: 'center' }),
+        column.create('설비그룹코드', 'EQMGUBUN', { width: 100, align: 'center' }),
+        column.create('설비그룹명', 'EQMGRPNM', { hidden: true }),
         column.create('설비명', 'EQMNM', { width: 200 }),
         // 2026-09-30 [설비별 점검계획 탭] 좌측 목록 현재 승인 REV 컬럼 (현장 점검 기준)
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),

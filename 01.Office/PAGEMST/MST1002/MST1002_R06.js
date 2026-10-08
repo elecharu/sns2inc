@@ -13,6 +13,9 @@ ItsPage.Load = function () {
         column.create("설비대분류", "EQMGROUP1", { width: 104, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', allowMerging: true }),
         column.create("설비중분류", "EQMGROUP2", { width: 105, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM114', allowMerging: true }),
         column.create("설비소분류", "EQMGROUP3", { width: 106, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM115', allowMerging: true }),
+        // 2026-10-08 [생산설비정보] 설비코드 앞 설비그룹코드 표시 및 설비그룹코드명 히든 선언
+        column.create("설비그룹코드", "EQMGUBUN", { width: 100, align: 'center' }),
+        column.create("설비그룹코드명", "EQMGRPNM", { hidden: true }),
         column.create("설비코드", "FANO", { width: 100, align: 'center' }),
         column.create("설비명", "EQMNM", { width: 101 }),
         column.create("설비상세명", "EQMNM_DETAIL", { width: 102 }),        
