@@ -9,6 +9,7 @@
 -- 			2026-10-01 					한성수	REVCD 기준 승인본/실적 처리, 설비그룹 없는 설비 지원 및 해당 월 점검자 반환
 -- 			2026-10-02 					한성수	수정 조회 적용 리비전 반환, 중복·미계획 등록 차단, 항목·점검값 검증 및 성능 개선
 -- 			2026-10-06 					한성수	승인 REV 조회 통합, 계획조회 REV 표시 및 DETAIL 설비코드 중복 제거
+-- 			2026-10-08 					한성수	미사용 일괄처리 입력값·점검주기 전달 제거
 -- *****************************************************************************
   IN $SYEAR           VARCHAR(50),
   IN $YYYYMM          VARCHAR(50),
@@ -20,7 +21,6 @@
   IN $CHKLOC_LIST     MEDIUMTEXT,
   IN $CHKMTH_LIST     MEDIUMTEXT,
   IN $CHKVALTP_LIST   MEDIUMTEXT,
-  IN $CHKCYCLE_LIST   MEDIUMTEXT,
   IN $CHKVALUE_LIST   MEDIUMTEXT,
     
   IN $BASEDATE        VARCHAR(50),
@@ -29,24 +29,15 @@
   IN $SOLUTION        VARCHAR(1000),
   IN $REVCD           VARCHAR(20),
 
-  
-  IN $CHKRSTKEY_LIST  MEDIUMTEXT,
-  IN $EMPCD_LIST      MEDIUMTEXT,
-  IN $PROBLEM_LIST    MEDIUMTEXT,
-  IN $SOLUTION_LIST   MEDIUMTEXT,
-
-
 -- *****************************************************************************
 IN  $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
--- SET @DEBUGLOGYN = 'Y'; 
 -- *****************************************************************************
   DECLARE _$CHKKNDCD     VARCHAR(100);
   DECLARE _$CHKKNDNM     VARCHAR(100);
   DECLARE _$CHKLOC       VARCHAR(100);
   DECLARE _$CHKMTH       VARCHAR(100);
   DECLARE _$CHKVALTP     VARCHAR(100);
-  DECLARE _$CHKCYCLE     VARCHAR(100);
   DECLARE _$CHKVALUE     VARCHAR(100);
   DECLARE _$CHKRSTKEY    VARCHAR(100);
 
@@ -267,7 +258,6 @@ WHEN 'LIST_CHKPLANEQM_EQM02' THEN -- 정기점검계획 조회 (설비 승인 �
     MSTEQMREV_DETAIL.CHKLOC,
     MSTEQMREV_DETAIL.CHKMTH,
     MSTEQMREV_DETAIL.CHKVALTP,
-    MSTEQMREV_DETAIL.CHKCYCLE,
     '' AS CHKVALUE,
     _$REVCD AS REVCD,
     _$REVNUM AS REVNUM,
@@ -397,7 +387,6 @@ WHEN 'ADD_CHKRSTEQM' THEN -- 정기점검 등록
     CALL COMSPLIT($CHKLOC_LIST, _$CHKLOC);
     CALL COMSPLIT($CHKMTH_LIST, _$CHKMTH);
     CALL COMSPLIT($CHKVALTP_LIST, _$CHKVALTP);
-    CALL COMSPLIT($CHKCYCLE_LIST, _$CHKCYCLE);  
     CALL COMSPLIT($CHKVALUE_LIST, _$CHKVALUE);
    
     SET _$SORTNO = (SELECT SORTNO FROM MSTEQMREV_DETAIL WHERE REVCD = $REVCD AND CHKKNDCD = _$CHKKNDCD LIMIT 1); 
