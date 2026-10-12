@@ -660,12 +660,12 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     END IF;
 
     IF _$APRVSTT = 'R' THEN
-      CALL COMERR('반려된 계획입니다. 보완 후 [개정내용 저장·재요청]을 눌러주세요.');
+      CALL COMERR('반려된 계획입니다. 보완 후 [개정내용 저장]을 눌러주세요.');
       LEAVE PROC;
     END IF;
 
     IF COALESCE(_$REQTIME, '') = '' THEN
-      CALL COMERR('점검계획이 변경되었습니다. [개정내용 저장·재요청] 후 처리해주세요.');
+      CALL COMERR('점검계획이 변경되었습니다. [개정내용 저장] 후 처리해주세요.');
       LEAVE PROC;
     END IF;
 

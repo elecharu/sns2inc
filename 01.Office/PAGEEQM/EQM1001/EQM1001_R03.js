@@ -1118,10 +1118,6 @@ function SetPlanEditButton(planTp, isEdit, revNm) {
     } else {
         ItsButton.Hide(planTp == 'G' ? 'btn_GRP_REV_SAVE' : 'btn_EQM_REV_SAVE');
     }
-
-    // var title = isApproved ? '■ 정기점검 (' + rev.REVNM + ' 승인본 · 변경 시 새 REV)' :
-    //     isEdit ? '■ 정기점검' : '■ 정기점검 (' + revNm + ' 승인본 · 조회 전용)';
-    // ItsLabel.SetText(planTp == 'G' ? 'lbl_GRP_ITEM' : 'lbl_EQM_ITEM', title);
 }
 
 // 2026-09-30 [설비그룹·설비별 점검계획 탭] 우측 상단 진행 중 REV 개정내용 저장
@@ -1252,7 +1248,7 @@ function SavePlanStatus(planTp) {
 
 // 2026-10-06 개정 이력: 선택 REV 승인 저장 후 대상 목록 갱신
 function SavePlanRevStatus(rev) {
-    ItsMsg.Confirm(rev.planCd + ' ' + rev.revNm + '을 승인하시겠습니까?', function () {
+    ItsMsg.Confirm('[' + rev.planCd + '] ' + rev.revNm + '을 승인하시겠습니까?', function () {
         var maria = new ItsMaria('EQM1001_R03', 'SAVE_PLAN_STATUS');
         maria.AddParam('PLANTP', rev.planTp);
         maria.AddParam('PLANCD', rev.planCd);
