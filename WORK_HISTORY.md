@@ -17,6 +17,22 @@
 
 ## 🕒 2026-10-12 (월) 작업 내역
 
+### 2. EQM1001_R03 및 R04 프로시저 들여쓰기·가독성 표준화 및 규칙 등록
+- **수정/대상 파일**: [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql), [procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md)
+- **배경 및 원인**: SQL 프로시저 가독성 및 유지보수성을 극대화하기 위해 R04의 표준 들여쓰기/열 정렬(SELECT 컬럼 7칸 정렬, 2스페이스 계층 구조)을 규칙으로 공식 등록하고 R03과 R04 전체 쿼리에 일괄 적용
+- **작업 상세 내용**:
+  - 1. procedure.md 및 sql_structure.md에 2스페이스 계층 들여쓰기, SELECT 연속 컬럼 열 정렬(7공백 오프셋), 주요 절(FROM, JOIN, WHERE) 정렬 표준 지침 및 R04 템플릿 명시 2. MES_SNS2_EQM1001_R04.sql 전체 분기 들여쓰기/열 정렬 적용 및 1일 1행 수정이력 반영 3. MES_SNS2_EQM1001_R03.sql 전체 1,032행(17개 분기, 반복 루프, 조건문, SELECT 열)에 동일 표준 일괄 적용 및 1일 1행 수정이력 반영
+- **검증 결과**: BOM(UTF-8 with BOM) 보존, CRLF 줄바꿈 통일(단독 LF 0건, \r\r\n 0건), 문법 무결성 검증 완료
+
+
+### 2. EQM1001_R04 전체 SQL 들여쓰기 및 프로시저 가독성 규칙 표준화
+- **수정/대상 파일**: [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql), [procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [sql_structure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/sql_structure.md)
+- **배경 및 원인**: EQM1001_R04 프로시저의 L174-L201(LIST_PLAN_EQM02 분기) 스타일을 기준으로 파일 전체의 들여쓰기, SELECT 컬럼 열 정렬, 제어문 계층 구조를 전면 통일하고, 규칙 문서(.agents/rules)에 영구 표준으로 반영
+- **작업 상세 내용**:
+  - 1) EQM1001_R04 전체 분기(공통 검증, LIST_CYCLE_EQMCD, LIST_PLAN_EQM02, ADD_CHKRSTEQM, SEARCH_CHKRSTEQM, SAVE_CHKRSTEQM, DELETE_CHKRSTEQM) 들여쓰기 및 SELECT 컬럼 열 정렬 표준화 2) .agents/rules/procedure.md 3절에 SELECT 컬럼 정렬, SQL 절 키워드 정렬, 제어문 계층적 들여쓰기 및 EQM1001_R04 모범 예시 명시 3) sql_structure.md에 procedure.md 서식 표준 참조 연결 4) UTF-8 with BOM 및 CRLF 인코딩 무결성 검증
+- **검증 결과**: BOM(0xEF 0xBB 0xBF) 및 CRLF 개행 무결성 확인 완료, 프로시저 구문 및 규칙 문서 정상 반영 확인
+
+
 ### 2. EQM1001_R04 미사용 반환 컬럼 제거
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R04.sql
 - **배경 및 원인**: 사용자가 불필요·미사용 부분 삭제 요청, 개선 작업은 보류
@@ -1035,6 +1051,8 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql), [procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md) | EQM1001_R03·R04 SQL 들여쓰기 및 가독성 표준화 적용 완료 | BOM(UTF-8 with BOM) 보존, CRLF 줄바꿈 통일(단독 LF 0건, \r\r\n 0건), 문법 무결성 검증 완료 |
+| **완료** | [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql), [procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [sql_structure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/sql_structure.md) | EQM1001_R04 들여쓰기 서식 적용 및 procedure.md 가독성 규칙 표준화 완료 | BOM(0xEF 0xBB 0xBF) 및 CRLF 개행 무결성 확인 완료, 프로시저 구문 및 규칙 문서 정상 반영 확인 |
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R04.sql | 미사용 반환 컬럼 제거 완료, 개선 사항은 보류 유지. 실제 DB 프로시저 반영은 사용자가 전체 소스 저장으로 진행 | 격리 MariaDB 10.2.44 네트워크 none에서 원본·변경본 컴파일 및 사용 컬럼 비교, 월별 조회·등록·수정·삭제·중복 오류 롤백 검증. 실제 R04 JS를 새 반환 데이터에 연결해 등록 팝업의 설비·점검자·두 REV 키 및 수정·삭제 요청의 실적키 모의 검증. 총 14건 통과, 쓰기 SQL·검증 블록·15개 입력 정의 일치, BOM/CRLF·원본 대조·최종 바이트 확인. 실제 DB 조회/DDL/DML·배포·UI/C# 수정 없음 |
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R04.sql | R04 SQL 소스 재작성 완료, 사용자가 프로시저 소스 편집기에서 전체 저장하여 적용 필요; 호출 파라미터는 변경 없어 재등록 불필요 | 네트워크 none 격리 MariaDB 10.2.44에 실제 최신 컬럼/PK 구성 후 원본·변경본 비교 38건 통과. 월별 현황, 최신 승인본, 빈 최신 승인본, 그룹 없는 설비, 동 코드 G/E 실적, 조회 후 새 승인, 등록/수정/삭제, 오류/중복/누락 롤백, 의도한 호환 제거, 제외한 보완 로직 미추가 확인. EXPLAIN에서 YEAR_PLAN PK eq_ref 직접 조회 확인, 속도 개선율 미측정. BOM/CRLF·당일 이력 1행·원본 대조·반영 바이트 일치 확인. 실제 DB는 SELECT만 실행, 실제 서버 DDL/DML·프로시저 배포 및 UI/C# 수정 없음 |
 | **완료** | docs/EQM1001_테이블연결도_20261012.html, .svg, .png, _역할표.html, _역할표.png | 현재 소스 기준 연결도·역할 표 작성 완료, 실제 DB 반영 상태는 별도 확인 필요 | 격리 임시 프로필 headless Edge에서 렌더링 및 이미지 육안 확인. SVG 1개·표 11행·헤더 5개·가로 넘침 없음·브라우저 페이지 오류 0건·중국어 문자 없음·UTF-8 BOM/CRLF 확인. SQL·화면 업무 소스 및 실제 DB·서버 배포 변경 없음 |

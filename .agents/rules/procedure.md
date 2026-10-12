@@ -113,11 +113,51 @@ trigger: always_on
   -- 			2026-09-16 					한성수	1일 1행으로 간결하게 통합된 작업내용
   ```
 
-### 3. 코드 들여쓰기 및 열 정렬 표준화
+### 3. 코드 들여쓰기 및 열 정렬 표준화 (가독성 최적화 지침)
 - **파라미터 및 변수 정렬**:
   - 입력 파라미터(`IN`) 및 변수 선언(`DECLARE`) 시 변수명, 데이터 타입, 주석이 일직선으로 정렬되도록 일관된 탭/공백 정렬을 적용합니다.
-- **제어문 및 SQL 블록 들여쓰기**:
-  - `CASE $CALLTYPE`의 각 `WHEN ... THEN` 분기, 제어문(`IF ... THEN ... END IF`, `WHILE ... DO ... END WHILE`), DML 문장(`SELECT`, `INSERT`, `UPDATE`, `DELETE`) 내부 블록은 2스페이스(또는 일관된 들여쓰기)를 적용하여 계층 구조를 명확히 정돈합니다.
+- **제어문 및 SQL 블록 들여쓰기 (2스페이스 계층 구조)**:
+  - `PROC: BEGIN` 아래의 공통 검증 및 본문 블록은 기본 2스페이스 들여쓰기를 적용합니다.
+  - `CASE $CALLTYPE`의 각 `WHEN ... THEN` 분기 내부 코드, 제어문(`IF ... THEN ... END IF`, `WHILE ... DO ... END WHILE`) 내부는 2스페이스 단위로 계층적 들여쓰기를 적용합니다 (`IF` 내부 4스페이스, 중첩 `IF` 6스페이스).
+  - 논리적인 실행 단위(입력값 검증, 분기 조건, 메인 DML 실행 등) 사이에는 빈 줄을 적절히 배치하여 시각적 피로도를 낮춥니다.
+- **SELECT 절 컬럼 열 정렬 (가독성 표준 패턴)**:
+  - 복수 컬럼 나열 시 첫 번째 컬럼은 `SELECT ` 키워드 바로 뒤에 작성하고, 두 번째 행부터의 컬럼들은 `SELECT ` 키워드 길이(공백 7칸)에 일직선으로 맞추어 정렬합니다 (`       컬럼명`).
+  - 연관된 식별키, 명칭, 결과값 등의 컬럼 그룹 단위로 행을 구분하여 가독성을 극대화합니다.
+- **SQL 주요 절(Clause) 키워드 정렬**:
+  - `SELECT`, `FROM`, `INNER JOIN`, `LEFT JOIN`, `WHERE`, `GROUP BY`, `ORDER BY` 등의 주요 키워드는 동일한 들여쓰기 기준선에 배치합니다.
+  - 조인 다중 조건(`AND ...`) 및 `WHERE` 절의 후속 조건은 기준선에 맞춰 정렬하거나 2칸 들여쓰기하여 조건 범위를 명확히 합니다.
+  - `UNION ALL` 구문은 위아래 빈 줄을 두고 주요 키워드와 동일한 들여쓰기로 배치합니다.
+- **표준 서식 모범 예시 (`EQM1001_R04` 기준)**:
+  ```sql
+  WHEN 'LIST_PLAN_EQM02' THEN -- 그룹·설비 최신 승인 항목 조회
+    SET _$PLANEMP = TRIM(COALESCE(_$PLANEMP, ''));
+
+    IF _$PLANEMP <> '' THEN
+      SET _$PLANEMPCD = (SELECT EMPCD FROM MSTEMP WHERE EMPCD = _$PLANEMP LIMIT 1);
+    END IF;
+
+    -- 두 계획은 합쳐 저장하지 않고 점검할 때만 함께 표시
+    SELECT 'G' AS PLANTP,
+           CONCAT('REV.', PLAN_REV.REVNUM) AS REVNM,
+           COALESCE(_$EQMREVCD, '') AS EQMREVCD, COALESCE(_$GRPREVCD, '') AS GRPREVCD,
+           PLAN_ITEM.CHKKNDCD, PLAN_ITEM.CHKKNDNM, PLAN_ITEM.CHKLOC, PLAN_ITEM.CHKMTH, PLAN_ITEM.CHKVALTP, PLAN_ITEM.SORTNO, '' AS CHKVALUE,
+           COALESCE(_$PLANEMPCD, '') AS PLANEMPCD, _$PLANEMP AS PLANEMPNM
+    FROM MSTEQMREV_DETAIL PLAN_ITEM
+    INNER JOIN MSTEQMREV_HEADER PLAN_REV ON PLAN_REV.REVCD = PLAN_ITEM.REVCD
+    WHERE PLAN_ITEM.REVCD = _$GRPREVCD
+
+    UNION ALL
+
+    SELECT 'E' AS PLANTP,
+           CONCAT('REV.', PLAN_REV.REVNUM) AS REVNM,
+           COALESCE(_$EQMREVCD, '') AS EQMREVCD, COALESCE(_$GRPREVCD, '') AS GRPREVCD,
+           PLAN_ITEM.CHKKNDCD, PLAN_ITEM.CHKKNDNM, PLAN_ITEM.CHKLOC, PLAN_ITEM.CHKMTH, PLAN_ITEM.CHKVALTP, PLAN_ITEM.SORTNO, '' AS CHKVALUE,
+           COALESCE(_$PLANEMPCD, '') AS PLANEMPCD, _$PLANEMP AS PLANEMPNM
+    FROM MSTEQMREV_DETAIL PLAN_ITEM
+    INNER JOIN MSTEQMREV_HEADER PLAN_REV ON PLAN_REV.REVCD = PLAN_ITEM.REVCD
+    WHERE PLAN_ITEM.REVCD = _$EQMREVCD
+    ORDER BY PLANTP DESC, SORTNO, CHKKNDCD;
+  ```
 
 ### 4. 표준 구분선(`-- *****************************************************************************`) 필수 선언
 - 프로시저 파일에서 주요 블록 구분이 필요할 때는 반드시 프로젝트 표준 구분선인 `-- *****************************************************************************`를 선언하여 블록 간 가독성을 유지합니다.
