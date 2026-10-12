@@ -6,6 +6,7 @@
 -- 			2026-09-16 					한성수	공통코드(CHKLOC, CHKMTH, CHKVALTP, CHKCYCLE) 연동 및 마이그레이션
 -- 			2026-09-23 					한성수	사용 중인 정기점검 계획의 점검항목만 조회
 -- 			2026-09-23 					한성수	정기점검 항목 전체 조회 및 CRUD 유형 고정
+-- 			2026-10-08 					한성수	점검항목 참조 검증을 REV DETAIL로 전환
 -- *****************************************************************************
   IN $CHKTP     VARCHAR(20),
   IN $CHKKNDCD  VARCHAR(100),
@@ -126,7 +127,7 @@ WHEN 'SAVE_MSTCHKKND' THEN
     CALL COMSPLIT($USEYN_LIST, _$USEYN);
     CALL COMSPLIT($REMARK_LIST, _$REMARK);
     
-    IF EXISTS (SELECT 1 FROM CHKPLANEQM WHERE CHKKNDCD = _$CHKKNDCD) THEN
+    IF EXISTS (SELECT 1 FROM MSTEQMREV_DETAIL WHERE CHKKNDCD = _$CHKKNDCD) THEN
       CALL COMERR('설비점검계획에 등록된 항목은 수정이 불가능 합니다.');
       LEAVE PROC;
     END IF;
@@ -152,7 +153,7 @@ WHEN 'DELETE_MSTCHKKND' THEN
     
     CALL COMSPLIT($CHKKNDCD_LIST, _$CHKKNDCD);
     
-    IF EXISTS (SELECT 1 FROM CHKPLANEQM WHERE CHKKNDCD = _$CHKKNDCD) THEN
+    IF EXISTS (SELECT 1 FROM MSTEQMREV_DETAIL WHERE CHKKNDCD = _$CHKKNDCD) THEN
       CALL COMERR('설비점검계획에 등록된 항목은 삭제 할 수 없습니다.');
       LEAVE PROC;
     END IF; 

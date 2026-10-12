@@ -31,7 +31,7 @@
             <Its:date runat="server" Label="점검일자" ID="pop1_date_BASEDATE" Field="BASEDATE"  InputWidth="120" />
             <Its:find runat="server" Label="점검자" ID="pop1_find_EMPCD" Field="EMPCD" GPCD="EMPCD"   InputWidth="110" />
             <Its:text runat="server" Label="REV키" ID="pop1_txt_REVCD" Field="REVCD" Hidden="true"/>
-            <Its:label runat="server" Text="" ID="pop1_lbl_REV_INFO" ForeColor="Danger" MarginLeft="10"/>
+            <Its:text runat="server" Label="그룹계획키" ID="pop1_txt_GRPREVCD" Field="GRPREVCD" Hidden="true"/>
             <Its:newline runat="server" />
             <Its:textarea runat="server" Label="문제점" ID="pop1_txtarea_PROBLEM" Field="PROBLEM" InputWidth="345" />
             <Its:textarea runat="server" Label="조치사항" ID="pop1_txtarea_SOLUTION" Field="SOLUTION" InputWidth="345" />

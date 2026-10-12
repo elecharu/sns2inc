@@ -1,6 +1,7 @@
 ﻿/// <reference path="../../Script/reference.js" />
 
 // 페이지 로드
+// 2026-10-08 설비그룹·설비별 점검계획 탭: 사용여부 없이 항목 추가·삭제로 관리
 ItsPage.Load = function () {
     // 2026-09-23 설비그룹 점검계획 탭: 좌측 설비그룹 목록 초기화 (설비그룹코드 1행 단위로 그룹 승인상태·반려사유 표시)
     ItsGrid.Create('grid_GRP1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
@@ -36,7 +37,6 @@ ItsPage.Load = function () {
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
-        column.create('사용여부', 'USEYN', { width: 70, columnType: enumColumnTypes.check, readOnly: false }),
         column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
         column.split()
     ]);
@@ -46,7 +46,6 @@ ItsPage.Load = function () {
         column.create('설비그룹코드', 'EQMGRP', { width: 120, align: 'center' }),
         column.create('설비그룹', 'EQMGRPNM', { width: 120, align: 'center' }),
         column.create('정기점검 건수', 'EQM02CNT', { width: 80, align: 'right', columnType: enumColumnTypes.number, decimalPrecision: 0 }),
-        column.create('대표설비코드', 'FANO', { hidden: true }),
         column.split()
     ]);
 
@@ -58,7 +57,6 @@ ItsPage.Load = function () {
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
-        column.create('사용여부', 'USEYN', { width: 70, columnType: enumColumnTypes.check, readOnly: true }),
         column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.split()
     ]);
@@ -98,7 +96,6 @@ ItsPage.Load = function () {
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
-        column.create('사용여부', 'USEYN', { width: 70, columnType: enumColumnTypes.check, readOnly: false }),
         column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
         column.split()
     ]);
@@ -303,13 +300,13 @@ ItsGrid.Event('grid_GRP_COPY1').onSelect = function () {
         return;
     }
 
-    ItsGrid.SetStore('grid_GRP_COPY2', maria.store.YnToBool('USEYN'));
+    ItsGrid.SetStore('grid_GRP_COPY2', maria.store);
 };
 
 // 설비그룹 점검계획 탭: 정기점검 일괄 복사
 ItsButton.Event('btn_COPY_GRP_EQM02').onClick = function () {
     var sourceGroupRowIndex = ItsGrid.GetCurrentIndex('grid_GRP_COPY1');
-    var sourceEquipmentCode = ItsGrid.GetValue('grid_GRP_COPY1', sourceGroupRowIndex, 'FANO');
+    var sourceGroupCode = ItsGrid.GetValue('grid_GRP_COPY1', sourceGroupRowIndex, 'EQMGRP');
     var targetGroupRowIndex = ItsGrid.GetCurrentIndex('grid_GRP1');
     var targetEqmGubun = ItsGrid.GetValue('grid_GRP1', targetGroupRowIndex, 'EQMGUBUN');
 
@@ -317,8 +314,9 @@ ItsButton.Event('btn_COPY_GRP_EQM02').onClick = function () {
     // 2026-10-08 [설비그룹 복사 팝업] 정기점검 일괄 복사 확인 메시지 간소화
     ItsMsg.Confirm('선택한 설비그룹의 점검항목을 일괄 복사하시겠습니까?', function () {
         var maria = new ItsMaria('EQM1001_R03', 'COPY_GRP_EQM02');
+        SetPlanRevParam(maria, 'G');
         maria.AddParam('EQMGRP', targetEqmGubun);
-        maria.AddParam('FANO_COPY', sourceEquipmentCode);
+        maria.AddParam('FANO_COPY', sourceGroupCode);
         maria.CallProc();
         if (maria.isError) {
             maria.ShowErrMsg();
@@ -380,6 +378,7 @@ ItsButton.Event('bdiv_GRP_btn_SAVE').onClick = function () {
 
     ItsMsg.Confirm(confirmationMessage, function () {
         var maria = new ItsMaria('EQM1001_R03', 'SAVE_GRP_EQM02');
+        SetPlanRevParam(maria, 'G');
         maria.AddParam('EQMGRP', selectedEqmGubun);
 
         for (var i = 0; i < ItsGrid.Length('grid_GRP2'); i++) {
@@ -387,10 +386,6 @@ ItsButton.Event('bdiv_GRP_btn_SAVE').onClick = function () {
                 maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid_GRP2', i, 'CHKKNDCD'));
                 maria.AddList('SORTNO_LIST', ItsGrid.GetValue('grid_GRP2', i, 'SORTNO'));
                 maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid_GRP2', i, 'REMARK'));
-                if (ItsGrid.GetValue('grid_GRP2', i, 'USEYN', false) == 'Y')
-                    maria.AddList('USEYN_LIST', 'Y');
-                else
-                    maria.AddList('USEYN_LIST', 'N');
             }
         }
 
@@ -422,6 +417,7 @@ ItsButton.Event('bdiv_GRP_btn_DEL').onClick = function () {
 
     ItsMsg.Confirm(confirmationMessage, function () {
         var maria = new ItsMaria('EQM1001_R03', 'DEL_GRP_EQM02');
+        SetPlanRevParam(maria, 'G');
         maria.AddParam('EQMGRP', selectedEqmGubun);
 
         for (var i = 0; i < ItsGrid.Length('grid_GRP2'); i++) {
@@ -490,6 +486,7 @@ ItsButton.Event('bdiv3_btn_SAVE').onClick = function () {
 
     ItsMsg.Confirm('선택하신 항목을 저장하시겠습니까?', function () {
         var maria = new ItsMaria('EQM1001_R03', 'SAVE_EQM02');
+        SetPlanRevParam(maria, 'E');
         maria.AddParam('FANO', selectedEquipmentCode);
 
         for (var i = 0; i < ItsGrid.Length('grid3'); i++) {
@@ -497,10 +494,6 @@ ItsButton.Event('bdiv3_btn_SAVE').onClick = function () {
                 maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid3', i, 'CHKKNDCD'));
                 maria.AddList('SORTNO_LIST', ItsGrid.GetValue('grid3', i, 'SORTNO'));
                 maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid3', i, 'REMARK'));
-                if (ItsGrid.GetValue('grid3', i, 'USEYN', false) == 'Y')
-                    maria.AddList('USEYN_LIST', 'Y');
-                else
-                    maria.AddList('USEYN_LIST', 'N');
             }
         }
 
@@ -528,6 +521,7 @@ ItsButton.Event('bdiv3_btn_DEL').onClick = function () {
 
     ItsMsg.Confirm('선택한 항목을 삭제하시겠습니까?', function () {
         var maria = new ItsMaria('EQM1001_R03', 'DEL_EQM02');
+        SetPlanRevParam(maria, 'E');
         maria.AddParam('FANO', selectedEquipmentCode);
 
         for (var i = 0; i < ItsGrid.Length('grid3'); i++) {
@@ -599,6 +593,7 @@ ItsButton.Event('btn_COPY_EQM02').onClick = function () {
     // 2026-10-02 [설비별 복사 팝업] 복사 원본·대상 설비 지정 확인은 프로시저(COPY_EQM02)에서 처리
     ItsMsg.Confirm('선택한 항목을 복사하시겠습니까?', function () {
         var maria = new ItsMaria('EQM1001_R03', 'COPY_EQM02');
+        SetPlanRevParam(maria, 'E');
         maria.AddParam('FANO', targetEquipmentCode);
         maria.AddParam('FANO_COPY', sourceEquipmentCode);
         maria.CallProc();
@@ -926,10 +921,12 @@ ItsButton.Event('btn_ADD_EQM02').onClick = function () {
         // 2026-10-02 [정기점검 추가 팝업] 설비그룹 지정 확인은 프로시저(REG_GRP_EQM02)에서 처리
 
         maria = new ItsMaria('EQM1001_R03', 'REG_GRP_EQM02');
+        SetPlanRevParam(maria, 'G');
         maria.AddParam('EQMGRP', selectedEqmGubun);
     } else {
         selectedEquipmentCode = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'FANO');
         maria = new ItsMaria('EQM1001_R03', 'REG_EQM02');
+        SetPlanRevParam(maria, 'E');
         maria.AddParam('FANO', selectedEquipmentCode);
     }
 
@@ -1103,7 +1100,7 @@ function SearchPlanRevItem(planTp, planCd, rowIndex) {
         return;
     }
 
-    ItsGrid.SetStore(itemGridId, maria.store.YnToBool('USEYN'));
+    ItsGrid.SetStore(itemGridId, maria.store);
     SetPlanEditButton(planTp, isEdit, isEdit ? '' : ItsGrid.GetValue(revGridId, rowIndex, 'REVNM'));
 }
 
@@ -1130,9 +1127,9 @@ function SetPlanEditButton(planTp, isEdit, revNm) {
         ItsButton.Hide(planTp == 'G' ? 'btn_GRP_REV_SAVE' : 'btn_EQM_REV_SAVE');
     }
 
-    var title = isApproved ? '■ 정기점검 (' + rev.REVNM + ' 승인본 · 변경 시 새 REV)' :
-        isEdit ? '■ 정기점검' : '■ 정기점검 (' + revNm + ' 승인본 · 조회 전용)';
-    ItsLabel.SetText(planTp == 'G' ? 'lbl_GRP_ITEM' : 'lbl_EQM_ITEM', title);
+    // var title = isApproved ? '■ 정기점검 (' + rev.REVNM + ' 승인본 · 변경 시 새 REV)' :
+    //     isEdit ? '■ 정기점검' : '■ 정기점검 (' + revNm + ' 승인본 · 조회 전용)';
+    // ItsLabel.SetText(planTp == 'G' ? 'lbl_GRP_ITEM' : 'lbl_EQM_ITEM', title);
 }
 
 // 2026-09-30 [설비그룹·설비별 점검계획 탭] 우측 상단 진행 중 REV 개정내용 저장
@@ -1314,3 +1311,9 @@ ItsButton.Event('btn_GRP_PLAN_RPT').onClick = function () { PrintPlanRev('G'); }
 // 2026-10-06 설비별 점검계획 탭: 승인·계획서 출력 버튼
 ItsButton.Event('btn_EQM_APPROVE').onClick = function () { SavePlanStatus('E'); };
 ItsButton.Event('btn_EQM_PLAN_RPT').onClick = function () { PrintPlanRev('E'); };
+
+// 2026-10-08 정기점검 변경 대상의 최신 REV 전달
+function SetPlanRevParam(maria, planTp) {
+    var rev = GetLatestPlanRev(planTp);
+    maria.AddParam('REVNUM', rev ? rev.REVNUM : '');
+}

@@ -258,7 +258,7 @@ public class ItsLocalInfo
             if (_TMLCUSTCD == "")
             {
                 StringBuilder query = new StringBuilder();
-                query.Append("SELECT CUSTCD FROM SYSUSER WHERE USERID = '" + _TMLUID + "';");
+                query.Append("SELECT CUSTCD FROM SYSUSER WHERE USERID = '" + ItsMemberShip.USERID + "';");
                 _TMLCUSTCD = ItsData.GetScalar(ItsMaria.Query(query.ToString()));
             }
 

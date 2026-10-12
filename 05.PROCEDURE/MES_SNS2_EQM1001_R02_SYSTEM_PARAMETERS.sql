@@ -1,0 +1,19 @@
+﻿-- *****************************************************************************
+-- Comment: EQM1001_R02 프로시저 호출 파라미터 재등록
+-- Create:  2026-10-08  한성수
+-- *****************************************************************************
+-- MES_SNS2_EQM1001_R02.sql 프로시저를 먼저 저장한 후 이 파일 전체 실행
+START TRANSACTION;
+DELETE FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2' AND SPECIFIC_NAME = 'EQM1001_R02';
+
+INSERT INTO MES_SNS2.SYSTEM_PARAMETERS
+SELECT * FROM information_schema.PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2' AND SPECIFIC_NAME = 'EQM1001_R02';
+COMMIT;
+
+-- 정상 건수: 21
+SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
+FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2' AND SPECIFIC_NAME = 'EQM1001_R02'
+ORDER BY ORDINAL_POSITION;

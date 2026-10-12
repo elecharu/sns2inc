@@ -1,5 +1,5 @@
 ﻿-- *****************************************************************************
--- Comment: EQM1001_R04 미사용 입력값 제거 후 파라미터 재등록
+-- Comment: EQM1001_R04 독립 승인본 적용 후 파라미터 재등록
 -- Create:  2026-10-08  한성수
 -- *****************************************************************************
 -- MES_SNS2_EQM1001_R04.sql을 먼저 반영한 후 실행합니다.
@@ -14,7 +14,7 @@ WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
   AND SPECIFIC_NAME = 'EQM1001_R04';
 COMMIT;
 
--- 17건: 15번 REVCD, 16번 CALLTYPE, 17번 KEYWORD
+-- 15건: 11번 GRPREVCD, 12번 PLANTP_LIST, 13번 REVCD, 14번 CALLTYPE, 15번 KEYWORD
 SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
 FROM MES_SNS2.SYSTEM_PARAMETERS
 WHERE SPECIFIC_SCHEMA = 'MES_SNS2'

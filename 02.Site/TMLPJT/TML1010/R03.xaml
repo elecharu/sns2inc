@@ -11,7 +11,7 @@
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
             <its:WrapContent x:Name="PANEL_S1" Width="900" Height="60">
-                <its:Pop GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ShowKeyPad="True" x:Name="pop_CUSTCD"/>
+                <its:Combo GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ReadOnly="True" x:Name="cb_CUSTCD"/>
                 <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True"/>
                 <UserControl Width="20"/>
                 <its:Button Label="소 재 재 고 조 회" Width="120" Height="30" CommandName="LIST_LOT" FontWeight="Bold"/>

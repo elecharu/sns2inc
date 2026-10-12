@@ -1,6 +1,7 @@
 ﻿/// <reference path="../../Script/reference.js" />
 
 // 2026-09-16 화면 초기 로드 시 메인 그리드(grid1) 및 팝업 점검 그리드(grid2, grid3) 생성 및 조회년도 기본값 설정
+// 2026-10-08 팝업에는 적용 REV 번호만 표시하고 월별 상태는 점검필요·점검완료로 표시
 ItsPage.Load = function () {
 
     ItsGrid.Create('grid1', { isCheckBoxGrid: false }, [
@@ -25,7 +26,7 @@ ItsPage.Load = function () {
     ]);
 
     // 2026-09-16 메인 그리드(grid1) 1~12월 점검상태(점검필요/점검완료) 텍스트 색상 지정 및 클릭 이벤트 바인딩
-    // 2026-10-06 [메인 그리드] REV 버전 포함 점검상태(점검필요·점검완료) 텍스트 색상 분기 처리
+    // 2026-10-06 [메인 그리드] 점검상태(점검필요·점검완료) 텍스트 색상 분기 처리
     ItsGrid.Get('grid1').formatItem.addHandler(function (s, e) {
         if ((s.columns[e.col].binding == 'M01' || s.columns[e.col].binding == 'M02' || s.columns[e.col].binding == 'M03' || s.columns[e.col].binding == 'M04' || s.columns[e.col].binding == 'M05'
             || s.columns[e.col].binding == 'M06' || s.columns[e.col].binding == 'M07' || s.columns[e.col].binding == 'M08' || s.columns[e.col].binding == 'M09' || s.columns[e.col].binding == 'M10'
@@ -46,8 +47,9 @@ ItsPage.Load = function () {
     });
 
     ItsGrid.Create('grid2', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        // 2026-10-02 [정기점검 등록 팝업] 이번 점검에 적용할 REV를 항목 그리드 칸으로 표시
-        column.create('적용 REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
+        // 2026-10-02 [정기점검 등록 팝업] 이번 점검 항목의 적용 REV 번호 표시
+        column.create('적용 REV', 'REVNM', { width: 90, align: 'center', readOnly: true }),
+        column.create('계획구분키', 'PLANTP', { hidden: true }),
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 290, readOnly: true }),
         column.create('점검항목', 'CHKLOC', { width: 110, columnType: enumColumnTypes.combo, gpcd: "CHKLOC", readOnly: true }),
@@ -58,8 +60,9 @@ ItsPage.Load = function () {
     ]);
 
     ItsGrid.Create('grid3', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        // 2026-10-02 [정기점검 수정 팝업] 실적에 기록된 적용 REV를 항목 그리드 칸으로 표시 (REV 관리 이전 실적은 빈 값)
-        column.create('적용 REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
+        // 2026-10-02 [정기점검 수정 팝업] 실적에 기록된 적용 REV 번호 표시
+        column.create('적용 REV', 'REVNM', { width: 90, align: 'center', readOnly: true }),
+        column.create('계획구분키', 'PLANTP', { hidden: true }),
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 290, readOnly: true }),
         column.create('점검항목', 'CHKLOC', { width: 110, columnType: enumColumnTypes.combo, gpcd: "CHKLOC", readOnly: true }),
@@ -92,7 +95,7 @@ ItsButton.EventSearch = function () {
 };
 
 // 2026-09-16 메인 그리드(grid1) 특정 월 점검상태 클릭 시 점검등록(pop1) 또는 점검수정(pop2) 팝업 오픈
-// 2026-10-06 [메인 그리드] REV 버전 포함 점검상태(점검필요·점검완료) 더블클릭 팝업 분기 처리
+// 2026-10-06 [메인 그리드] 점검상태(점검필요·점검완료) 더블클릭 팝업 분기 처리
 ItsGrid.Event('grid1').onDoubleClick = function (rowindex, field) {
     var CellValue = ItsGrid.GetValue('grid1', rowindex, field) || '';
     var EQMCD = ItsGrid.GetValue('grid1', rowindex, 'EQMCD');
@@ -107,24 +110,25 @@ ItsGrid.Event('grid1').onDoubleClick = function (rowindex, field) {
     if (MONTH != '') {
         if (CellValue.indexOf('점검필요') >= 0) {
             // 2026-10-02 [메인 그리드] 점검항목 조회 오류(승인 계획 없음 등) 시 정기점검 등록 팝업을 열지 않음
-            if (LIST_CHKPLANEQM_EQM02(EQMCD, YEAR + '-' + MONTH)) {
+            if (LIST_PLAN_EQM02(EQMCD, YEAR + '-' + MONTH)) {
                 ItsPop.Open('pop1');
             }
         }
         else if (CellValue.indexOf('점검완료') >= 0) {
-            SEARCH_CHKRSTEQM(EQMCD, YEAR + '-' + MONTH);
-            ItsPop.Open('pop2');
+            if (SEARCH_CHKRSTEQM(EQMCD, YEAR + '-' + MONTH)) {
+                ItsPop.Open('pop2');
+            }
         }
     }
 };
 
 // 2026-09-16 정기점검 등록 모달(pop1) 상단 패널 초기화 및 해당 설비의 점검항목 목록(grid2) 조회
-var LIST_CHKPLANEQM_EQM02 = function (EQMCD, YYYYMM) {
+var LIST_PLAN_EQM02 = function (EQMCD, YYYYMM) {
     ItsPage.InitData('pdiv1');
-    // 2026-09-30 [정기점검 등록 팝업] 이전에 연 팝업의 적용 REV·승인 대기 안내 초기화
+    // 2026-09-30 [정기점검 등록 팝업] 이전에 연 팝업의 적용 계획키 초기화
     ShowPlanRev([]);
 
-    var maria = new ItsMaria('EQM1001_R04', 'LIST_CHKPLANEQM_EQM02');
+    var maria = new ItsMaria('EQM1001_R04', 'LIST_PLAN_EQM02');
 
     maria.AddParam('EQMCD', EQMCD);
     // 2026-10-01 [정기점검 등록 팝업] 주기관리 점검자 조회용 계획 년월 전달
@@ -142,7 +146,7 @@ var LIST_CHKPLANEQM_EQM02 = function (EQMCD, YYYYMM) {
     ItsText.SetValue('txt_YYYYMM', YYYYMM);
 
     ItsGrid.SetStore('grid2', maria.store);
-    // 2026-09-30 [정기점검 등록 팝업] 적용 REV 보관 및 승인 대기 안내 표시
+    // 2026-09-30 [정기점검 등록 팝업] 적용 계획키 보관
     ShowPlanRev(maria.store.data);
     // 2026-10-01 [정기점검 등록 팝업] 주기관리에서 지정한 해당 월 점검자 기본 지정
     ShowPlanEmp(maria.store.data);
@@ -160,14 +164,12 @@ function ShowPlanEmp(rows) {
     }
 }
 
-// 2026-09-30 정기점검 등록 모달(pop1) 적용 REV 표시 및 저장용 REV 번호 보관, 새 REV가 승인 대기 중이면 안내 문구 표시
+// 2026-09-30 정기점검 등록 모달(pop1) 적용 계획키 내부 보관
+// 2026-10-08 그룹·설비 적용 계획키 보관 및 항목별 REV 표시
 function ShowPlanRev(rows) {
     var row = rows.length > 0 ? rows[0] : {};
-    var revNm = row.REVNM || '';
-
-    // 2026-10-01 [정기점검 등록 팝업] 저장 시 적용 리비전 키(REVCD) 전달
-    ItsText.SetValue('pop1_txt_REVCD', row.REVCD || '');
-    ItsLabel.SetText('pop1_lbl_REV_INFO', row.PENDREVNM ? row.PENDREVNM + ' 승인 대기 중 — 승인 전까지 ' + revNm + ' 항목으로 점검합니다.' : '');
+    ItsText.SetValue('pop1_txt_REVCD', row.EQMREVCD || '');
+    ItsText.SetValue('pop1_txt_GRPREVCD', row.GRPREVCD || '');
 }
 
 // 2026-09-16 정기점검 수정 모달(pop2) 상단 패널(pdiv3) 및 해당월 점검실적 항목(grid3) 조회
@@ -184,20 +186,21 @@ var SEARCH_CHKRSTEQM = function (EQMCD, YYYYMM) {
 
     if (maria.isError) {
         maria.ShowErrMsg();
-        return;
+        return false;
     }
 
     ItsPage.SetStore('pdiv3', maria.store.data[0]);
     ItsText.SetValue('pop2_txt_YYYYMM', YYYYMM);
-    // 2026-09-30 정기점검 수정 모달(pop2) 실적에 기록된 적용 REV 표시 (REV 관리 이전 실적은 빈 값)
-    // 2026-10-02 [정기점검 수정 팝업] 적용 REV는 상단 라벨 대신 항목 그리드(grid3) '적용 REV' 칸에 표시
+    // 2026-09-30 정기점검 수정 모달(pop2) 저장된 실적 항목 조회
+    // 2026-10-02 [정기점검 수정 팝업] 실적 항목을 그리드(grid3)에 표시
     ItsGrid.SetStore('grid3', maria.storeExtend1);
+    return true;
 };
 
 /* 정기점검 등록 팝업 (pop1) 이벤트 */
 
 // 2026-09-16 정기점검 등록 모달(pop1) 상단 입력값 및 그리드(grid2) 점검값 저장
-// 2026-10-08 [정기점검 등록 팝업] 미사용 점검주기 전달 제거
+// 2026-10-08 [정기점검 등록 팝업] 그룹·설비 계획키와 항목별 출처 전달
 ItsPop.Event('pop1').onAddBtnClick = function () {
     // 2026-10-02 [정기점검 등록 팝업] 점검 항목 유무·점검값 필수 확인은 프로시저(ADD_CHKRSTEQM)에서 처리
     var maria = new ItsMaria('EQM1001_R04', 'ADD_CHKRSTEQM');
@@ -206,10 +209,7 @@ ItsPop.Event('pop1').onAddBtnClick = function () {
 
     for (var i = 0; i < ItsGrid.Length('grid2'); i++) {
         maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid2', i, 'CHKKNDCD'));
-        maria.AddList('CHKKNDNM_LIST', ItsGrid.GetValue('grid2', i, 'CHKKNDNM'));
-        maria.AddList('CHKLOC_LIST', ItsGrid.GetValue('grid2', i, 'CHKLOC'));
-        maria.AddList('CHKMTH_LIST', ItsGrid.GetValue('grid2', i, 'CHKMTH'));
-        maria.AddList('CHKVALTP_LIST', ItsGrid.GetValue('grid2', i, 'CHKVALTP'));
+        maria.AddList('PLANTP_LIST', ItsGrid.GetValue('grid2', i, 'PLANTP'));
         maria.AddList('CHKVALUE_LIST', ItsGrid.GetValue('grid2', i, 'CHKVALUE'));
     }
 
@@ -233,7 +233,7 @@ ItsPop.Event('pop1').onCancelBtnClick = function () {
 /* 정기점검 수정 팝업 (pop2) 이벤트 */
 
 // 2026-09-16 정기점검 수정 모달(pop2) 상단 수정값 및 그리드(grid3) 점검값 저장
-// 2026-10-08 [정기점검 수정 팝업] 미사용 점검주기 전달 제거
+// 2026-10-08 [정기점검 수정 팝업] 항목별 출처를 유지하여 점검값 저장
 ItsPop.Event('pop2').onAddBtnClick = function () {
     // 2026-10-02 [정기점검 수정 팝업] 점검값 필수 확인은 프로시저(SAVE_CHKRSTEQM)에서 처리
     var maria = new ItsMaria('EQM1001_R04', 'SAVE_CHKRSTEQM');
@@ -242,10 +242,7 @@ ItsPop.Event('pop2').onAddBtnClick = function () {
 
     for (var i = 0; i < ItsGrid.Length('grid3'); i++) {
         maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid3', i, 'CHKKNDCD'));
-        maria.AddList('CHKKNDNM_LIST', ItsGrid.GetValue('grid3', i, 'CHKKNDNM'));
-        maria.AddList('CHKLOC_LIST', ItsGrid.GetValue('grid3', i, 'CHKLOC'));
-        maria.AddList('CHKMTH_LIST', ItsGrid.GetValue('grid3', i, 'CHKMTH'));
-        maria.AddList('CHKVALTP_LIST', ItsGrid.GetValue('grid3', i, 'CHKVALTP'));
+        maria.AddList('PLANTP_LIST', ItsGrid.GetValue('grid3', i, 'PLANTP'));
         maria.AddList('CHKVALUE_LIST', ItsGrid.GetValue('grid3', i, 'CHKVALUE'));
     }
 

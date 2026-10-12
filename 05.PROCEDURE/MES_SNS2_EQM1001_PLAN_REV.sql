@@ -3,6 +3,7 @@
 -- Create:  2026-09-30  한성수  설비그룹·설비별 정기점검 계획 REV 관리 신규 생성
 -- Modify:  2026-10-01  한성수  리비전 키(REVCD) PK 적용 (헤더: REVCD, 디테일: REVCD·CHKKNDCD), 점검실적 적용 리비전을 REVCD로 변경
 -- Modify:  2026-10-06  한성수  승인 상태 REV 헤더 통합, 구 승인 테이블 이름 변경 제거; DETAIL은 REVCD로 HEADER 정보 참조
+-- Modify:  2026-10-08  한성수  REV DETAIL을 작업본·승인본으로 함께 사용하고 항목 존재 기준으로 관리
 -- *****************************************************************************
 CREATE TABLE IF NOT EXISTS `MES_SNS2`.`MSTEQMREV_HEADER` (
   `REVCD`      varchar(20)    NOT NULL DEFAULT '' COMMENT '리비전키 (GETKEY(''REVCD''))',
@@ -34,10 +35,10 @@ CREATE TABLE IF NOT EXISTS `MES_SNS2`.`MSTEQMREV_DETAIL` (
   `CHKKNDCD`   varchar(20)    NOT NULL DEFAULT '' COMMENT '항목키',
   `CHKCYCLE`   varchar(10)    NOT NULL DEFAULT '' COMMENT '점검주기',
   `SORTNO`     decimal(20,0)  NOT NULL DEFAULT 0  COMMENT '정렬순서',
-  `CHKKNDNM`   varchar(1000)  NOT NULL DEFAULT '' COMMENT '승인 당시 점검명',
-  `CHKLOC`     varchar(1000)  NOT NULL DEFAULT '' COMMENT '승인 당시 점검항목',
-  `CHKMTH`     varchar(1000)  NOT NULL DEFAULT '' COMMENT '승인 당시 점검방법',
-  `CHKVALTP`   varchar(10)    NOT NULL DEFAULT '' COMMENT '승인 당시 점검값구분',
+  `CHKKNDNM`   varchar(1000)  NOT NULL DEFAULT '' COMMENT '리비전 점검명',
+  `CHKLOC`     varchar(1000)  NOT NULL DEFAULT '' COMMENT '리비전 점검항목',
+  `CHKMTH`     varchar(1000)  NOT NULL DEFAULT '' COMMENT '리비전 점검방법',
+  `CHKVALTP`   varchar(10)    NOT NULL DEFAULT '' COMMENT '리비전 점검값구분',
   `REMARK`     varchar(1000)  NOT NULL DEFAULT '' COMMENT '비고',
   `RTIME`      varchar(19)    NOT NULL DEFAULT '' COMMENT '등록시간',
   `REMP`       varchar(20)    NOT NULL DEFAULT '' COMMENT '등록자',

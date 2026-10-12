@@ -42,6 +42,11 @@ namespace TML1010
         public override void EventPageLoaded()
         {
             base.EventPageLoaded();
+
+            if (ItsLocalInfo.TMLCUSTCD != "")
+            {
+                cb_CUSTCD.Value = ItsLocalInfo.TMLCUSTCD.ToString();
+            }
         }
 
         public override void EventCommand(string commandName)

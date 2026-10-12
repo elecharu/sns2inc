@@ -273,6 +273,7 @@ namespace TML1010
 
                 MODEL_A1.SetValue("INVOICEKEY", ds.Tables[0].Rows[0]["INVOICEKEY"]);
                 MODEL_A1.SetValue("OUTDATE", ds.Tables[0].Rows[0]["MOVEDATE"]);
+                MODEL_A1.SetValue("INDATE", ds.Tables[0].Rows[0]["INDATE"]);
                 MODEL_A1.SetValue("OUTCUSTCD", ds.Tables[0].Rows[0]["OUTCUSTCD"]);
                 MODEL_A1.SetValue("INCUSTCD", ds.Tables[0].Rows[0]["INCUSTCD"]);
                 MODEL_G2.SetData(ds.Tables[0]);

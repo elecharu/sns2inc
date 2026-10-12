@@ -63,7 +63,7 @@
     </Reference>
     <Reference Include="TMLMAIN, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\ITS_MES_HS_VA.1.0\AAALIB\TMLMAIN.exe</HintPath>
+      <HintPath>..\..\AAALIB\TMLMAIN.exe</HintPath>
     </Reference>
     <Reference Include="TMLSTART, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

@@ -1,0 +1,285 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="2440" height="1200" viewBox="0 0 2440 1200" role="img" aria-labelledby="diagram-title diagram-desc" style="font-family:Malgun Gothic,Segoe UI,sans-serif">
+<title id="diagram-title">EQM1001 정기점검 테이블 연결도</title>
+<desc id="diagram-desc">기준정보, 독립 REV 계획 및 이력, 월별 점검자 배정, 점검실적을 구분한다. 계획 HEADER와 DETAIL은 REVCD로 연결하며 실적에는 그룹과 설비의 두 REV 키를 저장한다.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#637388"/></marker><marker id="green-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#388656"/></marker><marker id="amber-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#b98a28"/></marker></defs>
+<rect x="0" y="0" width="2440" height="1200" rx="0" fill="#ffffff" stroke="none" stroke-width="1.5"/>
+<text x="40" y="42" font-size="28" font-weight="600" fill="#1f2937" text-anchor="start" >설비 정기점검 테이블 연결도</text>
+<text x="40" y="73" font-size="18" font-weight="400" fill="#596579" text-anchor="start" >2026-10-12 로컬 R03·R04·R05 / 테이블 SQL 기준 · 주요 컬럼과 논리적 연결 · 실제 DB 반영 여부와 외래키 제약은 별도</text>
+<rect x="40" y="101" width="450" height="981" rx="12" fill="#f5f7fa" stroke="none" stroke-width="1.5"/>
+<rect x="595" y="101" width="1180" height="981" rx="12" fill="#f4f8f5" stroke="none" stroke-width="1.5"/>
+<rect x="1875" y="101" width="525" height="981" rx="12" fill="#f5f7fa" stroke="none" stroke-width="1.5"/>
+<text x="60" y="132" font-size="21" font-weight="600" fill="#1f2937" text-anchor="start" >기준정보</text>
+<text x="615" y="132" font-size="21" font-weight="600" fill="#1f2937" text-anchor="start" >점검계획 · REV · 현재 승인상태 · 처리이력</text>
+<text x="1895" y="132" font-size="21" font-weight="600" fill="#1f2937" text-anchor="start" >현장 점검실적</text>
+<path d="M 70 258 H 20 V 433 H 70" fill="none" stroke="#637388" stroke-width="2"  marker-end="url(#arrow)"/>
+<text x="27" y="347" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >1 : N</text>
+<path d="M 465 204 H 620" fill="none" stroke="#637388" stroke-width="2"  marker-end="url(#arrow)"/>
+<text x="542" y="176" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >G 계획</text>
+<text x="542" y="199" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >TPCD = PLANCD</text>
+<path d="M 465 457 H 620" fill="none" stroke="#637388" stroke-width="2"  marker-end="url(#arrow)"/>
+<text x="542" y="417" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >E 계획</text>
+<text x="542" y="440" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >FANO = PLANCD</text>
+<path d="M 1095 253 H 1260" fill="none" stroke="#637388" stroke-width="2"  marker-end="url(#arrow)"/>
+<text x="1177" y="221" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >REVCD</text>
+<text x="1177" y="244" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >1 : N</text>
+<path d="M 855 562 V 720" fill="none" stroke="#637388" stroke-width="2"  marker-end="url(#arrow)"/>
+<text x="944" y="633" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >REVCD</text>
+<text x="944" y="656" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >1 : N 처리이력</text>
+<path d="M 465 553 H 565 V 676 H 1490 V 720" fill="none" stroke="#637388" stroke-width="2"  marker-end="url(#arrow)"/>
+<text x="1440" y="653" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >설비코드 + 년도 / 월별 배정</text>
+<path d="M 465 811 H 545 V 1094 H 1810 V 376 H 1740" fill="none" stroke="#b98a28" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#amber-arrow)"/>
+<text x="1220" y="1117" font-size="16" font-weight="400" fill="#b98a28" text-anchor="middle" >점검항목 추가 시 기준정보 복사 — 승인 시 복사가 아님</text>
+<path d="M 1000 562 V 580 H 1790 V 404 H 1900" fill="none" stroke="#388656" stroke-width="2"  marker-end="url(#green-arrow)"/>
+<text x="1470" y="567" font-size="16" font-weight="400" fill="#388656" text-anchor="middle" >E 승인본의 키 → 실적 REVCD</text>
+<path d="M 1058 562 V 625 H 1832 V 438 H 1900" fill="none" stroke="#388656" stroke-width="2"  marker-end="url(#green-arrow)"/>
+<text x="1470" y="614" font-size="16" font-weight="400" fill="#388656" text-anchor="middle" >G 승인본의 키 → 실적 GRPREVCD</text>
+<path d="M 1670 528 V 659 H 1790 V 830 H 1900" fill="none" stroke="#b98a28" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#amber-arrow)"/>
+<text x="1838" y="800" font-size="16" font-weight="400" fill="#b98a28" text-anchor="middle" >당시 항목정보</text>
+<text x="1838" y="823" font-size="16" font-weight="400" fill="#b98a28" text-anchor="middle" >실적에 복사</text>
+<path d="M 2135 528 V 720" fill="none" stroke="#637388" stroke-width="2"  marker-end="url(#arrow)"/>
+<text x="2245" y="619" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >CHKRSTKEY</text>
+<text x="2245" y="642" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >실적 1 : 결과 N</text>
+<path d="M 1740 910 H 1850 V 470 H 1900" fill="none" stroke="#637388" stroke-width="2"  marker-end="url(#arrow)"/>
+<text x="1815" y="985" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >R04 등록 시</text>
+<text x="1815" y="1008" font-size="16" font-weight="400" fill="#596579" text-anchor="middle" >월 배정 확인</text>
+<rect x="70" y="155" width="395" height="169" rx="6" fill="#ffffff" stroke="#99a7b8" stroke-width="1.5"/>
+<rect x="71" y="156" width="393" height="65" rx="5" fill="#edf1f6" stroke="none" stroke-width="1.5"/>
+<text x="84" y="182" font-size="21" font-weight="600" fill="#1f2937" text-anchor="start" >COMTYPE</text>
+<text x="84" y="206" font-size="16" font-weight="400" fill="#596579" text-anchor="start" >설비그룹 코드 · FM116 범위</text>
+<path d="M 70 222 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="245" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">GPCD</text>
+<text x="285" y="245" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">FM116</text>
+<path d="M 70 256 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="279" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">TPCD</text>
+<text x="285" y="279" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">설비그룹코드</text>
+<path d="M 70 290 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="313" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">TPNM</text>
+<text x="285" y="313" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">설비그룹명</text>
+<rect x="70" y="390" width="395" height="237" rx="6" fill="#ffffff" stroke="#99a7b8" stroke-width="1.5"/>
+<rect x="71" y="391" width="393" height="65" rx="5" fill="#edf1f6" stroke="none" stroke-width="1.5"/>
+<text x="84" y="417" font-size="21" font-weight="600" fill="#1f2937" text-anchor="start" >MSTEQM</text>
+<text x="84" y="441" font-size="16" font-weight="400" fill="#596579" text-anchor="start" >설비 마스터 · 사용 중인 설비 조회</text>
+<path d="M 70 457 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="480" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">FANO</text>
+<text x="285" y="480" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">설비코드</text>
+<path d="M 70 491 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="514" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">EQMNM</text>
+<text x="285" y="514" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">설비명</text>
+<path d="M 70 525 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="548" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">EQMGUBUN</text>
+<text x="285" y="548" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">소속 그룹코드</text>
+<path d="M 70 559 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="582" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">USEYN</text>
+<text x="285" y="582" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">설비 사용여부</text>
+<path d="M 70 593 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="616" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">LINECD</text>
+<text x="285" y="616" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">소속 라인코드</text>
+<rect x="70" y="720" width="395" height="237" rx="6" fill="#ffffff" stroke="#99a7b8" stroke-width="1.5"/>
+<rect x="71" y="721" width="393" height="65" rx="5" fill="#edf1f6" stroke="none" stroke-width="1.5"/>
+<text x="84" y="747" font-size="21" font-weight="600" fill="#1f2937" text-anchor="start" >MSTCHKKND</text>
+<text x="84" y="771" font-size="16" font-weight="400" fill="#596579" text-anchor="start" >정기점검 항목 기준정보</text>
+<path d="M 70 787 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="810" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKKNDCD</text>
+<text x="285" y="810" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검코드</text>
+<path d="M 70 821 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="844" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKKNDNM</text>
+<text x="285" y="844" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검명</text>
+<path d="M 70 855 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="878" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKLOC · CHKMTH</text>
+<text x="285" y="878" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검항목 · 방법</text>
+<path d="M 70 889 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="912" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKVALTP</text>
+<text x="285" y="912" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검값구분</text>
+<path d="M 70 923 H 465" stroke="#dce2e9" stroke-width="1"/>
+<text x="84" y="946" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKTP · USEYN</text>
+<text x="285" y="946" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">02 · 사용여부</text>
+<rect x="620" y="155" width="475" height="407" rx="6" fill="#ffffff" stroke="#388656" stroke-width="1.5"/>
+<rect x="621" y="156" width="473" height="65" rx="5" fill="#e5f2e9" stroke="none" stroke-width="1.5"/>
+<text x="634" y="182" font-size="21" font-weight="600" fill="#1f2937" text-anchor="start" >MSTEQMREV_HEADER</text>
+<text x="634" y="206" font-size="16" font-weight="400" fill="#596579" text-anchor="start" >작업·승인 버전의 대상과 현재 상태</text>
+<path d="M 620 222 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="245" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">REVCD</text>
+<rect x="794" y="231" width="31" height="18" rx="0" fill="#fff0cc" stroke="none" stroke-width="1.5"/>
+<text x="809" y="244" font-size="12" font-weight="600" fill="#805b14" text-anchor="middle" >PK</text>
+<text x="835" y="245" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">리비전 고유키</text>
+<path d="M 620 256 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="279" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">PLANTP</text>
+<text x="835" y="279" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">G: 그룹 / E: 설비</text>
+<path d="M 620 290 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="313" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">PLANCD</text>
+<text x="835" y="313" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">그룹코드 / 설비코드</text>
+<path d="M 620 324 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="347" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">REVNUM</text>
+<text x="835" y="347" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">버전 번호 (0부터)</text>
+<path d="M 620 358 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="381" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">APRVSTT</text>
+<text x="835" y="381" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">빈 값: 대기 / A / R</text>
+<path d="M 620 392 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="415" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">REMARK</text>
+<text x="835" y="415" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">개정내용</text>
+<path d="M 620 426 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="449" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">REQEMP · REQTIME</text>
+<text x="835" y="449" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">요청자 · 요청일시</text>
+<path d="M 620 460 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="483" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">APRVEMP · APRVTIME</text>
+<text x="835" y="483" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">처리자 · 처리일시</text>
+<path d="M 620 494 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="517" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">REJREASON</text>
+<text x="835" y="517" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">반려사유</text>
+<path d="M 620 528 H 1095" stroke="#dce2e9"/>
+<text x="634" y="551" font-size="15" font-weight="400" fill="#596579" text-anchor="start" >유일 조합: PLANTP + PLANCD + REVNUM</text>
+<rect x="1260" y="155" width="480" height="373" rx="6" fill="#ffffff" stroke="#388656" stroke-width="1.5"/>
+<rect x="1261" y="156" width="478" height="65" rx="5" fill="#e5f2e9" stroke="none" stroke-width="1.5"/>
+<text x="1274" y="182" font-size="21" font-weight="600" fill="#1f2937" text-anchor="start" >MSTEQMREV_DETAIL</text>
+<text x="1274" y="206" font-size="16" font-weight="400" fill="#596579" text-anchor="start" >해당 REV의 실제 점검항목</text>
+<path d="M 1260 222 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="245" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">REVCD</text>
+<rect x="1434" y="231" width="31" height="18" rx="0" fill="#fff0cc" stroke="none" stroke-width="1.5"/>
+<text x="1449" y="244" font-size="12" font-weight="600" fill="#805b14" text-anchor="middle" >PK</text>
+<text x="1475" y="245" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">HEADER 연결키</text>
+<path d="M 1260 256 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="279" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKKNDCD</text>
+<rect x="1434" y="265" width="31" height="18" rx="0" fill="#fff0cc" stroke="none" stroke-width="1.5"/>
+<text x="1449" y="278" font-size="12" font-weight="600" fill="#805b14" text-anchor="middle" >PK</text>
+<text x="1475" y="279" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검코드</text>
+<path d="M 1260 290 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="313" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKKNDNM</text>
+<text x="1475" y="313" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">해당 REV의 점검명</text>
+<path d="M 1260 324 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="347" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKLOC</text>
+<text x="1475" y="347" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검항목</text>
+<path d="M 1260 358 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="381" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKMTH</text>
+<text x="1475" y="381" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검방법</text>
+<path d="M 1260 392 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="415" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKVALTP</text>
+<text x="1475" y="415" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검값구분</text>
+<path d="M 1260 426 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="449" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKCYCLE · SORTNO</text>
+<text x="1475" y="449" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검주기 · 정렬순서</text>
+<path d="M 1260 460 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="483" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">REMARK</text>
+<text x="1475" y="483" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">비고</text>
+<path d="M 1260 494 H 1740" stroke="#dce2e9"/>
+<text x="1274" y="517" font-size="15" font-weight="400" fill="#596579" text-anchor="start" >PLANTP·PLANCD·REVNUM 중복 없음 / USEYN 없음</text>
+<rect x="620" y="720" width="475" height="339" rx="6" fill="#ffffff" stroke="#99a7b8" stroke-width="1.5"/>
+<rect x="621" y="721" width="473" height="65" rx="5" fill="#edf1f6" stroke="none" stroke-width="1.5"/>
+<text x="634" y="747" font-size="21" font-weight="600" fill="#1f2937" text-anchor="start" >CHKPLANEQM_APRV</text>
+<text x="634" y="771" font-size="16" font-weight="400" fill="#596579" text-anchor="start" >처리이력 누적 · 현재 소스는 승인 기록 저장</text>
+<path d="M 620 787 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="810" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">APRVKEY</text>
+<rect x="794" y="796" width="31" height="18" rx="0" fill="#fff0cc" stroke="none" stroke-width="1.5"/>
+<text x="809" y="809" font-size="12" font-weight="600" fill="#805b14" text-anchor="middle" >PK</text>
+<text x="835" y="810" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">GETKEY로 생성</text>
+<path d="M 620 821 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="844" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">REVCD</text>
+<text x="835" y="844" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">처리한 HEADER의 키</text>
+<path d="M 620 855 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="878" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">PLANTP · PLANCD</text>
+<text x="835" y="878" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">처리 대상 정보</text>
+<path d="M 620 889 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="912" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">APRVSTT</text>
+<text x="835" y="912" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">처리 결과 A / R</text>
+<path d="M 620 923 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="946" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">REQEMP · REQTIME</text>
+<text x="835" y="946" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">당시 요청정보</text>
+<path d="M 620 957 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="980" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">APRVEMP · APRVTIME</text>
+<text x="835" y="980" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">처리자 · 처리일시</text>
+<path d="M 620 991 H 1095" stroke="#dce2e9" stroke-width="1"/>
+<text x="634" y="1014" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">REJREASON</text>
+<text x="835" y="1014" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">반려사유</text>
+<path d="M 620 1025 H 1095" stroke="#dce2e9"/>
+<text x="634" y="1048" font-size="15" font-weight="400" fill="#596579" text-anchor="start" >HEADER는 현재 상태 / 이 테이블은 처리 기록</text>
+<rect x="1260" y="720" width="480" height="271" rx="6" fill="#ffffff" stroke="#99a7b8" stroke-width="1.5"/>
+<rect x="1261" y="721" width="478" height="65" rx="5" fill="#edf1f6" stroke="none" stroke-width="1.5"/>
+<text x="1274" y="747" font-size="21" font-weight="600" fill="#1f2937" text-anchor="start" >CHKPLANEQM_YEARPLAN</text>
+<text x="1274" y="771" font-size="16" font-weight="400" fill="#596579" text-anchor="start" >R03 주기관리 · R04 점검월 배정 확인</text>
+<path d="M 1260 787 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="810" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">EQMCD</text>
+<text x="1475" y="810" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">설비코드</text>
+<path d="M 1260 821 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="844" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">YEAR</text>
+<text x="1475" y="844" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">계획년도</text>
+<path d="M 1260 855 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="878" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKTP</text>
+<text x="1475" y="878" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검구분 (02)</text>
+<path d="M 1260 889 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="912" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">MONTH_01~12</text>
+<text x="1475" y="912" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">월별 점검자</text>
+<path d="M 1260 923 H 1740" stroke="#dce2e9" stroke-width="1"/>
+<text x="1274" y="946" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">REMARK</text>
+<text x="1475" y="946" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">비고</text>
+<path d="M 1260 957 H 1740" stroke="#dce2e9"/>
+<text x="1274" y="980" font-size="15" font-weight="400" fill="#596579" text-anchor="start" >점검항목과 REV를 저장하는 테이블이 아님</text>
+<rect x="1900" y="155" width="470" height="373" rx="6" fill="#ffffff" stroke="#b98a28" stroke-width="1.5"/>
+<rect x="1901" y="156" width="468" height="65" rx="5" fill="#fff2d6" stroke="none" stroke-width="1.5"/>
+<text x="1914" y="182" font-size="21" font-weight="600" fill="#1f2937" text-anchor="start" >CHKRSTEQM</text>
+<text x="1914" y="206" font-size="16" font-weight="400" fill="#596579" text-anchor="start" >점검실적 한 건의 전체 정보</text>
+<path d="M 1900 222 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="245" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKRSTKEY</text>
+<rect x="2074" y="231" width="31" height="18" rx="0" fill="#fff0cc" stroke="none" stroke-width="1.5"/>
+<text x="2089" y="244" font-size="12" font-weight="600" fill="#805b14" text-anchor="middle" >PK</text>
+<text x="2115" y="245" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검실적 고유키</text>
+<path d="M 1900 256 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="279" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKTP</text>
+<text x="2115" y="279" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">02: 정기점검</text>
+<path d="M 1900 290 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="313" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">EQMCD</text>
+<text x="2115" y="313" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검한 설비코드</text>
+<path d="M 1900 324 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="347" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">BASEDATE</text>
+<text x="2115" y="347" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검일자</text>
+<path d="M 1900 358 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="381" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">EMPCD</text>
+<text x="2115" y="381" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">실제 점검자</text>
+<rect x="1901" y="392" width="468" height="34" rx="0" fill="#e5f2e9" stroke="none" stroke-width="1.5"/>
+<path d="M 1900 392 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="415" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">REVCD</text>
+<text x="2115" y="415" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">적용 설비 REV 키</text>
+<rect x="1901" y="426" width="468" height="34" rx="0" fill="#fff2d6" stroke="none" stroke-width="1.5"/>
+<path d="M 1900 426 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="449" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">GRPREVCD</text>
+<text x="2115" y="449" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">적용 그룹 REV 키</text>
+<path d="M 1900 460 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="483" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">PROBLEM · SOLUTION</text>
+<text x="2115" y="483" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">특이사항 · 조치내용</text>
+<path d="M 1900 494 H 2370" stroke="#dce2e9"/>
+<text x="1914" y="517" font-size="15" font-weight="400" fill="#596579" text-anchor="start" >두 컬럼 모두 HEADER.REVCD를 가리킴</text>
+<rect x="1900" y="720" width="470" height="339" rx="6" fill="#ffffff" stroke="#99a7b8" stroke-width="1.5"/>
+<rect x="1901" y="721" width="468" height="65" rx="5" fill="#edf1f6" stroke="none" stroke-width="1.5"/>
+<text x="1914" y="747" font-size="21" font-weight="600" fill="#1f2937" text-anchor="start" >CHKRSTEQMKND</text>
+<text x="1914" y="771" font-size="16" font-weight="400" fill="#596579" text-anchor="start" >실적 한 건에 속한 항목별 결과</text>
+<path d="M 1900 787 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="810" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKRSTKEY</text>
+<rect x="2074" y="796" width="31" height="18" rx="0" fill="#fff0cc" stroke="none" stroke-width="1.5"/>
+<text x="2089" y="809" font-size="12" font-weight="600" fill="#805b14" text-anchor="middle" >PK</text>
+<text x="2115" y="810" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">실적 HEADER 연결키</text>
+<rect x="1901" y="821" width="468" height="34" rx="0" fill="#fff2d6" stroke="none" stroke-width="1.5"/>
+<path d="M 1900 821 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="844" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">PLANTP</text>
+<rect x="2074" y="830" width="31" height="18" rx="0" fill="#fff0cc" stroke="none" stroke-width="1.5"/>
+<text x="2089" y="843" font-size="12" font-weight="600" fill="#805b14" text-anchor="middle" >PK</text>
+<text x="2115" y="844" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">G: 그룹 / E: 설비</text>
+<path d="M 1900 855 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="878" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKKNDCD</text>
+<rect x="2074" y="864" width="31" height="18" rx="0" fill="#fff0cc" stroke="none" stroke-width="1.5"/>
+<text x="2089" y="877" font-size="12" font-weight="600" fill="#805b14" text-anchor="middle" >PK</text>
+<text x="2115" y="878" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">점검코드</text>
+<path d="M 1900 889 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="912" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKKNDNM</text>
+<text x="2115" y="912" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">당시 점검명</text>
+<path d="M 1900 923 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="946" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKMTH · CHKVALTP</text>
+<text x="2115" y="946" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">당시 방법 · 값구분</text>
+<path d="M 1900 957 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="980" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">CHKVALUE</text>
+<text x="2115" y="980" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">입력한 점검값</text>
+<path d="M 1900 991 H 2370" stroke="#dce2e9" stroke-width="1"/>
+<text x="1914" y="1014" font-size="16" font-weight="600" fill="#1f2937" text-anchor="start" font-family="Consolas, Malgun Gothic, sans-serif" data-cell="name">SORTNO</text>
+<text x="2115" y="1014" font-size="17" font-weight="400" fill="#1f2937" text-anchor="start" data-cell="desc">표시 순서</text>
+<path d="M 1900 1025 H 2370" stroke="#dce2e9"/>
+<text x="1914" y="1048" font-size="15" font-weight="400" fill="#596579" text-anchor="start" >G → GRPREVCD / E → REVCD로 적용 버전 확인</text>
+<text x="40" y="1164" font-size="17" font-weight="400" fill="#596579" text-anchor="start" >회색선: 키 연결 / 조회 조건     점선: 항목정보 복사     초록선: 적용한 승인 REV 키 보관     PK: 복합키는 표시된 컬럼 전체</text>
+<text x="40" y="1190" font-size="17" font-weight="400" fill="#596579" text-anchor="start" >조회 보조: MSTEMP(사원명) · MSTLINE(라인명) / CHKPLANEQM은 현 업무에서 미사용 / 승인 시 DETAIL 복사 없음</text>
+</svg>

@@ -13,7 +13,7 @@
         <%-- 설비그룹 점검계획 탭: 화면 영역 --%>
         <Its:div runat="server" Type="SplitSingle" TabTitle="설비그룹 점검계획">         
             <Its:div runat="server" Type="SplitTop" TopHeightPc="4" BackColor="White" ID="div_GRP">
-                <Its:find runat="server" Label="설비그룹" Field="EQMGRP" GPCD="FM116" ID="find_GRP" MarginLeft="10" MarginTop="6" LabelWidth="60" InputWidth="120" NameWidth="150"/>
+                <Its:find runat="server" Label="설비그룹" Field="EQMGRP" GPCD="FM116" ID="find_GRP" MarginLeft="10" MarginTop="6" LabelWidth="60" InputWidth="80" NameWidth="120"/>
                 <Its:button runat="server" Label="계획서 출력" ID="btn_GRP_PLAN_RPT" Width="100" Float="right" MarginRight="10" MarginTop="6" BackColor="CustomButton2" />
             </Its:div>
             
@@ -65,8 +65,8 @@
         <%-- 설비별 점검계획 탭: 화면 영역 --%>
         <Its:div runat="server" Type="SplitSingle" TabTitle="설비별 점검계획">         
             <Its:div runat="server" Type="SplitTop" TopHeightPc="4" BackColor="White" ID="div_EQM">
-                <Its:find runat="server" Label="설비" Field="FANO" GPCD="EQMCD" ID="find_EQMCD" MarginLeft="10" MarginTop="6" LabelWidth="38" InputWidth="80" NameWidth="150"/>                      
-                <Its:find runat="server" Label="설비그룹" Field="EQMGRP" GPCD="FM116" ID="find_EQM_GRP" MarginLeft="15" MarginTop="6" LabelWidth="60" InputWidth="120" NameWidth="150"/>
+                <Its:find runat="server" Label="설비" Field="FANO" GPCD="EQMCD" ID="find_EQMCD" MarginLeft="10" MarginTop="6" LabelWidth="38" InputWidth="80" NameWidth="120"/>                      
+                <Its:find runat="server" Label="설비그룹" Field="EQMGRP" GPCD="FM116" ID="find_EQM_GRP" MarginLeft="15" MarginTop="6" LabelWidth="60" InputWidth="80" NameWidth="120"/>
                 <Its:button runat="server" Label="계획서 출력" ID="btn_EQM_PLAN_RPT" Width="100" Float="right" MarginRight="10" MarginTop="6" BackColor="CustomButton2" />
             </Its:div>
             
@@ -103,7 +103,6 @@
                             <Its:button runat="server" Label="추가" ID="bdiv3_btn_ADD" MarginLeft="10" BackColor="CustomButton2" />
                             <Its:button runat="server" Label="저장" ID="bdiv3_btn_SAVE" MarginLeft="10" BackColor="CustomButton" />
                             <Its:button runat="server" Label="삭제" ID="bdiv3_btn_DEL" MarginLeft="10" BackColor="CustomButton3" />
-                            <Its:label runat="server" Text="※ 수정 시 소속 설비그룹도 승인 대기로 전환됩니다." ID="lbl_EQM_REV_INFO" ForeColor="BlueDark1" MarginLeft="20"/>
                         </Its:div>
 
                         <Its:split runat="server" Type="Horizon" Resizeable="false" />
@@ -120,7 +119,7 @@
         <Its:div runat="server" Type="SplitSingle" TabTitle="정기점검 주기관리">
             <Its:div runat="server" Type="SplitTop" TopHeightPc="4" BackColor="White" ID="div_CYCLE_EQM">
                 <Its:combo runat="server" Label="조회년도" ID="cmb_SYEAR" Field="SYEAR" GPCD="YEAR" REF01="-4" REF02="0" MarginLeft="10" MarginTop="6" LabelWidth="60" />
-                <Its:find runat="server" Label="설비" Field="FANO" GPCD="EQMCD" ID="find1" MarginLeft="15" MarginTop="6" LabelWidth="38" />
+                <Its:find runat="server" Label="설비" Field="FANO" GPCD="EQMCD" ID="find1" MarginLeft="15" MarginTop="6" LabelWidth="38" InputWidth="80" NameWidth="120"/>
                 <Its:find runat="server" Label="점검자" Field="EMPCD" GPCD="EMPCD" ID="find_EMP" MarginLeft="15" MarginTop="6" LabelWidth="70" InputWidth="90" NameWidth="110" />
                 <Its:button runat="server" Label="일괄 주기설정" ID="btn_OPEN_CYCLE_BATCH" Width="100" MarginLeft="25" MarginTop="6" BackColor="CustomButton2" />
                 <Its:button runat="server" Label="저장" ID="div_SAVE_CYCLE_EQM" MarginLeft="25" MarginTop="6" BackColor="CustomButton" />

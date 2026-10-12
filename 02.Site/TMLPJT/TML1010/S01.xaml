@@ -13,7 +13,7 @@
             <its:WrapContent x:Name="PANEL_S1" Width="900" Height="60">
                 <its:Date Label="납기일자" Width="180" Value="{Binding SDATE}"/>
                 <its:Date HidenLabel="Y" Width="100"  Value="{Binding EDATE}"/>
-                <its:Pop GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ShowKeyPad="True" x:Name="pop_CUSTCD"/>
+                <its:Combo GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ReadOnly="True" x:Name="cb_CUSTCD"/>
                 <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True" />
                 <its:Text Label="거래명세서" Value="{Binding INVOICEKEY}"/>
                 <its:Button Label="조 회" Width="100" Height="30" CommandName="LIST_INVOICE" FontWeight="Bold"/>

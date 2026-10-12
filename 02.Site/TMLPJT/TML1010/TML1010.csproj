@@ -106,6 +106,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="R04.xaml.cs">
+      <DependentUpon>R04.xaml</DependentUpon>
+    </Compile>
     <Compile Include="R02.xaml.cs">
       <DependentUpon>R02.xaml</DependentUpon>
     </Compile>
@@ -155,6 +158,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="R04.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="R02.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

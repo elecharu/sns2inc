@@ -31,8 +31,6 @@ namespace TML1010
         ItsModelGrid MODEL_G2 = new ItsModelGrid();
         ItsModelGrid MODEL_G3 = new ItsModelGrid();
 
-
-
         // 생성자
         public S02()
         {
@@ -51,6 +49,11 @@ namespace TML1010
         public override void EventPageLoaded()
         {
             base.EventPageLoaded();
+
+            if (ItsLocalInfo.TMLCUSTCD != "")
+            {
+                cb_CUSTCD.Value = ItsLocalInfo.TMLCUSTCD.ToString();
+            }
 
             PANEL_A1.Close();
         }
