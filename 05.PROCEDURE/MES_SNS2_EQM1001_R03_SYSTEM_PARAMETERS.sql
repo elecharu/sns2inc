@@ -1,0 +1,22 @@
+﻿-- *****************************************************************************
+-- Comment: EQM1001_R03 반려 입력값 제거 후 호출 파라미터 재등록
+-- Create:  2026-10-12  한성수
+-- *****************************************************************************
+-- R03 프로시저 전체 저장 후 아래 트랜잭션을 실행
+START TRANSACTION;
+DELETE FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'EQM1001_R03';
+
+INSERT INTO MES_SNS2.SYSTEM_PARAMETERS
+SELECT * FROM information_schema.PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'EQM1001_R03';
+COMMIT;
+
+-- 정상 28건: APRVSTT 26번, CALLTYPE 27번, KEYWORD 28번
+SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
+FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'EQM1001_R03'
+ORDER BY ORDINAL_POSITION;

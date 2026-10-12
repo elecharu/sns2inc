@@ -1,6 +1,7 @@
 ﻿-- *****************************************************************************
 -- Comment: 정기점검 컬럼·PK 및 호출 파라미터 반영 확인
 -- Create:  2026-10-08  한성수
+-- Modify:  2026-10-12  한성수  R03 반려 입력값 제거 후 28개 파라미터 확인
 -- *****************************************************************************
 SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, COLUMN_KEY
 FROM information_schema.COLUMNS
@@ -14,7 +15,7 @@ WHERE TABLE_SCHEMA = 'MES_SNS2'
   AND TABLE_NAME IN ('MSTEQMREV_HEADER', 'MSTEQMREV_DETAIL', 'CHKPLANEQM_APRV', 'CHKRSTEQM', 'CHKRSTEQMKND')
 GROUP BY TABLE_NAME, INDEX_NAME ORDER BY TABLE_NAME, INDEX_NAME;
 
--- 정상 건수: R02 21, R03 29, R04 15, R05 10
+-- 정상 건수: R02 21, R03 28, R04 15, R05 10
 SELECT SPECIFIC_NAME, COUNT(*) AS PARAMCNT
 FROM MES_SNS2.SYSTEM_PARAMETERS
 WHERE SPECIFIC_SCHEMA = 'MES_SNS2'

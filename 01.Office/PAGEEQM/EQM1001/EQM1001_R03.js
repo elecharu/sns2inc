@@ -2,13 +2,12 @@
 
 // 페이지 로드
 ItsPage.Load = function () {
-    // 2026-09-23 설비그룹 점검계획 탭: 좌측 설비그룹 목록 초기화 (설비그룹코드 1행 단위로 그룹 승인상태·반려사유 표시)
+    // 2026-09-23 설비그룹 점검계획 탭: 목록 초기화 (2026-10-12 양탭 반려사유 제거)
     ItsGrid.Create('grid_GRP1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('설비그룹코드', 'EQMGUBUN', { width: 120, align: 'center' }),
         column.create('설비그룹', 'EQMGRPNM', { width: 120, align: 'center' }),
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 70, align: 'center', readOnly: true }),
-        column.create('반려사유', 'REJREASON', { width: 180, readOnly: true }),
         column.split()
     ]);
 
@@ -21,7 +20,6 @@ ItsPage.Load = function () {
         column.create('수정일시', 'REQTIME', { width: 130, align: 'center', readOnly: true }),
         column.create('승인자', 'APRVEMP', { width: 80, align: 'center', readOnly: true }),
         column.create('처리일시', 'APRVTIME', { width: 130, align: 'center', readOnly: true }),
-        column.create('반려사유', 'REJREASON', { width: 200, readOnly: true }),
         column.create('REV번호', 'REVNUM', { hidden: true }),
         column.create('상태코드', 'APRVSTT', { hidden: true }),
         column.split()
@@ -64,7 +62,6 @@ ItsPage.Load = function () {
         column.create('설비명', 'EQMNM', { width: 200 }),
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 65, align: 'center', readOnly: true }),
-        column.create('반려사유', 'REJREASON', { width: 180, readOnly: true }),
         column.split()
     ]);
 
@@ -77,7 +74,6 @@ ItsPage.Load = function () {
         column.create('수정일시', 'REQTIME', { width: 130, align: 'center', readOnly: true }),
         column.create('승인자', 'APRVEMP', { width: 80, align: 'center', readOnly: true }),
         column.create('처리일시', 'APRVTIME', { width: 130, align: 'center', readOnly: true }),
-        column.create('반려사유', 'REJREASON', { width: 200, readOnly: true }),
         column.create('REV번호', 'REVNUM', { hidden: true }),
         column.create('상태코드', 'APRVSTT', { hidden: true }),
         column.split()
@@ -1020,8 +1016,7 @@ function RefreshPlanRev(planTp, planCd) {
     });
     ItsGrid.SetRowData(gridId, rowIndex, {
         REVNM: data.REVNM,
-        APRVSTTNM: data.APRVSTTNM,
-        REJREASON: data.REJREASON
+        APRVSTTNM: data.APRVSTTNM
     });
     return true;
 }
@@ -1255,7 +1250,6 @@ function SavePlanRevStatus(rev) {
         maria.AddParam('REVNUM', rev.revNum);
         maria.AddParam('REMARK', rev.remark);
         maria.AddParam('APRVSTT', 'A');
-        maria.AddParam('REJREASON', '');
         maria.CallProc();
         if (maria.isError) {
             maria.ShowErrMsg();

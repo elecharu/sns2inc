@@ -17,6 +17,14 @@
 
 ## 🕒 2026-10-12 (월) 작업 내역
 
+### 2. EQM1001_R03 반려 코드 제거 및 대기·승인 통일
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql, 05.Procedure/EQM1001_REV_SETUP/99_VERIFY.sql
+- **배경 및 원인**: 반려 기능이 없는 R03에서 반려 분기와 사유가 잔존하여 제거 요청
+- **작업 상세 내용**:
+  - 그룹·설비 목록, REV 목록, 출력 이력의 반려 표시 및 승인 반려 전용 검증 제거. REJREASON 조회·입력·저장 참조와 양탭 4개 반려사유 컬럼 제거. R03 파라미터 29→28 전환 SQL 및 확인 건수 갱신. REV 없음 공란, 존재시 대기·승인 유지. 기존 JOIN·CRUD·독립REV·승인 이력키·테이블 구조 유지
+- **검증 결과**: 격리 MariaDB10.2.44에서 SQL 컴파일 및 조회·출력 전후비교·양탭 개정저장·승인·중복승인 차단·CRUD·독립REV·주기저장·파라미터등록19건, 실제 R03 JS 모의실행6건 합계25건 통과. BOM/CRLF 및 원본 변경없음 확인 후 반영. 실DB 변경·서버 배포·실브라우저 실행 없음
+
+
 ### 2. EQM1001_R03 및 R04 프로시저 들여쓰기·가독성 표준화 및 규칙 등록
 - **수정/대상 파일**: [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql), [procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md)
 - **배경 및 원인**: SQL 프로시저 가독성 및 유지보수성을 극대화하기 위해 R04의 표준 들여쓰기/열 정렬(SELECT 컬럼 7칸 정렬, 2스페이스 계층 구조)을 규칙으로 공식 등록하고 R03과 R04 전체 쿼리에 일괄 적용
@@ -1051,6 +1059,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql, 05.Procedure/EQM1001_REV_SETUP/99_VERIFY.sql | 로컬 수정 완료. R03 전체 프로시저 저장 후 R03_SYSTEM_PARAMETERS SQL 실행(28개), R03.js 함께 반영 필요 | 격리 MariaDB10.2.44에서 SQL 컴파일 및 조회·출력 전후비교·양탭 개정저장·승인·중복승인 차단·CRUD·독립REV·주기저장·파라미터등록19건, 실제 R03 JS 모의실행6건 합계25건 통과. BOM/CRLF 및 원본 변경없음 확인 후 반영. 실DB 변경·서버 배포·실브라우저 실행 없음 |
 | **완료** | [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql), [procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md) | EQM1001_R03·R04 SQL 들여쓰기 및 가독성 표준화 적용 완료 | BOM(UTF-8 with BOM) 보존, CRLF 줄바꿈 통일(단독 LF 0건, \r\r\n 0건), 문법 무결성 검증 완료 |
 | **완료** | [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql), [procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [sql_structure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/sql_structure.md) | EQM1001_R04 들여쓰기 서식 적용 및 procedure.md 가독성 규칙 표준화 완료 | BOM(0xEF 0xBB 0xBF) 및 CRLF 개행 무결성 확인 완료, 프로시저 구문 및 규칙 문서 정상 반영 확인 |
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R04.sql | 미사용 반환 컬럼 제거 완료, 개선 사항은 보류 유지. 실제 DB 프로시저 반영은 사용자가 전체 소스 저장으로 진행 | 격리 MariaDB 10.2.44 네트워크 none에서 원본·변경본 컴파일 및 사용 컬럼 비교, 월별 조회·등록·수정·삭제·중복 오류 롤백 검증. 실제 R04 JS를 새 반환 데이터에 연결해 등록 팝업의 설비·점검자·두 REV 키 및 수정·삭제 요청의 실적키 모의 검증. 총 14건 통과, 쓰기 SQL·검증 블록·15개 입력 정의 일치, BOM/CRLF·원본 대조·최종 바이트 확인. 실제 DB 조회/DDL/DML·배포·UI/C# 수정 없음 |
