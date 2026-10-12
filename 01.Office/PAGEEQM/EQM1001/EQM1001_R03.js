@@ -1,13 +1,11 @@
 ﻿/// <reference path="../../Script/reference.js" />
 
 // 페이지 로드
-// 2026-10-08 설비그룹·설비별 점검계획 탭: 사용여부 없이 항목 추가·삭제로 관리
 ItsPage.Load = function () {
     // 2026-09-23 설비그룹 점검계획 탭: 좌측 설비그룹 목록 초기화 (설비그룹코드 1행 단위로 그룹 승인상태·반려사유 표시)
     ItsGrid.Create('grid_GRP1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('설비그룹코드', 'EQMGUBUN', { width: 120, align: 'center' }),
         column.create('설비그룹', 'EQMGRPNM', { width: 120, align: 'center' }),
-        // 2026-09-30 [설비그룹 점검계획 탭] 좌측 목록 최신 REV 컬럼
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 70, align: 'center', readOnly: true }),
         column.create('반려사유', 'REJREASON', { width: 180, readOnly: true }),
@@ -33,7 +31,6 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid_GRP2', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 300 }),
-        // 2026-09-30 [화면 로드 최적화] 점검항목·점검방법·점검값구분은 프로시저에서 받은 코드명으로 표시 (콤보 목록 조회 제거)
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
@@ -53,7 +50,6 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid_GRP_COPY2', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 300 }),
-        // 2026-09-30 [화면 로드 최적화] 점검항목·점검방법·점검값구분은 프로시저에서 받은 코드명으로 표시 (콤보 목록 조회 제거)
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
@@ -66,7 +62,6 @@ ItsPage.Load = function () {
         column.create('설비그룹코드', 'EQMGUBUN', { width: 100, align: 'center' }),
         column.create('설비그룹명', 'EQMGRPNM', { hidden: true }),
         column.create('설비명', 'EQMNM', { width: 200 }),
-        // 2026-09-30 [설비별 점검계획 탭] 좌측 목록 현재 승인 REV 컬럼 (현장 점검 기준)
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 65, align: 'center', readOnly: true }),
         column.create('반려사유', 'REJREASON', { width: 180, readOnly: true }),
@@ -92,7 +87,6 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid3', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 300 }),
-        // 2026-09-30 [화면 로드 최적화] 점검항목·점검방법·점검값구분은 프로시저에서 받은 코드명으로 표시 (콤보 목록 조회 제거)
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
@@ -111,17 +105,16 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid8', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 70, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 300 }),
-        // 2026-09-30 [화면 로드 최적화] 점검항목·점검방법·점검값구분은 프로시저에서 받은 코드명으로 표시 (콤보 목록 조회 제거)
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
         column.split()
     ]);
+
     // 정기점검 주기관리 탭: 연간 계획 초기화
     ItsGrid.Create('grid9', { isCheckBoxGrid: true }, [
         column.create('설비코드', 'FANO', { width: 100, align: 'center' }),
         column.create('설비명', 'EQMNM', { width: 220 }),
-        // 2026-09-30 [정기점검 주기관리 탭] 설비등급은 프로시저에서 받은 코드명으로 표시 (콤보 목록 조회 제거)
         column.create('설비등급', 'EQMGRADENM', { width: 90, align: 'center', readOnly: true }),
         column.create('년도', 'YEAR', { width: 80, align: 'center' }),
         column.create('1월', 'M01', { width: 80, align: 'center', readOnly: true }),
@@ -136,7 +129,6 @@ ItsPage.Load = function () {
         column.create('10월', 'M10', { width: 80, align: 'center', readOnly: true }),
         column.create('11월', 'M11', { width: 80, align: 'center', readOnly: true }),
         column.create('12월', 'M12', { width: 80, align: 'center', readOnly: true }),
-        // 2026-10-02 [정기점검 주기관리 탭] 월별 점검자 사원코드 (저장값, 월 칸은 사원명 표시)
         column.create('1월점검자', 'M01CD', { hidden: true }),
         column.create('2월점검자', 'M02CD', { hidden: true }),
         column.create('3월점검자', 'M03CD', { hidden: true }),
@@ -151,11 +143,11 @@ ItsPage.Load = function () {
         column.create('12월점검자', 'M12CD', { hidden: true }),
         column.split()
     ]);
+
     // 공통 정기점검 추가 팝업: 점검항목 목록 초기화
     ItsGrid.Create('grid10', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 70, align: 'center' }),
         column.create('점검명', 'CHKKNDNM', { width: 300 }),
-        // 2026-09-30 [화면 로드 최적화] 점검항목·점검방법·점검값구분은 프로시저에서 받은 코드명으로 표시 (콤보 목록 조회 제거)
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
@@ -1312,7 +1304,8 @@ ItsButton.Event('btn_GRP_PLAN_RPT').onClick = function () { PrintPlanRev('G'); }
 ItsButton.Event('btn_EQM_APPROVE').onClick = function () { SavePlanStatus('E'); };
 ItsButton.Event('btn_EQM_PLAN_RPT').onClick = function () { PrintPlanRev('E'); };
 
-// 2026-10-08 정기점검 변경 대상의 최신 REV 전달
+// 2026-10-08 정기점검 변경 대상의 최신 REV 전달 [동시성 문제 해결]
+// 다른 사용자가 수정·저장 중에 최신 REV가 변경되었을 경우를 방지, 실행 직전에 다시 조회하여 해결
 function SetPlanRevParam(maria, planTp) {
     var rev = GetLatestPlanRev(planTp);
     maria.AddParam('REVNUM', rev ? rev.REVNUM : '');
