@@ -73,13 +73,13 @@ namespace TML1010
         {
             base.EventPageLoaded();
 
+            MODEL_S1.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));
+            MODEL_S1.SetValue("EDATE", DateTime.Now.AddMonths(1).AddDays(-DateTime.Now.Day).ToString("yyyy-MM-dd"));
+
             if (ItsLocalInfo.TMLCUSTCD != "")
             {
                 cb_CUSTCD.Value = ItsLocalInfo.TMLCUSTCD.ToString();
             }
-
-            MODEL_S1.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));
-            MODEL_S1.SetValue("EDATE", DateTime.Now.AddMonths(1).AddDays(-DateTime.Now.Day).ToString("yyyy-MM-dd"));
 
             PANEL_A1.Close();
         }

@@ -116,6 +116,14 @@ namespace TML1010
         {
             base.EventMessageResult(commandName);
         }
+
+        private void Text_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                EventCommand("LIST_INVOICE");
+            }
+        }
     }
 }
 

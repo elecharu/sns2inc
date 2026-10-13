@@ -11,11 +11,11 @@
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
             <its:WrapContent x:Name="PANEL_S1" Width="900" Height="60">
-                <its:Date Label="납기일자" Width="180" Value="{Binding SDATE}"/>
+                <its:Date Label="납품일자" Width="180" Value="{Binding SDATE}"/>
                 <its:Date HidenLabel="Y" Width="100"  Value="{Binding EDATE}"/>
                 <its:Combo GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ReadOnly="True" x:Name="cb_CUSTCD"/>
                 <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True" />
-                <its:Text Label="거래명세서" Value="{Binding INVOICEKEY}"/>
+                <its:Text Label="거래명세서" Value="{Binding INVOICEKEY}" KeyDown="Text_KeyDown"/>
                 <its:Button Label="조 회" Width="100" Height="30" CommandName="LIST_INVOICE" FontWeight="Bold"/>
                 <its:Button Label="납 품 취 소" Width="100" Height="30" CommandName="DEL_INVOICE" FontWeight="Bold" BackColor="RED"/>
             </its:WrapContent>
@@ -31,7 +31,7 @@
                     <its:Column Width="100" Header="품목코드" FieldName="ITEMCD"/>
                     <its:Column Width="130" Header="품명" FieldName="ITEMNM"/>
                     <its:Column Width="130" Header="규격" FieldName="ITEMSPEC"/>
-                    <its:Column Width="130" Header="업체" FieldName="CUSTCD"/>
+                    <!--<its:Column Width="130" Header="업체" FieldName="CUSTCD"/>-->
                     <its:Column Width="100" Header="로트번호" FieldName="LOTKEY"/>
                     <its:Column Width="100" DecimalPoint="0" Header="로트수량" FieldName="LOTQTY"/>
                     <its:Column Width="80" Header="S&amp;S INC 2공장 입고일자" FieldName="MTRINTIME" ALGIN="center"/>
@@ -64,7 +64,7 @@
                         <its:Column FieldName="ITEMCD" Width="120" Header="품목코드" ALGIN="Center"/>
                         <its:Column FieldName="ITEMNM" Width="200" Header="품명" ALGIN="Center"/>
                         <its:Column FieldName="LOTKEY" Width="120" Header="로트번호" ALGIN="Center"/>
-                        <its:Column FieldName="LOTQTY" Width="120" Header="로트수량" ALGIN="Center"/>
+                        <its:Column FieldName="LOTQTY" Width="120" Header="로트수량" ALGIN="Center" DecimalPoint="0"/>
                         <its:Column FieldName="LOTTP"  Width="100" Header="로트구분" ALGIN="Center"/>
                     </its:Grid>
                 </its:WrapContent>

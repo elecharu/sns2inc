@@ -44,82 +44,13 @@ namespace TML1010
             MODEL_A1.InitData();
 
             MODEL_G1.Binding(GRID_G1);
-            MODEL_G1.EventValueChanged += MODEL_G1_EventValueChanged;
 
             MODEL_G2.Binding(GRID_G2);
-        }
-
-        private void MODEL_G1_EventValueChanged(int rowIndex, string fieldName)
-        {
-            if (fieldName == "LOTQTY")
-            {
-                decimal lotQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "LOTQTY"));
-                decimal okQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "OKQTY"));
-                decimal carInQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "CARINQTY"));
-
-                if (okQty < lotQty)
-                {
-                    ShowMessageBox("", "출하수량이 출하가능량을 초과하였습니다.");
-                    MODEL_G1.SetValue(rowIndex, "LOTQTY", 0);
-                    return;
-                }
-
-                if (lotQty < carInQty)
-                {
-                    ShowMessageBox("", "적입량이 출하수량을 초과하였습니다.");
-                    MODEL_G1.SetValue(rowIndex, "CARINQTY", 0);
-                    return;
-                }
-
-                CALCUL_LOTUNIT(rowIndex);
-            }
-            else if (fieldName == "CARINQTY")
-            {
-                decimal lotQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "LOTQTY"));
-                decimal carInQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "CARINQTY"));
-
-                if (lotQty < carInQty)
-                {
-                    ShowMessageBox("", "적입량이 출하수량을 초과하였습니다.");
-                    MODEL_G1.SetValue(rowIndex, "CARINQTY", 0);
-                    return;
-                }
-
-                CALCUL_LOTUNIT(rowIndex);
-            }
-            else if (fieldName == "ISCHECKED")
-            {
-                CALCUL_LOTUNIT(rowIndex);
-            }
-        }
-
-        // LOT 개수 계산
-        public void CALCUL_LOTUNIT(int rowIndex)
-        {
-            decimal CARINQTY = MODEL_G1.GetDecimal(rowIndex, "CARINQTY");
-            decimal LOTQTY = MODEL_G1.GetDecimal(rowIndex, "LOTQTY");
-            decimal LOTUNIT = 0;
-            if (CARINQTY != 0)
-            {
-                LOTUNIT = LOTQTY / CARINQTY;
-            }
-
-            if (CARINQTY != 0 && LOTQTY != 0)
-            {
-                MODEL_G1.SetValue(rowIndex, "LOTUNIT", LOTUNIT);
-            }
-            else
-            {
-                MODEL_G1.SetValue(rowIndex, "LOTUNIT", 0);
-            }
         }
 
         public override void EventPageLoaded()
         {
             base.EventPageLoaded();
-
-            //TEST
-            //ItsLocalInfo.TMLUID = "osc1";
 
             if (ItsLocalInfo.TMLCUSTCD != "")
             {
@@ -215,7 +146,7 @@ namespace TML1010
             // 납품 취소
             if (commandName == "MTRCUST_INVOICE_CANCEL")
             {
-                ItsMaria.Set("TML1010_R01", "DEL_MTRCUSTLOT");
+                ItsMaria.Set("TML1010_R02", "DEL_MOVE_LOT");
 
                 ItsMaria.AddModel(MODEL_A1);
 
@@ -242,24 +173,7 @@ namespace TML1010
                 {
                     if (MODEL_G1.IsChecked(i))
                     {
-                        if (MODEL_G1.GetDecimal(i, "LOTQTY") == 0)
-                        {
-                            ShowMessageBox("", "출하수량을 입력하세요. (행 : " + (i + 1) + ")");
-                            return;
-                        }
-
-                        if (MODEL_G1.GetDecimal(i, "CARINQTY") == 0)
-                        {
-                            ShowMessageBox("", "적입량을 입력하세요. (행 : " + (i + 1) + ")");
-                            return;
-                        }
-
-                        ItsMaria.AddList("ITEMID_LIST", MODEL_G1.GetText(i, "ITEMID"));
-                        ItsMaria.AddList("LOTQTY_LIST", MODEL_G1.GetText(i, "LOTQTY"));
-                        ItsMaria.AddList("LOTTP_LIST", MODEL_G1.GetText(i, "LOTTP"));
-                        ItsMaria.AddList("CARINQTY_LIST", MODEL_G1.GetText(i, "CARINQTY"));
-                        ItsMaria.AddList("LOTUNIT_LIST", MODEL_G1.GetText(i, "LOTUNIT"));
-                        ItsMaria.AddList("WARECD_LIST", MODEL_G1.GetText(i, "WARECD"));
+                        ItsMaria.AddList("LOTKEY_LIST", MODEL_G1.GetValue(i, "LOTKEY"));
                     }
                 }
 

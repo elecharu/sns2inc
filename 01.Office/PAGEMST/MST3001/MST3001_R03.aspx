@@ -10,7 +10,7 @@
 <%-- SEARCH --%>
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" Runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
-        <Its:find runat="server" Label="부품코드" ID ="PARTCD" Field="PARTCD" GPCD="PARTCD" REF01="EQM" InputWidth="120" NameWidth="180"/>
+        <Its:find runat="server" Label="부품코드" ID ="PARTCD" Field="PARTCD" GPCD="ITEMCD" REF01="DM100700" InputWidth="120" NameWidth="180"/>
 
     </Its:div>
 </asp:Content>
@@ -52,7 +52,7 @@
                     <Its:num runat="server" Label="재고수량" ID="num_STOCKQTY"  Field="STOCKQTY" InputWidth="150"  />
                     <Its:num runat="server" Label="안전재고수량" ID="num_SAFEQTY"  Field="SAFEQTY" InputWidth="150"  />
                     <Its:newline runat="server" />
-                    <Its:combo runat="server" Label="단위" ID="cmb_UNIT" GPCD="ITEMUNIT"  Field="UNIT" InputWidth="110"  />
+                    <Its:combo runat="server" Label="단위" ID="cmb_UNIT" GPCD="DM150"  Field="UNIT" InputWidth="110"  />
                     <Its:newline runat="server" />
                     <Its:textarea runat="server" Label="특이사항" ID="Textarea1"  Field="REMARK" InputWidth="393"  />
                 </Its:div>

@@ -1,0 +1,129 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.IO;
+using System.Xml;
+using System.Data;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+using ITSLIB;
+using DevExpress.Xpf.Grid;
+
+namespace TML1010
+{
+    /// <summary>
+    /// R01.xaml에 대한 상호 작용 논리
+    /// </summary>
+    public partial class S01 : ITSLIB.ItsPageTml
+    {
+        ItsModelPanel MODEL_S1 = new ItsModelPanel();
+        ItsModelPanel MODEL_A1 = new ItsModelPanel();
+
+        ItsModelGrid MODEL_G1 = new ItsModelGrid();
+        ItsModelGrid MODEL_G2 = new ItsModelGrid();
+
+
+        // 생성자
+        public S01()
+        {
+            InitializeComponent();
+
+            MODEL_S1.Binding(PANEL_S1);
+            MODEL_S1.DefaultValue("SDATE", DateTime.Now);
+            MODEL_S1.DefaultValue("EDATE", DateTime.Now);
+            MODEL_S1.InitData();
+
+            MODEL_A1.Binding(PANEL_A1);
+            MODEL_A1.InitData();
+
+            MODEL_G1.Binding(GRID_G1);
+
+            MODEL_G2.Binding(GRID_G2);
+        }
+
+        public override void EventPageLoaded()
+        {
+            base.EventPageLoaded();
+
+            if (ItsLocalInfo.TMLCUSTCD != "")
+            {
+                cb_CUSTCD.Value = ItsLocalInfo.TMLCUSTCD.ToString();
+            }
+
+            MODEL_S1.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));
+            MODEL_S1.SetValue("EDATE", DateTime.Now.AddMonths(1).AddDays(-DateTime.Now.Day).ToString("yyyy-MM-dd"));
+
+            PANEL_A1.Close();
+        }
+
+        public override void EventCommand(string commandName)
+        {
+            base.EventCommand(commandName);
+
+            // 납품 조회
+            if (commandName == "LIST_INVOICE")
+            {
+                ItsMaria.Set("TML1010_S01", "LIST_INVOICE");
+
+                ItsMaria.AddModel(MODEL_S1);
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_G1.SetData(ds.Tables[0]);
+                (GRID_G1.View as TableView).BestFitColumns();
+            }
+            else if (commandName == "DEL_INVOICE")
+            {
+                ItsMaria.Set("TML1010_S01", "DEL_INVOICE");
+
+                for (int i = 0; i < MODEL_G1.Rows.Count; i++)
+                {
+                    if (MODEL_G1.IsChecked(i))
+                    {
+                        ItsMaria.AddList("INVOICEKEY_LIST", MODEL_G1.GetText(i, "INVOICEKEY"));
+                        ItsMaria.AddList("LOTKEY_LIST", MODEL_G1.GetText(i, "LOTKEY"));
+                    }
+                }
+
+                DataSet ds = ItsMaria.Call();
+
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                EventCommand("LIST_INVOICE");
+            }
+        }
+        
+        public override void EventMessageResult(string commandName)
+        {
+            base.EventMessageResult(commandName);
+        }
+
+        private void Text_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter)
+            {
+                EventCommand("LIST_INVOICE");
+            }
+        }
+    }
+}
+

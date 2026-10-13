@@ -10,7 +10,8 @@ ItsPage.Load = function () {
         column.create('규격', 'SPEC', { width: 150, readOnly: false }),
         column.create('재고수량', 'STOCKQTY', { width: 90, readOnly: true, columnType: enumColumnTypes.number }),
         column.create('안전재고수량', 'SAFEQTY', { width: 90, readOnly: false, columnType: enumColumnTypes.number }),
-        column.create('단위', 'UNIT', { width: 80, align:'center', readOnly: false, columnType: enumColumnTypes.combo, gpcd: 'ITEMUNIT' }),
+        // 2026-10-12 [설비부품 그리드] 단위 콤보 컬럼 공통코드 DM150 적용
+        column.create('단위', 'UNIT', { width: 80, align:'center', readOnly: false, columnType: enumColumnTypes.combo, gpcd: 'DM150' }),
         column.create('특이사항', 'REMARK', { width: 250, readOnly: false }),
         column.band('사진관리', {}, [
             column.create("파일등록", "FILEKEY", { width: 80, columnType: enumColumnTypes.button, iconCls: 'fa-file' }),

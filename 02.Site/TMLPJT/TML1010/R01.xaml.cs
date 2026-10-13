@@ -151,7 +151,7 @@ namespace TML1010
                 }
 
                 MODEL_G1.SetData(ds.Tables[0]);
-                (GRID_G1.View as TableView).BestFitColumns();
+               // (GRID_G1.View as TableView).BestFitColumns();
             }
             // 납품 등록
             else if (commandName == "ADD_MTRCUSTLOT") {
