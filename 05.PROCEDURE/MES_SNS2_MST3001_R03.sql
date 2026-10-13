@@ -2,7 +2,7 @@
 -- *****************************************************************************
 -- Comment: 설비부품정보 마스터관리
 -- Create:  2024-02-22  13:50   김영철
--- Modify:  2026-10-13          한성수  부품재고·로케이션 최적화 조회/저장, 로케이션 코드 수정 UPDATE 및 중복 검증·SQL 튜닝
+-- Modify:  2026-10-13          한성수  부품재고·로케이션 최적화 조회/저장, 안전재고 부족 시 핑크색(BACKGROUND) 표기, 로케이션 코드 수정 및 중복 검증·SQL 튜닝
 -- *****************************************************************************
   IN $COMPANYCD       VARCHAR(100),
   IN $FACTORYCD       VARCHAR(100),
@@ -61,7 +61,11 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
            COALESCE(MSTITEM_EQMPARTS.SAFEQTY, 0) AS SAFEQTY,
            COALESCE(MSTITEM_EQMPARTS.LOTQTY, 0) AS LOTQTY,
            COALESCE(MSTITEM_EQMPARTS.LOCACD, '') AS LOCACD,
-           COALESCE(MSTLOCA_EQMPARTS.LOCANM, '') AS LOCANM
+           COALESCE(MSTLOCA_EQMPARTS.LOCANM, '') AS LOCANM,
+           CASE WHEN COALESCE(MSTITEM_EQMPARTS.LOTQTY, 0) < COALESCE(MSTITEM_EQMPARTS.SAFEQTY, 0)
+                THEN 'PINK'
+                ELSE ''
+           END AS BACKGROUND
     FROM MSTITEM
     LEFT JOIN MSTITEM_EQMPARTS
       ON MSTITEM_EQMPARTS.ITEMID = MSTITEM.ITEMID

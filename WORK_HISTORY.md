@@ -17,6 +17,15 @@
 
 ## 🕒 2026-10-13 (화) 작업 내역
 
+### 5. MST3001_R03 안전재고 대비 현재고 부족 시 핑크색(BACKGROUND) 공통 컴포넌트 연동
+- **수정/대상 파일**: [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
+- **배경 및 원인**: 설비부품 기준정보 화면 그리드에서 부품의 현재고(LOTQTY)가 안전재고(SAFEQTY)보다 적을 경우, 공통 컴포넌트(ItsGrid)의 배경색 지원 기능을 활용하여 행 배경을 핑크색(PINK)으로 강조 표기하도록 요청.
+- **작업 상세 내용**:
+  - 1) 공통 컴포넌트 메커니즘 분석(`ItsGrid.js`): `ItsGrid.itemFormatter`에서 행 데이터의 `BACKGROUND` 필드 값(`$obj.rows[r]._data['BACKGROUND']`)을 읽어 셀 배경색(`cell.style.backgroundColor`)으로 자동 반영하는 표준 규약 확인.
+  - 2) 프로시저 SELECT 확장(`MES_SNS2_MST3001_R03.sql`): `SEL_ITEM` 분기에서 `CASE WHEN COALESCE(MSTITEM_EQMPARTS.LOTQTY, 0) < COALESCE(MSTITEM_EQMPARTS.SAFEQTY, 0) THEN 'PINK' ELSE '' END AS BACKGROUND` 컬럼을 SELECT 절에 추가하여 조회 시 재고 부족 행 자동 핑크색 렌더링.
+  - 3) 화면 스크립트(`MST3001_R03.js`): 화면에서 프레임워크 내부 객체(`_data['BACKGROUND']`)를 임의 조작하거나 `grid.refresh()` 깜빡임을 유발하는 비표준 코드를 배제하고, 프로젝트 실무 표준에 맞추어 `grid1.onChanged`는 단순 `CheckRow`만 수행하며 저장 후 자동 재조회 시 프로시저(`SEL_ITEM`)가 계산한 최신 `BACKGROUND`가 일관성 있게 렌더링되도록 단순화.
+- **검증 결과**: 전 파일 UTF-8 with BOM, CRLF 개행 및 JS 구문 검사 무결성 확인 완료.
+
 ### 4. MST3001_R03 로케이션 코드 수정 시 중복 검증 추가 및 실무 표준 SQL 튜닝
 - **수정/대상 파일**: [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
 - **배경 및 원인**: 로케이션 코드 수정 또는 신규 등록 시 이미 등록된 로케이션 코드를 입력했을 때 중복 키 에러나 의도치 않은 데이터 왜곡을 방지하기 위한 사전 검증 처리 및 실무 표준 SQL 성능 튜닝 요청.
