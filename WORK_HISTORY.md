@@ -17,6 +17,32 @@
 
 ## 🕒 2026-10-13 (화) 작업 내역
 
+### 4. MST3001_R03 로케이션 코드 수정 시 중복 검증 추가 및 실무 표준 SQL 튜닝
+- **수정/대상 파일**: [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
+- **배경 및 원인**: 로케이션 코드 수정 또는 신규 등록 시 이미 등록된 로케이션 코드를 입력했을 때 중복 키 에러나 의도치 않은 데이터 왜곡을 방지하기 위한 사전 검증 처리 및 실무 표준 SQL 성능 튜닝 요청.
+- **작업 상세 내용**:
+  - 1) 프로시저 중복 검증(`MES_SNS2_MST3001_R03.sql`): `SAVE_LOCA` 분기에서 신규 등록 시 기존 코드와의 중복, 수정 시 타 행 코드와의 중복을 단일 인덱스 쿼리(`IF EXISTS (SELECT 1 FROM MSTLOCA_EQMPARTS WHERE LOCACD = _$LOCACD AND LOCACD <> _$OLD_LOCACD LIMIT 1)`)로 철저히 검증하고, 중복 시 `CALL COMERR(CONCAT('이미 등록된 로케이션 코드입니다. [', _$LOCACD, ']')); LEAVE PROC;` 에러 처리.
+  - 2) 실무 표준 SQL 튜닝(`MES_SNS2_MST3001_R03.sql`):
+    - 불필요한 중복 SELECT 제거: 기존 UPDATE 분기 전의 `EXISTS` 조회 및 신규 분기 전의 `EXISTS` 조회를 제거하여, 중복 검증 통과 후 `_$OLD_LOCACD <> ''`이면 즉시 UPDATE, 없으면 즉시 INSERT로 직행시켜 I/O 절감.
+  - 3) 화면 스크립트(`MST3001_R03.js`): 화면단 유효성 검사를 완전히 제거하고, 단순히 선택된 행 목록을 프로시저로 전달하여 모든 유효성 검증(필수값 체크, 중복 체크 등)이 프로시저(`SAVE_LOCA`)에서 전담·일원화되어 처리되도록 정리.
+- **검증 결과**: UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료. 프로시저 내부 쿼리 라인 날짜 주석 미포함 및 최상단 Modify 1일 1행 원칙 준수 확인.
+
+### 3. MST3001_R03 설비부품 중요도·재고·로케이션 컬럼 추가, SEL_ITEM 쿼리 최적화, 로케이션 관리 팝업(코드 직접입력) 및 메인 그리드 재고·로케이션 수정·자동선택 저장 구현
+- **수정/대상 파일**: [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql), [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md)
+- **배경 및 원인**: 설비부품 기준정보 화면에 중요도등급·안전재고·현재고·로케이션 컬럼 추가 및 헤더 필터 우측 로케이션 기준정보 관리 팝업(조회·행추가·저장·삭제) 기능 구현 요청. 기존 SEL_ITEM의 80여 개 미사용 컬럼 다중 조회에 따른 비효율을 해결하고 화면 필수 18개 컬럼으로 슬림화 최적화 요청. 사용자 요청에 따라 로케이션 기준정보 관리 팝업의 로케이션코드(LOCACD)를 사용자가 직접 입력할 수 있도록 수정하고, 프로시저의 GETKEY 자동 채번을 제거하여 사용자가 입력한 코드값으로 직접 저장되도록 전환. 사용자 지정 MST3001_R03(L26-L70)의 표준 들여쓰기 서식을 공통 개발 규칙(.agents/rules/procedure.md)에 정식 반영. 추가로 메인 그리드(grid1)의 안전재고(SAFEQTY), 현재고(LOTQTY), 로케이션(LOCANM) 컬럼을 수정 가능(readOnly: false)하도록 전환하고, 상단 공통 헤더의 [저장] 버튼 클릭 시 수정한 항목들에 대해 왼쪽 체크박스가 자동 선택되어 선택된 항목들만 DB에 일괄 저장되도록 구현.
+- **작업 상세 내용**:
+  - 1) 로케이션 팝업 그리드(MST3001_R03.js): grid_LOCA에서 로케이션코드(LOCACD) 컬럼을 `readOnly: false`로 전환하여 사용자 직접 입력 지원. 팝업 저장(`btn_POP_SAVE`) 시 로케이션코드 및 로케이션명 필수 입력 유효성 검사 추가.
+  - 2) 메인 그리드 및 저장(MST3001_R03.js): grid1 생성을 `isCheckBoxGrid: true`로 변경하여 체크박스 그리드 활성화. 안전재고(SAFEQTY), 현재고(LOTQTY), 로케이션(LOCANM) 3개 컬럼에 `readOnly: false` 설정. 조회 시 원본값 보관, 셀 수정 시 체크박스 자동 선택(`CheckRow`), 상단 헤더 저장(`ItsButton.EventSave`) 시 원본 대비 변경된 행 일괄 자동 선택 후 `SAVE_ITEM` 호출 및 재조회.
+  - 3) 프로시저(MES_SNS2_MST3001_R03.sql):
+    - IN 파라미터에 `$ITEMID_LIST`, `$SAFEQTY_LIST`, `$LOTQTY_LIST`, `$OLD_LOCACD_LIST` 추가 (총 13개 파라미터).
+    - `SAVE_LOCA` 분기: `GETKEY('LOCACD')` 자동 채번 로직을 제거하고, 사용자가 입력한 `$LOCACD`에 대해 빈 값 검증 후 직접 INSERT/UPDATE 처리. 기존 행의 코드 변경 시 `OLD_LOCACD_LIST` 기반으로 `MSTLOCA_EQMPARTS`의 PK 코드를 정상 UPDATE하고, `MSTITEM_EQMPARTS`에 지정된 재고 로케이션코드도 연쇄 업데이트 처리.
+    - `SAVE_ITEM` 분기: `MSTITEM_EQMPARTS`에 안전재고/현재고/로케이션코드 저장(존재 시 UPDATE, 미존재 시 INSERT).
+    - 들여쓰기 서식 규칙(WHEN 빈 줄 1행, 4/6/8/10스페이스 계층, SELECT 11칸 열 정렬) 완벽 준수.
+  - 4) 파라미터 등록(MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql): 총 13건 파라미터 갱신 및 검증 스크립트 정비.
+  - 5) 마크업(MST3001_R03.aspx): btn_LOCA_MNG 버튼, pop_LOCA 팝업 및 상단 4버튼(조회·저장·행추가·삭제)과 grid_LOCA 배치, 800x480 황금비율 최적화 유지. 순수 태그 보존.
+- **검증 결과**: node -c JS 구문검사 통과. IIS Express HTTP 200 OK 렌더링 검증 완료. 전 파일 UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료.
+
+
 ### 2. MTR0001_R04 실제 발주 구조 적용 및 품목유형 오류 수정
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_MTR0001_R04.sql, 05.Procedure/MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql, 01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx, 01.Office/PAGEMTR/MTR0001/MTR0001_R04.js
 - **배경 및 원인**: 다른 프로젝트 기반 화면에서 MSTITEM.ITEMTP 없는 컬럼 오류 발생. 사용자가 실제 테이블 확인 및 현재 프로젝트 기준 업데이트 요청. 입고처는 발주 전체 MTRODR.INCUSTCD 선택, 공통 ERP 트리거는 별도 처리 선택
@@ -1140,6 +1166,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql), [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js) | MST3001_R03 설비부품 재고·로케이션 컬럼 추가 및 로케이션 기준정보 관리 팝업 CRUD 구현 완료 (실제 DB 프로시저 및 시스템 파라미터 반영은 사용자 진행) | node -c 구문검사 통과. IIS Express HTTP 200 OK 렌더링 검증 완료. MariaDB SELECT 모의 쿼리 무결성 확인. 전 파일 UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료. |
 | **완료** | 05.Procedure/MES_SNS2_MTR0001_R04.sql, 05.Procedure/MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql, 01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx, 01.Office/PAGEMTR/MTR0001/MTR0001_R04.js | 로컬 페이지·전용프로시저 수정 완료. 프로시저 저장→파라미터등록SQL(13개)→ASPX/JS 반영 필요. 실제 ERP 수신은 별도 ERP로그 트리거 연결 수정 전 오류 가능 | 선 검증 후 반영. 실제 DB SELECT 3조회: 설비자재181건/고유발주상세181건, ERP0건, MES181건. 실제 스키마 격리 MariaDB10.2.44에서 원래ITEMTP 오류 재현·필터·ERP원본수신·부분/전체수신·트리거로그 모의·0값갱신·입고처·삭제보호·실패롤백·메타등록19건, 실제JS VM10건 합계29건 통과. BOM/CRLF·node문법·원본해시 확인. 실제 ERP 로그테이블은 IF_MES_SNS에만 있고 FAC2 트리거의 무스키마 참조가 잘못됨; 사용자가 별도 처리 선택. 실제 수신/실브라우저/서버DDL-DML·배포 미수행 |
 | **완료** | [MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx), [MTR0001_R04.aspx.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx.cs), [MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql) | MTR0001_R04 설비부품 발주조회 화면 및 프로시저 MES_SNS2 프로젝트 이관·표준화 구축 완료 | C# 클래스 정규화, ASPX 2단 탭/공통코드 매핑, JS 그리드 컬럼 최적화, 프로시저 전면 개편(ERP IF/가입고 연동), 27개 파라미터 등록 SQL 준비, MSBuild 및 쿼리 검증 완료 (실제 DB 반영은 사용자 진행) |
 | **완료** | [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql) | 설비부품정보 프로시저 신규 구성/표준화 및 단위 콤보박스 DM150 적용 완료 | 프로시저 오류메시지/NULL조건/변수타입 보정, SYSTEM_PARAMETERS SQL 준비, UTF-8 BOM/CRLF 검증 완료 (실제 DB 반영은 사용자 진행) |

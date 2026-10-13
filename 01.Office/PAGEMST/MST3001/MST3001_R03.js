@@ -1,308 +1,251 @@
 ﻿/// <reference path="../../Script/reference.js" />
 
-/* 페이지 로드 시 수행 */
+// 2026-10-13 [설비부품정보] 페이지 초기 로드 및 그리드 정의
 ItsPage.Load = function () {
 
+    // 2026-10-13 [설비부품 메인] 체크박스 그리드 생성 및 재고·로케이션 수정 가능 설정
     ItsGrid.Create('grid1', { isCheckBoxGrid: true }, [
-        column.create('부품코드', 'PARTCD', { width: 90 }),
-        column.create('부품명', 'PARTNM', { width: 150, readOnly: false }),
-        column.create('타입', 'TYPE', { width: 150, readOnly: false }),
-        column.create('규격', 'SPEC', { width: 150, readOnly: false }),
-        column.create('재고수량', 'STOCKQTY', { width: 90, readOnly: true, columnType: enumColumnTypes.number }),
-        column.create('안전재고수량', 'SAFEQTY', { width: 90, readOnly: false, columnType: enumColumnTypes.number }),
-        // 2026-10-12 [설비부품 그리드] 단위 콤보 컬럼 공통코드 DM150 적용
-        column.create('단위', 'UNIT', { width: 80, align:'center', readOnly: false, columnType: enumColumnTypes.combo, gpcd: 'DM150' }),
-        column.create('특이사항', 'REMARK', { width: 250, readOnly: false }),
-        column.band('사진관리', {}, [
-            column.create("파일등록", "FILEKEY", { width: 80, columnType: enumColumnTypes.button, iconCls: 'fa-file' }),
-            column.create('파일명', 'FILENAME', { width: 200 }),
-            column.create("파일보기", "OPENFILE", { width: 80, columnType: enumColumnTypes.button, iconCls: 'fa-search' }),
-        ]),
-        column.split()
+        column.create("법인", "COMPANYCD", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'COMPANYCD' }),
+        column.create("품목유형", "ITEMCG", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM100', readOnly: true }),
+        column.create("대분류", "ITEM_LVL1", { width: 100, align: 'center' }),
+        column.create("중분류", "ITEM_LVL2", { width: 100, align: 'center' }),
+        column.create("소분류", "ITEM_LVL3", { width: 100, align: 'center' }),
+        column.create("세분류", "ITEM_LVL4", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'PP310' }),
+        column.create("품목ID", "ITEMID", { width: 100, align: 'center' }),
+        column.create("품목코드", "ITEMCD", { width: 100, align: 'center', backColor: enumColor.greenLight2 }),
+        column.create("품명", "ITEMNM", { width: 120 }),
+        column.create("규격", "ITEMSPEC", { width: 120 }),
+        column.create("중요도등급", "GRADE", { width: 90, align: 'center' }),
+        column.create("안전재고", "SAFEQTY", { width: 90, align: 'right', format: '#,##0', readOnly: false }),
+        column.create("현재고", "LOTQTY", { width: 90, align: 'right', format: '#,##0', readOnly: false }),
+        column.create("로케이션", "LOCANM", { width: 110, align: 'center', readOnly: false }),
+        column.create("관리단위", "ITEMUNIT", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM150' }),
+        column.create("공급구분", "ITEMSRC", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM160' }),
+        column.create("종료여부", "ENDYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
     ]);
 
+    // 2026-10-13 [설비부품 로케이션] 팝업 로케이션 그리드 생성 (로케이션코드·명 모두 직접 수정 가능)
+    ItsGrid.Create('grid_LOCA', { isCheckBoxGrid: true }, [
+        column.create("로케이션코드", "LOCACD", { width: 180, align: 'center', readOnly: false }),
+        column.create("로케이션 명", "LOCANM", { width: 450, align: 'left', readOnly: false }),
+    ]);
 
-    //ItsButton.EventSearch();
+    ItsCombo.SetValueByIndex('cmb_COMPANYCD', 0);
+    // 2026-10-13 [설비부품정보] 품목유형 설비자재(DM100700) 고정값 설정 및 품목검색 연동
+    ItsCombo.SetValue('sdiv1_combo_ITEMCG', 'DM100700');
+    ItsFind.SetRef02('sdiv1_find_ITEMID', 'DM100700');
 };
 
-/* 조회 */
+// 2026-10-13 [설비부품정보] 셀 수정 시 해당 행 체크박스 자동 선택
+ItsGrid.Event('grid1').onChanged = function (rowIndex, field, newValue, oldValue) {
+    if (field === 'SAFEQTY' || field === 'LOTQTY' || field === 'LOCANM') {
+        ItsGrid.CheckRow('grid1', rowIndex);
+    }
+};
+
+// 2026-10-13 [설비부품정보] 품목 및 부품 재고현황 조회
 ItsButton.EventSearch = function () {
-    var maria = new ItsMaria('MST3001_R03', 'LIST_EQMPART');
 
+    var maria = new ItsMaria('MST3001_R03', 'SEL_ITEM');
     maria.AddPanel('sdiv1');
-
-    maria.CallProc();
-
-    if (maria.isError) {
-        maria.ShowErrMsg();
-        return;
-    }
-
-    ItsGrid.SetStore('grid1', maria.store);
-
-    ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
-};
-
-
-/* 추가 */
-ItsButton.EventAdd = function () {
-    ItsPage.InitData('pdiv1');
-    ItsPop.Open('pop1');
-};
-
-//팝업 저장버튼 이벤트
-ItsPop.Event('pop1').onAddBtnClick = function () {    
-    ItsMsg.Confirm("해당부품을 추가하시겠습니까?", function () {
-        uploadStatus = { file1Done: false,  fileKey1: '' };
-
-        const changed1 = ItsFileManager.IsFileChanged('pop_file_PART');
-        
-        if (changed1) ItsFileManager.Upload('pop_file_PART');
-
-        if (!changed1) {
-            addEqm('');
-        }
-    })
-}
-
-ItsFileManager.Event('pop_file_PART').onUpload = function (id, fileKey) {
-    uploadStatus.file1Done = true;
-    uploadStatus.fileKey1 = fileKey;
-    tryAddEqm();
-};
-
-
-function tryAddEqm() {
-    const changed1 = ItsFileManager.IsFileChanged('pop_file_PART');
-    
-    if (!changed1 || uploadStatus.file1Done)  {
-        addEqm(uploadStatus.fileKey1);
-    }
-}
-
-function addEqm(fileKey) {
-    var maria = new ItsMaria('MST3001_R03', 'ADD_EQMPART');
-    maria.AddPanel('pdiv1');
-    maria.AddParam('IMGFILEKEY', fileKey);
-
     maria.CallProc();
     if (maria.isError) {
         maria.ShowErrMsg();
         return;
     }
-    ItsMsg.Toast(ItsMsg.CommonMsg.AddComplete);
-    ItsPop.Close('pop1');
-    ItsButton.EventSearch();
-}
 
-//팝업 취소버튼
-ItsPop.Event('pop1').onCancelBtnClick = function () {
-    ItsPop.Close('pop1');
-}
+    var store = maria.store.YnToBool('IOYN').YnToBool('SEPAYN').YnToBool('ENDYN');
+    for (var i = 0; i < store.data.length; i++) {
+        var row = store.data[i];
+        row._ORG_SAFEQTY = row.SAFEQTY;
+        row._ORG_LOTQTY  = row.LOTQTY;
+        row._ORG_LOCANM  = row.LOCANM;
+    }
 
-/* 저장 */
+    ItsGrid.SetStore('grid1', store);
+    ItsMsg.Toast(maria.store.Length() + '건이 조회되었습니다.');
+
+    ItsGrid.Get('grid1').autoSizeColumns();
+};
+
+// 2026-10-13 [설비부품정보] 상단 헤더 저장 (수정 항목 자동 체크 후 저장)
 ItsButton.EventSave = function () {
-    ItsMsg.Confirm("선택항목을 수정하시겠습니까?", function () {
-        var maria = new ItsMaria('MST3001_R03', 'UPDATE_EQMPART');
 
-        for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
-             if (ItsGrid.IsChecked('grid1', i)) {
-                maria.AddList('PARTCD_LIST', ItsGrid.GetValue('grid1', i, 'PARTCD'));
-                maria.AddList('PARTNM_LIST', ItsGrid.GetValue('grid1', i, 'PARTNM'));
-                maria.AddList('SPEC_LIST', ItsGrid.GetValue('grid1', i, 'SPEC'));
-                maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid1', i, 'REMARK'));
-                maria.AddList('SAFEQTY_LIST', ItsGrid.GetValue('grid1', i, 'SAFEQTY'));
-                maria.AddList('TYPE_LIST', ItsGrid.GetValue('grid1', i, 'TYPE'));
-                maria.AddList('UNIT_LIST', ItsGrid.GetValue('grid1', i, 'UNIT'));                 
-             }
+    var totalRows = ItsGrid.Length('grid1');
+    if (totalRows === 0) {
+        ItsMsg.Toast('조회된 데이터가 없습니다.');
+        return;
+    }
+
+    // 안전재고, 현재고, 로케이션 수정한 항목에 대해 왼쪽 체크박스 자동 선택
+    for (var i = 0; i < totalRows; i++) {
+        var curSafeQty = parseFloat(ItsGrid.GetValue('grid1', i, 'SAFEQTY')) || 0;
+        var curLotQty  = parseFloat(ItsGrid.GetValue('grid1', i, 'LOTQTY'))  || 0;
+        var curLocaNm  = (ItsGrid.GetValue('grid1', i, 'LOCANM') || '').trim();
+
+        var orgSafeQty = parseFloat(ItsGrid.GetValue('grid1', i, '_ORG_SAFEQTY')) || 0;
+        var orgLotQty  = parseFloat(ItsGrid.GetValue('grid1', i, '_ORG_LOTQTY'))  || 0;
+        var orgLocaNm  = (ItsGrid.GetValue('grid1', i, '_ORG_LOCANM') || '').trim();
+
+        if (curSafeQty !== orgSafeQty || curLotQty !== orgLotQty || curLocaNm !== orgLocaNm) {
+            ItsGrid.CheckRow('grid1', i);
         }
+    }
 
-        maria.CallProc();
+    if (!HasCheckedRows('grid1')) {
+        ItsMsg.Toast('수정되거나 선택된 항목이 없습니다.');
+        return;
+    }
 
-        if (maria.isError) {
-            maria.ShowErrMsg();
-            return;
-        } 
+    var saveCnt = 0;
+    for (var i = 0; i < totalRows; i++) {
+        if (ItsGrid.IsChecked('grid1', i)) {
+            saveCnt++;
+        }
+    }
 
-        ItsMsg.Toast('수정되었습니다.');
-        ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
-        ItsButton.EventSearch();
+    ItsMsg.Confirm('선택된 설비부품 ' + saveCnt + '건을 저장하시겠습니까?', function () {
+        var maria = new ItsMaria('MST3001_R03', 'SAVE_ITEM');
+        maria.AddPanel('sdiv1');
 
-    });
-};
-
-/* 삭제 */
-ItsButton.EventDelete = function () {
-    ItsMsg.Confirm("선택항목을 삭제하시겠습니까?", function () {
-        var maria = new ItsMaria('MST3001_R03', 'DELETE_EQMPART');
-
-        for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        for (var i = 0; i < totalRows; i++) {
             if (ItsGrid.IsChecked('grid1', i)) {
-                maria.AddList('PARTCD_LIST', ItsGrid.GetValue('grid1', i, 'PARTCD'));
+                var itemId  = (ItsGrid.GetValue('grid1', i, 'ITEMID')  || '').trim();
+                var safeQty = parseFloat(ItsGrid.GetValue('grid1', i, 'SAFEQTY')) || 0;
+                var lotQty  = parseFloat(ItsGrid.GetValue('grid1', i, 'LOTQTY'))  || 0;
+                var locaNm  = (ItsGrid.GetValue('grid1', i, 'LOCANM')  || '').trim();
+
+                maria.AddList('ITEMID_LIST', itemId);
+                maria.AddList('SAFEQTY_LIST', safeQty);
+                maria.AddList('LOTQTY_LIST', lotQty);
+                maria.AddList('LOCANM_LIST', locaNm);
             }
         }
 
         maria.CallProc();
-
         if (maria.isError) {
             maria.ShowErrMsg();
             return;
         }
 
-        ItsMsg.Toast('삭제가되었습니다.');
+        ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
         ItsButton.EventSearch();
     });
-
 };
 
+ItsCombo.Event('sdiv1_combo_ITEMCG').onChanged = function (value) {
+    ItsFind.SetRef02('sdiv1_find_ITEMID', value);
+};
 
-ItsGrid.Event('grid1').onButtonClick = function (rowIndex, field) {
-    if (field == "FILEKEY") {
-        var maria = new ItsMaria('MST3001_R03', 'GET_FILEURL');
-        maria.AddRecord('grid1', rowIndex);
+// 2026-10-13 [로케이션 관리] 로케이션 기준정보 관리 팝업 열기
+ItsButton.Event('btn_LOCA_MNG').onClick = function () {
+    ItsPop.Open('pop_LOCA');
+    SearchLoca();
+};
+
+// 2026-10-13 [로케이션 관리] 팝업 조회
+ItsButton.Event('btn_POP_SEARCH').onClick = function () {
+    SearchLoca();
+};
+
+// 2026-10-13 [로케이션 관리] 로케이션 기준정보 조회 처리
+function SearchLoca() {
+    var maria = new ItsMaria('MST3001_R03', 'SEL_LOCA');
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return;
+    }
+
+    for (var i = 0; i < maria.store.data.length; i++) {
+        maria.store.data[i]._ORG_LOCACD = maria.store.data[i].LOCACD;
+    }
+
+    ItsGrid.SetStore('grid_LOCA', maria.store);
+    ItsMsg.Toast(maria.store.Length() + '건의 로케이션이 조회되었습니다.');
+}
+
+// 2026-10-13 [로케이션 관리] 팝업 행추가
+ItsButton.Event('btn_POP_ADD').onClick = function () {
+    ItsGrid.AddRow('grid_LOCA', undefined, { isRowCheck: true, LOCACD: '', LOCANM: '', _ORG_LOCACD: '' });
+};
+
+// 2026-10-13 [로케이션 관리] 팝업 저장 (선택된 행 프로시저 전송 및 프로시저 검증)
+ItsButton.Event('btn_POP_SAVE').onClick = function () {
+    if (!HasCheckedRows('grid_LOCA')) {
+        ItsMsg.Toast('저장할 로케이션을 선택해주세요.');
+        return;
+    }
+
+    ItsMsg.Confirm('선택한 로케이션을 저장하시겠습니까?', function () {
+        var maria = new ItsMaria('MST3001_R03', 'SAVE_LOCA');
+
+        for (var i = 0; i < ItsGrid.Length('grid_LOCA'); i++) {
+            if (ItsGrid.IsChecked('grid_LOCA', i)) {
+                var locaCd    = (ItsGrid.GetValue('grid_LOCA', i, 'LOCACD') || '').trim();
+                var locaNm    = (ItsGrid.GetValue('grid_LOCA', i, 'LOCANM') || '').trim();
+                var oldLocaCd = (ItsGrid.GetValue('grid_LOCA', i, '_ORG_LOCACD') || '').trim();
+
+                maria.AddList('LOCACD_LIST', locaCd);
+                maria.AddList('LOCANM_LIST', locaNm);
+                maria.AddList('OLD_LOCACD_LIST', oldLocaCd);
+            }
+        }
+
         maria.CallProc();
         if (maria.isError) {
             maria.ShowErrMsg();
             return;
         }
 
-        ItsFileManager.SetFileKey('pdiv2_FILEKEY', maria.store.data[0]["FILEKEY"]);
-        ItsFileManager.SetFileName('pdiv2_FILEKEY', maria.store.data[0]['FILENAME']);
-        ItsText.SetValue('pdiv2_FILEURL', maria.store.data[0]['FILEURL']);
+        ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
+        SearchLoca();
+    });
+};
 
-        ItsPop.Open('pop2');
+// 2026-10-13 [로케이션 관리] 팝업 삭제 (체크된 행 삭제)
+ItsButton.Event('btn_POP_DEL').onClick = function () {
+    if (!HasCheckedRows('grid_LOCA')) {
+        ItsMsg.Toast('삭제할 로케이션을 선택해주세요.');
+        return;
     }
-    else if (field == "OPENFILE") {
-        // 파일보기 버튼
-        var maria = new ItsMaria('MST3001_R03', 'GET_FILEURL');
 
-        maria.AddRecord('grid1', rowIndex);
-        maria.CallProc();
+    ItsMsg.Confirm('선택한 로케이션을 삭제하시겠습니까?', function () {
+        var maria = new ItsMaria('MST3001_R03', 'DEL_LOCA');
+        var delCnt = 0;
 
-        if (maria.isError) {
-            maria.ShowErrMsg();
-            return;
-        }
-
-        var url = maria.store.data[0]['FILEURL'];
-
-        if (url != "" && url != undefined) {
-            window.open(url, '_blank');
-        }
-    }
-}
-
-
-
-ItsGrid.Event('grid1').onDoubleClick = function (rowIndex, field) {
-    if (field == "FILENAME" && ItsGrid.GetValue('gird1', rowIndex, 'FILENAME') != "" && ItsGrid.GetValue('grid1', rowIndex, 'FILENAME') != undefined) {
-        showPdf(ItsGrid.GetValue('grid1', rowIndex, 'FILEURL'), ItsGrid.GetValue('grid1', rowIndex, 'FILEURL'));
-    }
-}
-
-function showPdf(url, RUrl) {
-
-    if (RUrl.substr(RUrl.length - 3, 3) != "pdf") {
-        var top = (window.screen.height / 2) - (744 / 2);
-        if (ItsPage.$helpPop != undefined) {
-            ItsPage.$helpPop.close();
-        }
-        ItsPage.$helpPop = window.open(url, "_blank", 'height=500px, width=400px, top=' + top + 'px, left=200px, screenX=600px');
-        //ItsPage.$helpPop.focus();
-    }
-    else {
-        var path = RUrl;
-        if ($('#manual_content_pop').length == 0) {
-            var $iframeReport = "";
-            $iframeReport += "<div id='report_content_pop' class='ItsPop' title='Report Viewer' style='width:1200;hright:780'>";
-            $iframeReport += "<iframe id='manual_content' src = '../../Script/pdfjs/web/viewer.html?file=emptyFile.pdf' ";
-            $iframeReport += "scrolling='no' marginwidth='0' seamless ";
-            $iframeReport += "width='100%' height='100%'' frameborder=0 framespacing=0 ";
-            $iframeReport += "></iframe></div>";
-            var rptPop = $($iframeReport);
-            rptPop.dialog({
-                width: 1000,
-                height: 780,
-                autoOpen: false,
-                modal: true,
-                resizable: false,
-                open: function () {
-                    $('.ui-dialog-titlebar-close').html('<i class="fa fa-times"></i>');
-                    if (parseFloat($('#report_content_pop').parent().css('top').replace('px', '')) < 0) {
-                        $('#report_content_pop').parent().css('top', '0px')
-                    }
-                },
-                close: function (event, ui) {
-                    document.getElementById('manual_content').src = '../../Script/pdfjs/web/viewer.html?file=emptyFile.pdf';
+        for (var i = 0; i < ItsGrid.Length('grid_LOCA'); i++) {
+            if (ItsGrid.IsChecked('grid_LOCA', i)) {
+                var locaCd = (ItsGrid.GetValue('grid_LOCA', i, 'LOCACD') || '').trim();
+                if (locaCd !== '') {
+                    maria.AddList('LOCACD_LIST', locaCd);
+                    delCnt++;
                 }
-            })
+            }
         }
-        $('#report_content_pop').dialog("open");
-        document.getElementById('manual_content').src = '../../Script/pdfjs/web/viewer.html?file=' + path;
-    };
-}
 
-// 파일업로드 이벤트
-ItsFileManager.Event('pdiv2_FILEKEY').onUpload = function (id, filekey) {
-    var maria = new ItsMaria('MST3001_R03', 'UPLOAD_FILE');
-    maria.AddRecord('grid1', ItsGrid.GetCurrentIndex('grid1'));
-    maria.AddParam('FILEKEY', filekey);
-    maria.CallProc();
-    if (maria.isError) {
-        maria.ShowErrMsg();
-        return;
+        if (delCnt === 0) {
+            SearchLoca();
+            return;
+        }
+
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsMsg.Toast(ItsMsg.CommonMsg.DeleteComplete());
+        SearchLoca();
+    });
+};
+
+// 2026-10-13 [공통 유틸] 체크된 행 존재 여부 확인
+function HasCheckedRows(gridId) {
+    for (var i = 0; i < ItsGrid.Length(gridId); i++) {
+        if (ItsGrid.IsChecked(gridId, i)) {
+            return true;
+        }
     }
-
-    ItsPop.Close('pop2');
-    ItsMsg.Toast("업로드 완료");
-
-    ItsButton.EventSearch();
-}
-
-ItsFileManager.Event('pdiv2_FILEKEY').onDelete = function (id, filekey) {
-    var maria = new ItsMaria('MST3001_R03', 'DEL_FILE');
-    maria.AddRecord('grid1', ItsGrid.GetCurrentIndex('grid1'));
-    maria.AddParam('FILEKEY', filekey);
-    maria.CallProc();
-    if (maria.isError) {
-        maria.ShowErrMsg();
-        return;
-    }
-
-    ItsPop.Close('pop2');
-    ItsMsg.Toast("삭제 완료");
-
-    ItsButton.EventSearch();
-}
-
-// 다운로드 버튼
-ItsButton.Event('pdiv2_btn_DOWNLOAD').onClick = function () {
-    var url = ItsText.GetValue('pdiv2_FILEURL');
-
-    if (url != '' && url != undefined) {
-        var link = document.createElement('a');
-
-        url = url.replace('http://183.106.107.163:8001', '../..');  // 앞주소 날려줘야 pdf, 이미지파일이 바로 오픈안되고 다운로드됨        
-        link.href = url;
-        link.download = ItsFileManager.GetFileName('pdiv2_FILEKEY');
-        link.click();
-        link.remove();
-    }
-    else {
-        ItsMsg.Alert('등록된 파일이 없습니다.');
-        return;
-    }
-}
-
-// 파일보기
-ItsButton.Event('pdiv2_btn_OPEN_FILE').onClick = function () {
-    var url = ItsText.GetValue('pdiv2_FILEURL');
-
-    if (url != '' && url != undefined) {
-        window.open(url, '_blank');
-    }
-    else {
-        ItsMsg.Alert('등록된 파일이 없습니다.');
-        return;
-    }
+    return false;
 }

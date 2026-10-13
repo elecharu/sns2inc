@@ -116,47 +116,72 @@ trigger: always_on
 ### 3. 코드 들여쓰기 및 열 정렬 표준화 (가독성 최적화 지침)
 - **파라미터 및 변수 정렬**:
   - 입력 파라미터(`IN`) 및 변수 선언(`DECLARE`) 시 변수명, 데이터 타입, 주석이 일직선으로 정렬되도록 일관된 탭/공백 정렬을 적용합니다.
-- **제어문 및 SQL 블록 들여쓰기 (2스페이스 계층 구조)**:
+- **제어문 및 SQL 블록 들여쓰기 (계층 구조)**:
   - `PROC: BEGIN` 아래의 공통 검증 및 본문 블록은 기본 2스페이스 들여쓰기를 적용합니다.
-  - `CASE $CALLTYPE`의 각 `WHEN ... THEN` 분기 내부 코드, 제어문(`IF ... THEN ... END IF`, `WHILE ... DO ... END WHILE`) 내부는 2스페이스 단위로 계층적 들여쓰기를 적용합니다 (`IF` 내부 4스페이스, 중첩 `IF` 6스페이스).
-  - 논리적인 실행 단위(입력값 검증, 분기 조건, 메인 DML 실행 등) 사이에는 빈 줄을 적절히 배치하여 시각적 피로도를 낮춥니다.
+  - `CASE $CALLTYPE`의 각 `WHEN ... THEN` 분기 선언은 2스페이스(`  WHEN ... THEN`), 분기 선언 바로 다음 줄에는 빈 줄 1행을 배치하여 시각적 구분을 명확히 합니다.
+  - 분기 내부의 실행 코드(`IF`, `SET`, `SELECT` 등)는 4스페이스 들여쓰기(`    `)를 적용하며, 중첩 제어문 내부는 6스페이스 단위로 계층화합니다.
+  - 논리적인 실행 단위(입력값 검증, 변수 초기화/전처리, 메인 DML 실행 등) 사이에는 빈 줄을 적절히 배치하여 가독성을 극대화합니다.
 - **SELECT 절 컬럼 열 정렬 (가독성 표준 패턴)**:
-  - 복수 컬럼 나열 시 첫 번째 컬럼은 `SELECT ` 키워드 바로 뒤에 작성하고, 두 번째 행부터의 컬럼들은 `SELECT ` 키워드 길이(공백 7칸)에 일직선으로 맞추어 정렬합니다 (`       컬럼명`).
+  - 복수 컬럼 나열 시 첫 번째 컬럼은 `SELECT ` 키워드 바로 뒤에 작성하고, 두 번째 행부터의 컬럼들은 `SELECT ` 키워드 길이(공백 7칸)에 일직선으로 맞추어 11칸 시작선으로 정렬합니다 (`           컬럼명`).
   - 연관된 식별키, 명칭, 결과값 등의 컬럼 그룹 단위로 행을 구분하여 가독성을 극대화합니다.
-- **SQL 주요 절(Clause) 키워드 정렬**:
-  - `SELECT`, `FROM`, `INNER JOIN`, `LEFT JOIN`, `WHERE`, `GROUP BY`, `ORDER BY` 등의 주요 키워드는 동일한 들여쓰기 기준선에 배치합니다.
-  - 조인 다중 조건(`AND ...`) 및 `WHERE` 절의 후속 조건은 기준선에 맞춰 정렬하거나 2칸 들여쓰기하여 조건 범위를 명확히 합니다.
+- **SQL 주요 절(Clause) 및 JOIN/WHERE 정렬**:
+  - `SELECT`, `FROM`, `INNER JOIN`, `LEFT JOIN`, `WHERE`, `GROUP BY`, `ORDER BY` 등의 주요 키워드는 동일한 들여쓰기 기준선(4스페이스)에 일직선으로 배치합니다.
+  - `JOIN`의 `ON` 조건절은 JOIN 키워드보다 2스페이스 들여써서 6스페이스(`      ON ...`)로 배치하고, 조인 후속 `AND` 조건절은 `ON`의 시작 기준선에 맞추어 5~6스페이스(`     AND ...`)로 정렬합니다.
+  - `WHERE` 절의 단일 조건은 6스페이스(`      AND 컬럼 = 값`)에 정렬하고, 복합 `OR` 조건(검색어 필터 등)은 괄호 안쪽과 `OR` 키워드가 수직으로 일치하도록 아래 패턴으로 정렬합니다:
+    ```sql
+          AND (   $KEYWORD = ''
+               OR TABLE.COL1 LIKE CONCAT('%', $KEYWORD, '%')
+               OR TABLE.COL2 LIKE CONCAT('%', $KEYWORD, '%')
+              )
+    ```
   - `UNION ALL` 구문은 위아래 빈 줄을 두고 주요 키워드와 동일한 들여쓰기로 배치합니다.
-- **표준 서식 모범 예시 (`EQM1001_R04` 기준)**:
+- **표준 서식 모범 예시 (`MST3001_R03` 기준)**:
   ```sql
-  WHEN 'LIST_PLAN_EQM02' THEN -- 그룹·설비 최신 승인 항목 조회
-    SET _$PLANEMP = TRIM(COALESCE(_$PLANEMP, ''));
+  WHEN 'SEL_ITEM' THEN -- 설비부품 품목 마스터 및 재고·로케이션 조회 (화면 표시용 필수 컬럼 최적화)
+    
+    IF TRIM(COALESCE($COMPANYCD, '')) = '' THEN 
+      CALL COMERR('법인을 선택하십시오.');
+      LEAVE PROC;
+    END IF; 
 
-    IF _$PLANEMP <> '' THEN
-      SET _$PLANEMPCD = (SELECT EMPCD FROM MSTEMP WHERE EMPCD = _$PLANEMP LIMIT 1);
-    END IF;
+    SET $ITEMCG = 'DM100700';
+    SET $ITEMID = TRIM(COALESCE($ITEMID, ''));
 
-    -- 두 계획은 합쳐 저장하지 않고 점검할 때만 함께 표시
-    SELECT 'G' AS PLANTP,
-           CONCAT('REV.', PLAN_REV.REVNUM) AS REVNM,
-           COALESCE(_$EQMREVCD, '') AS EQMREVCD, COALESCE(_$GRPREVCD, '') AS GRPREVCD,
-           PLAN_ITEM.CHKKNDCD, PLAN_ITEM.CHKKNDNM, PLAN_ITEM.CHKLOC, PLAN_ITEM.CHKMTH, PLAN_ITEM.CHKVALTP, PLAN_ITEM.SORTNO, '' AS CHKVALUE,
-           COALESCE(_$PLANEMPCD, '') AS PLANEMPCD, _$PLANEMP AS PLANEMPNM
-    FROM MSTEQMREV_DETAIL PLAN_ITEM
-    INNER JOIN MSTEQMREV_HEADER PLAN_REV ON PLAN_REV.REVCD = PLAN_ITEM.REVCD
-    WHERE PLAN_ITEM.REVCD = _$GRPREVCD
-
-    UNION ALL
-
-    SELECT 'E' AS PLANTP,
-           CONCAT('REV.', PLAN_REV.REVNUM) AS REVNM,
-           COALESCE(_$EQMREVCD, '') AS EQMREVCD, COALESCE(_$GRPREVCD, '') AS GRPREVCD,
-           PLAN_ITEM.CHKKNDCD, PLAN_ITEM.CHKKNDNM, PLAN_ITEM.CHKLOC, PLAN_ITEM.CHKMTH, PLAN_ITEM.CHKVALTP, PLAN_ITEM.SORTNO, '' AS CHKVALUE,
-           COALESCE(_$PLANEMPCD, '') AS PLANEMPCD, _$PLANEMP AS PLANEMPNM
-    FROM MSTEQMREV_DETAIL PLAN_ITEM
-    INNER JOIN MSTEQMREV_HEADER PLAN_REV ON PLAN_REV.REVCD = PLAN_ITEM.REVCD
-    WHERE PLAN_ITEM.REVCD = _$EQMREVCD
-    ORDER BY PLANTP DESC, SORTNO, CHKKNDCD;
+    SELECT CAST(MSTITEM.ITEMID AS CHAR) AS ITEMID,
+           MSTITEM.ITEMCD,
+           MSTITEM.COMPANYCD,
+           MSTITEM.ITEMCG,
+           MSTITEM.ITEMNM,
+           MSTITEM.ITEMSPEC,
+           MSTITEM.ITEM_LVL1,
+           MSTITEM.ITEM_LVL2,
+           MSTITEM.ITEM_LVL3,
+           MSTITEM.ITEM_LVL4,
+           MSTITEM.ITEMUNIT,
+           MSTITEM.ITEMSRC,
+           MSTITEM.ENDYN,
+           MSTITEM.IOYN,
+           MSTITEM.SEPAYN,
+           COALESCE(MSTITEM_EQMPARTS.GRADE, MSTITEM.GRADE, '') AS GRADE,
+           COALESCE(MSTITEM_EQMPARTS.SAFEQTY, 0) AS SAFEQTY,
+           COALESCE(MSTITEM_EQMPARTS.LOTQTY, 0) AS LOTQTY,
+           COALESCE(MSTITEM_EQMPARTS.LOCACD, '') AS LOCACD,
+           COALESCE(MSTLOCA_EQMPARTS.LOCANM, '') AS LOCANM
+    FROM MSTITEM
+    LEFT JOIN MSTITEM_EQMPARTS
+      ON MSTITEM_EQMPARTS.ITEMID = MSTITEM.ITEMID
+     AND (COALESCE($FACTORYCD, '') = '' OR MSTITEM_EQMPARTS.FACTORYCD = $FACTORYCD)
+    LEFT JOIN MSTLOCA_EQMPARTS
+      ON MSTLOCA_EQMPARTS.LOCACD = MSTITEM_EQMPARTS.LOCACD
+    WHERE MSTITEM.COMPANYCD = $COMPANYCD
+      AND MSTITEM.ITEMCG = 'DM100700'
+      AND MSTITEM.ENDYN = $ENDYN
+      AND (   $ITEMID = ''
+           OR MSTITEM.ITEMID LIKE CONCAT('%', $ITEMID, '%')
+           OR MSTITEM.ITEMCD LIKE CONCAT('%', $ITEMID, '%')
+           OR MSTITEM.ITEMNM LIKE CONCAT('%', $ITEMID, '%')
+          )
+    ORDER BY MSTITEM.COMPANYCD, MSTITEM.ITEMCD;
   ```
 
 ### 4. 표준 구분선(`-- *****************************************************************************`) 필수 선언
