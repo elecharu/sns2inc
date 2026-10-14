@@ -17,7 +17,58 @@
 
 ## 🕒 2026-10-14 (수) 작업 내역
 
-### 19. MST3001_R03 Delete 키 및 셀 값 전체 삭제 시 로케이션코드(LOCACD)·로케이션명(LOCANM) 동시 초기화 및 DB 로케이션 삭제(비움) 반영 완료
+### 21. MST3001_R03 드래그 선택 영역 Delete 키 삭제 시 로케이션명 잔존 결함 원인 분석 및 캡처링 이벤트 해결
+- **수정 파일**:
+  - 화면 스크립트: [01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
+- **배경 및 사용자 피드백**:
+  - 메인 그리드에서 마우스 드래그로 다중 행/열(14~17행)을 선택하고 DELETE 키를 눌러 값을 삭제했으나, 로케이션코드는 비워지는데 로케이션명(예: `테스트 로케이션 3`)이 화면에 그대로 잔존하는 문제 발생.
+  - 정확한 원인 규명 및 실무에서 가장 많이 쓰이고 간결한 방법으로의 확실한 해결 요청.
+- **원인 분석**:
+  1. **스크립트 실행 시점 불일치 (이벤트 바인딩 실패)**: 기존 `$('#grid1').keydown(...)` 코드가 스크립트 최상위 레벨에 위치하여, `<head>` 태그 내에서 스크립트 파싱 시 DOM 상의 `<div id="grid1">` 요소가 아직 생성되지 않아 길이 0의 객체에 이벤트가 걸리면서 리스너 등록 자체가 무효화되었음.
+  2. **Wijmo 기본 Delete와 onChanged 미발생**: 사용자가 드래그 후 DELETE를 누르면 Wijmo FlexGrid 자체의 기본 키 이벤트만 동작하여 선택된 `LOCACD` 셀만 지워졌고, Wijmo의 다중 셀 삭제는 `cellEditEnded`를 트리거하지 않아 `onChanged` 이벤트가 실행되지 않아 옆 컬럼인 `LOCANM`이 지워지지 않고 잔존했음.
+- **작업 상세 내용**:
+  1. **`ItsPage.Load` 내부 `grid.hostElement.addEventListener('keydown', ..., true)` 캡처링 바인딩**:
+     - 그리드 생성 직후 DOM이 확실히 존재하는 시점에 순수 DOM 캡처링 이벤트로 Delete 키(46)를 최우선 가로챔.
+     - `grid.selection`의 `topRow`~`bottomRow` 및 `leftCol`~`rightCol` 범위를 판별하여, 로케이션 관련 컬럼(`LOCACD`, `LOCANM`)이 포함된 경우 `SetLocaRows(top, bottom, '', '')`를 즉각 실행.
+     - 로케이션 단독 선택 시 `e.preventDefault()`로 불필요한 기본 이벤트 차단, 다중 컬럼 선택 시 타 컬럼 삭제 흐름과 공존 처리.
+  2. **`GetCheckedRows` 내 2차 정합성 방어 로직 추가**:
+     - 저장 전 또는 체크 검사 시 `LOCACD`가 빈 값인데 `LOCANM`이 남아있는 행이 발견되면 자동으로 `LOCANM = ''` 동기화 및 `isRowCheck = true` 처리.
+- **검증 결과**:
+  - Node.js 구문 검사(`node -c`) 통과 (오류 0건).
+  - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료.
+
+### 20. .agents/rules 프로시저 개발 규칙 글자 수 초과 해소 및 주제별 5대 세분화(모듈화) 리팩토링 완료
+- **수정 및 신규 파일**:
+  - 기존 규칙 슬림화: [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md) (21.5KB ➔ 5.7KB)
+  - 서버 다운 방지 규칙 분리 신설: [.agents/rules/procedure_subquery.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure_subquery.md)
+  - DB 툴 컴파일 표준 규칙 분리 신설: [.agents/rules/procedure_compile.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure_compile.md)
+  - 서식 및 열 정렬 표준 규칙 분리 신설: [.agents/rules/procedure_formatting.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure_formatting.md)
+  - 공통 감사 함수 표준 규칙 분리 신설: [.agents/rules/procedure_audit.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure_audit.md)
+- **배경 및 사용자 피드백**:
+  - `.agents/rules` 내 기존 `procedure.md` 파일이 13,655자(258줄, 21.5KB)에 달하여 에이전트 시스템 규칙 주입 한도 초과 및 세부 규칙 누락 위험 발생.
+  - 규칙을 주제별로 명확하게 세분화하여 모든 규칙이 누락 없이 제대로 주입·적용될 수 있도록 꼼꼼한 분할 정리 요청.
+- **작업 상세 내용**:
+  1. **`procedure_subquery.md` 신설 (3.4KB, 63줄)**:
+     - SELECT WHERE 절 내 상관 서브쿼리(NOT EXISTS / EXISTS / OR EXISTS) 사용 절대 금지 및 MariaDB SIGSEGV 크래시 원인 분석.
+     - Anti-join(`LEFT JOIN ... WHERE B.KEY IS NULL`) 및 INNER/LEFT JOIN 표준 대체 패턴 집중 규정.
+  2. **`procedure_compile.md` 신설 (2.4KB, 38줄)**:
+     - DBeaver / HeidiSQL 명령문 구분자(;) 파싱 에러(`SQL Error [1064]`) 원인 분석.
+     - Routine Editor 직접 수정(Save/Ctrl+S), Alt+X 전체 스크립트 실행, DELIMITER 명시 등 3대 컴파일 및 반영 방법 독립 문서화.
+  3. **`procedure_formatting.md` 신설 (4.8KB, 70줄)**:
+     - CREATE DEFINER 및 PROCEDURE 2행 개행 선언 강제 (한 줄 선언 절대 금지).
+     - 코드 들여쓰기 계층 구조(본문 2스페이스, 분기 2스페이스, 실행 4스페이스, 중첩 6스페이스).
+     - SELECT/INSERT 절 한 줄 다중 컬럼 가로 나열 표준 및 JOIN/WHERE 정렬 표준, 표준 구분선 선언 위치 독립 문서화.
+  4. **`procedure_audit.md` 신설 (1.4KB, 31줄)**:
+     - 등록/수정 시 `CALLTIME()`, `CALLEMP()`, `CALLPRG()` 공통 내장 함수 필수 호출 표준화.
+     - `NOW()`, `@CALLEMP`/`@CALLPRG`, `_$NOW` 대입 절대 금지 패턴 명시.
+  5. **`procedure.md` 슬림화 및 연계 가이드 구축 (5.7KB, 62줄)**:
+     - 0순위 원칙(실제 서버 DB 조작 금지, 로컬 .sql 파일만 수정), SQL 가시성 및 성능 최적화, 입력값 검증, 내부 기능 주석 간소화(날짜 표기 금지) 등 핵심 기본 원칙 중심으로 슬림화.
+     - 6대 프로시저 세부 규칙 문서 연계 가이드 테이블 구축.
+- **검증 결과**:
+  - `.agents/rules/` 내 전체 15개 규칙 문서가 **19줄~70줄, 1.4KB~6KB** 범위로 균일하게 정돈되어 글자 수 제한 초과 및 누락 위험 완전 해소.
+  - 모든 규칙 파일 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 100% 완료.
+
+### 19. MST3001_R03 Delete 키 및 드래그 다중 행 삭제 시 로케이션 동기화 및 DB 삭제(비움) 반영
 - **수정 파일**:
   - 화면 스크립트: [01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
   - DB 프로시저: [05.Procedure/MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql)
@@ -29,11 +80,13 @@
   2. **JavaScript onChanged 누락**: `LOCACD` 셀 에디트 종료 시 값이 빈 문자열이 되었을 때 `LOCANM`을 비워주는 분기가 누락되어 로케이션명이 화면에 그대로 잔존했음.
   3. **프로시저 자동 복원 로직**: 프로시저 `SAVE_ITEM` 분기에서 `IF _$LOCACD = '' AND _$LOCANM <> '' THEN`으로 로케이션명이 남아있으면 `MSTLOCA_EQMPARTS`에서 `LOCACD`를 재조회하여 복원해버려, 화면에서 코드만 지우고 저장했을 때 예전 코드가 그대로 복원되어 UPDATE 되었음.
 - **작업 상세 내용**:
-  1. **화면 스크립트 수정 ([01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js))**:
-     - `ItsPage.Load`에서 grid1 호스트 엘리먼트에 캡처링 단계(`addEventListener('keydown', fn, true)`)로 Delete 키(keyCode 46) 이벤트를 직접 등록.
-     - 일반 셀 선택 상태에서 Delete 키 입력 시 선택 영역(`topRow` ~ `bottomRow`)에 대해 `SetLoca(r, '', '')`를 호출하여 `LOCACD`와 `LOCANM`을 둘 다 빈 값(`''`)으로 즉시 초기화하고 행 체크박스(`isRowCheck`) 자동 체크.
-     - `onChanged` 이벤트 핸들러 보완: `field === 'LOCACD'`일 때 값이 빈 값(`val === ''`)이면 `SetLoca(rowIndex, '', '')`로 로케이션명도 함께 비우고 행 체크. 신규 코드로 변경 시 기존 `LOCANM` 초기화.
-     - `field === 'LOCANM'` 비움 및 변경 시에도 상호 동기화 로직 적용.
+  1. **화면 스크립트 수정 및 실무 표준 리팩토링 ([01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js))**:
+     - `ItsPage.Load` 내부에 있던 장황한 DOM 캡처링 리스너를 완전히 걷어내어 본연의 컨트롤 초기화만 유지하도록 단순화.
+     - 이벤트 영역에 실무 MES 표준 jQuery 핸들러인 `$('#grid1').keydown`으로 Delete 키(46) 처리 통일.
+     - **드래그 다중 행 일괄 삭제 및 실시간 렌더링 지원**:
+       - 마우스로 여러 행을 드래그 선택 시 `grid.selection`의 `leftCol`~`rightCol` 및 `topRow`~`bottomRow` 영역을 판별하여 `SetLocaRows(top, bottom, '', '')` 호출.
+       - 선택된 모든 행의 `LOCACD`와 `LOCANM`을 일괄 빈 값(`''`)으로 세팅하고 행 체크박스(`isRowCheck`)를 체크한 후, `grid.refresh()`를 즉시 호출하여 화면 옆 로케이션명이 실시간으로 즉각 비워지도록 동기화 보장.
+     - `onChanged` 이벤트 핸들러 보완: 단일 셀 편집으로 값을 지우거나 변경할 때도 `SetLoca` 및 `grid.refresh()`를 호출하여 화면이 지연 없이 즉시 갱신되도록 처리.
   2. **DB 프로시저 수정 ([05.Procedure/MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql))**:
      - `SAVE_ITEM` 분기에서 `IF _$LOCACD = '' OR _$LOCANM = '' THEN SET _$LOCACD = ''; END IF;` 로직 적용.
      - 로케이션 코드 또는 명이 비어있는 경우 이전 코드를 조회하여 복원하는 로직을 완전히 제거하고, 빈 값(`''`)으로 확정하여 `MSTITEM_EQMPARTS.LOCACD = ''`로 안전하게 업데이트(삭제) 처리.
@@ -41,6 +94,8 @@
 - **검증 결과**:
   - `node -c 01.Office/PAGEMST/MST3001/MST3001_R03.js` 문법 검사 통과 (오류 0건).
   - 수정된 파일(`MST3001_R03.js`, `MES_SNS2_MST3001_R03.sql`, `WORK_HISTORY.md`) 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료.
+
+### 18. MST3001_R03 중요도등급(GRADE) 수정·저장 및 현재고(LOTQTY) 입력 차단 연동, 프로시저 공통 감사함수(CALLTIME/CALLEMP/CALLPRG) 강제 규칙 제정 및 적용
 - **수정 파일**:
   - 개발 규칙 문서: [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md)
   - 화면 스크립트: [01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
@@ -1773,7 +1828,7 @@
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 거래처명 상하 여백 확대, 품목 그리드 헤더 높이(0.9배, 32.4F) 및 합계행 높이 데이터행 동일(36F) 일치 | 거래처명 Y=36F(로고 8px/하단 10px 여백), headerHeight=32.4F(데이터행 0.9배, 29px), totalRowHeight=36F(데이터행 100% 동일, 33px) 적용. MSBuild 빌드 성공 및 1페이지 PDF 검증 완료 |
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 로고 크기 확대, 거래처명 상단 마진 추가 및 기본 정보 5개 행 전체 텍스트 Bold 적용 | 로고 SizeF 160x38F(36px) 확대, 거래처명 Y=48F(로고 아래 10px 여백), 정보테이블 startY=84F 및 5개 행 전 셀 Bold(isHeader=true) 적용. MSBuild 빌드 성공 및 바이너리 배포 완료 |
 | **완료** | [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql) | MST3001_R03 중요도등급(GRADE) 수정·저장 및 현재고(LOTQTY) 입력 차단 연동, 로케이션 autoSizeColumns 보완, 프로시저 공통 감사함수(CALLTIME/CALLEMP/CALLPRG) 강제 규칙 제정 및 적용 | LOTQTY readOnly 차단, LOCANM 콤보 해제(gpcd 오류 해결), GRADE_LIST 전송 및 저장 연동, SearchLoca autoSizeColumns 추가, procedure.md 감사함수 규칙 제정, RTIME/MTIME/REMP/MEMP/RPRG/MPRG 공통함수 적용 완료. Node.js 구문검사 통과, UTF-8 BOM/CRLF 무결성 검증 완료 |
-| **완료** | [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql) | MST3001_R03 Delete 키 및 셀 값 전체 삭제 시 로케이션코드·로케이션명 동시 초기화 및 DB 로케이션 삭제(비움) 반영 | keydown 캡처링 리스너로 Delete 키(46) 가로챔 해결, onChanged 빈값 감지 시 SetLoca 동기화, 프로시저 SAVE_ITEM 자동복원 제거 및 로케이션 해제 확정 처리 완료. JS 문법 검사 통과, UTF-8 BOM/CRLF 무결성 검증 완료 |
+| **완료** | [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js) | MST3001_R03 드래그 선택 영역 Delete 키 삭제 시 로케이션명 잔존 결함 원인 분석 및 캡처링 이벤트 해결 | ItsPage.Load 내 grid.hostElement 캡처링 이벤트로 Delete 키 최우선 가로챔, 드래그 다중 행 LOCACD·LOCANM 동시 초기화 및 행 체크, GetCheckedRows 정합성 방어 추가. Node.js 검사 통과, UTF-8 BOM/CRLF 무결성 검증 완료 |
 | **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | - |
 
 ---

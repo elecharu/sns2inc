@@ -34,36 +34,33 @@ ItsPage.Load = function () {
     ItsCombo.SetValue('sdiv1_combo_ITEMCG', 'DM100700');
     ItsFind.SetRef02('sdiv1_find_ITEMID', 'DM100700');
 
-    // 2026-10-14 [설비부품정보] Delete 키 입력 시 로케이션코드·로케이션명 일괄 초기화
+    // 2026-10-14 [설비부품정보] Delete 키 입력 시 드래그 선택 영역 로케이션 일괄 동기화
     var grid1 = ItsGrid.Get('grid1');
     if (grid1 && grid1.hostElement) {
         grid1.hostElement.addEventListener('keydown', function (e) {
             if (e.keyCode === 46) {
-                var isEditing = grid1.activeEditor || (e.target && e.target.tagName === 'INPUT');
-                if (isEditing) return;
-
                 var sel = grid1.selection;
-                if (!sel || sel.row < 0 || sel.col < 0) return;
-                var col = grid1.columns[sel.col];
-                if (!col) return;
-                var field = col.binding;
-                if (field === 'LOCACD' || field === 'LOCANM') {
-                    e.preventDefault();
-                    e.stopPropagation();
+                if (!sel || sel.row < 0) return;
+
+                var cdIdx = ItsGrid.$colIndex('grid1', 'LOCACD');
+                var nmIdx = ItsGrid.$colIndex('grid1', 'LOCANM');
+                var left = sel.leftCol !== undefined ? sel.leftCol : Math.min(sel.col, sel.col2);
+                var right = sel.rightCol !== undefined ? sel.rightCol : Math.max(sel.col, sel.col2);
+
+                if ((left <= cdIdx && cdIdx <= right) || (left <= nmIdx && nmIdx <= right)) {
                     var top = sel.topRow !== undefined ? sel.topRow : Math.min(sel.row, sel.row2);
                     var bottom = sel.bottomRow !== undefined ? sel.bottomRow : Math.max(sel.row, sel.row2);
-                    grid1.deferUpdate(function () {
-                        for (var r = top; r <= bottom; r++) {
-                            SetLoca(r, '', '');
-                        }
-                    });
+                    SetLocaRows(top, bottom, '', '');
+                    if (left >= Math.min(cdIdx, nmIdx) && right <= Math.max(cdIdx, nmIdx)) {
+                        e.preventDefault();
+                    }
                 }
             }
         }, true);
     }
 };
 
-// 2026-10-14 [설비부품정보] 로케이션 직접 입력 또는 삭제 시 코드·명 동기화
+// 2026-10-14 [설비부품정보] 로케이션 수정 또는 삭제 시 동기화
 ItsGrid.Event('grid1').onChanged = function (rowIndex, field, newValue, oldValue) {
     if (rowIndex < 0 || newValue === oldValue) return;
     var val = (newValue || '').toString().trim();
@@ -73,6 +70,7 @@ ItsGrid.Event('grid1').onChanged = function (rowIndex, field, newValue, oldValue
         } else {
             ItsGrid.SetValue('grid1', rowIndex, 'LOCANM', '');
             ItsGrid.CheckRow('grid1', rowIndex);
+            ItsGrid.Get('grid1').refresh();
         }
     } else if (field === 'LOCANM') {
         if (val === '') {
@@ -80,14 +78,8 @@ ItsGrid.Event('grid1').onChanged = function (rowIndex, field, newValue, oldValue
         } else {
             ItsGrid.SetValue('grid1', rowIndex, 'LOCACD', '');
             ItsGrid.CheckRow('grid1', rowIndex);
+            ItsGrid.Get('grid1').refresh();
         }
-    }
-};
-
-// 2026-10-14 [설비부품정보] Delete 키로 로케이션 코드·명 초기화
-ItsGrid.Event('grid1').onKeydown = function (rowIndex, field, keyCode) {
-    if (keyCode === 46 && (field === 'LOCANM' || field === 'LOCACD')) {
-        SetLoca(rowIndex, '', '');
     }
 };
 
@@ -118,13 +110,23 @@ function OpenLoca(rowIndex, field) {
 
 // 2026-10-14 [설비부품정보] 로케이션과 체크 상태를 한 번에 갱신
 function SetLoca(rowIndex, locaCd, locaNm) {
+    SetLocaRows(rowIndex, rowIndex, locaCd, locaNm);
+}
+
+// 2026-10-14 [설비부품정보] 선택 행 로케이션 일괄 갱신 및 화면 즉시 반영
+function SetLocaRows(topRow, bottomRow, locaCd, locaNm) {
     var grid = ItsGrid.Get('grid1');
-    if (!grid.rows[rowIndex] || !grid.rows[rowIndex].dataItem) return;
+    if (!grid) return;
     grid.deferUpdate(function () {
-        ItsGrid.SetValue('grid1', rowIndex, 'LOCACD', locaCd);
-        ItsGrid.SetValue('grid1', rowIndex, 'LOCANM', locaNm);
-        ItsGrid.CheckRow('grid1', rowIndex);
+        for (var r = topRow; r <= bottomRow; r++) {
+            if (grid.rows[r] && grid.rows[r].dataItem) {
+                ItsGrid.SetValue('grid1', r, 'LOCACD', locaCd);
+                ItsGrid.SetValue('grid1', r, 'LOCANM', locaNm);
+                ItsGrid.CheckRow('grid1', r);
+            }
+        }
     });
+    grid.refresh();
 }
 
 // 2026-10-13 [설비부품정보] 품목 및 부품 재고현황 조회
@@ -305,6 +307,14 @@ function GetCheckedRows(gridId, isCheckChange) {
         for (var i = 0; i < grid.rows.length; i++) {
             var row = grid.rows[i].dataItem;
             if (!row) continue;
+
+            if (gridId === 'grid1' && (row.LOCACD || '').trim() === '' && (row.LOCANM || '').trim() !== '') {
+                row.LOCANM = '';
+                ItsGrid.SetValue(gridId, i, 'LOCANM', '');
+                if (row.isRowCheck !== true && row.isRowCheck !== 'true') {
+                    ItsGrid.CheckRow(gridId, i);
+                }
+            }
 
             if (isCheckChange && (
                 (row.GRADE || '').trim() !== (row._ORG_GRADE || '').trim()
