@@ -172,13 +172,13 @@ namespace XtraRpt
             approveTable.Rows.Add(appRow2);
             list.Add(approveTable);
 
-            // 5. 기본 정보 테이블: 행마다 독립 XRTable로 배치 및 라벨 셀 너비 확대(좌 75F, 우 60F, 패딩 0)로 글자 잘림 원천 차단
+            // 5. 기본 정보 테이블: 시작과 끝선 완벽 일치 및 테두리 정렬(t1 All, t2~t5 Left|Right|Bottom)
             const float startY = 60F;
             const float rowH = 24F;
 
             // 좌측 총 너비: 315F, 우측 총 너비: 416F (315 + 416 = 731F)
             // [Row 1] Y=60F: 전화(75) + 값(240) + 회사명(190) + 사업자번호라벨(75) + 값(151) = 731F
-            XRTable t1 = CreateSingleRowTable(0F, startY, ReportWidth, rowH);
+            XRTable t1 = CreateSingleRowTable(0F, startY, ReportWidth, rowH, BorderSide.All);
             XRTableRow r1 = new XRTableRow { HeightF = rowH };
             r1.Cells.Add(CreateFixedCell("전    화", 75F, rowH, true));
             r1.Cells.Add(CreateFixedCell(Value(header, "CUSTTEL"), 240F, rowH, false, TextAlignment.MiddleLeft, 8.5F, 4));
@@ -189,7 +189,7 @@ namespace XtraRpt
             list.Add(t1);
 
             // [Row 2] Y=84F: FAX(75) + 값(240) + 대표자라벨(60) + 값(356) = 731F
-            XRTable t2 = CreateSingleRowTable(0F, startY + rowH, ReportWidth, rowH);
+            XRTable t2 = CreateSingleRowTable(0F, startY + rowH, ReportWidth, rowH, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow r2 = new XRTableRow { HeightF = rowH };
             r2.Cells.Add(CreateFixedCell("F  A  X", 75F, rowH, true));
             r2.Cells.Add(CreateFixedCell(Value(header, "CUSTFAX"), 240F, rowH, false, TextAlignment.MiddleLeft, 8.5F, 4));
@@ -199,7 +199,7 @@ namespace XtraRpt
             list.Add(t2);
 
             // [Row 3] Y=108F: 사업자번호라벨(75) + 값(240) + 주소라벨(60) + 값(356) = 731F
-            XRTable t3 = CreateSingleRowTable(0F, startY + (rowH * 2F), ReportWidth, rowH);
+            XRTable t3 = CreateSingleRowTable(0F, startY + (rowH * 2F), ReportWidth, rowH, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow r3 = new XRTableRow { HeightF = rowH };
             r3.Cells.Add(CreateFixedCell("사업자번호", 75F, rowH, true));
             r3.Cells.Add(CreateFixedCell(Value(header, "CUSTBIZNO"), 240F, rowH, false, TextAlignment.MiddleLeft, 8.5F, 4));
@@ -209,7 +209,7 @@ namespace XtraRpt
             list.Add(t3);
 
             // [Row 4] Y=132F: 발주번호(75) + 값(240) + 전화라벨(60) + 값(148) + FAX라벨(60) + 값(148) = 731F
-            XRTable t4 = CreateSingleRowTable(0F, startY + (rowH * 3F), ReportWidth, rowH);
+            XRTable t4 = CreateSingleRowTable(0F, startY + (rowH * 3F), ReportWidth, rowH, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow r4 = new XRTableRow { HeightF = rowH };
             r4.Cells.Add(CreateFixedCell("발 주 번 호", 75F, rowH, true));
             r4.Cells.Add(CreateFixedCell(Value(header, "MTRODRKEY"), 240F, rowH, false, TextAlignment.MiddleLeft, 8.5F, 4));
@@ -220,13 +220,13 @@ namespace XtraRpt
             t4.Rows.Add(r4);
             list.Add(t4);
 
-            // [Row 5] Y=156F: 발주일자(65) + 값(92) + 납기일자(65) + 값(93) + 담당자라벨(60) + 값(356) = 731F
-            XRTable t5 = CreateSingleRowTable(0F, startY + (rowH * 4F), ReportWidth, rowH);
+            // [Row 5] Y=156F: 발주일자(75) + 값(82.5) + 납기일자(75) + 값(82.5) + 담당자라벨(60) + 값(356) = 731F (시작/끝 완벽 일치)
+            XRTable t5 = CreateSingleRowTable(0F, startY + (rowH * 4F), ReportWidth, rowH, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow r5 = new XRTableRow { HeightF = rowH };
-            r5.Cells.Add(CreateFixedCell("발주일자", 65F, rowH, true));
-            r5.Cells.Add(CreateFixedCell(Value(header, "MTRODRDATE"), 92F, rowH, false, TextAlignment.MiddleCenter));
-            r5.Cells.Add(CreateFixedCell("납기일자", 65F, rowH, true));
-            r5.Cells.Add(CreateFixedCell(Value(header, "EXPDATE"), 93F, rowH, false, TextAlignment.MiddleCenter));
+            r5.Cells.Add(CreateFixedCell("발 주 일 자", 75F, rowH, true));
+            r5.Cells.Add(CreateFixedCell(Value(header, "MTRODRDATE"), 82.5F, rowH, false, TextAlignment.MiddleCenter));
+            r5.Cells.Add(CreateFixedCell("납 기 일 자", 75F, rowH, true));
+            r5.Cells.Add(CreateFixedCell(Value(header, "EXPDATE"), 82.5F, rowH, false, TextAlignment.MiddleCenter));
             r5.Cells.Add(CreateFixedCell("담 당 자", 60F, rowH, true));
             r5.Cells.Add(CreateFixedCell(Value(header, "EMPINFO"), 356F, rowH, false, TextAlignment.MiddleLeft, 8F, 4));
             t5.Rows.Add(r5);
@@ -244,13 +244,13 @@ namespace XtraRpt
             return list.ToArray();
         }
 
-        // 2026-10-14 품목 그리드 (헤더·데이터·합계 분리 테이블로 비정상 팽창 원천 차단) 및 하단 업체요청사항
+        // 2026-10-14 품목 그리드 (1~15행을 개별 단일행 XRTable로 생성하여 15번째줄 높이 25F로 100% 동일하게 일치)
         private XRControl[] CreateItemsAndFooterControls(DataRow header, DataTable items)
         {
             List<XRControl> list = new List<XRControl>();
 
             const float headerHeight = 23F;
-            const float dataRowHeight = 28F;
+            const float dataRowHeight = 25F; // 사용자 지정: 15번째 줄 간격(25F)으로 1~15행 완전 일치
             const float totalRowHeight = 23F;
 
             // 열 너비 규격: No(30), 품명(175), 규격(120), 단위(38), 단가(72), 수량(42), 금액(84), 비고(170) = 총 731F
@@ -263,8 +263,8 @@ namespace XtraRpt
             const float wAmt = 84F;
             const float wRemark = 170F;
 
-            // [1. 헤더 테이블] Y=0F, 높이 23F 고정 (독립 테이블로 행 높이 팽창 방지)
-            XRTable headerTable = CreateSingleRowTable(0F, 0F, ReportWidth, headerHeight);
+            // [1. 헤더 테이블] Y=0F, 높이 23F 고정 (독립 테이블)
+            XRTable headerTable = CreateSingleRowTable(0F, 0F, ReportWidth, headerHeight, BorderSide.All);
             XRTableRow th = new XRTableRow { HeightF = headerHeight };
             th.Cells.Add(CreateFixedCell("No", wNo, headerHeight, true, TextAlignment.MiddleCenter, 8.5F));
             th.Cells.Add(CreateFixedCell("품    명", wName, headerHeight, true, TextAlignment.MiddleCenter, 8.5F));
@@ -277,21 +277,15 @@ namespace XtraRpt
             headerTable.Rows.Add(th);
             list.Add(headerTable);
 
-            // [2. 데이터 행 테이블] Y=23F, 15개 행 고정 (각 행 28F)
-            float dataTableHeight = dataRowHeight * 15F; // 420F
-            XRTable dataTable = new XRTable();
-            dataTable.LocationFloat = new PointFloat(0F, headerHeight);
-            dataTable.SizeF = new SizeF(ReportWidth, dataTableHeight);
-            dataTable.Borders = BorderSide.All;
-            dataTable.BorderColor = Color.Black;
-            dataTable.BorderWidth = 1F;
-
             decimal totalQty = 0;
             decimal totalAmt = 0;
             int rowCount = items.Rows.Count;
 
+            // [2. 데이터 행들 1~15행] 각 행을 독립 XRTable로 생성하여 1행 팽창 원천 차단 및 모든 행의 높이를 25F로 100% 동일화
             for (int i = 0; i < 15; i++)
             {
+                float rowY = headerHeight + (i * dataRowHeight);
+                XRTable rowTable = CreateSingleRowTable(0F, rowY, ReportWidth, dataRowHeight, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
                 XRTableRow tr = new XRTableRow { HeightF = dataRowHeight };
 
                 if (i < rowCount)
@@ -336,14 +330,14 @@ namespace XtraRpt
                     tr.Cells.Add(CreateDataCell("", wRemark, dataRowHeight, TextAlignment.MiddleLeft, 7.5F));
                 }
 
-                dataTable.Rows.Add(tr);
+                rowTable.Rows.Add(tr);
+                list.Add(rowTable);
             }
-            list.Add(dataTable);
 
-            // [3. 합계 테이블] Y = headerHeight + dataTableHeight = 443F, 높이 23F
-            float totalTableY = headerHeight + dataTableHeight;
+            // [3. 합계 테이블] Y = headerHeight + (dataRowHeight * 15F) = 23F + 375F = 398F, 높이 23F
+            float totalTableY = headerHeight + (dataRowHeight * 15F);
             float totalTitleWidth = wNo + wName + wSpec + wUnit + wPrice; // 30 + 175 + 120 + 38 + 72 = 435F
-            XRTable totalTable = CreateSingleRowTable(0F, totalTableY, ReportWidth, totalRowHeight);
+            XRTable totalTable = CreateSingleRowTable(0F, totalTableY, ReportWidth, totalRowHeight, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow totalRow = new XRTableRow { HeightF = totalRowHeight };
             totalRow.Cells.Add(CreateFixedCell("합    계", totalTitleWidth, totalRowHeight, true, TextAlignment.MiddleCenter, 9F));
             totalRow.Cells.Add(CreateFixedCell(totalQty.ToString("#,##0"), wQty, totalRowHeight, true, TextAlignment.MiddleRight, 9F));
@@ -352,7 +346,7 @@ namespace XtraRpt
             totalTable.Rows.Add(totalRow);
             list.Add(totalTable);
 
-            // [4. 업체 요청 사항 박스] Y = 443F + 23F + 10F = 476F, 높이 115F
+            // [4. 업체 요청 사항 박스] Y = 398F + 23F + 10F = 431F, 높이 115F
             XRPanel reqPanel = new XRPanel();
             reqPanel.LocationFloat = new PointFloat(0F, totalTableY + totalRowHeight + 10F);
             reqPanel.SizeF = new SizeF(ReportWidth, 115F);
@@ -409,12 +403,12 @@ namespace XtraRpt
         }
 
         // 단일 행 테이블 생성 헬퍼
-        private static XRTable CreateSingleRowTable(float x, float y, float width, float height)
+        private static XRTable CreateSingleRowTable(float x, float y, float width, float height, BorderSide borders = BorderSide.All)
         {
             XRTable table = new XRTable();
             table.LocationFloat = new PointFloat(x, y);
             table.SizeF = new SizeF(width, height);
-            table.Borders = BorderSide.All;
+            table.Borders = borders;
             table.BorderColor = Color.Black;
             table.BorderWidth = 1F;
             return table;
