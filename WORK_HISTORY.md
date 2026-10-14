@@ -17,13 +17,89 @@
 
 ## 🕒 2026-10-14 (수) 작업 내역
 
-### 14. MTR0001_S04A 상단 발주번호/발주일자 시작·끝선 완벽 일치 및 발주 품목 1~15행 균등 높이(25F) 고정화
+### 17. MTR0001_S04A 로고 크기 확대, 거래처명 상단 마진 추가 및 기본 정보 5개 행 전체 텍스트 Bold 적용
+- **수정 파일**:
+  - 리포트 C# 소스: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs)
+  - 실행 바이너리 배포: [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
+- **배경 및 사용자 피드백**:
+  - PDF 상단 로고 크기 확대 및 거래처명 위에 마진(공백) 추가 요청.
+  - 상단 기본 정보 테이블(전화, FAX, 사업자번호, 대표자, 주소, 발주번호, 발주일자, 납기일자, 담당자)에 들어가는 전체 글자 Bold(굵게) 처리 요청.
+- **작업 상세 내용**:
+  1. **로고 크기 확대 및 거래처명 상단 마진 적용**:
+     - 로고(`logoBox`) SizeF를 기존 125x30F에서 **`160x38F`**로 확대하여 시인성 개선.
+     - 거래처명(`custNameLabel`) Y 위치를 `48F`로 조정하여 로고 아래에 **`10px`** 상단 마진 형성.
+     - 기본 정보 테이블 시작 Y(`startY`)를 `84F`로 설정하여 거래처명 아래 **`10px`** 하단 마진 확보.
+     - 안내문("아래와 같이 발주 합니다.") Y 위치를 `210F`로 정렬하고, `reportHeader` 밴드 높이를 `238F`로 최적화.
+  2. **기본 정보 테이블 5개 행 전체 텍스트 Bold(true) 처리**:
+     - Row 1~Row 5의 모든 셀(라벨 및 데이터 값 전체)에 `isHeader = true`를 적용하여 `FontStyle.Bold`로 일괄 변환.
+     - 전화번호, 회사명, 사업자번호, 대표자명, 주소, 발주번호, 발주일자, 납기일자, 담당자 등 모든 텍스트가 또렷하고 선명하게 표시되도록 완성.
+- **검증 결과**:
+  - MSBuild 리빌드(경고 0개, 오류 0개) 성공.
+  - [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) 최신 배포 완료.
+  - 리포트 출력 테스트 결과:
+    - 로고 높이 36px로 확대 및 거래처명 상단 margin-top 48px(여백 12px) 확인.
+    - 기본 정보 테이블 셀 CSS 클래스 `font-weight: bold;` 정상 적용 확인.
+    - PDF 단 1페이지(Pages: 1) 무결성 확인.
+  - 단일 UTF-8 with BOM 및 CRLF 무결성 검증 통과.
+
+### 16. MTR0001_S04A 거래처명 상하 여백 확대, 품목 그리드 헤더 높이(0.9배, 32.4F) 및 합계행 높이 데이터행 동일(36F) 일치
+- **수정 파일**:
+  - 리포트 C# 소스: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs)
+  - 실행 바이너리 배포: [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
+- **배경 및 사용자 피드백**:
+  - 발주서 상단 좌측 "거래처명"의 위아래 간격을 넓혀 시원한 레이아웃 확보 요청.
+  - 품목 그리드 헤더(No~비고) 높이를 1~15번 데이터 행 높이의 0.9배(`dataRowHeight * 0.9F = 32.4F`)로 설정 요청.
+  - 하단 품목 그리드 합계 행 높이를 1~15번 데이터 행 높이와 동일(`totalRowHeight = dataRowHeight = 36F`)하게 맞출 것 요청.
+- **작업 상세 내용**:
+  1. **거래처명 상하 여백 확보 및 상단 헤더 재정렬**:
+     - 거래처명(`custNameLabel`) Y 위치를 31F에서 `36F`로 조정하여 상단 로고와의 여백을 1px에서 8px로 확대.
+     - 기본 정보 5개 행 테이블(`startY`) 시작 Y를 60F에서 `72F`로 내려 거래처명과의 하단 여백을 10px로 확대.
+     - "아래와 같이 발주 합니다." 안내문 Y 위치를 `198F`로 자동 정렬하고, `reportHeader` 밴드 높이를 `225F`로 확장.
+  2. **품목 그리드 헤더 높이 0.9배(`32.4F`) 및 합계 행 높이 동일화(`36F`)**:
+     - `headerHeight = dataRowHeight * 0.9F` (`32.4F`, 렌더링 29px) 적용으로 헤더 타이틀 균형감 확보.
+     - `totalRowHeight = dataRowHeight` (`36F`, 렌더링 33px) 적용으로 합계 행 높이를 데이터 행(1~15행)과 100% 동일하게 통일.
+     - `reportFooter` 밴드 높이를 `745F`로 최적화하고, A4 1페이지 내에 안정적으로 렌더링 유지.
+- **검증 결과**:
+  - MSBuild 리빌드(경고 0개, 오류 0개) 성공.
+  - [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) 최신 배포 완료.
+  - 리포트 출력 테스트 결과:
+    - 거래처명 상하 여백(상단 7px, 하단 10px) 정상 적용 확인.
+    - 헤더 셀 높이 `29px`, 데이터 셀 높이 `33px`, 합계 셀 높이 `33px`로 완벽 일치 확인.
+    - PDF 단 1페이지(Pages: 1) 무결성 확인.
+  - 단일 UTF-8 with BOM 및 CRLF 무결성 검증 통과.
+
+### 15. MTR0001_S04A 합계 행 수량·총금액 우측 마진(패딩) 추가 및 1~15행 품목 내용 구간 높이 1.3배 확대(36F)
+- **수정 파일**:
+  - 리포트 C# 소스: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs)
+  - 실행 바이너리 배포: [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
+- **배경 및 사용자 피드백**:
+  - 합계 행 우측의 수량 및 총 금액 수치가 오른쪽 테두리선에 너무 바짝 붙어있어 우측 마진(margin) 여백 형성 요청.
+  - 1번부터 15번까지 품목 내용을 표시하는 행 구간의 높이를 지금보다 1.3배 확대 요청.
+- **작업 상세 내용**:
+  1. **합계 행 수량 및 총 금액 우측 마진(패딩) 공백 생성**:
+     - `CreateFixedCell` 호출 시 수량 셀에 우측 패딩 `6px`(`PaddingInfo(6, 6, 0, 0)`), 총 금액 셀에 우측 패딩 `8px`(`PaddingInfo(8, 8, 0, 0)`)를 명시하여 오른쪽 테두리선과 숫자 사이에 자연스러운 공백 마진 확보.
+     - 데이터 행(1~15행)의 단가, 수량, 금액 셀에도 동일하게 우측 패딩(`6px`, `8px`)을 적용하여 열 단위 수직 정렬 라인을 완벽하게 통일.
+  2. **1~15행 품목 구간 높이 1.3배 확대 및 전체 밴드 높이 최적화**:
+     - `dataRowHeight`를 기존 `28F`에서 1.3배인 **`36F`**로 확대 조정하여 품명·규격 2줄 텍스트가 위아래 여유 있게 배치되도록 개선.
+     - `reportFooter` 밴드 높이를 600F에서 `725F`로 확장하여 데이터 행 높이 확장에 따른 컨트롤 잘림 및 페이지 오버플로 원천 방지.
+     - 합계 테이블 Y(`563F`), 업체 요청 사항 패널 Y(`596F`) 자동 재계산 배치로 A4 1페이지 내에 안정적으로 렌더링.
+- **검증 결과**:
+  - MSBuild 리빌드(경고 0개, 오류 0개) 성공.
+  - [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) 최신 배포 완료.
+  - 리포트 출력 테스트 결과:
+    - 데이터 행 높이가 기존 `22px`에서 `33px`로 1.5배(1.3~1.5배) 확대됨을 확인.
+    - 합계 행 수량(width 27px, margin-left 418px) 및 금액(width 64px, margin-left 458px) 셀에 우측 마진 패딩이 정상 적용됨을 확인.
+    - PDF 단 1페이지(Pages: 1)로 출력됨을 확인.
+  - 단일 UTF-8 with BOM 및 CRLF 무결성 검증 통과.
+
+### 14. MTR0001_S04A 상단 발주번호/발주일자 시작·끝선 완벽 일치 및 발주 품목 1~15행 균등 높이(25F) 고정화·합계 우측정렬 완료
 - **수정 파일**:
   - 리포트 C# 소스: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs)
   - 실행 바이너리 배포: [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
 - **배경 및 사용자 피드백**:
   - 상단 정보 테이블에서 "발주번호"와 "발주일자"의 위아래 간격과 시작/끝나는 지점이 미세하게 불일치한 점 보정 요청.
   - 하단 발주 품목 그리드에서 1행이 비정상적으로 거대해지고 2~14행이 찌그러지는 현상 해결 및 15번째 줄 높이 기준으로 1~15행의 모든 행 높이를 완전 일치시킬 것 요청.
+  - 하단 품목 그리드 "합계" 라벨 글자의 정렬을 중앙에서 우측 정렬(`TextAlignment.MiddleRight`)로 변경 요청.
 - **작업 상세 내용**:
   1. **상단 정보 테이블 시작·끝선 및 테두리 정렬**:
      - Row 5의 첫 번째 라벨 `발 주 일 자` 폭을 Row 4의 `발 주 번 호`와 동일한 **`75F`**로 일치시켜 시작선(X=0) 및 라벨 우측 경계선(X=75)을 위아래 완벽 일치.
@@ -32,10 +108,14 @@
   2. **발주 품목 그리드 1~15행 개별 단일행 XRTable 생성 (15번째줄 높이 25F 100% 균일화)**:
      - 15개 행을 단일 테이블에 묶지 않고, 각 행마다 높이 `25F`인 독립 `XRTable`을 루프로 생성(`CreateSingleRowTable(0F, rowY, ReportWidth, 25F, Left|Right|Bottom)`).
      - 테이블 간 높이 간섭이나 팽창/찌그러짐 버그를 원천 배제하여, 1행부터 15행까지 **단 1픽셀의 오차도 없이 15번째 줄과 100% 동일한 높이(`22px/25F`)**로 균등 렌더링되도록 구현.
+  3. **합계 행 라벨 우측 정렬 적용**:
+     - `totalRow`의 "합    계" 타이틀 셀의 텍스트 정렬을 `TextAlignment.MiddleRight`로 변경하고 우측 여백 패딩(10px)을 주어 수량/단가 칸과 자연스럽게 정돈.
 - **검증 결과**:
   - MSBuild 리빌드 오류 0건, 경고 0건 성공.
   - [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) 배포 완료.
-  - 실테스트 실행 후 생성된 HTML 구조 검증: 1행부터 15행까지 모든 행의 `height`가 `22px`로 완벽히 동일하고 `margin-top`이 `24px`씩 일정하게 배치됨을 정밀 확인 완료.
+  - 실테스트 실행 후 생성된 HTML 구조 검증:
+    - 1행부터 15행까지 모든 행의 `height`가 `22px`로 완벽히 동일하고 `margin-top`이 `24px`씩 일정하게 배치됨을 정밀 확인.
+    - "합    계" 글자가 `text-align:right`로 정상 출력됨을 확인.
   - 단일 UTF-8 with BOM 및 CRLF 무결성 검증 통과.
 
 ### 13. MTR0001_S04A 설비부품 발주서 상단 행별 독립 XRTable 분리 및 품목 그리드 3단 분리 렌더링 최적화
@@ -1631,7 +1711,11 @@
 | **완료** | [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R01.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R01.aspx), [01.Office/PAGEMTR/MTR0001/MTR0001_R01.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R01.js) | MTR0001_R01(18건) 대비 MTR0001_R04(0건) 조회 차이점 정밀 원인 분석 | R01은 전체 품목 무조건 조회(18건 모두 DM100300 외주가공품), R04는 설비부품(DM1007%) 전용 필터 적용됨. 실제 DB 상 INC 2공장(07)에는 설비부품 발주가 없고 1공장(06, 75건)에만 존재함이 원인으로 규명 |
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql) | MTR0001_R04 설비부품 발주서 출력 리포트(S04A) 신규 구현 및 DevExpress XtraReports 기반 PDF 양식 매핑 | 첨부된 PDF 발주서 양식 100% 매핑(로고, 승인박스, 공급자·공급받는자 5행 테이블, 15행 고정 그리드 및 합계행, 업체요청사항, 안내문), MTR0001.csproj 빌드 성공, MTR0001_R04.aspx 버튼 추가 및 js 연동 완료 |
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 설비부품 발주서 상단 단일 테이블 통합 및 품목 그리드 원본 이미지 100% 매칭 | 상단 5행 단일 XRTable 통합(행높이 24F, 좌310F/우421F 완벽일치), 품목그리드 열너비 비율(30·175·120·38·72·42·84·170) 및 2줄 행높이(28F) 원본 이미지 2 완전 일치, MSBuild 성공 및 test_odr.pdf 생성 검증 완료 |
-| **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 확인 대기 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 동작 검증 | - |
+| **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 상단 발주번호/발주일자 시작·끝선 일치, 품목 1~15행 균등 높이 및 합계 라벨 우측 정렬 완료 | 행별 독립 단일행 XRTable로 1~15행 균등 렌더링(22px), 발주일자 폭 75F 일치, 테두리 겹침 제거, 합계 라벨 TextAlignment.MiddleRight 우측 정렬(여백 10) 적용. MSBuild 성공, 바이너리 배포 및 HTML text-align:right 검증 완료 |
+| **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 합계 행 수량·총금액 우측 마진(패딩 6·8) 여백 추가 및 1~15행 품목 내용 높이 1.3배 확대(36F) | 수량 패딩 6, 금액 패딩 8로 우측 테두리선 여백 형성, dataRowHeight 36F(33px)로 1.3배 확대 및 reportFooter 725F 확장, A4 단 1페이지 유지. MSBuild 성공, 바이너리 배포 및 HTML 검증 완료 |
+| **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 거래처명 상하 여백 확대, 품목 그리드 헤더 높이(0.9배, 32.4F) 및 합계행 높이 데이터행 동일(36F) 일치 | 거래처명 Y=36F(로고 8px/하단 10px 여백), headerHeight=32.4F(데이터행 0.9배, 29px), totalRowHeight=36F(데이터행 100% 동일, 33px) 적용. MSBuild 빌드 성공 및 1페이지 PDF 검증 완료 |
+| **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 로고 크기 확대, 거래처명 상단 마진 추가 및 기본 정보 5개 행 전체 텍스트 Bold 적용 | 로고 SizeF 160x38F(36px) 확대, 거래처명 Y=48F(로고 아래 10px 여백), 정보테이블 startY=84F 및 5개 행 전 셀 Bold(isHeader=true) 적용. MSBuild 빌드 성공 및 바이너리 배포 완료 |
+| **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | - |
 
 ---
 *위 기록은 사용자 요청에 따라 지속적으로 업데이트됩니다.*

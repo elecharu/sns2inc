@@ -67,9 +67,9 @@ namespace XtraRpt
 
             TopMarginBand topMargin = new TopMarginBand { HeightF = 15F };
             BottomMarginBand bottomMargin = new BottomMarginBand { HeightF = 15F };
-            ReportHeaderBand reportHeader = new ReportHeaderBand { HeightF = 210F };
+            ReportHeaderBand reportHeader = new ReportHeaderBand { HeightF = 238F };
             DetailBand detail = new DetailBand { HeightF = 0F };
-            ReportFooterBand reportFooter = new ReportFooterBand { HeightF = 600F };
+            ReportFooterBand reportFooter = new ReportFooterBand { HeightF = 745F };
             PageFooterBand pageFooter = new PageFooterBand { HeightF = 18F };
 
             // 상단 타이틀, 거래처명, 승인 박스, 단일 테이블로 행높이 및 수직선이 완벽히 일치된 헤더 정보 테이블
@@ -95,10 +95,10 @@ namespace XtraRpt
         {
             List<XRControl> list = new List<XRControl>();
 
-            // 1. 로고 이미지 (좌측 상단)
+            // 1. 로고 이미지 (2026-10-14 로고 크기 확대: 125x30 -> 160x38)
             XRPictureBox logoBox = new XRPictureBox();
             logoBox.LocationFloat = new PointFloat(0F, 0F);
-            logoBox.SizeF = new SizeF(125F, 30F);
+            logoBox.SizeF = new SizeF(160F, 38F);
             logoBox.Sizing = ImageSizeMode.ZoomImage;
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             string[] logoPaths = new string[]
@@ -123,9 +123,9 @@ namespace XtraRpt
             }
             list.Add(logoBox);
 
-            // 2. 거래처명 (로고 바로 아래, 14pt Bold)
+            // 2. 거래처명 (2026-10-14 로고 하단 상단 마진 10px 확보, 14pt Bold)
             XRLabel custNameLabel = new XRLabel();
-            custNameLabel.LocationFloat = new PointFloat(0F, 31F);
+            custNameLabel.LocationFloat = new PointFloat(0F, 48F);
             custNameLabel.SizeF = new SizeF(230F, 26F);
             custNameLabel.Font = new Font("맑은 고딕", 14F, FontStyle.Bold);
             custNameLabel.Text = Value(header, "CUSTNM");
@@ -172,69 +172,70 @@ namespace XtraRpt
             approveTable.Rows.Add(appRow2);
             list.Add(approveTable);
 
-            // 5. 기본 정보 테이블: 시작과 끝선 완벽 일치 및 테두리 정렬(t1 All, t2~t5 Left|Right|Bottom)
-            const float startY = 60F;
+            // 5. 기본 정보 테이블: 거래처명 아래 여백 확보, 시작/끝선 완벽 일치 및 전체 텍스트 Bold 적용 (t1 All, t2~t5 Left|Right|Bottom)
+            const float startY = 84F;
             const float rowH = 24F;
 
             // 좌측 총 너비: 315F, 우측 총 너비: 416F (315 + 416 = 731F)
-            // [Row 1] Y=60F: 전화(75) + 값(240) + 회사명(190) + 사업자번호라벨(75) + 값(151) = 731F
+            // 2026-10-14 기본 정보 테이블: 사용자 지정에 따라 라벨과 값 전체 텍스트 Bold(true) 처리
+            // [Row 1] Y=84F: 전화(75) + 값(240) + 회사명(190) + 사업자번호라벨(75) + 값(151) = 731F
             XRTable t1 = CreateSingleRowTable(0F, startY, ReportWidth, rowH, BorderSide.All);
             XRTableRow r1 = new XRTableRow { HeightF = rowH };
             r1.Cells.Add(CreateFixedCell("전    화", 75F, rowH, true));
-            r1.Cells.Add(CreateFixedCell(Value(header, "CUSTTEL"), 240F, rowH, false, TextAlignment.MiddleLeft, 8.5F, 4));
+            r1.Cells.Add(CreateFixedCell(Value(header, "CUSTTEL"), 240F, rowH, true, TextAlignment.MiddleLeft, 8.5F, 4));
             r1.Cells.Add(CreateFixedCell(Value(header, "COMPANYNM"), 190F, rowH, true, TextAlignment.MiddleLeft, 8.5F, 4));
             r1.Cells.Add(CreateFixedCell("사업자번호", 75F, rowH, true));
-            r1.Cells.Add(CreateFixedCell(Value(header, "COMPANYBIZNO"), 151F, rowH, false, TextAlignment.MiddleCenter));
+            r1.Cells.Add(CreateFixedCell(Value(header, "COMPANYBIZNO"), 151F, rowH, true, TextAlignment.MiddleCenter));
             t1.Rows.Add(r1);
             list.Add(t1);
 
-            // [Row 2] Y=84F: FAX(75) + 값(240) + 대표자라벨(60) + 값(356) = 731F
+            // [Row 2] Y=108F: FAX(75) + 값(240) + 대표자라벨(60) + 값(356) = 731F
             XRTable t2 = CreateSingleRowTable(0F, startY + rowH, ReportWidth, rowH, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow r2 = new XRTableRow { HeightF = rowH };
             r2.Cells.Add(CreateFixedCell("F  A  X", 75F, rowH, true));
-            r2.Cells.Add(CreateFixedCell(Value(header, "CUSTFAX"), 240F, rowH, false, TextAlignment.MiddleLeft, 8.5F, 4));
+            r2.Cells.Add(CreateFixedCell(Value(header, "CUSTFAX"), 240F, rowH, true, TextAlignment.MiddleLeft, 8.5F, 4));
             r2.Cells.Add(CreateFixedCell("대 표 자", 60F, rowH, true));
-            r2.Cells.Add(CreateFixedCell(Value(header, "PRESIDENT"), 356F, rowH, false, TextAlignment.MiddleLeft, 8.5F, 4));
+            r2.Cells.Add(CreateFixedCell(Value(header, "PRESIDENT"), 356F, rowH, true, TextAlignment.MiddleLeft, 8.5F, 4));
             t2.Rows.Add(r2);
             list.Add(t2);
 
-            // [Row 3] Y=108F: 사업자번호라벨(75) + 값(240) + 주소라벨(60) + 값(356) = 731F
+            // [Row 3] Y=132F: 사업자번호라벨(75) + 값(240) + 주소라벨(60) + 값(356) = 731F
             XRTable t3 = CreateSingleRowTable(0F, startY + (rowH * 2F), ReportWidth, rowH, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow r3 = new XRTableRow { HeightF = rowH };
             r3.Cells.Add(CreateFixedCell("사업자번호", 75F, rowH, true));
-            r3.Cells.Add(CreateFixedCell(Value(header, "CUSTBIZNO"), 240F, rowH, false, TextAlignment.MiddleLeft, 8.5F, 4));
+            r3.Cells.Add(CreateFixedCell(Value(header, "CUSTBIZNO"), 240F, rowH, true, TextAlignment.MiddleLeft, 8.5F, 4));
             r3.Cells.Add(CreateFixedCell("주    소", 60F, rowH, true));
-            r3.Cells.Add(CreateFixedCell(Value(header, "COMPANYADDR"), 356F, rowH, false, TextAlignment.MiddleLeft, 8F, 4));
+            r3.Cells.Add(CreateFixedCell(Value(header, "COMPANYADDR"), 356F, rowH, true, TextAlignment.MiddleLeft, 8F, 4));
             t3.Rows.Add(r3);
             list.Add(t3);
 
-            // [Row 4] Y=132F: 발주번호(75) + 값(240) + 전화라벨(60) + 값(148) + FAX라벨(60) + 값(148) = 731F
+            // [Row 4] Y=156F: 발주번호(75) + 값(240) + 전화라벨(60) + 값(148) + FAX라벨(60) + 값(148) = 731F
             XRTable t4 = CreateSingleRowTable(0F, startY + (rowH * 3F), ReportWidth, rowH, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow r4 = new XRTableRow { HeightF = rowH };
             r4.Cells.Add(CreateFixedCell("발 주 번 호", 75F, rowH, true));
-            r4.Cells.Add(CreateFixedCell(Value(header, "MTRODRKEY"), 240F, rowH, false, TextAlignment.MiddleLeft, 8.5F, 4));
+            r4.Cells.Add(CreateFixedCell(Value(header, "MTRODRKEY"), 240F, rowH, true, TextAlignment.MiddleLeft, 8.5F, 4));
             r4.Cells.Add(CreateFixedCell("전    화", 60F, rowH, true));
-            r4.Cells.Add(CreateFixedCell(Value(header, "COMPANYTEL"), 148F, rowH, false, TextAlignment.MiddleLeft, 8.5F, 4));
+            r4.Cells.Add(CreateFixedCell(Value(header, "COMPANYTEL"), 148F, rowH, true, TextAlignment.MiddleLeft, 8.5F, 4));
             r4.Cells.Add(CreateFixedCell("F  A  X", 60F, rowH, true));
-            r4.Cells.Add(CreateFixedCell(Value(header, "COMPANYFAX"), 148F, rowH, false, TextAlignment.MiddleLeft, 8.5F, 4));
+            r4.Cells.Add(CreateFixedCell(Value(header, "COMPANYFAX"), 148F, rowH, true, TextAlignment.MiddleLeft, 8.5F, 4));
             t4.Rows.Add(r4);
             list.Add(t4);
 
-            // [Row 5] Y=156F: 발주일자(75) + 값(82.5) + 납기일자(75) + 값(82.5) + 담당자라벨(60) + 값(356) = 731F (시작/끝 완벽 일치)
+            // [Row 5] Y=180F: 발주일자(75) + 값(82.5) + 납기일자(75) + 값(82.5) + 담당자라벨(60) + 값(356) = 731F (시작/끝 완벽 일치)
             XRTable t5 = CreateSingleRowTable(0F, startY + (rowH * 4F), ReportWidth, rowH, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow r5 = new XRTableRow { HeightF = rowH };
             r5.Cells.Add(CreateFixedCell("발 주 일 자", 75F, rowH, true));
-            r5.Cells.Add(CreateFixedCell(Value(header, "MTRODRDATE"), 82.5F, rowH, false, TextAlignment.MiddleCenter));
+            r5.Cells.Add(CreateFixedCell(Value(header, "MTRODRDATE"), 82.5F, rowH, true, TextAlignment.MiddleCenter));
             r5.Cells.Add(CreateFixedCell("납 기 일 자", 75F, rowH, true));
-            r5.Cells.Add(CreateFixedCell(Value(header, "EXPDATE"), 82.5F, rowH, false, TextAlignment.MiddleCenter));
+            r5.Cells.Add(CreateFixedCell(Value(header, "EXPDATE"), 82.5F, rowH, true, TextAlignment.MiddleCenter));
             r5.Cells.Add(CreateFixedCell("담 당 자", 60F, rowH, true));
-            r5.Cells.Add(CreateFixedCell(Value(header, "EMPINFO"), 356F, rowH, false, TextAlignment.MiddleLeft, 8F, 4));
+            r5.Cells.Add(CreateFixedCell(Value(header, "EMPINFO"), 356F, rowH, true, TextAlignment.MiddleLeft, 8F, 4));
             t5.Rows.Add(r5);
             list.Add(t5);
 
-            // 6. "아래와 같이 발주 합니다." 안내문
+            // 6. "아래와 같이 발주 합니다." 안내문 (startY 84F + rowH 24F*5행 = 204F 아래 배치)
             XRLabel noticeLabel = new XRLabel();
-            noticeLabel.LocationFloat = new PointFloat(0F, 186F);
+            noticeLabel.LocationFloat = new PointFloat(0F, 210F);
             noticeLabel.SizeF = new SizeF(300F, 20F);
             noticeLabel.Font = new Font("맑은 고딕", 9.5F, FontStyle.Bold);
             noticeLabel.Text = "아래와 같이 발주 합니다.";
@@ -244,14 +245,14 @@ namespace XtraRpt
             return list.ToArray();
         }
 
-        // 2026-10-14 품목 그리드 (1~15행을 개별 단일행 XRTable로 생성하여 15번째줄 높이 25F로 100% 동일하게 일치)
+        // 2026-10-14 품목 그리드 (헤더 높이 데이터행의 0.9배, 데이터행 36F, 합계행 높이 데이터행과 동일 36F 일치)
         private XRControl[] CreateItemsAndFooterControls(DataRow header, DataTable items)
         {
             List<XRControl> list = new List<XRControl>();
 
-            const float headerHeight = 23F;
-            const float dataRowHeight = 25F; // 사용자 지정: 15번째 줄 간격(25F)으로 1~15행 완전 일치
-            const float totalRowHeight = 23F;
+            const float dataRowHeight = 36F; // 사용자 지정: 1~15행 내용 구간 높이
+            const float headerHeight = dataRowHeight * 0.9F; // 사용자 지정: 헤더 높이를 데이터행의 0.9배(32.4F)로 설정
+            const float totalRowHeight = dataRowHeight; // 사용자 지정: 합계행 높이를 데이터행과 동일(36F)하게 일치
 
             // 열 너비 규격: No(30), 품명(175), 규격(120), 단위(38), 단가(72), 수량(42), 금액(84), 비고(170) = 총 731F
             const float wNo = 30F;
@@ -301,9 +302,9 @@ namespace XtraRpt
                     tr.Cells.Add(CreateDataCell(Value(row, "ITEMNM"), wName, dataRowHeight, TextAlignment.MiddleLeft, 8F, true));
                     tr.Cells.Add(CreateDataCell(Value(row, "ITEMSPEC"), wSpec, dataRowHeight, TextAlignment.MiddleLeft, 8F, true));
                     tr.Cells.Add(CreateDataCell(Value(row, "ITEMUNIT"), wUnit, dataRowHeight, TextAlignment.MiddleCenter, 8F));
-                    tr.Cells.Add(CreateDataCell(price.ToString("#,##0"), wPrice, dataRowHeight, TextAlignment.MiddleRight, 8.5F));
-                    tr.Cells.Add(CreateDataCell(qty.ToString("#,##0"), wQty, dataRowHeight, TextAlignment.MiddleRight, 8.5F));
-                    tr.Cells.Add(CreateDataCell(amt.ToString("#,##0"), wAmt, dataRowHeight, TextAlignment.MiddleRight, 8.5F));
+                    tr.Cells.Add(CreateDataCell(price.ToString("#,##0"), wPrice, dataRowHeight, TextAlignment.MiddleRight, 8.5F, false, 6));
+                    tr.Cells.Add(CreateDataCell(qty.ToString("#,##0"), wQty, dataRowHeight, TextAlignment.MiddleRight, 8.5F, false, 6));
+                    tr.Cells.Add(CreateDataCell(amt.ToString("#,##0"), wAmt, dataRowHeight, TextAlignment.MiddleRight, 8.5F, false, 8));
                     tr.Cells.Add(CreateDataCell(Value(row, "REMARK"), wRemark, dataRowHeight, TextAlignment.MiddleLeft, 7.5F, true));
                 }
                 else if (i == rowCount)
@@ -313,9 +314,9 @@ namespace XtraRpt
                     tr.Cells.Add(CreateDataCell("- - -  이  하  여  백  - - -", wName, dataRowHeight, TextAlignment.MiddleCenter, 7.5F));
                     tr.Cells.Add(CreateDataCell("", wSpec, dataRowHeight, TextAlignment.MiddleLeft, 8F));
                     tr.Cells.Add(CreateDataCell("", wUnit, dataRowHeight, TextAlignment.MiddleCenter, 8F));
-                    tr.Cells.Add(CreateDataCell("", wPrice, dataRowHeight, TextAlignment.MiddleRight, 8.5F));
-                    tr.Cells.Add(CreateDataCell("", wQty, dataRowHeight, TextAlignment.MiddleRight, 8.5F));
-                    tr.Cells.Add(CreateDataCell("", wAmt, dataRowHeight, TextAlignment.MiddleRight, 8.5F));
+                    tr.Cells.Add(CreateDataCell("", wPrice, dataRowHeight, TextAlignment.MiddleRight, 8.5F, false, 6));
+                    tr.Cells.Add(CreateDataCell("", wQty, dataRowHeight, TextAlignment.MiddleRight, 8.5F, false, 6));
+                    tr.Cells.Add(CreateDataCell("", wAmt, dataRowHeight, TextAlignment.MiddleRight, 8.5F, false, 8));
                     tr.Cells.Add(CreateDataCell("", wRemark, dataRowHeight, TextAlignment.MiddleLeft, 7.5F));
                 }
                 else
@@ -324,9 +325,9 @@ namespace XtraRpt
                     tr.Cells.Add(CreateDataCell("", wName, dataRowHeight, TextAlignment.MiddleLeft, 8F));
                     tr.Cells.Add(CreateDataCell("", wSpec, dataRowHeight, TextAlignment.MiddleLeft, 8F));
                     tr.Cells.Add(CreateDataCell("", wUnit, dataRowHeight, TextAlignment.MiddleCenter, 8F));
-                    tr.Cells.Add(CreateDataCell("", wPrice, dataRowHeight, TextAlignment.MiddleRight, 8.5F));
-                    tr.Cells.Add(CreateDataCell("", wQty, dataRowHeight, TextAlignment.MiddleRight, 8.5F));
-                    tr.Cells.Add(CreateDataCell("", wAmt, dataRowHeight, TextAlignment.MiddleRight, 8.5F));
+                    tr.Cells.Add(CreateDataCell("", wPrice, dataRowHeight, TextAlignment.MiddleRight, 8.5F, false, 6));
+                    tr.Cells.Add(CreateDataCell("", wQty, dataRowHeight, TextAlignment.MiddleRight, 8.5F, false, 6));
+                    tr.Cells.Add(CreateDataCell("", wAmt, dataRowHeight, TextAlignment.MiddleRight, 8.5F, false, 8));
                     tr.Cells.Add(CreateDataCell("", wRemark, dataRowHeight, TextAlignment.MiddleLeft, 7.5F));
                 }
 
@@ -334,14 +335,15 @@ namespace XtraRpt
                 list.Add(rowTable);
             }
 
-            // [3. 합계 테이블] Y = headerHeight + (dataRowHeight * 15F) = 23F + 375F = 398F, 높이 23F
+            // [3. 합계 테이블] Y = headerHeight + (dataRowHeight * 15F), 높이 totalRowHeight(36F)
             float totalTableY = headerHeight + (dataRowHeight * 15F);
             float totalTitleWidth = wNo + wName + wSpec + wUnit + wPrice; // 30 + 175 + 120 + 38 + 72 = 435F
             XRTable totalTable = CreateSingleRowTable(0F, totalTableY, ReportWidth, totalRowHeight, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow totalRow = new XRTableRow { HeightF = totalRowHeight };
-            totalRow.Cells.Add(CreateFixedCell("합    계", totalTitleWidth, totalRowHeight, true, TextAlignment.MiddleCenter, 9F));
-            totalRow.Cells.Add(CreateFixedCell(totalQty.ToString("#,##0"), wQty, totalRowHeight, true, TextAlignment.MiddleRight, 9F));
-            totalRow.Cells.Add(CreateFixedCell(totalAmt.ToString("#,##0"), wAmt, totalRowHeight, true, TextAlignment.MiddleRight, 9F));
+            // 2026-10-14 품목 그리드 합계 행: 합계 텍스트 우측 정렬 및 수량/총금액 우측 margin(패딩 6, 8) 공백 여백 추가
+            totalRow.Cells.Add(CreateFixedCell("합    계", totalTitleWidth, totalRowHeight, true, TextAlignment.MiddleRight, 9F, 10));
+            totalRow.Cells.Add(CreateFixedCell(totalQty.ToString("#,##0"), wQty, totalRowHeight, true, TextAlignment.MiddleRight, 9F, 6));
+            totalRow.Cells.Add(CreateFixedCell(totalAmt.ToString("#,##0"), wAmt, totalRowHeight, true, TextAlignment.MiddleRight, 9F, 8));
             totalRow.Cells.Add(CreateFixedCell("", wRemark, totalRowHeight, false, TextAlignment.MiddleCenter));
             totalTable.Rows.Add(totalRow);
             list.Add(totalTable);
@@ -432,8 +434,8 @@ namespace XtraRpt
             return cell;
         }
 
-        // 품목 데이터 셀 생성 (높이 28F 지원 및 줄바꿈 허용 시 CanGrow=false, WordWrap=true로 2줄 깔끔 렌더링)
-        private static XRTableCell CreateDataCell(string text, float width, float height, TextAlignment alignment, float fontSize = 8F, bool allowWrap = false)
+        // 품목 데이터 셀 생성 (높이 36F 지원 및 줄바꿈 허용 시 CanGrow=false, WordWrap=true로 2줄 깔끔 렌더링)
+        private static XRTableCell CreateDataCell(string text, float width, float height, TextAlignment alignment, float fontSize = 8F, bool allowWrap = false, int padding = 3)
         {
             XRTableCell cell = new XRTableCell();
             cell.WidthF = width;
@@ -446,7 +448,7 @@ namespace XtraRpt
             cell.BorderWidth = 1F;
             cell.CanGrow = false;
             cell.WordWrap = allowWrap;
-            cell.Padding = new PaddingInfo(3, 3, 0, 0, 100F);
+            cell.Padding = new PaddingInfo(padding, padding, 0, 0, 100F);
             return cell;
         }
 

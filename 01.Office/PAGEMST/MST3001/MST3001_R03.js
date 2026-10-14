@@ -12,10 +12,11 @@ ItsPage.Load = function () {
         column.create("품목코드", "ITEMCD", { width: 100, align: 'center', backColor: enumColor.greenLight2 }),
         column.create("품명", "ITEMNM", { width: 120 }),
         column.create("규격", "ITEMSPEC", { width: 120 }),
-        column.create("중요도등급", "GRADE", { width: 90, align: 'center' }),
+        column.create("중요도등급", "GRADE", { width: 90, align: 'center', readOnly: false }),
         column.create("안전재고", "SAFEQTY", { width: 90, align: 'right', format: '#,##0', readOnly: false }),
-        column.create("현재고", "LOTQTY", { width: 90, align: 'right', format: '#,##0', readOnly: false }),
-        column.create("로케이션", "LOCANM", { width: 160, align: 'center', columnType: enumColumnTypes.find, readOnly: false }),
+        column.create("현재고", "LOTQTY", { width: 90, align: 'right', format: '#,##0' }),
+        column.create("로케이션코드", "LOCACD", { width: 160, align: 'center', columnType: enumColumnTypes.find, readOnly: false }),
+        column.create("로케이션명", "LOCANM", { width: 160, align: 'center', columnType: enumColumnTypes.combo }),
         column.create("관리단위", "ITEMUNIT", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM150' }),
         column.create("공급구분", "ITEMSRC", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM160' }),
         column.create("종료여부", "ENDYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
@@ -106,6 +107,7 @@ ItsButton.EventSearch = function () {
     }
 
     ItsGrid.SetStore('grid1', store);
+    ItsGrid.Get('grid1').autoSizeColumns();
     ItsMsg.Toast(maria.store.Length() + '건이 조회되었습니다.');
 };
 
