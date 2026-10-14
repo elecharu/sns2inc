@@ -72,6 +72,7 @@ ItsGrid.Event('grid1').onSelect = function (rowIndex) {
     }
 
     ItsGrid.SetStore('grid2', maria.store);
+    ItsGrid.Get('grid1').autoSizeColumns();
     ItsGrid.Get('grid2').autoSizeColumns();
 };
 
@@ -98,11 +99,10 @@ ItsButton.Event('btn_PRINT').onClick = function () {
     }
 
     var rpt = new ItsXtraRpt('MTR0001_S04A');
-    rpt.FileName('설비부품_발주서_' + mtrOdrKey);
     rpt.AddParam('MTRODRKEY', mtrOdrKey);
     rpt.CallPop();
 
     if (rpt.isError) {
         ItsMsg.Alert(rpt.errMessage);
     }
-};
+};

@@ -1277,7 +1277,6 @@ function PrintPlanRev(planTp) {
         return;
     }
     var rpt = new ItsXtraRpt('EQM1001_S05A');
-    rpt.FileName('제조설비_정기점검계획서_' + planCd);
     rpt.AddParam('PLANTP', planTp);
     rpt.AddParam('PLANCD', planCd);
     rpt.CallPop();
