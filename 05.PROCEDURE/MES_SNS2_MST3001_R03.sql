@@ -4,13 +4,14 @@ PROCEDURE `MES_SNS2`.`MST3001_R03`(
 -- Comment: 설비부품정보 마스터관리
 -- Create:  2024-02-22  13:50   김영철
 -- Modify:  2026-10-13          한성수  부품재고·로케이션 최적화 조회/저장, 안전재고 부족 시 핑크색(BACKGROUND) 표기, 로케이션 코드 수정 및 중복 검증·SQL 튜닝
---          2026-10-14          한성수  SAVE_ITEM 로케이션코드·명 파라미터 동기화 및 로케이션 삭제(초기화) 지원
+--          2026-10-14          한성수  로케이션 연동·초기화 및 비움 삭제 처리, 중요도등급(GRADE) 저장 및 공통 감사함수 적용
 -- *****************************************************************************
   IN $COMPANYCD       VARCHAR(100),
   IN $FACTORYCD       VARCHAR(100),
   IN $ITEMID          VARCHAR(100),
   IN $ITEMCG          VARCHAR(100),
   IN $ITEMID_LIST     MEDIUMTEXT,
+  IN $GRADE_LIST      MEDIUMTEXT,
   IN $SAFEQTY_LIST    MEDIUMTEXT,
   IN $LOTQTY_LIST     MEDIUMTEXT,
   IN $LOCACD_LIST     VARCHAR(2000),
@@ -23,12 +24,12 @@ PROCEDURE `MES_SNS2`.`MST3001_R03`(
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 -- *****************************************************************************
   DECLARE _$ITEMID     VARCHAR(100);
+  DECLARE _$GRADE      VARCHAR(100);
   DECLARE _$SAFEQTY    VARCHAR(100);
   DECLARE _$LOTQTY     VARCHAR(100);
   DECLARE _$LOCACD     VARCHAR(100);
   DECLARE _$LOCANM     VARCHAR(100);
   DECLARE _$OLD_LOCACD VARCHAR(100);
-  DECLARE _$NOW        VARCHAR(19);
 
 -- *****************************************************************************
   CASE $CALLTYPE
@@ -40,6 +41,10 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       CALL COMERR('법인을 선택하십시오.');
       LEAVE PROC;
     END IF; 
+
+    IF COALESCE($FACTORYCD, '') = '' THEN
+      SET $FACTORYCD = '07';
+    END IF;
 
     SET $ITEMCG = 'DM100700';
     SET $ITEMID = TRIM(COALESCE($ITEMID, ''));
@@ -71,7 +76,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     FROM MSTITEM
     LEFT JOIN MSTITEM_EQMPARTS
       ON MSTITEM_EQMPARTS.ITEMID = MSTITEM.ITEMID
-     AND (COALESCE($FACTORYCD, '') = '' OR MSTITEM_EQMPARTS.FACTORYCD = $FACTORYCD)
+     AND MSTITEM_EQMPARTS.FACTORYCD = $FACTORYCD
     LEFT JOIN MSTLOCA_EQMPARTS
       ON MSTLOCA_EQMPARTS.LOCACD = MSTITEM_EQMPARTS.LOCACD
     WHERE MSTITEM.COMPANYCD = $COMPANYCD
@@ -94,49 +99,38 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     END IF;
 
     IF COALESCE($FACTORYCD, '') = '' THEN
-      SET $FACTORYCD = '02';
+      SET $FACTORYCD = '07';
     END IF;
-
-    SET _$NOW = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s');
 
     WHILE LENGTH($ITEMID_LIST) > 0 DO
       CALL COMSPLIT($ITEMID_LIST, _$ITEMID);
+      CALL COMSPLIT($GRADE_LIST, _$GRADE);
       CALL COMSPLIT($SAFEQTY_LIST, _$SAFEQTY);
       CALL COMSPLIT($LOTQTY_LIST, _$LOTQTY);
       CALL COMSPLIT($LOCACD_LIST, _$LOCACD);
       CALL COMSPLIT($LOCANM_LIST, _$LOCANM);
 
       SET _$ITEMID  = TRIM(COALESCE(_$ITEMID, ''));
+      SET _$GRADE   = TRIM(COALESCE(_$GRADE, ''));
       SET _$SAFEQTY = TRIM(COALESCE(_$SAFEQTY, '0'));
       SET _$LOTQTY  = TRIM(COALESCE(_$LOTQTY, '0'));
       SET _$LOCACD  = TRIM(COALESCE(_$LOCACD, ''));
       SET _$LOCANM  = TRIM(COALESCE(_$LOCANM, ''));
 
       IF _$ITEMID <> '' THEN
-        -- 로케이션 명만 입력되고 코드가 비어있는 경우 보정 (직접 타이핑 입력 지원)
-        IF _$LOCACD = '' AND _$LOCANM <> '' THEN
-          SELECT LOCACD INTO _$LOCACD
-          FROM MSTLOCA_EQMPARTS
-          WHERE LOCANM = _$LOCANM OR LOCACD = _$LOCANM
-          ORDER BY IF(LOCANM = _$LOCANM, 1, 2)
-          LIMIT 1;
-
-          IF _$LOCACD IS NULL THEN
-            SET _$LOCACD = '';
-          END IF;
-        -- 로케이션 명이 비어있는 경우(삭제 시) 코드도 빈 값('')으로 확정
-        ELSEIF _$LOCANM = '' THEN
+        -- 로케이션 코드 또는 로케이션 명이 비어있는 경우 로케이션 해제(삭제)
+        IF _$LOCACD = '' OR _$LOCANM = '' THEN
           SET _$LOCACD = '';
         END IF;
 
         IF EXISTS (SELECT 1 FROM MSTITEM_EQMPARTS WHERE FACTORYCD = $FACTORYCD AND ITEMID = CAST(_$ITEMID AS UNSIGNED) LIMIT 1) THEN
           UPDATE MSTITEM_EQMPARTS
-          SET SAFEQTY = CAST(_$SAFEQTY AS DECIMAL(20, 8)),
-              LOTQTY  = CAST(_$LOTQTY AS DECIMAL(20, 8)),
+          SET GRADE   = _$GRADE,
+              SAFEQTY = CAST(_$SAFEQTY AS DECIMAL(20, 8)),
               LOCACD  = _$LOCACD,
-              MTIME   = _$NOW,
-              MEMP    = @CALLEMP,
-              MPRG    = @CALLPRG
+              MTIME   = CALLTIME(),
+              MEMP    = CALLEMP(),
+              MPRG    = CALLPRG()
           WHERE FACTORYCD = $FACTORYCD
             AND ITEMID = CAST(_$ITEMID AS UNSIGNED);
         ELSE
@@ -156,13 +150,13 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
           ) VALUES (
             $FACTORYCD,
             CAST(_$ITEMID AS UNSIGNED),
-            '',
+            _$GRADE,
             CAST(_$SAFEQTY AS DECIMAL(20, 8)),
             CAST(_$LOTQTY AS DECIMAL(20, 8)),
             _$LOCACD,
-            _$NOW,
-            @CALLEMP,
-            @CALLPRG,
+            CALLTIME(),
+            CALLEMP(),
+            CALLPRG(),
             '',
             '',
             ''
@@ -194,8 +188,6 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       CALL COMERR('저장할 로케이션 데이터를 입력해주세요.');
       LEAVE PROC;
     END IF;
-
-    SET _$NOW = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s');
 
     WHILE LENGTH($LOCANM_LIST) > 0 DO
       CALL COMSPLIT($LOCACD_LIST, _$LOCACD);
@@ -233,15 +225,18 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
         UPDATE MSTLOCA_EQMPARTS
         SET LOCACD = _$LOCACD,
             LOCANM = _$LOCANM,
-            MTIME  = _$NOW,
-            MEMP   = @CALLEMP,
-            MPRG   = @CALLPRG
+            MTIME  = CALLTIME(),
+            MEMP   = CALLEMP(),
+            MPRG   = CALLPRG()
         WHERE LOCACD = _$OLD_LOCACD;
 
         -- 코드가 변경된 경우 부품 재고 테이블의 로케이션 코드도 연쇄 갱신
         IF _$OLD_LOCACD <> _$LOCACD THEN
           UPDATE MSTITEM_EQMPARTS
-          SET LOCACD = _$LOCACD
+          SET LOCACD = _$LOCACD,
+              MTIME  = CALLTIME(),
+              MEMP   = CALLEMP(),
+              MPRG   = CALLPRG()
           WHERE LOCACD = _$OLD_LOCACD;
         END IF;
 
@@ -259,9 +254,9 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
         ) VALUES (
           _$LOCACD,
           _$LOCANM,
-          _$NOW,
-          @CALLEMP,
-          @CALLPRG,
+          CALLTIME(),
+          CALLEMP(),
+          CALLPRG(),
           '',
           '',
           ''

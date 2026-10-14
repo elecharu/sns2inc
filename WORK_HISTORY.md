@@ -17,6 +17,63 @@
 
 ## 🕒 2026-10-14 (수) 작업 내역
 
+### 19. MST3001_R03 Delete 키 및 셀 값 전체 삭제 시 로케이션코드(LOCACD)·로케이션명(LOCANM) 동시 초기화 및 DB 로케이션 삭제(비움) 반영 완료
+- **수정 파일**:
+  - 화면 스크립트: [01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
+  - DB 프로시저: [05.Procedure/MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql)
+- **배경 및 사용자 피드백**:
+  1. `MST3001_R03.js` 메인 그리드의 로케이션코드(`LOCACD`) 컬럼에서 DELETE 키를 눌러 값을 지우거나, 사용자가 값을 전부 지워버렸을 경우 로케이션명(`LOCANM`)도 함께 지워지도록 동기화 요청.
+  2. DELETE 키로 값을 비우고 저장을 눌렀으나, DB 상에서 로케이션이 삭제되지 않고 기존 값이 그대로 유지되는 결함 해결 요청.
+- **원인 분석**:
+  1. **JavaScript keydown 가로챔**: 공통 마스터 스크립트(`MasterBase.js`)에서 `e.keyCode == 46`을 체크박스 전용으로 가로채 `ItsGrid.Event('grid1').onKeydown`이 아예 호출되지 않았음.
+  2. **JavaScript onChanged 누락**: `LOCACD` 셀 에디트 종료 시 값이 빈 문자열이 되었을 때 `LOCANM`을 비워주는 분기가 누락되어 로케이션명이 화면에 그대로 잔존했음.
+  3. **프로시저 자동 복원 로직**: 프로시저 `SAVE_ITEM` 분기에서 `IF _$LOCACD = '' AND _$LOCANM <> '' THEN`으로 로케이션명이 남아있으면 `MSTLOCA_EQMPARTS`에서 `LOCACD`를 재조회하여 복원해버려, 화면에서 코드만 지우고 저장했을 때 예전 코드가 그대로 복원되어 UPDATE 되었음.
+- **작업 상세 내용**:
+  1. **화면 스크립트 수정 ([01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js))**:
+     - `ItsPage.Load`에서 grid1 호스트 엘리먼트에 캡처링 단계(`addEventListener('keydown', fn, true)`)로 Delete 키(keyCode 46) 이벤트를 직접 등록.
+     - 일반 셀 선택 상태에서 Delete 키 입력 시 선택 영역(`topRow` ~ `bottomRow`)에 대해 `SetLoca(r, '', '')`를 호출하여 `LOCACD`와 `LOCANM`을 둘 다 빈 값(`''`)으로 즉시 초기화하고 행 체크박스(`isRowCheck`) 자동 체크.
+     - `onChanged` 이벤트 핸들러 보완: `field === 'LOCACD'`일 때 값이 빈 값(`val === ''`)이면 `SetLoca(rowIndex, '', '')`로 로케이션명도 함께 비우고 행 체크. 신규 코드로 변경 시 기존 `LOCANM` 초기화.
+     - `field === 'LOCANM'` 비움 및 변경 시에도 상호 동기화 로직 적용.
+  2. **DB 프로시저 수정 ([05.Procedure/MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql))**:
+     - `SAVE_ITEM` 분기에서 `IF _$LOCACD = '' OR _$LOCANM = '' THEN SET _$LOCACD = ''; END IF;` 로직 적용.
+     - 로케이션 코드 또는 명이 비어있는 경우 이전 코드를 조회하여 복원하는 로직을 완전히 제거하고, 빈 값(`''`)으로 확정하여 `MSTITEM_EQMPARTS.LOCACD = ''`로 안전하게 업데이트(삭제) 처리.
+     - 최상단 `Modify` 이력 영역 1일 1행 원칙에 따라 갱신.
+- **검증 결과**:
+  - `node -c 01.Office/PAGEMST/MST3001/MST3001_R03.js` 문법 검사 통과 (오류 0건).
+  - 수정된 파일(`MST3001_R03.js`, `MES_SNS2_MST3001_R03.sql`, `WORK_HISTORY.md`) 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료.
+- **수정 파일**:
+  - 개발 규칙 문서: [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md)
+  - 화면 스크립트: [01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
+  - DB 프로시저: [05.Procedure/MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql)
+  - DB 시스템 파라미터: [05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql)
+- **배경 및 사용자 피드백**:
+  1. `MST3001_R03.js` 메인 그리드에서 "현재고"(`LOTQTY`) 컬럼 입력을 차단하고, "중요도등급"(`GRADE`) 컬럼 수정이 가능해짐에 따라 저장 연동 요청.
+  2. 데이터 조회 후 `ItsGrid.Get('grid1').autoSizeColumns();` 실행 여부 확인 및 누락된 곳(`SearchLoca` 등)에 보완 요청.
+  3. 프로시저에서 공통 내장 함수(`CALLTIME()`, `CALLEMP()`, `CALLPRG()`)를 필수 활용하도록 규칙(`procedure.md`)에 추가하고 해당 프로시저에 적용 요청.
+- **작업 상세 내용**:
+  1. **프로시저 공통 규칙 추가 ([.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md))**:
+     - 6번 항목으로 `공통 감사(Audit) 함수 필수 사용 원칙 (CALLTIME(), CALLEMP(), CALLPRG())` 신설.
+     - 등록 시 `RTIME = CALLTIME()`, `REMP = CALLEMP()`, `RPRG = CALLPRG()`, 수정 시 `MTIME = CALLTIME()`, `MEMP = CALLEMP()`, `MPRG = CALLPRG()` 호출을 표준으로 강제. `NOW()`나 `@CALLEMP`, `@CALLPRG` 직접 대입 금지 명시.
+  2. **프로시저 수정 ([05.Procedure/MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql))**:
+     - `IN $GRADE_LIST MEDIUMTEXT` 파라미터 및 `DECLARE _$GRADE VARCHAR(100);` 변수 추가.
+     - 공장코드 기본값 보정: 레거시 기본값 `'02'`를 SNSINC 2공장의 올바른 공장코드인 `'07'`로 전면 업데이트 (`SEL_ITEM`, `SAVE_ITEM` 분기에서 `$FACTORYCD` 누락 시 `'07'` 기본 적용 및 `MSTITEM_EQMPARTS.FACTORYCD = '07'` 정확한 조인).
+     - `SAVE_ITEM` 분기에서 `CALL COMSPLIT($GRADE_LIST, _$GRADE);` 및 `MSTITEM_EQMPARTS`에 `GRADE = _$GRADE` 저장 연동.
+     - 현재고 컬럼 입력 차단에 따라 `UPDATE` 시 기존 재고 왜곡 방지를 위해 `LOTQTY`는 업데이트 대상에서 제외하고 기존 값 보존.
+     - `SAVE_ITEM`, `SAVE_LOCA` 전반의 등록/수정 일시 및 작업자 컬럼에 `CALLTIME()`, `CALLEMP()`, `CALLPRG()` 공통 함수 적용 (`_$NOW` 및 `@CALLEMP`/`@CALLPRG` 제거).
+     - 최상단 `Modify` 이력 1일 1행 원칙 및 2행 개행 선언부 준수.
+     - `SYSTEM_PARAMETERS.sql` 주석 및 총 14건 파라미터 검증 쿼리 동기화.
+  3. **화면 스크립트 수정 ([01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js))**:
+     - `grid1` 현재고(`LOTQTY`) 컬럼에 `readOnly: true` 설정하여 입력 차단.
+     - `grid1` 로케이션명(`LOCANM`) 컬럼의 불필요한 `columnType: enumColumnTypes.combo` 설정을 해제 (`combo column must have 'gpcd' attribute.` 오류 해결).
+     - 로케이션 검색 팝업 오픈(`OpenLoca`) 대상을 오로지 로케이션코드(`LOCACD`) 컬럼으로만 제한(`if (field !== 'LOCACD') return;`)하여 로케이션명(`LOCANM`) 클릭/더블클릭 시 팝업 차단.
+     - `EventSearch` 시 `row._ORG_GRADE = row.GRADE;` 원본값 보관 추가.
+     - `GetCheckedRows`에서 `GRADE` 변경 감지 로직 추가.
+     - `ItsButton.EventSave`에서 `maria.AddList('GRADE_LIST', (row.GRADE || '').trim());` 전송 추가.
+     - `SearchLoca` 함수에서 로케이션 조회 후 `ItsGrid.Get('grid_LOCA').autoSizeColumns();` 누락 보완.
+- **검증 결과**:
+  - `node -c 01.Office/PAGEMST/MST3001/MST3001_R03.js` 구문 검사 통과 (오류 0건).
+  - 수정된 모든 파일(`procedure.md`, `MST3001_R03.sql`, `SYSTEM_PARAMETERS.sql`, `MST3001_R03.js`) 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 바이너리 무결성 검증 완료.
+
 ### 17. MTR0001_S04A 로고 크기 확대, 거래처명 상단 마진 추가 및 기본 정보 5개 행 전체 텍스트 Bold 적용
 - **수정 파일**:
   - 리포트 C# 소스: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs)
@@ -1715,8 +1772,11 @@
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 합계 행 수량·총금액 우측 마진(패딩 6·8) 여백 추가 및 1~15행 품목 내용 높이 1.3배 확대(36F) | 수량 패딩 6, 금액 패딩 8로 우측 테두리선 여백 형성, dataRowHeight 36F(33px)로 1.3배 확대 및 reportFooter 725F 확장, A4 단 1페이지 유지. MSBuild 성공, 바이너리 배포 및 HTML 검증 완료 |
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 거래처명 상하 여백 확대, 품목 그리드 헤더 높이(0.9배, 32.4F) 및 합계행 높이 데이터행 동일(36F) 일치 | 거래처명 Y=36F(로고 8px/하단 10px 여백), headerHeight=32.4F(데이터행 0.9배, 29px), totalRowHeight=36F(데이터행 100% 동일, 33px) 적용. MSBuild 빌드 성공 및 1페이지 PDF 검증 완료 |
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 로고 크기 확대, 거래처명 상단 마진 추가 및 기본 정보 5개 행 전체 텍스트 Bold 적용 | 로고 SizeF 160x38F(36px) 확대, 거래처명 Y=48F(로고 아래 10px 여백), 정보테이블 startY=84F 및 5개 행 전 셀 Bold(isHeader=true) 적용. MSBuild 빌드 성공 및 바이너리 배포 완료 |
+| **완료** | [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql) | MST3001_R03 중요도등급(GRADE) 수정·저장 및 현재고(LOTQTY) 입력 차단 연동, 로케이션 autoSizeColumns 보완, 프로시저 공통 감사함수(CALLTIME/CALLEMP/CALLPRG) 강제 규칙 제정 및 적용 | LOTQTY readOnly 차단, LOCANM 콤보 해제(gpcd 오류 해결), GRADE_LIST 전송 및 저장 연동, SearchLoca autoSizeColumns 추가, procedure.md 감사함수 규칙 제정, RTIME/MTIME/REMP/MEMP/RPRG/MPRG 공통함수 적용 완료. Node.js 구문검사 통과, UTF-8 BOM/CRLF 무결성 검증 완료 |
+| **완료** | [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql) | MST3001_R03 Delete 키 및 셀 값 전체 삭제 시 로케이션코드·로케이션명 동시 초기화 및 DB 로케이션 삭제(비움) 반영 | keydown 캡처링 리스너로 Delete 키(46) 가로챔 해결, onChanged 빈값 감지 시 SetLoca 동기화, 프로시저 SAVE_ITEM 자동복원 제거 및 로케이션 해제 확정 처리 완료. JS 문법 검사 통과, UTF-8 BOM/CRLF 무결성 검증 완료 |
 | **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | - |
 
 ---
 *위 기록은 사용자 요청에 따라 지속적으로 업데이트됩니다.*
+
 
