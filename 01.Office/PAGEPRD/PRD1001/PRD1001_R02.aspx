@@ -33,16 +33,17 @@
 
 <%-- POP --%>
 <asp:Content ContentPlaceHolderID="CPH_POP" runat="Server">
-    <Its:pop runat="server" ID="pop_ADDPLAN" Type="common" Title="추가생산계획" Width="370" Height="200">
+    <Its:pop runat="server" ID="pop_ADDPLAN" Type="common" Title="추가생산계획" Width="370" Height="230">
         <Its:div runat="server" Type="SplitSingle" ID="pdiv1">
+            <Its:month runat="server" Label="추가월" Field="ADDMONTH" InputWidth="98" MarginLeft="20" MarginTop="15" ID="month_ADDMONTH"/>
             <Its:newline runat="server" />
-            <Its:num runat="server" Label="추가생산계획수량" Field="ADDPLANQTY" InputWidth="98" MarginLeft="20" MarginTop="15"/>
+            <Its:num runat="server" Label="추가생산계획수량" Field="ADDPLANQTY" InputWidth="98" MarginLeft="20" MarginTop="10"/>
             <Its:newline runat="server" />
             <Its:text runat="server" Label="추가사유" Field="ADDWHY" InputWidth="228" MarginLeft="20" MarginTop="10"/>
             <Its:newline runat="server" />
             <Its:find runat="server" Label="추가자" Field="EMPCD"  GPCD="EMPCD" InputWidth="100" MarginLeft="20" MarginTop="10"/>
             <Its:newline runat="server" />
-            <Its:button runat="server" Label="추가" ID="btn_ADDPLAN" BackColor="CustomButton2" Width="130" Height="30" MarginLeft="112" MarginTop="12"/>
+            <Its:button runat="server" Label="등록" ID="btn_ADDPLAN" BackColor="CustomButton2" Width="130" Height="30" MarginLeft="112" MarginTop="12"/>
         </Its:div>
     </Its:pop>
 </asp:Content>

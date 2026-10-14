@@ -1,0 +1,49 @@
+﻿
+
+<%-- PAGE --%>
+<%@ Page Title="" Language="C#" MasterPageFile="~/Common/Master/MasterBase.master" AutoEventWireup="true" CodeFile="PRD1001_R02.aspx.cs" Inherits="PRD1001_R02" %>
+
+<%-- HEAD --%>
+<asp:Content ContentPlaceHolderID="CPH_HEAD" runat="Server">
+    <script type="text/javascript" src="PRD1001_R02.js?ver=<%= BasePage.srcVersion %>"></script>
+</asp:Content>
+
+<asp:Content ContentPlaceHolderID="CPH_CUSTOM_BUTTON" runat="server">
+</asp:Content>
+
+<%-- SEARCH PANEL --%>
+<asp:Content ContentPlaceHolderID="CPH_SEARCH" runat="Server">
+    <Its:div runat="server" Type="SearchPanel" ID="sdiv1">        
+        <Its:dateRange runat="server" Label="조회일자" FieldFrom="SDATE" FieldTo="EDATE" ID="dateR"/>
+        <%--<Its:combo runat="server" Label="법인" InputWidth="130" Field="COMPANYCD" GPCD="COMPANYCD" ID="sdiv1_cmb_COMPANYCD" />--%>
+        <Its:combo runat="server" Label="공장" Field="FACTORYCD" GPCD="FACTORYCD" ID="sdiv1_cmb_FACTORYCD" ReadOnly="true" Value="07"/>        
+        <Its:find runat="server" Label="품목코드" Field="ITEMID" GPCD="ITEMID" ID="sdiv1_find_ITEMID" />
+        <Its:button runat="server" Label="1S수량 입력" BackColor="CustomButton" ID="btn_INPUT_ONESQTY"/>
+        <Its:button runat="server" Label="계획정지 입력" BackColor="CustomButton3" ID="btn_INPUT_PLANSTOP"/>
+    </Its:div>
+</asp:Content>
+
+<%-- BODY --%>
+<asp:Content ContentPlaceHolderID="CPH_BODY" runat="Server">
+    <Its:div runat="server" Type="SplitSingle">
+        <Its:grid runat="server" ID="grid1" />
+    </Its:div>
+</asp:Content>
+
+
+<%-- POP --%>
+<asp:Content ContentPlaceHolderID="CPH_POP" runat="Server">
+    <Its:pop runat="server" ID="pop_ADDPLAN" Type="common" Title="추가생산계획" Width="370" Height="230">
+        <Its:div runat="server" Type="SplitSingle" ID="pdiv1">
+            <Its:month runat="server" Label="추가월" Field="ADDMONTH" InputWidth="98" MarginLeft="20" MarginTop="15" ID="month_ADDMONTH"/>
+            <Its:newline runat="server" />
+            <Its:num runat="server" Label="추가생산계획수량" Field="ADDPLANQTY" InputWidth="98" MarginLeft="20" MarginTop="10"/>
+            <Its:newline runat="server" />
+            <Its:text runat="server" Label="추가사유" Field="ADDWHY" InputWidth="228" MarginLeft="20" MarginTop="10"/>
+            <Its:newline runat="server" />
+            <Its:find runat="server" Label="추가자" Field="EMPCD"  GPCD="EMPCD" InputWidth="100" MarginLeft="20" MarginTop="10"/>
+            <Its:newline runat="server" />
+            <Its:button runat="server" Label="등록" ID="btn_ADDPLAN" BackColor="CustomButton2" Width="130" Height="30" MarginLeft="112" MarginTop="12"/>
+        </Its:div>
+    </Its:pop>
+</asp:Content>

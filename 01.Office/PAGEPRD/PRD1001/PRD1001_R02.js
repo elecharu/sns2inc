@@ -26,8 +26,8 @@ ItsPage.Load = function () {
         column.create('추가', 'OPENPOP_ADDPLAN', { width: 50, columnType: enumColumnTypes.button, iconCls: 'fa-plus', allowMerging: false }),
         column.create('월계획잔량', 'LEFTPLANQTY', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0, backColor: enumColor.greenLight2 }),      
 
-        column.band('주간합계', {}, [
-            column.create('합계', 'SUM_PLAN', { width: 80, align: 'center', backColor: enumColor.yellowLight2 }),            
+        column.band('', {}, [
+            column.create('주간합계', 'SUM_PLAN', { width: 80, align: 'center', backColor: enumColor.yellowLight2, align: 'right' }),            
         ]),
         column.band('1일', {}, [
             column.create('주', 'PLAN_1_DAY', { width: 60, align: 'center' }),
@@ -183,6 +183,10 @@ ItsButton.EventSearch = function () {
     ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
 
     SET_BANDNAME();
+
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        SUM_WEEKPLAN(i); // 주간생산계획 합계 계산
+    }
 };
 
 // 주간 생산계획 저장
@@ -193,54 +197,56 @@ ItsButton.EventSave = function () {
         maria.AddPanel('sdiv1');
 
         for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
-            maria.AddList('ITEMID_LIST', ItsGrid.GetValue('grid1', i, 'ITEMID'));
-            maria.AddList('EQMCD_LIST', ItsGrid.GetValue('grid1', i, 'EQMCD'));
-            maria.AddList('CT_LIST', ItsGrid.GetValue('grid1', i, 'CT'));
-            maria.AddList('EFFI_LIST', ItsGrid.GetValue('grid1', i, 'EFFI'));
-            maria.AddList('UPH_LIST', ItsGrid.GetValue('grid1', i, 'UPH'));
-            maria.AddList('ONESQTY_LIST', ItsGrid.GetValue('grid1', i, 'ONESQTY'));
+            if (ItsGrid.IsChecked('grid1', i)) {
+                maria.AddList('ITEMID_LIST', ItsGrid.GetValue('grid1', i, 'ITEMID'));
+                maria.AddList('EQMCD_LIST', ItsGrid.GetValue('grid1', i, 'EQMCD'));
+                maria.AddList('CT_LIST', ItsGrid.GetValue('grid1', i, 'CT'));
+                maria.AddList('EFFI_LIST', ItsGrid.GetValue('grid1', i, 'EFFI'));
+                maria.AddList('UPH_LIST', ItsGrid.GetValue('grid1', i, 'UPH'));
+                maria.AddList('ONESQTY_LIST', ItsGrid.GetValue('grid1', i, 'ONESQTY'));
 
-            maria.AddList('PLAN_1_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_1_DAY'));
-            maria.AddList('PLAN_1_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_1_NIGHT'));
-            maria.AddList('PLAN_2_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_2_DAY'));
-            maria.AddList('PLAN_2_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_2_NIGHT'));
-            maria.AddList('PLAN_3_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_3_DAY'));
-            maria.AddList('PLAN_3_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_3_NIGHT'));
-            maria.AddList('PLAN_4_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_4_DAY'));
-            maria.AddList('PLAN_4_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_4_NIGHT'));
-            maria.AddList('PLAN_5_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_5_DAY'));
-            maria.AddList('PLAN_5_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_5_NIGHT'));
-            maria.AddList('PLAN_6_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_6_DAY'));
-            maria.AddList('PLAN_6_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_6_NIGHT'));
-            maria.AddList('PLAN_7_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_7_DAY'));
-            maria.AddList('PLAN_7_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_7_NIGHT'));
-            maria.AddList('PLAN_8_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_8_DAY'));
-            maria.AddList('PLAN_8_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_8_NIGHT'));
-            maria.AddList('PLAN_9_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_9_DAY'));
-            maria.AddList('PLAN_9_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_9_NIGHT'));
-            maria.AddList('PLAN_10_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_10_DAY'));
-            maria.AddList('PLAN_10_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_10_NIGHT'));
+                maria.AddList('PLAN_1_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_1_DAY'));
+                maria.AddList('PLAN_1_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_1_NIGHT'));
+                maria.AddList('PLAN_2_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_2_DAY'));
+                maria.AddList('PLAN_2_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_2_NIGHT'));
+                maria.AddList('PLAN_3_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_3_DAY'));
+                maria.AddList('PLAN_3_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_3_NIGHT'));
+                maria.AddList('PLAN_4_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_4_DAY'));
+                maria.AddList('PLAN_4_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_4_NIGHT'));
+                maria.AddList('PLAN_5_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_5_DAY'));
+                maria.AddList('PLAN_5_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_5_NIGHT'));
+                maria.AddList('PLAN_6_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_6_DAY'));
+                maria.AddList('PLAN_6_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_6_NIGHT'));
+                maria.AddList('PLAN_7_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_7_DAY'));
+                maria.AddList('PLAN_7_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_7_NIGHT'));
+                maria.AddList('PLAN_8_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_8_DAY'));
+                maria.AddList('PLAN_8_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_8_NIGHT'));
+                maria.AddList('PLAN_9_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_9_DAY'));
+                maria.AddList('PLAN_9_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_9_NIGHT'));
+                maria.AddList('PLAN_10_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_10_DAY'));
+                maria.AddList('PLAN_10_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_10_NIGHT'));
 
-            maria.AddList('PLAN_11_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_11_DAY'));
-            maria.AddList('PLAN_11_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_11_NIGHT'));
-            maria.AddList('PLAN_12_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_12_DAY'));
-            maria.AddList('PLAN_12_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_12_NIGHT'));
-            maria.AddList('PLAN_13_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_13_DAY'));
-            maria.AddList('PLAN_13_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_13_NIGHT'));
-            maria.AddList('PLAN_14_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_14_DAY'));
-            maria.AddList('PLAN_14_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_14_NIGHT'));
-            maria.AddList('PLAN_15_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_15_DAY'));
-            maria.AddList('PLAN_15_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_15_NIGHT'));
-            maria.AddList('PLAN_16_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_16_DAY'));
-            maria.AddList('PLAN_16_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_16_NIGHT'));
-            maria.AddList('PLAN_17_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_17_DAY'));
-            maria.AddList('PLAN_17_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_17_NIGHT'));
-            maria.AddList('PLAN_18_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_18_DAY'));
-            maria.AddList('PLAN_18_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_18_NIGHT'));
-            maria.AddList('PLAN_19_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_19_DAY'));
-            maria.AddList('PLAN_19_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_19_NIGHT'));
-            maria.AddList('PLAN_20_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_20_DAY'));
-            maria.AddList('PLAN_20_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_20_NIGHT'));
+                maria.AddList('PLAN_11_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_11_DAY'));
+                maria.AddList('PLAN_11_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_11_NIGHT'));
+                maria.AddList('PLAN_12_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_12_DAY'));
+                maria.AddList('PLAN_12_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_12_NIGHT'));
+                maria.AddList('PLAN_13_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_13_DAY'));
+                maria.AddList('PLAN_13_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_13_NIGHT'));
+                maria.AddList('PLAN_14_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_14_DAY'));
+                maria.AddList('PLAN_14_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_14_NIGHT'));
+                maria.AddList('PLAN_15_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_15_DAY'));
+                maria.AddList('PLAN_15_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_15_NIGHT'));
+                maria.AddList('PLAN_16_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_16_DAY'));
+                maria.AddList('PLAN_16_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_16_NIGHT'));
+                maria.AddList('PLAN_17_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_17_DAY'));
+                maria.AddList('PLAN_17_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_17_NIGHT'));
+                maria.AddList('PLAN_18_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_18_DAY'));
+                maria.AddList('PLAN_18_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_18_NIGHT'));
+                maria.AddList('PLAN_19_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_19_DAY'));
+                maria.AddList('PLAN_19_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_19_NIGHT'));
+                maria.AddList('PLAN_20_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_20_DAY'));
+                maria.AddList('PLAN_20_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_20_NIGHT'));
+            }
         }
 
         maria.CallProc();
@@ -257,6 +263,7 @@ ItsButton.EventSave = function () {
 /**********************************************************************************************************************************************************/
 ItsGrid.Event('grid1').onButtonClick = function (rowindex, field) {
     if (field == 'OPENPOP_ADDPLAN') {
+        ItsMonth.SetValue('month_ADDMONTH', ItsDateRange.GetValueFrom('dateR').substr(0, 7));
         ItsPop.Open('pop_ADDPLAN');
     }
 };
@@ -314,7 +321,59 @@ ItsButton.Event('btn_INPUT_ONESQTY').onClick = function () {
 
 // 계획정지 입력
 ItsButton.Event('btn_INPUT_PLANSTOP').onClick = function () {
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if (ItsGrid.IsChecked('grid1', i)) {
+            for (var j = 0; j < 31; j++) {
+                // 주간
+                var field_PLAN_DAY = 'PLAN_' + (j + 1) + '_DAY';
 
+                if (ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', field_PLAN_DAY)].visible) {
+                    var field_WORKTIME_DAY = 'WORKTIME_' + (j + 1) + '_DAY';
+                    var WORKTIME_DAY = ItsGrid.GetValue('grid1', i, field_WORKTIME_DAY);
+
+                    if (WORKTIME_DAY > 0) {
+                        ItsGrid.SetValue('grid1', i, field_PLAN_DAY, '계획정지');
+                    }
+                }
+                
+                // 야간
+                var field_PLAN_NIGHT = 'PLAN_' + (j + 1) + '_NIGHT';
+
+                if (ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', field_PLAN_NIGHT)].visible) {
+                    var field_WORKTIME_NIGHT = 'WORKTIME_' + (j + 1) + '_NIGHT';
+                    var WORKTIME_NIGHT = ItsGrid.GetValue('grid1', i, field_WORKTIME_NIGHT);
+
+                    if (WORKTIME_NIGHT > 0) {
+                        ItsGrid.SetValue('grid1', i, field_PLAN_NIGHT, '계획정지');
+                    }
+                }
+            }
+
+            SUM_WEEKPLAN(i); // 주간생산계획 합계 계산
+        }
+    }
+}
+
+// 생산계획 추가
+ItsButton.Event('btn_ADDPLAN').onClick = function () {
+    ItsMsg.Confirm("추가생산계획을 [등록] 하시겠습니까?", function () {
+        var maria = new ItsMaria('PRD1001_R02', 'ADDPLAN');
+
+        maria.AddPanel('pdiv1');
+        maria.AddParam('ITEMID', ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'ITEMID'));
+        maria.AddParam('EQMCD', ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMCD'));
+
+        maria.CallProc();
+
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsPop.Close('pop_ADDPLAN');
+
+        ItsButton.EventSearch();
+    })
 }
 /**********************************************************************************************************************************************************/
 // 일자컬럼 설정
@@ -340,8 +399,8 @@ SET_BANDNAME = function () {
         var isBetween = (day.toLocaleDateString('en-CA') >= SDATE.toLocaleDateString('en-CA') && day.toLocaleDateString('en-CA') <= EDATE.toLocaleDateString('en-CA'));
 
         // 일자컬럼 visible, readonly 설정
-        // : 조회일자 밖이면 visible = false
-        // : 근무시간 없는 날이면 readonly = true
+        //) : 조회일자 밖이면 visible = false
+        //) : 근무시간 없는 날이면 readonly = true
         if (isBetween) {
             ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_' + (i + 1) + '_DAY')].visible = true;
             ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_' + (i + 1) + '_NIGHT')].visible = true;
@@ -383,73 +442,73 @@ SET_BANDNAME = function () {
 SUM_WEEKPLAN = function (i) {
     var SUM = 0;
 
-    var PLAN_1_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_1_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_1_DAY') : 0);
-    var PLAN_2_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_2_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_2_DAY') : 0);
-    var PLAN_3_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_3_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_3_DAY') : 0);
-    var PLAN_4_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_4_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_4_DAY') : 0);
-    var PLAN_5_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_5_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_5_DAY') : 0);
-    var PLAN_6_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_6_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_6_DAY') : 0);
-    var PLAN_7_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_7_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_7_DAY') : 0);
-    var PLAN_8_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_8_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_8_DAY') : 0);
-    var PLAN_9_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_9_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_9_DAY') : 0);
-    var PLAN_10_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_10_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_10_DAY') : 0);
+    var PLAN_1_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_1_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_1_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_1_DAY')) : 0);
+    var PLAN_2_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_2_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_2_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_2_DAY')) : 0);
+    var PLAN_3_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_3_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_3_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_3_DAY')) : 0);
+    var PLAN_4_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_4_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_4_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_4_DAY')) : 0);
+    var PLAN_5_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_5_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_5_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_5_DAY')) : 0);
+    var PLAN_6_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_6_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_6_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_6_DAY')) : 0);
+    var PLAN_7_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_7_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_7_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_7_DAY')) : 0);
+    var PLAN_8_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_8_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_8_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_8_DAY')) : 0);
+    var PLAN_9_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_9_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_9_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_9_DAY')) : 0);
+    var PLAN_10_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_10_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_10_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_10_DAY')) : 0);
 
-    var PLAN_11_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_11_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_11_DAY') : 0);
-    var PLAN_12_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_12_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_12_DAY') : 0);
-    var PLAN_13_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_13_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_13_DAY') : 0);
-    var PLAN_14_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_14_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_14_DAY') : 0);
-    var PLAN_15_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_15_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_15_DAY') : 0);
-    var PLAN_16_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_16_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_16_DAY') : 0);
-    var PLAN_17_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_17_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_17_DAY') : 0);
-    var PLAN_18_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_18_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_18_DAY') : 0);
-    var PLAN_19_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_19_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_19_DAY') : 0);
-    var PLAN_20_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_20_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_20_DAY') : 0);
+    var PLAN_11_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_11_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_11_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_11_DAY')) : 0);
+    var PLAN_12_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_12_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_12_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_12_DAY')) : 0);
+    var PLAN_13_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_13_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_13_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_13_DAY')) : 0);
+    var PLAN_14_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_14_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_14_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_14_DAY')) : 0);
+    var PLAN_15_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_15_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_15_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_15_DAY')) : 0);
+    var PLAN_16_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_16_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_16_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_16_DAY')) : 0);
+    var PLAN_17_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_17_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_17_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_17_DAY')) : 0);
+    var PLAN_18_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_18_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_18_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_18_DAY')) : 0);
+    var PLAN_19_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_19_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_19_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_19_DAY')) : 0);
+    var PLAN_20_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_20_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_20_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_20_DAY')) : 0);
 
-    var PLAN_21_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_21_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_21_DAY') : 0);
-    var PLAN_22_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_22_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_22_DAY') : 0);
-    var PLAN_23_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_23_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_23_DAY') : 0);
-    var PLAN_24_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_24_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_24_DAY') : 0);
-    var PLAN_25_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_25_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_25_DAY') : 0);
-    var PLAN_26_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_26_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_26_DAY') : 0);
-    var PLAN_27_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_27_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_27_DAY') : 0);
-    var PLAN_28_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_28_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_28_DAY') : 0);
-    var PLAN_29_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_29_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_29_DAY') : 0);
-    var PLAN_30_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_30_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_30_DAY') : 0);
-    var PLAN_31_DAY = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_31_DAY')) ? ItsGrid.GetValue('grid1', i, 'PLAN_31_DAY') : 0);
+    var PLAN_21_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_21_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_21_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_21_DAY')) : 0);
+    var PLAN_22_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_22_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_22_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_22_DAY')) : 0);
+    var PLAN_23_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_23_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_23_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_23_DAY')) : 0);
+    var PLAN_24_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_24_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_24_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_24_DAY')) : 0);
+    var PLAN_25_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_25_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_25_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_25_DAY')) : 0);
+    var PLAN_26_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_26_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_26_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_26_DAY')) : 0);
+    var PLAN_27_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_27_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_27_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_27_DAY')) : 0);
+    var PLAN_28_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_28_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_28_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_28_DAY')) : 0);
+    var PLAN_29_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_29_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_29_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_29_DAY')) : 0);
+    var PLAN_30_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_30_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_30_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_30_DAY')) : 0);
+    var PLAN_31_DAY = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_31_DAY')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_31_DAY')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_31_DAY')) : 0);
 
-    var PLAN_1_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_1_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_1_NIGHT') : 0);
-    var PLAN_2_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_2_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_2_NIGHT') : 0);
-    var PLAN_3_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_3_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_3_NIGHT') : 0);
-    var PLAN_4_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_4_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_4_NIGHT') : 0);
-    var PLAN_5_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_5_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_5_NIGHT') : 0);
-    var PLAN_6_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_6_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_6_NIGHT') : 0);
-    var PLAN_7_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_7_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_7_NIGHT') : 0);
-    var PLAN_8_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_8_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_8_NIGHT') : 0);
-    var PLAN_9_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_9_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_9_NIGHT') : 0);
-    var PLAN_10_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_10_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_10_NIGHT') : 0);
+    var PLAN_1_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_1_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_1_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_1_NIGHT')) : 0);
+    var PLAN_2_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_2_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_2_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_2_NIGHT')) : 0);
+    var PLAN_3_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_3_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_3_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_3_NIGHT')) : 0);
+    var PLAN_4_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_4_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_4_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_4_NIGHT')) : 0);
+    var PLAN_5_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_5_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_5_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_5_NIGHT')) : 0);
+    var PLAN_6_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_6_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_6_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_6_NIGHT')) : 0);
+    var PLAN_7_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_7_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_7_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_7_NIGHT')) : 0);
+    var PLAN_8_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_8_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_8_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_8_NIGHT')) : 0);
+    var PLAN_9_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_9_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_9_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_9_NIGHT')) : 0);
+    var PLAN_10_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_10_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_10_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_10_NIGHT')) : 0);
 
-    var PLAN_11_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_11_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_11_NIGHT') : 0);
-    var PLAN_12_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_12_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_12_NIGHT') : 0);
-    var PLAN_13_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_13_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_13_NIGHT') : 0);
-    var PLAN_14_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_14_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_14_NIGHT') : 0);
-    var PLAN_15_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_15_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_15_NIGHT') : 0);
-    var PLAN_16_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_16_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_16_NIGHT') : 0);
-    var PLAN_17_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_17_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_17_NIGHT') : 0);
-    var PLAN_18_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_18_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_18_NIGHT') : 0);
-    var PLAN_19_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_19_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_19_NIGHT') : 0);
-    var PLAN_20_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_20_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_20_NIGHT') : 0);
+    var PLAN_11_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_11_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_11_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_11_NIGHT')) : 0);
+    var PLAN_12_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_12_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_12_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_12_NIGHT')) : 0);
+    var PLAN_13_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_13_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_13_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_13_NIGHT')) : 0);
+    var PLAN_14_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_14_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_14_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_14_NIGHT')) : 0);
+    var PLAN_15_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_15_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_15_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_15_NIGHT')) : 0);
+    var PLAN_16_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_16_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_16_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_16_NIGHT')) : 0);
+    var PLAN_17_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_17_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_17_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_17_NIGHT')) : 0);
+    var PLAN_18_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_18_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_18_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_18_NIGHT')) : 0);
+    var PLAN_19_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_19_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_19_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_19_NIGHT')) : 0);
+    var PLAN_20_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_20_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_20_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_20_NIGHT')) : 0);
 
-    var PLAN_21_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_21_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_21_NIGHT') : 0);
-    var PLAN_22_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_22_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_22_NIGHT') : 0);
-    var PLAN_23_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_23_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_23_NIGHT') : 0);
-    var PLAN_24_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_24_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_24_NIGHT') : 0);
-    var PLAN_25_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_25_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_25_NIGHT') : 0);
-    var PLAN_26_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_26_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_26_NIGHT') : 0);
-    var PLAN_27_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_27_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_27_NIGHT') : 0);
-    var PLAN_28_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_28_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_28_NIGHT') : 0);
-    var PLAN_29_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_29_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_29_NIGHT') : 0);
-    var PLAN_30_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_30_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_30_NIGHT') : 0);
-    var PLAN_31_NIGHT = (Number.isFinite(ItsGrid.GetValue('grid1', i, 'PLAN_31_NIGHT')) ? ItsGrid.GetValue('grid1', i, 'PLAN_31_NIGHT') : 0);
+    var PLAN_21_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_21_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_21_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_21_NIGHT')) : 0);
+    var PLAN_22_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_22_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_22_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_22_NIGHT')) : 0);
+    var PLAN_23_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_23_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_23_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_23_NIGHT')) : 0);
+    var PLAN_24_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_24_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_24_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_24_NIGHT')) : 0);
+    var PLAN_25_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_25_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_25_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_25_NIGHT')) : 0);
+    var PLAN_26_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_26_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_26_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_26_NIGHT')) : 0);
+    var PLAN_27_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_27_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_27_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_27_NIGHT')) : 0);
+    var PLAN_28_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_28_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_28_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_28_NIGHT')) : 0);
+    var PLAN_29_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_29_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_29_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_29_NIGHT')) : 0);
+    var PLAN_30_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_30_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_30_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_30_NIGHT')) : 0);
+    var PLAN_31_NIGHT = (Number(ItsGrid.GetValue('grid1', i, 'PLAN_31_NIGHT')) && ItsGrid.Get('grid1').columns[ItsGrid.$colIndex('grid1', 'PLAN_31_NIGHT')].visible ? Number(ItsGrid.GetValue('grid1', i, 'PLAN_31_NIGHT')) : 0);
 
     SUM = PLAN_1_DAY + PLAN_2_DAY + PLAN_3_DAY + PLAN_4_DAY + PLAN_5_DAY + PLAN_6_DAY + PLAN_7_DAY + PLAN_8_DAY + PLAN_9_DAY + PLAN_10_DAY
         + PLAN_11_DAY + PLAN_12_DAY + PLAN_13_DAY + PLAN_14_DAY + PLAN_15_DAY + PLAN_16_DAY + PLAN_17_DAY + PLAN_18_DAY + PLAN_19_DAY + PLAN_20_DAY
