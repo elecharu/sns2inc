@@ -73,12 +73,31 @@ trigger: always_on
       ```sql
       DELIMITER $$
       DROP PROCEDURE IF EXISTS `MES_SNS2`.`EQM1001_R03` $$
-      CREATE PROCEDURE `MES_SNS2`.`EQM1001_R03`(...)
+      CREATE DEFINER=`root`@`%` 
+      PROCEDURE `MES_SNS2`.`EQM1001_R03`(...)
       PROC: BEGIN
         ...
       END $$
       DELIMITER ;
       ```
+
+### 0-3. [프로시저 최상단 선언부 서식 표준] CREATE DEFINER 및 PROCEDURE 2행 개행 선언 강제 (한 줄 선언 절대 금지)
+- **배경 및 원칙**:
+  - 프로시저 최상단 선언부는 `CREATE DEFINER=... PROCEDURE ...(...)`와 같이 한 줄로 붙여 쓰는 것을 절대 금지하며, 반드시 `CREATE DEFINER=`root`@`%``와 `PROCEDURE `MES_SNS2`.`프로시저명`(`을 **2행으로 분리 개행하여 작성**합니다.
+  - 한 줄로 작성할 경우 DBeaver / HeidiSQL 등 DB 클라이언트 도구의 루틴 에디터 및 소스 비교 뷰에서 가독성을 심각하게 저해하고 프로젝트 코드 컨벤션과 불일치하므로 엄격히 배제합니다.
+- **표준 서식 모범 예시**:
+  ```sql
+  -- [올바른 예 - 2행 분리 개행 (필수)]
+  CREATE DEFINER=`root`@`%` 
+  PROCEDURE `MES_SNS2`.`MST3001_R03`(
+  -- *****************************************************************************
+  -- Comment: 설비부품정보 마스터관리
+  -- Create:  2024-02-22  13:50   김영철
+  ...
+
+  -- [잘못된 예 - 한 줄 선언 (절대 금지)]
+  CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`MST3001_R03`(
+  ```
 
 ### 1. SQL 가시성(가독성) 및 성능 최적화 원칙
 - **가시성 및 직관적 구조 (누가 읽어도 이해하기 쉬운 코드)**:

@@ -1,5 +1,5 @@
 ﻿CREATE DEFINER = 'root'@'%'
-PROCEDURE MES_SNS2.DC_FIND(
+PROCEDURE `MES_SNS2`.`DC_FIND`(
   IN $GPCD VARCHAR(20), 
   IN $KEYWORD VARCHAR(1000),
   IN $REF01 VARCHAR(20), 
@@ -14,7 +14,7 @@ PROCEDURE MES_SNS2.DC_FIND(
   IN $REF10 VARCHAR(20),
   IN $LIMIT VARCHAR(20)
 )
-  NO SQL
+    NO SQL
 PROC: BEGIN
 -- *****************************************************************************  
 DECLARE _$FIND_1    VARCHAR(100);
@@ -1592,6 +1592,33 @@ ELSEIF $GPCD = 'MIXITEM_INFO' THEN
 --       AND (REF01 LIKE CONCAT('%', $KEYWORD, '%')
 --        OR REF02 LIKE CONCAT('%', $KEYWORD, '%'))
 --     ;
+
+-- *****************************************************************************
+   -- 2026-10-13 한성수 추가 (MST3001_R03 페이지 로케이션 작업)
+  ELSEIF $GPCD = 'LOCACD_EQMPARTS_HEAD' OR $GPCD = 'LOCACD_HEAD' THEN -- 설비부품 로케이션 기준정보 헤더
+
+    SELECT '로케이션코드' AS CODE, '로케이션명' AS NAME;
+    SELECT 150 AS CODE, 350 AS NAME;
+
+  ELSEIF $GPCD = 'LOCACD_EQMPARTS_LIST' OR $GPCD = 'LOCACD_LIST' THEN -- 설비부품 로케이션 기준정보 목록
+
+    SELECT MSTLOCA_EQMPARTS.LOCACD AS CODE,
+           COALESCE(MSTLOCA_EQMPARTS.LOCANM, '') AS NAME
+    FROM MSTLOCA_EQMPARTS
+    WHERE (   $KEYWORD = ''
+           OR MSTLOCA_EQMPARTS.LOCACD LIKE CONCAT('%', $KEYWORD, '%')
+           OR MSTLOCA_EQMPARTS.LOCANM LIKE CONCAT('%', $KEYWORD, '%')
+          )
+    ORDER BY MSTLOCA_EQMPARTS.LOCACD
+    LIMIT _$LIMIT;
+
+  ELSEIF $GPCD = 'LOCACD_EQMPARTS_INFO' OR $GPCD = 'LOCACD_INFO' THEN -- 설비부품 로케이션 단건 정보
+
+    SELECT MSTLOCA_EQMPARTS.LOCACD AS CODE,
+           COALESCE(MSTLOCA_EQMPARTS.LOCANM, '') AS NAME
+    FROM MSTLOCA_EQMPARTS
+    WHERE MSTLOCA_EQMPARTS.LOCACD = $KEYWORD
+    LIMIT 1;
 
 -- *****************************************************************************
 ELSE SELECT 'ERROR' AS CODE, $GPCD AS NAME;

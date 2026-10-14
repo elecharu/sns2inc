@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-10-13
+> **최종 갱신일**: 2026-10-14
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -15,7 +15,94 @@
 
 ---
 
+## 🕒 2026-10-14 (수) 작업 내역
+
+### 4. MST3001_R03 프로젝트 코딩 규칙 기반 리팩토링 및 네이밍·주석 표준화
+- **수정/대상 파일**: [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
+- **배경 및 원인**: 프로젝트 코딩 컨벤션(`coding_convention.md`), 최적화 규칙(`Optimization.md`), 주석 표준에 맞추어 `MST3001_R03.js` 소스의 직관적인 네이밍 적용, 날짜 주석 보강, 가독성 및 무결성 향상 요청.
+- **작업 상세 내용**:
+  - 1) **변수 네이밍 표준화 (`coding_convention.md`)**:
+    - 체크/수정 행 배열 변수명을 표준 약어인 `arrRows`로 통일 (`var arrRows = GetCheckedRows(...)`).
+    - 함수 파라미터명을 도메인 의미에 부합하도록 직관적으로 정돈 (`code, name` ➔ `locaCd, locaNm`, `checkChanges` ➔ `isCheckChange`).
+  - 2) **주석 표준 준수 (`Optimization.md`)**:
+    - 신규/변경 함수 및 핸들러 상단 `// YYYY-MM-DD [위치] 상세 기능` 표준 날짜 주석 유지 및 보강 (누락되었던 `sdiv1_combo_ITEMCG.onChanged` 이벤트 상단 날짜 주석 추가).
+    - 기존 날짜 주석 일체 보존 및 인위적인 AI 번호 매기기 주석 배제.
+  - 3) **로직 무결성 및 성능 보존**:
+    - `ItsGrid.finishEditing()` 및 `grid.deferUpdate` 블록 내 일괄 처리 구조를 100% 보존하여 렌더링 깜빡임 및 성능 저하 방지.
+    - 기존 로직 흐름(로케이션 더블클릭/Enter 팝업 연동, Delete 키 초기화, 저장/삭제 파라미터 전달 등) 훼손 없이 순수 리팩토링 수행.
+- **검증 결과**:
+  - Node.js 구문 검사(`node -c 01.Office/PAGEMST/MST3001/MST3001_R03.js`) 통과 (오류 0건).
+  - UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 검증 통과 (BOM: true, Solo LF: 0, Double CR: 0).
+
+### 3. MST3001_R03 그리드 이벤트 정리 및 저장 반복 접근 축소
+- **수정/대상 파일**: 01.Office/PAGEMST/MST3001/MST3001_R03.js
+- **배경 및 원인**: 그리드 이벤트 중복 처리와 저장 시 전체 행 반복 접근 정리 요청
+- **작업 상세 내용**:
+  - 더블클릭과 Enter를 OpenLoca로 통합하고 공통 셀 수정 자동 체크 재사용. GetCheckedRows에서 편집 확정 및 수정·선택 행을 한 번 수집하고 SetLoca에서 화면 갱신 묶음 처리. 직접 입력 시 로케이션 코드 초기화, 팝업 원본 행 유지, 삭제 원본 코드 사용. 그리드 컬럼 및 전용 프로시저 호출 5종과 파라미터 유지
+- **검증 결과**: 실제 ItsGrid 소스와 Wijmo 2018·2020 라이브러리를 사용한 격리 Edge 브라우저 17개 시나리오씩 34개 통과. 1000행 1건 선택 저장 시 GetValue 호출 10006회에서 0회. 브라우저 테스트의 DB·팝업 연동은 대역이며 운영 화면 및 DB 실처리는 미실행. Node 문법과 BOM/CRLF 검증 통과
+
+
+### 1. MST3001_R03 메인 그리드 로케이션 값 존재 시 수정(전체 목록 팝업) 및 삭제(Delete 키·빈값 초기화·SAVE_ITEM 연동) 오류 해결, pop_LOCA 팝업 비율(600×500) 최적화
+- **수정/대상 파일**: [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql)
+- **배경 및 원인**: 
+  - 1) **수정 불가 원인**: 메인 그리드 로케이션 셀에 값이 있는 상태에서 더블클릭/엔터 시 `ItsPop.OpenFindCOM`에 `keyword: curVal`을 넘겨 단 1건만 조회되거나 팝업이 즉시 닫혀 타 로케이션으로의 변경(수정)이 불가능했던 현상.
+  - 2) **삭제 불가 원인**: 로케이션 셀의 내용을 지우거나 Delete 키를 눌렀을 때 숨은 필드 `LOCACD`가 동기화되지 않고, 프로시저 `SAVE_ITEM`에서도 `LOCACD_LIST`를 파싱/전송하지 않아 로케이션 초기화(삭제)가 DB에 정상 반영되지 않던 현상.
+  - 3) **팝업 비율**: 로케이션 관리 팝업(`pop_LOCA`)이 800×480으로 가로로 과도하게 넓어 컬럼 2개 대비 비효율적이었던 사각형 비율 개선 요청 (공통 컴포넌트 `findPop_COM`은 시스템 공통 규격 준수 유지).
+- **작업 상세 내용**:
+  - 1) **로케이션 수정 시 전체 목록 오픈 ([MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js))**: `grid1.onKeydownEnter`에서 `ItsPop.OpenFindCOM({ gpcd: 'LOCACD_EQMPARTS', keyword: '' })`로 호출하도록 수정하여, 기존 값이 존재하더라도 전체 로케이션 목록이 시원하게 노출되어 사용자가 원하는 다른 로케이션을 선택하여 수정할 수 있도록 조치.
+  - 2) **로케이션 삭제 인터랙션 지원 ([MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js))**:
+    - `grid1.onKeydown`: Delete 키(`keyCode === 46`) 입력 시 `LOCACD`와 `LOCANM`을 모두 `''`로 즉시 초기화하고 해당 행 체크박스 선택(`CheckRow`).
+    - `grid1.onChanged`: 셀 편집으로 `LOCANM`이 빈 값이 될 경우 `LOCACD`도 빈 값으로 자동 동기화.
+    - `ItsButton.EventSave` & `ItsButton.EventSearch`: `_ORG_LOCACD` 보관 및 변경 감지 조건에 `curLocaCd !== orgLocaCd` 추가, `maria.AddList('LOCACD_LIST', locaCd)` 전달 추가.
+  - 3) **프로시저 삭제/수정 처리 ([MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql))**: `SAVE_ITEM` 분기에서 `LOCACD_LIST`를 함께 분리(`COMSPLIT`)하고, `LOCANM`이 비어있으면 `LOCACD`도 빈 값(`''`)으로 확정하여 `MSTITEM_EQMPARTS.LOCACD = ''`로 정상 초기화(삭제)되도록 개선 (최상단 Modify 1일 1행 원칙 준수).
+  - 4) **로케이션 관리 팝업 디자인 비율 최적화 ([MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx) & [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js))**: `pop_LOCA` 규격을 `Width="600" Height="500"`의 안정적인 황금 직사각형 비율로 전환하고, `grid_LOCA` 컬럼 너비(코드 180, 명 360)를 팝업 너비에 최적 밀착. 공통 컴포넌트인 `MasterBase.master` 및 `ItsPop.js`는 원본 유지.
+- **검증 결과**:
+  - Node.js 구문 검사(`node -c`) 통과 (오류 0건).
+  - UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 검증 통과 (BOM: true, DoubleCR: false, BareLF: 0).
+  - IIS Express HTTP 200 정상 응답 및 신규 규격 렌더링 무결성 검증 완료.
+
+### 2. 프로시저 최상단 선언부 서식 규칙(CREATE DEFINER / PROCEDURE 2행 개행) 정정 및 표준화 적용
+- **수정/대상 파일**: [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [.agents/rules/procedure_history.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure_history.md), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql)
+- **배경 및 원인**: 프로시저 최상단 선언부 작성 시 `CREATE DEFINER=... PROCEDURE ...(...)` 형태로 한 줄에 붙여 쓰는 것은 DBeaver/HeidiSQL 루틴 에디터 및 소스 뷰 가독성과 프로젝트 컨벤션에 어긋나므로, 반드시 2행으로 분리 개행하여 작성하도록 규칙 정정 및 주요 프로시저 파일 적용 요청.
+- **작업 상세 내용**:
+  - 1) `procedure.md`: `### 0-3. [프로시저 최상단 선언부 서식 표준] CREATE DEFINER 및 PROCEDURE 2행 개행 선언 강제 (한 줄 선언 절대 금지)` 신규 조항 추가 및 표준 예시(`CREATE DEFINER=...\nPROCEDURE ...(`) 명시. 기존 `0-2` 섹션 예시도 2행 개행 형태로 동기화.
+  - 2) `procedure_history.md`: `3. 정렬 및 포맷 표준` 템플릿 상단에 `CREATE DEFINER=\`root\`@\`%\`\nPROCEDURE \`MES_SNS2\`.\`[프로시저명]\`(` 2행 개행 선언부 반영.
+  - 3) **프로시저 파일 표준화 적용**: [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql) 최상단 선언부를 `CREATE DEFINER=\`root\`@\`%\`\nPROCEDURE \`MES_SNS2\`.\`프로시저명\`(` 2행 개행 분리 형태로 통일 정규화 완료 (최상단 Modify 이력 1일 1행 원칙 준수).
+- **검증 결과**: 규칙 파일 및 대상 프로시저 파일 모두 UTF-8 with BOM 및 CRLF 개행 무결성 검증 통과 (BOM: true, DoubleCR: false, BareLF: 0).
+
+---
+
 ## 🕒 2026-10-13 (화) 작업 내역
+
+### 8. MST3001_R03 공통 마스터 코드검색 팝업(ItsPop.OpenFindCOM) B안 정석 적용 및 DC_FIND 로컬 분기 추가
+- **수정/대상 파일**: [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_DC_FIND.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_DC_FIND.sql)
+- **배경 및 원인**: 개별 화면마다 중복 팝업 태그와 JS 코드를 작성하는 방식을 지양하고, 마스터 페이지(`MasterBase.master`)에 탑재된 전역 공통 코드검색 팝업(`findPop_COM`) 및 프레임워크 표준 호출 API(`ItsPop.OpenFindCOM`)를 활용하는 프로젝트 표준 "B안" 적용 요청.
+- **작업 상세 내용**:
+  - 1) 화면 마크업 간소화(`MST3001_R03.aspx`): 화면 전용 팝업 마크업(`pop_FIND_LOCA`)을 전면 삭제하여 화면 태그를 깔끔하게 슬림화(`aspx_cs_comment.md` 준수).
+  - 2) 화면 스크립트 표준화 및 슬림화(`MST3001_R03.js`): 화면 전용 팝업 변수(`_targetGrid1Row`), 그리드 선언(`grid_FIND_LOCA`), 이벤트 및 검색 함수 등 비표준 코드 약 60줄 전면 제거. 메인 그리드 `grid1.onKeydownEnter`에서 `ItsPop.OpenFindCOM({ gpcd: 'LOCACD_EQMPARTS', keyword: curVal }, function (res) { ... })` 호출로 교체하여, 로케이션 선택 시 콜백을 통해 `LOCACD`/`LOCANM` 바인딩 및 `CheckRow`가 8줄의 간결한 코드로 완벽 처리되도록 표준화.
+  - 3) 공통 코드검색 프로시저 분기 추가(`MES_SNS2_DC_FIND.sql`): `DC_FIND` 프로시저 로컬 소스에 `LOCACD_EQMPARTS_HEAD`(헤더 정의: 로케이션코드 150, 로케이션명 350), `LOCACD_EQMPARTS_LIST`(키워드 부분검색 쿼리), `LOCACD_EQMPARTS_INFO`(단건 코드 조회) 분기 구현.
+- **검증 결과**: Node.js 구문 검사(`node -c`) 통과(오류 0건), UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료. IIS Express(포트 55085) HTTP 200 정상 응답 및 불필요 마크업 미생성 확인 완료.
+
+### 7. MST3001_R03 코드 검색 전용 팝업(pop_FIND_LOCA) 신규 구현 및 키워드 조회 연동
+- **수정/대상 파일**: [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
+- **배경 및 원인**: 기존 관리 팝업(`pop_LOCA`)을 재활용하지 않고, 공통 코드 검색 팝업 스타일과 동일한 별도의 신규 코드 검색 팝업(`pop_FIND_LOCA`, Title="코드 검색")을 생성하여 상단 키워드 입력창 및 `[Q 조회]` 버튼을 통한 로케이션 검색 지원 요청.
+- **작업 상세 내용**:
+  - 1) 팝업 UI 분리 및 마크업 구현(`MST3001_R03.aspx`): 기존 `pop_LOCA`는 순수 관리 전용으로 원상복구(선택 버튼 `btn_POP_APPLY` 제거)하고, 첨부 이미지 스타일의 독립적인 신규 팝업 `pop_FIND_LOCA`(Title="코드 검색", Width="600", Height="450")를 생성하여 상단 `BorderBlock` 패널(키워드 텍스트박스 `txt_FIND_LOCA_KEYWORD`, 돋보기 조회 버튼 `btn_FIND_LOCA_SEARCH`) 및 하단 결과 그리드(`grid_FIND_LOCA`) 배치.
+  - 2) 전용 그리드 생성 및 이벤트 연동(`MST3001_R03.js`): `grid_FIND_LOCA` 그리드(로케이션코드 180, 로케이션명 350) 정의. 메인 그리드(`grid1`) 로케이션 셀 더블클릭/엔터 시 `pop_FIND_LOCA` 팝업 오픈 및 현재 셀 값 키워드 설정 후 즉시 조회(`SearchFindLoca`).
+  - 3) 키워드 검색 및 바인딩(`MST3001_R03.js`): 키워드 텍스트박스 Enter(`onKeyEnter`) 및 조회 버튼 클릭 시 프로시저 `SEL_LOCA`를 호출하여 로케이션 목록 조회. 검색 결과 행 더블클릭 또는 Enter 시 메인 그리드 행(`_targetGrid1Row`)에 `LOCACD`/`LOCANM` 자동 바인딩 및 체크박스 자동 선택(`CheckRow`) 후 팝업 종료.
+  - 4) 관리 팝업(`pop_LOCA`) 분리 유지: 상단 검색영역의 [로케이션 기준정보 관리](`btn_LOCA_MNG`) 클릭 시에는 기존 `pop_LOCA`가 열려 조회·저장·행추가·삭제 작업을 독립적으로 수행하도록 분리.
+  - 5) 컬럼 너비 강제 축소 방지 및 팝업 규격 최적화(`MST3001_R03.js` & `MST3001_R03.aspx`): 조회 시 컬럼 너비 설정을 무시하고 글자 크기대로 자동 축소시키던 `ItsGrid.Get('grid1').autoSizeColumns()` 호출을 제거하여 `width: 160`이 정상 고정되도록 조치. 사용자 팝업 확대(800×480)에 맞추어 `grid_FIND_LOCA` 높이(390) 및 컬럼 너비(코드 220, 명 520) 비율 최적화.
+  - 6) `setTimeout` 제거 및 프레임워크 표준 `onPopOpened` 전환(`MST3001_R03.js`): 팝업 오픈 시 인위적인 `setTimeout` 지연 코드를 전면 제거하고, 프레임워크 공식 라이프사이클 이벤트인 `ItsPop.Event('pop_FIND_LOCA').onPopOpened`를 통해 팝업 오픈 완료 시 `ItsText.Focus`가 깔끔하게 실행되도록 실무 표준 방식으로 개선.
+- **검증 결과**: Node.js 구문 검사(`node -c`) 통과, UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료. IIS Express(포트 55085) HTTP 200 정상 응답 및 신규 팝업(`pop_FIND_LOCA`, `grid_FIND_LOCA`) 렌더링 무결성 검증 완료.
+
+### 6. MST3001_R03 메인 그리드 로케이션 셀 더블클릭 시 팝업 선택 연동 구현
+- **수정/대상 파일**: [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
+- **배경 및 원인**: 메인 그리드(grid1)의 로케이션 셀을 더블클릭했을 때 로케이션 기준정보 팝업을 열어 로케이션을 선택하면, 해당 행의 로케이션 정보(코드/명)가 자동으로 바인딩되고 체크박스가 선택되는 실무 표준 Find 컬럼 인터랙션 적용 요청.
+- **작업 상세 내용**:
+  - 1) 그리드 컬럼 속성(`MST3001_R03.js`): 메인 그리드의 "로케이션" 컬럼을 `columnType: enumColumnTypes.find`로 전환하여 찾기 가능 셀로 시각화.
+  - 2) 메인 그리드 이벤트 연동(`MST3001_R03.js`): `grid1.onDoubleClick` -> `grid1.onKeydownEnter` 연동을 통해 로케이션 셀에서 더블클릭/Enter 입력 시 대상 행(`_targetGrid1Row`)을 저장하고 `pop_LOCA` 팝업 자동 오픈 및 조회(`SearchLoca`).
+  - 3) 팝업 선택 연동(`MST3001_R03.js` & `MST3001_R03.aspx`): 팝업 상단에 [선택](`btn_POP_APPLY`) 버튼을 추가하고, `grid_LOCA` 행 더블클릭 또는 [선택] 클릭 시 선택한 로케이션의 `LOCACD`와 `LOCANM`을 메인 행에 `SetValue` 및 `CheckRow` 처리 후 팝업 자동 종료.
+- **검증 결과**: 전 파일 UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료. JS 구문 검사 통과 및 IIS Express HTTP 200 정상 렌더링 검증 완료.
 
 ### 5. MST3001_R03 안전재고 대비 현재고 부족 시 핑크색(BACKGROUND) 공통 컴포넌트 연동
 - **수정/대상 파일**: [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
@@ -1175,6 +1262,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 01.Office/PAGEMST/MST3001/MST3001_R03.js | MST3001_R03.js 로컬 반영 완료. 실제 서버 배포 및 운영 CRUD 검증은 미실행, SQL·공통 컴포넌트·ASPX 버전 변경 없음 | 실제 ItsGrid 소스와 Wijmo 2018·2020 라이브러리를 사용한 격리 Edge 브라우저 17개 시나리오씩 34개 통과. 1000행 1건 선택 저장 시 GetValue 호출 10006회에서 0회. 브라우저 테스트의 DB·팝업 연동은 대역이며 운영 화면 및 DB 실처리는 미실행. Node 문법과 BOM/CRLF 검증 통과 |
 | **완료** | [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql), [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js) | MST3001_R03 설비부품 재고·로케이션 컬럼 추가 및 로케이션 기준정보 관리 팝업 CRUD 구현 완료 (실제 DB 프로시저 및 시스템 파라미터 반영은 사용자 진행) | node -c 구문검사 통과. IIS Express HTTP 200 OK 렌더링 검증 완료. MariaDB SELECT 모의 쿼리 무결성 확인. 전 파일 UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료. |
 | **완료** | 05.Procedure/MES_SNS2_MTR0001_R04.sql, 05.Procedure/MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql, 01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx, 01.Office/PAGEMTR/MTR0001/MTR0001_R04.js | 로컬 페이지·전용프로시저 수정 완료. 프로시저 저장→파라미터등록SQL(13개)→ASPX/JS 반영 필요. 실제 ERP 수신은 별도 ERP로그 트리거 연결 수정 전 오류 가능 | 선 검증 후 반영. 실제 DB SELECT 3조회: 설비자재181건/고유발주상세181건, ERP0건, MES181건. 실제 스키마 격리 MariaDB10.2.44에서 원래ITEMTP 오류 재현·필터·ERP원본수신·부분/전체수신·트리거로그 모의·0값갱신·입고처·삭제보호·실패롤백·메타등록19건, 실제JS VM10건 합계29건 통과. BOM/CRLF·node문법·원본해시 확인. 실제 ERP 로그테이블은 IF_MES_SNS에만 있고 FAC2 트리거의 무스키마 참조가 잘못됨; 사용자가 별도 처리 선택. 실제 수신/실브라우저/서버DDL-DML·배포 미수행 |
 | **완료** | [MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx), [MTR0001_R04.aspx.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx.cs), [MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql) | MTR0001_R04 설비부품 발주조회 화면 및 프로시저 MES_SNS2 프로젝트 이관·표준화 구축 완료 | C# 클래스 정규화, ASPX 2단 탭/공통코드 매핑, JS 그리드 컬럼 최적화, 프로시저 전면 개편(ERP IF/가입고 연동), 27개 파라미터 등록 SQL 준비, MSBuild 및 쿼리 검증 완료 (실제 DB 반영은 사용자 진행) |
@@ -1292,6 +1380,11 @@
 | **완료** | [TML5001 - R01.xaml / .cs](file:///d:/ITS_MES_KJ_VA.1.0/02.Site/TMLPJT/TML5001/R01.xaml) | `SetPopInfo GPCD is empty` 생명주기 오류 디스패처 비동기 큐 개선 | 하드코딩 완전 제거 |
 | **완료** | [MES_SNS2_EQM1001_S01.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_S01.sql) | 설비이력카드 출력 리포트 쿼리 최적화 | 로컬 SQL 파일 반영 완료 |
 | **완료** | [MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql) | MTR0001_R04 프로시저 DELIMITER 제거 및 프로젝트 표준 형식 통일 | 최상단/최하단 구분자 제거, `CREATE DEFINER ~ END CASE; END` 서식 정규화, UTF-8 BOM/CRLF 검증 완료 |
+| **완료** | [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js) | MST3001_R03 코드 검색 전용 팝업(pop_FIND_LOCA) 및 키워드 조회 연동 | 독립 팝업(코드 검색) 추가, 키워드 검색창 및 돋보기 조회 버튼 배치, 더블클릭/Enter 선택 시 메인 그리드 바인딩 및 체크, pop_LOCA 관리 기능 복원. IIS Express HTTP 200 검증 완료 |
+| **완료** | [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_DC_FIND.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_DC_FIND.sql) | MST3001_R03 공통 마스터 코드검색(ItsPop.OpenFindCOM) B안 정석 적용 및 DC_FIND 로컬 분기 추가 | 화면 전용 팝업 태그·JS 약 60줄 전면 제거, 공통 findPop_COM 프레임워크 표준 호출로 8줄 전환, DC_FIND에 LOCACD_EQMPARTS 분기 추가. JS 구문검사 통과, IIS Express HTTP 200 검증 완료 |
+| **완료** | [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql) | MST3001_R03 로케이션 값 존재 시 수정(전체목록)·삭제(Delete키/빈값/SAVE_ITEM) 및 pop_LOCA 비율(600×500) 최적화 | 팝업 오픈 시 keyword: ''로 전체목록 제공, Delete 키 및 빈값 변경 시 LOCACD 동기화 초기화, SAVE_ITEM LOCACD_LIST 파싱/빈값 확정 저장, pop_LOCA 600×500 황금비율 최적화. JS 구문검사 통과, IIS Express HTTP 200 검증 완료 |
+| **완료** | [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [.agents/rules/procedure_history.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure_history.md), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql) | 프로시저 최상단 선언부 서식 규칙(CREATE DEFINER / PROCEDURE 2행 개행) 정정 및 표준화 적용 | 한 줄 선언 금지 및 2행 분리 개행(`CREATE DEFINER=...\nPROCEDURE ...(`) 표준화 조항(0-3) 및 템플릿 갱신, MST3001_R03·EQM1001_R03·EQM1001_R04 소스 파일 선언부 분리 개행 적용 완료. BOM·CRLF 검증 완료 |
+| **완료** | [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js) | MST3001_R03 프로젝트 코딩 규칙 기반 리팩토링 및 네이밍·주석 표준화 | arrRows 표준 배열 네이밍, locaCd/locaNm 파라미터 정돈, 콤보 이벤트 날짜 주석 보강, deferUpdate/finishEditing 무결성 유지. Node.js 구문검사 통과, UTF-8 with BOM/CRLF 검증 완료 |
 | **대기** | 사용자 추가 요청 사항 | 이어서 진행할 화면/기능 요청 시 즉시 반영 및 본 대장에 기록 갱신 예정 | - |
 
 ---

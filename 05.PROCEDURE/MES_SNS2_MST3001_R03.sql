@@ -1,8 +1,10 @@
-﻿CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`MST3001_R03`(
+﻿CREATE DEFINER=`root`@`%` 
+PROCEDURE `MES_SNS2`.`MST3001_R03`(
 -- *****************************************************************************
 -- Comment: 설비부품정보 마스터관리
 -- Create:  2024-02-22  13:50   김영철
 -- Modify:  2026-10-13          한성수  부품재고·로케이션 최적화 조회/저장, 안전재고 부족 시 핑크색(BACKGROUND) 표기, 로케이션 코드 수정 및 중복 검증·SQL 튜닝
+--          2026-10-14          한성수  SAVE_ITEM 로케이션코드·명 파라미터 동기화 및 로케이션 삭제(초기화) 지원
 -- *****************************************************************************
   IN $COMPANYCD       VARCHAR(100),
   IN $FACTORYCD       VARCHAR(100),
@@ -101,18 +103,18 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       CALL COMSPLIT($ITEMID_LIST, _$ITEMID);
       CALL COMSPLIT($SAFEQTY_LIST, _$SAFEQTY);
       CALL COMSPLIT($LOTQTY_LIST, _$LOTQTY);
+      CALL COMSPLIT($LOCACD_LIST, _$LOCACD);
       CALL COMSPLIT($LOCANM_LIST, _$LOCANM);
 
       SET _$ITEMID  = TRIM(COALESCE(_$ITEMID, ''));
       SET _$SAFEQTY = TRIM(COALESCE(_$SAFEQTY, '0'));
       SET _$LOTQTY  = TRIM(COALESCE(_$LOTQTY, '0'));
+      SET _$LOCACD  = TRIM(COALESCE(_$LOCACD, ''));
       SET _$LOCANM  = TRIM(COALESCE(_$LOCANM, ''));
 
       IF _$ITEMID <> '' THEN
-        SET _$LOCACD = '';
-
-        -- 로케이션 명 또는 코드로 LOCACD 조회
-        IF _$LOCANM <> '' THEN
+        -- 로케이션 명만 입력되고 코드가 비어있는 경우 보정 (직접 타이핑 입력 지원)
+        IF _$LOCACD = '' AND _$LOCANM <> '' THEN
           SELECT LOCACD INTO _$LOCACD
           FROM MSTLOCA_EQMPARTS
           WHERE LOCANM = _$LOCANM OR LOCACD = _$LOCANM
@@ -122,6 +124,9 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
           IF _$LOCACD IS NULL THEN
             SET _$LOCACD = '';
           END IF;
+        -- 로케이션 명이 비어있는 경우(삭제 시) 코드도 빈 값('')으로 확정
+        ELSEIF _$LOCANM = '' THEN
+          SET _$LOCACD = '';
         END IF;
 
         IF EXISTS (SELECT 1 FROM MSTITEM_EQMPARTS WHERE FACTORYCD = $FACTORYCD AND ITEMID = CAST(_$ITEMID AS UNSIGNED) LIMIT 1) THEN
