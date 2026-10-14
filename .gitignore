@@ -1,0 +1,12 @@
+﻿# Visual Studio
+.vs/
+**/.vs/
+
+# Report Output & Temporary Files
+01.Office/Reports/tempFiles/
+04.Report/bin/tempFiles/
+**/tempFiles/
+*.pdf
+!01.Office/Script/pdfjs/**
+!03.Pda/Script/pdfjs/**
+!docs/**

@@ -17,6 +17,45 @@
 
 ## 🕒 2026-10-14 (수) 작업 내역
 
+### 23. 공통 프레임워크 우선 활용 및 기존 화면 참조 규칙 추가, 레포트 임시 파일 정리 및 .gitignore 등록
+- **수정 및 신규 파일**:
+  - 신규 규칙: [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md)
+  - 환경 설정: [.gitignore](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.gitignore)
+  - 로컬 정리: `01.Office/Reports/tempFiles/*`, `04.Report/bin/tempFiles/*` 로컬 임시 산출물 삭제 및 Git 캐시 제거
+- **배경 및 사용자 피드백**:
+  - 앞으로 레포트 및 일반 기능 개발 시 공통 프레임워크(`ItsFramework`)에서 지원하는 기능을 최대한 활용하고, 프로젝트 내 기존 검증된 페이지들을 참고하여 유사한 표준 형태로 제작하도록 하는 규칙 제정 요청.
+  - 지금까지 리포트 출력 테스트 중 로컬에 쌓였던 임시/쓰레기 파일들(`tempFiles` 내부 `*.pdf`, `*.html`, `*_files/`)을 모두 `.gitignore`에 추가하고 로컬 디스크 및 Git 저장소에서 깨끗이 삭제 요청.
+- **작업 상세 내용**:
+  1. **신규 규칙 제정 ([`.agents/rules/framework_convention.md`](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md))**:
+     - **공통 프레임워크 우선 활용 원칙 (Framework-First)**: 기능 착수 전 `ItsXtraRpt`, `ItsGrid`, `ItsFind`, `ItsPop`, `ItsCombo`, `ItsMsg` 및 백엔드 공통 컨트롤러 지원 여부를 우선 확인하고, 자동 처리 동작(타임스탬프 파일명 자동 발급, 모달 중앙 정렬, 유효성 검사 등)의 인위적 중복 재구현 및 하드코딩 금지.
+     - **기존 유사 화면 참조 원칙 (Reference-First)**: 독자적 구현 대신 프로젝트 내 이미 안정적으로 운영 중인 화면(SAL0001_S05, EQM1001_S01 등)의 레이아웃(`.aspx`), 스크립트(`.js`), 비하인드(`.cs`), 프로시저(`.sql`) 구조를 그대로 모방하여 표준 일관성 준수.
+     - **리포트(`ItsXtraRpt`) 표준 연동 규정**: `new ItsXtraRpt('리포트명')` 생성 ➔ `AddParam` 조건 바인딩 ➔ `CallPop()`/`Call()` 호출 간결화, 파일명 수동 지정(`rpt.FileName`) 금지, 기존 리포트 C# 비하인드 모방.
+     - **리포트 임시 파일 형상 관리 격리**: 출력 테스트 중 자동 생성되는 임시 파일의 Git 추적 차단 명시.
+  2. **Git 추적 임시 파일 제거 및 로컬 청소**:
+     - 기존 Git 인덱스에 포함되어 있던 `01.Office/Reports/tempFiles/` 및 `04.Report/bin/tempFiles/` 내 수십 개의 `*.pdf`, `*.html`, `*_files`를 `git rm -r --cached`로 인덱스에서 완전 제거.
+     - 로컬 디스크 상에 남아있던 잔여 임시 파일들을 완전 삭제하여 디스크 및 소스 트리 정리.
+  3. **[`.gitignore`](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.gitignore) 생성 및 패턴 등록**:
+     - `01.Office/Reports/tempFiles/`, `04.Report/bin/tempFiles/`, `**/tempFiles/`, `*.pdf` 패턴 등록 (단, pdfjs 라이브러리 및 docs는 예외 처리 `!01.Office/Script/pdfjs/**`, `!03.Pda/Script/pdfjs/**`, `!docs/**`로 보존).
+- **검증 결과**:
+  - `git status` 확인 결과 불필요한 임시 산출물이 전면 정리되고 `.gitignore` 및 신규 규칙만 깔끔하게 추적됨을 확인.
+  - 모든 신규/수정 파일 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료.
+
+### 22. MTR0001_R04 및 EQM1001_R03 리포트 호출 시 불필요한 rpt.FileName 제거 및 프레임워크 표준 정돈
+- **수정 파일**:
+  - 화면 스크립트: [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
+- **배경 및 사용자 피드백**:
+  - 리포트 호출부에서 인위적으로 파일명을 지정(`rpt.FileName(...)`)하던 코드가 다른 기존 페이지(SAL0001_S05, EQM1001_S01 등)의 사용 관례와 일치하지 않으며 불필요하다는 피드백.
+  - 공통 프레임워크(`XtraReport.aspx.cs`)에서 파일명을 자동 처리하므로 화면 단의 불필요한 하드코딩 제거 요청.
+- **원인 및 분석**:
+  - 공통 리포트 컨트롤러(`XtraReport.aspx.cs`)에서 `fileName`이 빈 문자열이면 `DateTime.Now.Ticks`로 고유 임시 파일명을 자동 발급하여 관리하므로, 화면 스크립트에서 파일명을 굳이 지정할 필요가 전혀 없음.
+  - 기존 프로젝트의 다른 리포트 호출 페이지들(`SAL0001_S05.js`, `EQM1001_S01.js` 등)도 `rpt.FileName(...)`을 호출하지 않고 순수 파라미터 전달 및 `CallPop()`/`Call()`만 수행하는 표준 패턴을 준수하고 있었음.
+- **작업 상세 내용**:
+  - `MTR0001_R04.js`: `rpt.FileName('설비부품_발주서_' + mtrOdrKey);` 라인 제거.
+  - `EQM1001_R03.js`: `rpt.FileName('제조설비_정기점검계획서_' + planCd);` 라인 제거.
+- **검증 결과**:
+  - Node.js 구문 검사(`node -c`) 통과 (오류 0건).
+  - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료.
+
 ### 21. MST3001_R03 드래그 선택 영역 Delete 키 삭제 시 로케이션명 잔존 결함 원인 분석 및 캡처링 이벤트 해결
 - **수정 파일**:
   - 화면 스크립트: [01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
@@ -1829,6 +1868,8 @@
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 로고 크기 확대, 거래처명 상단 마진 추가 및 기본 정보 5개 행 전체 텍스트 Bold 적용 | 로고 SizeF 160x38F(36px) 확대, 거래처명 Y=48F(로고 아래 10px 여백), 정보테이블 startY=84F 및 5개 행 전 셀 Bold(isHeader=true) 적용. MSBuild 빌드 성공 및 바이너리 배포 완료 |
 | **완료** | [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql) | MST3001_R03 중요도등급(GRADE) 수정·저장 및 현재고(LOTQTY) 입력 차단 연동, 로케이션 autoSizeColumns 보완, 프로시저 공통 감사함수(CALLTIME/CALLEMP/CALLPRG) 강제 규칙 제정 및 적용 | LOTQTY readOnly 차단, LOCANM 콤보 해제(gpcd 오류 해결), GRADE_LIST 전송 및 저장 연동, SearchLoca autoSizeColumns 추가, procedure.md 감사함수 규칙 제정, RTIME/MTIME/REMP/MEMP/RPRG/MPRG 공통함수 적용 완료. Node.js 구문검사 통과, UTF-8 BOM/CRLF 무결성 검증 완료 |
 | **완료** | [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js) | MST3001_R03 드래그 선택 영역 Delete 키 삭제 시 로케이션명 잔존 결함 원인 분석 및 캡처링 이벤트 해결 | ItsPage.Load 내 grid.hostElement 캡처링 이벤트로 Delete 키 최우선 가로챔, 드래그 다중 행 LOCACD·LOCANM 동시 초기화 및 행 체크, GetCheckedRows 정합성 방어 추가. Node.js 검사 통과, UTF-8 BOM/CRLF 무결성 검증 완료 |
+| **완료** | [MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js) | MTR0001_R04 및 EQM1001_R03 리포트 호출 시 불필요한 rpt.FileName 제거 및 프레임워크 표준 정돈 | XtraReport 컨트롤러 자동 파일명 발급 기능에 따라 불필요한 rpt.FileName 하드코딩 라인 전면 제거, 기존 화면 표준(SAL0001_S05, EQM1001_S01) 일치화. JS 구문검사 통과, UTF-8 BOM/CRLF 무결성 검증 완료 |
+| **완료** | [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md), [.gitignore](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.gitignore) | 공통 프레임워크 우선 활용 및 기존 화면 참조 규칙 추가, 레포트 임시 파일 정리 및 .gitignore 등록 | 신규 규칙 제정(Framework-First & Reference-First), tempFiles 로컬 파일 삭제 및 .gitignore 패턴 등록, git 추적 임시파일 인덱스 제거 완료. 단일 UTF-8 BOM/CRLF 검증 통과 |
 | **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | - |
 
 ---
