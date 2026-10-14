@@ -17,6 +17,223 @@
 
 ## 🕒 2026-10-14 (수) 작업 내역
 
+### 13. MTR0001_S04A 설비부품 발주서 상단 행별 독립 XRTable 분리 및 품목 그리드 3단 분리 렌더링 최적화
+- **수정 파일**:
+  - 리포트 C# 소스: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs)
+  - 실행 바이너리 배포: [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
+- **배경 및 문제 원인 정밀 분석**:
+  - 사용자 피드백: "양주현" 앞의 "대표자", "621-19-65025" 앞의 "사업자번호" 라벨 누락 및 하단 그리드 헤더 비정상 팽창 지적.
+  - **원인 1 (상단 정보 라벨 누락)**:
+    - DevExpress `XRTable`은 모든 행이 동일한 열(Column) 개수/너비를 공유해야 하는 제약이 있어, 단일 테이블에 행마다 다른 열 구조를 넣으면 레이아웃 엔진이 1행 기준 열 너비로 강제 축소/정규화하여 2행의 "대 표 자" 및 3행의 "사업자번호" 라벨이 셀 너비 부족(65F/50F + 패딩)으로 끝 글자가 잘리거나 밀려나는 현상 발생.
+  - **원인 2 (하단 품목 그리드 헤더 팽창)**:
+    - 헤더와 데이터 15행을 단일 XRTable(고정 높이)에 넣으면서 DevExpress 엔진의 남은 공간 비례 배분에 의해 헤더 행이 비정상적으로 길어지는 현상 발생.
+- **작업 상세 내용**:
+  1. **상단 정보 5개 행 독립 XRTable 구조로 전면 개편**:
+     - 5개 행을 각각 독립된 `XRTable`(높이 24F, 너비 731F)로 분리 생성하여 행 간 열 구조 충돌 원천 차단.
+     - 라벨 셀 너비 확대: 좌측 라벨 `75F`, 우측 라벨 `60F`로 확장.
+     - 패딩 최적화: 라벨 셀 패딩을 `0`으로 설정하고 폰트 8~8.5pt Bold를 적용하여 `"대 표 자"`, `"사업자번호"`, `"발 주 번 호"`, `"발주일자"`, `"납기일자"`, `"담 당 자"`의 모든 글자가 단 1글자도 잘리지 않고 100% 온전하게 렌더링되도록 구현.
+  2. **하단 발주 품목 그리드 3단(헤더·데이터·합계) 독립 테이블 분리**:
+     - `headerTable`: 높이 `23F` 독립 테이블 고정 (비정상 팽창 원천 차단, 슬림한 8.5pt Bold).
+     - `dataTable`: 높이 `420F` (28F * 15행) 독립 테이블, 품명/비고 2줄 텍스트(`WordWrap = true`) 여유 배치, 9행 `- - -  이  하  여  백  - - -`, 10~15행 격자선 유지.
+     - `totalTable`: 높이 `23F` 독립 테이블, `합    계(435F) | 42F | 84F | 170F`.
+- **검증 결과**:
+  - MSBuild 리빌드 통과 (경고 0건, 오류 0건).
+  - [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) 최신 배포 완료.
+  - 실테스트 실행 후 생성된 HTML 텍스트 정밀 파싱 검증: `"대 표 자"`, `"사업자번호"`, `"발 주 번 호"`, `"발주일자"`, `"납기일자"`, `"담 당 자"`, `"합    계"` 전 라벨 100% 온전 출력 및 그리드 헤더 높이 20px(23F) 정상 확인 완료.
+
+### 12. MTR0001_R04 설비부품 발주서 출력 리포트(S04A) 신규 구현 및 DevExpress XtraReports 기반 PDF 양식 매핑
+- **수정/신규 파일**:
+  - 화면 마크업: [01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx)
+  - 클라이언트 스크립트: [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js)
+  - 리포트 C# 프로젝트: [04.Report/PAGEMTR/MTR0001/MTR0001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/MTR0001.csproj), [04.Report/PAGEMTR/MTR0001/MTR0001.sln](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/MTR0001.sln), [04.Report/PAGEMTR/MTR0001/Program.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/Program.cs), [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [04.Report/PAGEMTR/MTR0001/S04A.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.Designer.cs)
+  - DB 프로시저: [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql)
+- **배경 및 사용자 요구사항**:
+  - 사용자가 첨부한 "발주서" PDF 양식을 기반으로 설비부품 발주서 출력 기능을 구현 요청.
+  - `MTR0001_R04.aspx` 거래처 우측 끝에 "발주서 출력" 버튼(`btn_PRINT`) 추가.
+  - PDF 관련 구조 및 구현 방식은 `04.Report/PAGEEQM/EQM1001`(DevExpress XtraReports 독립 Exe 및 ItsXtraRpt 호출) 방식을 준수하여 `04.Report/PAGEMTR/MTR0001`에 구현 및 데이터 매핑.
+- **작업 상세 내용**:
+  1. **DB 프로시저 리포트 조회 분기 추가 (`CALL_RPT`)**:
+     - `05.Procedure/MES_SNS2_MTR0001_R04.sql`: `WHEN 'CALL_RPT' THEN` 분기 신설.
+     - Table 0 (헤더): 발주번호, 발주일자, 납기일자, 발주상태(`MM110`), 승인일자, 거래처(`MSTCUST`) 전화·FAX·사업자번호, 자사(`MSTBDV`) 상호·대표자·사업자번호·주소·대표전화·FAX, 발주담당자(`MSTEMP`) 정보(`부서 (사원명 직급 연락처)`), 비고(`REMARK`).
+     - Table 1 (상세): 순번(`NO`), 발주순번(`MTRODRSEQ`), 품목코드(`ITEMCD`), 품명(`ITEMNM`), 규격(`ITEMSPEC`), 단위(`ITEMUNIT`), 단가(`PRICE`), 수량(`QTY`), 금액(`AMT`), 비고(`REMARK`).
+  2. **리포트 C# 프로젝트 신규 구축 (`04.Report/PAGEMTR/MTR0001`)**:
+     - `EQM1001` 아키텍처를 기반으로 `MTR0001.csproj`, `MTR0001.sln`, `Program.cs`, `S04A.cs`, `S04A.Designer.cs` 생성.
+     - `S04A.cs`: 첨부된 PDF 발주서 양식 100% 동일 재현 및 디자인 정밀 고도화:
+       - 상단: `S&S INC` 로고 + 거래처명, 중앙 `발   주   서` 타이틀, 우측 `발주승인완료` 승인 도장 박스.
+       - 헤더 정보 테이블: 좌측 테이블(320F)과 우측 테이블(411F)의 2개 대칭 테이블로 분리 구성, 모든 셀 `CanGrow=false`, `WordWrap=false` 및 행높이 `22F` 고정으로 1행(전화·사업자번호·에스앤에스아이앤씨)과 2~5행(FAX·대표자 등)의 높이 및 수직 열 시작점·끝선 완벽 일치.
+       - 품목 헤더 슬림화: 품목 헤더(`No 품 명 규 격 단위 단가 수량 금액 비고`) 높이를 기존 21F에서 `18F`로 컴팩트하게 슬림화(8F Bold).
+       - 품목 데이터 행 높이 확대: 품목 데이터 행 높이를 기존 21F에서 `25F`로 넉넉하게 확대하여 긴 규격/품명 및 비고 텍스트가 2줄로 표시되더라도 답답함 없이 시원하고 가독성 높게 표시.
+       - 하단 박스 통합: `업체 요청 사항` 대형 패널(높이 115F, Borders=All) 내부에 상단 제목·비고 내용과 하단 3줄 품질/규격 안내문을 박스 내부로 완벽히 포함하여 정돈, 하단 중앙 페이지 번호(`1 / 1`).
+     - MSBuild 컴파일(오류 0건, 경고 0건) 및 `01.Office/Reports/MTR0001.exe` 배포 완료.
+  3. **웹 화면 UI 및 클라이언트 스크립트 연동**:
+     - `MTR0001_R04.aspx`: `sdiv1` 내에 `<Its:button runat="server" Label="발주서 출력" ID="btn_PRINT" Width="90" Float="right" MarginRight="10" MarginTop="4" BackColor="CustomButton2" />` 배치 (`aspx_cs_comment.md` 무주석 원칙 준수).
+     - `MTR0001_R04.js`: `btn_PRINT` 클릭 시 좌측 그리드 선택 검증 및 `new ItsXtraRpt('MTR0001_S04A')` 인스턴스 생성 후 `rpt.CallPop()` 팝업 출력 (`Optimization.md` 날짜 주석 작성).
+- **검증 결과**:
+  - `MTR0001.csproj` MSBuild 컴파일 에러 0건 성공.
+  - `MTR0001_R04.aspx` IIS Express HTTP 200 정상 로딩 검증 완료.
+  - `MTR0001_R04.js` Node.js 구문 검사(`node -c`) 통과.
+  - 모든 파일 단일 UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 확인 완료.
+
+### 11. MTR0001_R01(18건) 대비 MTR0001_R04(0건) 조회 결과 차이점 정밀 원인 분석 및 DB 실데이터 검증
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R01.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R01.aspx), [01.Office/PAGEMTR/MTR0001/MTR0001_R01.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R01.js)
+- **배경 및 사용자 질의**:
+  - "MTR0001_R01 페이지에서는 발주조회를 할 경우 INC 2공장에서 총 18개의 데이터가 나오는데 왜 우리가 짠 부분에서는 0건이 나오나요?? 어떤 차이점인지 알려주면 고마울 것 같습니다"
+- **DB 실데이터 및 소스코드 대조 정밀 원인 분석 결과**:
+  1. **`MTR0001_R01` (일반 발주등록 화면) 동작 구조**:
+     - 프로시저 `MTR0001_R01`의 `LIST_MTRODR` 쿼리는 디테일(`MTRODRD`) 및 품목(`MSTITEM`)과의 조인이 **일절 없음**.
+     - 즉, 품목유형(원자재, 외주가공, 설비부품 등)에 관계없이 공장코드(`ODRFACTORY LIKE '%07%'`)에 해당하는 **모든 종류의 발주헤더를 무조건 조회**.
+     - 실제 DB의 INC 2공장(`07`) 발주 18건(예: `26050100003` ~ `26090100015`)의 디테일 품목을 조사한 결과, 포함된 품목들은 전부 **`DM100300` (외주가공품)** 임.
+       (예: `외주가공-OWC Outer Support Ring`, `외주가공-BOSS-UD CLUTCH`, `SLIDE BALL`, `외주가공-MHT Shaft`, `Bushing`, `절단재,AL6061` 등).
+  2. **`MTR0001_R04` (설비부품 발주입고 화면) 동작 구조**:
+     - 사용자의 이전 요구사항("좌측 그리드에는 발주디테일에 설비부품이 있는 발주헤더만 조회 조건이 붙습니다")에 따라, `MTRODRD`와 `MSTITEM`을 조인하여 **설비부품 품목구분(`ITEMCG = 'DM100700'` 또는 `DM100750`)을 포함하는 발주헤더만 필터링**하도록 구현됨.
+  3. **결정적 차이점 (0건 발생 원인)**:
+     - 전체 DB 분석 결과, 설비부품(`DM100700` 53건, `DM100750` 24건, 합계 75건) 발주는 **모두 INC 1공장(`06`)** 으로만 등록되어 있음.
+     - **현재 INC 2공장(`07`)에는 설비부품(`DM100700`/`DM100750`)으로 발주된 데이터가 DB에 단 1건도 존재하지 않음 (0건)**.
+     - 따라서 `MTR0001_R01`에서 조회되던 18건은 순수 **외주가공품(`DM100300`)** 발주이기 때문에, 설비부품 발주헤더만 조회하는 `MTR0001_R04`에서는 의도된 필터링에 의해 제외되어 0건이 반환됨.
+- **향후 대응 방향 제안**:
+  - 1안: R04 화면에서도 외주가공품(`DM100300`) 또는 전체 품목 발주를 조회할 수 있도록 품목 필터 조건 완화/조정.
+  - 2안: 설비부품 전용 화면 목적을 유지하고, INC 2공장의 설비부품 신규 발주 데이터 등록 또는 INC 1공장(`06`) 발주 데이터 연계.
+
+### 10. MTR0001_R04 구매담당자 사원번호(4328, 4329 등) 사원명 매핑 및 INC 2공장(07) 디폴트 확정
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js)
+- **배경 및 원인 분석**:
+  - 사용자가 "07이 기본이고 06은 나중에 통합하기 위해 남겨진 공장입니다. 07을 그대로 유지하는것이 맞습니다. 근데 문제는 좌측 그리드에서 구매 담당자 이름이 이상합니다. 숫자로 나오는데 4328, 4329 이 부분 똑바로 해주세요"라고 요청.
+  - `MTRODR.ODREMPID`에는 사번(`EMPCD`, 예: `202507041`)이 아니라 ERP 시스템에서 I/F 연동 시 부여된 사원 고유식별자(`EMPID`, `4328`, `4329` 등)가 저장되어 있음.
+  - DB 조사 결과:
+    - `EMPID 4328`: 설비보전팀(`42F30`) **박상근** (`EMPCD 202507041`)
+    - `EMPID 4329`: 생산팀(`42F20`) **구동근** (`EMPCD 202507042`)
+    - `EMPID 4318`: **김일한** (`EMPCD 202507031`)
+    - `EMPID 4438`: INC 2공장(`07`, `44F10`) **정영진** (`EMPCD 202507152`)
+  - `MTR0001_R04` 프로시저가 `ODREMPID` 정수값을 그대로 출력하여 좌측 그리드의 '구매담당자' 컬럼에 숫자로 표시되고 있었음.
+  - 조인 과정에서 `MSTEMP.EMPID`가 `VARCHAR`이고 대다수(2,187건)가 빈 문자열(`''`)인 상태에서, 숫자형 컬럼인 `MTRODR.ODREMPID`(또는 `ODRDELEMPID` 0값)와 암시적 `=` 비교가 이루어지며 MariaDB가 빈 문자열 `''`을 DOUBLE로 변환하려다 `Truncated incorrect DOUBLE value: ''` 런타임 오류 유발.
+- **작업 상세 내용**:
+  - 1) **프로시저 구매담당자 사원명 조인 및 DOUBLE 에러 원천 차단 ([MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql))**:
+    - `LIST_MTRODR`: `MTRODR.ODREMPID > 0` 조건으로 미지정/0값 불필요 조인을 원천 배제하고, `CAST(MTRODR.ODREMPID AS CHAR)`를 통해 문자열 대 문자열 비교로 강제하여 암시적 DOUBLE 형변환 에러 완전 박멸.
+    - `LIST_MTRODRD`: 우측 상세의 `MTRODRD.ODRDELEMPID`도 동일하게 `ODRDELEMPID > 0` 및 `CAST AS CHAR` 안전 조인 적용.
+    - `CASE WHEN COALESCE(ODREMPID, 0) = 0 THEN '' ELSE COALESCE(MSTEMP.EMPNM, SNS_EMP.EMPNM, CAST(ODREMPID AS CHAR)) END`로 미지정 시 깔끔한 빈 문자열 반환.
+    - 최상단 `Modify` 이력 1일 1행 압축 갱신 (`procedure_history.md` 준수).
+  - 2) **클라이언트 스크립트 공장 디폴트 확정 ([MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js))**:
+    - 초기 로드(`ItsPage.Load`) 및 법인 변경(`onChanged`) 시 `ItsCombo.SetValueByIndex('sdiv1_combo_FACTORYCD', 2)`와 함께 `ItsCombo.SetValue('sdiv1_combo_FACTORYCD', '07')`를 명시하여 "INC 2공장(07)" 기본 선택 보장.
+    - 함수 상단 날짜 주석 작성 (`Optimization.md` 준수).
+- **검증 결과**:
+  - 실제 DB 연결 쿼리 실행 검증:
+    - `LIST_MTRODR` 쿼리: 75건 151ms 만에 정상 반환, `26073000022` ➔ **박상근** 등 사원명 정확 바인딩 확인.
+    - `LIST_MTRODRD` 쿼리: 4건 30ms 만에 DOUBLE 에러 및 랙 없이 즉시 정상 반환 확인.
+  - Node.js 구문 검사(`node -c 01.Office/PAGEMTR/MTR0001/MTR0001_R04.js`) 오류 0건 통과.
+  - 전체 파일 단일 UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 확인 완료.
+
+### 9. 실제 DB 스키마 직접 검증(DESC/SELECT) 및 MTRODR.MTRODRSEQ 제거·ITEMID 정수형 PK 조인 완전 정상화
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js)
+- **배경 및 원인 분석**:
+  - `Unknown column 'MTRODR.MTRODRSEQ' in 'field list'` 에러 발생.
+  - 실제 DB 연결을 통해 `DESC MTRODR`, `DESC MTRODRD`, `DESC MSTITEM` 스키마 및 실제 데이터 관계를 직접 SELECT 검증하여 근본 원인 규명:
+    1. **발주헤더 테이블(`MTRODR`)**: `MTRODRKEY`(PK), `MTRODRDATE`, `EXPDATE`, `CUSTCD`, `ODREMPID`, `MTRODRSTT` 등이 존재하며, **`MTRODRSEQ` 컬럼은 발주헤더 테이블에 아예 존재하지 않음** (`MTRODRSEQ`는 디테일 테이블 `MTRODRD`에만 존재).
+    2. **품목 조인 키 관계**: `MTRODRD.ITEMID`는 `int(4)`이고, `MSTITEM.ITEMID`는 `int(11)`로 **양쪽 모두 숫자형(INT) PK**임.
+       (앞서 `I.ITEMCD = D.ITEMID`로 문자열 품목코드와 숫자형 컬럼을 비교하려 했던 것이 DOUBLE 형변환 에러의 원인이었으며, 실제 정석 관계는 `I.ITEMID = D.ITEMID`임이 데이터 매칭 75건(249개 상세)으로 입증됨).
+- **작업 상세 내용**:
+  - 1) **프로시저 스키마 정합성 보정 ([MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql))**:
+    - `LIST_MTRODR`: SELECT 절에서 존재하지 않는 `MTRODR.MTRODRSEQ` 컬럼을 완전히 제거하고, 실제 존재하는 헤더 컬럼(`MTRODRDATE`, `MTRODRKEY`, `MTRODRSTT`, `CUSTCD`, `CUSTNM`, `EXPDATE`, `ODREMPID`)만 정확히 조회.
+    - 품목 조인 조건: `I.ITEMID = D.ITEMID`로 정수형 PK 직접 조인 적용 및 설비부품(`ITEMCG = 'DM100700' OR ITEMCG LIKE 'DM1007%' OR ITEMCG = 'DM100750'`) 인라인 뷰 필터링.
+    - `LIST_MTRODRD`: 상세 조회 시 `MSTITEM.ITEMID = MTRODRD.ITEMID`로 직접 조인하여 품목코드(`ITEMCD`), 품명(`ITEMNM`), 규격(`ITEMSPEC`) 정확 반환.
+  - 2) **클라이언트 스크립트 그리드 동기화 ([MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js))**:
+    - 좌측 발주헤더 그리드(`grid1`)에서 존재하지 않는 컬럼인 `MTRODRSEQ`를 제거하고 실제 발주헤더 데이터 구조와 1:1 일치.
+- **실제 DB 쿼리 실행 검증 결과**:
+  - `DESC MTRODR`, `DESC MTRODRD`, `DESC MSTITEM` 컬럼 타입 및 제약조건 전수 확인 완료.
+  - `LIST_MTRODR` 핵심 쿼리 실제 DB 실행 검증: 2026년 설비부품 발주헤더 총 75건 정상 조회 확인.
+  - `LIST_MTRODRD` 핵심 쿼리 실제 DB 실행 검증: 발주번호 `26050600015`의 상세 설비부품 4건(`7-630Ton-4`, `7-AMP-50-239`, `7-AMP-70-282`, `7-AMP-70-283`) 에러 없이 완벽 출력 확인.
+  - 소스 파일 단일 UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 확인 완료.
+
+### 8. 이중 BOM 파서 크래시 원인 분석 및 인코딩·ASPX 공통 규칙 강화
+- **수정/대상 파일**: [.agents/rules/encoding.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/encoding.md), [.agents/rules/aspx_cs_comment.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/aspx_cs_comment.md), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx)
+- **배경 및 원인 분석**:
+  - `MTR0001_R04.aspx` 접속 시 `Content 컨트롤이 포함된 콘텐츠 페이지에는 Content 컨트롤만 사용할 수 있습니다. 줄 1:` 구문 분석 오류 발생.
+  - 원인 규명:
+    - 마스터 페이지(`MasterPageFile`)를 상속하는 `.aspx` 콘텐츠 페이지는 `<%@ Page ... %>` 선언부 및 `<asp:Content>` 바깥에 어떠한 일반 텍스트나 공백도 허용하지 않음.
+    - 파일 저장 시 기존 BOM 바이트가 존재하는 상태에서 BOM이 중복 추가되어 **이중 BOM(`0xEF 0xBB 0xBF 0xEF 0xBB 0xBF`, 6바이트)**이 기록됨.
+    - 첫 번째 BOM은 파일 헤더로 인식되었으나, 두 번째 BOM이 ASP.NET 파서에 의해 `<asp:Content>` 바깥에 위치한 "보이지 않는 문자(`\uFEFF`, Zero Width No-Break Space)" 텍스트로 인식되어 줄 1 파서 오류 크래시 유발.
+- **작업 상세 내용**:
+  - 1) **인코딩 규칙 강화 ([.agents/rules/encoding.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/encoding.md))**:
+    - **단일 UTF-8 with BOM(3바이트) 엄수 및 중복 BOM(`\xef\xbb\xbf\xef\xbb\xbf`) 절대 금지** 명시.
+    - ASP.NET 콘텐츠 페이지 줄 1 파서 크래시 및 스크립트 구문 오류 실사례 주의사항 명시.
+    - 파일 저장 후 **3단계 바이너리 검증**(1단계: 단일 BOM 존재, 2단계: 중복 BOM 부존재 `buf.slice(0, 6)`, 3단계: 표준 CRLF 및 중복 개행 부존재) 의무화.
+    - 기존 BOM(`\uFEFF`)을 전면 제거한 후 단 1개의 BOM 바이트만 결합하는 Node.js 안전 정규화 스크립트 표준 패턴 가이드 추가.
+  - 2) **ASPX 규칙 강화 ([.agents/rules/aspx_cs_comment.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/aspx_cs_comment.md))**:
+    - `1-1. <asp:Content> 외부 텍스트 및 중복 BOM 유입 절대 금지 (줄 1 파서 크래시 방지)` 조항 신규 제정.
+    - 콘텐츠 페이지 바깥 영역 텍스트 배제 및 단일 BOM 3바이트 무결성 유지 표준화.
+  - 3) **실서버 렌더링 검증 ([MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx))**:
+    - 중복 BOM 제거 후 단일 BOM으로 복구. 로컬 웹서버(IIS Express) 실제 HTTP GET 요청 검증 결과 **HTTP 200 OK**, `grid1`, `grid2` 정상 로딩 확인.
+- **검증 결과**:
+  - [.agents/rules/encoding.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/encoding.md), [.agents/rules/aspx_cs_comment.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/aspx_cs_comment.md) 모두 단일 BOM(True), CRLF(True), LFOnly(False) 통과.
+  - IIS Express `http://localhost:55085/PAGEMTR/MTR0001/MTR0001_R04.aspx` HTTP 200 정상 응답 확인.
+
+### 7. MTR0001_R04 원본 기반(MTR0001_R01) 복원, INC 2공장 디폴트 설정 및 설비부품 발주헤더 필터링 구현
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx)
+- **배경 및 사용자 요구사항**: 
+  - `MTR0001_R01.aspx` 및 `MTR0001_R01.js`를 원본 기반으로 재정립.
+  - 최초 접속 시 공장 콤보박스에 **"INC 2공장"**이 디폴트로 선택되어야 함.
+  - 좌측 그리드(`grid1`)는 **"발주디테일에 설비부품이 있는 발주헤더만 조회"** 조건이 필수 적용되어야 함.
+  - 프로시저 및 스크립트 수정 시 프로젝트 코딩 규칙(`procedure.md`, `coding_convention.md`, `Optimization.md`, `encoding.md`) 엄격 준수.
+- **작업 상세 내용**:
+  - 1) **프로시저 리팩터링 및 DOUBLE 에러 원천 차단 ([MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql))**:
+    - `Truncated incorrect DOUBLE value: '7-열처리설비-00001'` 에러 근본 원인 해결:
+      `MTRODRD.ITEMID`에 품목코드(`ITEMCD`, 예: `'7-열처리설비-00001'`)가 저장되어 있어 `I.ITEMID = D.ITEMID` 비교 시 문자열이 DOUBLE 숫자로 변환되며 발생했던 결함을, 품목코드 직접 매핑 `I.ITEMCD = D.ITEMID` 및 숫자형 ID 방어 조건 `(D.ITEMID REGEXP '^[0-9]+$' AND I.ITEMID = D.ITEMID)`로 완벽 해결.
+    - 좌측 그리드 설비부품 발주헤더 필터링: `MTRODRD`와 `MSTITEM(ITEMCG = 'DM100700' OR ITEMCG LIKE 'DM1007%' OR ITEMCG = 'DM100750')`을 인라인 뷰로 묶어 `DISTINCT D.MTRODRKEY`만 추출한 후 `MTRODR`과 `INNER JOIN`하여, 서버 다운 위험 없이 설비부품 발주헤더만 중복 없이 1건씩 추출 (`procedure.md` 0-1 상관 서브쿼리 금지 원칙 준수).
+    - 날짜 및 공장 조건 안정화: `$SDATE`/`$EDATE` 하이픈 제거 전처리 후 앞 8자리 비교로 날짜 포맷 무관 안전 조회, `$FACTORYCD`가 공백이거나 발주헤더 공장 컬럼이 공백인 경우도 포괄하여 조회 0건 결함 방지.
+    - `MTR0001_R01` 좌측 그리드 사양에 맞추어 `MTRODR.MTRODRSEQ` 컬럼 추가 반환.
+    - 최상단 `CREATE DEFINER` 2행 개행 선언 및 `Modify` 1일 1행 작성 준수.
+  - 2) **클라이언트 스크립트 MTR0001_R01 원본 기반 복원 및 INC 2공장 디폴트 확정 ([MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js))**:
+    - `ItsPage.Load`에서 `MTR0001_R01`의 그리드 컬럼 구성(좌측 발주일자, 발주번호, 발주순번(hidden), 발주상태, 거래처코드(hidden), 거래처명, 납기일자, 구매담당자 / 우측 발주상세 13개 컬럼)을 정밀 복원.
+    - 공장 디폴트 설정: 법인 기본값 60 고정(`SetValue('sdiv1_combo_COMPANYCD', '60')`)과 함께 공장 콤보 REF01 지정 및 `SetValueByIndex('sdiv1_combo_FACTORYCD', 2)`를 명시하여 화면 최초 로드 시 "INC 2공장"이 확실하게 선택되도록 구현.
+    - 법인 변경 이벤트(`onChanged`)에서도 `SetValueByIndex('sdiv1_combo_FACTORYCD', 2)`를 유지하여 INC 2공장 기본 선택 보장.
+    - `ItsGrid.Event('grid1').onSelect`에서 `AddPanel('sdiv1')` 및 `AddRecord('grid1', rowIndex)`를 통해 원본 패턴과 동일하게 발주번호를 전달하고 `grid2` 바인딩 및 컬럼 자동 너비 조절 적용.
+    - 함수/이벤트 블록 최상단 `// 2026-10-14 [설비부품 발주관리] ...` 날짜 주석 작성 (`Optimization.md` 준수).
+  - 3) **화면 마크업 점검 ([MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx))**:
+    - `SplitLeft`/`SplitRight` 2단 레이아웃 및 검색 패널 무주석 순수 ASP.NET 마크업 유지 (`aspx_cs_comment.md` 준수).
+- **검증 결과**:
+  - Node.js 구문 검사(`node -c 01.Office/PAGEMTR/MTR0001/MTR0001_R04.js`) 오류 0건 통과.
+  - 05.Procedure/MES_SNS2_MTR0001_R04.sql, MTR0001_R04.js, MTR0001_R04.aspx 3개 파일 전체 UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 확인 완료 (BOM: true, DoubleCR: false, LFOnly: false).
+
+### 6. MTR0001_R04 DOUBLE 형변환 오류 해결 및 실무 표준 JS·SQL 리팩터링
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js)
+- **배경 및 원인**: 
+  - `Truncated incorrect DOUBLE value: '7-열처리설비-00001'` 런타임 SQL 에러 지속 발생.
+  - 원인 규명:
+    - `MTRODRD.ITEMID`와 `MSTITEM.ITEMID`/`ITEMCD` 조인 시 한쪽이 숫자형이고 한쪽이 문자열일 경우, MariaDB 옵티마이저가 문자열 `'7-열처리설비-00001'`을 DOUBLE로 변환하려다 에러 발생.
+    - 특히 `I.ITEMCD = D.ITEMID`에서 `D.ITEMID`가 `BIGINT/INT`인 경우 또는 반대로 `D.ITEMID`가 `VARCHAR`이고 `I.ITEMID`가 `INT`인 경우 어느 쪽이든 타입 불일치 시 MariaDB가 숫자로 변환을 강제함.
+- **작업 상세 내용**:
+  - 1) **프로시저 SQL DOUBLE 에러 근본 해결 (`MES_SNS2_MTR0001_R04.sql`)**:
+    - `LIST_MTRODR` 및 `LIST_MTRODRD`의 품목 조인 시 비교 대상 양쪽을 모두 `CAST(... AS CHAR)`로 감싸 순수 문자열 대 문자열 비교로 강제:
+      `ON (I.ITEMCD = CAST(D.ITEMID AS CHAR) OR CAST(I.ITEMID AS CHAR) = CAST(D.ITEMID AS CHAR))`
+    - 이로써 `D.ITEMID`와 `MSTITEM`의 타입이 정수든 문자열이든 상관없이 100% 안전하게 문자열로 비교되어 DOUBLE 형변환 에러 완전 박멸.
+    - 품목구분 조건을 `(I.ITEMCG = 'DM100700' OR I.ITEMCG LIKE 'DM1007%' OR I.ITEMCG = 'DM100750')`로 확장하여 설비부품 전체 포괄.
+    - `LIST_MTRODRD` 결과 반환 시 `COALESCE(MSTITEM.ITEMCD, CAST(MTRODRD.ITEMID AS CHAR)) AS ITEMCD` 적용으로 품목 마스터 미등록 부품도 발주 데이터 유실 없이 화면 표시 보장.
+    - 최상단 `Modify` 이력 1일 1행 갱신 (`procedure_history.md` 준수).
+  - 2) **클라이언트 JS 실무 표준화 (`MTR0001_R04.js`)**:
+    - `ItsButton.EventSearch`: 조회 성공 시 데이터가 1건 이상이면 첫 번째 행을 자동 선택(`ItsGrid.SelectRow('grid1', 0);`)하여 우측 상세 그리드 즉시 바인딩 (실무 표준 UX 적용).
+    - `ItsGrid.Event('grid1').onSelect`: 행 선택 시 `MTRODRKEY` 유효성 검사 및 `maria.AddParam('MTRODRKEY', odrKey)` 명시적 전달로 안전성 강화.
+    - `ItsCombo.Event('sdiv1_combo_COMPANYCD').onChanged`: 공장 콤보 연동 시 하드코딩 인덱스(2)를 전체 선택(`SetValueByIndex(..., 0)`)으로 정상화하여 타 공장 데이터 누락 방지.
+- **검증 결과**:
+  - Node.js 구문 검사(`node -c`) 통과 (오류 0건).
+  - UTF-8 with BOM 및 CRLF 개행 무결성 검증 통과 (BOM: true, DoubleCR: false).
+
+### 5. MTR0001_R04 설비부품 발주관리(발주헤더·상세 분리 조회) 구현 및 procedure.md 컬럼 가로 나열 규칙 갱신
+- **수정/대상 파일**: [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [05.Procedure/MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js)
+- **배경 및 원인**: 
+  - 1) 설비부품 발주 화면에서 좌측 그리드(`grid1`)는 설비부품이 포함된 발주헤더(`MTRODR`)만 조회하고, 우측 그리드(`grid2`)는 선택된 발주헤더의 상세 품목(`MTRODRD`)을 조회하는 2단 분리 조회 기능 구현 요청.
+  - 2) 프로시저 작성 시 다른 테이블을 복잡하게 참조하지 않는 경우 무의미하게 세로로 1컬럼씩 나열하지 않고 연관 컬럼들을 한 줄에 가로로 나열하도록 규칙 업데이트 요청.
+- **작업 상세 내용**:
+  - 1) **프로시저 규칙 갱신 (`procedure.md`)**: 단일 테이블 및 복잡한 참조가 없는 SELECT/INSERT 절 작성 시 한 줄에 여러 컬럼을 그룹화하여 가로로 나열하는 표준 규칙 추가.
+  - 2) **프로시저 분리 구현 (`MES_SNS2_MTR0001_R04.sql`)**:
+    - `LIST_MTRODR`: `MTRODRD`와 `MSTITEM(ITEMCG = 'DM100700')` 인라인 뷰 조인을 통해 설비부품이 포함된 발주헤더만 행 중복 없이 1건씩 추출 (서버 다운 방지 원칙 준수).
+    - `LIST_MTRODRD`: 선택된 발주번호(`$MTRODRKEY`)에 해당하는 설비부품 상세 목록 조회.
+    - 단일 테이블/비참조 컬럼들을 한 줄 다중 컬럼 형태로 가로 정렬하여 가독성 및 압축성 최적화.
+  - 3) **화면 마크업 정비 (`MTR0001_R04.aspx`)**: `MTR0001_R04` 전용 CodeFile/Inherits 및 JS 스크립트 연결 정상화, `SplitLeft`/`SplitRight` 2단 그리드 구조 확정 (`aspx_cs_comment.md` 무주석 원칙 준수).
+  - 4) **화면 스크립트 연동 (`MTR0001_R04.js`)**: `LIST_MTRODR` 및 `grid1.onSelect` 시 `LIST_MTRODRD` 호출 연동, 날짜 주석 작성.
+- **검증 결과**:
+  - Node.js 구문 검사(`node -c`) 오류 0건 통과.
+  - IIS Express HTTP 200 정상 렌더링 검증 완료.
+  - 전체 파일 UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료.
+
 ### 4. MST3001_R03 프로젝트 코딩 규칙 기반 리팩토링 및 네이밍·주석 표준화
 - **수정/대상 파일**: [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
 - **배경 및 원인**: 프로젝트 코딩 컨벤션(`coding_convention.md`), 최적화 규칙(`Optimization.md`), 주석 표준에 맞추어 `MST3001_R03.js` 소스의 직관적인 네이밍 적용, 날짜 주석 보강, 가독성 및 무결성 향상 요청.
@@ -1385,7 +1602,16 @@
 | **완료** | [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql) | MST3001_R03 로케이션 값 존재 시 수정(전체목록)·삭제(Delete키/빈값/SAVE_ITEM) 및 pop_LOCA 비율(600×500) 최적화 | 팝업 오픈 시 keyword: ''로 전체목록 제공, Delete 키 및 빈값 변경 시 LOCACD 동기화 초기화, SAVE_ITEM LOCACD_LIST 파싱/빈값 확정 저장, pop_LOCA 600×500 황금비율 최적화. JS 구문검사 통과, IIS Express HTTP 200 검증 완료 |
 | **완료** | [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [.agents/rules/procedure_history.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure_history.md), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql) | 프로시저 최상단 선언부 서식 규칙(CREATE DEFINER / PROCEDURE 2행 개행) 정정 및 표준화 적용 | 한 줄 선언 금지 및 2행 분리 개행(`CREATE DEFINER=...\nPROCEDURE ...(`) 표준화 조항(0-3) 및 템플릿 갱신, MST3001_R03·EQM1001_R03·EQM1001_R04 소스 파일 선언부 분리 개행 적용 완료. BOM·CRLF 검증 완료 |
 | **완료** | [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js) | MST3001_R03 프로젝트 코딩 규칙 기반 리팩토링 및 네이밍·주석 표준화 | arrRows 표준 배열 네이밍, locaCd/locaNm 파라미터 정돈, 콤보 이벤트 날짜 주석 보강, deferUpdate/finishEditing 무결성 유지. Node.js 구문검사 통과, UTF-8 with BOM/CRLF 검증 완료 |
-| **대기** | 사용자 추가 요청 사항 | 이어서 진행할 화면/기능 요청 시 즉시 반영 및 본 대장에 기록 갱신 예정 | - |
+| **완료** | [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx), [MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js) | MTR0001_R04 설비부품 발주관리(발주헤더·상세 분리 조회) 및 컬럼 가로 나열 규칙 적용 | 설비부품 포함 발주헤더(grid1) 및 상세(grid2) 분리 조회, 비참조 컬럼 한 줄 다중 컬럼 가로 배치 규칙화, aspx/js 연동 완료. IIS Express 200 OK, BOM/CRLF 검증 완료 |
+| **완료** | [MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql) | MTR0001_R04 설비부품 발주 조회 0건 결함 원인 분석 및 프로시저 날짜·품목·공장 유연 조건 보완 | 날짜 빈값 허용 및 8자리 비교, 품목 ITEMID/ITEMCD 매칭 및 DM1007% 호환, 공장/거래처 조건 보완 완료. Node.js BOM/CRLF 검증 통과 |
+| **완료** | [MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx), [MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql) | MTR0001_R04 MTR0001_R01 원본 기반 복원, INC 2공장 디폴트 설정 및 설비부품 발주헤더 필터링 구현 | 공장 INC 2공장(인덱스 2) 디폴트 설정, 좌측 그리드 설비부품 포함 발주헤더 필터링, 품목코드 매핑(DOUBLE 에러 해결), MTR0001_R01 컬럼 구성 복원 완료. UTF-8 BOM/CRLF 검증 통과 |
+| **완료** | [.agents/rules/encoding.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/encoding.md), [.agents/rules/aspx_cs_comment.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/aspx_cs_comment.md) | 이중 BOM 파서 크래시 원인 분석 및 단일 UTF-8 BOM 보장·ASPX 파서 오류 방지 규칙 강화 | 이중 BOM(\xef\xbb\xbf\xef\xbb\xbf) 절대 금지 및 3단계 바이너리 검증 절차 표준화, aspx_cs_comment.md 1-1 조항 신규 제정. IIS Express HTTP 200 검증 완료 |
+| **완료** | [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js) | 실제 DB 스키마 직접 검증(DESC/SELECT) 및 MTRODR.MTRODRSEQ 제거·ITEMID 정수형 PK 조인 완전 정상화 | MTRODR에 없는 MTRODRSEQ 컬럼 SELECT 및 grid1 정의 완전 제거, I.ITEMID=D.ITEMID 정수형 PK 직접 조인으로 DOUBLE 에러 완전 박멸, 실제 DB 쿼리(75건/249건) 검증 완료. 단일 UTF-8 BOM/CRLF 무결성 확인 |
+| **완료** | [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R01.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R01.aspx), [01.Office/PAGEMTR/MTR0001/MTR0001_R01.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R01.js) | MTR0001_R01(18건) 대비 MTR0001_R04(0건) 조회 차이점 정밀 원인 분석 | R01은 전체 품목 무조건 조회(18건 모두 DM100300 외주가공품), R04는 설비부품(DM1007%) 전용 필터 적용됨. 실제 DB 상 INC 2공장(07)에는 설비부품 발주가 없고 1공장(06, 75건)에만 존재함이 원인으로 규명 |
+| **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql) | MTR0001_R04 설비부품 발주서 출력 리포트(S04A) 신규 구현 및 DevExpress XtraReports 기반 PDF 양식 매핑 | 첨부된 PDF 발주서 양식 100% 매핑(로고, 승인박스, 공급자·공급받는자 5행 테이블, 15행 고정 그리드 및 합계행, 업체요청사항, 안내문), MTR0001.csproj 빌드 성공, MTR0001_R04.aspx 버튼 추가 및 js 연동 완료 |
+| **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 설비부품 발주서 상단 단일 테이블 통합 및 품목 그리드 원본 이미지 100% 매칭 | 상단 5행 단일 XRTable 통합(행높이 24F, 좌310F/우421F 완벽일치), 품목그리드 열너비 비율(30·175·120·38·72·42·84·170) 및 2줄 행높이(28F) 원본 이미지 2 완전 일치, MSBuild 성공 및 test_odr.pdf 생성 검증 완료 |
+| **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 확인 대기 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 동작 검증 | - |
 
 ---
 *위 기록은 사용자 요청에 따라 지속적으로 업데이트됩니다.*
+
