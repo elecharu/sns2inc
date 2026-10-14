@@ -31,8 +31,8 @@
      - 그리드 생성 직후 DOM이 확실히 존재하는 시점에 순수 DOM 캡처링 이벤트로 Delete 키(46)를 최우선 가로챔.
      - `grid.selection`의 `topRow`~`bottomRow` 및 `leftCol`~`rightCol` 범위를 판별하여, 로케이션 관련 컬럼(`LOCACD`, `LOCANM`)이 포함된 경우 `SetLocaRows(top, bottom, '', '')`를 즉각 실행.
      - 로케이션 단독 선택 시 `e.preventDefault()`로 불필요한 기본 이벤트 차단, 다중 컬럼 선택 시 타 컬럼 삭제 흐름과 공존 처리.
-  2. **`GetCheckedRows` 내 2차 정합성 방어 로직 추가**:
-     - 저장 전 또는 체크 검사 시 `LOCACD`가 빈 값인데 `LOCANM`이 남아있는 행이 발견되면 자동으로 `LOCANM = ''` 동기화 및 `isRowCheck = true` 처리.
+  2. **`GetCheckedRows` 순수성 유지 (과도한 중복 방어 로직 배제)**:
+     - 실시간 UI 캡처링 이벤트와 DB 프로시저에서 이미 완전 방어되므로, 공통 유틸 함수인 `GetCheckedRows` 내 임의 데이터 변조 로직을 배제하고 체크 행 수집 본연의 기능만 간결하게 유지.
 - **검증 결과**:
   - Node.js 구문 검사(`node -c`) 통과 (오류 0건).
   - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료.

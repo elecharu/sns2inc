@@ -1,4 +1,4 @@
-/// <reference path="../../Script/reference.js" />
+﻿/// <reference path="../../Script/reference.js" />
 
 ItsPage.Load = function () {
     ItsGrid.Create('grid1', { isCheckBoxGrid: true }, [
