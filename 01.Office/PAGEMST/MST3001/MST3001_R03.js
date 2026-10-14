@@ -1,4 +1,4 @@
-﻿/// <reference path="../../Script/reference.js" />
+/// <reference path="../../Script/reference.js" />
 
 ItsPage.Load = function () {
     ItsGrid.Create('grid1', { isCheckBoxGrid: true }, [
@@ -307,14 +307,6 @@ function GetCheckedRows(gridId, isCheckChange) {
         for (var i = 0; i < grid.rows.length; i++) {
             var row = grid.rows[i].dataItem;
             if (!row) continue;
-
-            if (gridId === 'grid1' && (row.LOCACD || '').trim() === '' && (row.LOCANM || '').trim() !== '') {
-                row.LOCANM = '';
-                ItsGrid.SetValue(gridId, i, 'LOCANM', '');
-                if (row.isRowCheck !== true && row.isRowCheck !== 'true') {
-                    ItsGrid.CheckRow(gridId, i);
-                }
-            }
 
             if (isCheckChange && (
                 (row.GRADE || '').trim() !== (row._ORG_GRADE || '').trim()
