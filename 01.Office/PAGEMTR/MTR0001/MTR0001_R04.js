@@ -75,27 +75,10 @@ ItsGrid.Event('grid1').onSelect = function (rowIndex) {
     ItsGrid.Get('grid2').autoSizeColumns();
 };
 
-// 2026-10-14 [설비부품 발주관리] 법인 선택 시 공장 연동 (INC 2공장(07) 디폴트)
-ItsCombo.Event('sdiv1_combo_COMPANYCD').onChanged = function (value) {
-    ItsCombo.SetRef01('sdiv1_combo_FACTORYCD', value);
-    ItsCombo.SetValueByIndex('sdiv1_combo_FACTORYCD', 2);
-    ItsCombo.SetValue('sdiv1_combo_FACTORYCD', '07');
-};
-
-// 2026-10-14 [상단 검색영역] 선택된 발주헤더의 설비부품 발주서 PDF 리포트(S04A) 팝업 출력
+// 2026-10-15 [상단 검색영역] 선택된 발주헤더의 설비부품 발주서 PDF 리포트(S04A) 팝업 출력 (발주 선택 검증 프로시저 위임)
 ItsButton.Event('btn_PRINT').onClick = function () {
 
-    var rowIndex = ItsGrid.GetCurrentIndex('grid1');
-    if (rowIndex < 0) {
-        ItsMsg.Toast('출력할 발주를 선택해주세요.');
-        return;
-    }
-
-    var mtrOdrKey = ItsGrid.GetValue('grid1', rowIndex, 'MTRODRKEY');
-    if (!mtrOdrKey) {
-        ItsMsg.Toast('출력할 발주를 선택해주세요.');
-        return;
-    }
+    var mtrOdrKey = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'MTRODRKEY') || '';
 
     var rpt = new ItsXtraRpt('MTR0001_S04A');
     rpt.AddParam('MTRODRKEY', mtrOdrKey);

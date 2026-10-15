@@ -19,12 +19,8 @@ namespace XtraRpt
         {
             InitializeComponent();
 
-            // 2026-10-14 발주번호 파라미터 취득 및 검증
+            // 2026-10-15 [설비부품 발주서] 발주번호 파라미터 취득 및 프로시저(MTR0001_R04 CALL_RPT) 데이터 조회 (검증 프로시저 위임)
             string mtrOdrKey = param.ContainsKey("MTRODRKEY") ? param["MTRODRKEY"] : "";
-            if (string.IsNullOrEmpty(mtrOdrKey))
-            {
-                throw new InvalidOperationException("발주번호를 선택해주세요.");
-            }
 
             ItsMaria maria = CreateMaria("MTR0001_R04", "CALL_RPT");
             maria.AddParam("MTRODRKEY", mtrOdrKey);

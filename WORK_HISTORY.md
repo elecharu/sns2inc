@@ -17,15 +17,32 @@
 
 ## 🕒 2026-10-15 (목) 작업 내역
 
-### 8. MTR0001_R04 프로시저 품목 단위(ITEMUNIT) 콤마 누락 문법 오류 수정 및 조회조건 간소화
-- **수정/대상 파일**: [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql)
-- **배경 및 원인**: 프로시저 내부 `CALL_RPT` 분기에서 `ITEMUNIT` 컬럼 정의 뒤 콤마(`,`)가 누락되어 구문 분석 오류(SQL Syntax Error)가 발생한 문제 해결 요청
+### 2. MTR0001_R04 발주서 출력 검증 로직 프로시저(MTR0001_R04 CALL_RPT) 이동 및 화면 스크립트 간결화
+- **수정/대상 파일**: [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
+- **배경 및 원인**: 화면(JS) 및 C# 리포트 비하인드에서 수행하던 발주번호 선택 유무 검증 로직을 DB 프로시저(CALL_RPT) 내부로 이동하여 검증 단일화 및 화면 스크립트 간결화 요청
 - **작업 상세 내용**:
-  1. `CALL_RPT` Table 1 품목 디테일 SELECT 절의 `ITEMUNIT` 뒤 누락된 콤마(`,`) 추가하여 문법 오류 즉시 해결
-  2. 사용자의 소스코드 선호 스타일(공장 사업장 연결, COALESCE 방어 처리, MSTEMP OR 조인 등) 원본 보존
-  3. `LIST_MTRODR` 날짜 파라미터 직접 비교(`>= $SDATE`, `<= $EDATE`) 및 `ITEMUNIT` 1행 단일화 유지
+  - 1) MTR0001_R04.sql CALL_RPT 분기 상단에 IF COALESCE(, '') = '' THEN CALL COMERR('출력할 발주를 선택해주세요.'); LEAVE PROC; END IF; 추가 2) MTR0001_R04.js btn_PRINT 클릭 이벤트 내 rowIndex / !mtrOdrKey 다중 if 분기 제거하고 mtrOdrKey 취득 후 rpt.CallPop() 직접 호출 3) S04A.cs 파라미터 검증 throw 제거 후 maria.CallProc()로 프로시저 에러 직접 전파 4) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 MTR0001.exe 배포 완료
+- **검증 결과**: MSBuild 컴파일 통과 (0 Error, 0 Warning), 전 파일 단일 UTF-8 BOM(\xef\xbb\xbf) 및 CRLF 개행 무결성 확인
+
+
+### 2. MTR0001_R04 프로시저 Table 0 쿼리 종료 세미콜론(;) 누락 구문 오류 해결
+- **수정/대상 파일**: [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql)
+- **배경 및 원인**: 과잉 방어코드 정리 시 LIMIT 1; 제거 과정에서 WHERE 절 뒤 세미콜론(;)이 함께 탈락하여 Table 1 SELECT 문과 연결되며 SQL 문법 오류(SQL Error [1064]) 발생
+- **작업 상세 내용**:
+  - CALL_RPT 분기 Table 0(발주 헤더 쿼리) WHERE 절 끝에 세미콜론(WHERE MTRODR.MTRODRKEY = ;) 정상 반영, 단일 UTF-8 with BOM 및 Windows CRLF 개행 무결성 확인 및 정규화 완료
+- **검증 결과**: 프로시저 전체 문법 및 세미콜론 종결자 무결성 확인, 단일 UTF-8 BOM(\xef\xbb\xbf) 및 CRLF 개행 검증 통과
+
+
+### 8. MTR0001_R04 프로시저 MTR0001_R01 원본 기반 쿼리 표준화 및 과잉 방어코드 전면 제거
+- **수정/대상 파일**: [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql)
+- **배경 및 원인**: 기존 `MTR0001_R01` 기반의 깔끔하고 직관적인 쿼리 스타일로 통일하고, 과도하게 중첩된 방어 코드(불필요한 SET문, 텍스트 컬럼 COALESCE 남발, 복잡한 인라인 중첩, OR 조인 조건) 전면 제거 요청
+- **작업 상세 내용**:
+  1. `LIST_MTRODR`: 상단 4개 SET 초기화문 제거 및 WHERE 절 단일 COALESCE 인라인 조건화, 복잡한 사원 CASE WHEN을 `COALESCE(MSTEMP.EMPNM, NULLIF(MTRODR.ODREMPID, 0), '')`로 직관화, MSTEMP 조인 단일화(`EMPCD = CAST(ODREMPID AS CHAR)`)
+  2. `LIST_MTRODRD`: 불필요한 `IF KEY = '' LEAVE` 방어문 및 `LEFT JOIN` 제거, R01과 동일하게 `INNER JOIN MSTITEM` 및 `ITEMCG LIKE 'DM1007%'`로 간결화
+  3. `CALL_RPT`: 불필요한 검증문 제거, Table 0 11개 텍스트 컬럼의 과도한 `COALESCE(..., '')` 전면 제거, `EMPINFO`를 5줄 간결 구조로 단순화, Table 1의 불필요한 COALESCE 제거 및 단위 1줄 단일화(`COALESCE(GPCD('DM150', MSTITEM.ITEMUNIT), 'EA')`)
 - **검증 결과**:
-  - 프로시저 문법 오류 해소 및 파라미터 규격(8개)·반환 컬럼명 일치 확인
+  - 프로시저 파라미터 규격(8개) 및 각 분기 반환 컬럼명·별칭 100% 일치 확인
+  - 150줄 ➔ 124줄로 압축 및 R01 원본 수준의 가독성 확보
   - `git diff` 검증 통과 및 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 확인
   - 실제 서버 DB 미반영 (사용자 DBeaver 루틴 에디터 직접 반영 대상)
 
@@ -1867,7 +1884,9 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
-| **완료** | [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql) | MTR0001_R04 프로시저 품목 단위(ITEMUNIT) 콤마 누락 문법 오류 수정 및 조회조건 간소화 | CALL_RPT Table 1 SELECT 절 ITEMUNIT 뒤 누락 콤마(,) 추가 완료, 원본 코드 스타일 보존, BOM/CRLF 검증 완료 (실서버 DBeaver 컴파일 대상) |
+| **대기** | [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | 검증 로직 이동 반영된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | MSBuild 컴파일 통과 (0 Error, 0 Warning), 전 파일 단일 UTF-8 BOM(\xef\xbb\xbf) 및 CRLF 개행 무결성 확인 |
+| **대기** | [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql) | CALL_RPT 분기 세미콜론 누락 수정본(MTR0001_R04.sql) 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | 프로시저 전체 문법 및 세미콜론 종결자 무결성 확인, 단일 UTF-8 BOM(\xef\xbb\xbf) 및 CRLF 개행 검증 통과 |
+| **완료** | [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql) | MTR0001_R04 프로시저 MTR0001_R01 원본 기반 쿼리 표준화 및 과잉 방어코드 전면 제거 | 4개 SET문 제거, Table 0 11개 텍스트 컬럼 COALESCE 제거, EMPINFO 5줄 단순화, Table 1 INNER JOIN 및 단위 1줄 단일화, BOM/CRLF 검증 완료 (실서버 DBeaver 컴파일 대상) |
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 발주승인완료 일자 바인딩(MTRODRDATE) 수정에 따른 MSBuild 리빌드 및 최신 바이너리 배포 | MSBuild Release 리빌드 성공(0 Error, 0 Warning), MTR0001.exe 최신 배포 완료(13:07:11), 단일 UTF-8 BOM/CRLF 무결성 검증 완료 |
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 사용자 직접 수정 소스코드 검증, MSBuild 리빌드 및 최신 바이너리(01.Office/Reports/MTR0001.exe) 배포 적용 | MSBuild Release 리빌드 성공(0 Error, 0 Warning), MTR0001.exe 최신 배포 완료(11:53:42), 단일 UTF-8 BOM/CRLF 무결성 검증 완료 |
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 발주서 비고 및 하단 3줄 안내문 볼드(Bold) 서식 반영, MSBuild 빌드 및 바이너리 재배포 | MSBuild Release 컴파일 성공(에러 0), 01.Office/Reports/MTR0001.exe 최신 배포 완료, 단일 UTF-8 BOM/CRLF 무결성 검증 완료 |
