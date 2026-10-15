@@ -30,7 +30,7 @@
                     <its:Column Header="입고등록번호" FieldName="MTRINKEY" ALGIN="CENTER" Visible="False"/>
                     <its:Column Header="거래처" FieldName="CUSTCD" ALGIN="CENTER" GPCD="CUSTCD"/>
                     <its:Column Header="품목코드" FieldName="ITEMCD" ALGIN="CENTER"/>
-                    <its:Column Header="품명" FieldName="ITEMNM" ALGIN="CENTER"/>
+                    <its:Column Header="품명" FieldName="ITEMNM" />
                     <its:Column Header="입고수량" FieldName="INQTY" ALGIN="CENTER" DecimalPoint="0"/>
                     <its:Column Header="로트별 상세정보" FieldName="INDATE" ALGIN="CENTER" CellType="Button" ButtonText="보기" CommandName="LIST_MTRINLOT_LOTKEY"/>
                     <its:Column Header="입고취소" FieldName="INDATE" ALGIN="CENTER" CellType="Button" ButtonText="취소" CommandName="DEL_MTRIN"/>
@@ -111,6 +111,7 @@
                         <its:Column Width="130" Header="품명" FieldName="ITEMNM"/>
                         <its:Column Width="130" Header="규격" FieldName="ITEMSPEC"/>
                         <its:Column Width="80" DecimalPoint="0" Header="발주수량" FieldName="ODRQTY"/>
+                        <its:Column Width="80" DecimalPoint="0" Header="입고수량" FieldName="INQTY"/>
                         <its:Column Width="80" Header="납기일자" FieldName="EXPDATE" ALGIN="center"/>
                         <its:Column Width="100" Header="발주키" FieldName="MTRODRKEY" Visible="False"/>
                         <its:Column Width="100" Header="발주상세키" FieldName="MTRODRSEQ" Visible="False"/>

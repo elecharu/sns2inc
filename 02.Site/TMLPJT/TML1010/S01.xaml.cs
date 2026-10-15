@@ -89,6 +89,16 @@ namespace TML1010
             }
             else if (commandName == "DEL_INVOICE")
             {
+                ShowMessageBox("DEL_INVOICE", "납품 취소 하시겠습니까?");
+            }
+        }
+        
+        public override void EventMessageResult(string commandName)
+        {
+            base.EventMessageResult(commandName);
+
+            if (commandName == "DEL_INVOICE")
+            {
                 ItsMaria.Set("TML1010_S01", "DEL_INVOICE");
 
                 for (int i = 0; i < MODEL_G1.Rows.Count; i++)
@@ -110,11 +120,6 @@ namespace TML1010
 
                 EventCommand("LIST_INVOICE");
             }
-        }
-        
-        public override void EventMessageResult(string commandName)
-        {
-            base.EventMessageResult(commandName);
         }
 
         private void Text_KeyDown(object sender, KeyEventArgs e)

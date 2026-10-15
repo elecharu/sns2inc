@@ -44,74 +44,7 @@ namespace TML1010
             MODEL_A1.InitData();
 
             MODEL_G1.Binding(GRID_G1);
-            MODEL_G1.EventValueChanged += MODEL_G1_EventValueChanged;
-
             MODEL_G2.Binding(GRID_G2);
-        }
-
-        private void MODEL_G1_EventValueChanged(int rowIndex, string fieldName)
-        {
-            if (fieldName == "LOTQTY")
-            {
-                decimal lotQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "LOTQTY"));
-                decimal okQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "OKQTY"));
-                decimal carInQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "CARINQTY"));
-
-                if (okQty < lotQty)
-                {
-                    ShowMessageBox("", "출하수량이 출하가능량을 초과하였습니다.");
-                    MODEL_G1.SetValue(rowIndex, "LOTQTY", 0);
-                    return;
-                }
-
-                if (lotQty < carInQty)
-                {
-                    ShowMessageBox("", "적입량이 출하수량을 초과하였습니다.");
-                    MODEL_G1.SetValue(rowIndex, "CARINQTY", 0);
-                    return;
-                }
-
-                CALCUL_LOTUNIT(rowIndex);
-            }
-            else if (fieldName == "CARINQTY")
-            {
-                decimal lotQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "LOTQTY"));
-                decimal carInQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "CARINQTY"));
-
-                if (lotQty < carInQty)
-                {
-                    ShowMessageBox("", "적입량이 출하수량을 초과하였습니다.");
-                    MODEL_G1.SetValue(rowIndex, "CARINQTY", 0);
-                    return;
-                }
-
-                CALCUL_LOTUNIT(rowIndex);
-            }
-            else if (fieldName == "ISCHECKED")
-            {
-                CALCUL_LOTUNIT(rowIndex);
-            }
-        }
-
-        // LOT 개수 계산
-        public void CALCUL_LOTUNIT(int rowIndex)
-        {
-            decimal CARINQTY = MODEL_G1.GetDecimal(rowIndex, "CARINQTY");
-            decimal LOTQTY = MODEL_G1.GetDecimal(rowIndex, "LOTQTY");
-            decimal LOTUNIT = 0;
-            if (CARINQTY != 0)
-            {
-                LOTUNIT = LOTQTY / CARINQTY;
-            }
-
-            if (CARINQTY != 0 && LOTQTY != 0)
-            {
-                MODEL_G1.SetValue(rowIndex, "LOTUNIT", LOTUNIT);
-            }
-            else
-            {
-                MODEL_G1.SetValue(rowIndex, "LOTUNIT", 0);
-            }
         }
 
         public override void EventPageLoaded()
@@ -210,29 +143,6 @@ namespace TML1010
                 ShowMessageBox(commandName, "이동 취소 하시겠습니까??");
                 return;
             }
-            else if (commandName == "POP_MTRCUSTLOT")
-            {
-                ItsMaria.Set("TML1010_R01", "LIST_MTRCUSTLOT");
-                ItsMaria.AddOne("MTRODRKEY", MODEL_G1.GetText(MODEL_G1.CurrentIndex, "MTRODRKEY"));
-                ItsMaria.AddOne("MTRODRSEQ", MODEL_G1.GetText(MODEL_G1.CurrentIndex, "MTRODRSEQ"));
-
-                DataSet ds = ItsMaria.Call();
-
-                if (ItsMaria.IsError)
-                {
-                    ShowMessageBox("", ItsMaria.ErrMessage);
-                    return;
-                }
-
-                MODEL_A1.SetValue("MTRODRKEY", ds.Tables[0].Rows[0]["MTRODRKEY"]);
-                MODEL_A1.SetValue("MTRODRSEQ", ds.Tables[0].Rows[0]["MTRODRSEQ"]);
-                MODEL_A1.SetValue("OUTDATE", ds.Tables[0].Rows[0]["PRDDATE"]);
-                MODEL_A1.SetValue("OUTCUSTCD", ds.Tables[0].Rows[0]["OUTCUSTCD"]);
-                MODEL_A1.SetValue("INCUSTCD", ds.Tables[0].Rows[0]["INCUSTCD"]);
-                MODEL_G2.SetData(ds.Tables[0]);
-
-                PANEL_A1.Show();
-            }
         }
 
         public override void EventMessageResult(string commandName)
@@ -270,23 +180,8 @@ namespace TML1010
                 {
                     if (MODEL_G1.IsChecked(i))
                     {
-                        if (MODEL_G1.GetDecimal(i, "LOTQTY") == 0)
-                        {
-                            ShowMessageBox("", "출하수량을 입력하세요. (행 : " + (i + 1) + ")");
-                            return;
-                        }
-
-                        if (MODEL_G1.GetDecimal(i, "CARINQTY") == 0)
-                        {
-                            ShowMessageBox("", "적입량을 입력하세요. (행 : " + (i + 1) + ")");
-                            return;
-                        }
-
-                        ItsMaria.AddList("ITEMID_LIST", MODEL_G1.GetText(i, "ITEMID"));
+                        ItsMaria.AddList("LOTKEY_LIST", MODEL_G1.GetText(i, "LOTKEY"));
                         ItsMaria.AddList("LOTQTY_LIST", MODEL_G1.GetText(i, "LOTQTY"));
-                        ItsMaria.AddList("LOTTP_LIST", MODEL_G1.GetText(i, "LOTTP"));
-                        ItsMaria.AddList("CARINQTY_LIST", MODEL_G1.GetText(i, "CARINQTY"));
-                        ItsMaria.AddList("LOTUNIT_LIST", MODEL_G1.GetText(i, "LOTUNIT"));
                         ItsMaria.AddList("WARECD_LIST", MODEL_G1.GetText(i, "WARECD"));
                     }
                 }
@@ -302,6 +197,7 @@ namespace TML1010
                 MODEL_A1.SetValue("INVOICEKEY", ds.Tables[0].Rows[0]["INVOICEKEY"]);
                 MODEL_A1.SetValue("OUTDATE", ds.Tables[0].Rows[0]["MOVEDATE"]);
                 MODEL_A1.SetValue("OUTCUSTCD", ds.Tables[0].Rows[0]["OUTCUSTCD"]);
+                MODEL_A1.SetValue("INDATE", ds.Tables[0].Rows[0]["INDATE"]);
                 MODEL_A1.SetValue("INCUSTCD", ds.Tables[0].Rows[0]["INCUSTCD"]);
                 MODEL_G2.SetData(ds.Tables[0]);
 

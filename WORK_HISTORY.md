@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-10-14
+> **최종 갱신일**: 2026-10-15
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -14,6 +14,25 @@
 4. **대화 기록 및 불러오기 연계**: 모든 사용자 요청 및 작업 결과는 본 문서에 실시간 동기화되어, 새 세션이나 나중에 작업 재개 시 "불러오기"를 통해 이전 맥락을 100% 이어받습니다.
 
 ---
+
+## 🕒 2026-10-15 (목) 작업 내역
+
+### 2. 사용 중단 컬럼의 JS·SQL·프로시저 최종 검증 규칙 추가
+- **수정/대상 파일**: .agents/rules/validation.md
+- **배경 및 원인**: 읽기 전용 또는 사용 중단 컬럼의 전송·분해·저장 코드가 잔존하여 다른 데이터 초기화 등 문제가 재발하지 않도록 최종 검증 단계 규칙화 요청
+- **작업 상세 내용**:
+  - validation.md 5절에 사용 중단 범위와 실제 DB 기본값 확인, 호출 경로 전체 추적, 주석 코드 포함 제거, 제외값 의존 조건 제거, 파라미터 등록 일치, 기존값 보존·신규 기본값·팝업 동작 검증, 완료 전 재검색 및 검증 범위 기록 8항 추가. 조회·별도 팝업 사용처 유지 이유 명시 및 실서버 변경 금지 규칙 연결
+- **검증 결과**: 기존 1~4절 내용 유지 및 변경 diff 확인. 단일 UTF-8 BOM/CRLF 확인. 문서 변경만 수행하여 업무 소스·DB 테스트 및 실제 서버 반영 없음
+
+
+### 1. MST3001_R03 조회 전용 현재고·로케이션명 저장 경로 제거
+- **수정/대상 파일**: 01.Office/PAGEMST/MST3001/MST3001_R03.js, 05.Procedure/MES_SNS2_MST3001_R03.sql, 05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql
+- **배경 및 원인**: 현재고와 메인 로케이션명은 수정 불가이나 주석 처리된 전송 코드 및 프로시저 입력·분해·저장 의존이 잔존. 이름 미전송 시 SAVE_ITEM이 로케이션 코드까지 초기화하는 조건 확인
+- **작업 상세 내용**:
+  - 메인 저장은 ITEMID/GRADE/SAFEQTY/LOCACD 4종 목록만 전송. LOTQTY_LIST 입력·지역변수·분해·신규 INSERT 대입 제거, LOCANM 저장 및 변경비교·원본 보관·직접 수정 분기 제거. LOCANM readonly 명시, Delete는 코드 선택 범위만 처리. SAVE_ITEM의 이름 빈값에 의존한 코드 초기화 제거. LOCANM_LIST와 관련 변수는 로케이션 기준정보 팝업 CRUD용으로 유지. 파라미터 14→13 및 등록 SQL 설명 갱신
+- **검증 결과**: 실서버 SELECT로 3개 테이블 112컬럼 확인, LOTQTY 기본값0 확인. 공통 ItsGrid 실제 소스를 사용한 Node VM 검증14건 및 네트워크 차단 MariaDB10.2.44에서 컴파일·현재고보존·코드단독저장·신규기본값·팝업CRUD·등록13건 검증13건, 총27건 통과. JS문법 및 단일BOM/CRLF 확인. 실서버 DDL/DML 및 브라우저 E2E 미실행
+---
+
 
 ## 🕒 2026-10-14 (수) 작업 내역
 
@@ -1731,6 +1750,8 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | .agents/rules/validation.md | 사용 중단 컬럼 관련 후속 작업부터 validation.md 5절에 따라 호출·저장·파라미터 등록·최종 검색을 검증 | 기존 1~4절 내용 유지 및 변경 diff 확인. 단일 UTF-8 BOM/CRLF 확인. 문서 변경만 수행하여 업무 소스·DB 테스트 및 실제 서버 반영 없음 |
+| **완료** | 01.Office/PAGEMST/MST3001/MST3001_R03.js, 05.Procedure/MES_SNS2_MST3001_R03.sql, 05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql | MST3001_R03 전용 프로시저를 DBeaver 루틴 에디터에서 저장한 다음 SYSTEM_PARAMETERS 등록 SQL 실행 필요(13개). JS 함께 적용. 실제 서버 반영 및 운영 화면 검증은 미실행 | 실서버 SELECT로 3개 테이블 112컬럼 확인, LOTQTY 기본값0 확인. 공통 ItsGrid 실제 소스를 사용한 Node VM 검증14건 및 네트워크 차단 MariaDB10.2.44에서 컴파일·현재고보존·코드단독저장·신규기본값·팝업CRUD·등록13건 검증13건, 총27건 통과. JS문법 및 단일BOM/CRLF 확인. 실서버 DDL/DML 및 브라우저 E2E 미실행 |
 | **완료** | 01.Office/PAGEMST/MST3001/MST3001_R03.js | MST3001_R03.js 로컬 반영 완료. 실제 서버 배포 및 운영 CRUD 검증은 미실행, SQL·공통 컴포넌트·ASPX 버전 변경 없음 | 실제 ItsGrid 소스와 Wijmo 2018·2020 라이브러리를 사용한 격리 Edge 브라우저 17개 시나리오씩 34개 통과. 1000행 1건 선택 저장 시 GetValue 호출 10006회에서 0회. 브라우저 테스트의 DB·팝업 연동은 대역이며 운영 화면 및 DB 실처리는 미실행. Node 문법과 BOM/CRLF 검증 통과 |
 | **완료** | [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql), [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js) | MST3001_R03 설비부품 재고·로케이션 컬럼 추가 및 로케이션 기준정보 관리 팝업 CRUD 구현 완료 (실제 DB 프로시저 및 시스템 파라미터 반영은 사용자 진행) | node -c 구문검사 통과. IIS Express HTTP 200 OK 렌더링 검증 완료. MariaDB SELECT 모의 쿼리 무결성 확인. 전 파일 UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료. |
 | **완료** | 05.Procedure/MES_SNS2_MTR0001_R04.sql, 05.Procedure/MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql, 01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx, 01.Office/PAGEMTR/MTR0001/MTR0001_R04.js | 로컬 페이지·전용프로시저 수정 완료. 프로시저 저장→파라미터등록SQL(13개)→ASPX/JS 반영 필요. 실제 ERP 수신은 별도 ERP로그 트리거 연결 수정 전 오류 가능 | 선 검증 후 반영. 실제 DB SELECT 3조회: 설비자재181건/고유발주상세181건, ERP0건, MES181건. 실제 스키마 격리 MariaDB10.2.44에서 원래ITEMTP 오류 재현·필터·ERP원본수신·부분/전체수신·트리거로그 모의·0값갱신·입고처·삭제보호·실패롤백·메타등록19건, 실제JS VM10건 합계29건 통과. BOM/CRLF·node문법·원본해시 확인. 실제 ERP 로그테이블은 IF_MES_SNS에만 있고 FAC2 트리거의 무스키마 참조가 잘못됨; 사용자가 별도 처리 선택. 실제 수신/실브라우저/서버DDL-DML·배포 미수행 |

@@ -147,6 +147,7 @@ namespace TML1020
                 }
 
                 MODEL_G1.SetData(ds.Tables[0]);
+                (GRID_G1.View as TableView).BestFitColumns();
             }
             else if (commandName == "LIST_MTRINLOT_LOTKEY")
             {
@@ -182,6 +183,7 @@ namespace TML1020
                 }
 
                 MODEL_G3.SetData(ds.Tables[0]);
+                (GRID_G3.View as TableView).BestFitColumns();
             }
             else if (commandName == "ADD_MTRINLOT")
             {

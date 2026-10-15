@@ -13,7 +13,6 @@ PROCEDURE `MES_SNS2`.`MST3001_R03`(
   IN $ITEMID_LIST     MEDIUMTEXT,
   IN $GRADE_LIST      MEDIUMTEXT,
   IN $SAFEQTY_LIST    MEDIUMTEXT,
-  IN $LOTQTY_LIST     MEDIUMTEXT,
   IN $LOCACD_LIST     VARCHAR(2000),
   IN $LOCANM_LIST     VARCHAR(4000),
   IN $OLD_LOCACD_LIST VARCHAR(2000),
@@ -26,7 +25,6 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$ITEMID     VARCHAR(100);
   DECLARE _$GRADE      VARCHAR(100);
   DECLARE _$SAFEQTY    VARCHAR(100);
-  DECLARE _$LOTQTY     VARCHAR(100);
   DECLARE _$LOCACD     VARCHAR(100);
   DECLARE _$LOCANM     VARCHAR(100);
   DECLARE _$OLD_LOCACD VARCHAR(100);
@@ -91,7 +89,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 
   -- *****************************************************************************
 
-  WHEN 'SAVE_ITEM' THEN -- 설비부품 안전재고·현재고·로케이션 저장
+  WHEN 'SAVE_ITEM' THEN -- 설비부품 등급·안전재고·로케이션코드 저장
     
     IF TRIM(COALESCE($ITEMID_LIST, '')) = '' THEN
       CALL COMERR('저장할 품목을 선택해주세요.');
@@ -106,23 +104,14 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       CALL COMSPLIT($ITEMID_LIST, _$ITEMID);
       CALL COMSPLIT($GRADE_LIST, _$GRADE);
       CALL COMSPLIT($SAFEQTY_LIST, _$SAFEQTY);
-      CALL COMSPLIT($LOTQTY_LIST, _$LOTQTY);
       CALL COMSPLIT($LOCACD_LIST, _$LOCACD);
-      CALL COMSPLIT($LOCANM_LIST, _$LOCANM);
 
       SET _$ITEMID  = TRIM(COALESCE(_$ITEMID, ''));
       SET _$GRADE   = TRIM(COALESCE(_$GRADE, ''));
       SET _$SAFEQTY = TRIM(COALESCE(_$SAFEQTY, '0'));
-      SET _$LOTQTY  = TRIM(COALESCE(_$LOTQTY, '0'));
       SET _$LOCACD  = TRIM(COALESCE(_$LOCACD, ''));
-      SET _$LOCANM  = TRIM(COALESCE(_$LOCANM, ''));
 
       IF _$ITEMID <> '' THEN
-        -- 로케이션 코드 또는 로케이션 명이 비어있는 경우 로케이션 해제(삭제)
-        IF _$LOCACD = '' OR _$LOCANM = '' THEN
-          SET _$LOCACD = '';
-        END IF;
-
         IF EXISTS (SELECT 1 FROM MSTITEM_EQMPARTS WHERE FACTORYCD = $FACTORYCD AND ITEMID = CAST(_$ITEMID AS UNSIGNED) LIMIT 1) THEN
           UPDATE MSTITEM_EQMPARTS
           SET GRADE   = _$GRADE,
@@ -135,31 +124,12 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
             AND ITEMID = CAST(_$ITEMID AS UNSIGNED);
         ELSE
           INSERT INTO MSTITEM_EQMPARTS (
-            FACTORYCD,
-            ITEMID,
-            GRADE,
-            SAFEQTY,
-            LOTQTY,
-            LOCACD,
-            RTIME,
-            REMP,
-            RPRG,
-            MTIME,
-            MEMP,
-            MPRG
+            FACTORYCD, ITEMID, GRADE, SAFEQTY, LOCACD,
+            RTIME, REMP, RPRG, MTIME, MEMP, MPRG
           ) VALUES (
-            $FACTORYCD,
-            CAST(_$ITEMID AS UNSIGNED),
-            _$GRADE,
-            CAST(_$SAFEQTY AS DECIMAL(20, 8)),
-            CAST(_$LOTQTY AS DECIMAL(20, 8)),
-            _$LOCACD,
-            CALLTIME(),
-            CALLEMP(),
-            CALLPRG(),
-            '',
-            '',
-            ''
+            $FACTORYCD, CAST(_$ITEMID AS UNSIGNED), _$GRADE,
+            CAST(_$SAFEQTY AS DECIMAL(20, 8)), _$LOCACD,
+            CALLTIME(), CALLEMP(), CALLPRG(), '', '', ''
           );
         END IF;
       END IF;

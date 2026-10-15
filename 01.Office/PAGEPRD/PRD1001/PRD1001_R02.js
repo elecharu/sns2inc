@@ -177,7 +177,7 @@ ItsButton.EventSearch = function () {
         return;
     }
 
-    ItsGrid.SetStore('grid1', maria.store.YnToBool('APPYN').YnToBool('STOCKYN'));
+    ItsGrid.SetStore('grid1', maria.store);
     //ItsGrid.Get('grid1').autoSizeColumns();    
 
     ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));

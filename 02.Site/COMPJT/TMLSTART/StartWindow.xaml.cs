@@ -167,10 +167,10 @@ namespace TMLSTART
                 System.Diagnostics.Process Proc = new System.Diagnostics.Process();
 
                 // 협력사 LOGIN 시
-                //Proc.StartInfo.FileName = localPath + "ITSLOGIN.exe";
+                Proc.StartInfo.FileName = localPath + "ITSLOGIN.exe";
 
                 // 사내 LOGIN 시 (사내는 LOGIN 이 없어서 TMLMAIN.EXE 가 바로 실행됨)
-                Proc.StartInfo.FileName = localPath + "TMLMAIN.exe";
+                //Proc.StartInfo.FileName = localPath + "TMLMAIN.exe";
 
                 Proc.Start();
 

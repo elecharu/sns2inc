@@ -43,15 +43,14 @@ ItsPage.Load = function () {
                 if (!sel || sel.row < 0) return;
 
                 var cdIdx = ItsGrid.$colIndex('grid1', 'LOCACD');
-                var nmIdx = ItsGrid.$colIndex('grid1', 'LOCANM');
                 var left = sel.leftCol !== undefined ? sel.leftCol : Math.min(sel.col, sel.col2);
                 var right = sel.rightCol !== undefined ? sel.rightCol : Math.max(sel.col, sel.col2);
 
-                if ((left <= cdIdx && cdIdx <= right) || (left <= nmIdx && nmIdx <= right)) {
+                if (left <= cdIdx && cdIdx <= right) {
                     var top = sel.topRow !== undefined ? sel.topRow : Math.min(sel.row, sel.row2);
                     var bottom = sel.bottomRow !== undefined ? sel.bottomRow : Math.max(sel.row, sel.row2);
                     SetLocaRows(top, bottom, '', '');
-                    if (left >= Math.min(cdIdx, nmIdx) && right <= Math.max(cdIdx, nmIdx)) {
+                    if (left === cdIdx && right === cdIdx) {
                         e.preventDefault();
                     }
                 }
@@ -62,24 +61,12 @@ ItsPage.Load = function () {
 
 // 2026-10-14 [설비부품정보] 로케이션 수정 또는 삭제 시 동기화
 ItsGrid.Event('grid1').onChanged = function (rowIndex, field, newValue, oldValue) {
-    if (rowIndex < 0 || newValue === oldValue) return;
-    var val = (newValue || '').toString().trim();
-    if (field === 'LOCACD') {
-        if (val === '') {
-            SetLoca(rowIndex, '', '');
-        } else {
-            ItsGrid.SetValue('grid1', rowIndex, 'LOCANM', '');
-            ItsGrid.CheckRow('grid1', rowIndex);
-            ItsGrid.Get('grid1').refresh();
-        }
-    } else if (field === 'LOCANM') {
-        if (val === '') {
-            SetLoca(rowIndex, '', '');
-        } else {
-            ItsGrid.SetValue('grid1', rowIndex, 'LOCACD', '');
-            ItsGrid.CheckRow('grid1', rowIndex);
-            ItsGrid.Get('grid1').refresh();
-        }
+    if (rowIndex < 0 || field !== 'LOCACD' || newValue === oldValue) return;
+    if ((newValue || '').toString().trim() === '') {
+        SetLoca(rowIndex, '', '');
+    } else {
+        ItsGrid.SetValue('grid1', rowIndex, 'LOCANM', '');
+        ItsGrid.CheckRow('grid1', rowIndex);
     }
 };
 
@@ -145,9 +132,7 @@ ItsButton.EventSearch = function () {
         var row = store.data[i];
         row._ORG_GRADE = row.GRADE;
         row._ORG_SAFEQTY = row.SAFEQTY;
-        row._ORG_LOTQTY = row.LOTQTY;
         row._ORG_LOCACD = row.LOCACD;
-        row._ORG_LOCANM = row.LOCANM;
     }
 
     ItsGrid.SetStore('grid1', store);
@@ -178,9 +163,7 @@ ItsButton.EventSave = function () {
             maria.AddList('ITEMID_LIST', (row.ITEMID || '').trim());
             maria.AddList('GRADE_LIST', (row.GRADE || '').trim());
             maria.AddList('SAFEQTY_LIST', parseFloat(row.SAFEQTY) || 0);
-            maria.AddList('LOTQTY_LIST', parseFloat(row.LOTQTY) || 0);
             maria.AddList('LOCACD_LIST', (row.LOCACD || '').trim());
-            maria.AddList('LOCANM_LIST', (row.LOCANM || '').trim());
         }
 
         maria.CallProc();
@@ -311,8 +294,7 @@ function GetCheckedRows(gridId, isCheckChange) {
             if (isCheckChange && (
                 (row.GRADE || '').trim() !== (row._ORG_GRADE || '').trim()
                 || (parseFloat(row.SAFEQTY) || 0) !== (parseFloat(row._ORG_SAFEQTY) || 0)
-                || (row.LOCACD || '').trim() !== (row._ORG_LOCACD || '').trim()
-                || (row.LOCANM || '').trim() !== (row._ORG_LOCANM || '').trim())) {
+                || (row.LOCACD || '').trim() !== (row._ORG_LOCACD || '').trim())) {
                 if (row.isRowCheck !== true && row.isRowCheck !== 'true') {
                     ItsGrid.CheckRow(gridId, i);
                 }

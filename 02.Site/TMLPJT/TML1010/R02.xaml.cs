@@ -173,7 +173,9 @@ namespace TML1010
                 {
                     if (MODEL_G1.IsChecked(i))
                     {
+                        ItsMaria.AddList("WARECD_LIST", MODEL_G1.GetValue(i, "WARECD"));
                         ItsMaria.AddList("LOTKEY_LIST", MODEL_G1.GetValue(i, "LOTKEY"));
+                        ItsMaria.AddList("LOTQTY_LIST", MODEL_G1.GetValue(i, "LOTQTY"));
                     }
                 }
 

@@ -28,11 +28,11 @@
                     <its:Column Width="50" Header="선택" CellType="Check" FieldName="ISCHECKED" IsRowCheck="True"/>
                     <its:Column Width="100" Header="거래처" FieldName="CUSTCD" GPCD="CUSTCD" Visible="False"/>
                     <its:Column Width="100" Header="창고" FieldName="WARECD" GPCD="WARECD_OSC"/>
-                    <its:Column Width="100" Header="로트번호" FieldName="LOTKEY"/>
                     <its:Column Width="100" Header="품목ID" FieldName="ITEMID" Visible="False"/>
                     <its:Column Width="100" Header="품목코드" FieldName="ITEMCD"/>
                     <its:Column Width="130" Header="품명" FieldName="ITEMNM"/>
                     <its:Column Width="130" Header="규격" FieldName="ITEMSPEC"/>
+                    <its:Column Width="100" Header="로트번호" FieldName="LOTKEY"/>
                     <its:Column Width="80" DecimalPoint="0" Header="재고수량" FieldName="LOTQTY"/>
                     <its:Column Width="80" Header="단위" FieldName="ITEMUNIT" ALGIN="center" GPCD="DM150"/>
                     <its:Column Width="80" Header="재고유형" FieldName="LOTTP" ALGIN="center" GPCD="LOTTP"/>
