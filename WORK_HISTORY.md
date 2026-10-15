@@ -17,6 +17,18 @@
 
 ## 🕒 2026-10-15 (목) 작업 내역
 
+### 8. MTR0001_R04 프로시저 품목 단위(ITEMUNIT) 콤마 누락 문법 오류 수정 및 조회조건 간소화
+- **수정/대상 파일**: [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql)
+- **배경 및 원인**: 프로시저 내부 `CALL_RPT` 분기에서 `ITEMUNIT` 컬럼 정의 뒤 콤마(`,`)가 누락되어 구문 분석 오류(SQL Syntax Error)가 발생한 문제 해결 요청
+- **작업 상세 내용**:
+  1. `CALL_RPT` Table 1 품목 디테일 SELECT 절의 `ITEMUNIT` 뒤 누락된 콤마(`,`) 추가하여 문법 오류 즉시 해결
+  2. 사용자의 소스코드 선호 스타일(공장 사업장 연결, COALESCE 방어 처리, MSTEMP OR 조인 등) 원본 보존
+  3. `LIST_MTRODR` 날짜 파라미터 직접 비교(`>= $SDATE`, `<= $EDATE`) 및 `ITEMUNIT` 1행 단일화 유지
+- **검증 결과**:
+  - 프로시저 문법 오류 해소 및 파라미터 규격(8개)·반환 컬럼명 일치 확인
+  - `git diff` 검증 통과 및 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 확인
+  - 실제 서버 DB 미반영 (사용자 DBeaver 루틴 에디터 직접 반영 대상)
+
 ### 7. MTR0001_S04A 승인일자 바인딩(MTRODRDATE 기준) 수정에 따른 리포트 재빌드 및 배포
 - **수정/대상 파일**: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
 - **배경 및 원인**: 발주서 우측 상단 발주승인완료 도장 박스의 날짜를 `MTRODRDATE` 직접 바인딩으로 수정한 소스코드 반영 및 재빌드 배포 요청
@@ -1855,6 +1867,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql) | MTR0001_R04 프로시저 품목 단위(ITEMUNIT) 콤마 누락 문법 오류 수정 및 조회조건 간소화 | CALL_RPT Table 1 SELECT 절 ITEMUNIT 뒤 누락 콤마(,) 추가 완료, 원본 코드 스타일 보존, BOM/CRLF 검증 완료 (실서버 DBeaver 컴파일 대상) |
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 발주승인완료 일자 바인딩(MTRODRDATE) 수정에 따른 MSBuild 리빌드 및 최신 바이너리 배포 | MSBuild Release 리빌드 성공(0 Error, 0 Warning), MTR0001.exe 최신 배포 완료(13:07:11), 단일 UTF-8 BOM/CRLF 무결성 검증 완료 |
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 사용자 직접 수정 소스코드 검증, MSBuild 리빌드 및 최신 바이너리(01.Office/Reports/MTR0001.exe) 배포 적용 | MSBuild Release 리빌드 성공(0 Error, 0 Warning), MTR0001.exe 최신 배포 완료(11:53:42), 단일 UTF-8 BOM/CRLF 무결성 검증 완료 |
 | **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 발주서 비고 및 하단 3줄 안내문 볼드(Bold) 서식 반영, MSBuild 빌드 및 바이너리 재배포 | MSBuild Release 컴파일 성공(에러 0), 01.Office/Reports/MTR0001.exe 최신 배포 완료, 단일 UTF-8 BOM/CRLF 무결성 검증 완료 |
