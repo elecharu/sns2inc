@@ -17,6 +17,14 @@
 
 ## 🕒 2026-10-15 (목) 작업 내역
 
+### 2. EQM1001 및 MTR0001 리포트 프로젝트 MSBuild 리빌드 및 최신 실행파일 배포
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/EQM1001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/EQM1001.csproj), [04.Report/PAGEMTR/MTR0001/MTR0001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/MTR0001.csproj), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
+- **배경 및 원인**: 설비관리(EQM1001) 및 자재발주관리(MTR0001) 리포트 2개 프로젝트 전체 재컴파일 및 01.Office/Reports 최신 바이너리 교체 요청
+- **작업 상세 내용**:
+  - 1) EQM1001.csproj MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 2) MTR0001.csproj MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 3) 생성된 최신 바이너리(EQM1001.exe, EQM1001.pdb, MTR0001.exe, MTR0001.pdb)를 01.Office/Reports/ 경로로 덮어쓰기 배포 완료
+- **검증 결과**: MSBuild 컴파일 통과 (0 Error, 0 Warning), 01.Office/Reports/ 내 최신 바이너리 타임스탬프(14:37) 갱신 확인
+
+
 ### 2. MTR0001_R04 발주서 출력 검증 로직 프로시저(MTR0001_R04 CALL_RPT) 이동 및 화면 스크립트 간결화
 - **수정/대상 파일**: [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
 - **배경 및 원인**: 화면(JS) 및 C# 리포트 비하인드에서 수행하던 발주번호 선택 유무 검증 로직을 DB 프로시저(CALL_RPT) 내부로 이동하여 검증 단일화 및 화면 스크립트 간결화 요청
@@ -1884,6 +1892,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | [04.Report/PAGEEQM/EQM1001/EQM1001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/EQM1001.csproj), [04.Report/PAGEMTR/MTR0001/MTR0001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/MTR0001.csproj), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | EQM1001 및 MTR0001 리포트 최신 빌드 바이너리 01.Office/Reports 교체 배포 완료 | MSBuild 컴파일 통과 (0 Error, 0 Warning), 01.Office/Reports/ 내 최신 바이너리 타임스탬프(14:37) 갱신 확인 |
 | **대기** | [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | 검증 로직 이동 반영된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | MSBuild 컴파일 통과 (0 Error, 0 Warning), 전 파일 단일 UTF-8 BOM(\xef\xbb\xbf) 및 CRLF 개행 무결성 확인 |
 | **대기** | [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql) | CALL_RPT 분기 세미콜론 누락 수정본(MTR0001_R04.sql) 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | 프로시저 전체 문법 및 세미콜론 종결자 무결성 확인, 단일 UTF-8 BOM(\xef\xbb\xbf) 및 CRLF 개행 검증 통과 |
 | **완료** | [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql) | MTR0001_R04 프로시저 MTR0001_R01 원본 기반 쿼리 표준화 및 과잉 방어코드 전면 제거 | 4개 SET문 제거, Table 0 11개 텍스트 컬럼 COALESCE 제거, EMPINFO 5줄 단순화, Table 1 INNER JOIN 및 단위 1줄 단일화, BOM/CRLF 검증 완료 (실서버 DBeaver 컴파일 대상) |
