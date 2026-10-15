@@ -1276,7 +1276,7 @@ function PrintPlanRev(planTp) {
         ItsMsg.Toast(planTp == 'G' ? '설비그룹을 선택해주세요.' : '설비를 선택해주세요.');
         return;
     }
-    var rpt = new ItsXtraRpt('EQM1001_S05A');
+    var rpt = new ItsXtraRpt('EQM1001_R03');
     rpt.AddParam('PLANTP', planTp);
     rpt.AddParam('PLANCD', planCd);
     rpt.CallPop();

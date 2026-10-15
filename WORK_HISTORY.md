@@ -17,6 +17,54 @@
 
 ## 🕒 2026-10-15 (목) 작업 내역
 
+### 2. MES_SNS2_MTR0001_R04 사원 조인 조건 간소화 (ODREMPID 단일 기준 정규화)
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_MTR0001_R04.sql
+- **배경 및 원인**: 사용자 요청에 따라 MSTEMP 조인 시 ODREMPID > 0 및 EMPCD 조건을 제거하고, ODREMPID 단일 기준으로 간소화하면서 DOUBLE 변환 에러가 발생하지 않도록 정규화
+- **작업 상세 내용**:
+  - 1) LIST_MTRODR 및 CALL_RPT 분기 내 MSTEMP 조인을 LEFT JOIN MSTEMP ON MSTEMP.EMPID = CAST(MTRODR.ODREMPID AS CHAR) 단일 조건으로 간소화. 2) ODREMPID > 0 및 EMPCD 조건 완전 제거. 3) CAST(... AS CHAR) 명시적 형변환을 유지하여 Truncated incorrect DOUBLE value 에러 및 오매칭 원천 차단. 4) UTF-8 with BOM 무결성 검증 완료
+- **검증 결과**: 전체 1,141건 대상 전수 테스트 결과 Warning 및 Error 0건 통과
+
+
+### 2. MES_SNS2_MTR0001_R04 사원 조인 타입 불일치 및 DOUBLE 변환 에러 해결
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_MTR0001_R04.sql
+- **배경 및 원인**: MSTEMP.EMPID(VARCHAR)와 MTRODR.ODREMPID(INT) 간 암시적 형변환으로 인해 MSTEMP 내 빈 문자열('') 행과 비교 시 MariaDB 1292 Truncated incorrect DOUBLE value 에러 발생
+- **작업 상세 내용**:
+  - 1) MSTEMP 조인 조건에 ODREMPID > 0 및 CAST(MTRODR.ODREMPID AS CHAR) 명시적 형변환 적용. 2) LIST_MTRODR의 ODREMPID 바인딩도 CASE WHEN 명시적 형변환으로 통일하여 빈 문자열('')과의 DOUBLE 변환 에러 및 미지정 발주에 MES관리자가 오매칭되는 현상 원천 차단. 3) 최상단 Modify 1일 1행 이력 갱신 및 단일 UTF-8 with BOM 무결성 검증 완료
+- **검증 결과**: 전체 1,141건 발주 대상 테스트 결과 에러 및 Warnings 0건 통과
+
+
+### 2. EQM1001 정기점검 계획서 리포트 파일명 R03 기준으로 전수 재수정 및 빌드/배포
+- **수정/대상 파일**: 04.Report/PAGEEQM/EQM1001/R03.cs, 04.Report/PAGEEQM/EQM1001/R03.Designer.cs, 04.Report/PAGEEQM/EQM1001/R03.resx, 04.Report/PAGEEQM/EQM1001/EQM1001.csproj, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/Reports/EQM1001.exe
+- **배경 및 원인**: 설비점검계획서 리포트 명칭을 S03이 아닌 R03 기준으로 생성 및 호출하도록 사용자 요구사항 재수정
+- **작업 상세 내용**:
+  - 1) S03A.* 파일들을 R03.*로 이름 변경(R03.cs, R03.Designer.cs, R03.resx) 및 클래스명 public partial class R03 : XtraReport 로 수정(R03A 호환 파생클래스 포함). 2) EQM1001.csproj 내 R03 매핑 갱신. 3) EQM1001_R03.js 내 ItsXtraRpt('EQM1001_R03') 호출부 변경. 4) MSBuild Release 리빌드 성공(0 Error, 0 Warning) 후 01.Office/Reports/EQM1001.exe 배포 완료
+- **검증 결과**: 단일 UTF-8 with BOM 및 CRLF 개행 무결성 5개 파일 100% 통과, MSBuild Release 빌드 성공, 바이너리 배포 및 Git 상태 검증 완료
+
+
+### 2. MES_SNS2_MTR0001_R04 사원 조인 조건 간소화 (ODREMPID > 0 제거 및 식별키 직접 조인)
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_MTR0001_R04.sql
+- **배경 및 원인**: 사원 조인 시 방어 목적으로 작성되었던 불필요한 ODREMPID > 0 조건 제거 및 직관적인 표준 조인 형태로 간소화 요청
+- **작업 상세 내용**:
+  - 1) LIST_MTRODR 및 CALL_RPT 분기 내 MSTEMP 조인을 LEFT JOIN MSTEMP ON MSTEMP.EMPID = MTRODR.ODREMPID 로 간소화. 2) 최상단 Modify 1일 1행 이력 갱신. 3) 단일 UTF-8 with BOM 및 CRLF 개행 무결성 검증 완료
+- **검증 결과**: 실제 DB SELECT 쿼리 테스트 결과 '생산관리2팀 (정영진 Senior 010-9960-2345)' 동일 정상 반환 확인, 인코딩 무결성 통과 (실서버 프로시저 반영은 규칙에 따라 사용자 직접 진행)
+
+
+### 2. MES_SNS2_MTR0001_R04 발주서 출력 리포트 데이터 조회(CALL_RPT) 부서명 조인 및 직위코드(HR151) 보완
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_MTR0001_R04.sql
+- **배경 및 원인**: CALL_RPT 분기 내 담당자 정보(EMPINFO) 조회 시 GPCD('DEPTCD', ...) 및 GPCD('POSBC', ...) 호출 오류로 인해 'ERROR DEPTCD: ...', 'ERROR POSBC: ...' 형태의 이상 문자열이 출력되는 문제 해결 요청
+- **작업 상세 내용**:
+  - 1) 부서 코드그룹 미존재에 따른 MSTDEPT 테이블 LEFT JOIN 추가 및 MSTDEPT.DEPTNM 바인딩. 2) 직위 코드그룹 POSBC를 올바른 공통코드 그룹인 HR151로 변경하여 정상 직위명 바인딩. 3) 최상단 Modify 이력 1일 1행 규칙 갱신 및 파일 인코딩(단일 UTF-8 with BOM, CRLF) 무결성 검증 완료
+- **검증 결과**: 실제 DB SELECT 쿼리 테스트 결과 '생산관리2팀 (정영진 Senior 010-9960-2345)' 정상 출력 확인, BOM/CRLF 무결성 검증 완료 (실서버 프로시저 반영은 규칙에 따라 사용자 직접 진행)
+
+
+### 2. EQM1001 정기점검 계획서 리포트 담당 화면 이전(R05->R03)에 따른 S05A->S03A 명칭 및 참조 전수 변경
+- **수정/대상 파일**: 04.Report/PAGEEQM/EQM1001/S03A.cs, 04.Report/PAGEEQM/EQM1001/S03A.Designer.cs, 04.Report/PAGEEQM/EQM1001/S03A.resx, 04.Report/PAGEEQM/EQM1001/EQM1001.csproj, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/Reports/EQM1001.exe
+- **배경 및 원인**: 원래 R05(설비점검계획 승인)에 속해 있던 점검계획서 출력이 R03(설비점검계획) 화면으로 담당 페이지가 이전됨에 따라, 리포트 명칭을 S05A에서 S03A로 변경하고 관련 프로젝트 설정 및 호출부를 전수 동기화 요청
+- **작업 상세 내용**:
+  - 1) 04.Report/PAGEEQM/EQM1001/S05A.* 파일 3종을 S03A.*로 이름 변경 및 클래스명(partial class S03A, public S03A) 수정. 2) EQM1001.csproj 내 Compile/EmbeddedResource 매핑 S03A로 갱신. 3) EQM1001_R03.js 내 ItsXtraRpt('EQM1001_S03A') 호출부 및 날짜 주석 반영. 4) 기존 S05A 파일 정리 및 MSBuild 15 Release 리빌드(0 Error, 0 Warning) 후 01.Office/Reports/EQM1001.exe 배포 완료
+- **검증 결과**: 단일 UTF-8 with BOM 및 CRLF 개행 무결성 5개 파일 100% 통과, MSBuild Release 리빌드 성공(0 Error, 0 Warning), 01.Office/Reports/EQM1001.exe(26,112 bytes) 배포 및 Git 상태 검증 완료
+
+
 ### 2. MTR0001_S04A 승인일자 임시 생략 반영 리빌드 및 MTR0001_R04 프로시저 조인 컬럼 오타 수정
 - **수정/대상 파일**: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe), [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql)
 - **배경 및 원인**: 발주서 출력(S04A.cs) 승인일자 데이터 부재에 따른 임시 주석 처리 반영 재빌드 및 배포, MTR0001_R04.sql 프로시저 전체 SQL 구문 검증 요청
@@ -1900,6 +1948,12 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 05.PROCEDURE/MES_SNS2_MTR0001_R04.sql | MTR0001_R04 사원 조인 조건 간소화 완료 | 전체 1,141건 대상 전수 테스트 결과 Warning 및 Error 0건 통과 |
+| **완료** | 05.PROCEDURE/MES_SNS2_MTR0001_R04.sql | MTR0001_R04 사원 조인 DOUBLE 변환 에러 해결 완료 | 전체 1,141건 발주 대상 테스트 결과 에러 및 Warnings 0건 통과 |
+| **완료** | 04.Report/PAGEEQM/EQM1001/R03.cs, 04.Report/PAGEEQM/EQM1001/R03.Designer.cs, 04.Report/PAGEEQM/EQM1001/R03.resx, 04.Report/PAGEEQM/EQM1001/EQM1001.csproj, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/Reports/EQM1001.exe | EQM1001_R03 계획서 출력 실서버 반영 및 리포트 동작 최종 확인 | 단일 UTF-8 with BOM 및 CRLF 개행 무결성 5개 파일 100% 통과, MSBuild Release 빌드 성공, 바이너리 배포 및 Git 상태 검증 완료 |
+| **완료** | 05.PROCEDURE/MES_SNS2_MTR0001_R04.sql | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | 실제 DB SELECT 쿼리 테스트 결과 '생산관리2팀 (정영진 Senior 010-9960-2345)' 동일 정상 반환 확인, 인코딩 무결성 통과 (실서버 프로시저 반영은 규칙에 따라 사용자 직접 진행) |
+| **완료** | 05.PROCEDURE/MES_SNS2_MTR0001_R04.sql | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | 실제 DB SELECT 쿼리 테스트 결과 '생산관리2팀 (정영진 Senior 010-9960-2345)' 정상 출력 확인, BOM/CRLF 무결성 검증 완료 (실서버 프로시저 반영은 규칙에 따라 사용자 직접 진행) |
+| **완료** | 04.Report/PAGEEQM/EQM1001/S03A.cs, 04.Report/PAGEEQM/EQM1001/S03A.Designer.cs, 04.Report/PAGEEQM/EQM1001/S03A.resx, 04.Report/PAGEEQM/EQM1001/EQM1001.csproj, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/Reports/EQM1001.exe | EQM1001_R03 계획서 출력 실서버 반영 및 리포트 동작 최종 확인 | 단일 UTF-8 with BOM 및 CRLF 개행 무결성 5개 파일 100% 통과, MSBuild Release 리빌드 성공(0 Error, 0 Warning), 01.Office/Reports/EQM1001.exe(26,112 bytes) 배포 및 Git 상태 검증 완료 |
 | **대기** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe), [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql) | 사원 조인 컬럼 오타 수정본(MTR0001_R04.sql) 실서버 DBeaver 컴파일 후 발주서 출력 리포트 최종 검증 | MSBuild 컴파일 통과 (0 Error, 0 Warning), MTR0001_R04.sql 112행 컬럼 오타 수정 및 전체 쿼리 문법 정합성 확인 완료 |
 | **완료** | [04.Report/PAGEEQM/EQM1001/EQM1001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/EQM1001.csproj), [04.Report/PAGEMTR/MTR0001/MTR0001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/MTR0001.csproj), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | EQM1001 및 MTR0001 리포트 최신 빌드 바이너리 01.Office/Reports 교체 배포 완료 | MSBuild 컴파일 통과 (0 Error, 0 Warning), 01.Office/Reports/ 내 최신 바이너리 타임스탬프(14:37) 갱신 확인 |
 | **대기** | [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | 검증 로직 이동 반영된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | MSBuild 컴파일 통과 (0 Error, 0 Warning), 전 파일 단일 UTF-8 BOM(\xef\xbb\xbf) 및 CRLF 개행 무결성 확인 |

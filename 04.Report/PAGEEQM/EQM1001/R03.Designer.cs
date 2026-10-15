@@ -1,6 +1,6 @@
 ﻿namespace XtraRpt
 {
-    partial class S05A
+    partial class R03
     {
         private System.ComponentModel.IContainer components = null;
 
