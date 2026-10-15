@@ -156,8 +156,8 @@ namespace XtraRpt
             XRTableRow appRow2 = new XRTableRow { HeightF = 28F };
             XRTableCell appCell2 = new XRTableCell();
             appCell2.Font = new Font("맑은 고딕", 9.5F, FontStyle.Regular);
-            string aprvDate = Value(header, "MTRODRDATE"); // 발주승인완료 날짜 (MTRODRDATE 기준)
-            appCell2.Text = aprvDate;
+            // string aprvDate = Value(header, "MTRODRDATE"); // 발주승인완료 날짜 (MTRODRDATE 기준)
+            // appCell2.Text = aprvDate;
             appCell2.TextAlignment = TextAlignment.MiddleCenter;
             appRow2.Cells.Add(appCell2);
 

@@ -17,6 +17,14 @@
 
 ## 🕒 2026-10-15 (목) 작업 내역
 
+### 2. MTR0001_S04A 승인일자 임시 생략 반영 리빌드 및 MTR0001_R04 프로시저 조인 컬럼 오타 수정
+- **수정/대상 파일**: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe), [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql)
+- **배경 및 원인**: 발주서 출력(S04A.cs) 승인일자 데이터 부재에 따른 임시 주석 처리 반영 재빌드 및 배포, MTR0001_R04.sql 프로시저 전체 SQL 구문 검증 요청
+- **작업 상세 내용**:
+  - 1) S04A.cs 승인일자 텍스트 바인딩 주석 처리 반영 후 MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 2) 최신 MTR0001.exe 및 pdb 파일 01.Office/Reports/ 경로 배포 완료 3) MTR0001_R04.sql 전수 검증 결과, CALL_RPT 분기 사원 조인문 112행의 오타(MTRODR.EMPID -> MTRODR.ODREMPID) 발견 및 즉시 정상화 완료 4) UTF-8 with BOM 및 CRLF 개행 무결성 확인
+- **검증 결과**: MSBuild 컴파일 통과 (0 Error, 0 Warning), MTR0001_R04.sql 112행 컬럼 오타 수정 및 전체 쿼리 문법 정합성 확인 완료
+
+
 ### 2. EQM1001 및 MTR0001 리포트 프로젝트 MSBuild 리빌드 및 최신 실행파일 배포
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/EQM1001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/EQM1001.csproj), [04.Report/PAGEMTR/MTR0001/MTR0001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/MTR0001.csproj), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
 - **배경 및 원인**: 설비관리(EQM1001) 및 자재발주관리(MTR0001) 리포트 2개 프로젝트 전체 재컴파일 및 01.Office/Reports 최신 바이너리 교체 요청
@@ -1892,6 +1900,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **대기** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe), [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql) | 사원 조인 컬럼 오타 수정본(MTR0001_R04.sql) 실서버 DBeaver 컴파일 후 발주서 출력 리포트 최종 검증 | MSBuild 컴파일 통과 (0 Error, 0 Warning), MTR0001_R04.sql 112행 컬럼 오타 수정 및 전체 쿼리 문법 정합성 확인 완료 |
 | **완료** | [04.Report/PAGEEQM/EQM1001/EQM1001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/EQM1001.csproj), [04.Report/PAGEMTR/MTR0001/MTR0001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/MTR0001.csproj), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | EQM1001 및 MTR0001 리포트 최신 빌드 바이너리 01.Office/Reports 교체 배포 완료 | MSBuild 컴파일 통과 (0 Error, 0 Warning), 01.Office/Reports/ 내 최신 바이너리 타임스탬프(14:37) 갱신 확인 |
 | **대기** | [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | 검증 로직 이동 반영된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | MSBuild 컴파일 통과 (0 Error, 0 Warning), 전 파일 단일 UTF-8 BOM(\xef\xbb\xbf) 및 CRLF 개행 무결성 확인 |
 | **대기** | [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql) | CALL_RPT 분기 세미콜론 누락 수정본(MTR0001_R04.sql) 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | 프로시저 전체 문법 및 세미콜론 종결자 무결성 확인, 단일 UTF-8 BOM(\xef\xbb\xbf) 및 CRLF 개행 검증 통과 |
