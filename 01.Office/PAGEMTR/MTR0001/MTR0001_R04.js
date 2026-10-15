@@ -23,7 +23,6 @@ ItsPage.Load = function () {
         column.create('품명', 'ITEMNM', { width: 250, align: 'center' }),
         column.create('규격', 'ITEMSPEC', { width: 200, align: 'center' }),
         column.create('납기일자', 'EXPDATE', { width: 100, align: 'center' }),
-        column.create('구매담당자', 'ODRDELEMPID', { width: 100, align: 'center', hidden: true }),
         column.create('발주수량', 'ODRQTY', { width: 80, columnType: enumColumnTypes.number }),
         column.create('구매단가', 'MTRODRPRICE', { width: 80, columnType: enumColumnTypes.number }),
         column.create('구매금액', 'MTRODRAMT', { width: 80, columnType: enumColumnTypes.number }),

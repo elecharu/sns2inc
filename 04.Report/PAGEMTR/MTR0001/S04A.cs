@@ -56,26 +56,26 @@ namespace XtraRpt
             return maria;
         }
 
-        // 2026-10-14 발주서 리포트 밴드 및 컨트롤 동적 조립 (A4 1페이지 규격 최적화)
+        // 2026-10-14 발주 리포트
         private void BuildReport(DataRow header, DataTable items)
         {
             Dpi = 100F;
             PaperKind = PaperKind.A4;
             PageWidth = 827;
             PageHeight = 1169;
-            Margins = new Margins(48, 48, 20, 20);
+            Margins = new Margins(48, 48, 45, 20);
 
-            TopMarginBand topMargin = new TopMarginBand { HeightF = 15F };
+            TopMarginBand topMargin = new TopMarginBand { HeightF = 45F };
             BottomMarginBand bottomMargin = new BottomMarginBand { HeightF = 15F };
             ReportHeaderBand reportHeader = new ReportHeaderBand { HeightF = 238F };
             DetailBand detail = new DetailBand { HeightF = 0F };
             ReportFooterBand reportFooter = new ReportFooterBand { HeightF = 745F };
             PageFooterBand pageFooter = new PageFooterBand { HeightF = 18F };
 
-            // 상단 타이틀, 거래처명, 승인 박스, 단일 테이블로 행높이 및 수직선이 완벽히 일치된 헤더 정보 테이블
+            // 상단 타이틀, 거래처명, 승인 박스
             reportHeader.Controls.AddRange(CreateHeaderControls(header));
 
-            // 이미지 2와 100% 동일한 품목 그리드(헤더 23F, 데이터행 28F 2줄 최적화, 15행 유지) 및 요청사항 박스
+            // 품목 그리드
             reportFooter.Controls.AddRange(CreateItemsAndFooterControls(header, items));
 
             // 하단 중앙 페이지 번호 (1/1)
@@ -90,16 +90,17 @@ namespace XtraRpt
             Bands.AddRange(new Band[] { topMargin, bottomMargin, reportHeader, detail, reportFooter, pageFooter });
         }
 
-        // 2026-10-14 상단 헤더 영역 컨트롤 생성 (행별 독립 XRTable로 DevExpress 컬럼 왜곡 방지 및 대표자·사업자번호 라벨 100% 보존)
+        // 2026-10-14 상단 헤더 영역 컨트롤 생성
         private XRControl[] CreateHeaderControls(DataRow header)
         {
             List<XRControl> list = new List<XRControl>();
 
-            // 1. 로고 이미지 (2026-10-14 로고 크기 확대: 125x30 -> 160x38)
+            // 1. 로고 이미지
             XRPictureBox logoBox = new XRPictureBox();
             logoBox.LocationFloat = new PointFloat(0F, 0F);
-            logoBox.SizeF = new SizeF(160F, 38F);
+            logoBox.SizeF = new SizeF(190F, 45F);
             logoBox.Sizing = ImageSizeMode.ZoomImage;
+            logoBox.ImageAlignment = ImageAlignment.MiddleLeft;
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
             string[] logoPaths = new string[]
             {
@@ -123,16 +124,16 @@ namespace XtraRpt
             }
             list.Add(logoBox);
 
-            // 2. 거래처명 (2026-10-14 로고 하단 상단 마진 10px 확보, 14pt Bold)
+            // 2. 거래처명
             XRLabel custNameLabel = new XRLabel();
-            custNameLabel.LocationFloat = new PointFloat(0F, 48F);
+            custNameLabel.LocationFloat = new PointFloat(0F, 51F);
             custNameLabel.SizeF = new SizeF(230F, 26F);
             custNameLabel.Font = new Font("맑은 고딕", 14F, FontStyle.Bold);
             custNameLabel.Text = Value(header, "CUSTNM");
             custNameLabel.TextAlignment = TextAlignment.BottomLeft;
             list.Add(custNameLabel);
 
-            // 3. 발주서 메인 타이틀 (중앙, 21pt Bold, 자간 분리)
+            // 3. 발주서 메인 타이틀
             XRLabel titleLabel = new XRLabel();
             titleLabel.LocationFloat = new PointFloat(230F, 5F);
             titleLabel.SizeF = new SizeF(270F, 38F);
@@ -141,29 +142,25 @@ namespace XtraRpt
             titleLabel.TextAlignment = TextAlignment.MiddleCenter;
             list.Add(titleLabel);
 
-            // 4. 우측 승인 도장 박스 (2단 박스: 발주승인완료 / 승인일자)
+            // 4. 우측 승인 도장 박스
             XRTable approveTable = new XRTable();
-            approveTable.LocationFloat = new PointFloat(616F, 0F);
-            approveTable.SizeF = new SizeF(115F, 44F);
+            approveTable.LocationFloat = new PointFloat(591F, 0F);
+            approveTable.SizeF = new SizeF(140F, 56F);
             approveTable.Borders = BorderSide.All;
             approveTable.BorderWidth = 1.2F;
             approveTable.BorderColor = Color.Black;
 
-            XRTableRow appRow1 = new XRTableRow { HeightF = 22F };
+            XRTableRow appRow1 = new XRTableRow { HeightF = 28F };
             XRTableCell appCell1 = new XRTableCell();
-            appCell1.Font = new Font("맑은 고딕", 9F, FontStyle.Bold);
+            appCell1.Font = new Font("맑은 고딕", 10F, FontStyle.Bold);
             appCell1.Text = "발주승인완료";
             appCell1.TextAlignment = TextAlignment.MiddleCenter;
             appRow1.Cells.Add(appCell1);
 
-            XRTableRow appRow2 = new XRTableRow { HeightF = 22F };
+            XRTableRow appRow2 = new XRTableRow { HeightF = 28F };
             XRTableCell appCell2 = new XRTableCell();
-            appCell2.Font = new Font("맑은 고딕", 8.5F, FontStyle.Regular);
-            string aprvDate = Value(header, "APRVDATE");
-            if (string.IsNullOrEmpty(aprvDate))
-            {
-                aprvDate = Value(header, "MTRODRDATE");
-            }
+            appCell2.Font = new Font("맑은 고딕", 9.5F, FontStyle.Regular);
+            string aprvDate = Value(header, "MTRODRDATE"); // 발주승인완료 날짜 (MTRODRDATE 기준)
             appCell2.Text = aprvDate;
             appCell2.TextAlignment = TextAlignment.MiddleCenter;
             appRow2.Cells.Add(appCell2);
@@ -172,13 +169,11 @@ namespace XtraRpt
             approveTable.Rows.Add(appRow2);
             list.Add(approveTable);
 
-            // 5. 기본 정보 테이블: 거래처명 아래 여백 확보, 시작/끝선 완벽 일치 및 전체 텍스트 Bold 적용 (t1 All, t2~t5 Left|Right|Bottom)
+            // 5. 기본 정보 테이블
             const float startY = 84F;
             const float rowH = 24F;
 
-            // 좌측 총 너비: 315F, 우측 총 너비: 416F (315 + 416 = 731F)
-            // 2026-10-14 기본 정보 테이블: 사용자 지정에 따라 라벨과 값 전체 텍스트 Bold(true) 처리
-            // [Row 1] Y=84F: 전화(75) + 값(240) + 회사명(190) + 사업자번호라벨(75) + 값(151) = 731F
+            // [Row 1]
             XRTable t1 = CreateSingleRowTable(0F, startY, ReportWidth, rowH, BorderSide.All);
             XRTableRow r1 = new XRTableRow { HeightF = rowH };
             r1.Cells.Add(CreateFixedCell("전    화", 75F, rowH, true));
@@ -189,7 +184,7 @@ namespace XtraRpt
             t1.Rows.Add(r1);
             list.Add(t1);
 
-            // [Row 2] Y=108F: FAX(75) + 값(240) + 대표자라벨(60) + 값(356) = 731F
+            // [Row 2]
             XRTable t2 = CreateSingleRowTable(0F, startY + rowH, ReportWidth, rowH, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow r2 = new XRTableRow { HeightF = rowH };
             r2.Cells.Add(CreateFixedCell("F  A  X", 75F, rowH, true));
@@ -199,7 +194,7 @@ namespace XtraRpt
             t2.Rows.Add(r2);
             list.Add(t2);
 
-            // [Row 3] Y=132F: 사업자번호라벨(75) + 값(240) + 주소라벨(60) + 값(356) = 731F
+            // [Row 3]
             XRTable t3 = CreateSingleRowTable(0F, startY + (rowH * 2F), ReportWidth, rowH, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow r3 = new XRTableRow { HeightF = rowH };
             r3.Cells.Add(CreateFixedCell("사업자번호", 75F, rowH, true));
@@ -209,7 +204,7 @@ namespace XtraRpt
             t3.Rows.Add(r3);
             list.Add(t3);
 
-            // [Row 4] Y=156F: 발주번호(75) + 값(240) + 전화라벨(60) + 값(148) + FAX라벨(60) + 값(148) = 731F
+            // [Row 4]
             XRTable t4 = CreateSingleRowTable(0F, startY + (rowH * 3F), ReportWidth, rowH, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow r4 = new XRTableRow { HeightF = rowH };
             r4.Cells.Add(CreateFixedCell("발 주 번 호", 75F, rowH, true));
@@ -221,7 +216,7 @@ namespace XtraRpt
             t4.Rows.Add(r4);
             list.Add(t4);
 
-            // [Row 5] Y=180F: 발주일자(75) + 값(82.5) + 납기일자(75) + 값(82.5) + 담당자라벨(60) + 값(356) = 731F (시작/끝 완벽 일치)
+            // [Row 5]
             XRTable t5 = CreateSingleRowTable(0F, startY + (rowH * 4F), ReportWidth, rowH, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow r5 = new XRTableRow { HeightF = rowH };
             r5.Cells.Add(CreateFixedCell("발 주 일 자", 75F, rowH, true));
@@ -233,7 +228,7 @@ namespace XtraRpt
             t5.Rows.Add(r5);
             list.Add(t5);
 
-            // 6. "아래와 같이 발주 합니다." 안내문 (startY 84F + rowH 24F*5행 = 204F 아래 배치)
+            // 6. "아래와 같이 발주 합니다." 안내문
             XRLabel noticeLabel = new XRLabel();
             noticeLabel.LocationFloat = new PointFloat(0F, 210F);
             noticeLabel.SizeF = new SizeF(300F, 20F);
@@ -245,14 +240,14 @@ namespace XtraRpt
             return list.ToArray();
         }
 
-        // 2026-10-14 품목 그리드 (헤더 높이 데이터행의 0.9배, 데이터행 36F, 합계행 높이 데이터행과 동일 36F 일치)
+        // 2026-10-14 품목 그리드
         private XRControl[] CreateItemsAndFooterControls(DataRow header, DataTable items)
         {
             List<XRControl> list = new List<XRControl>();
 
-            const float dataRowHeight = 36F; // 사용자 지정: 1~15행 내용 구간 높이
-            const float headerHeight = dataRowHeight * 0.9F; // 사용자 지정: 헤더 높이를 데이터행의 0.9배(32.4F)로 설정
-            const float totalRowHeight = dataRowHeight; // 사용자 지정: 합계행 높이를 데이터행과 동일(36F)하게 일치
+            const float dataRowHeight = 36F;
+            const float headerHeight = dataRowHeight * 0.9F;
+            const float totalRowHeight = dataRowHeight;
 
             // 열 너비 규격: No(30), 품명(175), 규격(120), 단위(38), 단가(72), 수량(42), 금액(84), 비고(170) = 총 731F
             const float wNo = 30F;
@@ -264,7 +259,7 @@ namespace XtraRpt
             const float wAmt = 84F;
             const float wRemark = 170F;
 
-            // [1. 헤더 테이블] Y=0F, 높이 23F 고정 (독립 테이블)
+            // [1. 헤더 테이블] 
             XRTable headerTable = CreateSingleRowTable(0F, 0F, ReportWidth, headerHeight, BorderSide.All);
             XRTableRow th = new XRTableRow { HeightF = headerHeight };
             th.Cells.Add(CreateFixedCell("No", wNo, headerHeight, true, TextAlignment.MiddleCenter, 8.5F));
@@ -282,7 +277,7 @@ namespace XtraRpt
             decimal totalAmt = 0;
             int rowCount = items.Rows.Count;
 
-            // [2. 데이터 행들 1~15행] 각 행을 독립 XRTable로 생성하여 1행 팽창 원천 차단 및 모든 행의 높이를 25F로 100% 동일화
+            // [2. 데이터 행들 1~15행]
             for (int i = 0; i < 15; i++)
             {
                 float rowY = headerHeight + (i * dataRowHeight);
@@ -340,7 +335,6 @@ namespace XtraRpt
             float totalTitleWidth = wNo + wName + wSpec + wUnit + wPrice; // 30 + 175 + 120 + 38 + 72 = 435F
             XRTable totalTable = CreateSingleRowTable(0F, totalTableY, ReportWidth, totalRowHeight, BorderSide.Left | BorderSide.Right | BorderSide.Bottom);
             XRTableRow totalRow = new XRTableRow { HeightF = totalRowHeight };
-            // 2026-10-14 품목 그리드 합계 행: 합계 텍스트 우측 정렬 및 수량/총금액 우측 margin(패딩 6, 8) 공백 여백 추가
             totalRow.Cells.Add(CreateFixedCell("합    계", totalTitleWidth, totalRowHeight, true, TextAlignment.MiddleRight, 9F, 10));
             totalRow.Cells.Add(CreateFixedCell(totalQty.ToString("#,##0"), wQty, totalRowHeight, true, TextAlignment.MiddleRight, 9F, 6));
             totalRow.Cells.Add(CreateFixedCell(totalAmt.ToString("#,##0"), wAmt, totalRowHeight, true, TextAlignment.MiddleRight, 9F, 8));
@@ -369,16 +363,16 @@ namespace XtraRpt
             XRLabel reqContent = new XRLabel();
             reqContent.LocationFloat = new PointFloat(8F, 24F);
             reqContent.SizeF = new SizeF(712F, 28F);
-            reqContent.Font = new Font("맑은 고딕", 8F, FontStyle.Regular);
+            reqContent.Font = new Font("맑은 고딕", 8F, FontStyle.Bold);
             reqContent.Text = Value(header, "REMARK");
             reqContent.Borders = BorderSide.None;
             reqPanel.Controls.Add(reqContent);
 
-            // (3) 박스 내부 하단 3줄 안내문 (요청 사항 영역 안쪽에 완벽 통합 배치)
+            // (3) 박스 내부 하단 3줄 안내문
             XRLabel notice1 = new XRLabel();
             notice1.LocationFloat = new PointFloat(8F, 56F);
             notice1.SizeF = new SizeF(712F, 15F);
-            notice1.Font = new Font("맑은 고딕", 7.5F, FontStyle.Regular);
+            notice1.Font = new Font("맑은 고딕", 7.5F, FontStyle.Bold);
             notice1.Text = "* 위와 같은 내용을 발주하오니 업무에 참조 바라며 발주서 접수 즉시 회신 바랍니다.";
             notice1.Borders = BorderSide.None;
             reqPanel.Controls.Add(notice1);
@@ -386,7 +380,7 @@ namespace XtraRpt
             XRLabel notice2 = new XRLabel();
             notice2.LocationFloat = new PointFloat(8F, 72F);
             notice2.SizeF = new SizeF(712F, 15F);
-            notice2.Font = new Font("맑은 고딕", 7.5F, FontStyle.Regular);
+            notice2.Font = new Font("맑은 고딕", 7.5F, FontStyle.Bold);
             notice2.Text = "* 품질에 관련된 관련표준을 명기한 경우 해당표준에 따른다.";
             notice2.Borders = BorderSide.None;
             reqPanel.Controls.Add(notice2);
@@ -394,7 +388,7 @@ namespace XtraRpt
             XRLabel notice3 = new XRLabel();
             notice3.LocationFloat = new PointFloat(8F, 88F);
             notice3.SizeF = new SizeF(712F, 15F);
-            notice3.Font = new Font("맑은 고딕", 7.5F, FontStyle.Regular);
+            notice3.Font = new Font("맑은 고딕", 7.5F, FontStyle.Bold);
             notice3.Text = "* 품질에 관련하여 관련표준을 구체적으로 명기하지 않은 경우 당사의 검사규격에 따른다.";
             notice3.Borders = BorderSide.None;
             reqPanel.Controls.Add(notice3);
@@ -416,7 +410,7 @@ namespace XtraRpt
             return table;
         }
 
-        // 고정 높이 셀 생성 (CanGrow = false, WordWrap = false로 행 높이 왜곡 원천 차단)
+        // 고정 높이 셀 생성
         private static XRTableCell CreateFixedCell(string text, float width, float height, bool isHeader, TextAlignment alignment = TextAlignment.MiddleCenter, float fontSize = 8.5F, int padding = 0)
         {
             XRTableCell cell = new XRTableCell();
@@ -434,7 +428,7 @@ namespace XtraRpt
             return cell;
         }
 
-        // 품목 데이터 셀 생성 (높이 36F 지원 및 줄바꿈 허용 시 CanGrow=false, WordWrap=true로 2줄 깔끔 렌더링)
+        // 품목 데이터 셀 생성
         private static XRTableCell CreateDataCell(string text, float width, float height, TextAlignment alignment, float fontSize = 8F, bool allowWrap = false, int padding = 3)
         {
             XRTableCell cell = new XRTableCell();

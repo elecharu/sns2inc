@@ -17,6 +17,111 @@
 
 ## 🕒 2026-10-15 (목) 작업 내역
 
+### 7. MTR0001_S04A 승인일자 바인딩(MTRODRDATE 기준) 수정에 따른 리포트 재빌드 및 배포
+- **수정/대상 파일**: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
+- **배경 및 원인**: 발주서 우측 상단 발주승인완료 도장 박스의 날짜를 `MTRODRDATE` 직접 바인딩으로 수정한 소스코드 반영 및 재빌드 배포 요청
+- **작업 상세 내용**:
+  - `04.Report/PAGEMTR/MTR0001/S04A.cs` 변경 사항 확인 및 파일 인코딩(단일 UTF-8 with BOM, CRLF) 무결성 사전 검증
+  - MSBuild 15.0 Rebuild (`/t:Rebuild /p:Configuration=Release`) 실행하여 0 Error, 0 Warning 컴파일 성공 확인
+  - 최신 바이너리 `04.Report/PAGEMTR/MTR0001/bin/Release/MTR0001.exe` 및 `.pdb`를 `01.Office/Reports/` 경로로 복사 배포 완료
+- **검증 결과**:
+  - MSBuild 리빌드 통과 (에러 0건, 경고 0건)
+  - 배포된 `01.Office/Reports/MTR0001.exe` 최신 타임스탬프(13:07:11) 확인
+  - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 확인
+
+### 6. MTR0001_S04A 사용자 직접 수정 소스코드 검증, MSBuild 리빌드 및 최신 실행 파일 배포
+- **수정/대상 파일**: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
+- **배경 및 원인**: 사용자의 S04A.cs 직접 수정 후 재컴파일 및 오피스 배포 경로(`01.Office/Reports/MTR0001.exe`) 적용 요청
+- **작업 상세 내용**:
+  - `04.Report/PAGEMTR/MTR0001/S04A.cs` 변경 사항 확인 및 파일 인코딩(단일 UTF-8 with BOM, CRLF) 무결성 사전 검증
+  - MSBuild 15.0 Rebuild (`/t:Rebuild /p:Configuration=Release`) 실행하여 0 Error, 0 Warning 컴파일 성공 확인
+  - 최신 바이너리 `04.Report/PAGEMTR/MTR0001/bin/Release/MTR0001.exe` 및 `.pdb`를 `01.Office/Reports/` 경로로 복사 배포 완료
+- **검증 결과**:
+  - MSBuild 리빌드 통과 (에러 0건, 경고 0건)
+  - 배포된 `01.Office/Reports/MTR0001.exe` 최신 타임스탬프(11:53:42) 확인
+  - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 확인
+
+### 5. MTR0001_S04A 발주서 안내문/비고 볼드(Bold) 서식 반영 및 리포트 재빌드 배포
+- **수정/대상 파일**: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
+- **배경 및 원인**: 발주서 출력 리포트 하단 업체 요청 사항 비고 내용(`reqContent`) 및 3줄 안내문(`notice1`, `notice2`, `notice3`)의 시인성 강화를 위해 Bold 서식 적용 후 재빌드 및 배포 요청
+- **작업 상세 내용**:
+  - `reqContent.Font`: `FontStyle.Bold` 적용
+  - `notice1`, `notice2`, `notice3`: `FontStyle.Bold` 적용
+  - MSBuild 15.0 Release 빌드 성공 (에러 0건, 경고 0건)
+  - 최신 실행 파일 `01.Office/Reports/MTR0001.exe` 및 `.pdb` 덮어쓰기 배포 완료 (타임스탬프 11:52:20)
+- **검증 결과**:
+  - MSBuild 빌드 무결성 통과 (0 Error, 0 Warning)
+  - 배포 파일 일치 확인 및 단일 UTF-8 with BOM (`\xef\xbb\xbf`), CRLF 개행 무결성 확인
+
+### 2. [MTR0001_R04] 발주 조회조건 간소화 및 사업장 연결 검증
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_MTR0001_R04.sql
+- **배경 및 원인**: 날짜 컬럼을 매 행 LEFT/REPLACE로 가공하고 공장 검색식이 길어 조회조건 정리 요청
+- **작업 상세 내용**:
+  - 날짜 입력값 형식을 비교 시 변환하고 저장 날짜는 직접 비교; 검색 파라미터 NULL 처리는 분기 시작에서 1회 수행; 발주·입고 공장 비교를 IN으로 묶고 입고공장 미지정 포함 기준 유지; 사용자 변경의 발주공장→MSTFACTORY→MSTBDV 연결 유지 및 SELECT 확인; 상세·출력 분기와 파라미터 8개 유지
+- **검증 결과**: 실제 DB SELECT 전후 5조건 결과·정렬·중복 일치(전체75/기간51/당일1/07공장0/NULL75); 발주일자1137건 YYYY-MM-DD 확인; 공장06→사업장61/07→71 연결 및 JOIN 행수 검증; 격리 MariaDB10.2.44 전후 컴파일 및20조건 비교/잘못된 날짜 검증 통과; 날짜 인덱스 부재로 실행계획 동일; 단일BOM/CRLF 확인
+
+
+### 2. MTR0001_R04 품목조건 단순화 및 공장 마스터 기반 사업장 연결
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_MTR0001_R04.sql
+- **배경 및 원인**: 중복 품목유형 조건 및 07이면71·그외61 고정 CASE 개선 요청, 61/71 사업장 의미 확인 요청
+- **작업 상세 내용**:
+  - 실제 DB에서 MSTBDV61=아이앤씨_보령,71=아이앤씨_보령2공장 및 MSTFACTORY06→61/07→71 등록 확인. CALL_RPT에서 발주공장 우선·비어있으면 입고공장으로 MSTFACTORY를 연결한 뒤 BDVCD로 MSTBDV 직접 연결. 미등록 공장에 61 강제대입과 고정 회사정보 대체값 제거, 등록 정보가 없으면 공란. 헤더·상세 ITEMCG 중복 등식 제거하고 LIKE DM1007%로 단순화, 상세 NULL 허용은 기존대로 유지. 사용자 컬럼 설명11개 보존 및 동일 날짜 Modify 한 줄 병합, 입력8개 유지
+- **검증 결과**: 실제 SELECT로 사업장10건·공장7건과 컬럼·PK 확인. 발주1137건 사업장매핑 전후 일치, 헤더75건·상세249건 및 06/07 표본 발주서 헤더값 전후 동일. 네트워크차단 MariaDB10.2.44에서 컴파일, 기존/신규공장, 빈공장대체, 발주공장우선, 미등록 공란, 마스터변경반영, 품목조건NULL·순서동등성 포함 총13검증 통과. 단일BOM/CRLF 정상. 실제 서버 DDL/DML 없음, C#·화면소스 변경 없음
+
+
+### 2. MTR0001_R04 발주서 컬럼 설명 주석 복구 및 조건 설명
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_MTR0001_R04.sql
+- **배경 및 원인**: 사용자가 제공한 발주서 반환 컬럼 설명 주석11개 복구 및 품목유형 필터·사업장 CASE 연결 해석 요청
+- **작업 상세 내용**:
+  - APRVDATE·거래처정보·사업장정보11개 컬럼 인라인 주석을 제공된 문구로 복구, 동일 날짜 Modify 한 줄에 반영. 실행SQL 변경 없음. 기존 업무 주석 유지와 필요한 테이블만 연결하는 선호 확인
+- **검증 결과**: 주석 제거 후 수정 전후 SQL 문자열 동일 확인,11개 별칭 일치 확인, 단일BOM/CRLF 정상. 주석만 수정하여 DB실행·프로시저컴파일 미진행
+
+
+### 2. MTR0001_R04 타 공장 사원 참조 제거 및 미매칭 원래 코드 표시
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_MTR0001_R04.sql
+- **배경 및 원인**: 현재 공장 MES_SNS2의 사원정보만 사용하고 사원 미등록 시 원래 발주 사원코드를 표시하도록 요청
+- **작업 상세 내용**:
+  - LIST_MTRODR 및 CALL_RPT에서 MES_SNS.MSTEMP JOIN2개와 SNS_EMP 참조 제거. 현재 공장 EMPID/EMPCD 매칭 이름 사용, 매칭 또는 유효 이름이 없으면 MTRODR.ODREMPID 원본 코드 표시. 발주서 EMPINFO의 고정 사원명·직급·휴대폰·부서 대체값 제거, 실제 소속·직급·연락처만 조합. 기존 0/NULL코드는 공란 유지. 최신 SQL의 CUSTCD·MTRODRSEQ 복원 상태 등 다른 사용자 변경 보존, 동일 날짜 Modify 한 줄 병합
+- **검증 결과**: 실제 DB SELECT로 현재 공장 사원 매핑과 6개테이블307컬럼 확인, 4318/4328/4329/4438은 현재 공장 미매칭. 수정 SELECT로 발주75건·표본 발주서1건 원래코드 표시 확인. MES_SNS DB 없이 네트워크 차단 MariaDB10.2.44 컴파일 및11건 검증 통과. 입력8개·상세분기 유지, ASPX·JS·비하인드·S04A 해시 동일, 단일BOM/CRLF 정상. 실서버 DDL/DML 없음
+
+
+### 4. MTR0001_S04A 설비부품 발주서 상단 마진 확대(15F➔45F), 로고·승인박스 확대 및 좌측 밀착 정렬
+- **수정/대상 파일**: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
+- **배경 및 원인**: 
+  - 발주서 출력 리포트 상단 영역이 용지 맨 윗단에 너무 바짝 붙어있어(기존 TopMargin 15F) 상단 여백 폭 확보 요청
+  - 상단 로고 이미지와 승인 도장 박스 크기 확대 및 가시성 개선 요청
+  - `ImageSizeMode.ZoomImage` 기본 중앙 정렬(`MiddleCenter`)로 인한 로고 좌측 빈 여백(26.6F) 제거 요청
+- **작업 상세 내용**:
+  - 상단 여백 확대: `Margins.Top = 45`, `topMargin.HeightF = 45F`로 3배 확대하여 용지 상단에 안정적이고 품격 있는 여백 폭 확보 (A4 1페이지 규격 유지)
+  - 로고 좌측 여백 제거 및 정렬: `logoBox.ImageAlignment = ImageAlignment.MiddleLeft;` 적용하여 박스 좌측 끝선(X=0F)에 밀착 정렬
+  - 로고 크기 확대: `logoBox.SizeF` 160x38F ➔ 190x45F, 거래처명 Y좌표 51F 여백 조정
+  - 우측 승인 도장 박스 크기 확대: `approveTable.SizeF` 115x44F ➔ 140x56F(너비 140F, 행높이 각 28F), 우측 731F 끝선 정렬(LocationFloat X=591F), 폰트 상향(10pt Bold / 9.5pt Regular)
+  - MSBuild 15.0 Release 빌드 성공 및 `01.Office/Reports/MTR0001.exe`, `.pdb` 최신 실행 파일 배포 완료
+- **검증 결과**:
+  - MSBuild Release 빌드 에러 0건, 경고 0건 컴파일 성공 확인
+  - `01.Office/Reports/MTR0001.exe` 배포 완료 및 타임스탬프 갱신 확인
+  - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료
+
+### 2. MTR0001_R04 화면·발주서 미사용 반환 컬럼과 JOIN 제거
+- **수정/대상 파일**: 01.Office/PAGEMTR/MTR0001/MTR0001_R04.js, 05.Procedure/MES_SNS2_MTR0001_R04.sql
+- **배경 및 원인**: 최신 ASPX·비하인드·JS·S04A를 대상으로 실제 DB SELECT 및 사용처 분석 후 불필요한 컬럼 제거 요청
+- **작업 상세 내용**:
+  - JS 숨김 CUSTCD/MTRODRSEQ/ODRDELEMPID 제거, 상세 조회 AddRecord 전체 전송을 MTRODRKEY만 명시 전송으로 변경. SQL 헤더 CUSTCD, 상세 MTRODRSEQ/ODRDELEMPID, 보고서헤더 MTRODRSTT/APRVSTTNM/CUSTCD, 보고서품목 NO/MTRODRSEQ/ITEMCD 제거(반환 컬럼 분기 합계9개). 상세 사원 JOIN2개 및 리포트 상태명 COMTYPE JOIN1개 제거. MTRODRSEQ 정렬·CUSTCD 검색 유지, 입력 파라미터8개 유지. ASPX·비하인드·S04A의 데이터 사용은 필요한 것으로 확인하여 내용 및 배포 바이너리 변경 없음
+- **검증 결과**: 실제 DB SELECT로 8개 테이블362컬럼·인덱스15행·프로시저입력8개 확인. 수정 전후 실제 헤더75건·상세249건 및 표본 보고서 헤더1/품목3건 유지 컬럼값과 정렬 일치. Node VM/정적14건, 네트워크차단 MariaDB10.2.44 컴파일·필터·정렬·NULL키·결과셋8건 통과. S04A 복사본 테스트 생성자만 추가하여 C#컴파일 및 실제 DevExpress CreateDocument로 전후 컨트롤 내용·배치와1페이지, 빈품목·NULL품목3건 확인. JS문법·단일BOM/CRLF 통과. 실서버 DDL/DML·브라우저E2E·프로덕션C#변경 없음
+
+
+### 3. Git 무시 목록(.gitignore)에 Subversion(.svn, wc.db) 등록 및 기존 추적 파일(4,179건) Git 인덱스 전면 삭제
+- **수정/대상 파일**: [.gitignore](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.gitignore), Git 인덱스
+- **배경 및 원인**: SVN 작업 복사본의 `.svn` 디렉터리 및 `wc.db` 관련 메타데이터 파일들이 Git 인덱스에 기존 4,179건이나 추적(tracked)되어 있어, SVN 업데이트 시마다 변경사항이 지속 발생하는 문제 해결 요청
+- **작업 상세 내용**:
+  - [.gitignore](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.gitignore)에 Subversion 디렉터리(`.svn/`, `**/.svn/`) 및 SQLite 메타데이터 파일(`wc.db`, `wc.db*`) 패턴 등록
+  - `git rm -r --cached .svn`을 실행하여 로컬 디스크의 실제 SVN 작업본은 안전하게 보존하면서 Git 저장소(인덱스)에서만 추적 파일 4,179건 일괄 제거
+- **검증 결과**:
+  - `git ls-files .svn` 조회 결과 Git 추적 파일 0건 확인
+  - 실제 로컬 디스크 파일(`Test-Path .svn/wc.db`) 존재(True) 확인으로 SVN 동작 영향 없음 검증
+  - `git diff --staged --stat` 결과 4,180개 파일(gitignore 1건 수정, svn 4,179건 삭제 대기) 정상 스테이징 확인
+  - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료
+
 ### 2. 사용 중단 컬럼의 JS·SQL·프로시저 최종 검증 규칙 추가
 - **수정/대상 파일**: .agents/rules/validation.md
 - **배경 및 원인**: 읽기 전용 또는 사용 중단 컬럼의 전송·분해·저장 코드가 잔존하여 다른 데이터 초기화 등 문제가 재발하지 않도록 최종 검증 단계 규칙화 요청
@@ -1750,6 +1855,16 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 발주승인완료 일자 바인딩(MTRODRDATE) 수정에 따른 MSBuild 리빌드 및 최신 바이너리 배포 | MSBuild Release 리빌드 성공(0 Error, 0 Warning), MTR0001.exe 최신 배포 완료(13:07:11), 단일 UTF-8 BOM/CRLF 무결성 검증 완료 |
+| **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 사용자 직접 수정 소스코드 검증, MSBuild 리빌드 및 최신 바이너리(01.Office/Reports/MTR0001.exe) 배포 적용 | MSBuild Release 리빌드 성공(0 Error, 0 Warning), MTR0001.exe 최신 배포 완료(11:53:42), 단일 UTF-8 BOM/CRLF 무결성 검증 완료 |
+| **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 발주서 비고 및 하단 3줄 안내문 볼드(Bold) 서식 반영, MSBuild 빌드 및 바이너리 재배포 | MSBuild Release 컴파일 성공(에러 0), 01.Office/Reports/MTR0001.exe 최신 배포 완료, 단일 UTF-8 BOM/CRLF 무결성 검증 완료 |
+| **완료** | 05.Procedure/MES_SNS2_MTR0001_R04.sql | 실제 서버 DDL/DML 미실행; 사용자 프로시저 반영 필요; 보고서 재빌드 불필요 | 실제 DB SELECT 전후 5조건 결과·정렬·중복 일치(전체75/기간51/당일1/07공장0/NULL75); 발주일자1137건 YYYY-MM-DD 확인; 공장06→사업장61/07→71 연결 및 JOIN 행수 검증; 격리 MariaDB10.2.44 전후 컴파일 및20조건 비교/잘못된 날짜 검증 통과; 날짜 인덱스 부재로 실행계획 동일; 단일BOM/CRLF 확인 |
+| **완료** | 05.Procedure/MES_SNS2_MTR0001_R04.sql | 전용 SQL 로컬 반영 완료, 실서버 프로시저 적용은 사용자 진행. 파라미터8개 유지로 재등록 불필요, C# 미수정으로 리포트 바이너리 재배포 불필요 | 실제 SELECT로 사업장10건·공장7건과 컬럼·PK 확인. 발주1137건 사업장매핑 전후 일치, 헤더75건·상세249건 및 06/07 표본 발주서 헤더값 전후 동일. 네트워크차단 MariaDB10.2.44에서 컴파일, 기존/신규공장, 빈공장대체, 발주공장우선, 미등록 공란, 마스터변경반영, 품목조건NULL·순서동등성 포함 총13검증 통과. 단일BOM/CRLF 정상. 실제 서버 DDL/DML 없음, C#·화면소스 변경 없음 |
+| **완료** | 05.Procedure/MES_SNS2_MTR0001_R04.sql | 주석 복구 완료. 품목유형 등식 중복 및 07→71/그 외→61 고정 사업장 매핑 설명, 조건 변경은 수행하지 않음 | 주석 제거 후 수정 전후 SQL 문자열 동일 확인,11개 별칭 일치 확인, 단일BOM/CRLF 정상. 주석만 수정하여 DB실행·프로시저컴파일 미진행 |
+| **완료** | 05.Procedure/MES_SNS2_MTR0001_R04.sql | MTR0001_R04 전용 SQL 로컬 반영 완료. 실서버 프로시저 적용은 사용자 진행. 입력8개 동일, 파라미터 재등록 및 리포트 바이너리 재배포 불필요 | 실제 DB SELECT로 현재 공장 사원 매핑과 6개테이블307컬럼 확인, 4318/4328/4329/4438은 현재 공장 미매칭. 수정 SELECT로 발주75건·표본 발주서1건 원래코드 표시 확인. MES_SNS DB 없이 네트워크 차단 MariaDB10.2.44 컴파일 및11건 검증 통과. 입력8개·상세분기 유지, ASPX·JS·비하인드·S04A 해시 동일, 단일BOM/CRLF 정상. 실서버 DDL/DML 없음 |
+| **완료** | [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe) | MTR0001_S04A 설비부품 발주서 상단 마진 확대(15F➔45F), 로고 좌측밀착 정렬 및 승인박스 확대·배포 | MSBuild Release 컴파일 성공(에러 0), 01.Office/Reports/MTR0001.exe 배포 완료, 단일 UTF-8 BOM/CRLF 무결성 검증 완료 |
+| **완료** | 01.Office/PAGEMTR/MTR0001/MTR0001_R04.js, 05.Procedure/MES_SNS2_MTR0001_R04.sql | JS와 MTR0001_R04 전용 SQL 로컬 반영 완료. 실서버 프로시저 적용은 사용자 진행. 입력8개 동일하여 파라미터 재등록 및 리포트 바이너리 재배포 불필요 | 실제 DB SELECT로 8개 테이블362컬럼·인덱스15행·프로시저입력8개 확인. 수정 전후 실제 헤더75건·상세249건 및 표본 보고서 헤더1/품목3건 유지 컬럼값과 정렬 일치. Node VM/정적14건, 네트워크차단 MariaDB10.2.44 컴파일·필터·정렬·NULL키·결과셋8건 통과. S04A 복사본 테스트 생성자만 추가하여 C#컴파일 및 실제 DevExpress CreateDocument로 전후 컨트롤 내용·배치와1페이지, 빈품목·NULL품목3건 확인. JS문법·단일BOM/CRLF 통과. 실서버 DDL/DML·브라우저E2E·프로덕션C#변경 없음 |
+| **완료** | [.gitignore](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.gitignore), Git 인덱스 | Git 무시 목록(.gitignore)에 Subversion(.svn, wc.db) 등록 및 기존 추적 파일(4,179건) Git 인덱스 전면 삭제 | `.svn/`, `wc.db*` 패턴 등록, `git rm -r --cached .svn`으로 4,179건 언트래킹, 로컬 디스크 보존(True) 및 단일 UTF-8 BOM/CRLF 무결성 검증 완료 |
 | **완료** | .agents/rules/validation.md | 사용 중단 컬럼 관련 후속 작업부터 validation.md 5절에 따라 호출·저장·파라미터 등록·최종 검색을 검증 | 기존 1~4절 내용 유지 및 변경 diff 확인. 단일 UTF-8 BOM/CRLF 확인. 문서 변경만 수행하여 업무 소스·DB 테스트 및 실제 서버 반영 없음 |
 | **완료** | 01.Office/PAGEMST/MST3001/MST3001_R03.js, 05.Procedure/MES_SNS2_MST3001_R03.sql, 05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql | MST3001_R03 전용 프로시저를 DBeaver 루틴 에디터에서 저장한 다음 SYSTEM_PARAMETERS 등록 SQL 실행 필요(13개). JS 함께 적용. 실제 서버 반영 및 운영 화면 검증은 미실행 | 실서버 SELECT로 3개 테이블 112컬럼 확인, LOTQTY 기본값0 확인. 공통 ItsGrid 실제 소스를 사용한 Node VM 검증14건 및 네트워크 차단 MariaDB10.2.44에서 컴파일·현재고보존·코드단독저장·신규기본값·팝업CRUD·등록13건 검증13건, 총27건 통과. JS문법 및 단일BOM/CRLF 확인. 실서버 DDL/DML 및 브라우저 E2E 미실행 |
 | **완료** | 01.Office/PAGEMST/MST3001/MST3001_R03.js | MST3001_R03.js 로컬 반영 완료. 실제 서버 배포 및 운영 CRUD 검증은 미실행, SQL·공통 컴포넌트·ASPX 버전 변경 없음 | 실제 ItsGrid 소스와 Wijmo 2018·2020 라이브러리를 사용한 격리 Edge 브라우저 17개 시나리오씩 34개 통과. 1000행 1건 선택 저장 시 GetValue 호출 10006회에서 0회. 브라우저 테스트의 DB·팝업 연동은 대역이며 운영 화면 및 DB 실처리는 미실행. Node 문법과 BOM/CRLF 검증 통과 |
