@@ -2,6 +2,12 @@
 .vs/
 **/.vs/
 
+# Subversion
+.svn/
+**/.svn/
+wc.db
+wc.db*
+
 # Report Output & Temporary Files
 01.Office/Reports/tempFiles/
 04.Report/bin/tempFiles/
