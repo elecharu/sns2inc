@@ -11,7 +11,7 @@ ItsPage.Load = function () {
         column.create('품목코드', 'ITEMCD', { width: 150, allowMerging: true }),
         column.create('품명', 'ITEMNM', { width: 300, allowMerging: true }),    
         column.create('투입공정', 'PRCNM', { width: 100, align: 'center', allowMerging: true }),    
-        column.create('구분', 'QTYTP', { width: 80 }),    
+        column.create('구분', 'QTYTP', { width: 80, align: 'center' }),    
 
         column.band('1일', {}, [
             column.create('수량', 'QTY_1', { width: 60, align: 'center' }),

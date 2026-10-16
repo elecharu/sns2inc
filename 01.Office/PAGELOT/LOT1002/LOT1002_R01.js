@@ -4,7 +4,7 @@
 ItsPage.Load = function () {
 
     ItsGrid.Create('grid1', { isCheckBoxGrid: false, isSubTotalGrid: true }, [
-        column.create('품목ID', 'ITEMID', { width: 120, hidden: true }),
+        column.create('품목ID', 'ITEMID', { width: 120 }),
         column.create("품목유형", "ITEMCG", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center' }),
         column.create("공급구분", "ITEMSRC", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'DM160', align: 'center', hidden: true }),
         column.create('품목코드', 'ITEMCD', { width: 120, align: 'center' }),
@@ -23,7 +23,7 @@ ItsPage.Load = function () {
     ]);
 
     ItsGrid.Create('grid2', { isCheckBoxGrid: true }, [
-        column.create('품목ID', 'ITEMID', { width: 120, hidden: true }),
+        column.create('품목ID', 'ITEMID', { width: 120 }),
         column.create("품목유형", "ITEMCG", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center' }),
         column.create('품목코드', 'ITEMCD', { width: 120, readOnly: false }),
         column.create('품명', 'ITEMNM', { width: 300 }),
@@ -136,18 +136,6 @@ ItsButton.Event('btn_IN_ETC').onClick = function () {
             ItsButton.EventSearch();
 
             ItsGrid.SelectRow('grid1', current_index);
-
-            // ERP IF 프로시저 호출 (2026-03-05 신정수)
-            var mssql = new ItsMssql();
-
-            mssql.AddQuery("EXEC sea_mfg.dbo.usp_z_mes_receive_305; EXEC sea_mfg.dbo.usp_z_mes_receive_306;");
-
-            mssql.Call();
-
-            if (mssql.isError) {
-                mssql.ShowErrMsg();
-                return;
-            }
         });
 }
 /***********************************************************************************************************************************/

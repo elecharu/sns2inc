@@ -4,7 +4,7 @@
 ItsPage.Load = function () {
 
     ItsGrid.Create('grid1', { isSubTotalGrid: true }, [
-        column.create('품목ID', 'ITEMID', { width: 100, hidden: true }),
+        column.create('품목ID', 'ITEMID', { width: 100}),
         column.create('창고코드', 'WARECD', { width: 100, hidden: true }),
         column.create('창고명', 'WARENM', { width: 100, align: 'center' }),
         column.create("품목유형", "ITEMCG", { width: 90, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center' }),
