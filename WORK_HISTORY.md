@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-10-15
+> **최종 갱신일**: 2026-10-16
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -12,6 +12,48 @@
 2. **주석 및 네이밍 표준**: 소스코드에는 `// YYYY-MM-DD 기능설명` 표준을 준수하며, 본 문서에는 원인 분석, 설계 의도, 수정 파일 링크를 명시합니다.
 3. **컴파일 및 빌드 검증**: 소스 수정 후에는 반드시 컴파일 빌드 무결성(MSBuild 등)을 확인하고 그 결과를 기재합니다.
 4. **대화 기록 및 불러오기 연계**: 모든 사용자 요청 및 작업 결과는 본 문서에 실시간 동기화되어, 새 세션이나 나중에 작업 재개 시 "불러오기"를 통해 이전 맥락을 100% 이어받습니다.
+
+---
+
+## 🕒 2026-10-16 (금) 작업 내역
+
+### 1. EQM1001_R03 제조설비 정기 점검 시트 DevExpress Report Designer 표준 호환 전면 구축
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.cs), [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [04.Report/PAGEEQM/EQM1001/R03.resx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.resx), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe)
+- **배경 및 원인**: 기존 R03 리포트가 비하인드 C# 코드(BuildReport)에서 컨트롤을 동적으로 생성하여 Visual Studio 디자인 뷰에서 빈 화면이 표시되고 DevExpress Designer 기능을 이용할 수 없던 문제를 해결하기 위해, 사용자 요청(S01B 템플릿 기준)에 따라 Visual Studio DevExpress Report Designer 표준 형식으로 전면 재구축 요청
+- **작업 상세 내용**:
+  - 1) [R03.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.Designer.cs)에 TopMargin, BottomMargin, PageHeader(타이틀, 설비정보 테이블, 점검헤더 테이블), Detail(점검항목 그리드 바인딩 행), ReportFooter(확인/점검자/담당 결재란, 개정이력 4개 행 및 헤더), PageFooter(계획서 라벨) 등 전체 리포트 컨트롤을 DevExpress Designer 표준 코드로 완전 구성
+  - 2) [R03.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.cs)는 사용자 첨부 기준(S01B)에 맞추어 매개변수 없는 기본 생성자 `public R03() { InitializeComponent(); }`, 파라미터 생성자 `public R03(Dictionary<string, string> param) : this()`, 데이터 바인딩 로직(`BindReportData`, `BindRevHistory`), `MODEL_S1` 클래스 및 호환용 `R03A` 파생 클래스로 구조 정규화
+  - 3) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 바이너리([01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe)) 배포 완료
+  - 4) DesignSurface 로드 테스트를 통해 DesignerHost 인스턴스화 및 ReportDesigner 정상 진입 검증
+- **검증 결과**: MSBuild 컴파일 0 Error 통과, DesignSurface 인스턴스화 통과, 단일 UTF-8 with BOM 및 CRLF 개행 무결성 100% 확인
+
+### 3. EQM1001_R03 리포트 DB 연결 표준 정규화 및 DevExpress XtraReport 디자이너 개발 규칙 수립
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.cs), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe), [.agents/rules/report_devexpress.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/report_devexpress.md), [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md)
+- **배경 및 원인**: 사용자의 요청에 따라 R03.cs 내에 하드코딩되어 있던 CreateMaria 헬퍼 메서드(DB IP, Port, 암호 설정)를 프로젝트 표준 템플릿(S01A/S01B)과 동일하게 제거하고 new ItsMaria(...) 기본 생성자로 정규화하며, 향후 모든 신규/수정 리포트가 Visual Studio DevExpress Report Designer 표준 방식을 준수하도록 .agents/rules/에 공식 개발 규칙 문서화
+- **작업 상세 내용**:
+  - 1) [R03.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.cs): CreateMaria 수동 설정 블록 완전 제거, new ItsMaria("EQM1001_R03", "CALL_PLAN_RPT") 표준 호출로 일치 (ITS_CONFIG_MARIA.xml 자동 로드 활용)
+  - 2) [.agents/rules/report_devexpress.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/report_devexpress.md): DevExpress XtraReport 디자이너 표준 개발 규칙 신규 제정 (C# 코드 동적 생성 금지, 디자이너 3개 파일 세트 cs/Designer.cs/resx 표준, 기본 생성자 public R03() { InitializeComponent(); } 필수, components 컨테이너 선언/초기화, InitializeComponent() 내 임의 헬퍼 메서드 호출 금지, XRTableRow의 ISupportInitialize 미지원 주의, CreateMaria 하드코딩 금지, ItsMaria/ItsSecurity 공통 컴포넌트 함수 최우선 적극 활용 및 불필요한 자체 헬퍼 제작 금지, MODEL_S1 내부 모델 선언 및 MSBuild 검증/배포 절차 명시)
+  - 3) [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md): 1절에 화면·스크립트·백엔드·리포트 전반의 공통 컴포넌트/함수 지원 여부 선행 확인 및 최우선 적극 활용(Framework-First & Common Utility Usage) 규칙 대폭 강화 (C# 코드 동적 생성 금지, 디자이너 3개 파일 세트 cs/Designer.cs/resx 표준, 기본 생성자 public R03() { InitializeComponent(); } 필수, components 컨테이너 선언/초기화, InitializeComponent() 내 임의 헬퍼 메서드 호출 금지, XRTableRow의 ISupportInitialize 미지원 주의, CreateMaria 하드코딩 금지, MODEL_S1 내부 모델 선언 및 MSBuild 검증/배포 절차 명시)
+  - 4) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 바이너리(01.Office/Reports/EQM1001.exe, 04.Report/bin/EQM1001.exe) 배포 완료
+- **검증 결과**: MSBuild 컴파일 0 Error 통과, 모든 수정 및 신규 파일 단일 UTF-8 with BOM 및 CRLF 개행 무결성 100% 확인
+
+### 4. EQM1001_R03 리포트 PageFooter 밴드 제거 및 재빌드·배포
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe), [04.Report/bin/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/bin/EQM1001.exe)
+- **배경 및 원인**: 사용자 요청에 따라 정기점검 계획서 하단 불필요한 PageFooter 밴드(제조설비 정기 점검 계획서 라벨)를 제거하고 Visual Studio DevExpress Report Designer 표준 코드 정리 및 재빌드·배포 요청
+- **작업 상세 내용**:
+  - 1) [R03.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.Designer.cs): PageFooterBand 초기화, xrLabelFooter 컨트롤 선언, PageFooter 밴드 속성 블록, Bands.AddRange 내 PageFooter 등록 및 필드 선언부 완전 제거
+  - 2) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning)
+  - 3) 최신 실행파일([01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe) 및 [04.Report/bin/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/bin/EQM1001.exe)) 복사 배포 완료
+- **검증 결과**: MSBuild 컴파일 0 Error 통과, 단일 UTF-8 with BOM 및 CRLF 개행 무결성 100% 확인
+
+### 2. EQM1001_S01A 설비이력카드 Visual Studio 디자이너 호환성 확보 및 기본 생성자 보완
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/S01A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/S01A.cs), [04.Report/PAGEEQM/EQM1001/S01A.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/S01A.Designer.cs), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe)
+- **배경 및 원인**: Visual Studio Report Designer에서 S01A.cs 열기 시 헬퍼 메서드 제거 및 XRTableRow BeginInit 제외 후 발생한 '값은 null일 수 없습니다. 매개 변수 이름: component' 오류 해결
+- **작업 상세 내용**:
+  - 1) S01A.cs에 기본 생성자 public S01A() { InitializeComponent(); } 추가 및 기존 생성자 : this() 연결
+  - 2) S01A.Designer.cs InitializeComponent() 최상단에 this.components = new System.ComponentModel.Container(); 초기화 반영
+  - 3) MSBuild 15.0 Rebuild 성공 및 최신 바이너리 배포 완료
+- **검증 결과**: MSBuild 컴파일 0 Error 통과, 단일 UTF-8 with BOM 및 CRLF 무결성 통과
 
 ---
 
@@ -2006,6 +2048,7 @@
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql, 04.Report/PAGEEQM/EQM1001/S05A.cs | 계획서 하단 개정이력 최신 4건 표시 반영 완료. 프로시저 DB 반영과 S05A 보고서 빌드 배포 필요 | 네트워크 없는 MariaDB 10.2.44에서 원본·수정 전체 프로시저 컴파일 및 17건 통과: 그룹/설비 최신 4건·상태·순서, 과거 REV 선택에도 최신 이력 유지, REV 공란 자동선택, REV.0, 1~3건 경계값, 잘못된 계획 선택, 본문 결과 동일, 이월 코드 제거 확인. 스테이징 S05A를 프로젝트 MSBuild Release로 빌드 성공. 검증 후 로컬 소스 적용, BOM/CRLF/파일 바이트 일치 확인. 실제 웹 PDF 출력은 미실행. |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx | 확인창·알림 토스트 및 화면 안내 문구 전면 간소화 완료 | UTF-8 with BOM 및 CRLF 개행 무결성 검증 통과(BOM: true, DoubleCR: false), git diff 확인 완료 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js | 설비그룹 개정 저장 및 승인 재요청 확인창 문구 간소화 완료 | UTF-8 with BOM 및 CRLF 개행 무결성 검증 완료(BOM: true, DoubleCR: false) |
+| **완료** | [R03.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.cs), [R03.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [R03.resx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.resx) | R03 제조설비 정기 점검 시트 DevExpress Report Designer 표준 형식 구축 | 첨부 템플릿 기준 Designer.cs 레이아웃 전면 구성, R03.cs 기본생성자 및 바인딩 정규화, MSBuild 0 Error 통과, 바이너리 배포 완료 |
 | **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/Reports/EQM1001.exe | 계획서 출력 최신 REV 자동 선택 및 이력화 완료 | MSBuild 컴파일 오류 0건, 인코딩 BOM/CRLF 검증 통과, git diff 검증 완료 |
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql | 주기관리 조회 성능 개선 로컬 업무 소스 반영 완료. 실제 서버 프로시저 반영 및 화면 최종 응답시간 확인은 미실행 | 격리 MariaDB 10.2.44에서 원본·수정 프로시저 전체 컴파일 및 18건 검증 통과: 미등록 주기, NULL/빈 문자열/공백, 정상·미등록 코드, 기존 사원명, 설비코드·이름 검색, 연도·CHKTP 분리, 조회년도 검증, 승인 계획 없는 주기 저장, 12개월 사원코드 저장/이름 조회, 수정·삭제 및 실적 월 잠금. 최종 후보 실제 DB 읽기 전용 SELECT 222.12ms, 1143행 30컬럼 전체 JSON/순서 동일. 연결 개설/웹 렌더링 제외 측정. 스테이징 검증 후 적용 파일 바이트 일치, 다른 분기·입력 서명 불변, UTF-8 BOM/CRLF 정상. |
 | **분석 완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql (분석만), 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js (분석만) | 주기관리 조회 병목 확인 및 결과 동일성 검증 완료. 우선 R03 LIST_CYCLE_EQMCD에서 빈 값/NULL의 GPCD 호출을 건너뛰는 최소 수정 권고; 업무 소스 반영 전 상태 | 원본/후보 모두 1143행 30컬럼. 전체 결과 JSON 및 행 순서 완전 동일, 셀 차이 0건, 설비코드 중복 0건. 측정은 연결 개설과 JSON 직렬화를 제외한 SQL 결과 수신/DataSet 구성 시간이며 실제 브라우저 전체 시간은 미측정. 진단 파일은 TEMP/codex-eqm1001-cycle-perf-20261007에 저장. |
@@ -2110,6 +2153,8 @@
 | **완료** | [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js) | MST3001_R03 드래그 선택 영역 Delete 키 삭제 시 로케이션명 잔존 결함 원인 분석 및 캡처링 이벤트 해결 | ItsPage.Load 내 grid.hostElement 캡처링 이벤트로 Delete 키 최우선 가로챔, 드래그 다중 행 LOCACD·LOCANM 동시 초기화 및 행 체크, GetCheckedRows 정합성 방어 추가. Node.js 검사 통과, UTF-8 BOM/CRLF 무결성 검증 완료 |
 | **완료** | [MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js) | MTR0001_R04 및 EQM1001_R03 리포트 호출 시 불필요한 rpt.FileName 제거 및 프레임워크 표준 정돈 | XtraReport 컨트롤러 자동 파일명 발급 기능에 따라 불필요한 rpt.FileName 하드코딩 라인 전면 제거, 기존 화면 표준(SAL0001_S05, EQM1001_S01) 일치화. JS 구문검사 통과, UTF-8 BOM/CRLF 무결성 검증 완료 |
 | **완료** | [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md), [.gitignore](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.gitignore) | 공통 프레임워크 우선 활용 및 기존 화면 참조 규칙 추가, 레포트 임시 파일 정리 및 .gitignore 등록 | 신규 규칙 제정(Framework-First & Reference-First), tempFiles 로컬 파일 삭제 및 .gitignore 패턴 등록, git 추적 임시파일 인덱스 제거 완료. 단일 UTF-8 BOM/CRLF 검증 통과 |
+| **완료** | [R03.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.cs), [.agents/rules/report_devexpress.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/report_devexpress.md) | R03 CreateMaria 제거 및 DevExpress 리포트 규칙 수립 | CreateMaria 하드코딩 제거 및 new ItsMaria(...) 표준화, .agents/rules/report_devexpress.md 제정, framework_convention.md 연동, MSBuild 15.0 Rebuild 0 Error 통과, 바이너리 배포 및 단일 BOM 무결성 확인 |
+| **완료** | [R03.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe) | R03 PageFooter 밴드 제거 및 재빌드·배포 | PageFooterBand 및 xrLabelFooter 완전 삭제, MSBuild 15.0 Rebuild 0 Error 통과, 최신 바이너리 배포 및 단일 BOM 무결성 확인 |
 | **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | - |
 
 ---
