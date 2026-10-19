@@ -1,5 +1,5 @@
-﻿--host=183.106.107.163
+﻿--host=211.43.15.98
 --port=33061
 --user=root
 --password=its1005[]
---dbname=MES_DE
+--dbname=MES_SNS2

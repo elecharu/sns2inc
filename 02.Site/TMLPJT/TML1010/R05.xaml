@@ -1,0 +1,166 @@
+﻿<its:ItsPageTml xmlns:c1="http://schemas.componentone.com/winfx/2006/xaml"  
+                x:Class="TML1010.R05"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:TML1010"
+      xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
+      Width="980" Height="580">
+    <its:ItsPageTml.Resources>
+    <Style x:Key="GRID_BUTTON" TargetType="{x:Type Button}">
+        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="Background" Value="#E6E6E6" />
+        <Setter Property="BorderBrush" Value="#A0A0A0" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="FontFamily" Value="Malgun Gothic" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Margin" Value="1,0,1,0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+    </its:ItsPageTml.Resources>
+
+    <Canvas Background="WhiteSmoke">
+
+        <!-- 상단 조회 패널 -->
+        <UserControl Canvas.Left="0" Canvas.Top="0" Style="{DynamicResource TML_PANEL}">
+            <its:WrapContent x:Name="PANEL_S1" Width="980" Height="45">
+                <its:Button Width="150" Height="36" CommandName="SEARCH_EQMPARTS" Label="설비부품 재고조회"  />
+                <UserControl Width="20" />
+                <its:Combo Label="공장" Width="260" Value="{Binding FACTORYCD}" GPCD="FACTORYCD" x:Name="cmb_FACTORYCD" />
+            </its:WrapContent>
+        </UserControl>
+
+        <!-- 메인 설비부품 현재고 그리드 (11개 컬럼) -->
+        <UserControl Canvas.Left="0" Canvas.Top="45" Style="{DynamicResource TML_GRID}">
+            <its:Grid x:Name="GRID_G1" Width="980" Height="530">
+                <its:Grid.Columns>
+                    <its:Column Width="110" FieldName="ITEMCD" Header="설비부품코드" ALGIN="Center" />
+                    <its:Column Width="185" FieldName="ITEMNM" Header="설비부품명" />
+                    <its:Column Width="80" FieldName="GRADE" Header="중요도등급" ALGIN="Center" />
+                    <its:Column Width="90" FieldName="LOCANM" Header="로케이션" ALGIN="Center" />
+                    <its:Column Width="75" FieldName="SAFEQTY" Header="안전재고" ALGIN="Right" DecimalPoint="0" />
+                    <its:Column Width="75" FieldName="LOTQTY" Header="현재고" ALGIN="Right" DecimalPoint="0" />
+                    <its:Column Width="50" FieldName="ITEMUNIT" Header="단위" ALGIN="Center" GPCD="DM150" />
+                    <its:Column Width="65" Header="입고" CellType="Button" ButtonText="입고" CommandName="POP_IN_EQMPARTS" />
+                    <its:Column Width="65" Header="출고" CellType="Button" ButtonText="출고" CommandName="POP_OUT_EQMPARTS" />
+                    <its:Column Width="85" Header="입출고 이력" CellType="Button" ButtonText="조회" CommandName="POP_EQM_INOUT" />
+                    <its:Column Width="75" Header="라벨출력" CellType="Button" ButtonText="출력" CommandName="POP_PRINT_LABEL" />
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <!-- 발주 조회 및 입고 등록 팝업 -->
+        <UserControl x:Name="POP_IN" Canvas.Left="15" Canvas.Top="10" Style="{DynamicResource TML_POP}" Width="950" Height="545" Visibility="Collapsed">
+            <Grid Width="944" Height="510" Background="WhiteSmoke">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="58" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <its:WrapContent x:Name="PANEL_ODR" Margin="10,10,10,0">
+                    <its:Date Label="발주일자" LabelWidth="60" Width="184" Value="{Binding SDATE}" />
+                    <its:Date HidenLabel="Y" Width="124" Value="{Binding EDATE}" />
+                    <UserControl Width="12" />
+                    <its:Pop Label="거래처" LabelWidth="60" Width="290" GPCD="CUSTCD" Value="{Binding CUSTCD}" ShowKeyPad="True" />
+                    <UserControl Width="18" />
+                    <its:Button Label="발주조회" Width="140" Height="36" SetFontSize="16" CommandName="SEARCH_ODR_EQMPARTS" BackColor="SteelBlue" />
+                </its:WrapContent>
+                <Grid Grid.Row="1" Margin="10,0,10,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="500" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border BorderBrush="Black" BorderThickness="1" Background="White">
+                        <its:Grid x:Name="GRID_ODR" Width="498" Height="440">
+                            <its:Grid.Resources>
+                                <ResourceDictionary Source="/ITSLIB;component/00_Style/StyleGrid.xaml" />
+                            </its:Grid.Resources>
+                            <its:Grid.Columns>
+                                <its:Column Width="40" ButtonText="▶" CommandName="SEL_ODR" Header=" 선 택 " />
+                                <its:Column Width="82" FieldName="MTRODRDATE" Header="발주일자" ALGIN="Center" />
+                                <its:Column Width="108" FieldName="CUSTNM" Header="거래처" />
+                                <its:Column Width="70" FieldName="ODRQTY" Header="발주량" ALGIN="Right" DecimalPoint="0" />
+                                <its:Column Width="70" FieldName="PREV_INQTY" Header="입고량" ALGIN="Right" DecimalPoint="0" />
+                                <its:Column Width="70" FieldName="REMAINQTY" Header="발주잔량" ALGIN="Right" DecimalPoint="0" />
+                            </its:Grid.Columns>
+                        </its:Grid>
+                    </Border>
+                    <Border Grid.Column="2" BorderBrush="Black" BorderThickness="1">
+                        <StackPanel Margin="12,30,12,0">
+                            <its:WrapContent x:Name="PANEL_IN_INFO" Width="386" Height="145">
+                                <its:Text Label="설비부품코드" LabelWidth="90" Width="376" Value="{Binding ITEMCD}" ReadOnly="True" />
+                                <UserControl Width="376" Height="14" />
+                                <its:Text Label="설비부품명" LabelWidth="90" Width="376" Value="{Binding ITEMNM}" ReadOnly="True" />
+                                <UserControl Width="376" Height="14" />
+                                <its:Text Label="규격" LabelWidth="90" Width="376" Value="{Binding ITEMSPEC}" ReadOnly="True" />
+                                <its:Combo x:Name="cmb_IN_UNIT" Value="{Binding ITEMUNIT}" GPCD="DM150" Visibility="Collapsed" />
+                            </its:WrapContent>
+                            <its:WrapContent x:Name="PANEL_A2" Width="386" Height="235">
+                                <its:Pop x:Name="pop_IN_EMP" Label="입고자" LabelWidth="90" Width="376" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True" />
+                                <UserControl Width="376" Height="18" />
+                                <its:Date Label="입고일자" LabelWidth="90" Width="270" Value="{Binding INDATE}" />
+                                <UserControl Width="376" Height="18" />
+                                <its:Number Label="입고량" LabelWidth="90" Width="260" Value="{Binding INQTY}" ShowKeyPad="True" DecimalPoint="0" />
+                                <its:Combo x:Name="cmb_INTP" Value="{Binding INTP}" GPCD="INOUTTP_EQMPARTS" Visibility="Collapsed" />
+                                <UserControl Width="376" Height="22" />
+                                <UserControl Width="85" />
+                                <its:Button Width="260" Height="54" Label="입고 등록" CommandName="IN_EQMPARTS" BackColor="Green" SetFontSize="20" />
+                            </its:WrapContent>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </UserControl>
+
+        <!-- 출고 등록 팝업 -->
+        <UserControl x:Name="POP_OUT" Canvas.Left="270" Canvas.Top="131"
+                     Style="{DynamicResource TML_POP}" Width="440" Height="318" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A3" Background="WhiteSmoke" Width="404" Margin="16">
+                <Grid Width="404">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="32" />
+                        <RowDefinition Height="16" />
+                        <RowDefinition Height="50" />
+                    </Grid.RowDefinitions>
+                    <its:Date Grid.Row="0" Label="출고일자" LabelWidth="75" Width="240" HorizontalAlignment="Left" Value="{Binding OUTDATE}" />
+                    <its:Text Grid.Row="1" Label="품목코드" LabelWidth="75" Width="404" Value="{Binding ITEMCD}" ReadOnly="True" />
+                    <its:Text Grid.Row="2" Label="품명" LabelWidth="75" Width="404" Value="{Binding ITEMNM}" ReadOnly="True" />
+                    <its:Combo Grid.Row="3" Label="출고구분" LabelWidth="75" Width="280" HorizontalAlignment="Left" Value="{Binding OUTTP}" GPCD="INOUTTP_EQMPARTS" x:Name="cmb_OUTTP" />
+                    <its:Number Grid.Row="4" Label="출고수량" LabelWidth="75" Width="280" HorizontalAlignment="Left" Value="{Binding OUTQTY}" ShowKeyPad="True" DecimalPoint="0" />
+                    <its:Pop Grid.Row="5" x:Name="pop_OUT_EMP" Label="출고자" LabelWidth="75" Width="404" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True" />
+                    <its:Combo x:Name="cmb_OUT_UNIT" Value="{Binding ITEMUNIT}" GPCD="DM150" Visibility="Collapsed" />
+                    <its:Button Grid.Row="7" Width="230" Height="50" HorizontalAlignment="Center" Label="출고 등록" CommandName="OUT_EQMPARTS" BackColor="Orange" SetFontSize="18" />
+                </Grid>
+            </its:WrapContent>
+        </UserControl>
+
+        <!-- 입출고 이력 팝업 -->
+        <UserControl x:Name="POP_INOUT" Canvas.Left="15" Canvas.Top="30" Style="{DynamicResource TML_POP}" Width="950" Height="510" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A1" Background="WhiteSmoke" Width="944" Height="475">
+                <its:Date Label="조회일자" LabelWidth="60" Width="184" Value="{Binding SDATE}" />
+                <its:Date HidenLabel="Y" Width="124" Value="{Binding EDATE}" />
+                <UserControl Width="20" />
+                <its:Button Width="160" Height="32" Label="입출고 이력조회" CommandName="SEARCH_INOUT_EQMPARTS" BackColor="SeaGreen" SetFontSize="16" />
+                <its:Grid x:Name="GRID_G2" Width="940" Height="430" Margin="2,5,2,0">
+                    <its:Grid.Columns>
+                        <its:Column Width="130" FieldName="INOUTDATE" Header="발생일자" ALGIN="Center" />
+                        <its:Column Width="60" FieldName="INOROUT" Header="입/출" ALGIN="Center" />
+                        <its:Column Width="220" FieldName="INOUTTPNM" Header="입출고유형" ALGIN="Center" />
+                        <its:Column Width="150" FieldName="INQTY" Header="입고량" ALGIN="Right" DecimalPoint="0" />
+                        <its:Column Width="150" FieldName="OUTQTY" Header="출고량" ALGIN="Right" DecimalPoint="0" />
+                        <its:Column Width="180" FieldName="EMPNM" Header="처리자" ALGIN="Center" />
+                    </its:Grid.Columns>
+                </its:Grid>
+            </its:WrapContent>
+        </UserControl>
+
+    </Canvas>
+</its:ItsPageTml>

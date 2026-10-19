@@ -127,6 +127,9 @@
     <Compile Include="R01.xaml.cs">
       <DependentUpon>R01.xaml</DependentUpon>
     </Compile>
+    <Compile Include="R05.xaml.cs">
+      <DependentUpon>R05.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -183,6 +186,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="R01.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="R05.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

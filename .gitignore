@@ -16,3 +16,10 @@ wc.db*
 !01.Office/Script/pdfjs/**
 !03.Pda/Script/pdfjs/**
 !docs/**
+# Temporary Audit & Working Folders
+.tmp*
+**/.tmp*
+.tmp-*/
+**/.tmp-*/
+.tmp-r05-stock-audit/
+.tmp-tml-r05-buttons/

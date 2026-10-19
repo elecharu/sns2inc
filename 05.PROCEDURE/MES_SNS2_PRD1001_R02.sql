@@ -259,6 +259,8 @@ WHEN 'LIST_WEEKPLAN' THEN  -- 주간 생산계획 조회
       INNER JOIN MSTBOM 
        ON TEMP_END.ITEMID = MSTBOM.MITEMID
       WHERE TEMP_END.ENDYN = 'N'
+        AND MSTBOM.USEYN = 'Y'
+        AND (MSTBOM.USETODT IS NULL OR MSTBOM.USETODT = '' OR LEFT(MSTBOM.USETODT, 4) = '9999')
       ;
   
       UPDATE TEMP_END SET ENDYN = 'Y';
@@ -479,9 +481,10 @@ WHEN 'LIST_WEEKPLAN' THEN  -- 주간 생산계획 조회
                             ON MSTITEM.ITEMID = TEMP_END.ITEMID
                           INNER JOIN MSTROUT_MATCH
                             ON MSTROUT_MATCH.ITEMID = MSTITEM.ITEMID
-                           AND MSTROUT_MATCH.BASEYN = 'Y'
+                           AND (MSTROUT_MATCH.EDT IS NULL OR MSTROUT_MATCH.EDT = '' OR LEFT(MSTROUT_MATCH.EDT, 4) = '9999')
                           INNER JOIN MSTROUT_DETAIL
                             ON MSTROUT_DETAIL.ROUTCD = MSTROUT_MATCH.ROUTCD
+                           AND (MSTROUT_DETAIL.EDT IS NULL OR MSTROUT_DETAIL.EDT = '' OR LEFT(MSTROUT_DETAIL.EDT, 4) = '9999')
                           INNER JOIN MSTPRC
                             ON MSTPRC.PRCCD = MSTROUT_DETAIL.PRCCD
                           INNER JOIN MSTLINE
