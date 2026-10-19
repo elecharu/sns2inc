@@ -24,7 +24,6 @@ namespace TML1010
     /// </summary>
     public partial class R05 : ITSLIB.ItsPageTml
     {
-        ItsModelPanel MODEL_S1 = new ItsModelPanel();
         ItsModelPanel MODEL_ODR_S = new ItsModelPanel();
         ItsModelPanel MODEL_IN_INFO = new ItsModelPanel();
         ItsModelPanel MODEL_A2 = new ItsModelPanel();
@@ -49,13 +48,6 @@ namespace TML1010
             }
             Resources.MergedDictionaries.Add(gridStyle);
 
-            // 2026-10-16 [설비부품 입출고] 공통코드를 입고·출고별로 표시
-            cmb_INTP.ItemsSource = new DataView(cmb_INTP.ModelCombo, "Value LIKE 'IN_%'", "Value", DataViewRowState.CurrentRows);
-            cmb_OUTTP.ItemsSource = new DataView(cmb_OUTTP.ModelCombo, "Value LIKE 'OUT_%'", "Value", DataViewRowState.CurrentRows);
-
-            MODEL_S1.Binding(PANEL_S1);
-            MODEL_S1.InitData();
-
             MODEL_ODR_S.Binding(PANEL_ODR);
             MODEL_ODR_S.InitData();
 
@@ -63,9 +55,7 @@ namespace TML1010
             MODEL_IN_INFO.InitData();
 
             MODEL_A2.Binding(PANEL_A2);
-            MODEL_A2.FieldType("ITEMCD", ItsEnums.FieldTypes.String);
             MODEL_A2.FieldType("ITEMID", ItsEnums.FieldTypes.String);
-            MODEL_A2.FieldType("FACTORYCD", ItsEnums.FieldTypes.String);
             MODEL_A2.FieldType("MTRODRKEY", ItsEnums.FieldTypes.String);
             MODEL_A2.FieldType("MTRODRSEQ", ItsEnums.FieldTypes.String);
             MODEL_A2.FieldType("LOCACD", ItsEnums.FieldTypes.String);
@@ -74,13 +64,11 @@ namespace TML1010
             MODEL_A3.Binding(PANEL_A3);
             MODEL_A3.FieldType("ITEMCD", ItsEnums.FieldTypes.String);
             MODEL_A3.FieldType("ITEMID", ItsEnums.FieldTypes.String);
-            MODEL_A3.FieldType("FACTORYCD", ItsEnums.FieldTypes.String);
             MODEL_A3.FieldType("LOTQTY", ItsEnums.FieldTypes.Decimal);
             MODEL_A3.InitData();
 
             MODEL_A1.Binding(PANEL_A1);
             MODEL_A1.FieldType("ITEMID", ItsEnums.FieldTypes.String);
-            MODEL_A1.FieldType("FACTORYCD", ItsEnums.FieldTypes.String);
             MODEL_A1.InitData();
 
             MODEL_G1.Binding(GRID_G1);
@@ -95,9 +83,6 @@ namespace TML1010
             PANEL_A2.Close();
             PANEL_A3.Close();
             PANEL_A1.Close();
-
-            // 2026-10-16 [설비부품 조회] 공통 공장코드의 INC 2공장 기본 선택
-            cmb_FACTORYCD.Value = "07";
 
             MODEL_ODR_S.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));
             MODEL_ODR_S.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
@@ -135,12 +120,10 @@ namespace TML1010
             base.EventCommand(commandName);
 
             // 설비부품 현재고 조회
+            // 2026-10-19 [설비부품 조회] 미사용 잉여 파라미터(ITEMCD, KEYWORD) 전송 제거
             if (commandName == "SEARCH_EQMPARTS")
             {
                 ItsMaria.Set("TML1010_R05", "LIST_EQMPARTS");
-                ItsMaria.AddOne("FACTORYCD", (cmb_FACTORYCD.Value ?? "").ToString());
-                ItsMaria.AddOne("ITEMCD", "");
-                ItsMaria.AddOne("KEYWORD", "");
 
                 try
                 {
@@ -185,14 +168,14 @@ namespace TML1010
                 MODEL_IN_INFO.SetValue("ITEMUNIT", itemUnit);
                 MODEL_IN_INFO.SetValue("ITEMSPEC", MODEL_G1.GetText(rowIdx, "ITEMSPEC"));
 
+                // 2026-10-19 [입고 팝업] 미사용 패널 ITEMCD 세팅 제거 및 필수값 초기화
                 MODEL_A2.InitData();
-                MODEL_A2.SetValue("ITEMCD", itemCd);
                 MODEL_A2.SetValue("ITEMID", itemId);
-                MODEL_A2.SetValue("FACTORYCD", MODEL_G1.GetText(rowIdx, "FACTORYCD"));
                 MODEL_A2.SetValue("INDATE", DateTime.Now.ToString("yyyy-MM-dd"));
                 MODEL_A2.SetValue("LOCACD", locaCd);
                 MODEL_A2.SetValue("INTP", "IN_01");
-                MODEL_A2.SetValue("EMPCD", ItsMemberShip.EMPCD);
+                // 2026-10-19 [입고자] 로그인 사원이 없으면 공백으로 초기화
+                MODEL_A2.SetValue("EMPCD", (ItsMemberShip.EMPCD ?? "").Trim());
 
                 EventCommand("SEARCH_ODR_EQMPARTS");
                 if (ItsMaria.IsError) return;
@@ -210,7 +193,6 @@ namespace TML1010
                 ItsMaria.Set("TML1010_R05", "LIST_ODR_EQMPARTS");
                 ItsMaria.AddModel(MODEL_ODR_S);
                 ItsMaria.AddOne("ITEMID", MODEL_A2.GetValue("ITEMID"));
-                ItsMaria.AddOne("FACTORYCD", MODEL_A2.GetValue("FACTORYCD"));
 
                 DataSet dsOdr = ItsMaria.Call();
                 if (ItsMaria.IsError)
@@ -219,8 +201,12 @@ namespace TML1010
                     return;
                 }
                 MODEL_ODR.SetData(dsOdr.Tables[0]);
+                for (int i = 0; i < MODEL_ODR.ModelCount; i++)
+                {
+                    MODEL_ODR.SetBackColor(i, "WHITE");
+                }
             }
-            // 2026-10-19 [입고 발주] 단일 발주 선택 및 재클릭 해제
+            // 2026-10-19 [입고 발주] 단일 선택은 노란색, 선택 해제는 흰색
             else if (commandName == "SEL_ODR")
             {
                 if (MODEL_ODR.ModelCount <= 0 || MODEL_ODR.CurrentIndex < 0)
@@ -229,14 +215,26 @@ namespace TML1010
                 }
 
                 int odrIdx = MODEL_ODR.CurrentIndex;
-                bool isOff = MODEL_A2.GetText("MTRODRKEY") == MODEL_ODR.GetText(odrIdx, "MTRODRKEY")
-                    && MODEL_A2.GetText("MTRODRSEQ") == MODEL_ODR.GetText(odrIdx, "MTRODRSEQ");
-                MODEL_A2.SetValue("MTRODRKEY", isOff ? "" : MODEL_ODR.GetText(odrIdx, "MTRODRKEY"));
-                MODEL_A2.SetValue("MTRODRSEQ", isOff ? "" : MODEL_ODR.GetText(odrIdx, "MTRODRSEQ"));
-                MODEL_A2.SetValue("INQTY", isOff ? 0 : MODEL_ODR.GetDecimal(odrIdx, "REMAINQTY"));
-                for (int i = 0; i < MODEL_ODR.ModelCount; i++)
+                if (MODEL_ODR.GetText(odrIdx, "BACKGROUND") == "WHITE")
                 {
-                    MODEL_ODR.SetBackColor(i, !isOff && i == odrIdx ? "YELLOW" : "WHITE");
+                    for (int i = 0; i < MODEL_ODR.ModelCount; i++)
+                    {
+                        if (MODEL_ODR.GetText(i, "BACKGROUND") == "YELLOW")
+                        {
+                            MODEL_ODR.SetBackColor(i, "WHITE");
+                        }
+                    }
+                    MODEL_ODR.SetBackColor(odrIdx, "YELLOW");
+                    MODEL_A2.SetValue("MTRODRKEY", MODEL_ODR.GetText(odrIdx, "MTRODRKEY"));
+                    MODEL_A2.SetValue("MTRODRSEQ", MODEL_ODR.GetText(odrIdx, "MTRODRSEQ"));
+                    MODEL_A2.SetValue("INQTY", MODEL_ODR.GetDecimal(odrIdx, "REMAINQTY"));
+                }
+                else
+                {
+                    MODEL_ODR.SetBackColor(odrIdx, "WHITE");
+                    MODEL_A2.SetValue("MTRODRKEY", "");
+                    MODEL_A2.SetValue("MTRODRSEQ", "");
+                    MODEL_A2.SetValue("INQTY", 0);
                 }
             }
             // 설비부품 입고 버튼 클릭 (확인창 호출)
@@ -298,7 +296,6 @@ namespace TML1010
                 MODEL_A3.InitData();
                 MODEL_A3.SetValue("ITEMCD", itemCd);
                 MODEL_A3.SetValue("ITEMID", MODEL_G1.GetText(rowIdx, "ITEMID"));
-                MODEL_A3.SetValue("FACTORYCD", MODEL_G1.GetText(rowIdx, "FACTORYCD"));
                 MODEL_A3.SetValue("ITEMNM", itemNm);
                 MODEL_A3.SetValue("ITEMUNIT", itemUnit);
                 MODEL_A3.SetValue("LOTQTY", lotQty);
@@ -355,7 +352,6 @@ namespace TML1010
 
                 int rowIdx = MODEL_G1.CurrentIndex;
                 MODEL_A1.SetValue("ITEMID", MODEL_G1.GetText(rowIdx, "ITEMID"));
-                MODEL_A1.SetValue("FACTORYCD", MODEL_G1.GetText(rowIdx, "FACTORYCD"));
 
                 EventCommand("SEARCH_INOUT_EQMPARTS");
                 if (ItsMaria.IsError) return;
@@ -402,7 +398,6 @@ namespace TML1010
                 {
                     ItsMaria.Set("TML1010_R05", "LABEL_REPRINT");
                     ItsMaria.AddOne("ITEMID", MODEL_G1.GetText(MODEL_G1.CurrentIndex, "ITEMID"));
-                    ItsMaria.AddOne("FACTORYCD", MODEL_G1.GetText(MODEL_G1.CurrentIndex, "FACTORYCD"));
                     DataSet ds = ItsMaria.Call();
                     if (ItsMaria.IsError)
                     {

@@ -26,10 +26,8 @@
 
         <!-- 상단 조회 패널 -->
         <UserControl Canvas.Left="0" Canvas.Top="0" Style="{DynamicResource TML_PANEL}">
-            <its:WrapContent x:Name="PANEL_S1" Width="980" Height="45">
+            <its:WrapContent Width="980" Height="45">
                 <its:Button Width="150" Height="36" CommandName="SEARCH_EQMPARTS" Label="설비부품 재고조회"  />
-                <UserControl Width="20" />
-                <its:Combo Label="공장" Width="260" Value="{Binding FACTORYCD}" GPCD="FACTORYCD" x:Name="cmb_FACTORYCD" />
             </its:WrapContent>
         </UserControl>
 
@@ -69,19 +67,19 @@
                 </its:WrapContent>
                 <Grid Grid.Row="1" Margin="10,0,10,10">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="500" />
+                        <ColumnDefinition Width="65*" />
                         <ColumnDefinition Width="12" />
-                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="35*" />
                     </Grid.ColumnDefinitions>
                     <Border BorderBrush="Black" BorderThickness="1" Background="White">
-                        <its:Grid x:Name="GRID_ODR" Width="498" Height="440">
+                        <its:Grid x:Name="GRID_ODR" Width="590" Height="440">
                             <its:Grid.Resources>
                                 <ResourceDictionary Source="/ITSLIB;component/00_Style/StyleGrid.xaml" />
                             </its:Grid.Resources>
                             <its:Grid.Columns>
-                                <its:Column Width="40" ButtonText="▶" CommandName="SEL_ODR" Header=" 선 택 " />
+                                <its:Column Width="60" ButtonText="▶" CommandName="SEL_ODR" Header=" 선 택 " />
                                 <its:Column Width="82" FieldName="MTRODRDATE" Header="발주일자" ALGIN="Center" />
-                                <its:Column Width="108" FieldName="CUSTNM" Header="거래처" />
+                                <its:Column Width="180" FieldName="CUSTNM" Header="거래처" />
                                 <its:Column Width="70" FieldName="ODRQTY" Header="발주량" ALGIN="Right" DecimalPoint="0" />
                                 <its:Column Width="70" FieldName="PREV_INQTY" Header="입고량" ALGIN="Right" DecimalPoint="0" />
                                 <its:Column Width="70" FieldName="REMAINQTY" Header="발주잔량" ALGIN="Right" DecimalPoint="0" />
@@ -89,25 +87,25 @@
                         </its:Grid>
                     </Border>
                     <Border Grid.Column="2" BorderBrush="Black" BorderThickness="1">
-                        <StackPanel Margin="12,30,12,0">
-                            <its:WrapContent x:Name="PANEL_IN_INFO" Width="386" Height="145">
-                                <its:Text Label="설비부품코드" LabelWidth="90" Width="376" Value="{Binding ITEMCD}" ReadOnly="True" />
-                                <UserControl Width="376" Height="14" />
-                                <its:Text Label="설비부품명" LabelWidth="90" Width="376" Value="{Binding ITEMNM}" ReadOnly="True" />
-                                <UserControl Width="376" Height="14" />
-                                <its:Text Label="규격" LabelWidth="90" Width="376" Value="{Binding ITEMSPEC}" ReadOnly="True" />
+                        <StackPanel Margin="8,30,8,0">
+                            <its:WrapContent x:Name="PANEL_IN_INFO" Width="300" Height="145">
+                                <its:Text Label="설비부품코드" LabelWidth="80" Width="295" Value="{Binding ITEMCD}" ReadOnly="True" />
+                                <UserControl Width="295" Height="14" />
+                                <its:Text Label="설비부품명" LabelWidth="80" Width="295" Value="{Binding ITEMNM}" ReadOnly="True" />
+                                <UserControl Width="295" Height="14" />
+                                <its:Text Label="규격" LabelWidth="80" Width="295" Value="{Binding ITEMSPEC}" ReadOnly="True" />
                                 <its:Combo x:Name="cmb_IN_UNIT" Value="{Binding ITEMUNIT}" GPCD="DM150" Visibility="Collapsed" />
                             </its:WrapContent>
-                            <its:WrapContent x:Name="PANEL_A2" Width="386" Height="235">
-                                <its:Pop x:Name="pop_IN_EMP" Label="입고자" LabelWidth="90" Width="376" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True" />
-                                <UserControl Width="376" Height="18" />
-                                <its:Date Label="입고일자" LabelWidth="90" Width="270" Value="{Binding INDATE}" />
-                                <UserControl Width="376" Height="18" />
-                                <its:Number Label="입고량" LabelWidth="90" Width="260" Value="{Binding INQTY}" ShowKeyPad="True" DecimalPoint="0" />
+                            <its:WrapContent x:Name="PANEL_A2" Width="300" Height="235">
+                                <its:Pop x:Name="pop_IN_EMP" Label="입고자" LabelWidth="80" Width="295" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True" />
+                                <UserControl Width="295" Height="18" />
+                                <its:Date Label="입고일자" LabelWidth="80" Width="295" Value="{Binding INDATE}" />
+                                <UserControl Width="295" Height="18" />
+                                <its:Number Label="입고량" LabelWidth="80" Width="295" Value="{Binding INQTY}" ShowKeyPad="True" DecimalPoint="0" />
                                 <its:Combo x:Name="cmb_INTP" Value="{Binding INTP}" GPCD="INOUTTP_EQMPARTS" Visibility="Collapsed" />
-                                <UserControl Width="376" Height="22" />
-                                <UserControl Width="85" />
-                                <its:Button Width="260" Height="54" Label="입고 등록" CommandName="IN_EQMPARTS" BackColor="Green" SetFontSize="20" />
+                                <UserControl Width="295" Height="22" />
+                                <UserControl Width="10" />
+                                <its:Button Width="275" Height="54" Label="입고 등록" CommandName="IN_EQMPARTS" BackColor="Green" SetFontSize="20" />
                             </its:WrapContent>
                         </StackPanel>
                     </Border>

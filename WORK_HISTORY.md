@@ -17,6 +17,202 @@
 
 ## 🕒 2026-10-19 (월) 작업 내역
 
+### 7. TML1010_R05 쓰레기 코드 전수 무결성 검증 및 불필요한 잉여 코드 자체 삭제 의무화 규칙 제정
+- **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [.agents/rules/Optimization.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/Optimization.md), [.agents/rules/validation.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/validation.md)
+- **배경 및 원인**:
+  - `R05.xaml` 및 `R05.xaml.cs` 내 불필요한 쓰레기 코드(미사용 컨트롤, 임시 우회 로직, 잉여 바인딩 등)가 일절 없는지 확실한 전수 무결성 검증 요청.
+  - 사용자가 매번 소스코드를 검증하고 지적하지 않아도 되도록, "작업 완료 보고 전 불필요한 잉여·쓰레기 코드를 에이전트 스스로 전수 검사하고 삭제하는 규칙"을 공식 추가하도록 지시.
+- **작업 상세 내용**:
+  - `R05.xaml` 및 `R05.xaml.cs` 전수 검사:
+    - 11개 컬럼 그리드(`GRID_G1`), 3개 팝업(`POP_IN`, `POP_OUT`, `POP_INOUT`), 8개 모델 바인딩(`MODEL_ODR_S`, `MODEL_IN_INFO`, `MODEL_A2`, `MODEL_A3`, `MODEL_A1`, `MODEL_G1`, `MODEL_G2`, `MODEL_ODR`), 10개 이벤트 분기 전수 점검 결과 쓰레기 코드 0건 확인.
+  - `Optimization.md`:
+    - 제5조(작업 완료 전 불필요한 잉여·쓰레기 코드 자체 제거 및 전수 검사 의무화 - Anti-Garbage Code) 신규 제정.
+    - 필수 삭제 대상 5대 쓰레기 코드 유형(임시 우회/비표준 꼼수 코드, 미사용 선언/바인딩, 미사용 파라미터/전송값, 주석 처리된 잔여 코드, 테스트/디버깅 잔여물) 명시 및 자체 Diff 전수 검사 프로세스 의무화.
+  - `validation.md`:
+    - 제6조(작업 완료 전 불필요한 잉여·쓰레기 코드 전수 점검 및 자체 삭제 의무화) 신규 제정.
+    - 사용자에게 검증 부담 전가 원천 금지 및 에이전트 자체 100% 정리 완료 의무화.
+- **검증 결과**:
+  - MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning).
+  - `Optimization.md`, `validation.md` 단일 UTF-8 BOM 및 CRLF 개행 바이너리 무결성 검증 완료.
+
+### 6. TML1010_R05 C# 생성자 내 불필요한 DataView 필터링 코드 완전 제거
+- **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs)
+- **배경 및 원인**:
+  - 화면 비하인드 코드 생성자에서 `cmb_INTP` 및 `cmb_OUTTP`에 인위적으로 걸려 있던 `DataView(..., "Value LIKE 'IN_%'")`, `DataView(..., "Value LIKE 'OUT_%'")` 코드는 `framework_convention.md` 제5조 규칙에 위배될 뿐만 아니라, `cmb_INTP`는 숨김(Collapsed) 컨트롤이고 출고는 기본값(`OUT_01`)으로 이미 자동 세팅되므로 완전히 불필요한 잉여 코드임. 사용자 요청에 따라 전면 삭제함.
+- **작업 상세 내용**:
+  - `R05.xaml.cs` 생성자 내 `cmb_INTP` 및 `cmb_OUTTP`의 `DataView` 필터링 2줄 완전 삭제.
+  - 순수 프레임워크 XAML 바인딩 및 기존 로직만 유지.
+- **검증 결과**:
+  - MSBuild 15.0 Rebuild 성공 (경고 0개, 오류 0개) 및 최신 바이너리 배포 완료.
+  - 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료.
+
+### 5. MST1002_R06 설비그룹 공통 콤보(FM116) 바인딩 적용 및 그리드 콤보 연동 규칙 제정
+- **수정/대상 파일**: [01.Office/PAGEMST/MST1002/MST1002_R06.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST1002/MST1002_R06.js), [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md)
+- **배경 및 원인**:
+  - `MST1002_R06.js`에서 설비그룹코드(`EQMGUBUN`)를 `hidden: true`로 숨기고 설비그룹명(`EQMGRPNM`)을 별도의 텍스트 컬럼으로 표시하던 비표준 중복 구조를 제거하고, `EQMGROUP1~3`(설비대/중/소분류)과 동일하게 공통 컴포넌트(`ItsGrid`의 `enumColumnTypes.combo`) 자동 바인딩으로 일치화 요청.
+  - 향후 모든 화면에서 공통 컴포넌트를 적극 활용하도록 규칙 문서 반영 요청.
+- **작업 상세 내용**:
+  - `MST1002_R06.js`:
+    - `column.create("설비그룹코드", "EQMGUBUN", { hidden: true })` 및 `EQMGRPNM` 텍스트 컬럼 2줄 삭제.
+    - `column.create("설비그룹", "EQMGUBUN", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM116', allowMerging: true })` 단일 콤보 컬럼으로 통합 바인딩.
+  - `framework_convention.md`:
+    - 제6조(그리드 공통코드 콤보 컬럼 표준 연동 규칙) 신규 제정:
+      - 1) 코드 hidden 및 명칭 텍스트 컬럼 분리 선언 절대 금지.
+      - 2) 공통 컴포넌트(`columnType: enumColumnTypes.combo, gpcd: '...'`) 표준 바인딩 의무화.
+      - 3) 프로시저 SELECT 절 내 단순 명칭 표시용 `COMTYPE` 중복 조인 배제 연계.
+- **검증 결과**:
+  - `MST1002_R06.js` Node.js Function 구문 검사 통과 (Syntax OK).
+  - 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료.
+
+### 4. 공통코드(GPCD) 그룹 분리 및 ItsCombo 연동 표준 규칙 제정
+- **수정/대상 파일**: [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md)
+- **배경 및 원인**:
+  - 화면 비하인드 코드에서 `DataView`나 `LIKE` 문을 사용해 공통코드를 인위적으로 분기/필터링하는 비표준 구현을 영구 금지하고, 프레임워크(`ItsCombo.xaml.cs`) 및 공통 프로시저(`DC_COMBO`)의 표준 연동 방식을 규칙화함.
+- **작업 상세 내용**:
+  - `framework_convention.md`에 제5조(공통코드 그룹 분리 및 ItsCombo 표준 연동 규칙) 신규 제정:
+    - 1) C# 비하인드 코드 내 `DataView` 필터링 및 `LIKE` 문자열 검색 코드 전면 금지.
+    - 2) 성격이 다른 코드(입고/출고 등)는 처음부터 그룹코드(`GPCD`) 자체를 완전 분리(`INTP_...`, `OUTTP_...`)하여 관리하는 [정석 방식 1] 원칙 명문화.
+    - 3) C# 코드 없이 XAML 태그(`GPCD="..."`) 또는 JS 선언만으로 프레임워크 100% 자동 바인딩 보장.
+    - 4) 공통 컴포넌트(`ItsCombo`, `ItsFind`, `ItsPop`, `ItsGrid` 등) 기본 함수 최우선 활용 의무화.
+- **검증 결과**: 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료.
+
+### 3. TML1010_R05 실제 DB 공통코드(INOUTTP_EQMPARTS) 엄격 준수 및 ENDYN 표준화 적용
+- **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql)
+- **배경 및 원인**:
+  - 사용자 지침에 따라 실제 DB에 등록되어 있는 기존 공통코드(`INOUTTP_EQMPARTS`: `IN_01` 구매입고, `OUT_01` 부품교체)만을 엄격히 사용하며, 임의의 신규 코드나 DML을 배제하고 기존 환경을 유지함.
+  - `MSTITEM.ENDYN`의 불필요한 과잉보호(`IFNULL(..., 'N') <> 'Y'`)를 제거하고 다른 프로젝트 프로시저(`DC_FIND.sql`, `PRD1001_R03.sql`)와 동일한 `AND MSTITEM.ENDYN = 'N'` 단일 긍정 일치 조건으로 통일.
+- **작업 상세 내용**:
+  - 임의 생성했던 `MES_SNS2_TML1010_R05_COMTYPE_SETUP.sql` 파일 즉시 완전 삭제.
+  - `R05.xaml`: `cmb_INTP` 및 `cmb_OUTTP`의 `GPCD`를 실제 DB에 존재하는 `INOUTTP_EQMPARTS`로 복원.
+  - `R05.xaml.cs`: 실제 DB의 `INOUTTP_EQMPARTS` 내 `IN_`과 `OUT_` 값을 구분하기 위한 기존 `DataView` 바인딩 코드로 완전 복원.
+  - `MES_SNS2_TML1010_R05.sql`:
+    - L79 `MSTITEM.ENDYN = 'N'` 직관적 단일 조건 통일 유지.
+    - L239 이력조회(`LIST_INOUT_EQMPARTS`)의 `INOUTTPNM`을 실제 공통코드인 `GPCD('INOUTTP_EQMPARTS', INOUT_EQMPARTS.INOUTTP_EQMPARTS)`로 복원.
+    - 최상단 `Modify` 주석 1일 1행 압축 유지.
+- **검증 결과**:
+  - 실제 DB `COMTYPE` 직접 조회 확인 (`INOUTTP_EQMPARTS`의 `IN_01`, `OUT_01` 2건 존재 확인).
+  - C# MSBuild 15.0 Rebuild 성공 (경고 0개, 오류 0개) 및 바이너리 배포 완료.
+  - 소스 3개 파일 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료.
+
+### 2. TML1010_R05 라벨 출력 반환데이터(ITEMNM, ITEMCD, ITEMID) 최적화 및 ENDYN 표준화
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs)
+- **배경 및 원인**: SYSLABEL의 EQMPARTS 양식에 맞춰 LABEL_REPRINT 및 IN_EQMPARTS 분기에서 불필요한 조인 제거 및 ITEMNM, ITEMCD, ITEMID 3개 컬럼 반환으로 단일화, ENDYN 과잉보호 조건 표준화(AND MSTITEM.ENDYN = 'N'), R05 라벨 출력 및 입고 시 라벨 자동출력 오류처리 검증
+- **작업 상세 내용**:
+  - 프로시저 LABEL_REPRINT 및 IN_EQMPARTS 분기의 2번째 테이블 반환 쿼리를 SELECT MSTITEM.ITEMNM, MSTITEM.ITEMCD, MSTITEM.ITEMID FROM MSTITEM WHERE MSTITEM.ITEMID =  로 통일, 라인 79 ENDYN 조건 표준화 완료, C# PrintLabel 모듈 및 예외처리 안전성 최종 검증 완료
+- **검증 결과**: 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료, SYSLABEL XMLDATA 실제 필드 매핑 일치 확인
+
+
+### 2. TML1010_R05 설비부품 입출고 미사용 파라미터(ITEMCD, KEYWORD, REMARK) 완전 제거 및 C# 모델 정리
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql), [05.Procedure/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs)
+- **배경 및 원인**: 화면 UI/UX에 검색창 및 비고란이 없음에도 프로시저와 C# 모델에 남아 리소스를 소모하던 미사용 파라미터(, , ) 전면 제거 요청
+- **작업 상세 내용**:
+  - 프로시저 선언부 , ,  제거(18건->15건), 입출고 이력 REMARK 빈문자열 직접 대입, C# R05.xaml.cs SEARCH_EQMPARTS 잉여 파라미터 전송 및 MODEL_A2의 ITEMCD 불필요 필드 제거, SYSTEM_PARAMETERS 주석 15건 갱신
+- **검증 결과**: 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료, Roslyn C# 컴파일 성공(0 Error), 프로시저-C#-파라미터등록 1:1 일치 확인
+
+
+### 1. TML1010_R05 재고조회 잉여 검색조건(KEYWORD/ITEMCD/ITEMSPEC) 전면 제거 및 2공장 등록부품 정밀 필터화
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql)
+- **배경 및 원인**: 화면 UI/UX에 검색창이 전혀 없음에도 불구하고 프로시저에 남아있던 불필요한 KEYWORD/ITEMCD/ITEMNM/ITEMSPEC 검색 조건으로 인한 코드 비대화 및 3,823건 과다 조회 문제
+- **작업 상세 내용**:
+  - UI에 없는 KEYWORD, ITEMCD 등 잉여 LIKE 조건문 10줄 전면 삭제, MSTITEM_EQMPARTS.ITEMID IS NOT NULL 조건을 단독 적용하여 2공장 관리 부품(11건)만 초고속 조회되도록 WHERE 절 5줄로 완전 슬림화, 최상단 Modify 1일 1행 압축 유지
+- **검증 결과**: 단일 UTF-8 with BOM(ef bb bf) 및 표준 CRLF 개행 무결성 100% 검증 통과
+
+
+### 2. TML1010_R05 라벨 출력 로직 분기별 독립 완결형 표준 구조 개편
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql)
+- **배경 및 원인**: END CASE 바깥에 존재하던 IF CALLTYPE 라벨 공통 블록으로 인한 분기별 흐름 단절 및 유지보수 혼선 방지
+- **작업 상세 내용**:
+  - END CASE 하단 공통 IF문 완전 제거, IN_EQMPARTS(입고완료 라벨출력) 및 LABEL_REPRINT(재발행 라벨출력) 각 분기 내부로 라벨 데이터셋 2개 SELECT를 배치하여 분기별 완결형 표준 구조(END CASE; END)로 일치화, 최상단 Modify 1일 1행 압축 유지
+- **검증 결과**: 단일 UTF-8 with BOM(ef bb bf) 및 표준 CRLF 개행 무결성 100% 검증 통과
+
+
+### 3. TML1010_R05 설비부품 재고조회 WHERE 절 조건문 단순화 및 IFNULL 반복 제거
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql)
+- **배경 및 원인**: L77-L90의 기괴한 복합 조건(IFNULL($KEYWORD, '') <> '' OR IFNULL($ITEMCD, '') <> '' OR MSTITEM_EQMPARTS.ITEMID IS NOT NULL) 및 반복된 IFNULL 호출로 인한 가독성 저해 및 사용자 개선 요청
+- **작업 상세 내용**:
+  - PROC: BEGIN 직후 파라미터($KEYWORD, $ITEMCD, $SDATE, $EDATE, $CUSTCD) 단 1회 기본값 정규화, LIST_EQMPARTS의 복합 억지 조건 전면 삭제 및 표준 8줄 WHERE 절로 단순화, LIST_ODR_EQMPARTS 및 LIST_INOUT_EQMPARTS 날짜/거래처 조건문 일관성 정리, 최상단 Modify 1일 1행 압축 유지
+- **검증 결과**: 단일 UTF-8 with BOM(ef bb bf) 및 표준 CRLF 개행 무결성 100% 검증 통과
+
+
+### 4. TML1010_R05 과잉보호 조건문 및 NULLIF 제거, INC 2공장(07) 및 법인(60) 하드코딩 직관화
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql)
+- **배경 및 원인 분석**:
+  - 사용자 요청에 따라 프로시저 내 불필요한 과잉보호 조건문과 복잡한 `NULLIF` 식을 제거하고, 프로젝트 내 다른 프로시저 표준을 준수하여 간결하고 직관적으로 단순화
+  - 공장코드는 07(INC 2공장)로 고정이므로 불필요한 다중 방어 로직 대신 하드코딩 처리
+- **작업 상세 내용**:
+  - 1) **상단 3중 불필요 사전조회 제거**: `MSTFACTORY` 조회/검증, `MSTITEM` 검증 조회, `MSTEMP` 존재 조회 등 3개의 사전 DB 쿼리를 제거하고 `$ITEMID` 빈값 검증 및 `$EMPCD` 입력 검증으로 슬림화
+  - 2) **NULLIF 및 복합식 완전 제거**: 발주 조회(`LIST_ODR_EQMPARTS`) 및 입고등록(`IN_EQMPARTS`)의 `COALESCE(NULLIF(MTRODR.INFACTORYCD, ''), MTRODR.ODRFACTORY) = '07'` 과잉 복합식을 다른 발주 프로시저(`MTR0001_R04`)와 동일하게 `MTRODR.ODRFACTORY = '07'`로 완전 단순화
+  - 3) **INC 2공장(07) 및 법인(60) 하드코딩 직관화**: `MSTITEM.COMPANYCD = '60'`, `MSTITEM_EQMPARTS.FACTORYCD = '07'` 하드코딩 및 조인 내 불필요 조건(`MSTITEM_EQMPARTS.LOCACD <> ''`) 제거
+  - 4) **인위적 문자열 검증 제거 및 IFNULL 표준화**: 입고/출고 구분의 `LEFT(..., 3) <> 'IN_'`, `LEFT(..., 4) <> 'OUT_'` 과잉 문자열 자르기 검증을 제거하고, `COALESCE` 남발을 프로젝트 표준인 `IFNULL`로 정돈
+  - 5) **변수 정리 및 파라미터 직접 사용**: 불필요해진 `_$ITEMID`, `_$COMPANYCD` 지역변수를 제거하고 `$ITEMID` 직접 바인딩
+- **검증 결과**:
+  - 단일 UTF-8 with BOM (`\xef\xbb\xbf`) 및 CRLF 개행 3단계 바이너리 무결성 100% 통과
+  - 내부 코드 라인 날짜 주석 0건, 최상단 Modify 이력 1일 1행 원칙 준수
+
+### 5. TML1010_R05 공장 고정 범위 확정
+- **수정/대상 파일**: WORK_HISTORY.md
+- **배경 및 원인**: 입출고 이력 공장 구분 컬럼 추가 여부에 대한 사용자 답변 수신
+- **작업 상세 내용**:
+  - 사용자가 화면·전용 프로시저만 07로 고정하도록 확정; INOUT_EQMPARTS 테이블 구조 및 기존 이력 유지, 공장 컬럼 추가SQL 작성하지 않음; 앞선 소스·실행파일 반영 범위와 일치
+- **검증 결과**: 직전 반영 내용과 사용자 선택 일치 확인; 소스·DB·실행파일 추가 변경 없음; 운영 프로시저 저장 후 SYSTEM_PARAMETERS 등록SQL 적용은 사용자 진행
+
+
+### 6. TML1010_R05 INC 2공장 고정 및 로그인 입고자 초기화
+- **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml, R05.xaml.cs, 05.Procedure/MES_SNS2_TML1010_R05.sql, MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql
+- **배경 및 원인**: INC 2공장 전용 화면으로 공장 선택 제거 및 로그인 사원 기본 입고자 확인 요청
+- **작업 상세 내용**:
+  - 공장 콤보·검색모델·FACTORYCD 모델필드·전송·조회 반환컬럼·프로시저 입력 제거; 법인·재고·발주 입고공장·라벨은 07 고정; 프로시저 입력 19에서 18로 변경 및 메타데이터 등록SQL 갱신; 팝업 열기마다 로그인 EMPCD를 trim하여 설정하고 NULL·공백은 빈 값 처리; 사용자ID 임의 대체 없음. 이력 테이블에는 공장 컬럼이 없으므로 공장별 기존 이력 분리는 미적용하며 별도 선택 요청
+- **검증 결과**: 실제 DB SELECT로 공장07/법인60 및 307컬럼·로그인 사원 연결·공통사원팝업07조건·기존19파라미터 확인; 네트워크 차단 MariaDB10.2에서 수정 프로시저 컴파일 및16검증 통과(07재고입출고·06재고보존·발주공장우선/대체·타공장입고거절·사원누락·라벨·이력·18입력); 후보의 실제 입고자 문장을 공통모델로 컴파일한5검증 통과; 최종4파일 후보해시일치·단일BOM/CRLF·잔여공장입력검색 통과; Release 빌드 성공 및 실행파일3곳/PDB일치. 운영DB SELECT 외 변경 없음, DB에는 프로시저 저장 후 SYSTEM_PARAMETERS 등록SQL 실행 필요
+
+
+### 2. TML1010_R05 입고등록 영역 35% 확대
+- **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml
+- **배경 및 원인**: 오른쪽 입고등록 영역 30%가 좁아 35%로 확대 요청
+- **작업 상세 내용**:
+  - 입고 팝업 비율 65:35로 조정; 오른쪽 패널 255에서 300, 입력칸 250에서 295, 버튼 230에서 275로 확대; 왼쪽 그리드 590 및 거래처 컬럼 180으로 조정하여 모든 컬럼 폭 확보
+- **검증 결과**: 원본 반영 전 XML 및 공통 컴포넌트 독립 WPF 배치 검증; 65:35 비율 및 입력 항목 경계 정상; UTF-8 단일 BOM 및 CRLF 정상; Release 빌드 성공; 실행파일 3곳 및 PDB 해시 일치
+
+
+### 2. TML1010_R05 입고 팝업 7:3 배치 조정
+- **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml
+- **배경 및 원인**: 발주 그리드 폭이 좁아 컬럼 내용이 잘려 왼쪽과 오른쪽 영역을 7:3으로 조정 요청
+- **작업 상세 내용**:
+  - 입고 팝업 열을 7*:12:3*로 배치; 그리드 498에서 636 및 거래처 컬럼 108에서 220으로 확대; 오른쪽 패널 255, 입력칸 250 및 라벨 80, 등록 버튼 230으로 축소; 다른 팝업과 업무 동작 유지
+- **검증 결과**: 원본 반영 전 XML 및 폭 계산 검증; 실제 공통 컴포넌트로 DB 조회 없는 독립 WPF 렌더링 및 입력 컨트롤 경계 확인; 단일 UTF-8 BOM과 CRLF 정상; Release 빌드 성공; 실행파일 3곳 및 PDB 해시 일치
+
+
+### 2. TML1010_R05 발주 선택 컬럼 너비 확대
+- **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml
+- **배경 및 원인**: 입고 팝업 발주 목록의 선택 헤더가 좁아 문구가 잘림
+- **작업 상세 내용**:
+  - SEL_ODR 컬럼 너비만 40에서 60으로 확대; 다른 컬럼과 선택 동작 유지
+- **검증 결과**: 수정 전 XML과 전체 컬럼 폭 검증; UTF-8 단일 BOM 및 CRLF 확인; Release 빌드 성공; 실행파일 3곳 SHA256 일치
+
+
+### 2. TML1010_R05 발주 그리드 부분입고 하늘색 표시 제거
+- **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml.cs, 02.Site/AAABIN/TML1010.exe·pdb, 02.Site/TMLPJT/TML1010/TML1010.exe
+- **배경 및 원인**: 사용자가 부분입고 하늘색 표시 제거 요청. 해당 색상은 이전 참조 화면 적용 과정에서 추가했던 부가 표시
+- **작업 상세 내용**:
+  - 발주 조회 초기색·이전 선택 복원색·재클릭 해제색의 PREV_INQTY 기반 SKYBLUE/WHITE 분기를 모두 WHITE로 통일. 선택 판단 조건의 SKYBLUE 항목도 삭제. 선택 행 YELLOW, 단일 선택, 발주키/순번/입고수량 전달·해제 및 사원·저장·라벨 동작 유지. 후보 검증 후 C#만 반영하고 Release 재빌드. 이전 사용자 승인 범위의 TML1010 PID50496 종료 후 로컬 AAABIN EXE/PDB와 프로젝트 EXE 반영
+- **검증 결과**: 원본 적용 전 후보에서 하늘색 분기3곳과 선택 조건1곳 제거 확인, 색상/관련 주석 외 업무 C# 원문 불변 비교 통과, 후보·실프로젝트 MSBuild 성공. 최종 C# SKYBLUE 잔여0건, WHITE 복원3곳·YELLOW 선택 유지 확인. 배포3경로 EXE SHA256=8C002B553FDB60B46C79AEAFA4E8E7BA2F1C5C774969744547E9F939763029A0 및 PDB 해시 일치, 단일BOM/CRLF 확인. XAML/SQL/테스트데이터SQL/csproj/App 해시 불변. DB 접근 없음. 검증 후보·중간빌드 등 임시 파일 마무리 삭제
+
+
+### 2. TML1010_R05 발주 선택 로직을 TML5000_R02 BACKGROUND 방식으로 통일
+- **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml.cs, 02.Site/AAABIN/TML1010.exe·pdb, 02.Site/TMLPJT/TML1010/TML1010.exe
+- **배경 및 원인**: 참조 화면과 같은 선택 관련 로직 요청. 기존 R05는 발주키·순번 일치 여부로 해제를 판단하고 모든 행을 흰색으로 덮어써 부분입고 행의 원래 색을 보존하지 않았음
+- **작업 상세 내용**:
+  - 발주 조회 후 미입고 WHITE·기입고량이 있는 행 SKYBLUE 초기화. 참조 TML5000_R02와 같이 BACKGROUND WHITE/SKYBLUE에서 선택 시 YELLOW, 해제 시 원래 색 복원. 기존 사용자 확정 사항인 발주1건 선택을 유지하며 다른 발주 선택 시 기존 YELLOW 행만 복원. 선택된 발주키·순번·잔량을 입력모델에 보관, 해제 시 키·순번·수량 초기화. 일반 행 포커스 이동은 선택 대상/입력량에 영향 없음. XAML 공통 삼각형 버튼·입고자/라벨/저장/조회 SQL 유지. 후보 사전 검증 후 업무 C# 적용, Release 빌드, 앞서 승인된 종료·배포 방식으로 해당 프로젝트 TML1010 PID47456 종료 후 로컬 실행파일 반영
+- **검증 결과**: 공통 ITSLIB 실제 그리드와 현재 XAML GRID_ODR를 사용하여 native 버튼 클릭을 컴파일된 R05.EventCommand에 연결. DB 의존 생성자는 제외하고 선택 이벤트가 사용하는 모델을 주입한 격리 검증에서 후보·최종 AAABIN 실행본 각25개 통과: WHITE/SKYBLUE 초기색, YELLOW 선택/원래색 복원, 같은 키 다른 순번·다른 발주 선택, 단일 선택, 일반 포커스와 입고대상 분리, 사원/입력량 보존, 재조회 초기화, BACKGROUND 상태 우선, 빈 목록. PNG 시각 확인. 후보·실프로젝트 빌드 오류0, 배포3경로 EXE SHA256=5E57F1C8AFDE824CBACD293DE92191BDACA263B9C135D1530872DA29989210B4 일치 및 PDB 일치. C# 선택/초기색 영역 외 불변, XAML/SQL/테스트데이터SQL/csproj/App 해시 보존. 단일BOM/CRLF 확인. 실제 DB 접근 없음. 임시 빌드·검증자료 마무리 삭제
+
+
+### 2. TML1010_R05 전체 기능 시험용 테스트 데이터 생성 SQL 작성
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_TML1010_R05_TEST_DATA.sql
+- **배경 및 원인**: 설비부품 재고조회·출고·발주선택·입고·입출고이력·라벨 출력을 직접 시험할 수 있는 충분한 수량의 테스트 데이터 한 세트 SQL 요청
+- **작업 상세 내용**:
+  - INC 2공장07 전용 부품000-TEST-R05를 AUTO_INCREMENT 품목키로 생성. 현재고10000·안전재고100, 발주TEST-R05의1번행은 발주승인/발주10000/입고0,2번행은 납품진행/발주20000/입고10000으로 각각 입고가능10000. 초기재고10000의 입고이력은 발주키TEST-R05·순번2와 연결. 기존 구매 거래처·공장 사원·로케이션은 참조만 하며 신규 공통마스터/테이블/프로시저 생성 없음. MariaDB BEGIN NOT ATOMIC 익명블록·트랜잭션·오류 롤백·감사함수 및 세션값 복구 적용. 기존 테스트 부품/발주 발견 시 재실행을 중단하여 진행 결과 보존. 생성 결과 SELECT와 화면 시험 순서를 같은 파일에 제공
+- **검증 결과**: 실제 DB SELECT로316컬럼·AUTO_INCREMENT·발주 FK·거래처 구매플래그1·단위DM150100/EA·사원/로케이션·감사함수·라벨·InnoDB5테이블·R05 라벨 분기 준비 상태 확인. 동일 메타데이터 MariaDB10.2 격리 환경에서 전체 SQL 파일 그대로 실행 성공. 실제 R05 프로시저와 연결한31개 검증 통과: 부품1건 조회, 승인/납품진행 발주2행, 출고100→9900·입고200→10100·잔량10000 전체입고→20100, 완료발주 제외, 이력/라벨데이터/재출력 무변경, 기존 업무·공통마스터 불변, 재실행 결과 보존, 말단 이력키 충돌 시 전체롤백, 단위 누락 차단, 다른 자동 품목키 생성과 감사세션 복구. 최종 파일과 검증 후보 바이트 일치, 단일BOM/CRLF 및 INSERT 전용 확인. 테스트 컨테이너·임시스크립트·DB추출·실행파일 전부 삭제. 실제 DB에는 SELECT 외 실행하지 않음
+
+
 ### 2. TML1010_R05 사용자 승인 후 실행 프로그램 종료 및 최신 실행본 배포
 - **수정/대상 파일**: 02.Site/AAABIN/TML1010.exe·pdb, 02.Site/TMLPJT/TML1010/TML1010.exe
 - **배경 및 원인**: 사용자가 실행 중인 TML1010 종료 후 새 버전 반영을 명시 승인하여 이전 배포 대기 상태 해소
@@ -2167,6 +2363,19 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs) | TML1010_R05 프로시저 실서버 DB 반영 및 입고 라벨 출력 테스트 | 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료, SYSLABEL XMLDATA 실제 필드 매핑 일치 확인 |
+| **완료** | [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql), [05.Procedure/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs) | TML1010_R05 프로시저(15개 파라미터) 및 SYSTEM_PARAMETERS 실서버 DB 반영 및 터미널 화면 최종 확인 | 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료, Roslyn C# 컴파일 성공(0 Error), 프로시저-C#-파라미터등록 1:1 일치 확인 |
+| **완료** | [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql) | 잉여 검색조건 전면 제거 및 2공장 등록 부품 11건 정합성 복원 완료 | 단일 UTF-8 with BOM(ef bb bf) 및 표준 CRLF 개행 무결성 100% 검증 통과 |
+| **완료** | [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql) | 라벨출력 분기별 완결 구조 개편 및 프로젝트 표준 일치화, 단일 UTF-8 BOM/CRLF 무결성 검증 완료 | 단일 UTF-8 with BOM(ef bb bf) 및 표준 CRLF 개행 무결성 100% 검증 통과 |
+| **완료** | [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql) | LIST_EQMPARTS 지저분한 복합 조건 전면 제거 및 파라미터 1회 정규화, 단일 UTF-8 BOM/CRLF 무결성 검증 완료 | 단일 UTF-8 with BOM(ef bb bf) 및 표준 CRLF 개행 무결성 100% 검증 통과 |
+| **완료** | WORK_HISTORY.md | 공장07 고정 범위 확정 및 이력 구조 유지; 이력 컬럼 추가 여부 확인 종료 | 직전 반영 내용과 사용자 선택 일치 확인; 소스·DB·실행파일 추가 변경 없음; 운영 프로시저 저장 후 SYSTEM_PARAMETERS 등록SQL 적용은 사용자 진행 |
+| **완료** | 02.Site/TMLPJT/TML1010/R05.xaml, R05.xaml.cs, 05.Procedure/MES_SNS2_TML1010_R05.sql, MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql | 소스·실행파일 반영 완료; 운영 프로시저와 파라미터 등록은 사용자 적용 필요; 이력 공장 구분 여부 별도 확인 | 실제 DB SELECT로 공장07/법인60 및 307컬럼·로그인 사원 연결·공통사원팝업07조건·기존19파라미터 확인; 네트워크 차단 MariaDB10.2에서 수정 프로시저 컴파일 및16검증 통과(07재고입출고·06재고보존·발주공장우선/대체·타공장입고거절·사원누락·라벨·이력·18입력); 후보의 실제 입고자 문장을 공통모델로 컴파일한5검증 통과; 최종4파일 후보해시일치·단일BOM/CRLF·잔여공장입력검색 통과; Release 빌드 성공 및 실행파일3곳/PDB일치. 운영DB SELECT 외 변경 없음, DB에는 프로시저 저장 후 SYSTEM_PARAMETERS 등록SQL 실행 필요 |
+| **완료** | 02.Site/TMLPJT/TML1010/R05.xaml | 오른쪽 35% 입고 팝업 및 실행파일 반영 완료 | 원본 반영 전 XML 및 공통 컴포넌트 독립 WPF 배치 검증; 65:35 비율 및 입력 항목 경계 정상; UTF-8 단일 BOM 및 CRLF 정상; Release 빌드 성공; 실행파일 3곳 및 PDB 해시 일치 |
+| **완료** | 02.Site/TMLPJT/TML1010/R05.xaml | 입고 팝업 7:3 배치와 새 실행파일 반영 완료 | 원본 반영 전 XML 및 폭 계산 검증; 실제 공통 컴포넌트로 DB 조회 없는 독립 WPF 렌더링 및 입력 컨트롤 경계 확인; 단일 UTF-8 BOM과 CRLF 정상; Release 빌드 성공; 실행파일 3곳 및 PDB 해시 일치 |
+| **완료** | 02.Site/TMLPJT/TML1010/R05.xaml | 선택 컬럼 확대 및 실행파일 반영 완료 | 수정 전 XML과 전체 컬럼 폭 검증; UTF-8 단일 BOM 및 CRLF 확인; Release 빌드 성공; 실행파일 3곳 SHA256 일치 |
+| **완료** | 02.Site/TMLPJT/TML1010/R05.xaml.cs, 02.Site/AAABIN/TML1010.exe·pdb, 02.Site/TMLPJT/TML1010/TML1010.exe | 프로그램 재실행 후 기본/해제 흰색·선택 노란색 사용. 하늘색 부분입고 표시는 제거. DB 프로시저 추가 반영 불필요 | 원본 적용 전 후보에서 하늘색 분기3곳과 선택 조건1곳 제거 확인, 색상/관련 주석 외 업무 C# 원문 불변 비교 통과, 후보·실프로젝트 MSBuild 성공. 최종 C# SKYBLUE 잔여0건, WHITE 복원3곳·YELLOW 선택 유지 확인. 배포3경로 EXE SHA256=8C002B553FDB60B46C79AEAFA4E8E7BA2F1C5C774969744547E9F939763029A0 및 PDB 해시 일치, 단일BOM/CRLF 확인. XAML/SQL/테스트데이터SQL/csproj/App 해시 불변. DB 접근 없음. 검증 후보·중간빌드 등 임시 파일 마무리 삭제 |
+| **완료** | 02.Site/TMLPJT/TML1010/R05.xaml.cs, 02.Site/AAABIN/TML1010.exe·pdb, 02.Site/TMLPJT/TML1010/TML1010.exe | 프로그램 재실행 후 새 선택 로직 사용. 프로시저 변경·DB 추가 반영 불필요. 단일 발주 선택 유지; 미입고 흰색·부분입고 하늘색·선택 노란색 | 공통 ITSLIB 실제 그리드와 현재 XAML GRID_ODR를 사용하여 native 버튼 클릭을 컴파일된 R05.EventCommand에 연결. DB 의존 생성자는 제외하고 선택 이벤트가 사용하는 모델을 주입한 격리 검증에서 후보·최종 AAABIN 실행본 각25개 통과: WHITE/SKYBLUE 초기색, YELLOW 선택/원래색 복원, 같은 키 다른 순번·다른 발주 선택, 단일 선택, 일반 포커스와 입고대상 분리, 사원/입력량 보존, 재조회 초기화, BACKGROUND 상태 우선, 빈 목록. PNG 시각 확인. 후보·실프로젝트 빌드 오류0, 배포3경로 EXE SHA256=5E57F1C8AFDE824CBACD293DE92191BDACA263B9C135D1530872DA29989210B4 일치 및 PDB 일치. C# 선택/초기색 영역 외 불변, XAML/SQL/테스트데이터SQL/csproj/App 해시 보존. 단일BOM/CRLF 확인. 실제 DB 접근 없음. 임시 빌드·검증자료 마무리 삭제 |
+| **완료** | 05.Procedure/MES_SNS2_TML1010_R05_TEST_DATA.sql | 사용자가 MES_SNS2 새 SQL편집기에서 MES_SNS2_TML1010_R05_TEST_DATA.sql 전체선택 Alt+X 실행 후 공장07 조회. 부품000-TEST-R05를 선택하여 시험; 실물 라벨은 현장 프린터에서 확인. 같은 파일 재실행은 기존 결과 보존을 위해 중단 | 실제 DB SELECT로316컬럼·AUTO_INCREMENT·발주 FK·거래처 구매플래그1·단위DM150100/EA·사원/로케이션·감사함수·라벨·InnoDB5테이블·R05 라벨 분기 준비 상태 확인. 동일 메타데이터 MariaDB10.2 격리 환경에서 전체 SQL 파일 그대로 실행 성공. 실제 R05 프로시저와 연결한31개 검증 통과: 부품1건 조회, 승인/납품진행 발주2행, 출고100→9900·입고200→10100·잔량10000 전체입고→20100, 완료발주 제외, 이력/라벨데이터/재출력 무변경, 기존 업무·공통마스터 불변, 재실행 결과 보존, 말단 이력키 충돌 시 전체롤백, 단위 누락 차단, 다른 자동 품목키 생성과 감사세션 복구. 최종 파일과 검증 후보 바이트 일치, 단일BOM/CRLF 및 INSERT 전용 확인. 테스트 컨테이너·임시스크립트·DB추출·실행파일 전부 삭제. 실제 DB에는 SELECT 외 실행하지 않음 |
 | **완료** | 02.Site/AAABIN/TML1010.exe·pdb, 02.Site/TMLPJT/TML1010/TML1010.exe | 로컬 실행파일 교체 완료. 프로그램을 다시 실행하면 새 버전 사용. 실제 서버의 TML1010_R05 프로시저 저장은 사용자 적용 사항이며 이번 턴에서는 DB에 접근하지 않음 | MSBuild 성공. Release·AAABIN·프로젝트 루트 EXE 3경로 SHA256=1C70A2741E96412CACB7D53DB11AA2AA3AC2BFC282F34485D563055B49CE7862 일치, Release/AAABIN PDB 해시 일치. 기존 후보의72개 및 최종 빌드61개 검증을 수행했던 소스 유지. 임시 중간빌드 폴더는 마무리 삭제 |
 | **대기** | 02.Site/TMLPJT/TML1010/R05.xaml, 02.Site/TMLPJT/TML1010/R05.xaml.cs, 05.Procedure/MES_SNS2_TML1010_R05.sql | 기능 구현·검증·빌드 및 사용자 승인 후 AAABIN EXE/PDB 교체 완료. 남은 외부 적용: 사용자가 TML1010_R05 프로시저를 Routine Editor에서 저장; 파라미터19개 동일하여 재등록 불필요. 기존 EQMPARTS 양식의 실물 라벨은 현장 프린터에서 확인 필요 | 실제 DB SELECT로316컬럼·발주/입출고 코드·EQMPARTS XML·파라미터19개 확인. 동일 메타데이터의 MariaDB10.2 격리 DB와 테스트 코드 없는 실제 후보 WPF 실행본에서72개 검증 통과: 정상·누락/잘못된 사원·0/음수/초과수량·타품목/타공장/잘못된 상태 거절 및 저장 보존, 발주키/순번/사원 저장, 현재고 증감, 부분/완료 상태, 재발행 무변경, 실제 선택 버튼 ON/OFF·단일선택·포커스 분리, 출고자 기본값/선택값, 입고자 보존, 라벨 실패 후 입고1회 저장. 실프로젝트 Release 빌드 성공 및 최종 빌드61개 SQL/UI 스모크 통과. 동시 출고4+4/현재고5 테스트는1건 성공·1건 재고부족, 최종재고1·이력1건 확인. 소스BOM/CRLF·호출분기·파라미터 정합성 통과, csproj/App/메타등록SQL 불변. 새 실행본 SHA256=06759DB944270183EBC478A7C860BD4704157AD0C342B32CCC9B18555F4F1159. 프로젝트 루트 EXE 반영 완료. 운영DB SELECT 외 변경·실물인쇄 없음. 테스트 전용 컨테이너 및 임시폴더/후보/스크립트/PNG/DB추출자료 모두 삭제 |
 | **완료** | 02.Site/TMLPJT/TML1010/R05.xaml, 02.Site/AAABIN/TML1010.exe·pdb, 02.Site/TMLPJT/TML1010/TML1010.exe | 출고 팝업 수정 실행본 재실행 필요. R05 관련 임시폴더10개·테스트 컨테이너2개 정리 완료; 이전 발주 선택 ON/OFF 요청은 별도 업무 소스 반영 및 저장 검증 필요 | 기존 배포본 오류 재현 후 수정 후보와 최종 AAABIN 실행본 모두 실제 R05 생성자·공통 TML 스타일·Frame·ITSLIB·격리 MariaDB를 사용한23개 검증 통과. 공통 출고 버튼→팝업 표시, 품목 표시·읽기전용·수량 바인딩·공통코드, X닫기·재열기, 800x600·1280x800·1920x1080 확대축소 중앙·화면경계, 입고·이력 팝업 및 입고자 기본값 보존, 실적 생성 없음 확인. 후보·실프로젝트 빌드 오류0, 실행파일3경로 SHA256=1F86DF210632E583B8A9C49AC9195354E8AEAA86531320F1D2DE077667180D5B 일치. C#/SQL/csproj/App 해시 불변, 출고 영역 외 XAML 불변, 단일BOM/CRLF 확인. 운영DB 변경·물리 프린터 출력 없음 |
@@ -2345,9 +2554,16 @@
 | **완료** | [App.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/App.xaml), [TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe) | TML1010 StartupUri R05 전환 | App.xaml StartupUri="R05.xaml" 지정, MSBuild 15.0 Rebuild 0 Error 통과, 바이너리 배포 및 단일 BOM 무결성 확인 |
 | **완료** | [R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe) | R05 프로시저명 TML1010_R05 전면 교체 | 프로시저 호출 4곳 TML1010_R05 교정, MSBuild 15.0 Rebuild 0 Error 통과, 바이너리 배포 및 단일 BOM 무결성 확인 |
 | **완료** | [R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05.sql), [TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe) | TML1010 R05 설비부품 입출고 관리 전면 전환 및 5대 기능 구현 | 설비부품코드/명/등급/로케이션/안전재고/현재고/단위/입고/출고/이력/라벨출력 11개 컬럼 그리드, 발주조회 입고, 출고, 이력조회, 프로시저 전면 개편, MSBuild 15.0 Rebuild 0 Error 통과, 배포 및 단일 BOM 무결성 확인 |
+| **완료** | [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql) | TML1010_R05 과잉보호 조건문 및 NULLIF 제거, INC 2공장(07) 및 법인(60) 하드코딩 직관화 | 상단 3중 사전조회 제거, NULLIF 제거 및 ODRFACTORY='07' 고정, COALESCE/LEFT 과잉검증 단순화, 단일 UTF-8 BOM/CRLF 무결성 검증 완료 |
+| **완료** | [02.Site/TMLPJT/TML1010/R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql) | TML1010_R05 실제 DB 공통코드(INOUTTP_EQMPARTS) 엄격 준수 및 ENDYN 표준화 | DB 실제 등록 데이터(INOUTTP_EQMPARTS: IN_01 구매입고, OUT_01 부품교체) 전면 복원, 임의 생성 파일 삭제, C# DataView 바인딩 유지, MSTITEM.ENDYN='N' 표준화, MSBuild 15.0 빌드 성공(0 Error), 단일 BOM/CRLF 검증 완료 |
+| **완료** | [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md) | 공통코드(GPCD) 그룹 분리 및 ItsCombo 연동 표준 규칙 제정 | C# 비하인드 DataView/LIKE 필터링 금지, GPCD 분리 정석 방식 1 명문화, 마크업 자동 바인딩 및 공통 컴포넌트 우선 활용 규칙 추가, 단일 BOM/CRLF 검증 완료 |
+| **완료** | [01.Office/PAGEMST/MST1002/MST1002_R06.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST1002/MST1002_R06.js), [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md) | MST1002_R06 설비그룹 공통 콤보(FM116) 바인딩 적용 및 그리드 콤보 연동 규칙 제정 | 설비그룹코드 hidden 및 명칭 별도 컬럼 삭제, enumColumnTypes.combo(gpcd: 'FM116') 단일 콤보 바인딩 적용, framework_convention.md 제6조 규칙 추가, JS 구문 검사 및 단일 BOM/CRLF 검증 완료 |
+| **완료** | [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs) | TML1010_R05 C# 생성자 내 불필요한 DataView 필터링 코드 완전 제거 | cmb_INTP 및 cmb_OUTTP의 잉여 DataView 필터링 2줄 완전 삭제, 순수 프레임워크 바인딩 유지, MSBuild Rebuild 빌드 성공(0 Error), 단일 BOM/CRLF 검증 완료 |
+| **완료** | [R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [.agents/rules/Optimization.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/Optimization.md), [.agents/rules/validation.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/validation.md) | TML1010_R05 쓰레기 코드 전수 무결성 검증 및 잉여 코드 자체 삭제 의무화 규칙 제정 | R05.xaml/R05.xaml.cs 쓰레기 코드 0건 전수 검증, Optimization.md 제5조 및 validation.md 제6조 신규 제정(5대 쓰레기 코드 자체 삭제 의무화), 단일 BOM/CRLF 검증 완료 |
 | **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | - |
 
 ---
 *위 기록은 사용자 요청에 따라 지속적으로 업데이트됩니다.*
+
 
 

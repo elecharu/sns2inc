@@ -4,7 +4,7 @@ var tabstate = 0;
 
 /* 페이지 로드 시 수행 */
 ItsPage.Load = function () {
-    
+
     /* 그리드 생성 */
     ItsGrid.Create('grid1', { isCheckBoxGrid: false, allowMerging: 'Cells' }, [
         column.create("공장", "FACTORYCD", { width: 120, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', allowMerging: true }),
@@ -13,12 +13,10 @@ ItsPage.Load = function () {
         column.create("설비대분류", "EQMGROUP1", { width: 104, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', allowMerging: true }),
         column.create("설비중분류", "EQMGROUP2", { width: 105, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM114', allowMerging: true }),
         column.create("설비소분류", "EQMGROUP3", { width: 106, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM115', allowMerging: true }),
-        // 2026-10-08 [생산설비정보] 설비코드 앞 설비그룹코드 표시 및 설비그룹코드명 히든 선언
-        column.create("설비그룹코드", "EQMGUBUN", { width: 100, align: 'center' }),
-        column.create("설비그룹코드명", "EQMGRPNM", { hidden: true }),
+        column.create("설비그룹", "EQMGUBUN", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM116', allowMerging: true }),
         column.create("설비코드", "FANO", { width: 100, align: 'center' }),
         column.create("설비명", "EQMNM", { width: 101 }),
-        column.create("설비상세명", "EQMNM_DETAIL", { width: 102 }),        
+        column.create("설비상세명", "EQMNM_DETAIL", { width: 102 }),
         column.create("설비등급구분", "EQMGRADE", { width: 107, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM110' }),
         column.create("설비상태구분", "EQMSTT", { width: 108, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM111' }),
         column.create("설치일자", "SETDATE", { width: 109, align: 'center' }),
@@ -59,9 +57,9 @@ ItsButton.EventSearch = function () {
         return;
     }
 
-    ItsGrid.SetStore('grid1', maria.store.YnToBool('USEYN')); 
+    ItsGrid.SetStore('grid1', maria.store.YnToBool('USEYN'));
 
-    ItsMsg.Toast(maria.store.Length() + '건이 조회되었습니다.'); 
+    ItsMsg.Toast(maria.store.Length() + '건이 조회되었습니다.');
 
     ItsGrid.Get('grid1').autoSizeColumns();
 };
