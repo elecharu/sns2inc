@@ -33,8 +33,6 @@ namespace TML1010
         ItsModelGrid MODEL_G2 = new ItsModelGrid();
         ItsModelGrid MODEL_ODR = new ItsModelGrid();
 
-        
-        // 2026-10-16 [설비부품 화면] 공통 버튼 동작을 유지하고 회색 외형 적용
         public R05()
         {
             InitializeComponent();
@@ -99,7 +97,7 @@ namespace TML1010
             }
         }
 
-        // 2026-10-16 [입출고 팝업] 공통 팝업 동작을 유지하고 참고 화면의 제목줄 색상 적용
+        // 2026-10-16 [입출고 팝업] 공통 팝업 동작을 유지 및 컬럼 헤더 배경색 적용
         private void SetPopColor(UserControl pop)
         {
             pop.ApplyTemplate();
@@ -120,7 +118,6 @@ namespace TML1010
             base.EventCommand(commandName);
 
             // 설비부품 현재고 조회
-            // 2026-10-19 [설비부품 조회] 미사용 잉여 파라미터(ITEMCD, KEYWORD) 전송 제거
             if (commandName == "SEARCH_EQMPARTS")
             {
                 ItsMaria.Set("TML1010_R05", "LIST_EQMPARTS");
@@ -160,15 +157,12 @@ namespace TML1010
                 string itemCd = MODEL_G1.GetText(rowIdx, "ITEMCD");
                 string itemNm = MODEL_G1.GetText(rowIdx, "ITEMNM");
                 string itemId = MODEL_G1.GetText(rowIdx, "ITEMID");
-                string itemUnit = MODEL_G1.GetText(rowIdx, "ITEMUNIT");
                 string locaCd = MODEL_G1.GetText(rowIdx, "LOCACD");
 
                 MODEL_IN_INFO.SetValue("ITEMCD", itemCd);
                 MODEL_IN_INFO.SetValue("ITEMNM", itemNm);
-                MODEL_IN_INFO.SetValue("ITEMUNIT", itemUnit);
                 MODEL_IN_INFO.SetValue("ITEMSPEC", MODEL_G1.GetText(rowIdx, "ITEMSPEC"));
 
-                // 2026-10-19 [입고 팝업] 미사용 패널 ITEMCD 세팅 제거 및 필수값 초기화
                 MODEL_A2.InitData();
                 MODEL_A2.SetValue("ITEMID", itemId);
                 MODEL_A2.SetValue("INDATE", DateTime.Now.ToString("yyyy-MM-dd"));
@@ -237,47 +231,31 @@ namespace TML1010
                     MODEL_A2.SetValue("INQTY", 0);
                 }
             }
-            // 설비부품 입고 버튼 클릭 (확인창 호출)
+            
             else if (commandName == "IN_EQMPARTS")
             {
-                decimal inQty = MODEL_A2.GetDecimal("INQTY");
-                string inDate = (MODEL_A2.GetValue("INDATE") ?? "").ToString();
-                string itemCd = (MODEL_IN_INFO.GetValue("ITEMCD") ?? "").ToString();
-                string itemNm = (MODEL_IN_INFO.GetValue("ITEMNM") ?? "").ToString();
-                string itemUnit = cmb_IN_UNIT.SelectedLabel;
-                string inTp = cmb_INTP.SelectedLabel;
                 string odrKey = (MODEL_A2.GetValue("MTRODRKEY") ?? "").ToString();
-
                 if (string.IsNullOrEmpty(odrKey))
                 {
                     ShowMessageBox("", "입고할 발주를 선택해주세요.");
                     return;
                 }
 
+                decimal inQty = MODEL_A2.GetDecimal("INQTY");
                 if (inQty <= 0)
                 {
                     ShowMessageBox("", "입고수량을 0보다 크게 입력해주십시오.");
                     return;
                 }
 
+                string inDate = (MODEL_A2.GetValue("INDATE") ?? "").ToString();
                 if (string.IsNullOrEmpty(inDate))
                 {
                     ShowMessageBox("", "입고일자를 입력해주십시오.");
                     return;
                 }
 
-                string msg = "설비부품을 입고하시겠습니까?"
-                    + "\n- 입고일자 : " + inDate
-                    + "\n- 부품코드(명) : " + itemCd + " (" + itemNm + ")"
-                    + "\n- 입고구분 : " + inTp
-                    + "\n- 입고수량 : " + inQty.ToString("N0") + " " + itemUnit;
-
-                if (!string.IsNullOrEmpty(odrKey))
-                {
-                    msg += "\n- 발주번호 : " + odrKey;
-                }
-
-                ShowMessageBox("IN_EQMPARTS", msg);
+                ShowMessageBox("IN_EQMPARTS", "설비부품을 입고하시겠습니까?");
             }
             // 2026-10-19 [출고 팝업] 로그인 사원 기본값 및 출고자 선택
             else if (commandName == "POP_OUT_EQMPARTS")
@@ -290,32 +268,26 @@ namespace TML1010
                 int rowIdx = MODEL_G1.CurrentIndex;
                 string itemCd = MODEL_G1.GetText(rowIdx, "ITEMCD");
                 string itemNm = MODEL_G1.GetText(rowIdx, "ITEMNM");
-                string itemUnit = MODEL_G1.GetText(rowIdx, "ITEMUNIT");
                 decimal lotQty = MODEL_G1.GetDecimal(rowIdx, "LOTQTY");
 
                 MODEL_A3.InitData();
                 MODEL_A3.SetValue("ITEMCD", itemCd);
                 MODEL_A3.SetValue("ITEMID", MODEL_G1.GetText(rowIdx, "ITEMID"));
                 MODEL_A3.SetValue("ITEMNM", itemNm);
-                MODEL_A3.SetValue("ITEMUNIT", itemUnit);
                 MODEL_A3.SetValue("LOTQTY", lotQty);
                 MODEL_A3.SetValue("OUTDATE", DateTime.Now.ToString("yyyy-MM-dd"));
-                MODEL_A3.SetValue("OUTTP", "OUT_01");
+                MODEL_A3.SetValue("OUTTP", "OUT_01"); // 기본값 설정 (추후 삭제해도 상관 없음)
                 MODEL_A3.SetValue("EMPCD", ItsMemberShip.EMPCD);
 
                 PANEL_A3.Show();
                 SetPopColor(POP_OUT);
             }
-            // 설비부품 출고 버튼 클릭 (확인창 호출)
+        
             else if (commandName == "OUT_EQMPARTS")
             {
                 decimal outQty = MODEL_A3.GetDecimal("OUTQTY");
                 decimal curQty = MODEL_A3.GetDecimal("LOTQTY");
                 string outDate = (MODEL_A3.GetValue("OUTDATE") ?? "").ToString();
-                string itemCd = (MODEL_A3.GetValue("ITEMCD") ?? "").ToString();
-                string itemNm = (MODEL_A3.GetValue("ITEMNM") ?? "").ToString();
-                string itemUnit = cmb_OUT_UNIT.SelectedLabel;
-                string outTp = cmb_OUTTP.SelectedLabel;
 
                 if (outQty <= 0)
                 {
@@ -335,12 +307,7 @@ namespace TML1010
                     return;
                 }
 
-                ShowMessageBox("OUT_EQMPARTS", "설비부품을 출고하시겠습니까?"
-                    + "\n- 출고일자 : " + outDate
-                    + "\n- 부품코드(명) : " + itemCd + " (" + itemNm + ")"
-                    + "\n- 출고구분 : " + outTp
-                    + "\n- 출고수량 : " + outQty.ToString("N0") + " " + itemUnit
-                );
+                ShowMessageBox("OUT_EQMPARTS", "설비부품을 출고하시겠습니까?");
             }
             // 설비부품 입출고이력 팝업 오픈
             else if (commandName == "POP_EQM_INOUT")
@@ -406,14 +373,13 @@ namespace TML1010
                     }
                     PrintLabel(ds);
                 }
-                catch (Exception ex)
+                catch
                 {
-                    ShowMessageBox("", "라벨 출력 실패: " + ex.Message);
+                    ShowMessageBox("", "라벨 출력에 실패했습니다. 프린터를 확인해주세요.");
                 }
             }
         }
 
-        // 2026-10-16 [설비부품 라벨] 공통 라벨 양식에 선택 부품과 수량 전달
         // 2026-10-19 [라벨 출력] 프로시저의 양식코드와 출력 데이터 사용
         private void PrintLabel(DataSet ds)
         {
@@ -464,10 +430,9 @@ namespace TML1010
                 {
                     PrintLabel(ds);
                 }
-                catch (Exception ex)
+                catch
                 {
-                    ShowMessageBox("", "입고 등록은 완료되었습니다. 라벨 출력에 실패했습니다."
-                        + "\n출력 버튼으로 다시 출력해주세요.\n" + ex.Message);
+                    ShowMessageBox("", "입고는 완료되었습니다. 라벨 출력을 확인해주세요.");
                 }
             }
             // 2026-10-19 [출고 저장] 선택한 출고자를 입출고 이력에 전달

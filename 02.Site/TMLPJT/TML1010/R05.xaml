@@ -94,7 +94,6 @@
                                 <its:Text Label="설비부품명" LabelWidth="80" Width="295" Value="{Binding ITEMNM}" ReadOnly="True" />
                                 <UserControl Width="295" Height="14" />
                                 <its:Text Label="규격" LabelWidth="80" Width="295" Value="{Binding ITEMSPEC}" ReadOnly="True" />
-                                <its:Combo x:Name="cmb_IN_UNIT" Value="{Binding ITEMUNIT}" GPCD="DM150" Visibility="Collapsed" />
                             </its:WrapContent>
                             <its:WrapContent x:Name="PANEL_A2" Width="300" Height="235">
                                 <its:Pop x:Name="pop_IN_EMP" Label="입고자" LabelWidth="80" Width="295" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True" />
@@ -134,7 +133,6 @@
                     <its:Combo Grid.Row="3" Label="출고구분" LabelWidth="75" Width="280" HorizontalAlignment="Left" Value="{Binding OUTTP}" GPCD="INOUTTP_EQMPARTS" x:Name="cmb_OUTTP" />
                     <its:Number Grid.Row="4" Label="출고수량" LabelWidth="75" Width="280" HorizontalAlignment="Left" Value="{Binding OUTQTY}" ShowKeyPad="True" DecimalPoint="0" />
                     <its:Pop Grid.Row="5" x:Name="pop_OUT_EMP" Label="출고자" LabelWidth="75" Width="404" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True" />
-                    <its:Combo x:Name="cmb_OUT_UNIT" Value="{Binding ITEMUNIT}" GPCD="DM150" Visibility="Collapsed" />
                     <its:Button Grid.Row="7" Width="230" Height="50" HorizontalAlignment="Center" Label="출고 등록" CommandName="OUT_EQMPARTS" BackColor="Orange" SetFontSize="18" />
                 </Grid>
             </its:WrapContent>

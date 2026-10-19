@@ -17,6 +17,37 @@
 
 ## 🕒 2026-10-19 (월) 작업 내역
 
+### 9. SYSLABEL EQMPARTS(설비부품 라벨) 양식 폭 확장 및 폰트 크기 최적화 (글자 잘림 방지)
+- **수정/대상 파일**: [05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql)
+- **배경 및 원인**:
+  - 현장 터미널에서 바코드 라벨(50mm × 25mm) 출력 시 부품명(`ITEMNM`)이 긴 경우 뒷부분이 잘려서 출력되는 현상 발생 (`[테스트] 설`까지만 출력되고 짤림).
+  - DB `SYSLABEL` 테이블의 `LABELCD = 'EQMPARTS'`에 등록된 `XMLDATA`를 분석한 결과, 전체 폭 50mm 중 부품명(`ITEMNM`)의 너비가 불과 `Width="22.75"`mm로 협소하게 지정되어 있고 폰트 크기가 `12pt`로 커서 5~6글자 이후 강제 잘림 현상(Trimming)이 원인으로 규명됨.
+- **작업 상세 내용**:
+  - 실제 DB 서버 직접 수정 금지 원칙(`procedure.md`)에 따라 사용자가 DBeaver/HeidiSQL에서 즉시 실행할 수 있는 `05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql` 쿼리 파일 생성:
+    - 부품명(`ITEMNM`): 가로 폭을 `Width="46"`mm로 대폭 확장(좌우 2mm 여백 활용)하고, 폰트를 `맑은 고딕^@^8.5^@^Bold`로 조정하여 18~20자의 긴 품명도 전혀 잘리지 않도록 개선.
+    - 부품코드(`ITEMCD`): 품명 바로 아래(`Y="7"`)에 폭 `46`mm, 폰트 `굴림^@^8.5^@^Regular`로 배치하여 긴 코드도 여유 있게 수용.
+    - 바코드(`ITEMID`): 폭을 기존 29.25mm에서 `42`mm(`X="4"`, `Y="12"`, `Height="11.5"`)로 확장하고 바코드 아래 텍스트 폰트를 `8.5pt`로 조정하여 바코드 바 두께/해상도를 높이고 스캔 인식률 극대화.
+    - 미사용 더미 필드(`LOTKEY`, `PRDDATE`, `LOTQTY`, `ITEMSPEC`) 완전 제거로 XML 경량화 및 구조 정돈.
+- **검증 결과**:
+  - `05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql` 단일 UTF-8 with BOM 및 CRLF 개행 바이너리 무결성 검증 완료.
+
+### 8. TML1010_R05 입출고 확인·에러 팝업 메시지 단일 문장 간소화 및 잉여 컨트롤·변수 자체 삭제
+- **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs)
+- **배경 및 원인**:
+  - 현장 터미널 화면에서 확인 팝업 및 라벨 출력 실패 팝업 메시지가 여러 줄로 길어지면서 메시지박스 UI 타이틀("Message")과 본문 텍스트가 겹치고 레이아웃이 깨지는 UI/UX 결함 발생.
+  - 사용자의 요청에 따라 모든 확인 및 오류 팝업 문구를 간결한 단일 문장으로 전면 축소.
+- **작업 상세 내용**:
+  - `R05.xaml.cs`:
+    - 입고등록 확인 문구: `"설비부품을 입고하시겠습니까?"` (단일 문장)
+    - 입고 후 라벨 출력 실패 문구: `"입고는 완료되었습니다. 라벨 출력을 확인해주세요."` (단일 문장)
+    - 출고등록 확인 문구: `"설비부품을 출고하시겠습니까?"` (단일 문장)
+    - 라벨 재발행 실패 문구: `"라벨 출력에 실패했습니다. 프린터를 확인해주세요."` (단일 문장)
+    - 확인창 조합용으로만 쓰이던 잉여 변수(`itemCd`, `itemNm`, `itemUnit`, `inTp`, `outTp`) 완전 삭제 (`Optimization.md` 제5조 Anti-Garbage Code 규칙 준수).
+  - `R05.xaml`:
+    - 확인창 단위 표시용으로만 존재하던 미사용 숨김 콤보 `cmb_IN_UNIT`, `cmb_OUT_UNIT` 2건 완전 삭제.
+- **검증 결과**:
+  - `R05.xaml`, `R05.xaml.cs` 단일 UTF-8 BOM 및 CRLF 개행 3단계 바이너리 검증 완료.
+
 ### 7. TML1010_R05 쓰레기 코드 전수 무결성 검증 및 불필요한 잉여 코드 자체 삭제 의무화 규칙 제정
 - **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [.agents/rules/Optimization.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/Optimization.md), [.agents/rules/validation.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/validation.md)
 - **배경 및 원인**:
@@ -2560,6 +2591,8 @@
 | **완료** | [01.Office/PAGEMST/MST1002/MST1002_R06.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST1002/MST1002_R06.js), [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md) | MST1002_R06 설비그룹 공통 콤보(FM116) 바인딩 적용 및 그리드 콤보 연동 규칙 제정 | 설비그룹코드 hidden 및 명칭 별도 컬럼 삭제, enumColumnTypes.combo(gpcd: 'FM116') 단일 콤보 바인딩 적용, framework_convention.md 제6조 규칙 추가, JS 구문 검사 및 단일 BOM/CRLF 검증 완료 |
 | **완료** | [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs) | TML1010_R05 C# 생성자 내 불필요한 DataView 필터링 코드 완전 제거 | cmb_INTP 및 cmb_OUTTP의 잉여 DataView 필터링 2줄 완전 삭제, 순수 프레임워크 바인딩 유지, MSBuild Rebuild 빌드 성공(0 Error), 단일 BOM/CRLF 검증 완료 |
 | **완료** | [R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [.agents/rules/Optimization.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/Optimization.md), [.agents/rules/validation.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/validation.md) | TML1010_R05 쓰레기 코드 전수 무결성 검증 및 잉여 코드 자체 삭제 의무화 규칙 제정 | R05.xaml/R05.xaml.cs 쓰레기 코드 0건 전수 검증, Optimization.md 제5조 및 validation.md 제6조 신규 제정(5대 쓰레기 코드 자체 삭제 의무화), 단일 BOM/CRLF 검증 완료 |
+| **완료** | [R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs) | TML1010_R05 입고등록 확인 팝업 메시지 간소화 및 잉여 컨트롤·변수 자체 삭제 | 확인창 문구 단일 문장("설비부품을 입고하시겠습니까?") 변경, 잉여 변수(itemCd/Nm/Unit/inTp) 및 미사용 컨트롤(cmb_IN_UNIT) 전면 삭제, 단일 BOM/CRLF 검증 완료 |
+| **완료** | [05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql) | SYSLABEL EQMPARTS 라벨 양식 폭 확장(46mm) 및 폰트 8.5pt 최적화 | 부품명 46mm 폭 확장 및 폰트 8.5pt 축소, 바코드 42mm 중앙 배치, 더미 필드 제거, 단일 BOM/CRLF 검증 완료 |
 | **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | - |
 
 ---

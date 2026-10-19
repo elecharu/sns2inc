@@ -436,13 +436,13 @@ WHEN 'LIST_WEEKPLAN' THEN  -- 주간 생산계획 조회
             , RESULT.ROUTCD
             , RESULT.PRCCD
             , RESULT.PRCNM
-            , MSTSTD_LAST.EQMCD
+            , EQMSTD_LAST.EQMCD
             , MSTLINE_EQM.EQMNM
-            , MSTSTD_LAST.CT
-            , MSTSTD_LAST.EFFI
-            , IF(   MSTSTD_LAST.CT * MSTSTD_LAST.EFFI IS NULL OR MSTSTD_LAST.CT * MSTSTD_LAST.EFFI = 0
+            , EQMSTD_LAST.CT
+            , EQMSTD_LAST.EFFI
+            , IF(   EQMSTD_LAST.CT * EQMSTD_LAST.EFFI IS NULL OR EQMSTD_LAST.CT * EQMSTD_LAST.EFFI = 0
                   , 0
-                  , 3600 / MSTSTD_LAST.CT * (MSTSTD_LAST.EFFI/100)) AS UPH
+                  , 3600 / EQMSTD_LAST.CT * (EQMSTD_LAST.EFFI/100)) AS UPH
             , RESULT.PLANQTY  -- 월생산계획수량_반제품 
             , RESULT.ADDSALQTY  -- 추가수주_반제품   
             , IFNULL(RSTMONTH.GOODQTY, 0) AS GOODQTY  -- 월생산수량_반제품    
@@ -544,33 +544,33 @@ WHEN 'LIST_WEEKPLAN' THEN  -- 주간 생산계획 조회
                         , MSL_VALUE.EFFI
                       FROM (
                               SELECT
-                                  MSTSTD.FACTORYCD
-                                , MSTSTD.ITEMID
-                                , MSTSTD.LINECD
-                                , MSTSTD.EQMCD
-                                , MAX(MSTSTD.SDT) AS SDT_LAST
-                              FROM MSTSTD
+                                  MSTEQM_STD.FACTORYCD
+                                , MSTEQM_STD.ITEMID
+                                , MSTEQM_STD.LINECD
+                                , MSTEQM_STD.EQMCD
+                                , MAX(MSTEQM_STD.SDT) AS SDT_LAST
+                              FROM MSTEQM_STD
                               INNER JOIN MSTPRC
-                                ON MSTPRC.PRCCD = MSTSTD.PRCCD  
-                              WHERE MSTSTD.FACTORYCD = $FACTORYCD
+                                ON MSTPRC.PRCCD = MSTEQM_STD.PRCCD  
+                              WHERE MSTEQM_STD.FACTORYCD = $FACTORYCD
                                 AND MSTPRC.USEYN = 'Y'
-                              GROUP BY MSTSTD.FACTORYCD
-                                     , MSTSTD.ITEMID
-                                     , MSTSTD.LINECD
-                                     , MSTSTD.EQMCD
+                              GROUP BY MSTEQM_STD.FACTORYCD
+                                     , MSTEQM_STD.ITEMID
+                                     , MSTEQM_STD.LINECD
+                                     , MSTEQM_STD.EQMCD
                            ) AS MSL
-                      INNER JOIN MSTSTD AS MSL_VALUE
+                      INNER JOIN MSTEQM_STD AS MSL_VALUE
                         ON MSL_VALUE.FACTORYCD = MSL.FACTORYCD
                        AND MSL_VALUE.ITEMID = MSL.ITEMID
                        AND MSL_VALUE.LINECD = MSL.LINECD
                        AND MSL_VALUE.EQMCD = MSL.EQMCD
                        AND MSL_VALUE.SDT = MSL.SDT_LAST
-                    ) AS MSTSTD_LAST  -- 반제품 라인별 CT, 설비종합효율
-            ON MSTSTD_LAST.ITEMID = RESULT.ITEMID
-           AND MSTSTD_LAST.LINECD = RESULT.LINECD
-           AND MSTSTD_LAST.PRCCD = RESULT.PRCCD
+                    ) AS EQMSTD_LAST  -- 반제품 라인별 CT, 설비종합효율
+            ON EQMSTD_LAST.ITEMID = RESULT.ITEMID
+           AND EQMSTD_LAST.LINECD = RESULT.LINECD
+           AND EQMSTD_LAST.PRCCD = RESULT.PRCCD
           LEFT JOIN MSTLINE_EQM
-            ON MSTLINE_EQM.EQMCD = MSTSTD_LAST.EQMCD
+            ON MSTLINE_EQM.EQMCD = EQMSTD_LAST.EQMCD
         
           LEFT JOIN (
                       SELECT
@@ -586,8 +586,8 @@ WHEN 'LIST_WEEKPLAN' THEN  -- 주간 생산계획 조회
                         AND MSTPRC.WEEKPLANYN = 'Y' -- 주간생산계획 내리는 공정만 
                       GROUP BY PRDRST.ITEMID, PRDRST.EQMCD
                     ) AS RSTMONTH   -- 생산실적 집계       
-            ON RSTMONTH.ITEMID = MSTSTD_LAST.ITEMID
-           AND RSTMONTH.EQMCD = MSTSTD_LAST.EQMCD
+            ON RSTMONTH.ITEMID = EQMSTD_LAST.ITEMID
+           AND RSTMONTH.EQMCD = EQMSTD_LAST.EQMCD
         
           LEFT JOIN (
                       SELECT
@@ -597,8 +597,8 @@ WHEN 'LIST_WEEKPLAN' THEN  -- 주간 생산계획 조회
                       FROM PRDPLAN_W_ADDPLAN AS ADDPLAN
                       WHERE ADDPLAN.ADDMONTH = LEFT($SDATE, 7)                
                     ) AS W_ADDPLAN  -- 추가 생산계획 
-            ON W_ADDPLAN.ITEMID = MSTSTD_LAST.ITEMID
-           AND W_ADDPLAN.EQMCD = MSTSTD_LAST.EQMCD
+            ON W_ADDPLAN.ITEMID = EQMSTD_LAST.ITEMID
+           AND W_ADDPLAN.EQMCD = EQMSTD_LAST.EQMCD
        ) AS RESULT2
   LEFT JOIN (
               SELECT
