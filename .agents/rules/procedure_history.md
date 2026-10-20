@@ -33,7 +33,7 @@ trigger: always_on
 - 프로시저 최상단 선언부는 반드시 `CREATE DEFINER`와 `PROCEDURE`를 2행으로 분리 개행하며, 최상단 주석 블록 내에서 일관된 들여쓰기와 열 정렬을 유지합니다:
   ```sql
   CREATE DEFINER=`root`@`%` 
-  PROCEDURE `MES_SNS2`.`[프로시저명]`(
+  PROCEDURE `{SCHEMA}`.`[프로시저명]`(
   -- *****************************************************************************
   -- Comment: [프로시저 설명]
   -- Create: 	YYYY-MM-DD  	생성 			[작성자]

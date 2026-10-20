@@ -8,7 +8,7 @@ description: >-
 
 # Work History Manager & Session Restoration Skill
 
-본 스킬은 MES 프로젝트 진행 중 발생하는 모든 사용자 요청, 코드 수정, 설계 결정 및 검증 결과를 [WORK_HISTORY.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/WORK_HISTORY.md)에 **스스로 자동 기록**하고, 사용자가 **"지난 작업 불러와줘"**라고 요청했을 때 **직전 작업 맥락을 즉각 100% 복원하여 끊김 없이 작업을 이어갈 수 있도록** 지원하는 표준 스킬입니다.
+본 스킬은 MES 프로젝트 진행 중 발생하는 모든 사용자 요청, 코드 수정, 설계 결정 및 검증 결과를 `{PROJECT_ROOT}/WORK_HISTORY.md`에 **스스로 자동 기록**하고, 사용자가 **"지난 작업 불러와줘"**라고 요청했을 때 **직전 작업 맥락을 즉각 100% 복원하여 끊김 없이 작업을 이어갈 수 있도록** 지원하는 표준 스킬입니다.
 
 ---
 
@@ -37,11 +37,11 @@ description: >-
   ```bash
   node .agents/skills/work-history-manager/scripts/sync_history.js --add-task "[작업제목]" "[수정파일목록]" "[배경및원인]" "[작업상세내용]" "[검증결과]" "[완료/진행중]" "[WIP설명]"
   ```
-- 또는 직접 [WORK_HISTORY.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/WORK_HISTORY.md)에 오늘 날짜 섹션을 확인하고 추가/수정.
+- 또는 직접 `{PROJECT_ROOT}/WORK_HISTORY.md`에 오늘 날짜 섹션을 확인하고 추가/수정.
 
 ### 기록 필수 5대 항목:
 1. **작업 일자 및 번호/제목**: `### N. [프로그램ID] 작업 명칭`
-2. **수정/대상 파일**: 정확한 파일 링크 (`[파일명](file:///...)`)
+2. **수정/대상 파일**: 프로젝트 루트 기준 상대경로 (예: `01.Office/.../EQM1001_R03.js`, 절대경로·드라이브명 하드코딩 금지)
 3. **배경 및 원인 분석**: 문제 발생 원인 또는 신규 요구사항 배경
 4. **작업 상세 내용**: 구체적 구현 로직 및 변경점
 5. **검증 결과 및 WIP 상태**: 컴파일/빌드, 브라우저 렌더링, 콘솔 에러 0건 여부
@@ -50,7 +50,7 @@ description: >-
 
 ## 🛡️ 3. 인코딩 및 파일 무결성 보장
 
-[WORK_HISTORY.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/WORK_HISTORY.md)는 프로젝트의 핵심 자산이므로 항상 다음 검증을 수행합니다:
+`{PROJECT_ROOT}/WORK_HISTORY.md`는 프로젝트의 핵심 자산이므로 항상 다음 검증을 수행합니다:
 ```bash
 node .agents/skills/work-history-manager/scripts/sync_history.js --validate
 ```

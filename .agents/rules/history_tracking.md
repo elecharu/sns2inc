@@ -8,9 +8,10 @@ trigger: always_on
 
 ### 1. 작업 완료 시 자동 기록 의무 (Auto-Save Mandate)
 
-- **위치**: 프로젝트 루트 디렉터리의 [WORK_HISTORY.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/WORK_HISTORY.md)
+- **위치**: 현재 작업 중인 프로젝트 루트 디렉터리의 `WORK_HISTORY.md` (`{PROJECT_ROOT}/WORK_HISTORY.md`, 프로젝트 루트 판별은 `project_context.md` 준수)
+- 파일이 없으면 첫 작업 기록 시 프로젝트 루트에 `UTF-8 with BOM` + `CRLF`로 신규 생성합니다.
 - **무조건 자동 저장 원칙**:
-  - 화면 UI(`.aspx`), 스크립트(`.js`), 백엔드 C#(`.cs`), DB 프로시저(`.sql`) 등 소스 코드를 생성/수정하거나, 버그 해결 및 화면 검증을 완료한 모든 작업 턴(Turn)에서는 **사용자가 "저장해줘" 또는 "기록해줘"라고 별도로 요청하지 않아도 에이전트가 스스로 [WORK_HISTORY.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/WORK_HISTORY.md)에 작업 내역과 하단 [현재 작업 상태 (Work In Progress)] 테이블을 최신 상태로 자동 업데이트/저장**해야 합니다.
+  - 화면 UI(`.aspx`), 스크립트(`.js`), 백엔드 C#(`.cs`), DB 프로시저(`.sql`) 등 소스 코드를 생성/수정하거나, 버그 해결 및 화면 검증을 완료한 모든 작업 턴(Turn)에서는 **사용자가 "저장해줘" 또는 "기록해줘"라고 별도로 요청하지 않아도 에이전트가 스스로 `WORK_HISTORY.md`에 작업 내역과 하단 [현재 작업 상태 (Work In Progress)] 테이블을 최신 상태로 자동 업데이트/저장**해야 합니다.
 - **기록 필수 5대 항목**:
   1. 작업 일자 및 번호/제목 (예: `### 1. TQC1001_R02 검사 조회 로직 개선`)ㅇ
   2. 사용자 요청 사항 및 작업 배경/원인 분석
@@ -22,7 +23,7 @@ trigger: always_on
 - **트리거 발화**:
   - 사용자가 "지난 작업 불러와줘", "이어서 진행해줘", "이전 작업 내용", "지난번 하던거", "작업 이력 확인" 등 세션 복원성 명령을 내린 경우.
 - **3단계 복원 절차**:
-  1. **1단계 (이력 조회)**: 자동화 스크립트(`node .agents/skills/work-history-manager/scripts/sync_history.js --read-latest`) 또는 [WORK_HISTORY.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/WORK_HISTORY.md)를 즉시 조회합니다.
+  1. **1단계 (이력 조회)**: 자동화 스크립트(`node .agents/skills/work-history-manager/scripts/sync_history.js --read-latest`) 또는 `WORK_HISTORY.md`를 즉시 조회합니다.
   2. **2단계 (3단 브리핑)**:
      - **직전 완료 작업**: 가장 최근 일자에 완료된 작업 요약 및 수정 파일 링크
      - **현재 상태 요약**: WIP 테이블 상의 대기 및 진행 상태
@@ -38,4 +39,4 @@ trigger: always_on
 
 ### 4. 파일 무결성 및 인코딩 준수
 
-- [WORK_HISTORY.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/WORK_HISTORY.md)를 갱신할 때는 반드시 `encoding.md` 규칙에 따라 **UTF-8 with BOM** 및 **CRLF 개행**을 철저히 유지하며, 기존 과거 이력을 임의로 삭제하거나 훼손하지 않습니다.
+- `WORK_HISTORY.md`를 갱신할 때는 반드시 `encoding.md` 규칙에 따라 **UTF-8 with BOM** 및 **CRLF 개행**을 철저히 유지하며, 기존 과거 이력을 임의로 삭제하거나 훼손하지 않습니다.

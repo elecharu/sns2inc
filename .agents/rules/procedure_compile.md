@@ -27,9 +27,9 @@ DB 클라이언트 도구(DBeaver, HeidiSQL 등)를 통해 MariaDB 저장 프로
   - SQL 편집기에서 스크립트로 직접 생성할 때는 최상단과 최하단에 `DELIMITER`를 명시하여 툴이 세미콜론 단위로 자르지 못하도록 방지합니다:
     ```sql
     DELIMITER $$
-    DROP PROCEDURE IF EXISTS `MES_SNS2`.`EQM1001_R03` $$
+    DROP PROCEDURE IF EXISTS `{SCHEMA}`.`EQM1001_R03` $$
     CREATE DEFINER=`root`@`%` 
-    PROCEDURE `MES_SNS2`.`EQM1001_R03`(...)
+    PROCEDURE `{SCHEMA}`.`EQM1001_R03`(...)
     PROC: BEGIN
       ...
     END $$

@@ -10,20 +10,20 @@ trigger: always_on
 
 ### 1. 프로시저 최상단 선언부 서식 표준 (2행 분리 개행 강제)
 - **원칙**:
-  - 프로시저 선언부는 `CREATE DEFINER=... PROCEDURE ...(...)`와 같이 한 줄로 붙여 쓰는 것을 절대 금지하며, 반드시 `CREATE DEFINER=`root`@`%``와 `PROCEDURE `MES_SNS2`.`프로시저명`(`을 **2행으로 분리 개행하여 작성**합니다.
+  - 프로시저 선언부는 `CREATE DEFINER=... PROCEDURE ...(...)`와 같이 한 줄로 붙여 쓰는 것을 절대 금지하며, 반드시 `CREATE DEFINER=`root`@`%``와 `PROCEDURE `{SCHEMA}`.`프로시저명`(`을 **2행으로 분리 개행하여 작성**합니다. (`{SCHEMA}`는 `project_context.md`에 따라 판별한 실제 스키마명으로 치환)
   - 한 줄로 작성할 경우 DBeaver / HeidiSQL 등 DB 도구의 루틴 에디터 및 소스 비교 뷰에서 가독성을 심각하게 저해합니다.
 - **표준 서식 모범 예시**:
   ```sql
   -- [올바른 예 - 2행 분리 개행 (필수)]
   CREATE DEFINER=`root`@`%` 
-  PROCEDURE `MES_SNS2`.`MST3001_R03`(
+  PROCEDURE `{SCHEMA}`.`MST3001_R03`(
   -- *****************************************************************************
   -- Comment: 설비부품정보 마스터관리
   -- Create:  2024-02-22  13:50   김영철
   ...
 
   -- [잘못된 예 - 한 줄 선언 (절대 금지)]
-  CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`MST3001_R03`(
+  CREATE DEFINER=`root`@`%` PROCEDURE `{SCHEMA}`.`MST3001_R03`(
   ```
 
 ---

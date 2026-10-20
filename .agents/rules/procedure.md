@@ -11,7 +11,7 @@ trigger: always_on
 ### 0. [최우선 0순위 원칙] 실제 서버 DB 조작 및 공통 컴포넌트 수정 절대 금지
 - **실제 서버 DB 직접 반영 절대 금지**:
   - 프로시저, 함수, 테이블 등 데이터베이스 객체를 생성/수정/삭제할 때 **실제 연결된 서버 DB에 쿼리(`CREATE`, `ALTER`, `DROP`, `INSERT`, `UPDATE`, `DELETE` 등)를 직접 실행하는 행위를 절대 엄금합니다.**
-  - 모든 작업은 반드시 프로젝트 내 존재하는 프로시저 폴더(`05.PROCEDURE/` 등) 안의 **로컬 소스 파일(`.sql`)만을 수정**해야 하며, DB 반영은 사용자가 직접 진행합니다.
+  - 모든 작업은 반드시 프로젝트 내 존재하는 프로시저 폴더(`05.PROCEDURE/`, `프로시저/` 등 프로젝트마다 상이하므로 `project_context.md`에 따라 확인) 안의 **로컬 소스 파일(`.sql`)만을 수정**해야 하며, DB 반영은 사용자가 직접 진행합니다.
 - **공통 컴포넌트 프로시저 및 함수 임의 변경 절대 금지**:
   - `DC_FIND`, `DC_COMBO`, `GPCD` 등 전체 시스템 및 모든 화면에서 공통으로 참조하는 핵심 공통 DB 객체는 개별 화면의 개발 편의나 요구사항을 이유로 **절대 임의로 수정/변경하지 않습니다.**
   - 개별 화면 요구사항은 반드시 해당 화면 전용 소스 파일(`.js`, `.aspx`) 및 화면 전용 프로시저 내에서 독립적으로 처리합니다.
@@ -53,6 +53,7 @@ trigger: always_on
 프로시저 개발 시 다음 세부 규칙 문서를 함께 엄격히 준수합니다:
 | 규칙명 | 문서 파일 | 핵심 준수 사항 |
 | :--- | :--- | :--- |
+| **프로젝트 경로·스키마 판별** | [project_context.md](project_context.md) | 경로·스키마명 하드코딩 금지, 대상 파일·인접 프로시저 기준으로 `{SCHEMA}` 판별 |
 | **서버 다운 방지 원칙** | [procedure_subquery.md](procedure_subquery.md) | SELECT WHERE 절 내 상관 서브쿼리(NOT EXISTS/EXISTS) 절대 금지 ➔ Anti-join 대체 |
 | **DB 툴 컴파일 표준** | [procedure_compile.md](procedure_compile.md) | DBeaver Routine Editor 저장 또는 Alt+X 스크립트 실행으로 SQL Error [1064] 방지 |
 | **서식 및 열 정렬 표준** | [procedure_formatting.md](procedure_formatting.md) | CREATE DEFINER / PROCEDURE 2행 개행, 2/4/6 들여쓰기, 한 줄 다중 컬럼 가로 나열 |
