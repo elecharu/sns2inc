@@ -16,6 +16,7 @@ PROCEDURE `MES_SNS2`.`EQM1001_R03`(
 -- 			2026-10-07 					한성수	설비별 정리·중복 방지, 보완 재요청·일괄 승인, 주기 성능개선, 계획서 출력 최신 REV 자동선택·전체 이력화
 -- 			2026-10-08 					한성수	항목 추가·삭제·승인 검증·그룹 검색, HEADER·DETAIL 작업본·그룹/설비 REV 독립 관리 및 DETAIL 사용여부 제거
 -- 			2026-10-12 					한성수	반려 분기·사유·입력값 제거 및 대기·승인 상태로 통일
+-- 			2026-10-20 					한성수	설비 목록 조회(LIST_MSTEQM) 잉여 컬럼(EQMGRPNM) 및 COMTYPE 조인 제거
 -- *****************************************************************************
   IN $FANO           VARCHAR(20),
   IN $FANO_COPY      VARCHAR(20),
@@ -406,7 +407,6 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   WHEN 'LIST_MSTEQM' THEN -- 설비 목록 조회
     SELECT MSTEQM.FANO,
            COALESCE(MSTEQM.EQMGUBUN, '') AS EQMGUBUN,
-           COALESCE(COMTYPE.TPNM, '') AS EQMGRPNM,
            MSTEQM.EQMNM,
            COALESCE(CONCAT('REV.', PLAN_REV.REVNUM), '') AS REVNM,
            CASE WHEN PLAN_REV.REVCD IS NULL OR PLAN_REV.REVCD = '' THEN ''
@@ -414,9 +414,6 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
                 ELSE '대기' END AS APRVSTTNM,
            COALESCE(PLAN_REV.APRVSTT, '') AS APRVSTT
     FROM MSTEQM
-    LEFT JOIN COMTYPE
-      ON COMTYPE.GPCD = 'FM116'
-     AND COMTYPE.TPCD = MSTEQM.EQMGUBUN
     LEFT JOIN (
       SELECT PLANCD, MAX(REVNUM) AS REVNUM
       FROM MSTEQMREV_HEADER
@@ -428,7 +425,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
      AND PLAN_REV.PLANCD = LAST_REV.PLANCD
      AND PLAN_REV.REVNUM = LAST_REV.REVNUM
     WHERE MSTEQM.USEYN = 'Y'
-      AND (COALESCE($EQMGRP, '') = '' OR MSTEQM.EQMGUBUN LIKE CONCAT('%', $EQMGRP, '%') OR COMTYPE.TPNM LIKE CONCAT('%', $EQMGRP, '%'))
+      AND (COALESCE($EQMGRP, '') = '' OR MSTEQM.EQMGUBUN LIKE CONCAT('%', $EQMGRP, '%'))
       AND (COALESCE($FANO, '') = '' OR MSTEQM.FANO LIKE CONCAT('%', $FANO, '%') OR MSTEQM.EQMNM LIKE CONCAT('%', $FANO, '%'))
     ORDER BY MSTEQM.FANO;
 

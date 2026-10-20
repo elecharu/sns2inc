@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-10-19
+> **최종 갱신일**: 2026-10-20
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -12,6 +12,40 @@
 2. **주석 및 네이밍 표준**: 소스코드에는 `// YYYY-MM-DD 기능설명` 표준을 준수하며, 본 문서에는 원인 분석, 설계 의도, 수정 파일 링크를 명시합니다.
 3. **컴파일 및 빌드 검증**: 소스 수정 후에는 반드시 컴파일 빌드 무결성(MSBuild 등)을 확인하고 그 결과를 기재합니다.
 4. **대화 기록 및 불러오기 연계**: 모든 사용자 요청 및 작업 결과는 본 문서에 실시간 동기화되어, 새 세션이나 나중에 작업 재개 시 "불러오기"를 통해 이전 맥락을 100% 이어받습니다.
+
+---
+
+## 🕒 2026-10-20 (화) 작업 내역
+
+### 1. EQM1001_R03 설비별 점검계획 탭 그리드(grid1) 설비그룹 공통 콤보(FM116) 바인딩 적용
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
+- **배경 및 원인**:
+  - `framework_convention.md` 제6조(그리드 공통코드 콤보 컬럼 표준 연동 규칙)에 따라, `EQM1001_R03.js`의 설비별 점검계획 탭 좌측 그리드(`grid1`)에서 코드 컬럼(`EQMGUBUN`)을 단순 텍스트로 두고 명칭 컬럼(`EQMGRPNM`)을 `hidden: true`로 숨기던 기존 비표준 방식을 제거하고, 공통 프레임워크 컴포넌트(`ItsGrid`의 `enumColumnTypes.combo`) 표준 바인딩으로 일치화 요청.
+- **작업 상세 내용**:
+  - `EQM1001_R03.js`:
+    - `column.create('설비그룹코드', 'EQMGUBUN', { width: 100, align: 'center' })` 및 `column.create('설비그룹명', 'EQMGRPNM', { hidden: true })` 2개 컬럼을 `column.create('설비그룹', 'EQMGUBUN', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM116' })` 단일 콤보 컬럼으로 통합 변경.
+    - 날짜 주석(`// 2026-10-20 [설비별 점검계획 탭] 좌측 그리드 설비그룹 공통 콤보(FM116) 바인딩 적용`) 작성 및 기존 날짜 주석 보존.
+- **검증 결과**:
+  - Node.js 구문 검사(`new Function(...)`) 통과 (Syntax OK).
+  - git diff 자체 전수 검사 결과 불필요한 잉여·쓰레기 코드 0건 확인 (`Optimization.md`, `validation.md` 준수).
+  - 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료.
+
+---
+
+### 2. EQM1001_R03 프로시저 설비 목록 조회(LIST_MSTEQM) 잉여 컬럼(EQMGRPNM) 및 COMTYPE 조인 제거
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql)
+- **배경 및 원인**:
+  - 화면 `grid1`에서 `EQMGUBUN`을 공통 콤보(`enumColumnTypes.combo, gpcd: 'FM116'`)로 자동 매핑함에 따라, 프로시저에서 설비그룹명(`EQMGRPNM`)을 추출하기 위해 수행하던 `COMTYPE` 조인 및 반환 컬럼이 완전히 불필요한 잉여 로직이 됨.
+  - 사용자 지침 및 `framework_convention.md` 제6조(프로시저 쿼리 단순화 연계)에 따라 불필요한 조인 및 잉여 컬럼 전면 제거.
+- **작업 상세 내용**:
+  - `MES_SNS2_EQM1001_R03.sql`:
+    - `LIST_MSTEQM` 분기 SELECT 절에서 `COALESCE(COMTYPE.TPNM, '') AS EQMGRPNM` 삭제.
+    - FROM 절에서 `LEFT JOIN COMTYPE ON COMTYPE.GPCD = 'FM116' AND COMTYPE.TPCD = MSTEQM.EQMGUBUN` 완전 삭제.
+    - WHERE 절에서 `OR COMTYPE.TPNM LIKE CONCAT('%', $EQMGRP, '%')` 삭제 및 `MSTEQM.EQMGUBUN LIKE CONCAT('%', $EQMGRP, '%')` 단독 조건으로 단순화.
+    - 최상단 `Modify` 이력 1일 1행 압축 기록 (`procedure_history.md` 준수).
+- **검증 결과**:
+  - git diff 자체 전수 검사 결과 불필요한 잉여 코드 0건 확인.
+  - 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료.
 
 ---
 
@@ -2593,6 +2627,8 @@
 | **완료** | [R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [.agents/rules/Optimization.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/Optimization.md), [.agents/rules/validation.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/validation.md) | TML1010_R05 쓰레기 코드 전수 무결성 검증 및 잉여 코드 자체 삭제 의무화 규칙 제정 | R05.xaml/R05.xaml.cs 쓰레기 코드 0건 전수 검증, Optimization.md 제5조 및 validation.md 제6조 신규 제정(5대 쓰레기 코드 자체 삭제 의무화), 단일 BOM/CRLF 검증 완료 |
 | **완료** | [R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs) | TML1010_R05 입고등록 확인 팝업 메시지 간소화 및 잉여 컨트롤·변수 자체 삭제 | 확인창 문구 단일 문장("설비부품을 입고하시겠습니까?") 변경, 잉여 변수(itemCd/Nm/Unit/inTp) 및 미사용 컨트롤(cmb_IN_UNIT) 전면 삭제, 단일 BOM/CRLF 검증 완료 |
 | **완료** | [05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql) | SYSLABEL EQMPARTS 라벨 양식 폭 확장(46mm) 및 폰트 8.5pt 최적화 | 부품명 46mm 폭 확장 및 폰트 8.5pt 축소, 바코드 42mm 중앙 배치, 더미 필드 제거, 단일 BOM/CRLF 검증 완료 |
+| **완료** | [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js) | EQM1001_R03 설비별 점검계획 탭(grid1) 설비그룹 공통 콤보(FM116) 바인딩 적용 | 코드/명칭 분리 제거, enumColumnTypes.combo(gpcd: 'FM116') 단일 콤보 바인딩 적용, JS 구문 검사 및 단일 BOM/CRLF 검증 완료 |
+| **완료** | [05.Procedure/MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql) | EQM1001_R03 설비 목록 조회(LIST_MSTEQM) 잉여 컬럼(EQMGRPNM) 및 COMTYPE 조인 제거 | 잉여 EQMGRPNM 컬럼 및 COMTYPE 조인 전면 삭제, WHERE 절 단순화, 단일 BOM/CRLF 검증 완료 |
 | **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | - |
 
 ---

@@ -57,8 +57,7 @@ ItsPage.Load = function () {
     // 2026-10-08 [설비별 점검계획 탭] 좌측 그리드 설비코드 옆 설비그룹코드 표시 및 설비그룹명 히든 선언
     ItsGrid.Create('grid1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('설비코드', 'FANO', { width: 80, align: 'center' }),
-        column.create('설비그룹코드', 'EQMGUBUN', { width: 100, align: 'center' }),
-        column.create('설비그룹명', 'EQMGRPNM', { hidden: true }),
+        column.create('설비그룹', 'EQMGUBUN', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM116' }),
         column.create('설비명', 'EQMNM', { width: 200 }),
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 65, align: 'center', readOnly: true }),
