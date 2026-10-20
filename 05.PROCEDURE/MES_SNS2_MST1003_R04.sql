@@ -11,10 +11,19 @@ PROCEDURE MES_SNS2.MST1003_R04(
   IN $ITEMCG VARCHAR(100),
   IN $CALLTYPE VARCHAR(100),
   IN $ENDYN VARCHAR(1), 
+  IN $ITEMID_LIST MEDIUMTEXT,
+  IN $PRCTEST_YN_LIST MEDIUMTEXT,
+  IN $OUTTEST_YN_LIST MEDIUMTEXT,
+  -- *****************************************************************************
   IN $KEYWORD VARCHAR(1000)
   )
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+  -- *****************************************************************************
 -- SET @DEBUGLOGYN = 'Y';
+
+  DECLARE _$ITEMID VARCHAR(100);
+  DECLARE _$PRCTEST_YN VARCHAR(1);
+  DECLARE _$OUTTEST_YN VARCHAR(1);
 -- *****************************************************************************
   CASE $CALLTYPE
 -- ****************************************************************************
@@ -53,6 +62,8 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       MSTITEM.SPEC20, MSTITEM.EXPDAY, MSTITEM.BOXQTY, MSTITEM.LINK_ID, 
       MSTITEM.WONGA_ID, MSTITEM.PRODUCT_DT, MSTITEM.PACK_QTY, MSTITEM.PACK_LAY, 
       MSTITEM.DEPT_CD, MSTITEM.DEV_RID, MSTITEM.REMARK, MSTITEM.REMP, 
+      PRCTEST_YN, 
+      OUTTEST_YN,
       MSTITEM.RTIME, MSTITEM.MEMP, MSTITEM.MTIME
     FROM MSTITEM
     WHERE MSTITEM.COMPANYCD = $COMPANYCD
@@ -63,7 +74,23 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
           )
     ORDER BY MSTITEM.COMPANYCD, MSTITEM.ITEMCD
     ;
+-- * ***************************************************************************
+WHEN 'SAVE_MSTITEM' THEN  -- 품목정보 저장 
+  
+  WHILE LENGTH($ITEMID_LIST) > 0 DO
+    CALL COMSPLIT($ITEMID_LIST, _$ITEMID);    
+    CALL COMSPLIT($PRCTEST_YN_LIST, _$PRCTEST_YN);
+    CALL COMSPLIT($OUTTEST_YN_LIST, _$OUTTEST_YN);
 
+    UPDATE MSTITEM
+    SET PRCTEST_YN = _$PRCTEST_YN
+      , OUTTEST_YN = _$OUTTEST_YN
+      , MTIME = CALLTIME()
+      , MEMP  = CALLEMP()
+      , MPRG  = CALLPRG()
+    WHERE ITEMID = _$ITEMID
+    ;
+  END WHILE;
 -- ****************************************************************************
   END CASE;
 END

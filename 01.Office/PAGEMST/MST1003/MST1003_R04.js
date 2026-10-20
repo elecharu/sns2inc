@@ -4,12 +4,12 @@
 ItsPage.Load = function () {
     
     /* 그리드 생성 */
-    ItsGrid.Create('grid1', { isCheckBoxGrid: false }, [
+    ItsGrid.Create('grid1', { isCheckBoxGrid: true }, [
         column.create("법인", "COMPANYCD", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'COMPANYCD' }),
         column.create("품목유형", "ITEMCG", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM100' }),        
-        column.create("대분류", "ITEM_LVL1", { width: 100, align: 'center', /*columnType: enumColumnTypes.combo, gpcd: 'P100'*/ }),
-        column.create("중분류", "ITEM_LVL2", { width: 100, align: 'center', /*columnType: enumColumnTypes.combo, gpcd: 'P110'*/ }),
-        column.create("소분류", "ITEM_LVL3", { width: 100, align: 'center', /*columnType: enumColumnTypes.combo, gpcd: 'P120'*/ }),
+        column.create("대분류", "ITEM_LVL1", { width: 100, align: 'center'/*, columnType: enumColumnTypes.combo, gpcd: 'P100'*/ }),
+        column.create("중분류", "ITEM_LVL2", { width: 100, align: 'center'/*, columnType: enumColumnTypes.combo, gpcd: 'P110'*/ }),
+        column.create("소분류", "ITEM_LVL3", { width: 100, align: 'center'/*, columnType: enumColumnTypes.combo, gpcd: 'P120'*/ }),
         column.create("세분류", "ITEM_LVL4", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'PP310' }),
         column.create("품목ID", "ITEMID", { width: 100, align: 'center' }),
         column.create("품목코드", "ITEMCD", { width: 100, align: 'center', backColor: enumColor.greenLight2 }),
@@ -17,6 +17,8 @@ ItsPage.Load = function () {
         column.create("규격", "ITEMSPEC", { width: 100 }),
         column.create("관리단위", "ITEMUNIT", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM150' }),
         column.create("공급구분", "ITEMSRC", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM160' }),
+        column.create("자주검사여부", "PRCTEST_YN", { width: 100, align: 'center', columnType: enumColumnTypes.check, readOnly: false }),
+        column.create("출하검사여부", "OUTTEST_YN", { width: 100, align: 'center', columnType: enumColumnTypes.check, readOnly: false }),
         column.create("종료여부", "ENDYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
         column.create("종료처리자ID", "ENDUSEID", { width: 100, align: 'center' }),
         column.create("종료사유구분", "ENDREASON", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM180' }),
@@ -99,7 +101,7 @@ ItsPage.Load = function () {
 
     ItsCombo.SetValueByIndex('cmb_COMPANYCD', 0);
 };
-
+/************************************************************************************************************************************************************/
 /* 조회 */
 ItsButton.EventSearch = function () {
 
@@ -111,15 +113,52 @@ ItsButton.EventSearch = function () {
         return;
     }
 
-    ItsGrid.SetStore('grid1', maria.store.YnToBool('IOYN').YnToBool('SEPAYN').YnToBool('ENDYN'));
+    ItsGrid.SetStore('grid1', maria.store.YnToBool('IOYN').YnToBool('SEPAYN').YnToBool('ENDYN').YnToBool('PRCTEST_YN').YnToBool('OUTTEST_YN'));
+
     ItsMsg.Toast(maria.store.Length() + '건이 조회되었습니다.');
 
     ItsGrid.Get('grid1').autoSizeColumns();
 };
 
+/************************************************************************************************************************************************************/
+/* 저장 */
+ItsButton.EventSave = function () {
+    if (ItsGrid.Length('grid1') > 0) {
+        ItsMsg.Confirm("저장하시겠습니까?", function () {
+            var maria = new ItsMaria('MST1003_R04', 'SAVE_MSTITEM');
+
+            for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+                if (ItsGrid.IsChecked('grid1', i)) {
+                    maria.AddList('ITEMID_LIST', ItsGrid.GetValue('grid1', i, 'ITEMID'));
+
+                    if (ItsGrid.GetValue('grid1', i, 'PRCTEST_YN'))
+                        maria.AddList('PRCTEST_YN_LIST', 'Y');
+                    else
+                        maria.AddList('PRCTEST_YN_LIST', 'N');
+
+                    if (ItsGrid.GetValue('grid1', i, 'OUTTEST_YN'))
+                        maria.AddList('OUTTEST_YN_LIST', 'Y');
+                    else
+                        maria.AddList('OUTTEST_YN_LIST', 'N');
+                }
+            }            
+
+            maria.CallProc();
+
+            if (maria.isError) {
+                maria.ShowErrMsg();
+                return;
+            }
+
+            ItsButton.EventSearch();
+        });
+    }   
+}
+/************************************************************************************************************************************************************/
 ItsCombo.Event('sdiv1_combo_ITEMCG').onChanged = function (value) {
     ItsFind.SetRef02('sdiv1_find_ITEMID', value);
 }
+/************************************************************************************************************************************************************/
 
 
 
