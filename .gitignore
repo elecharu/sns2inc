@@ -15,7 +15,9 @@ wc.db*
 *.pdf
 !01.Office/Script/pdfjs/**
 !03.Pda/Script/pdfjs/**
+!05.Scm/Script/pdfjs/**
 !docs/**
+
 # Temporary Audit & Working Folders
 .tmp*
 **/.tmp*
@@ -23,3 +25,46 @@ wc.db*
 **/.tmp-*/
 .tmp-r05-stock-audit/
 .tmp-tml-r05-buttons/
+
+# Report Labels & Dynamic Outputs
+**/tempLabel/
+01.Office/Reports/tempLabel/
+05.Scm/Reports/tempLabel/
+05.Scm/Reports/tempFiles/
+
+# Build & Compilation Outputs (Intermediate Files)
+**/obj/
+[Oo]bj/
+*.pch
+*.ilk
+*.idb
+*.ipch
+
+# Visual Studio User Settings & Caches
+*.suo
+*.user
+*.userosvmat
+*.userprefs
+*.sln.docstates
+*.vshost.exe*
+
+# Application Runtime Logs
+*.log
+**/Log/
+**/LOG/
+**/logs/
+
+# Android Build Outputs (apk)
+apk/**/.gradle/
+apk/**/build/
+apk/**/local.properties
+apk/**/.idea/
+
+# Large Files Exceeding GitHub 100MB Limit
+01.Office/PAGECOM/MONITOR/file/02_oper.gif
+
+# OS Generated Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.BIN/
