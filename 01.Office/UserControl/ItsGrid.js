@@ -984,7 +984,7 @@ var ItsGrid = {
                     } catch (e) { }
                 }
                 try {
-                    if ($params.isCheckBoxGrid && $obj.cells.getCellData(r, 0, true) == 'true') {
+                    if ($params.isCheckBoxGrid && $obj.cells.getCellData(r, 'isRowCheck', true) == 'true') {
                         cell.style.backgroundColor = '#fbf7ff';
                     }
                 } catch (e) { }

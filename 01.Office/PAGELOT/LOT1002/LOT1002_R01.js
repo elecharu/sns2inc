@@ -23,9 +23,9 @@ ItsPage.Load = function () {
     ]);
 
     ItsGrid.Create('grid2', { isCheckBoxGrid: true }, [
-        column.create('품목ID', 'ITEMID', { width: 120 }),
         column.create("품목유형", "ITEMCG", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center' }),
-        column.create('품목코드', 'ITEMCD', { width: 120, readOnly: false }),
+        column.create('품목ID', 'ITEMID', { width: 120, columnType: enumColumnTypes.find, readOnly: false }),        
+        column.create('품목코드', 'ITEMCD', { width: 120, columnType: enumColumnTypes.find, readOnly: false }),
         column.create('품명', 'ITEMNM', { width: 300 }),
         column.create('로트번호', 'LOTKEY', { width: 120, readOnly: false }),
         column.create('입고수량', 'INQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
@@ -144,18 +144,18 @@ ItsGrid.Event('grid2').onDoubleClick = function (rowIndex, field) {
 }
 
 ItsGrid.Event('grid2').onKeydownEnter = function (rowIndex, field) {
-    if (field == 'ITEMCD') {
+    if (field == 'ITEMCD' || field == 'ITEMID') {
         var gpcd_find = 'ITEMID';
 
-        // 품목코드 팝업 (자재창고 > 자재,부자재, 외주서브품창고 > 서브품)
+        // 품목코드 팝업 
         ItsPop.OpenFindCOM({
-            gpcd: gpcd_find
+            gpcd: gpcd_find, keyword: ItsGrid.GetValue('grid2', rowIndex, field)
         }
             , function (res) {
                 ItsGrid.SetValue('grid2', rowIndex, 'ITEMID', res['CODE']);
                 ItsGrid.SetValue('grid2', rowIndex, 'ITEMCD', res['NAME']);
                 ItsGrid.SetValue('grid2', rowIndex, 'ITEMNM', res['REF01']);
-                ItsGrid.SetValue('grid2', rowIndex, 'ITEMCG', res['SPEC']);
+                ItsGrid.SetValue('grid2', rowIndex, 'ITEMCG', res['REF2']);
                 ItsGrid.CheckRow('grid2', rowIndex);
             });
     }
@@ -176,12 +176,12 @@ ItsGrid.Event('grid2').onChanged = function (rowIndex, field, newValue) {
             ItsGrid.SetValue('grid2', rowIndex, 'ITEMID', maria.store.data[0]["ITEMID"]);
             ItsGrid.SetValue('grid2', rowIndex, 'ITEMCD', maria.store.data[0]["ITEMCD"]);
             ItsGrid.SetValue('grid2', rowIndex, 'ITEMNM', maria.store.data[0]["ITEMNM"]);
-            ItsGrid.SetValue('grid2', rowIndex, 'ITEMSPEC', maria.store.data[0]["ITEMSPEC"]);
+            ItsGrid.SetValue('grid2', rowIndex, 'ITEMCG', maria.store.data[0]["ITEMCG"]);
         } else {
             ItsGrid.SetValue('grid2', rowIndex, 'ITEMID', '');
             ItsGrid.SetValue('grid2', rowIndex, 'ITEMCD', '');
             ItsGrid.SetValue('grid2', rowIndex, 'ITEMNM', '');
-            ItsGrid.SetValue('grid2', rowIndex, 'ITEMSPEC', '');
+            ItsGrid.SetValue('grid2', rowIndex, 'ITEMCG', '');
         }
     }
 }

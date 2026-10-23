@@ -1,5 +1,5 @@
 ﻿CREATE DEFINER = 'root'@'%'
-PROCEDURE `MES_SNS2`.`DC_FIND`(
+PROCEDURE MES_SNS2.DC_FIND(
   IN $GPCD VARCHAR(20), 
   IN $KEYWORD VARCHAR(1000),
   IN $REF01 VARCHAR(20), 
@@ -14,7 +14,7 @@ PROCEDURE `MES_SNS2`.`DC_FIND`(
   IN $REF10 VARCHAR(20),
   IN $LIMIT VARCHAR(20)
 )
-    NO SQL
+  NO SQL
 PROC: BEGIN
 -- *****************************************************************************  
 DECLARE _$FIND_1    VARCHAR(100);
@@ -226,20 +226,21 @@ ELSEIF $GPCD = 'CUSTCD2_HEAD' THEN
 -- *****************************************************************************
   ELSEIF $GPCD = 'ITEMID_HEAD' THEN
   
-    SELECT '품목ID' AS CODE, '품목코드' AS NAME, '품명' AS REF01, '품목유형' AS SPEC;
-    SELECT 80 AS CODE, 130 AS NAME, 250 AS REF01, 200 AS SPEC;
+    SELECT '품목ID' AS CODE, '품목코드' AS NAME, '품명' AS REF01, '품목유형' AS REF2;
+    SELECT 80 AS CODE, 130 AS NAME, 250 AS REF01, 200 AS REF2;
 
   ELSEIF $GPCD = 'ITEMID_LIST' THEN
 
     SELECT
-      MSTITEM.ITEMID AS CODE,
+      CAST(MSTITEM.ITEMID AS CHAR) AS CODE,
       MSTITEM.ITEMCD AS NAME,
       MSTITEM.ITEMNM AS REF01,
-      GPCD('DM100', MSTITEM.ITEMCG) AS SPEC  
+      GPCD('DM100', MSTITEM.ITEMCG) AS REF2  
       FROM MSTITEM
       WHERE MSTITEM.COMPANYCD LIKE CONCAT('%', $REF01, '%')
         AND MSTITEM.ITEMCG LIKE CONCAT('%', $REF02, '%')
-        AND (MSTITEM.ITEMCD LIKE CONCAT('%', $KEYWORD, '%') 
+        AND (MSTITEM.ITEMID LIKE CONCAT('%', $KEYWORD, '%') 
+        OR MSTITEM.ITEMCD LIKE CONCAT('%', $KEYWORD, '%') 
         OR MSTITEM.ITEMNM LIKE CONCAT('%', $KEYWORD, '%')
         OR MSTITEM.ITEMSPEC LIKE CONCAT('%', $KEYWORD, '%')
         OR MSTITEM.EONO LIKE CONCAT('%', $KEYWORD, '%')
@@ -250,25 +251,25 @@ ELSEIF $GPCD = 'CUSTCD2_HEAD' THEN
   ELSEIF $GPCD = 'ITEMID_INFO' THEN
 
     SELECT 
-      MSTITEM.ITEMID AS CODE,
+      CAST(MSTITEM.ITEMID AS CHAR) AS CODE,
       MSTITEM.ITEMCD AS NAME,
       MSTITEM.ITEMNM AS REF01,
-      GPCD('DM100', MSTITEM.ITEMCG) AS SPEC
+      GPCD('DM100', MSTITEM.ITEMCG) AS REF2
       FROM MSTITEM
       WHERE MSTITEM.ITEMID = $KEYWORD;   
 
 -- *****************************************************************************
   ELSEIF $GPCD = 'ITEMCD_HEAD' THEN
 
-    SELECT '품목코드' AS CODE, '품명' AS NAME, '품목ID' AS REF01, '규격' AS REF02, '품목유형' AS REF03, '단위' AS REF04;
+    SELECT '품목ID' AS CODE, '품명' AS NAME, '품목코드' AS REF01, '규격' AS REF02, '품목유형' AS REF03, '단위' AS REF04;
     SELECT 150 AS CODE, 250 AS NAME, 100 AS REF01, 80 AS REF02, 50 AS REF03, 50 AS REF04;
   
   ELSEIF $GPCD = 'ITEMCD_LIST' THEN
    
     SELECT 
-      MSTITEM.ITEMCD AS CODE,
+      MSTITEM.ITEMID AS CODE,
       MSTITEM.ITEMNM AS NAME,
-      MSTITEM.ITEMID AS REF01,
+      MSTITEM.ITEMCD AS REF01,
       MSTITEM.ITEMSPEC AS REF02,
       GPCD('DM100', MSTITEM.ITEMCG) AS REF03,
       GPCD('ITEMUNIT', MSTITEM.ITEMUNIT) AS REF04
@@ -364,31 +365,55 @@ ELSEIF $GPCD = 'CUSTCD2_HEAD' THEN
     LIMIT _$LIMIT;
 
 -- *****************************************************************************
-  ELSEIF $GPCD = 'EMPCD_HEAD' THEN
+  ELSEIF $GPCD = 'EMPID_HEAD' THEN
 
-    SELECT '사원코드' AS CODE, '성명' AS NAME, '부서' AS REF01;
+    SELECT '사원ID' AS CODE, '성명' AS NAME, '부서' AS REF01;
     SELECT 100 AS CODE, 100 AS NAME, 100 AS REF01;
   
-  ELSEIF $GPCD = 'EMPCD_LIST' THEN
+  ELSEIF $GPCD = 'EMPID_LIST' THEN
 
     SELECT 
-        ME.EMPCD AS CODE
+        ME.EMPID AS CODE
       , ME.EMPNM AS NAME
       , IFNULL(MSTDEPT.DEPTNM, '') AS REF01
     FROM MSTEMP AS ME
     LEFT JOIN MSTDEPT
       ON MSTDEPT.DEPTCD = ME.DEPTCD
-    WHERE (ME.EMPCD LIKE CONCAT('%', $KEYWORD, '%') OR
+    WHERE (ME.EMPID LIKE CONCAT('%', $KEYWORD, '%') OR
            ME.EMPNM LIKE CONCAT('%', $KEYWORD, '%'))
       AND ME.EMPTP  LIKE CONCAT('%', $REF05,   '%')
-      AND EMPSTT = 'HR125100';
+      AND ME.EMPID <> ''
+     LIMIT _$LIMIT;
   
-  ELSEIF $GPCD = 'EMPCD_INFO' THEN
+  ELSEIF $GPCD = 'EMPID_INFO' THEN
   
-    SELECT ME.EMPCD AS CODE, ME.EMPNM AS NAME
+    SELECT ME.EMPID AS CODE, ME.EMPNM AS NAME
       FROM MSTEMP AS ME
       WHERE ME.EMPTP LIKE CONCAT('%', $REF05, '%')
-        AND ME.EMPCD = $KEYWORD;
+        AND ME.EMPID = $KEYWORD;
+
+-- *****************************************************************************
+
+  ELSEIF $GPCD = 'LINECD_HEAD' THEN
+
+  SELECT '작업장코드' AS CODE, '작업장' AS NAME;
+  SELECT 100 AS CODE, 150 AS NAME;
+
+  ELSEIF $GPCD = 'LINECD_LIST' THEN
+  
+    SELECT 
+      LINECD AS CODE, LINENM AS NAME
+    FROM MSTLINE
+    WHERE LINECD LIKE CONCAT('%', $KEYWORD, '%')
+      AND USEYN = 'Y'
+      AND FACTORYCD = '07'
+    LIMIT _$LIMIT;
+  
+  ELSEIF $GPCD = 'LINE_EQM_INFO' THEN
+
+    SELECT LINECD AS CODE, LINENM AS NAME
+    FROM MSTLINE
+    WHERE LINECD = $KEYWORD;
 
 -- *****************************************************************************
 
@@ -442,6 +467,32 @@ ELSEIF $GPCD = 'CUSTCD2_HEAD' THEN
       FROM MSTEMP AS ME
       WHERE ME.EMPCD = $KEYWORD;
 
+-- *****************************************************************************
+  ELSEIF $GPCD = 'EMPCD_HEAD' THEN
+
+    SELECT '사원코드' AS CODE, '성명' AS NAME, '부서' AS REF01;
+    SELECT 100 AS CODE, 100 AS NAME, 100 AS REF01;
+  
+  ELSEIF $GPCD = 'EMPCD_LIST' THEN
+
+    SELECT 
+        ME.EMPCD AS CODE
+      , ME.EMPNM AS NAME
+      , IFNULL(MSTDEPT.DEPTNM, '') AS REF01
+    FROM MSTEMP AS ME
+    LEFT JOIN MSTDEPT
+      ON MSTDEPT.DEPTCD = ME.DEPTCD
+    WHERE (ME.EMPCD LIKE CONCAT('%', $KEYWORD, '%') OR
+           ME.EMPNM LIKE CONCAT('%', $KEYWORD, '%'))
+      AND ME.EMPTP  LIKE CONCAT('%', $REF05,   '%')
+      AND EMPSTT = 'HR125100';
+  
+  ELSEIF $GPCD = 'EMPCD_INFO' THEN
+  
+    SELECT ME.EMPCD AS CODE, ME.EMPNM AS NAME
+      FROM MSTEMP AS ME
+      WHERE ME.EMPTP LIKE CONCAT('%', $REF05, '%')
+        AND ME.EMPCD = $KEYWORD;
 -- *****************************************************************************
   ELSEIF $GPCD = 'EMPCD_DEPTP_HEAD' THEN
 
@@ -636,7 +687,6 @@ ELSEIF $GPCD = 'CUSTCD2_HEAD' THEN
 
 -- *****************************************************************************
 
-
   ELSEIF $GPCD = 'UPDROPDEPT_HEAD' THEN
   
     SELECT '부서코드' AS CODE, '부서명' AS NAME, '생성일' AS REF01, '폐쇄일' AS REF02;
@@ -712,7 +762,6 @@ ELSEIF $GPCD = 'WORKDATELIST_HEAD' THEN
         AND COMTYPE.TPCD <> $REF01;
 
 -- *****************************************************************************
-
   ELSEIF $GPCD = 'EQMCD_HEAD' OR $GPCD = 'FANO_HEAD' THEN
   
   SELECT '설비코드' AS CODE, '설비명' AS NAME, '호기명' AS REF01;
@@ -770,7 +819,6 @@ ELSEIF $GPCD = 'EQMCD_LIST' OR $GPCD = 'FANO_LIST' THEN
       WHERE MSTWARE.WARECD = $KEYWORD;
 
 -- *****************************************************************************
-
   ELSEIF $GPCD = 'TOOLCD_HEAD' THEN
     
     SELECT '금형코드' AS CODE, '금형명' AS NAME, '캐비티' AS REF01;
@@ -815,7 +863,6 @@ ELSEIF $GPCD = 'EQMCD_LIST' OR $GPCD = 'FANO_LIST' THEN
           AND MSTTOOL.TOOLCD = $KEYWORD;
 
 -- *****************************************************************************
-
 ELSEIF $GPCD = 'TOOLITEM_HEAD' THEN
   
   SELECT '금형코드' AS CODE, '금형명' AS NAME, '캐비티' AS REF01;
@@ -880,8 +927,6 @@ ELSEIF $GPCD = 'TOOLITEM_INFO' THEN
     LIMIT _$LIMIT;
   
 -- ****************************************************************************
-
- 
   ELSEIF $GPCD = 'STDKNDCD_HEAD' THEN
     
     SELECT '항목코드' AS CODE, '항목명' AS NAME;
@@ -913,35 +958,6 @@ ELSEIF $GPCD = 'TOOLITEM_INFO' THEN
     SELECT MSTSTDKND.STDKNDCD AS CODE, MSTSTDKND.STDKNDNM AS NAME
     FROM MSTSTDKND 
     WHERE MSTSTDKND.STDKNDCD = $KEYWORD;
-
--- *****************************************************************************
---   ELSEIF $GPCD = 'DEPTP_HEAD' THEN
---   
---     SELECT '부서코드' AS CODE, '부서명' AS NAME;
---     SELECT 80 AS CODE, 220 AS NAME;
--- 
---   ELSEIF $GPCD = 'DEPTP_LIST' THEN
--- 
---     SELECT 
---       MSTDEPT.DEPTP AS CODE,
---       CONCAT(CASE WHEN MSTDEPT.LEVEL = 1 THEN ''
---                   ELSE REPEAT('-', MSTDEPT.LEVEL * 2) END,
---       MSTDEPT.DEPTNM) AS NAME
---       FROM MSTDEPT
---       WHERE (MSTDEPT.DEPTP LIKE CONCAT('%', $KEYWORD, '%') OR MSTDEPT.DEPTNM LIKE CONCAT('%', $KEYWORD, '%'))
---         AND MSTDEPT.USEYN = 'Y'
---         AND (GETDATE() BETWEEN MSTDEPT.STARTDAY AND MSTDEPT.ENDDAY)
---         AND MSTDEPT.BDVCD LIKE CONCAT('%', $REF01, '%')
---       LIMIT _$LIMIT;
---   
---   ELSEIF $GPCD = 'DEPTP_INFO' THEN
---   
---     SELECT MSTDEPT.DEPTP AS CODE, MSTDEPT.DEPTNM AS NAME
---       FROM MSTDEPT
---       WHERE MSTDEPT.DEPTP = $KEYWORD
---         AND MSTDEPT.USEYN = 'Y'
---         AND (GETDATE() BETWEEN MSTDEPT.STARTDAY AND MSTDEPT.ENDDAY)
---         AND MSTDEPT.BDVCD LIKE CONCAT('%', $REF01, '%');
 
 -- *****************************************************************************
 

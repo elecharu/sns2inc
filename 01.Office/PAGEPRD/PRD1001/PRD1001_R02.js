@@ -159,6 +159,9 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
+    // 체크박스 컬럼을 주간합계 우측으로 이동
+    var $grid = ItsGrid.Get('grid1');
+    $grid.columns.moveElement($grid.getColumn('isRowCheck').index, $grid.getColumn('SUM_PLAN').index);
 
 };
 /**********************************************************************************************************************************************************/
@@ -246,6 +249,29 @@ ItsButton.EventSave = function () {
                 maria.AddList('PLAN_19_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_19_NIGHT'));
                 maria.AddList('PLAN_20_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_20_DAY'));
                 maria.AddList('PLAN_20_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_20_NIGHT'));
+
+                maria.AddList('PLAN_21_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_21_DAY'));
+                maria.AddList('PLAN_21_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_21_NIGHT'));
+                maria.AddList('PLAN_22_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_22_DAY'));
+                maria.AddList('PLAN_22_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_22_NIGHT'));
+                maria.AddList('PLAN_23_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_23_DAY'));
+                maria.AddList('PLAN_23_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_23_NIGHT'));
+                maria.AddList('PLAN_24_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_24_DAY'));
+                maria.AddList('PLAN_24_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_24_NIGHT'));
+                maria.AddList('PLAN_25_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_25_DAY'));
+                maria.AddList('PLAN_25_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_25_NIGHT'));
+                maria.AddList('PLAN_26_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_26_DAY'));
+                maria.AddList('PLAN_26_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_26_NIGHT'));
+                maria.AddList('PLAN_27_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_27_DAY'));
+                maria.AddList('PLAN_27_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_27_NIGHT'));
+                maria.AddList('PLAN_28_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_28_DAY'));
+                maria.AddList('PLAN_28_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_28_NIGHT'));
+                maria.AddList('PLAN_29_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_29_DAY'));
+                maria.AddList('PLAN_29_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_29_NIGHT'));
+                maria.AddList('PLAN_30_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_30_DAY'));
+                maria.AddList('PLAN_30_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_30_NIGHT'));
+                maria.AddList('PLAN_31_DAY_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_31_DAY'));
+                maria.AddList('PLAN_31_NIGHT_LIST', ItsGrid.GetValue('grid1', i, 'PLAN_31_NIGHT'));
             }
         }
 
@@ -265,6 +291,23 @@ ItsGrid.Event('grid1').onButtonClick = function (rowindex, field) {
     if (field == 'OPENPOP_ADDPLAN') {
         ItsMonth.SetValue('month_ADDMONTH', ItsDateRange.GetValueFrom('dateR').substr(0, 7));
         ItsPop.Open('pop_ADDPLAN');
+    }
+};
+
+ItsGrid.Event('grid1').onChanged = function (rowIndex, field, newValue, oldValue, type) {
+    if (field == 'PLAN_1_DAY' || field == 'PLAN_1_NIGHT' || field == 'PLAN_2_DAY' || field == 'PLAN_2_NIGHT' || field == 'PLAN_3_DAY' || field == 'PLAN_3_NIGHT' ||
+        field == 'PLAN_4_DAY' || field == 'PLAN_4_NIGHT' || field == 'PLAN_5_DAY' || field == 'PLAN_5_NIGHT' || field == 'PLAN_6_DAY' || field == 'PLAN_6_NIGHT' ||
+        field == 'PLAN_7_DAY' || field == 'PLAN_7_NIGHT' || field == 'PLAN_8_DAY' || field == 'PLAN_8_NIGHT' || field == 'PLAN_9_DAY' || field == 'PLAN_9_NIGHT' ||
+        field == 'PLAN_10_DAY' || field == 'PLAN_10_NIGHT' ||
+        field == 'PLAN_11_DAY' || field == 'PLAN_11_NIGHT' || field == 'PLAN_12_DAY' || field == 'PLAN_12_NIGHT' || field == 'PLAN_13_DAY' || field == 'PLAN_13_NIGHT' ||
+        field == 'PLAN_14_DAY' || field == 'PLAN_14_NIGHT' || field == 'PLAN_15_DAY' || field == 'PLAN_15_NIGHT' || field == 'PLAN_16_DAY' || field == 'PLAN_16_NIGHT' ||
+        field == 'PLAN_17_DAY' || field == 'PLAN_17_NIGHT' || field == 'PLAN_18_DAY' || field == 'PLAN_18_NIGHT' || field == 'PLAN_19_DAY' || field == 'PLAN_19_NIGHT' ||
+        field == 'PLAN_20_DAY' || field == 'PLAN_20_NIGHT' ||
+        field == 'PLAN_21_DAY' || field == 'PLAN_21_NIGHT' || field == 'PLAN_22_DAY' || field == 'PLAN_22_NIGHT' || field == 'PLAN_23_DAY' || field == 'PLAN_23_NIGHT' ||
+        field == 'PLAN_24_DAY' || field == 'PLAN_24_NIGHT' || field == 'PLAN_25_DAY' || field == 'PLAN_25_NIGHT' || field == 'PLAN_26_DAY' || field == 'PLAN_26_NIGHT' ||
+        field == 'PLAN_27_DAY' || field == 'PLAN_27_NIGHT' || field == 'PLAN_28_DAY' || field == 'PLAN_28_NIGHT' || field == 'PLAN_29_DAY' || field == 'PLAN_29_NIGHT' ||
+        field == 'PLAN_30_DAY' || field == 'PLAN_30_NIGHT' || field == 'PLAN_31_DAY' || field == 'PLAN_31_NIGHT') {
+        SUM_WEEKPLAN(rowIndex);
     }
 };
 /**********************************************************************************************************************************************************/
@@ -418,7 +461,7 @@ SET_BANDNAME = function () {
 
                 var WORKTIME_NIGHT = ItsGrid.GetValue('grid1', 0, 'WORKTIME_' + (i + 1) + '_NIGHT');
 
-                if (WORKTIME_DAY > 0) {
+                if (WORKTIME_NIGHT > 0) {
                     ItsGrid.SetReadOnly('grid1', 'PLAN_' + (i + 1) + '_NIGHT', false);
                     ItsGrid.SetColumnBackColor('grid1', 'PLAN_' + (i + 1) + '_NIGHT', 'white');
                 }

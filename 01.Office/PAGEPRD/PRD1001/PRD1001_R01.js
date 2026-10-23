@@ -57,7 +57,15 @@ ItsButton.EventSearch = function () {
     ItsGrid.SetStore('grid1', maria.store.YnToBool('APPYN').YnToBool('STOCKYN'));
     //ItsGrid.Get('grid1').autoSizeColumns();
 
-    ItsLabel.SetText('label_INFO', maria.storeExtend1.GetValue(0, 'INFO'));
+    var INFO = maria.storeExtend1.GetValue(0, 'INFO') || '';
+    ItsLabel.SetText('label_INFO', INFO);
+
+    // 계획 상태별 라벨 색상 (확정됨: 파랑 / 저장됨: 초록 / 저장필요: 빨강)
+    var infoColor = '#000000';
+    if (INFO.indexOf('확정됨') > -1) infoColor = '#1565C0';
+    else if (INFO.indexOf('저장됨') > -1) infoColor = '#2E7D32';
+    else if (INFO.indexOf('저장필요') > -1) infoColor = '#D32F2F';
+    ItsLabel.SetStyle('label_INFO', ItsLabel.Style.ForeColor, infoColor);
 
 
     ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));

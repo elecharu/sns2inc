@@ -137,7 +137,8 @@ $(window).ready(function () {
                     } catch (e) { }
                 }
             });
-            var bc = new wijmo.grid.selector.BooleanChecker($obj.columns[0]);
+            // 체크박스 컬럼 위치가 이동된 경우에도 전체선택 체크박스가 따라가도록 binding으로 찾음
+            var bc = new wijmo.grid.selector.BooleanChecker($obj.getColumn('isRowCheck') || $obj.columns[0]);
             bc.itemChecked.addHandler(function (s, e) {
                 ItsGrid.Event($obj.hostElement.id.replace('-targetEl', '')).onCtxMenu('all_chk', {});
             });

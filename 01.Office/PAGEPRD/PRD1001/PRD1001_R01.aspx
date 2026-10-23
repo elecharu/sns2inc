@@ -20,7 +20,7 @@
         <%--<Its:combo runat="server" Label="법인" InputWidth="130" Field="COMPANYCD" GPCD="COMPANYCD" ID="sdiv1_cmb_COMPANYCD" />--%>
         <Its:combo runat="server" Label="공장" Field="FACTORYCD" GPCD="FACTORYCD" ID="sdiv1_cmb_FACTORYCD" ReadOnly="true" Value="07"/>        
         <Its:find runat="server" Label="품목코드" Field="ITEMID" GPCD="ITEMID" ID="sdiv1_find_ITEMID" />
-        <Its:label runat="server" Text="" ID="label_INFO" MarginLeft="100" Bold="true"/>
+        <Its:label runat="server" Text="" ID="label_INFO" MarginLeft="100" Bold="true" FontSize="16"/>
     </Its:div>
 </asp:Content>
 

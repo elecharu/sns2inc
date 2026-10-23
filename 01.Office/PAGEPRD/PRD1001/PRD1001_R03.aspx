@@ -14,11 +14,11 @@
 <%-- SEARCH PANEL --%>
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">        
-        <Its:date runat="server" Label="조회일자" Field="SDATE" ID="date_SDATE" ReadOnly="true"/>
+        <Its:date runat="server" Label="조회일자" Field="SDATE" ID="date_SDATE"/>
         <Its:date runat="server" Label="" Field="EDATE" ID="date_EDATE" LabelWidth="0"/>
         <%--<Its:combo runat="server" Label="법인" InputWidth="130" Field="COMPANYCD" GPCD="COMPANYCD" ID="sdiv1_cmb_COMPANYCD" />--%>
         <Its:combo runat="server" Label="공장" Field="FACTORYCD" GPCD="FACTORYCD" ID="sdiv1_cmb_FACTORYCD" ReadOnly="true" Value="07"/>        
-        <Its:find runat="server" Label="품목코드" Field="ITEMID" GPCD="ITEMID" ID="sdiv1_find_ITEMID" />
+        <Its:find runat="server" Label="제품코드" Field="ITEMID" GPCD="ITEMID" ID="sdiv1_find_ITEMID" />
     </Its:div>
 </asp:Content>
 

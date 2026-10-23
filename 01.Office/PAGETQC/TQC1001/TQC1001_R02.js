@@ -13,7 +13,7 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid2', { isCheckBoxGrid: false }, [
         column.create("등록여부", "EXISTSYN", { width: 70, columnType: enumColumnTypes.check }),
         column.create('품목유형', 'ITEMCG', { width: 80, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center' }),
-        column.create('품목ID', 'ITEMID', { width: 150, hidden: true }),
+        column.create('품목ID', 'ITEMID', { width: 150, align: 'center' }),
         column.create('품목코드', 'ITEMCD', { width: 150 }),
         column.create('품명', 'ITEMNM', { width: 300 }),
 
@@ -319,14 +319,16 @@ ItsButton.Event('btn_SAVE_DETAIL').onClick = function () {
     for (var i = 0; i < ItsGrid.Length('grid4'); i++) {
         var stdcd = (ItsGrid.GetValue('grid4', i, 'STDCD') || '').trim();
         var stdpart = (ItsGrid.GetValue('grid4', i, 'STDPART') || '').trim();
+        var eqmgroup = (ItsGrid.GetValue('grid4', i, 'EQMGROUP2') || '').trim();
 
         if (stdcd !== '') {
 
-            // STDPART가 비었으면 대체 키로 "NULL" 사용
-            var comboKey = stdcd + '|' + (stdpart === '' ? 'NULL' : stdpart);
+            var comboKey = stdcd + '|' +
+                (stdpart === '' ? 'NULL' : stdpart) + '|' +
+                (eqmgroup === '' ? 'NULL' : eqmgroup);
 
             if (comboSet.has(comboKey)) {
-                ItsMsg.Alert('검사항목 + 세부항목 조합 중복되었습니다.');
+                ItsMsg.Alert('검사항목 + 세부항목 + 설비중분류 조합이 중복되었습니다.');
                 return;
             }
 
@@ -427,12 +429,14 @@ ItsButton.Event('btn_DEL_DETAIL').onClick = function () {
                 var rowREVCD = ItsGrid.GetValue('grid4', i, 'REVCD');
                 var rowSTDCD = ItsGrid.GetValue('grid4', i, 'STDCD');
                 var rowSTDPART = ItsGrid.GetValue('grid4', i, 'STDPART');
+                var rowEQMGROUP2 = ItsGrid.GetValue('grid4', i, 'EQMGROUP2');
 
                 if (rowREVCD && rowSTDCD) {
                     // DB 삭제 대상
                     maria.AddList('REVCD_LIST', rowREVCD);
                     maria.AddList('STDCD_LIST', rowSTDCD);
                     maria.AddList('STDPART_LIST', rowSTDPART);
+                    maria.AddList('EQMGROUP2_LIST', rowEQMGROUP2);
                     deleteList = true;
                 }
 
@@ -572,10 +576,24 @@ ItsGrid.Event('grid4').onChanged = function (rowIndex, field) {
 
         // 검사범위(STDRANGE)에 따른 기준값 초기화
         switch (stdrange) {
-            case '06': // ~
-                ItsGrid.SetValue('grid4', currentIndex, 'STDVAL', '0');
+            case '01':
                 break;
-
+            case '02':
+                break;
+            case '03':
+                break;
+            case '04':
+                break;
+            case '05':
+                break;
+            case '06':
+                break;
+            case '07':
+                break;
+            case '08':
+                ItsGrid.SetValue('grid4', currentIndex, 'STDMINUS', '0');
+                ItsGrid.SetValue('grid4', currentIndex, 'STDPLUS', '0');
+                break;
             case '10': // + 
                 ItsGrid.SetValue('grid4', currentIndex, 'STDMINUS', '0');
                 break;
@@ -583,28 +601,11 @@ ItsGrid.Event('grid4').onChanged = function (rowIndex, field) {
             case '11': // - 
                 ItsGrid.SetValue('grid4', currentIndex, 'STDPLUS', '0');
                 break;
-
-            case '01':
-            case '02':
-            case '03':
-            case '04':
-            case '05':
-            case '08':
-                ItsGrid.SetValue('grid4', currentIndex, 'STDMINUS', '0');
-                ItsGrid.SetValue('grid4', currentIndex, 'STDPLUS', '0');
-                break;
-
-
             case '': // 빈 값일 경우: 모든 기준값 초기화
                 ItsGrid.SetValue('grid4', currentIndex, 'STDVAL', '0');
                 ItsGrid.SetValue('grid4', currentIndex, 'STDMINUS', '0');
                 ItsGrid.SetValue('grid4', currentIndex, 'STDPLUS', '0');
                 break;
-        }
-
-        if (stdrange === '07' && field === 'STDMINUS') {
-            const MINUSVAL = ItsGrid.GetValue('grid4', currentIndex, 'STDMINUS');
-            ItsGrid.SetValue('grid4', currentIndex, 'STDPLUS', MINUSVAL);
         }
 
     }

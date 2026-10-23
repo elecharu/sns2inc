@@ -12,7 +12,7 @@
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1"> 
         <Its:combo runat="server" Label="법인" ID="cmb_COMPANYCD" Field="COMPANYCD" GPCD="COMPANYCD" InputWidth="120"/>
         <Its:combo runat="server" Label="품목유형" ID="cmb_ITEMCG" Field="ITEMCG" GPCD="*DM100" Value="DM100100"/>
-        <Its:find runat="server" Label="품목코드" GPCD="ITEMCD" Field="ITEMCD" />  
+        <Its:find runat="server" Label="품목코드" GPCD="ITEMID" Field="ITEMID" />  
         <Its:check runat="server" Label="종료여부" Field="ENDYN" ID="chk_ENDYN" Value="false"/>        
     </Its:div>   
   

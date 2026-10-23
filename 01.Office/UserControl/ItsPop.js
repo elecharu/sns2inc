@@ -35,8 +35,13 @@ var ItsPop = {
                         ItsGrid.Get($(this).find('.ItsGrid').eq(i).attr('id')).refresh();
                     }
                     ItsSplit.Resize($(this));
-                    $('div.ItsDate_box > input').each(function () {
+                    // 팝업 오픈 시 첫 입력칸 자동 포커스로 열린 일자/년월 캘린더 닫기
+                    $('div.ItsDate_box > input, div.ItsMonth_box > input').each(function () {
                         $(this).datetimepicker('hide');
+                        // 포커스가 남아 있으면 클릭해도 캘린더가 다시 열리지 않으므로 포커스 해제
+                        if (this === document.activeElement) {
+                            $(this).blur();
+                        }
                     });
                     if ($(this).attr('data-type') == 'add' && $(this).height() > 45) {
                         $(this).height($(this).height() + 45);
