@@ -7,14 +7,14 @@
       xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
       xmlns:local="clr-namespace:TML2040"
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
-      Width="900" Height="480">
+      Width="980" Height="480">
     <Canvas Background="Silver">
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
-            <its:ButtonList x:Name="EQM_LIST" PanelWidth="900" Height="105"/>
+            <its:ButtonList x:Name="EQM_LIST" PanelWidth="980" Height="105"/>
         </UserControl>
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="105">
-            <its:WrapContent x:Name="PANEL_B1" Width="900" Height="40">
+            <its:WrapContent x:Name="PANEL_B1" Width="980" Height="40">
                 <UserControl Width="800" Height="3"/>
                 <its:Button Label="비가동조회" Width="150" Height="35" FontSize="15" CommandName="SEARCH_WORK" BackColor="BLACK"/>
                 <its:Button Label="비가동추가" Width="150" Height="35" FontSize="15" CommandName="ADD" BackColor="SEAGREEN" Visibility="Collapsed"/>
@@ -25,7 +25,7 @@
         </UserControl>
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="142">
-            <its:WrapContent x:Name="PANEL_B2" Width="900" Height="40">
+            <its:WrapContent x:Name="PANEL_B2" Width="980" Height="40">
                 <UserControl Width="800" Height="3"/>
                 <its:Date Label="조회 일자" Value="{Binding DATE}"/>
             </its:WrapContent>
@@ -34,7 +34,7 @@
         <!--비가동 이력 그리드-->
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="175">
             <Grid>
-                <its:Grid x:Name="GRID_G1" Width="900" Height="305">
+                <its:Grid x:Name="GRID_G1" Width="980" Height="305">
                     <!--<its:Column Width="50" Header="선택" IsRowCheck="True"/>-->
                     <its:Column Width="90" Header="설비코드" FieldName="EQMCD" Visible="False"/>
                     <its:Column Width="120" Header="설비명" FieldName="EQMNM"/>

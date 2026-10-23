@@ -112,12 +112,12 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
-    // 구분이 '소재입고'인 행만 입력 가능 (편집, 붙여넣기, Delete 모두 막기 위해 행 단위로 readOnly 지정)
+    // 구분이 '소재입고'(제품은 '제품생산')인 행만 입력 가능 (편집, 붙여넣기, Delete 모두 막기 위해 행 단위로 readOnly 지정)
     // ) 그룹그리드는 조회/정렬 시 행이 다시 만들어지므로 loadedRows 때마다 지정
     ItsGrid.Get('grid1').loadedRows.addHandler(function (s) {
         s.rows.forEach(function (row) {
             if (row instanceof wijmo.grid.GroupRow) return;
-            row.isReadOnly = (row.dataItem == undefined || row.dataItem.QTYTP != '소재입고');
+            row.isReadOnly = (row.dataItem == undefined || QTYTP_IN.indexOf(row.dataItem.QTYTP) == -1);
         });
     });
 
@@ -130,14 +130,23 @@ ItsPage.Load = function () {
         if (row instanceof wijmo.grid.GroupRow) return;
 
         e.cell.style.backgroundColor = (row.isReadOnly || col.isReadOnly) ? '#F7F7F7' : 'white';
+
+        // 소재잔량(제품잔량)이 음수이면 글씨 빨간색
+        // ) 셀이 재사용되므로 일자 컬럼은 매번 색상을 다시 지정
+        if (col.binding.indexOf('QTY_') == 0) {
+            var isMinus = row.dataItem != undefined
+                && QTYTP_REMAIN.indexOf(row.dataItem.QTYTP) > -1
+                && parseFloat((row.dataItem[col.binding] || '').toString().replace(/,/g, '')) < 0;
+            e.cell.style.color = isMinus ? 'red' : '';
+        }
     });
 
-    // 소재입고 입력 시 같은 제품묶음(RITEMID)의 같은 품목ID 소재잔량만 재계산
+    // 소재입고(제품생산) 입력 시 같은 제품묶음(RITEMID)의 같은 품목ID 소재잔량(제품잔량)만 재계산
     // ) 공통 onChanged는 그룹그리드 붙여넣기 시 현재 선택행 index가 넘어오므로 wijmo 이벤트에서 수정된 행을 직접 사용
     var recalcByEditedCell = function (s, e) {
         var row = s.rows[e.row];
         var field = s.columns[e.col].binding;
-        if (row == undefined || row.dataItem == undefined || row.dataItem.QTYTP != '소재입고' || field.indexOf('QTY_') != 0) return;
+        if (row == undefined || row.dataItem == undefined || QTYTP_IN.indexOf(row.dataItem.QTYTP) == -1 || field.indexOf('QTY_') != 0) return;
 
         CALC_REMAINQTY(ItsGrid.GetStore('grid1'), row.dataItem.RITEMID, row.dataItem.ITEMID);
         s.refresh();
@@ -216,11 +225,17 @@ SET_BANDNAME = function () {
 }
 
 /**********************************************************************************************************************************************************/
-// 소재잔량 계산
+// 소재잔량(제품잔량) 계산
 // 당일 소재잔량 = 전날 소재잔량 + 당일 소재입고 - 당일 생산계획
+// 당일 제품잔량 = 전날 제품잔량 + 당일 제품생산 - 당일 출하계획
 // ) 조회 시작일은 계산하지 않고 프로시저가 넣어준 현재고를 그대로 표시
 // ) rItemId, itemId 지정 시 해당 제품묶음의 해당 품목ID 소재잔량만 계산
 var SEARCH_DAY = { S: 1, E: 31 };
+
+// 구분(QTYTP) 값 : 소재 / 제품(품목유형 DM100100)
+var QTYTP_IN = ['소재입고', '제품생산'];
+var QTYTP_PLAN = ['생산계획', '출하계획'];
+var QTYTP_REMAIN = ['소재잔량', '제품잔량'];
 
 CALC_REMAINQTY = function (data, rItemId, itemId) {
     var sDay = SEARCH_DAY.S;
@@ -239,9 +254,9 @@ CALC_REMAINQTY = function (data, rItemId, itemId) {
         var key = [row.RITEMID, row.IDX, row.MITEMID, row.ITEMID].join('|');
         if (groups[key] == undefined) groups[key] = { IN: null, PLAN: null, REMAIN: [] };
 
-        if (row.QTYTP == '소재입고') groups[key].IN = row;
-        else if (row.QTYTP == '생산계획') groups[key].PLAN = row;
-        else if (row.QTYTP == '소재잔량') groups[key].REMAIN.push(row);
+        if (QTYTP_IN.indexOf(row.QTYTP) > -1) groups[key].IN = row;
+        else if (QTYTP_PLAN.indexOf(row.QTYTP) > -1) groups[key].PLAN = row;
+        else if (QTYTP_REMAIN.indexOf(row.QTYTP) > -1) groups[key].REMAIN.push(row);
     });
 
     Object.keys(groups).forEach(function (key) {

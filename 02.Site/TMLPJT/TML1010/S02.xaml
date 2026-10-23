@@ -6,11 +6,11 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:TML1010"
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
-      Width="900" Height="480">
+      Width="980" Height="480">
     <Canvas Background="WhiteSmoke">
 
         <UserControl Canvas.Left="0" Canvas.Top="0" Style="{DynamicResource TML_PANEL}">
-            <its:WrapContent x:Name="PANEL_S1" Width="900" Height="30">
+            <its:WrapContent x:Name="PANEL_S1" Width="980" Height="30">
                 <its:Date Label="생산일자" Value="{Binding SDATE}"/>
                 <its:Date Label="" LabelWidth="0" Width="120" Value="{Binding EDATE}"/>
                 <its:Combo GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ReadOnly="True" x:Name="cb_CUSTCD"/>
@@ -19,7 +19,7 @@
             </its:WrapContent>
         </UserControl>
         <UserControl Canvas.Left="0" Canvas.Top="30" Style="{DynamicResource TML_GRID}">
-            <its:Grid x:Name="GRID_G1" Width="900" Height="450">
+            <its:Grid x:Name="GRID_G1" Width="980" Height="450">
                 <its:Grid.Columns>
                     <its:Column Width="130" FieldName="OSCRSTKEY" Header="실적번호" ALGIN="Center"/>
                     <its:Column Width="57" FieldName="RSTTIME" Header="생산일자" ALGIN="Center"/>

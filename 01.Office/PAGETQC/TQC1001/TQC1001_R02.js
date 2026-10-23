@@ -34,7 +34,7 @@ ItsPage.Load = function () {
         column.create("검사항목코드", "STDCD", { width: 100, hidden: true }),
         column.create("검사항목", "STDNM", { width: 100}),
         column.create("세부항목", "STDPART", { width: 100, readOnly: false }),
-        column.create("설비중분류", "EQMGROUP2", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'FM114', readOnly: false, align: 'center' }),
+        column.create("세부공정", "PRCDETAIL", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'PRCDETAIL', readOnly: false, align: 'center' }),
         column.create("특성", "FEATURE", { width: 100, readOnly: false, align: 'center' }),
         column.create("검사방법", "STDCHKTP", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'STDCHKTP', readOnly: false, align: 'center'}),
         column.create("측정기기", "STDMACHINE", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'STDMACHINE', readOnly: false, align: 'center'}),
@@ -319,7 +319,7 @@ ItsButton.Event('btn_SAVE_DETAIL').onClick = function () {
     for (var i = 0; i < ItsGrid.Length('grid4'); i++) {
         var stdcd = (ItsGrid.GetValue('grid4', i, 'STDCD') || '').trim();
         var stdpart = (ItsGrid.GetValue('grid4', i, 'STDPART') || '').trim();
-        var eqmgroup = (ItsGrid.GetValue('grid4', i, 'EQMGROUP2') || '').trim();
+        var eqmgroup = (ItsGrid.GetValue('grid4', i, 'PRCDETAIL') || '').trim();
 
         if (stdcd !== '') {
 
@@ -378,7 +378,7 @@ ItsButton.Event('btn_SAVE_DETAIL').onClick = function () {
                 maria2.AddList('STDCD_LIST', ItsGrid.GetValue('grid4', i, 'STDCD'));
                 maria2.AddList('STDNM_LIST', ItsGrid.GetValue('grid4', i, 'STDNM'));
                 maria2.AddList('STDPART_LIST', ItsGrid.GetValue('grid4', i, 'STDPART'));   // 세부항목 저장
-                maria2.AddList('EQMGROUP2_LIST', ItsGrid.GetValue('grid4', i, 'EQMGROUP2'));   // 세부항목 저장
+                maria2.AddList('PRCDETAIL_LIST', ItsGrid.GetValue('grid4', i, 'PRCDETAIL'));   // 세부항목 저장
                 maria2.AddList('FEATURE_LIST', ItsGrid.GetValue('grid4', i, 'FEATURE'));   // 세부항목 저장
                 maria2.AddList('STDCHKTP_LIST', ItsGrid.GetValue('grid4', i, 'STDCHKTP'));
                 maria2.AddList('STDMACHINE_LIST', ItsGrid.GetValue('grid4', i, 'STDMACHINE'));
@@ -429,14 +429,14 @@ ItsButton.Event('btn_DEL_DETAIL').onClick = function () {
                 var rowREVCD = ItsGrid.GetValue('grid4', i, 'REVCD');
                 var rowSTDCD = ItsGrid.GetValue('grid4', i, 'STDCD');
                 var rowSTDPART = ItsGrid.GetValue('grid4', i, 'STDPART');
-                var rowEQMGROUP2 = ItsGrid.GetValue('grid4', i, 'EQMGROUP2');
+                var rowPRCDETAIL = ItsGrid.GetValue('grid4', i, 'PRCDETAIL');
 
                 if (rowREVCD && rowSTDCD) {
                     // DB 삭제 대상
                     maria.AddList('REVCD_LIST', rowREVCD);
                     maria.AddList('STDCD_LIST', rowSTDCD);
                     maria.AddList('STDPART_LIST', rowSTDPART);
-                    maria.AddList('EQMGROUP2_LIST', rowEQMGROUP2);
+                    maria.AddList('PRCDETAIL_LIST', rowPRCDETAIL);
                     deleteList = true;
                 }
 

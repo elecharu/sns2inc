@@ -7,11 +7,11 @@
       xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
       xmlns:local="clr-namespace:TML1020"
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
-      Width="900" Height="480">
+      Width="980" Height="480">
     <Canvas Background="Silver">
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
-            <its:WrapContent x:Name="PANEL_S1" Width="900" Height="60">
+            <its:WrapContent x:Name="PANEL_S1" Width="980" Height="60">
                 <its:Date Label="입고일자" Value="{Binding SDATE}"/>
                 <its:Date Label="" LabelWidth="0" Width="120" Value="{Binding EDATE}"/>
                 <its:Button Label="입고 조회" CommandName="SEL_MTRIN" Width="100"/>
@@ -23,7 +23,7 @@
         </UserControl>
 
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="60">
-            <its:Grid x:Name="GRID_G1" Width="900" Height="420">
+            <its:Grid x:Name="GRID_G1" Width="980" Height="420">
                 <its:Grid.Columns>
                     <its:Column Header="입고일자" FieldName="INDATE" ALGIN="CENTER"/>
                     <its:Column Header="거래명세서 번호" FieldName="INVOICEKEY" ALGIN="CENTER"/>

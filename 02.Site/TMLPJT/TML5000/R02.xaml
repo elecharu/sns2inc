@@ -7,11 +7,11 @@
       xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
       xmlns:local="clr-namespace:TML5000"
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
-      Width="900" Height="480">
+      Width="980" Height="480">
     <Canvas Background="Silver">
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
-            <its:WrapContent x:Name="PANEL_S1" Width="900" Height="70">
+            <its:WrapContent x:Name="PANEL_S1" Width="980" Height="70">
                 <UserControl Width="5000" Height="5" />
                 <its:Combo GPCD="WARECD" LabelWidth="50" Label="외주처" Value="{Binding TMLWARE}" ReadOnly="True" Visibility="Collapsed"/>
                 <its:Date Label="납기일자" Width="180" Value="{Binding SDATE}" />
@@ -29,7 +29,7 @@
 
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="70">
             <Grid>
-                <its:Grid x:Name="GRID_G1" Width="900" Height="180">
+                <its:Grid x:Name="GRID_G1" Width="980" Height="180">
                     <its:Grid.Columns>
                         <its:Column Width="40" ButtonText="▶" CommandName="SEL_SALOUT" Header=" 선 택 "/>
                         <its:Column Width="80" Header="수주번호" FieldName="SALODRKEY" Visible="False"/>
@@ -50,7 +50,7 @@
         </UserControl>
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="250">
-            <its:WrapContent x:Name="PANEL_A1" Width="900" Height="30">
+            <its:WrapContent x:Name="PANEL_A1" Width="980" Height="30">
                 <its:Text Label="지시번호" Value="{Binding SALOUTGROUPKEY}" Visibility="Collapsed" />
                 <its:Text Label="지시번호_DT" Value="{Binding SALOUTKEY}" Visibility="Collapsed" />
                 <its:Date Label="출고일자" Width="180" Value="{Binding OUTTIME}" />
@@ -64,7 +64,7 @@
         
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="280">
             <Grid>
-                <its:Grid x:Name="GRID_G2" Width="900" Height="200">
+                <its:Grid x:Name="GRID_G2" Width="980" Height="200">
                     <its:Grid.Columns>
                         <its:Column Width="100" Header="LOTNO" FieldName="LOTKEY" ALGIN="CENTER"/>
                         <its:Column Width="100" Header="HEAT번호" FieldName="HEATNO" ALGIN="CENTER"/>

@@ -229,7 +229,7 @@ WHEN 'LIST_MTRPLAN' THEN  -- 자재, 외주품 발주량 계산
   FROM (
           SELECT
               STOCK.IDX, STOCK.RITEMID, STOCK.MITEMID, STOCK.ITEMID, STOCK.PRCCD
-            , '소재잔량' AS QTYTP
+            , IF(MSTITEM.ITEMCG = 'DM100100', '제품잔량', '소재잔량') AS QTYTP
             , SUM(IF(RIGHT(STOCK.STOCKDATE, 2) = '01', STOCK.SUMQTY, 0)) AS QTY_1
             , SUM(IF(RIGHT(STOCK.STOCKDATE, 2) = '02', STOCK.SUMQTY, 0)) AS QTY_2
             , SUM(IF(RIGHT(STOCK.STOCKDATE, 2) = '03', STOCK.SUMQTY, 0)) AS QTY_3
@@ -288,6 +288,8 @@ WHEN 'LIST_MTRPLAN' THEN  -- 자재, 외주품 발주량 계산
                   )
                   GROUP BY TEMP_END.RITEMID, TEMP_END.MITEMID, TEMP_END.ITEMID
                ) AS STOCK
+          LEFT JOIN MSTITEM
+            ON MSTITEM.ITEMID = STOCK.ITEMID
           GROUP BY STOCK.RITEMID, STOCK.MITEMID, STOCK.ITEMID
        ) AS STOCK_RESULT
   ;
@@ -341,7 +343,7 @@ WHEN 'LIST_MTRPLAN' THEN  -- 자재, 외주품 발주량 계산
   FROM (
           SELECT
               WEEKPLAN.IDX, WEEKPLAN.RITEMID, WEEKPLAN.MITEMID, WEEKPLAN.ITEMID, WEEKPLAN.PRCCD
-            , '생산계획' AS QTYTP
+            , IF(MSTITEM.ITEMCG = 'DM100100', '출하계획', '생산계획') AS QTYTP
             , SUM(IF(RIGHT(WEEKPLAN.PDATE, 2) = '01', WEEKPLAN.PLANQTY, 0)) AS QTY_1
             , SUM(IF(RIGHT(WEEKPLAN.PDATE, 2) = '02', WEEKPLAN.PLANQTY, 0)) AS QTY_2
             , SUM(IF(RIGHT(WEEKPLAN.PDATE, 2) = '03', WEEKPLAN.PLANQTY, 0)) AS QTY_3
@@ -386,6 +388,8 @@ WHEN 'LIST_MTRPLAN' THEN  -- 자재, 외주품 발주량 계산
                     ON PRDPLAN_W.PMONTH = _$PMONTH
                    AND PRDPLAN_W.ITEMID = IF(TEMP_END.MITEMID = '', 0, TEMP_END.MITEMID)
                ) AS WEEKPLAN
+          LEFT JOIN MSTITEM
+            ON MSTITEM.ITEMID = WEEKPLAN.ITEMID
           GROUP BY WEEKPLAN.RITEMID, WEEKPLAN.MITEMID, WEEKPLAN.ITEMID
        ) AS WEEKPLAN_RESULT
   ;
@@ -398,7 +402,7 @@ WHEN 'LIST_MTRPLAN' THEN  -- 자재, 외주품 발주량 계산
     , QTY_21, QTY_22, QTY_23, QTY_24, QTY_25, QTY_26, QTY_27, QTY_28, QTY_29, QTY_30, QTY_31)
   SELECT
       TEMP_END.IDX, TEMP_END.RITEMID, TEMP_END.MITEMID, TEMP_END.ITEMID, TEMP_END.PRCCD
-    , '소재입고'  AS QTYTP
+    , IF(MSTITEM.ITEMCG = 'DM100100', '제품생산', '소재입고')  AS QTYTP
     , '' AS QTY_1
     , '' AS QTY_2
     , '' AS QTY_3
@@ -433,6 +437,8 @@ WHEN 'LIST_MTRPLAN' THEN  -- 자재, 외주품 발주량 계산
     , '' AS QTY_30
     , '' AS QTY_31
   FROM TEMP_END
+  LEFT JOIN MSTITEM
+    ON MSTITEM.ITEMID = TEMP_END.ITEMID
   ;
 
 
@@ -498,15 +504,15 @@ WHEN 'LIST_MTRPLAN' THEN  -- 자재, 외주품 발주량 계산
             , 1=1,
             (  MSTPRC.USEYN = 'Y'
                AND MSTPRC.FACTORYCD = '07'
---                AND MSTPRC.PRCCD NOT IN ('I2M1400_N', 'I2M1600_N')
+               AND MSTPRC.WEEKPLANYN = 'Y'
             )
           )    
     AND IF($ITEMID = '', 1=1, TEMP_END.RITEMID = $ITEMID)
   ORDER BY TEMP_END.RITEMID
          , TEMP_END.IDX DESC
-         , (CASE WHEN TEMP_MTRPLAN.QTYTP = '소재입고' THEN 1
-                 WHEN TEMP_MTRPLAN.QTYTP = '생산계획' THEN 2
-                 WHEN TEMP_MTRPLAN.QTYTP = '소재잔량' THEN 3
+         , (CASE WHEN TEMP_MTRPLAN.QTYTP IN ('소재입고', '제품생산') THEN 1
+                 WHEN TEMP_MTRPLAN.QTYTP IN ('생산계획', '출하계획') THEN 2
+                 WHEN TEMP_MTRPLAN.QTYTP IN ('소재잔량', '제품잔량') THEN 3
             ELSE 99 END)
   ;
 

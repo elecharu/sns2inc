@@ -6,10 +6,10 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:TML1010"
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
-      Width="900" Height="480">
+      Width="980" Height="480">
     <Canvas Background="WhiteSmoke">
         <UserControl Canvas.Left="0" Canvas.Top="0" Style="{DynamicResource TML_PANEL}">
-            <its:WrapContent x:Name="PANEL_S1" Width="900" Height="30">
+            <its:WrapContent x:Name="PANEL_S1" Width="980" Height="30">
                 <its:Combo GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ReadOnly="True" x:Name="cb_CUSTCD"/>
                 <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True"/>
                 <UserControl Width="20"/>
@@ -17,7 +17,7 @@
             </its:WrapContent>
         </UserControl>
         <UserControl Canvas.Left="0" Canvas.Top="30" Style="{DynamicResource TML_GRID}">
-            <its:Grid x:Name="GRID_G1" Width="900" Height="450">
+            <its:Grid x:Name="GRID_G1" Width="980" Height="450">
                 <its:Grid.Columns>
                     <its:Column Width="150" FieldName="WARECD" Header="창고" ALGIN="Center" GPCD="WARECD_OSC"/>
                     <its:Column Width="120" FieldName="ITEMID" Header="품목ID" ALGIN="Center" Visible="False"/>

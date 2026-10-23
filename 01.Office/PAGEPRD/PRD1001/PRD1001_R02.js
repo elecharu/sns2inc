@@ -11,8 +11,8 @@ ItsPage.Load = function () {
         column.create('품목코드', 'ITEMCD', { width: 150}),
         column.create('품명', 'ITEMNM', { width: 220 }),    
         column.create('규격', 'ITEMSPEC', { width: 200, allowMerging: true }),
-        column.create('공정', 'PRCNM', { width: 100, align: 'center', allowMerging: true  }),
-        column.create('라인', 'EQMNM', { width: 100, align: 'center', allowMerging: true }),
+        column.create('공정', 'PRCNM', { width: 100, align: 'center' }),
+        column.create('라인', 'EQMNM', { width: 100, align: 'center' }),
 
         column.create('CT', 'CT', { width: 70, columnType: enumColumnTypes.number, decimalPrecision: 1 }),  
         column.create('효율', 'EFFI', { width: 70, columnType: enumColumnTypes.number, decimalPrecision: 1 }),  
@@ -23,7 +23,7 @@ ItsPage.Load = function () {
         column.create('월생산수량', 'GOODQTY', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),      
         column.create('추가수주량', 'ADDSALQTY', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),      
         column.create('추가생산계획량', 'ADDPLANQTY', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
-        column.create('추가', 'OPENPOP_ADDPLAN', { width: 50, columnType: enumColumnTypes.button, iconCls: 'fa-plus', allowMerging: false }),
+        column.create('추가', 'OPENPOP_ADDPLAN', { width: 50, columnType: enumColumnTypes.button, iconCls: 'fa-plus'}),
         column.create('월계획잔량', 'LEFTPLANQTY', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0, backColor: enumColor.greenLight2 }),      
 
         column.band('', {}, [
@@ -324,7 +324,7 @@ ItsButton.Event('btn_INPUT_ONESQTY').onClick = function () {
             }
 
             for (var j = 0; j < 31; j++) {
-                if (SUM_INPUT > LEFTPLANQTY)
+                if (SUM_INPUT >= LEFTPLANQTY)
                     break;
 
                 // 주간
@@ -335,12 +335,14 @@ ItsButton.Event('btn_INPUT_ONESQTY').onClick = function () {
                     var WORKTIME_DAY = ItsGrid.GetValue('grid1', i, field_WORKTIME_DAY);
 
                     if (WORKTIME_DAY > 0) {
-                        ItsGrid.SetValue('grid1', i, field_PLAN_DAY, ONESQTY);
-                        SUM_INPUT = SUM_INPUT + ONESQTY;
+                        // 마지막 셀은 (월계획잔량 - 총입력량) 만큼만 입력
+                        var INPUT_DAY = Math.min(ONESQTY, LEFTPLANQTY - SUM_INPUT);
+                        ItsGrid.SetValue('grid1', i, field_PLAN_DAY, INPUT_DAY);
+                        SUM_INPUT = SUM_INPUT + INPUT_DAY;
                     }
                 }
 
-                if (SUM_INPUT > LEFTPLANQTY)
+                if (SUM_INPUT >= LEFTPLANQTY)
                     break;
 
                 // 야간
@@ -351,8 +353,10 @@ ItsButton.Event('btn_INPUT_ONESQTY').onClick = function () {
                     var WORKTIME_NIGHT = ItsGrid.GetValue('grid1', i, field_WORKTIME_NIGHT);
 
                     if (WORKTIME_NIGHT > 0) {
-                        ItsGrid.SetValue('grid1', i, field_PLAN_NIGHT, ONESQTY);
-                        SUM_INPUT = SUM_INPUT + ONESQTY;
+                        // 마지막 셀은 (월계획잔량 - 총입력량) 만큼만 입력
+                        var INPUT_NIGHT = Math.min(ONESQTY, LEFTPLANQTY - SUM_INPUT);
+                        ItsGrid.SetValue('grid1', i, field_PLAN_NIGHT, INPUT_NIGHT);
+                        SUM_INPUT = SUM_INPUT + INPUT_NIGHT;
                     }
                 }
             }

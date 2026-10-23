@@ -6,11 +6,11 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:TML1010"
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
-      Width="900" Height="480">
+      Width="980" Height="480">
     <Canvas Background="WhiteSmoke">
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
-            <its:WrapContent x:Name="PANEL_S1" Width="900" Height="60">
+            <its:WrapContent x:Name="PANEL_S1" Width="980" Height="60">
                 <its:Combo GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ReadOnly="True" x:Name="cb_CUSTCD"/>
                 <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True" />
                 <UserControl Width="20"/>
@@ -24,7 +24,7 @@
         </UserControl>
 
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="60">
-            <its:Grid x:Name="GRID_G1" Width="900" Height="420">
+            <its:Grid x:Name="GRID_G1" Width="980" Height="420">
                 <its:Grid.Columns>
                     <its:Column Width="50" Header="선택" CellType="Check" FieldName="ISCHECKED" IsRowCheck="True"/>
                     <its:Column Width="100" Header="거래처" FieldName="CUSTCD" GPCD="CUSTCD" Visible="False"/>

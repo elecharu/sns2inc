@@ -11,7 +11,7 @@ ItsPage.Load = function () {
         column.create('품목코드', 'ITEMCD', { width: 150 }),
         column.create('품명', 'ITEMNM', { width: 200 }),    
         column.create('규격', 'ITEMSPEC', { width: 200 }),
-        column.create('단가', 'SALFUP', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+        column.create('단가', 'SALUP', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.create('UPH', 'UPH', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.create('생산라인수', 'COUNT_LINE', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.create('근무시간', 'WORKHOURS', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
@@ -19,19 +19,19 @@ ItsPage.Load = function () {
         column.create('안전재고', 'SAFEQTY', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
 
         column.band('생산CAPA', {}, [
-            column.create('수량', 'CAPAQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0 }),       
-            column.create('금액(원)', 'CAPAAMT', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0 }),       
+            column.create('수량', 'CAPAQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, groupType: enumGrouping.sum }),       
+            column.create('금액(원)', 'CAPAAMT', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, groupType: enumGrouping.sum }),       
         ]),
 
         column.band('판매계획', {}, [
-            column.create('수량', 'ODRQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
-            column.create('금액(원)', 'ODRAMT', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+            column.create('수량', 'ODRQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, groupType: enumGrouping.sum }),
+            column.create('금액(원)', 'ODRAMT', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, groupType: enumGrouping.sum }),
         ]),
 
         column.band('생산계획', {}, [
             column.create("재고감안계산", "STOCKYN", { width: 85, align: 'center', columnType: enumColumnTypes.check, readOnly: false }),
-            column.create('수량', 'PLANQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
-            column.create('금액(원)', 'PLANAMT', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+            column.create('수량', 'PLANQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, groupType: enumGrouping.sum, readOnly: false }),
+            column.create('금액(원)', 'PLANAMT', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, groupType: enumGrouping.sum }),
             column.create('부하율', 'LOADFACTOR', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 1 }),
             column.create('근무일수', 'WORKDAYS_EXPECTED', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 1 }),
         ]),
@@ -82,7 +82,7 @@ ItsButton.EventSave = function () {
         for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
             maria.AddList('ITEMID_LIST', ItsGrid.GetValue('grid1', i, 'ITEMID'));
             maria.AddList('LINECD_LIST', ItsGrid.GetValue('grid1', i, 'LINECD'));
-            maria.AddList('SALFUP_LIST', ItsGrid.GetValue('grid1', i, 'SALFUP'));
+            maria.AddList('SALUP_LIST', ItsGrid.GetValue('grid1', i, 'SALUP'));
             maria.AddList('UPH_LIST', ItsGrid.GetValue('grid1', i, 'UPH'));
             maria.AddList('COUNTLINE_LIST', ItsGrid.GetValue('grid1', i, 'COUNT_LINE'));
             maria.AddList('WORKHOURS_LIST', ItsGrid.GetValue('grid1', i, 'WORKHOURS'));

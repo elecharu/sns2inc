@@ -144,6 +144,26 @@
     font-family:'SpoqaHanSansNeo_B';
     font-weight:normal;
 }
+/* 셀 드래그 시 우측하단 선택 셀개수 / 합계 표시 */
+.ItsGrid.wj-flexgrid {
+    position: relative;
+}
+.ItsGrid_selInfo {
+    display: none;
+    position: absolute;
+    z-index: 10;
+    padding: 3px 10px;
+    background: #2F5597;
+    color: #FFFFFF;
+    font-family: 'SpoqaHanSansNeo_B';
+    font-size: 13px;
+    letter-spacing: 0.2px;
+    -webkit-font-smoothing: antialiased;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    white-space: pre;
+    border-radius: 3px;
+    pointer-events: none;
+}
 .itsgrid-selected-row {
     border-bottom: 1px solid indianred;
 }

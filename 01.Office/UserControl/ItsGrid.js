@@ -1091,6 +1091,15 @@ var ItsGrid = {
         $obj.groupField = $params.groupField;
         $obj.groupASC = $params.groupASC;
         $obj.rowHeaders.columns.minSize = 30;
+
+        // 셀 드래그 시 그리드 우측하단에 선택 셀개수 / 합계 표시
+        $obj._$selInfo = $('<div class="ItsGrid_selInfo"></div>').appendTo($obj.hostElement);
+        var $selInfoTimer;
+        $obj.selectionChanged.addHandler(function () {
+            clearTimeout($selInfoTimer);
+            $selInfoTimer = setTimeout(function () { ItsGrid.$showSelectionInfo($params.id); }, 50); // 드래그 중 반복 계산 방지
+        });
+
         this.list.push($obj);
         return $obj;
     },
@@ -2002,6 +2011,51 @@ ItsGrid.$calculate = function (id) {
     };
     ItsPage.SetStore('gridCalc', $data);
     ItsPop.Open('gridCalc');
+};
+// 선택 셀개수 / 합계 표시 (2개 이상 선택 시만 표시)
+// ) 숨긴 행/컬럼, 그룹(소계) 행은 제외
+ItsGrid.$showSelectionInfo = function (id) {
+    var $obj = ItsGrid.Get(id);
+    if ($obj == undefined || $obj._$selInfo == undefined) return;
+
+    var COUNT = 0;
+    var NUMCOUNT = 0; // 숫자 셀 개수 (평균 계산용)
+    var SUM = 0;
+    var ranges = ($obj.selectedRanges && $obj.selectedRanges.length > 0) ? $obj.selectedRanges : [$obj.selection];
+    ranges.forEach(function ($selection) {
+        if ($selection == undefined || !$selection.isValid) return;
+        for (var r = $selection.topRow; r <= $selection.bottomRow; r++) {
+            var row = $obj.rows[r];
+            if (row == undefined || !row.isVisible || row instanceof wijmo.grid.GroupRow) continue;
+            for (var c = $selection.leftCol; c <= $selection.rightCol; c++) {
+                var col = $obj.columns[c];
+                if (col == undefined || !col.isVisible || col.binding == 'isRowCheck') continue;
+                COUNT++;
+                var $val = parseFloat(($obj.cells.getCellData(r, c, true) || '').toString().replace(/[,]/gi, ''));
+                if (!isNaN($val)) {
+                    SUM += $val;
+                    NUMCOUNT++;
+                }
+            }
+        }
+    });
+
+    var $info = $obj._$selInfo;
+    if (COUNT < 2) {
+        $info.hide();
+        return;
+    }
+
+    // 스크롤바에 가리지 않도록 위치 보정
+    var root = $obj.hostElement.querySelector('[wj-part="root"]');
+    var sbW = root ? root.offsetWidth - root.clientWidth : 0;
+    var sbH = root ? root.offsetHeight - root.clientHeight : 0;
+    $info.css({ right: (sbW + 4) + 'px', bottom: (sbH + 4) + 'px' });
+    var AVG = NUMCOUNT > 0 ? SUM / NUMCOUNT : 0;
+    $info.text('개수: ' + COUNT.toLocaleString()
+        + '   합계: ' + (Math.round(SUM * 1000) / 1000).toLocaleString()
+        + '   평균: ' + (Math.round(AVG * 1000) / 1000).toLocaleString());
+    $info.show();
 };
 ItsGrid.$getGpcdData = function (params, async, callbackFn) {
     if (params.gpcd.substring(0, 6).toUpperCase() == 'SELECT') {
