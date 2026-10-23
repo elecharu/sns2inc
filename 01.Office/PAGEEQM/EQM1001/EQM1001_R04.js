@@ -191,8 +191,6 @@ var SEARCH_CHKRSTEQM = function (EQMCD, YYYYMM) {
 
     ItsPage.SetStore('pdiv3', maria.store.data[0]);
     ItsText.SetValue('pop2_txt_YYYYMM', YYYYMM);
-    // 2026-09-30 정기점검 수정 모달(pop2) 저장된 실적 항목 조회
-    // 2026-10-02 [정기점검 수정 팝업] 실적 항목을 그리드(grid3)에 표시
     ItsGrid.SetStore('grid3', maria.storeExtend1);
     return true;
 };
@@ -253,7 +251,6 @@ ItsPop.Event('pop2').onAddBtnClick = function () {
         return;
     }
 
-    // 2026-10-02 [정기점검 수정 팝업] '수정되었습니다.' 알림에서 확인을 누르면 팝업 닫고 메인 목록 재조회
     ItsMsg.Alert("수정되었습니다.", function () {
         ItsPop.Close('pop2');
         ItsButton.EventSearch();

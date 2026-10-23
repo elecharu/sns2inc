@@ -17,6 +17,7 @@ PROCEDURE `MES_SNS2`.`EQM1001_R03`(
 -- 			2026-10-08 					한성수	항목 추가·삭제·승인 검증·그룹 검색, HEADER·DETAIL 작업본·그룹/설비 REV 독립 관리 및 DETAIL 사용여부 제거
 -- 			2026-10-12 					한성수	반려 분기·사유·입력값 제거 및 대기·승인 상태로 통일
 -- 			2026-10-20 					한성수	설비 목록 조회(LIST_MSTEQM) 잉여 컬럼(EQMGRPNM) 및 COMTYPE 조인 제거
+-- 			2026-10-23 					한성수	REV HEADER 생성 시 점검구분(CHKTP) 정기점검('02') 저장
 -- *****************************************************************************
   IN $FANO           VARCHAR(20),
   IN $FANO_COPY      VARCHAR(20),
@@ -155,9 +156,9 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       SET _$NEWREV   = 1;
 
       INSERT INTO MSTEQMREV_HEADER (
-        REVCD, PLANTP, PLANCD, REVNUM, RTIME, REMP, RPRG
+        REVCD, CHKTP, PLANTP, PLANCD, REVNUM, RTIME, REMP, RPRG
       ) VALUES (
-        _$REVCD, _$PLANTP, _$PLANCD, COALESCE(_$REVNUM + 1, 0), CALLTIME(), CALLEMP(), CALLPRG()
+        _$REVCD, '02', _$PLANTP, _$PLANCD, COALESCE(_$REVNUM + 1, 0), CALLTIME(), CALLEMP(), CALLPRG()
       );
 
       INSERT INTO MSTEQMREV_DETAIL (

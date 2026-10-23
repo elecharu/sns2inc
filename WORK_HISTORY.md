@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-10-20
+> **최종 갱신일**: 2026-10-23
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -14,6 +14,25 @@
 4. **대화 기록 및 불러오기 연계**: 모든 사용자 요청 및 작업 결과는 본 문서에 실시간 동기화되어, 새 세션이나 나중에 작업 재개 시 "불러오기"를 통해 이전 맥락을 100% 이어받습니다.
 
 ---
+
+## 🕒 2026-10-23 (금) 작업 내역
+
+### 2. EQM1001_R04 정기점검 등록·수정 팝업 항목 CHKTP 02 REV 제한
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R04.sql
+- **배경 및 원인**: 등록(grid2)·수정(grid3) 팝업 항목을 MSTEQMREV_HEADER.CHKTP = '02' REV만 표시 요청
+- **작업 상세 내용**:
+  - LIST_PLAN_EQM02 승인 REV 조회 및 ADD_CHKRSTEQM 승인본 검증에 CHKTP = '02' 추가, SEARCH_CHKRSTEQM HEADER LEFT JOIN을 INNER JOIN + CHKTP = '02'로 변경, Modify 이력 1행 추가
+- **검증 결과**: 단일 BOM/CRLF 검증 완료, 기존 HEADER CHKTP 데이터 보정 필요 여부 사용자 확인 필요
+
+
+### 1. EQM1001_R03 REV HEADER 생성 시 CHKTP 정기점검(02) 저장
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql
+- **배경 및 원인**: MSTEQMREV_HEADER 신규 REV 생성 시 점검구분(CHKTP) 값 미저장
+- **작업 상세 내용**:
+  - 정기점검 CRUD 공통 신규 REV 생성 INSERT에 CHKTP = '02' 추가, 최상단 Modify 2026-10-23 이력 1행 추가 (HEADER INSERT는 R03 단 1곳, R04는 조회만 수행)
+- **검증 결과**: 단일 BOM/CRLF 검증 완료, 실서버 DB 반영은 사용자 진행
+---
+
 
 ## 🕒 2026-10-20 (화) 작업 내역
 
@@ -2428,6 +2447,8 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 05.Procedure/MES_SNS2_EQM1001_R04.sql | EQM1001_R03·R04 실서버 반영 및 기존 HEADER CHKTP '02' 보정 | 단일 BOM/CRLF 검증 완료, 기존 HEADER CHKTP 데이터 보정 필요 여부 사용자 확인 필요 |
+| **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql | EQM1001_R03 프로시저 실서버 반영 대기 | 단일 BOM/CRLF 검증 완료, 실서버 DB 반영은 사용자 진행 |
 | **완료** | [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs) | TML1010_R05 프로시저 실서버 DB 반영 및 입고 라벨 출력 테스트 | 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료, SYSLABEL XMLDATA 실제 필드 매핑 일치 확인 |
 | **완료** | [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql), [05.Procedure/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs) | TML1010_R05 프로시저(15개 파라미터) 및 SYSTEM_PARAMETERS 실서버 DB 반영 및 터미널 화면 최종 확인 | 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료, Roslyn C# 컴파일 성공(0 Error), 프로시저-C#-파라미터등록 1:1 일치 확인 |
 | **완료** | [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql) | 잉여 검색조건 전면 제거 및 2공장 등록 부품 11건 정합성 복원 완료 | 단일 UTF-8 with BOM(ef bb bf) 및 표준 CRLF 개행 무결성 100% 검증 통과 |
