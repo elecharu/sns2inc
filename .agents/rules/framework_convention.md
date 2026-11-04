@@ -22,11 +22,11 @@ trigger: always_on
 ### 3. 레포트(ItsXtraRpt) 표준 연동 및 작성 규칙
 - **간결한 표준 인스턴스 호출**: `new ItsXtraRpt('리포트명')` 인스턴스 생성 후 `AddParam`으로 필요한 조건값만 전달하고 `CallPop()` 또는 `Call()`로 호출하는 간결한 표준 패턴을 준수합니다.
 - **임의 파일명 지정(`rpt.FileName`) 금지**: 공통 컨트롤러가 파일명 미지정 시 고유 타임스탬프(`DateTime.Now.Ticks`) 파일명을 자동 부여하므로, 화면 스크립트에서 인위적으로 파일명을 조합하여 지정하지 않습니다.
-- **기존 리포트 C# 소스 모방**: 신규 리포트 C# 비하인드(`04.Report/.../S05A.cs`) 구현 시에도 프로젝트 내 기존 검증된 리포트(`SAL0001_S05.cs`, `EQM1001_S01.cs` 등)의 데이터 수신 및 바인딩 구조를 그대로 준용합니다.
+- **표준 레포트 구조 준용**: 신규 리포트 C# 비하인드(`{REPORT_ROOT}/.../S05A.cs`) 구현 시에는 `report_file_structure.md`의 3개 파일 템플릿(파일 구조·데이터 수신·바인딩 구조)을 그대로 준용하고, 현재 프로젝트에 같은 구조의 기준 레포트(`project_context.md`)가 있으면 함께 참고합니다.
 - **DevExpress 디자이너 표준 구조 준수 (`report_devexpress.md` 필수 준수)**: C# 비하인드 코드 동적 생성(`BuildReport`)을 금지하고 `Designer.cs` 기반의 표준 디자이너 3개 파일 세트(`cs`, `Designer.cs`, `resx`), 매개변수 없는 기본 생성자 필수 선언, `components` 초기화, `ItsMaria` 표준 호출(`CreateMaria` 하드코딩 금지) 규칙을 반드시 준수합니다.
 
 ### 4. 레포트 임시 파일 형상 관리 격리
-- 리포트 출력 테스트 중 로컬 임시 폴더(`01.Office/Reports/tempFiles/`, `04.Report/bin/tempFiles/` 등)에 자동 생성되는 임시 산출물(`*.pdf`, `*.html`, `*_files/` 등)은 `.gitignore`를 통해 형상 관리에서 철저히 격리하며 Git 저장소에 커밋하지 않습니다.
+- 리포트 출력 테스트 중 로컬 임시 폴더(`{REPORT_BIN}/tempFiles/`, 예: `01.Office/Reports/tempFiles/`, `04.Report/bin/tempFiles/`)에 자동 생성되는 임시 산출물(`*.pdf`, `*.html`, `*_files/` 등)은 `.gitignore`를 통해 형상 관리에서 철저히 격리하며 Git 저장소에 커밋하지 않습니다.
 
 ### 5. 공통코드(GPCD) 그룹 분리 및 콤보박스(ItsCombo) 표준 연동 규칙
 - **C# 비하인드 코드 내 DataView 필터링 / LIKE 문 사용 전면 금지**:

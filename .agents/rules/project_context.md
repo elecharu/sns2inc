@@ -14,6 +14,9 @@ trigger: always_on
 | `{PROJECT_ROOT}` | 현재 작업 중인 프로젝트 루트 | `.agents` 폴더가 위치한 디렉터리 |
 | `{SCHEMA}` | 프로시저가 속한 DB 스키마명 | 아래 2항 판별 순서 적용 |
 | 프로시저 폴더 | 로컬 `.sql` 소스 보관 폴더 | `{PROJECT_ROOT}` 하위에서 `.sql` 프로시저 파일이 모여 있는 폴더 검색 (`05.PROCEDURE/`, `프로시저/` 등) |
+| `{REPORT_ROOT}` | DevExpress 레포트 소스 폴더 | `{PROJECT_ROOT}` 하위에서 `DevExpress.XtraReports` 를 참조하는 `.csproj`가 모여 있는 폴더 검색 (`04.Report/` 등) |
+| `{REPORT_BIN}` | 레포트 exe 실행(배포) 폴더 | 웹 레포트 컨트롤러(`CONTROLLER/XtraReport.aspx.cs` 등)가 실행하는 exe 경로(`..\Reports\{화면ID}.exe` → 웹 루트의 `Reports/`)와, 레포트 프로젝트 공용 출력 폴더(`{REPORT_ROOT}/bin/` 등). `ITS_CONFIG_MARIA.xml`이 함께 있는 폴더 |
+| 기준 레포트 | 디자이너 구조 비교용 레포트 | 현재 프로젝트에서 `report_file_structure.md` 구조로 작성되어 VS 디자이너에서 정상으로 열리는 레포트. 없으면 `report_file_structure.md` 템플릿을 기준으로 함 |
 
 - 규칙 문서의 예시 코드에 나오는 `{SCHEMA}`, `{PROJECT_ROOT}`는 그대로 쓰지 않고 항상 실제 값으로 치환하여 작성합니다.
 - 다른 프로젝트의 경로(`D:\ITS_MES_...`)나 스키마명을 그대로 가져와 사용하지 않습니다.
@@ -31,3 +34,5 @@ trigger: always_on
 ### 3. 경로 표기 원칙
 - `WORK_HISTORY.md`, 작업 보고 등에서 파일을 가리킬 때는 `{PROJECT_ROOT}` 기준 상대경로로 작성하고, 드라이브명·절대경로(`file:///d:/...`)를 하드코딩하지 않습니다.
 - 프로젝트 폴더 구성(`01.Office`, `04.Report`, 프로시저 폴더 등)은 작업 착수 전 실제 디렉터리를 확인하여 사용합니다.
+- 규칙 문서에 나오는 실제 화면ID·파일명(`EQM1001_R03`, `S01A` 등)은 규칙을 처음 만든 프로젝트의 **사례**입니다. 다른 프로젝트에서는 그 파일이 없을 수 있으므로, 필수 참조 대상으로 쓰지 않고 현재 프로젝트의 같은 역할 파일을 찾아 적용합니다.
+- 빌드 도구·라이브러리 버전(MSBuild, DevExpress 등)은 프로젝트의 `.csproj` 참조와 설치된 Visual Studio 기준으로 확인하여 사용합니다.

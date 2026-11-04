@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-10-23
+> **최종 갱신일**: 2026-11-04
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -14,6 +14,49 @@
 4. **대화 기록 및 불러오기 연계**: 모든 사용자 요청 및 작업 결과는 본 문서에 실시간 동기화되어, 새 세션이나 나중에 작업 재개 시 "불러오기"를 통해 이전 맥락을 100% 이어받습니다.
 
 ---
+
+## 🕒 2026-11-04 (수) 작업 내역
+
+### 2. 공유 규칙 다른 프로젝트 적용성 정비
+- **수정/대상 파일**: [.agents/rules/project_context.md](.agents/rules/project_context.md), [.agents/rules/report_file_structure.md](.agents/rules/report_file_structure.md), [.agents/rules/report_devexpress.md](.agents/rules/report_devexpress.md), [.agents/rules/framework_convention.md](.agents/rules/framework_convention.md)
+- **배경 및 원인**: 규칙을 여러 프로젝트에 공유하므로 이 프로젝트 전용 경로·파일·버전에 의존하는 부분 정비 요청
+- **작업 상세 내용**:
+  - project_context.md에 {REPORT_ROOT}·{REPORT_BIN}·기준 레포트 판별 추가, 규칙 속 실제 화면ID는 사례로만 사용하고 버전은 csproj 기준 확인하도록 명시. report_file_structure.md: EQM1001/R03 필수 참조 제거, 사례 값 안내, csproj 예시 {리포트ID}화, 빈 resx 전문 수록, DevExpress Version 값 csproj 기준, 배포 경로 {REPORT_BIN}. report_devexpress.md: 기준 레포트·exe 실행 경로·배포 경로·MSBuild 버전 일반화, 알려진 원인 표에 확인 환경 명시. framework_convention.md 레포트 참조·임시폴더 경로 일반화. 오늘 작성한 작업 이력 링크를 절대경로에서 상대경로로 정정
+- **검증 결과**: 단일 BOM/CRLF 확인
+
+
+### 2. 레포트 디자이너 오류 진단 절차 규칙화
+- **수정/대상 파일**: [report_devexpress.md](.agents/rules/report_devexpress.md), [report_file_structure.md](.agents/rules/report_file_structure.md)
+- **배경 및 원인**: S01A 디자이너 오류를 호출 스택 확인 없이 RowSpan으로 추측 수정해 재발한 과정을 규칙에 반영해 재발 방지 요청
+- **작업 상세 내용**:
+  - report_devexpress.md 2-5 신설: 런타임/디자이너 구분 → 호출 스택 확보(필수) → R03과 비교 → 의심 요소 하나씩 제거하는 소거법 → 허용 패턴 수정 → VS 디자이너·exe·출력 비교 3중 검증 → 확정 원인만 규칙화 및 오판 정정 기록. 실사례로 확인된 알려진 원인 표(XRPanel, 헬퍼 호출, XRTableRow BeginInit) 추가. report_file_structure.md 체크리스트에 2-5 연결
+- **검증 결과**: 단일 BOM/CRLF 확인
+
+
+### 2. EQM1001_S01A VS 디자이너 component null 오류 실제 원인(XRPanel) 해결
+- **수정/대상 파일**: [S01A.Designer.cs](04.Report/PAGEEQM/EQM1001/S01A.Designer.cs), [EQM1001.exe](01.Office/Reports/EQM1001.exe), [report_devexpress.md](.agents/rules/report_devexpress.md), [report_file_structure.md](.agents/rules/report_file_structure.md)
+- **배경 및 원인**: RowSpan 제거 후에도 VS 디자이너에서 '값은 null일 수 없습니다. 매개 변수 이름: component' 오류 지속
+- **작업 상세 내용**:
+  - VS 오류 페이지 호출 스택 확인: DesignerHost.GetDesigner ← VSLockService.CanChangeComponent ← XRControlDesignerBase.get_Locked ← XRControlDesigner.OnLoadComplete. R03 정상, S01A에서 XRPanel만 제거한 변형이 VS 디자이너에서 정상 로드되어 원인을 자식 컨트롤을 담는 XRPanel(xrPanelHeader)로 확정. 패널을 빈 테두리 XRLabel(xrLabelHeaderBox 731x56)로 교체하고 로고·제목을 PageHeader에 직접 배치. report_devexpress.md 2-4를 RowSpan 금지에서 XRPanel 금지로 정정, report_file_structure.md 본문·체크리스트 정정(VS 디자이너 열기 확인 항목 추가)
+- **검증 결과**: VS 2017 디자이너에서 S01A 정상 표시 확인(오류 페이지 없음). MSBuild Release Rebuild 성공. A-001 PNG 비교 시 상단 박스 픽셀 동일, 항목명 열 글자 서브픽셀 차이만 존재. 웹 컨트롤러 방식 실행·오류 안내 정상. 01.Office/Reports·04.Report/bin 배포
+
+
+### 2. EQM1001_S01A RowSpan 제거 (원인 오판 — 3번 항목에서 실제 원인 XRPanel 해결)
+- **수정/대상 파일**: [S01A.Designer.cs](04.Report/PAGEEQM/EQM1001/S01A.Designer.cs), [EQM1001.exe](01.Office/Reports/EQM1001.exe), [report_devexpress.md](.agents/rules/report_devexpress.md), [report_file_structure.md](.agents/rules/report_file_structure.md)
+- **배경 및 원인**: R03 구조 전환 후 VS 디자이너에서 '값은 null일 수 없습니다. 매개 변수 이름: component' 오류. 빌드·런타임은 정상이라 디자이너 전용 문제로 판단
+- **작업 상세 내용**:
+  - CodeDOM 디자이너 로더(DesignSurface+CodeDomDesignerLoader) 재현 결과 RowSpan 대입이 셀이 행·테이블에 들어가기 전에 실행됨 확인. 카테고리 셀(cell_Cat_*) 3개와 병합 아래 빈 셀 18개 제거, 독립 XRLabel(xrLabelCatEQM/BUY/USE, 32F 폭) 추가, 테이블 X=32F·폭 323F로 이동. RowSpan 금지 규칙을 추가했으나 오류가 계속되어 3번 항목에서 XRPanel 규칙으로 정정
+- **검증 결과**: MSBuild Release Rebuild 성공. CodeDOM 로더 S01A 오류 0건(누락 필드 음성대조 검출 확인). A-001 PNG 비교 시 선·크기·값 동일, 항목명 열 글자 서브픽셀 차이만 존재. 웹 컨트롤러 방식 실행 정상, 오류 안내 정상. 01.Office/Reports·04.Report/bin 배포. 실제 VS 디자이너 열기는 사용자 확인 필요
+
+
+### 1. EQM1001_S01A 설비이력카드 레포트 표준 구조(R03 기준) 전환 및 레포트 파일 구조 규칙 제정
+- **수정/대상 파일**: [S01A.cs](04.Report/PAGEEQM/EQM1001/S01A.cs), [S01A.Designer.cs](04.Report/PAGEEQM/EQM1001/S01A.Designer.cs), [S01A.resx](04.Report/PAGEEQM/EQM1001/S01A.resx), [EQM1001.exe](01.Office/Reports/EQM1001.exe), [report_file_structure.md](.agents/rules/report_file_structure.md), [report_devexpress.md](.agents/rules/report_devexpress.md), [framework_convention.md](.agents/rules/framework_convention.md)
+- **배경 및 원인**: 모든 레포트를 EQM1001/R03 3개 파일 구조로 작성하도록 규칙화 요청, S01A는 기본 생성자 없음·DB 접속정보 하드코딩·Designer 내 헬퍼 메서드(CreateSpecRow/CreateCatCell/CreateHeaderCell/InitDataCell) 호출로 표준 위반
+- **작업 상세 내용**:
+  - report_file_structure.md 신규 제정(폴더/csproj/cs/Designer/resx 구조·명명·A4 기본값·체크리스트). S01A.cs: 기본 생성자+this() 체이닝, DbServer 등 하드코딩 제거(ITS_CONFIG_MARIA.xml 사용), BindReportData/LoadLogo/LoadImage/Value 분리, MODEL_S1 추가. S01A.Designer.cs: 헬퍼 호출을 순수 대입문으로 전개(행 18개·카테고리/라벨 셀 명명 cell_Cat_/cell_Lbl_/cell_Hdr_), 밴드 순서 R03 기준 정렬, 레이아웃 값(여백 45, 폰트, 폭) 기존 유지. S01A.resx: 표준 빈 resx로 교체
+- **검증 결과**: MSBuild 15.0 Release Rebuild 성공. 기존/신규 exe로 EQMCD=A-001 출력 비교 시 HTML·이미지 완전 동일, PDF는 생성일시·문서ID만 차이. 미존재 설비·파라미터 누락 안내 메시지 정상. 01.Office/Reports, 04.Report/bin 배포 및 단일 BOM/CRLF 확인. Visual Studio 디자이너 열기는 미확인
+---
+
 
 ## 🕒 2026-10-23 (금) 작업 내역
 
@@ -2447,6 +2490,11 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | [.agents/rules/project_context.md](.agents/rules/project_context.md), [.agents/rules/report_file_structure.md](.agents/rules/report_file_structure.md), [.agents/rules/report_devexpress.md](.agents/rules/report_devexpress.md), [.agents/rules/framework_convention.md](.agents/rules/framework_convention.md) | - | 단일 BOM/CRLF 확인 |
+| **완료** | [report_devexpress.md](.agents/rules/report_devexpress.md), [report_file_structure.md](.agents/rules/report_file_structure.md) | - | 단일 BOM/CRLF 확인 |
+| **완료** | [S01A.Designer.cs](04.Report/PAGEEQM/EQM1001/S01A.Designer.cs), [EQM1001.exe](01.Office/Reports/EQM1001.exe), [report_devexpress.md](.agents/rules/report_devexpress.md), [report_file_structure.md](.agents/rules/report_file_structure.md) | - | VS 2017 디자이너에서 S01A 정상 표시 확인(오류 페이지 없음). MSBuild Release Rebuild 성공. A-001 PNG 비교 시 상단 박스 픽셀 동일, 항목명 열 글자 서브픽셀 차이만 존재. 웹 컨트롤러 방식 실행·오류 안내 정상. 01.Office/Reports·04.Report/bin 배포 |
+| **완료** | [S01A.Designer.cs](04.Report/PAGEEQM/EQM1001/S01A.Designer.cs), [EQM1001.exe](01.Office/Reports/EQM1001.exe), [report_devexpress.md](.agents/rules/report_devexpress.md), [report_file_structure.md](.agents/rules/report_file_structure.md) | S01A VS 디자이너 열기 사용자 확인 대기 | MSBuild Release Rebuild 성공. CodeDOM 로더 S01A 오류 0건(누락 필드 음성대조 검출 확인). A-001 PNG 비교 시 선·크기·값 동일, 항목명 열 글자 서브픽셀 차이만 존재. 웹 컨트롤러 방식 실행 정상, 오류 안내 정상. 01.Office/Reports·04.Report/bin 배포. 실제 VS 디자이너 열기는 사용자 확인 필요 |
+| **완료** | [S01A.cs](04.Report/PAGEEQM/EQM1001/S01A.cs), [S01A.Designer.cs](04.Report/PAGEEQM/EQM1001/S01A.Designer.cs), [S01A.resx](04.Report/PAGEEQM/EQM1001/S01A.resx), [EQM1001.exe](01.Office/Reports/EQM1001.exe), [report_file_structure.md](.agents/rules/report_file_structure.md), [report_devexpress.md](.agents/rules/report_devexpress.md), [framework_convention.md](.agents/rules/framework_convention.md) | S01A 표준 구조 전환 완료, VS 디자이너 열기 확인 필요 | MSBuild 15.0 Release Rebuild 성공. 기존/신규 exe로 EQMCD=A-001 출력 비교 시 HTML·이미지 완전 동일, PDF는 생성일시·문서ID만 차이. 미존재 설비·파라미터 누락 안내 메시지 정상. 01.Office/Reports, 04.Report/bin 배포 및 단일 BOM/CRLF 확인. Visual Studio 디자이너 열기는 미확인 |
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R04.sql | EQM1001_R03·R04 실서버 반영 및 기존 HEADER CHKTP '02' 보정 | 단일 BOM/CRLF 검증 완료, 기존 HEADER CHKTP 데이터 보정 필요 여부 사용자 확인 필요 |
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql | EQM1001_R03 프로시저 실서버 반영 대기 | 단일 BOM/CRLF 검증 완료, 실서버 DB 반영은 사용자 진행 |
 | **완료** | [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs) | TML1010_R05 프로시저 실서버 DB 반영 및 입고 라벨 출력 테스트 | 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료, SYSLABEL XMLDATA 실제 필드 매핑 일치 확인 |
