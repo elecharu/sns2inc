@@ -1,0 +1,443 @@
+﻿CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.TML2040_R01(
+-- *****************************************************************************
+-- Comment: 비가동 조회
+-- Create: 2026-10-12 13:21: 김영철
+-- Modify: 
+-- *****************************************************************************
+
+	IN $PRDNONKEY VARCHAR(20),
+	IN $PRDWORKKEY VARCHAR(20),
+	IN $EQMCD VARCHAR(20),
+	IN $NONCD VARCHAR(10),
+	IN $SDATE VARCHAR(19),
+	IN $NONSTIME VARCHAR(19),
+	IN $NONETIME VARCHAR(19),
+	IN $AUTOYN VARCHAR(1),
+	IN $REMARK VARCHAR(1000),
+	IN $TMLCD VARCHAR(20),
+	IN $TOOLCD VARCHAR(20),
+	IN $PROBLEM VARCHAR(1000),
+	IN $SOLUTION VARCHAR(1000),
+	IN $NONTP VARCHAR(10),
+	IN $USETOOLCD VARCHAR(20),
+	IN $INPUTTOOLCD VARCHAR(20),
+	IN $FANO VARCHAR(20),
+	IN $EQMREPNO VARCHAR(20),
+	IN $DATE VARCHAR(10),
+	IN $CALLTYPE VARCHAR(50),
+	IN $KEYWORD VARCHAR(1000)
+
+)
+PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+
+  DECLARE _$PRDNONKEY VARCHAR(20);
+  DECLARE _$PRDWORKKEY VARCHAR(20);
+  DECLARE _$NONTP VARCHAR(20);
+  DECLARE _$NONCD VARCHAR(20);
+  DECLARE _$LINECD VARCHAR(20);
+
+-- ****************************************************************************
+CASE $CALLTYPE
+-- ****************************************************************************
+WHEN 'LIST_EQM' THEN
+
+  SELECT PRDRSTNON.EQMCD,
+         MSTLINE_EQM.EQMNO,
+         MSTLINE_EQM.EQMNM
+    FROM PRDRSTNON
+    INNER JOIN MSTLINE_EQM ON PRDRSTNON.EQMCD = MSTLINE_EQM.EQMCD
+    WHERE MSTLINE_EQM.USEYN = 'Y'
+    GROUP BY PRDRSTNON.EQMCD
+    ORDER BY MSTLINE_EQM.EQMCD;
+
+-- ****************************************************************************
+WHEN 'LIST_MSTNON' THEN
+
+  SELECT LINECD
+    INTO _$LINECD
+    FROM MSTLINE_EQM
+    WHERE EQMCD = $EQMCD;
+
+  SELECT MSTNON.NONCD, MSTNON.NONNM
+    FROM MSTNON
+    WHERE MSTNON.NONGROUPCD1 = $NONTP
+      AND MSTNON.LINECD = _$LINECD;
+
+-- ****************************************************************************
+-- 비가동 유형 조회
+WHEN 'LIST_NONTP' THEN
+
+  SELECT LINECD
+    INTO _$LINECD
+    FROM MSTLINE_EQM
+    WHERE EQMCD = $EQMCD;
+
+  SELECT MSTNON.NONGROUPCD1 AS NONTP, NON_HEAD.TPNM AS TPNM
+    FROM MSTNON
+    INNER JOIN (
+      SELECT TPCD, TPNM
+        FROM COMTYPE
+        WHERE GPCD = 'PP410'
+      ) AS NON_HEAD ON MSTNON.NONGROUPCD1 = NON_HEAD.TPCD
+    WHERE LINECD = _$LINECD
+      AND FACTORYCD = '07' -- 1공장 비가동 코드만 조회
+      AND USEYN = 'Y'
+    GROUP BY NONGROUPCD1;
+
+-- ****************************************************************************
+WHEN 'SHOW_PRDRSTNON_UP' THEN
+
+  IF (SELECT NONETIME FROM PRDRSTNON WHERE PRDNONKEY = $PRDNONKEY) = '' THEN
+    CALL COMERR('종료된 비가동만 수정이 가능합니다.');
+    LEAVE PROC;
+  END IF;
+
+  SELECT PRDNONKEY,
+         LEFT(NONSTIME, 10) AS NONSDAY,
+         LEFT(NONETIME, 10) AS NONEDAY,
+         RIGHT(NONSTIME, 8) AS NONSTIME,
+         RIGHT(NONETIME, 8) AS NONETIME,
+         FANO
+    FROM PRDRSTNON
+    WHERE PRDNONKEY = $PRDNONKEY;
+
+-- ****************************************************************************
+WHEN 'LIST_PRDRSTNON' THEN
+
+  SELECT PRDRSTNON.PRDNONKEY,
+         PRDRSTNON.PRDWORKKEY,
+         PRDRSTNON.EQMCD,
+         GPCD('LINEEQM', PRDRSTNON.EQMCD) AS EQMNM,
+         PRDRSTNON.NONCD,
+         LEFT(PRDRSTNON.NONSTIME, 16) AS NONSTIME,
+         LEFT(PRDRSTNON.NONETIME, 16) AS NONETIME,
+         CASE WHEN PRDRSTNON.NONETIME <> ''
+              THEN CONCAT(TIMESTAMPDIFF(MINUTE, PRDRSTNON.NONSTIME, PRDRSTNON.NONETIME), '분')
+         END AS NONTIME,
+         PRDRSTNON.AUTOYN,
+         PRDRSTNON.REMARK,
+         IFNULL(MSTNON.NONNM, '') AS NONNM,
+         PRDRSTNON.PROBLEM,
+         PRDRSTNON.SOLUTION,
+         IFNULL(GPCD('PP410', MSTNON.NONGROUPCD1), '') AS NONTP, -- 1공장 기준
+         PRDRSTNON.FANO,
+         GPCD('FANO', PRDRSTNON.FANO) AS FANONM
+    FROM PRDRSTNON
+    INNER JOIN MSTLINE_EQM ON PRDRSTNON.EQMCD = MSTLINE_EQM.EQMCD
+    INNER JOIN MSTEQM_MATCH ON MSTLINE_EQM.EQMCD = MSTEQM_MATCH.EQMCD
+    INNER JOIN MSTEQM ON MSTEQM_MATCH.FANO = MSTEQM.FANO
+    LEFT JOIN MSTNON ON PRDRSTNON.NONCD = MSTNON.NONCD
+                    AND MSTLINE_EQM.LINECD = MSTNON.LINECD
+    WHERE PRDRSTNON.EQMCD = $EQMCD
+      AND PRDRSTNON.NONSTIME LIKE CONCAT('%', $DATE, '%')
+    GROUP BY PRDRSTNON.PRDNONKEY
+    ORDER BY PRDRSTNON.NONSTIME;
+
+-- ****************************************************************************
+WHEN 'INFO_PRDRSTNON' THEN
+
+  SELECT PRDRSTNON.PRDNONKEY,
+         PRDRSTNON.PRDWORKKEY,
+         PRDRSTNON.NONSTIME,
+         PRDRSTNON.NONETIME,
+         PRDRSTNON.NONCD,
+         GPCD('NONCD', PRDRSTNON.NONCD) AS NONNM,
+         IFNULL(MSTNON.NONGROUPCD1, '') AS NONTP,
+         PRDRSTNON.FANO
+    FROM PRDRSTNON
+    LEFT JOIN MSTNON ON PRDRSTNON.NONCD = MSTNON.NONCD
+    WHERE PRDRSTNON.PRDNONKEY = $PRDNONKEY
+      AND PRDRSTNON.EQMCD = $EQMCD
+    ORDER BY PRDRSTNON.NONSTIME;
+
+-- ****************************************************************************
+WHEN 'CHK_TIMER' THEN
+
+  SELECT PRDWORKKEY
+    INTO _$PRDWORKKEY
+    FROM PRDWORK
+    WHERE EQMCD = $EQMCD AND WORKETIME = ''
+    LIMIT 1;
+
+  IF NOT EXISTS (SELECT PRDNONKEY FROM PRDRSTNON WHERE PRDWORKKEY = _$PRDWORKKEY) THEN
+    SELECT 'N' AS CHK;
+  ELSE
+    SELECT 'Y' AS CHK,
+           PRDRSTNON.NONSTIME,
+           PRDRSTNON.NONCD,
+           MSTNON.NONGROUPCD1 AS NONTP
+      FROM PRDRSTNON
+      LEFT JOIN MSTNON ON PRDRSTNON.NONCD = MSTNON.NONCD
+      WHERE PRDRSTNON.PRDWORKKEY = _$PRDWORKKEY
+        AND PRDRSTNON.NONETIME = ''
+      LIMIT 1;
+  END IF;
+
+-- ****************************************************************************
+WHEN 'ADD_PRDRSTNON' THEN
+
+  IF $NONSTIME = '' THEN
+    CALL COMERR('비가동 시작시간을 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $NONETIME = '' THEN
+    CALL COMERR('비가동 종료시간을 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $NONSTIME = $NONETIME THEN
+    CALL COMERR('비가동 시작시간과 종료시간이 같습니다.');
+    LEAVE PROC;
+  END IF;
+
+  IF $NONCD = '' THEN
+    CALL COMERR('점검코드를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $EQMCD = '' THEN
+    CALL COMERR('설비를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $FANO = '' THEN
+    CALL COMERR('상세 설비를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  SET _$PRDNONKEY = GETKEY('PRDRSTNON');
+
+  SELECT PRDWORKKEY
+    INTO $PRDWORKKEY
+    FROM PRDWORK
+    WHERE EQMCD = $EQMCD AND WORKETIME = ''
+    LIMIT 1;
+
+  INSERT INTO PRDRSTNON (
+    PRDNONKEY, PRDWORKKEY, EQMCD, FANO,
+    NONTP, NONCD,
+    NONSTIME, NONETIME, AUTOYN, REMARK,
+    RTIME, REMP, RPRG
+  ) VALUES (
+    _$PRDNONKEY, $PRDWORKKEY, $EQMCD, $FANO,
+    $NONTP, $NONCD,
+    $NONSTIME, $NONETIME, 'N', $REMARK,
+    CALLTIME(), CALLEMP(), CALLPRG()
+  );
+
+-- ****************************************************************************
+WHEN 'UP_PRDRSTNON' THEN
+
+  IF $NONSTIME = '' THEN
+    CALL COMERR('비가동 시작시간을 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $NONETIME = '' THEN
+    CALL COMERR('비가동 종료시간을 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $NONSTIME = $NONETIME THEN
+    CALL COMERR('비가동 시작시간과 종료시간이 같습니다.');
+    LEAVE PROC;
+  END IF;
+
+  IF $FANO = '' THEN
+    CALL COMERR('상세설비를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $NONCD = '' THEN
+    CALL COMERR('점검코드를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  UPDATE PRDRSTNON
+    SET FANO     = $FANO,
+        NONSTIME = $NONSTIME,
+        NONETIME = $NONETIME,
+        NONTP    = $NONTP,
+        NONCD    = $NONCD,
+        MTIME    = GETTIME(),
+        MEMP     = CALLEMP(),
+        MPRG     = CALLPRG()
+    WHERE PRDNONKEY = $PRDNONKEY;
+
+-- ****************************************************************************
+-- 비가동 문제점/조치사항 조회
+WHEN 'SEL_PRDRSTNON_PROBLEM' THEN
+
+  IF (SELECT NONCD FROM PRDRSTNON WHERE PRDNONKEY = $PRDNONKEY) = '600_N' THEN
+    CALL COMERR('식사 비가동은 고장내역/수리내역상세을 입력 할 수 없습니다.');
+    LEAVE PROC;
+  END IF;
+
+  SELECT PROBLEM, SOLUTION
+    FROM PRDRSTNON
+    WHERE PRDNONKEY = $PRDNONKEY;
+
+-- ****************************************************************************
+WHEN 'UP_PRDRSTNON_PROBLEM' THEN
+
+  UPDATE PRDRSTNON
+    SET PROBLEM  = $PROBLEM,
+        SOLUTION = $SOLUTION,
+        MTIME    = GETTIME(),
+        MEMP     = CALLEMP(),
+        MPRG     = CALLPRG()
+    WHERE PRDNONKEY = $PRDNONKEY;
+
+-- ****************************************************************************
+WHEN 'DEL_PRDRSTNON' THEN
+
+  IF $PRDNONKEY = '' THEN
+    CALL COMERR('비가동내용을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $EQMCD = '' THEN
+    CALL COMERR('설비를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF (SELECT NONETIME FROM PRDRSTNON WHERE PRDNONKEY = $PRDNONKEY AND EQMCD = $EQMCD) = '' THEN
+    CALL COMERR('종료된 비가동만 삭제가 가능합니다.');
+    LEAVE PROC;
+  END IF;
+
+  DELETE FROM PRDRSTNON
+    WHERE PRDNONKEY = $PRDNONKEY
+      AND EQMCD = $EQMCD;
+
+-- ****************************************************************************
+WHEN 'START_NON' THEN
+
+  IF $NONSTIME = '' THEN
+    CALL COMERR('비가동 시간을 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $NONCD = '' THEN
+    CALL COMERR('점검코드를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $EQMCD = '' THEN
+    CALL COMERR('설비를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  SET _$PRDNONKEY = GETKEY('PRDRSTNON');
+
+  SELECT PRDWORKKEY
+    INTO $PRDWORKKEY
+    FROM PRDWORK
+    WHERE EQMCD = $EQMCD AND WORKETIME = ''
+    LIMIT 1;
+
+  INSERT INTO PRDRSTNON (
+    PRDNONKEY, PRDWORKKEY, EQMCD, NONTP, NONCD,
+    NONSTIME, NONETIME, AUTOYN, REMARK,
+    RTIME, REMP, RPRG
+  ) VALUES (
+    _$PRDNONKEY, $PRDWORKKEY, $EQMCD, $NONTP, $NONCD,
+    $NONSTIME, '', 'N', $REMARK,
+    CALLTIME(), CALLEMP(), CALLPRG()
+  );
+
+-- ****************************************************************************
+WHEN 'END_NON' THEN
+
+  IF (SELECT AUTOYN FROM PRDRSTNON WHERE EQMCD = $EQMCD AND NONETIME = '') = 'Y' THEN
+    CALL COMERR('자동생성 비가동은 수동처리 불가');
+    LEAVE PROC;
+  END IF;
+
+  IF $NONETIME = '' THEN
+    CALL COMERR('비가동 시간을 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $NONCD = '' THEN
+    CALL COMERR('점검코드를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $EQMCD = '' THEN
+    CALL COMERR('설비를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  SELECT PRDWORKKEY
+    INTO _$PRDWORKKEY
+    FROM PRDWORK
+    WHERE EQMCD = $EQMCD AND WORKETIME = ''
+    LIMIT 1;
+
+  SELECT PRDNONKEY, NONTP, NONCD
+    INTO _$PRDNONKEY, _$NONTP, _$NONCD
+    FROM PRDRSTNON
+    WHERE PRDWORKKEY = _$PRDWORKKEY
+      AND NONETIME = ''
+    LIMIT 1;
+
+  -- 240704 KYC 고장유형 입력을 위해 추가
+  IF _$NONCD = 'I240001N' THEN
+    SET _$NONCD = 'FM307200';
+  ELSEIF _$NONCD = 'I240002N' THEN
+    SET _$NONCD = 'FM307100';
+  ELSE
+    SET _$NONCD = 'FM307300';
+  END IF;
+
+  UPDATE PRDRSTNON
+    SET NONETIME = $NONETIME,
+        REMARK   = $REMARK
+    WHERE EQMCD = $EQMCD
+      AND NONETIME = ''
+      AND PRDWORKKEY = _$PRDWORKKEY
+    ORDER BY NONSTIME DESC
+    LIMIT 1;
+
+  -- 설비 고장 비가동이면 설비수리(EQMREP) 이력 생성
+  IF _$NONTP = 'PP410I240N' THEN
+
+    SET $EQMREPNO = GETKEY('EQMREP');
+
+    INSERT INTO EQMREP (
+      EQMREPNO, PRDNONKEY, REPSDATE, REPSTIME,
+      REPSTOPTIME, REMARK, REPREMARK, EMPCD,
+      HANDLEDETAILREMARK, REPTP, FANO, FACTORYCD,
+      EQMCD, LINECD,
+      RTIME, REMP, RPRG
+    )
+    SELECT $EQMREPNO,
+           PRDRSTNON.PRDNONKEY,
+           LEFT(PRDRSTNON.NONSTIME, 10),
+           RIGHT(PRDRSTNON.NONSTIME, 8),
+           TIMESTAMPDIFF(MINUTE, PRDRSTNON.NONSTIME, PRDRSTNON.NONETIME),
+           PRDRSTNON.REMARK,
+           PRDRSTNON.PROBLEM,
+           PRDRSTNON.REMP,
+           PRDRSTNON.SOLUTION,
+           _$NONCD,
+           '',
+           '01', -- 1공장 기준
+           PRDRSTNON.EQMCD,
+           IFNULL(MSTLINE_EQM.LINECD, ''),
+           GETTIME(), CALLEMP(), CALLPRG()
+      FROM PRDRSTNON
+      INNER JOIN MSTNON ON PRDRSTNON.NONCD = MSTNON.NONCD
+      LEFT JOIN MSTLINE_EQM ON PRDRSTNON.EQMCD = MSTLINE_EQM.EQMCD
+      WHERE PRDRSTNON.PRDNONKEY = _$PRDNONKEY
+        AND PRDRSTNON.PRDWORKKEY = _$PRDWORKKEY;
+
+  END IF;
+
+-- ****************************************************************************
+END CASE;
+
+END

@@ -17,9 +17,9 @@
                 <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True" />
                 <UserControl Width="20"/>
                 <its:Button Label="발 주 조 회" Width="100" Height="30" CommandName="LIST_MTRODR" FontWeight="Bold"/>
-                <its:Date Width="180" Label="출하일자" Value="{Binding PRDDATE}" Foreground="Green" FontWeight="Bold"/>
+                <its:Date Width="280" Label="출하일자" Value="{Binding PRDDATE}" Foreground="Green" FontWeight="Bold"/>
+                <UserControl Width="520"/>
                 <its:Button Label="납 품 등 록" Width="100" Height="30" CommandName="ADD_MTRCUSTLOT" FontWeight="Bold" BackColor="Green"/>
-                <UserControl Width="400"/>
             </its:WrapContent>
         </UserControl>
 
@@ -47,7 +47,7 @@
             </its:Grid>
         </UserControl>
 
-        <UserControl Canvas.Left="100" Canvas.Top="30" Style="{DynamicResource TML_POP}" Width="700" Height="400">
+        <UserControl Canvas.Left="140" Canvas.Top="40" Style="{DynamicResource TML_POP}" Width="700" Height="400">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="60" />

@@ -1,0 +1,541 @@
+-- ITSIF_INTERFACE 설치 스크립트 (원본 DB: IF_MES_SNS_FAC2, 추출일 2026-10-27)
+-- 대상 DB 를 선택한 뒤 실행하세요. 예) USE IF_MES_SNS_FAC2;
+
+DELIMITER $$
+
+DROP PROCEDURE IF EXISTS `APP_LOGIN`$$
+CREATE PROCEDURE `APP_LOGIN`(
+-- *****************************************************************************
+-- Comment: APP로그인
+-- Create: 2016-11-04 14:36: 
+-- Modify: 2016-11-04 14:36: 
+-- *****************************************************************************
+  IN $USERID VARCHAR(20),     -- 유저아이디 
+  IN $USERPASS VARCHAR(1000),
+-- *****************************************************************************
+  IN $CALLTYPE VARCHAR(50))
+PROC: BEGIN
+-- SET @DEBUGLOGYN = 'Y'; 
+-- *****************************************************************************
+
+-- DECLARE _$V01 VARCHAR(1000);
+
+-- ****************************************************************************
+CASE $CALLTYPE
+-- * ***************************************************************************
+WHEN 'LOGIN' THEN
+
+  IF $USERID = 'itsco' AND $USERPASS = 'gdyb21LQTcIANtvYMT7QVQ==' THEN
+    SELECT 'OK' AS RESULT;
+  ELSE 
+    SELECT 'ERR' AS RESULT;
+  END IF;
+
+-- ****************************************************************************
+END CASE; END$$
+
+DROP PROCEDURE IF EXISTS `COMCALL`$$
+CREATE PROCEDURE `COMCALL`(
+  IN $PROCNAME  VARCHAR(50),
+  IN $CALLTYPE  VARCHAR(50), 
+  IN $PARAM     MEDIUMTEXT
+)
+PROC: BEGIN
+-- *****************************************************************************
+-- 작성자: 김동학 2016-10-01: 
+-- 수정자: 김동학 2016-10-01: 
+-- *****************************************************************************
+  DECLARE _$CALLPROC MEDIUMTEXT;
+  DECLARE _$PARAM_NAME VARCHAR(100);
+  DECLARE _$PARAM_TYPE VARCHAR(100);
+  DECLARE _$DONEFLAG VARCHAR(5) DEFAULT 'START';
+  DECLARE _$CS CURSOR FOR 
+    SELECT PARAMETER_NAME, DATA_TYPE
+      FROM INFORMATION_SCHEMA.PARAMETERS
+      WHERE SPECIFIC_SCHEMA = DATABASE()
+      AND SPECIFIC_NAME = $PROCNAME;
+-- *****************************************************************************
+  SET _$CALLPROC = CONCAT('CALL ', $PROCNAME, '(');
+  BEGIN
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET _$DONEFLAG = 'END';
+    OPEN _$CS;  WHILE _$DONEFLAG <> 'END' DO
+
+      FETCH _$CS INTO _$PARAM_NAME, _$PARAM_TYPE;
+
+      IF _$DONEFLAG = 'START' THEN 
+
+        SET _$DONEFLAG ='LOOP';
+
+      ELSEIF _$DONEFLAG <> 'END' THEN
+
+        SET _$CALLPROC = CONCAT(_$CALLPROC, ',');
+
+      END IF;
+
+      IF _$DONEFLAG  <> 'END' THEN
+
+        IF _$PARAM_NAME = '$CALLTYPE' THEN
+  
+          SET _$CALLPROC = CONCAT(_$CALLPROC, '''', $CALLTYPE, '''');
+  
+        ELSE
+          
+          IF UPPER(_$PARAM_TYPE) = 'DECIMAL' THEN
+
+            SET _$CALLPROC = CONCAT(_$CALLPROC, 0 + GETPARAM($PARAM, _$PARAM_NAME), '');
+
+          ELSE
+
+            SET _$CALLPROC = CONCAT(_$CALLPROC, '''', GETPARAM($PARAM, _$PARAM_NAME), '''');
+
+          END IF;
+  
+        END IF;
+
+      END IF;
+
+    END WHILE; CLOSE _$CS;
+
+  END;
+
+  SET @CALLPROC2 = CONCAT(_$CALLPROC, ');');
+
+  PREPARE CALLPROC FROM @CALLPROC2;
+  EXECUTE CALLPROC ;
+  DEALLOCATE PREPARE CALLPROC;
+-- *****************************************************************************
+END$$
+
+DROP PROCEDURE IF EXISTS `COMCALLC`$$
+CREATE PROCEDURE `COMCALLC`(
+  IN $PROCNAME  VARCHAR(50),
+  IN $CALLTYPE  VARCHAR(50), 
+  IN $TRANYN    VARCHAR(1),
+  IN $PARAM     MEDIUMTEXT
+)
+PROC: BEGIN
+-- *****************************************************************************
+-- 작성자: 김동학 2016-10-01: 
+-- 수정자: 김동학 2016-10-01: 
+-- *****************************************************************************
+
+  DECLARE _$CALLPROC MEDIUMTEXT;
+  DECLARE _$PARAM_NAME VARCHAR(100);
+  DECLARE _$PARAM_TYPE VARCHAR(100);
+  DECLARE _$DONEFLAG VARCHAR(5) DEFAULT 'START';
+  DECLARE _$CS CURSOR FOR 
+    SELECT PARAMETER_NAME, DATA_TYPE
+      FROM INFORMATION_SCHEMA.PARAMETERS
+      WHERE SPECIFIC_SCHEMA = DATABASE()
+      AND SPECIFIC_NAME = $PROCNAME;
+
+  -- SET MAX_SP_RECURSION_DEPTH = 10;
+
+-- *****************************************************************************
+  DECLARE EXIT HANDLER FOR SQLWARNING 
+  BEGIN
+    
+    IF IFNULL(@ERRMSG, '') = '' THEN 
+      GET DIAGNOSTICS CONDITION 1 @ERRMSG = MESSAGE_TEXT; 
+    END IF;
+
+    IF $TRANYN <> 'N' THEN ROLLBACK; END IF;
+    
+    CALL COMDEBUG(-1, @ERRMSG); 
+
+    DELETE FROM COMDEBUG WHERE DEBUGTIME < ADDDATE_MONTH(GETDATE(), -1);
+    INSERT INTO COMDEBUG (
+      DEBUGNM, DEBUGTIME, DEBUGMSG, PROCNAME, 
+      CALLTYPE, CALLPARAM, CALLEMP, CALLPRG, CALLHOST, CALLIP, CALLMAC
+    ) VALUES (
+      'SQLWARNING', GETTIME(), @ERR_PROC_MSG, $PROCNAME, 
+      $CALLTYPE, $PARAM, @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+    );
+
+    SELECT '_ERR_' AS RTNCODE, @ERRMSG AS ERRMSG, @ERR_PROC_MSG AS ERRDEBUG;
+
+  END;
+-- *****************************************************************************
+  DECLARE EXIT HANDLER FOR NOT FOUND 
+  BEGIN
+    
+    IF IFNULL(@ERRMSG, '') = '' THEN 
+      GET DIAGNOSTICS CONDITION 1 @ERRMSG = MESSAGE_TEXT; 
+    END IF;
+
+    IF $TRANYN <> 'N' THEN ROLLBACK; END IF;
+
+    CALL COMDEBUG(-1, @ERRMSG); 
+
+    DELETE FROM COMDEBUG WHERE DEBUGTIME < ADDDATE_MONTH(GETDATE(), -1);
+    INSERT INTO COMDEBUG (
+      DEBUGNM, DEBUGTIME, DEBUGMSG, PROCNAME, 
+      CALLTYPE, CALLPARAM, CALLEMP, CALLPRG, CALLHOST, CALLIP, CALLMAC
+    ) VALUES (
+      'NOT_FOUND', GETTIME(), @ERR_PROC_MSG, $PROCNAME, 
+      $CALLTYPE, $PARAM, @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+    );
+
+    SELECT '_ERR_' AS RTNCODE, @ERRMSG AS ERRMSG, @ERR_PROC_MSG AS ERRDEBUG;
+
+  END;
+-- *****************************************************************************
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+  BEGIN
+
+    IF IFNULL(@ERRMSG, '') = '' THEN 
+      GET DIAGNOSTICS CONDITION 1 @ERRMSG = MESSAGE_TEXT;
+    END IF;
+
+    IF $TRANYN <> 'N' THEN ROLLBACK; END IF;
+
+    CALL COMDEBUG(-1, @ERRMSG); 
+
+    DELETE FROM COMDEBUG WHERE DEBUGTIME < ADDDATE_MONTH(GETDATE(), -1);
+    INSERT INTO COMDEBUG (
+      DEBUGNM, DEBUGTIME, DEBUGMSG, PROCNAME, 
+      CALLTYPE, CALLPARAM, CALLEMP, CALLPRG, CALLHOST, CALLIP, CALLMAC
+    ) VALUES (
+      'SQLEXCEPTION', GETTIME(), @ERR_PROC_MSG, $PROCNAME, 
+      $CALLTYPE, $PARAM, @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+    );
+
+    SELECT '_ERR_' AS RTNCODE, @ERRMSG AS ERRMSG, @ERR_PROC_MSG AS ERRDEBUG;
+
+  END;
+-- *****************************************************************************
+  SET AUTOCOMMIT = 0;
+  START TRANSACTION;
+-- *****************************************************************************
+
+  SET @CALLEMP = GETPARAM($PARAM, 'CALLEMP');
+  SET @CALLPRG = GETPARAM($PARAM, 'CALLPRG');
+  SET @CALLHOST = GETPARAM($PARAM, 'CALLHOST');
+  SET @CALLIP = GETPARAM($PARAM, 'CALLIP');
+  SET @CALLMAC = GETPARAM($PARAM, 'CALLMAC');
+  SET @ERR_PROC_MSG = '';
+
+  SET @ERRMSG = '';
+  SET @DEBUGLOGYN = 'N';
+-- *****************************************************************************
+  SET _$CALLPROC = CONCAT('CALL ', $PROCNAME, '(');
+  BEGIN
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET _$DONEFLAG = 'END';
+    OPEN _$CS;  WHILE _$DONEFLAG <> 'END' DO
+
+      FETCH _$CS INTO _$PARAM_NAME, _$PARAM_TYPE;
+
+      IF _$DONEFLAG = 'START' THEN 
+
+        SET _$DONEFLAG ='LOOP';
+
+      ELSEIF _$DONEFLAG <> 'END' THEN
+
+        SET _$CALLPROC = CONCAT(_$CALLPROC, ',');
+
+      END IF;
+
+      IF _$DONEFLAG  <> 'END' THEN
+
+        IF _$PARAM_NAME = '$CALLTYPE' THEN
+  
+          SET _$CALLPROC = CONCAT(_$CALLPROC, '''', $CALLTYPE, '''');
+  
+        ELSE
+          
+          IF UPPER(_$PARAM_TYPE) = 'DECIMAL' THEN
+
+            SET _$CALLPROC = CONCAT(_$CALLPROC, 0 + GETPARAM($PARAM, _$PARAM_NAME), '');
+
+          ELSE
+
+            SET _$CALLPROC = CONCAT(_$CALLPROC, '''', GETPARAM($PARAM, _$PARAM_NAME), '''');
+
+          END IF;
+  
+        END IF;
+      END IF;
+
+    END WHILE; CLOSE _$CS;
+
+  END;
+
+  SET @CALLPROC = CONCAT(_$CALLPROC, ');');
+
+  PREPARE CALLPROC FROM @CALLPROC;
+  EXECUTE CALLPROC ;
+  DEALLOCATE PREPARE CALLPROC;
+-- *****************************************************************************
+  IF IFNULL(@ERRMSG, '') <> '' THEN
+
+    IF $TRANYN <> 'N' THEN ROLLBACK; END IF; 
+
+    IF @DEBUGLOGYN = 'Y' THEN 
+
+      DELETE FROM COMDEBUG WHERE DEBUGTIME < ADDDATE_MONTH(GETDATE(), -1);
+      INSERT INTO COMDEBUG (
+        DEBUGNM, DEBUGTIME, DEBUGMSG, PROCNAME, 
+        CALLTYPE, CALLPARAM, CALLEMP, CALLPRG, CALLHOST, CALLIP, CALLMAC
+      ) VALUES (
+        'ROLLBACK', GETTIME(), @ERR_PROC_MSG, $PROCNAME, 
+        $CALLTYPE, $PARAM, @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+      );
+
+    END IF;
+
+    SELECT '_ERR_' AS RTNCODE, @ERRMSG AS ERRMSG, @ERR_PROC_MSG AS ERRDEBUG;
+
+  ELSE
+
+    IF $TRANYN <> 'N' THEN COMMIT; END IF; 
+
+    IF @DEBUGLOGYN = 'Y' THEN 
+
+      DELETE FROM COMDEBUG WHERE DEBUGTIME < ADDDATE_MONTH(GETDATE(), -1);
+      INSERT INTO COMDEBUG (
+        DEBUGNM, DEBUGTIME, DEBUGMSG, PROCNAME, 
+        CALLTYPE, CALLPARAM, CALLEMP, CALLPRG, CALLHOST, CALLIP, CALLMAC
+      ) VALUES (
+        'COMMIT', GETTIME(), @ERR_PROC_MSG, $PROCNAME, 
+        $CALLTYPE, $PARAM, @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+      );
+
+    END IF;
+
+    SELECT '_SUC_' AS RTNCODE, 'SUCCESS' AS ERRMSG, @ERR_PROC_MSG AS ERRDEBUG;
+
+  END IF;
+-- *****************************************************************************
+END$$
+
+DROP PROCEDURE IF EXISTS `COMDEBUG`$$
+CREATE PROCEDURE `COMDEBUG`(
+  IN $LINENUM INT, 
+  IN $ERRMSG VARCHAR(20000)
+)
+PROC: BEGIN
+
+  IF IFNULL(@ERR_PROC_MSG, '') = '' THEN 
+
+    SET @ERR_PROC_MSG = CONCAT('Line ', $LINENUM, ': ', $ERRMSG);
+
+  ELSE
+
+    SET @ERR_PROC_MSG = CONCAT(@ERR_PROC_MSG, CHAR(10), 'Line ', $LINENUM, ': ', $ERRMSG);
+
+  END IF;
+
+END$$
+
+DROP PROCEDURE IF EXISTS `COMERR`$$
+CREATE PROCEDURE `COMERR`(IN $ERRMSG VARCHAR(20000))
+PROC: BEGIN
+
+  IF IFNULL(@ERRMSG, '') = '' THEN 
+
+    IF IFNULL($ERRMSG, '') = '' THEN
+
+        SET @ERRMSG = 'NULL';
+
+    ELSE
+
+      SET @ERRMSG = $ERRMSG;
+
+    END IF;
+
+  END IF;
+
+END$$
+
+DROP PROCEDURE IF EXISTS `COMSPLIT`$$
+CREATE PROCEDURE `COMSPLIT`(INOUT $PARAMLIST MEDIUMTEXT, INOUT $PARAM VARCHAR(20000))
+PROC: BEGIN
+
+  DECLARE _$SINDEX INT;
+
+  IF RIGHT($PARAMLIST, 1) <> '»' THEN 
+    SET $PARAMLIST = CONCAT($PARAMLIST, '»');
+  END IF;
+
+  SET _$SINDEX = INSTR($PARAMLIST, '»');
+  IF _$SINDEX = 0 THEN 
+
+    SET $PARAM = $PARAMLIST;
+    SET $PARAMLIST = '';
+
+  END IF;
+
+  SET $PARAM = SUBSTRING($PARAMLIST, 1, _$SINDEX - 1);
+  SET $PARAMLIST = SUBSTRING($PARAMLIST, _$SINDEX + 1);
+
+END$$
+
+DROP PROCEDURE IF EXISTS `IF_INTERFACE`$$
+CREATE PROCEDURE `IF_INTERFACE`(
+-- *****************************************************************************
+-- Comment: 인터페이스 조회 
+-- Create: 2024-03-01 : KYC
+-- Modify: 2026-10-27 : RECEIVE 끝에 IFDESC(설명) 추가 - IF_MONITOR 수집현황 표시용 (기존 0~4번 컬럼 순서 유지)
+-- *****************************************************************************
+  IN $IFNAME VARCHAR(100),
+  IN $SDATE VARCHAR(10),
+
+  IN $INTIMELIST MEDIUMTEXT,
+  IN $BDVLIST MEDIUMTEXT,
+  IN $RSDTLIST MEDIUMTEXT,
+  IN $ORDLIST MEDIUMTEXT,
+  IN $REQLIST MEDIUMTEXT,
+  IN $ITEMLIST MEDIUMTEXT,
+  IN $ITEMNMLIST MEDIUMTEXT,
+  IN $JOBCDLIST MEDIUMTEXT,
+  IN $JOBNMLIST MEDIUMTEXT,
+  IN $EQMLIST MEDIUMTEXT,
+  IN $EQMNMLIST MEDIUMTEXT,
+  IN $EMPLIST MEDIUMTEXT,
+  IN $BANLIST MEDIUMTEXT,
+  IN $JOBSTLIST MEDIUMTEXT,
+  IN $JOBETLIST MEDIUMTEXT,
+  IN $ENDLIST MEDIUMTEXT,
+  IN $QTYLIST MEDIUMTEXT,
+  IN $RSCTLIST MEDIUMTEXT,
+  IN $RSEQLIST MEDIUMTEXT,
+  IN $FLAGLIST MEDIUMTEXT,
+  IN $ERPRSTLIST MEDIUMTEXT,
+
+  IN $BADLIST MEDIUMTEXT,
+  IN $RSLTLIST MEDIUMTEXT,
+  IN $BPCDLIST MEDIUMTEXT,
+  IN $SUBBADLIST MEDIUMTEXT,
+
+  -- 마이그레이션 실적 수집시 사용
+  IN $INSKEYLIST MEDIUMTEXT,
+  IN $RSTKEYLIST MEDIUMTEXT,
+  IN $PRCLIST MEDIUMTEXT,
+  IN $WKDTLIST MEDIUMTEXT,
+  IN $STIMELIST MEDIUMTEXT,
+  IN $ETIMELIST MEDIUMTEXT,
+  IN $GOODLIST MEDIUMTEXT,
+  IN $BADQLIST MEDIUMTEXT,
+
+-- *****************************************************************************
+ IN $CALLTYPE VARCHAR(50))
+PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+-- SET @DEBUGLOGYN = 'Y';
+-- *****************************************************************************
+
+  DECLARE _$SQL VARCHAR(1000);
+
+  DECLARE _$IFNAME VARCHAR(100);
+  DECLARE _$INIT_TIME MEDIUMTEXT;
+  DECLARE _$ORG_CD MEDIUMTEXT;
+  DECLARE _$MFG_RSLT_DT MEDIUMTEXT;
+  DECLARE _$WK_ORD_NO MEDIUMTEXT;
+  DECLARE _$ROUT_REQ_QTY MEDIUMTEXT;
+  DECLARE _$ITEM_CD MEDIUMTEXT;
+  DECLARE _$ITEM_NM MEDIUMTEXT;
+  DECLARE _$JOB_CODE MEDIUMTEXT;
+  DECLARE _$JOB_NAME MEDIUMTEXT;
+  DECLARE _$RESOURCE_ID MEDIUMTEXT;
+  DECLARE _$RESOURCE_NAME MEDIUMTEXT;
+  DECLARE _$EMP_NO MEDIUMTEXT;
+  DECLARE _$BAN_CD MEDIUMTEXT;
+  DECLARE _$JOB_START_TIME MEDIUMTEXT;
+  DECLARE _$JOB_END_TIME MEDIUMTEXT;
+  DECLARE _$END_YN MEDIUMTEXT;
+  DECLARE _$MFG_QTY MEDIUMTEXT;
+  DECLARE _$RSC_TIME MEDIUMTEXT;
+  DECLARE _$ROUT_SEQ MEDIUMTEXT;
+  DECLARE _$FLAG MEDIUMTEXT;
+  DECLARE _$ERP_RSLT_FLAG MEDIUMTEXT;
+
+  DECLARE _$BAD_ID MEDIUMTEXT;
+  DECLARE _$RSLT_INIT_TIME MEDIUMTEXT;
+  DECLARE _$BP_CD MEDIUMTEXT;
+  DECLARE _$SUB_BAD_ID MEDIUMTEXT;
+
+  DECLARE _$PRDINSKEY VARCHAR(20);
+  DECLARE _$PRDRSTKEY VARCHAR(20);
+  DECLARE _$PRCCD VARCHAR(20);
+  DECLARE _$ITEMCD VARCHAR(20);
+  DECLARE _$WORKDATE VARCHAR(10);
+  DECLARE _$STIME VARCHAR(19);
+  DECLARE _$ETIME VARCHAR(19);
+  DECLARE _$EQMCD VARCHAR(20);
+  DECLARE _$EMPCD VARCHAR(20);
+  DECLARE _$GOODQTY DECIMAL(20, 8);
+  DECLARE _$BADQTY DECIMAL(20, 8);
+  DECLARE _$BADCD VARCHAR(20);
+
+
+  DECLARE _$AA MEDIUMTEXT;
+  DECLARE _$BB VARCHAR(100);
+
+-- ****************************************************************************
+CASE $CALLTYPE
+-- ****************************************************************************
+WHEN 'VIEW_DATA' THEN
+
+  SELECT TABLENAME INTO _$IFNAME FROM IFSTD WHERE IFNAME = $IFNAME;
+
+  SET @v_SQL = CONCAT('SELECT * FROM MES_SNS.', _$IFNAME, ' ORDER BY MTIME DESC LIMIT 1000;');
+
+  PREPARE stmt3 FROM @v_SQL;
+
+  EXECUTE stmt3;
+
+  DEALLOCATE PREPARE stmt3;
+
+-- ****************************************************************************
+WHEN 'RECEIVE' THEN
+
+  SELECT 
+    IFNAME, 
+    CASE 
+      WHEN CYCLE = '수시' THEN 10
+      WHEN CYCLE = '1분' THEN 60
+      WHEN CYCLE = '5분' THEN 300
+      WHEN CYCLE = '10분' THEN 600
+      WHEN CYCLE = '60분' THEN 3600
+      WHEN CYCLE = '하루' THEN 86400
+    END AS CYCLE, 
+    LASTTIME,
+    IFGB,
+    PROCNAME,
+    IFDESC
+    FROM IFSTD
+    WHERE IFTYPE = 'READ'
+      AND USEYN = 'Y'
+  ORDER BY LASTTIME ASC; -- 수집이 마지막이였던 테이블 먼저 조회
+
+-- ****************************************************************************
+WHEN 'SEND' THEN
+
+  SELECT PROCNAME,
+    CASE 
+      WHEN CYCLE = '수시' THEN 10
+      WHEN CYCLE = '1분' THEN 60
+      WHEN CYCLE = '5분' THEN 300
+      WHEN CYCLE = '10분' THEN 600
+      WHEN CYCLE = '60분' THEN 3600
+      WHEN CYCLE = '하루' THEN 86400
+    END AS CYCLE, 
+    LASTTIME
+    FROM IFSTD
+    WHERE IFTYPE = 'SEND'
+      AND USEYN = 'Y'
+  ORDER BY SORTNO ASC;
+
+-- ****************************************************************************
+WHEN 'LIST' THEN
+
+  SELECT
+    IFNAME, IFTYPE, CYCLE
+    FROM IFSTD
+    WHERE IFTYPE = 'READ';
+
+-- ****************************************************************************
+END CASE; END$$
+
+DELIMITER ;

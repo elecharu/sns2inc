@@ -34,7 +34,7 @@
             </its:Grid>
         </UserControl>
 
-        <UserControl Canvas.Left="50" Canvas.Top="30" Style="{DynamicResource TML_POP}" Width="800" Height="425" Visibility="Visible">
+        <UserControl Canvas.Left="90" Canvas.Top="27" Style="{DynamicResource TML_POP}" Width="800" Height="425" Visibility="Visible">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="30"/>

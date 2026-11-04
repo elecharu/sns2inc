@@ -4,6 +4,8 @@ PROCEDURE MES_SNS2.DC_COMBO(
 -- Comment: COMBOBOX
 -- Create: 2016-11-10 14:45: 
 -- Modify: 2016-11-10 14:45: 
+--         2026-10-23 12:06:      LINECD: REF02 가 빈 값이면 사내 작업장(MSTLINE.OSCCUSTCD = '')만 조회
+--         2026-10-28 김영철:     OSCCONSUM_PRCCD/EQMCD/ITEMID_PRD/PRCDETAIL 추가 (MST3001_R05 외주처 소모품 그리드 행별 필터용)
 -- *****************************************************************************
   IN $GPCD VARCHAR(20000),
   IN $REF01 VARCHAR(20),
@@ -129,6 +131,7 @@ PROC: BEGIN
       GPCD('FM100', EQMTP) AS Tag
       FROM MSTEQM
       WHERE USEYN = 'Y'
+        AND FACTORYCD = '07'
         AND LINECD LIKE CONCAT('%', $REF01, '%')
       GROUP BY EQMTP
       ORDER BY EQMTP;
@@ -142,6 +145,7 @@ PROC: BEGIN
       GPCD('FM113', EQMGROUP1) AS Tag
       FROM MSTEQM
       WHERE USEYN = 'Y'
+        AND FACTORYCD = '07'
         AND LINECD LIKE CONCAT('%', $REF01, '%')
         AND EQMTP LIKE CONCAT('%', $REF02, '%')
       GROUP BY EQMGROUP1
@@ -156,6 +160,7 @@ PROC: BEGIN
       GPCD('FM114', EQMGROUP2) AS Tag
       FROM MSTEQM
       WHERE USEYN = 'Y'
+        AND FACTORYCD = '07'
         AND LINECD LIKE CONCAT('%', $REF01, '%')
         AND EQMTP LIKE CONCAT('%', $REF02, '%')
         AND EQMGROUP1 LIKE CONCAT('%', $REF03, '%')
@@ -171,6 +176,7 @@ PROC: BEGIN
       GPCD('FM115', EQMGROUP3) AS Tag
       FROM MSTEQM
       WHERE USEYN = 'Y'
+        AND FACTORYCD = '07'
         AND LINECD LIKE CONCAT('%', $REF01, '%')
         AND EQMTP LIKE CONCAT('%', $REF02, '%')
         AND EQMGROUP1 LIKE CONCAT('%', $REF03, '%')
@@ -201,6 +207,22 @@ PROC: BEGIN
     AND MSTPRC.PRCTP = 'IN'
   ORDER BY MSTPRC.SORTNO, MSTPRC.PRCCD
   LIMIT 100;
+-- *****************************************************************************  
+  ELSEIF $GPCD = 'PRCCD_PRD' THEN -- 생산실적등록화면 공정코드 
+      SELECT MSTPRC.PRCNM AS Label, MSTPRC.PRCCD AS Value
+        FROM MSTPRC
+        WHERE MSTPRC.USEYN = 'Y'
+          AND IF((SELECT OSCCUSTCD FROM MSTLINE WHERE LINECD = $REF01) = '', MSTPRC.GUBUN_BC = 'PP412001', MSTPRC.GUBUN_BC = 'PP412002')
+        ORDER BY MSTPRC.PRCCD
+        LIMIT 100;
+-- *****************************************************************************  
+  ELSEIF $GPCD = 'PRCCD_LINE' THEN -- 작업장별 공정코드 
+      SELECT MSTPRC.PRCNM AS Label, MSTPRC.PRCCD AS Value
+        FROM MSTPRC
+        WHERE MSTPRC.USEYN = 'Y'
+          AND MSTPRC.PRCCD IN (SELECT PRCCD FROM MSTLINE_EQM WHERE LINECD = $REF01 GROUP BY PRCCD)
+        ORDER BY MSTPRC.PRCCD
+        LIMIT 100;
 -- *****************************************************************************  
   ELSEIF $GPCD = 'PRCCD_TML' THEN -- 단말기에 설정된 공정리스트 조회 
       SELECT MSTPRC.PRCNM AS Label, MSTPRC.PRCCD AS Value
@@ -546,8 +568,95 @@ PROC: BEGIN
         ORDER BY MSTEQM.EQMCD;
 
     END IF;
+-- *****************************************************************************
+  ELSEIF $GPCD = 'EQMCD_LINE' THEN -- 작업장,공정별 라인조회 
 
-    
+      SELECT MSTLINE_EQM.EQMNM AS Label, MSTLINE_EQM.EQMCD AS Value
+        FROM MSTLINE_EQM
+        WHERE MSTLINE_EQM.LINECD LIKE CONCAT('%', $REF01, '%')
+          AND MSTLINE_EQM.PRCCD LIKE CONCAT('%', $REF02, '%')
+        ORDER BY MSTLINE_EQM.EQMCD;
+
+-- *****************************************************************************
+-- OSCCONSUM_* : MST3001_R05 외주처 소모품 그리드 콤보. 입력 REF01 = 공장.
+--   결과의 REF01/REF02 는 상위 분류값이며 화면이 행마다 이 값으로 목록을 거른다.
+--   첫 행은 빈 값(선택 안 함). 원본이 0건이어도 그리드 콤보 로딩이 죽지 않게 항상 1건 이상 내려준다.
+  ELSEIF $GPCD = 'OSCCONSUM_PRCCD' THEN -- 작업장별 공정 (REF01 = 작업장)
+
+      SELECT '' AS Label, '' AS Value, '' AS REF01
+      UNION ALL
+      SELECT OSCCONSUM_PRCCD.Label, OSCCONSUM_PRCCD.Value, OSCCONSUM_PRCCD.REF01
+        FROM (
+               SELECT DISTINCT MSTPRC.PRCNM AS Label, MSTPRC.PRCCD AS Value, MSTLINE_EQM.LINECD AS REF01
+                 FROM MSTLINE_EQM
+                 INNER JOIN MSTLINE
+                   ON MSTLINE.LINECD = MSTLINE_EQM.LINECD
+                 INNER JOIN MSTPRC
+                   ON MSTPRC.PRCCD = MSTLINE_EQM.PRCCD
+                 WHERE MSTLINE_EQM.USEYN = 'Y'
+                   AND MSTLINE.FACTORYCD = $REF01
+                 ORDER BY MSTLINE_EQM.LINECD, MSTPRC.PRCCD
+                 LIMIT 100000
+             ) AS OSCCONSUM_PRCCD;
+
+-- *****************************************************************************
+  ELSEIF $GPCD = 'OSCCONSUM_EQMCD' THEN -- 작업장·공정별 라인 (REF01 = 작업장, REF02 = 공정)
+
+      SELECT '' AS Label, '' AS Value, '' AS REF01, '' AS REF02
+      UNION ALL
+      SELECT OSCCONSUM_EQMCD.Label, OSCCONSUM_EQMCD.Value, OSCCONSUM_EQMCD.REF01, OSCCONSUM_EQMCD.REF02
+        FROM (
+               SELECT MSTLINE_EQM.EQMNM AS Label, MSTLINE_EQM.EQMCD AS Value, MSTLINE_EQM.LINECD AS REF01, MSTLINE_EQM.PRCCD AS REF02
+                 FROM MSTLINE_EQM
+                 INNER JOIN MSTLINE
+                   ON MSTLINE.LINECD = MSTLINE_EQM.LINECD
+                 WHERE MSTLINE_EQM.USEYN = 'Y'
+                   AND MSTLINE.FACTORYCD = $REF01
+                 ORDER BY MSTLINE_EQM.EQMCD
+                 LIMIT 100000
+             ) AS OSCCONSUM_EQMCD;
+
+-- *****************************************************************************
+  ELSEIF $GPCD = 'OSCCONSUM_ITEMID_PRD' THEN -- 라인별 생산품목 (MSTEQM_STD, REF01 = 라인)
+
+      SELECT '' AS Label, '' AS Value, '' AS REF01
+      UNION ALL
+      SELECT OSCCONSUM_ITEMID_PRD.Label, OSCCONSUM_ITEMID_PRD.Value, OSCCONSUM_ITEMID_PRD.REF01
+        FROM (
+               SELECT DISTINCT CONCAT(MSTITEM.ITEMCD, ' ', MSTITEM.ITEMNM) AS Label,
+                      CAST(MSTITEM.ITEMID AS CHAR) AS Value,
+                      MSTEQM_STD.EQMCD AS REF01
+                 FROM MSTEQM_STD
+                 INNER JOIN MSTITEM
+                   ON MSTITEM.ITEMID = MSTEQM_STD.ITEMID
+                 WHERE MSTEQM_STD.FACTORYCD = $REF01
+                 ORDER BY MSTEQM_STD.EQMCD, MSTITEM.ITEMCD
+                 LIMIT 100000
+             ) AS OSCCONSUM_ITEMID_PRD;
+
+-- *****************************************************************************
+  ELSEIF $GPCD = 'OSCCONSUM_PRCDETAIL' THEN -- 라인별 세부공정 (MSTLINE_EQM_PRCDETAIL, 명칭은 공통코드 PRCDETAIL, REF01 = 라인)
+
+      SELECT '' AS Label, '' AS Value, '' AS REF01
+      UNION ALL
+      SELECT OSCCONSUM_PRCDETAIL.Label, OSCCONSUM_PRCDETAIL.Value, OSCCONSUM_PRCDETAIL.REF01
+        FROM (
+               SELECT IFNULL(COMTYPE.TPNM, MSTLINE_EQM_PRCDETAIL.PRCDETAIL) AS Label,
+                      MSTLINE_EQM_PRCDETAIL.PRCDETAIL AS Value,
+                      MSTLINE_EQM_PRCDETAIL.EQMCD AS REF01
+                 FROM MSTLINE_EQM_PRCDETAIL
+                 INNER JOIN MSTLINE_EQM
+                   ON MSTLINE_EQM.EQMCD = MSTLINE_EQM_PRCDETAIL.EQMCD
+                 INNER JOIN MSTLINE
+                   ON MSTLINE.LINECD = MSTLINE_EQM.LINECD
+                 LEFT JOIN COMTYPE
+                   ON COMTYPE.GPCD = 'PRCDETAIL'
+                  AND COMTYPE.TPCD = MSTLINE_EQM_PRCDETAIL.PRCDETAIL
+                 WHERE MSTLINE.FACTORYCD = $REF01
+                 ORDER BY MSTLINE_EQM_PRCDETAIL.EQMCD, MSTLINE_EQM_PRCDETAIL.PRCDETAIL
+                 LIMIT 100000
+             ) AS OSCCONSUM_PRCDETAIL;
+
 -- *****************************************************************************
   ELSEIF $GPCD = 'EQMCD_OQC' THEN
 
@@ -952,6 +1061,8 @@ PROC: BEGIN
       WHERE MSTLINE.USEYN = 'Y'
         AND MSTLINE.EDT = ''
         AND MSTLINE.FACTORYCD LIKE CONCAT('%', $REF01, '%')
+        AND CASE WHEN $REF02 = '' THEN MSTLINE.OSCCUSTCD = ''   -- REF02 빈 값: 사내 작업장만
+                 ELSE MSTLINE.OSCCUSTCD LIKE CONCAT('%', $REF02, '%') END
       ORDER BY LINECD, LINENM;
 
 -- *****************************************************************************  

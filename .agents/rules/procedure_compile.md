@@ -15,6 +15,7 @@ DB 클라이언트 도구(DBeaver, HeidiSQL 등)를 통해 MariaDB 저장 프로
   - MariaDB 서버의 문제가 아니라, **DB 클라이언트 도구(DBeaver, HeidiSQL 등)의 명령문 구분자(Statement Delimiter) 파싱 방식 때문**에 발생합니다.
   - DBeaver에서 **단일 쿼리 실행(`Ctrl + Enter`)**을 누르거나 일반 스크립트 실행 시, 도구가 프로시저 내부의 세미콜론(`;`)을 단일 쿼리의 끝으로 인식하여 문장을 강제로 자르고, 그 다음 줄인 `WHEN '...' THEN`부터 별개의 독립된 SQL 문장으로 서버에 전송합니다.
   - MariaDB 서버는 아무런 컨텍스트 없이 날아온 `WHEN '...' THEN` 단독 문장을 파싱할 수 없으므로 1064 구문 오류를 발생시킵니다.
+- **1행 `near '\uFEFFCREATE ...'` 오류**: 파일 맨 앞 BOM이 SQL에 포함되어 전송된 경우입니다. 프로시저 `.sql`은 BOM 없이 저장합니다 (`encoding.md` 1-1 예외 준수).
 
 ---
 

@@ -153,9 +153,10 @@ namespace ITSLIB
                 query.Append("CALL DC_POP('" + _GPCD + "_HEAD', '', '', '', '', '', '')");
                 DataSet ds = ItsMaria.Query(query.ToString());
 
-                while(gridView.Columns.Count > 1)
+                //_HEAD 가 CODE 부터 모든 열을 돌려주므로 기본 열은 모두 지운다 (남기면 코드 열이 두 번 나옴)
+                while(gridView.Columns.Count > 0)
                 {
-                    gridView.Columns.RemoveAt(1);
+                    gridView.Columns.RemoveAt(0);
                 }
                 for (int i = 0; i < ds.Tables[0].Columns.Count; i++)
                 {

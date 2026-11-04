@@ -435,6 +435,10 @@ li {
     font-weight: 700;
     font-size: 20px;
     line-height: 35.16px; 
+    /* 사원명이 길면 줄바꿈 대신 말줄임(…) */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .main_right_adminmenu > .logout_btn span {
     margin-left: 53px;

@@ -7,6 +7,7 @@ trigger: always_on
 신규 기능 개발 및 레포트 구현 시 코드 일관성, 유지보수성을 극대화하고 중복 구현 및 잉여 코드를 방지하기 위해 다음 원칙을 반드시 준수합니다.
 
 ### 1. 공통 프레임워크 및 컴포넌트 함수 최우선 적극 활용 원칙 (Framework-First & Common Utility Usage)
+- **[최우선] 분석·작성 단계 적용 절차와 자주 쓰는 공통 기능 표는 [priority_reference_verification.md](priority_reference_verification.md) 2항을 먼저 따릅니다.**
 - **공통 컴포넌트/함수 지원 여부 선행 확인 및 적극 활용**:
   - 화면 UI(`.aspx`), 클라이언트 스크립트(`.js`), 백엔드 C#(`.cs`), 리포트(`04.Report`) 등 모든 영역에서 기능 구현 착수 전, 해당 기능이 프로젝트 공통 프레임워크 및 공통 라이브러리(`ItsCommon`, `ItsLibRpt`, `ItsMaria`, `ItsSecurity`, `ItsXtraRpt`, `ItsGrid`, `ItsFind`, `ItsPop`, `ItsCombo`, `ItsMsg` 등)에 이미 존재하는지 반드시 먼저 확인하고, 존재하는 경우 이를 적극적으로 활용하여 구현합니다.
 - **인위적인 중복 재구현 및 자체 헬퍼 남발 금지**:
@@ -14,6 +15,7 @@ trigger: always_on
   - 공통 라이브러리에 없는 개별 업무 화면/리포트 고유의 특수 로직에 한해서만 최소한의 내부 메서드로 간결하고 안전하게 구현합니다.
 
 ### 2. 기존 정상 동작 유사 화면 참조 원칙 (Reference-First)
+- **[최우선] 조사·검증 세부 절차는 [priority_reference_verification.md](priority_reference_verification.md)를 먼저 따릅니다.**
 - **유사 화면 패턴 모방 의무화**: 신규 화면이나 레포트 개발 시 독자적인 방식을 도입하지 말고, 현재 프로젝트 내에 이미 안정적으로 구현되어 동작하고 있는 다른 업무 화면의 소스코드를 검색하여 동일한 형태로 제작합니다.
 - **표준 패턴 일관성 유지**: 화면 레이아웃(`.aspx`), 스크립트 이벤트 및 호출 구조(`.js`), 비하인드 로직(`.cs`), 프로시저(`.sql`)까지 기존 프로젝트 표준 관례를 철저히 따라 이질감 없는 코드를 유지합니다.
 

@@ -15,8 +15,10 @@
                 <its:Date HidenLabel="Y" Width="100"  Value="{Binding EDATE}"/>
                 <its:Combo GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ReadOnly="True" x:Name="cb_CUSTCD"/>
                 <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True" />
-                <its:Text Label="거래명세서" Value="{Binding INVOICEKEY}" KeyDown="Text_KeyDown"/>
+                <UserControl Width="20"/>
                 <its:Button Label="조 회" Width="100" Height="30" CommandName="LIST_INVOICE" FontWeight="Bold"/>
+                <its:Text Label="거래명세서" Width="280" Value="{Binding INVOICEKEY}" KeyDown="Text_KeyDown"/>
+                <UserControl Width="520"/>
                 <its:Button Label="납 품 취 소" Width="100" Height="30" CommandName="DEL_INVOICE" FontWeight="Bold" BackColor="RED"/>
             </its:WrapContent>
         </UserControl>
@@ -39,7 +41,7 @@
             </its:Grid>
         </UserControl>
 
-        <UserControl Canvas.Left="100" Canvas.Top="30" Style="{DynamicResource TML_POP}" Width="700" Height="400" Visibility="Hidden">
+        <UserControl Canvas.Left="140" Canvas.Top="40" Style="{DynamicResource TML_POP}" Width="700" Height="400" Visibility="Hidden">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="60" />

@@ -11,9 +11,20 @@ trigger: always_on
 ### 1. 단일 UTF-8 with BOM 인코딩 강제 (중복 BOM 절대 금지)
 - **적용 대상**: 모든 소스 코드 및 텍스트 파일 (`.cs`, `.xaml`, `.aspx`, `.js`, `.sql`, `.css`, `.html`, `.md` 등)
 - **인코딩 표준**: 반드시 **단일 UTF-8 with BOM** (파일 시작 3바이트: `\xef\xbb\xbf`) 방식으로 저장합니다.
+- **[예외] 프로시저 `.sql` 파일은 BOM 없이 저장**: 프로시저 폴더(`project_context.md` 기준)의 `.sql` 파일은 **UTF-8 (BOM 없음)** + CRLF로 저장합니다 (아래 1-1 준수).
 - **[중요] 중복 BOM (`\xef\xbb\xbf\xef\xbb\xbf`) 발생 절대 금지**:
   - 이미 BOM이 존재하는 파일에 무조건 BOM 바이트를 덧붙여 6바이트 이상의 중복 BOM(`0xEF 0xBB 0xBF 0xEF 0xBB 0xBF`)이 생성되는 행위를 철저히 방지합니다.
   - 파일의 시작은 정확히 3바이트(`0xEF 0xBB 0xBF`)의 단일 BOM이어야 하며, 4~6번째 바이트에 BOM이 반복되어서는 안 됩니다.
+
+---
+
+### 1-1. [예외] 프로시저 `.sql` 파일 BOM 제외 (SQL Error [1064] 방지)
+- **적용 대상**: 프로시저 폴더(`프로시저/`, `05.PROCEDURE/` 등 `project_context.md` 기준)의 `.sql` 파일 (프로시저 본문, `_SYSTEM_PARAMETERS.sql` 등)
+- **원칙**: **UTF-8 (BOM 없음)** + **CRLF**로 저장합니다. 파일 시작 3바이트가 `\xef\xbb\xbf`가 아니어야 합니다.
+- **배경 (SAL1004_R01 실사례)**:
+  - **오류 메시지**: `You have an error in your SQL syntax ... near '\uFEFFCREATE DEFINER=...' at line 1`
+  - **원인**: DB 툴에서 파일을 열거나 불러와 실행하면 BOM이 보이지 않는 문자(`\uFEFF`)로 SQL 맨 앞에 포함되어 서버로 전송되고, MariaDB가 `CREATE` 앞의 이 문자를 해석하지 못해 1행 구문 오류가 발생합니다.
+- **기존 파일**: BOM이 있는 기존 프로시저 `.sql`은 수정하는 시점에 BOM을 제거하여 저장합니다. 수정하지 않는 파일은 일괄 변경하지 않습니다.
 
 ---
 
@@ -38,7 +49,7 @@ trigger: always_on
 
 ### 4. 파일 저장 후 3단계 바이너리 무결성 검증 의무화
 - 소스 코드 및 문서 파일 수정 후에는 바이너리 레벨에서 아래 3가지를 스스로 즉시 검증합니다:
-  1. **단일 BOM 존재 확인**: 첫 3바이트가 `\xef\xbb\xbf`인지 확인.
+  1. **단일 BOM 존재 확인**: 첫 3바이트가 `\xef\xbb\xbf`인지 확인. (프로시저 `.sql`은 반대로 첫 3바이트가 `\xef\xbb\xbf`가 **아닌지** 확인)
   2. **중복 BOM 부존재 확인**: 4~6번째 바이트가 `\xef\xbb\xbf`가 아닌지 확인 (`buf.slice(0, 6)` 비교).
   3. **표준 CRLF 확인**: 파일 내용 중에 `\r\r\n` (중복 개행)이나 단독 `LF`가 없는지 확인.
 

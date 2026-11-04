@@ -163,7 +163,8 @@ ItsSplit._$Resize = function (obj) {
         var leftwidthpc = $left.attr('data-leftwidthpc');
         if (leftwidthpc != "" && leftwidthpc != undefined) {
             $left.outerWidth('calc(' + leftwidthpc + '% - ' + 3 * pPad + 'px)');
-            $right.outerWidth('calc(' + (100 - 0.3 - parseFloat(leftwidthpc)) + '% - ' + (2 * pPad) + 4 + 'px)');
+            // 분할바 폭을 빼야 좁은 화면에서 오른쪽이 다음 줄로 밀리지 않음
+            $right.outerWidth('calc(' + (100 - parseFloat(leftwidthpc)) + '% - ' + ($split.outerWidth() + 2 * pPad + 4) + 'px)');
         } else {
             var splitLeft = ItsPage.Position($split).left;
             var splitWidth = $split.outerWidth();

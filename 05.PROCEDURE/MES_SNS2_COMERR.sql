@@ -1,0 +1,19 @@
+﻿CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.COMERR(IN $ERRMSG VARCHAR(20000))
+PROC: BEGIN
+
+  IF IFNULL(@ERRMSG, '') = '' THEN 
+
+    IF IFNULL($ERRMSG, '') = '' THEN
+
+        SET @ERRMSG = 'NULL';
+
+    ELSE
+
+      SET @ERRMSG = $ERRMSG;
+
+    END IF;
+
+  END IF;
+
+END

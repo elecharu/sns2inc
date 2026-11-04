@@ -84,7 +84,8 @@ $(window).resize(function(){
     re_size();
 });
 function re_size() {
-    $(".m_content > iframe").height(window.innerHeight);
+    // 상단 탭바 높이만큼 빼야 기기 높이에 맞음
+    $(".m_content > iframe").height(window.innerHeight - $('#main_right_tabmenu').outerHeight());
 
     setTimeout(function () {
         try {

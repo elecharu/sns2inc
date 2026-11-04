@@ -15,8 +15,8 @@
                 <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True" />
                 <UserControl Width="20"/>
                 <its:Button Label="재 고 조 회" Width="150" Height="30" CommandName="LIST_COMLOT" FontWeight="Bold"/>
-                <UserControl Width="100"/>
-                <its:Date Label="이동일자" Value="{Binding MOVEDATE}" FontWeight="Bold"/>
+                <UserControl Width="310"/>
+                <its:Date Label="이동일자" Width="250" Value="{Binding MOVEDATE}" FontWeight="Bold"/>
                 <its:Pop Label="이동 거래처" Value="{Binding MOVECUSTCD}" GPCD="CUSTCD_OSC" Width="250" FontWeight="Bold" ShowKeyPad="True" />
                 <UserControl Width="20"/>
                 <its:Button Label="이 동 등 록" Width="150" Height="30" CommandName="MOVE_LOT" FontWeight="Bold" BackColor="Green"/>
@@ -41,7 +41,7 @@
             </its:Grid>
         </UserControl>
 
-        <UserControl Canvas.Left="100" Canvas.Top="30" Style="{DynamicResource TML_POP}" Width="700" Height="400" Visibility="Hidden">
+        <UserControl Canvas.Left="140" Canvas.Top="40" Style="{DynamicResource TML_POP}" Width="700" Height="400" Visibility="Hidden">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="60" />

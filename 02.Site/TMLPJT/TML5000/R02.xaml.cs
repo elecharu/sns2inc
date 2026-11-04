@@ -38,7 +38,7 @@ namespace TML5000
         ItsModelGrid MODEL_G3 = new ItsModelGrid();
         ItsModelGrid MODEL_G4 = new ItsModelGrid();
 
-        // 선택 수주리스트 값
+        // 선택 수주 값 (수주는 1건만 선택)
         public struct Pruduct
         {
             public string odrkey;
@@ -55,7 +55,6 @@ namespace TML5000
             MODEL_S1.Binding(PANEL_S1);
             MODEL_S1.DefaultValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));
             MODEL_S1.InitData();
-            MODEL_S1.EventValueChanged += MODEL_S1_EventValueChanged;
 
             MODEL_A1.Binding(PANEL_A1);
             MODEL_A1.InitData();
@@ -70,36 +69,63 @@ namespace TML5000
             MODEL_G4.Binding(GRID_G4);
         }
 
-        // 출하처리자 선택, 지정시 스캔이력 모두 초기화하기
-        private void MODEL_S1_EventValueChanged(string fieldName)
+        // 선택 수주의 미확정(OUTYN = 'N') 스캔 목록 조회
+        private void LoadScanLot()
         {
-            if (fieldName == "EMPCD")
+            MODEL_G2.Clear();
+            MODEL_A1.SetValue("SUMQTY", 0);
+            if (_salodrlist.Count == 0) return;
+
+            ItsMaria.Set("TML5000_R02", "LIST_SCANLOT");
+            ItsMaria.AddList("SALODRLIST", _salodrlist[0].odrkey);
+            ItsMaria.AddList("ODRSEQLIST", _salodrlist[0].seq);
+            DataTable dt = ItsMaria.Call().Tables[0];
+            if (ItsMaria.IsError)
             {
-                _salodrlist.Clear();
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
 
-                ItsMaria.Set("TML5000_R02", "RESET_SCANLIST");
-                ItsMaria.Call();
-                if (ItsMaria.IsError)
-                {
-                    ShowMessageBox("", ItsMaria.ErrMessage);
-                    return;
-                }
+            SetScanList(dt);
 
-                for (int i = 0; i < MODEL_G1.Rows.Count; i++)
-                {
-                    if (MODEL_G1.GetValue(i, "BACKGROUND").ToString() == "YELLOW")
-                    {
-                        MODEL_G1.SetBackColor(i, "WHITE");
-                    }
-                }
+            // 이미 스캔한 출하가 있으면 그 출고창고로 고정
+            if (dt.Rows.Count > 0)
+            {
+                cb_WARECD.Value = ItsData.GetText(dt, 0, "WARECD");
+                cb_WARECD.IsEnabled = false;
+            }
+        }
+
+        // 스캔 목록 + 스캔 총수량
+        private void SetScanList(DataTable dt)
+        {
+            MODEL_G2.SetData(dt);
+
+            int SUMSCANQTY = 0;
+            for (int i = 0; i < MODEL_G2.Rows.Count; i++)
+            {
+                SUMSCANQTY += Convert.ToInt32(MODEL_G2.GetValue(i, "SCANQTY"));
+            }
+            MODEL_A1.SetValue("SUMQTY", SUMSCANQTY);
+        }
+
+        // 선택 표시(노란색) 해제
+        private void ClearSelRow(int rowIndex)
+        {
+            if (MODEL_G1.GetInt(rowIndex, "SALQTY") < Convert.ToInt32(MODEL_G1.GetValue(rowIndex, "OUTQTY")))
+            {
+                MODEL_G1.SetBackColor(rowIndex, "SKYBLUE");
+            }
+            else
+            {
+                MODEL_G1.SetBackColor(rowIndex, "WHITE");
             }
         }
 
         private void MODEL_G3_EventRowChanged(int rowIndex)
         {
             ItsMaria.Set("TML5000_R02", "LIST_SALOUTLOT_HISTORY");
-            ItsMaria.AddOne("SALOUTGROUPKEY", MODEL_G3.GetText(rowIndex, "SALOUTGROUPKEY"));
-            ItsMaria.AddOne("OUTTIME", MODEL_G3.GetText(rowIndex, "OUTTIME"));
+            ItsMaria.AddOne("SALOUTKEY", MODEL_G3.GetText(rowIndex, "SALOUTKEY"));
             ItsMaria.AddOne("TMLCD", ItsLocalInfo.TMLCD);
             DataTable dt = ItsMaria.Call().Tables[0];
             if (ItsMaria.IsError)
@@ -129,7 +155,7 @@ namespace TML5000
                 MODEL_A1.InitData();
 
                 _salodrlist.Clear();
-                S1_COMBO_EMPCD.IsEnabled = true;
+                cb_WARECD.IsEnabled = true;
 
                 ItsMaria.Set("TML5000_R02", "SEL_SALODR");
                 ItsMaria.AddModel(MODEL_S1);
@@ -141,29 +167,38 @@ namespace TML5000
                     return;
                 }
 
-                if (ds.Tables.Count > 2)
+                if (ds.Tables[0].Rows.Count == 0)
                 {
-                    MODEL_G2.SetData(ds.Tables[1]);
-
-                    ShowMessageBox("", "담당자의 출하스캔이력이 존재 합니다. \r\n출하이력을 먼저 삭제하세요.");
+                    ShowMessageBox("", "조회되는 수주가 없습니다.");
+                    return;
                 }
-                else
-                {
-                    if (ds.Tables[0].Rows.Count == 0)
-                    {
-                        ShowMessageBox("", "조회되는 수주가 없습니다.");
-                        return;
-                    }
 
-                    MODEL_G1.SetData(ds.Tables[0]);
-                    (GRID_G1.View as TableView).BestFitColumns();
-                }
+                MODEL_G1.SetData(ds.Tables[0]);
+                (GRID_G1.View as TableView).BestFitColumns();
             }
 
             else if (commandName == "SEL_SALOUT")
             {
                 if (MODEL_G1.GetValue(MODEL_G1.CurrentIndex, "BACKGROUND").ToString() == "WHITE" || MODEL_G1.GetValue(MODEL_G1.CurrentIndex, "BACKGROUND").ToString() == "SKYBLUE")
                 {
+                    // 수주는 1건만: 다른 수주가 선택돼 있으면 스캔이 없을 때만 바꿈
+                    if (_salodrlist.Count > 0)
+                    {
+                        if (MODEL_G2.Rows.Count != 0)
+                        {
+                            ShowMessageBox("", "선택한 수주에 스캔한 재고가 있습니다.\n출고확정 또는 삭제 후 바꾸세요.");
+                            return;
+                        }
+
+                        for (int i = 0; i < MODEL_G1.Rows.Count; i++)
+                        {
+                            if (MODEL_G1.GetValue(i, "BACKGROUND").ToString() == "YELLOW") ClearSelRow(i);
+                        }
+                        _salodrlist.Clear();
+                        cb_WARECD.Value = string.Empty;
+                        cb_WARECD.IsEnabled = true;
+                    }
+
                     MODEL_G1.SetBackColor(MODEL_G1.CurrentIndex, "YELLOW");
                     _salodrlist.Add(new Pruduct
                     {
@@ -202,8 +237,7 @@ namespace TML5000
                         cb_WARECD.IsEnabled = false;
                     }
 
-                    S1_COMBO_EMPCD.IsEnabled = false;
-                    
+                    LoadScanLot(); //이 수주의 미확정 스캔 목록 (이어서 작업)
                 }
                 else
                 {
@@ -213,32 +247,11 @@ namespace TML5000
                         return;
                     }
 
-                    if (MODEL_G1.GetInt(MODEL_G1.CurrentIndex, "SALQTY") < Convert.ToInt32(MODEL_G1.GetValue(MODEL_G1.CurrentIndex, "OUTQTY")))
-                    {
-                        MODEL_G1.SetBackColor(MODEL_G1.CurrentIndex, "SKYBLUE");
-                    }
-                    else
-                    {
-                        MODEL_G1.SetBackColor(MODEL_G1.CurrentIndex, "WHITE");
-                    }
+                    ClearSelRow(MODEL_G1.CurrentIndex);
 
-                    // 선택리스트 제거
-                    for (int i = 0; i < _salodrlist.Count; i++)
-                    {
-                        if (_salodrlist[i].odrkey == MODEL_G1.GetText(MODEL_G1.CurrentIndex, "SALODRKEY") &&
-                            _salodrlist[i].seq == MODEL_G1.GetText(MODEL_G1.CurrentIndex, "ODRSEQ"))
-                        {
-                            _salodrlist.RemoveAt(i);
-                            break;
-                        }
-                    }
-
-                    if (_salodrlist.Count == 0)
-                    {
-                        S1_COMBO_EMPCD.IsEnabled = true;
-                        cb_WARECD.Value = string.Empty;
-                        cb_WARECD.IsEnabled = true;
-                    }
+                    _salodrlist.Clear();
+                    cb_WARECD.Value = string.Empty;
+                    cb_WARECD.IsEnabled = true;
                 }
             }
 
@@ -247,7 +260,6 @@ namespace TML5000
             {
                 ItsMaria.Set("TML5000_R02", "DEL_SCANLOT");
                 ItsMaria.AddOne("LOTKEY", MODEL_G2.GetText(MODEL_G2.CurrentIndex, "LOTKEY"));
-                ItsMaria.AddOne("EMPCD", MODEL_S1.GetText("EMPCD"));
                 DataSet ds = ItsMaria.Call();
                 if (ItsMaria.IsError)
                 {
@@ -255,21 +267,23 @@ namespace TML5000
                     return;
                 }
 
-                MODEL_G2.SetData(ds.Tables[0]);
-
-                int SUMSCANQTY = 0;
-
-                for (int i = 0; i < MODEL_G2.Rows.Count; i++)
-                {
-                    SUMSCANQTY += Convert.ToInt32(MODEL_G2.GetValue(i, "SCANQTY"));
-                }
-
-                MODEL_A1.SetValue("SUMQTY", SUMSCANQTY);
+                SetScanList(ds.Tables[0]);
+                if (MODEL_G2.Rows.Count == 0 && _salodrlist.Count > 0) cb_WARECD.IsEnabled = true; //스캔이 없으면 창고 다시 선택 가능
             }
             // 출고확정
             else if (commandName == "OUTCONFIRM")
             {
-                ShowMessageBox(commandName, "선택한 출하이력을 처리합니다.");
+                if (_salodrlist.Count == 0)
+                {
+                    ShowMessageBox("", "선택한 수주가 없습니다.");
+                    return;
+                }
+                if (MODEL_G2.Rows.Count == 0)
+                {
+                    ShowMessageBox("", "스캔한 재고가 없습니다.");
+                    return;
+                }
+                ShowMessageBox(commandName, "스캔한 재고를 출고확정합니다.");
                 return;
             }
 
@@ -303,8 +317,7 @@ namespace TML5000
             else if (commandName == "REPRINT")
             {
                 ItsMaria.Set("TML5000_R02", "PRINT");
-                ItsMaria.AddOne("SALOUTGROUPKEY", MODEL_G3.GetText(MODEL_G3.CurrentIndex, "SALOUTGROUPKEY"));
-                ItsMaria.AddOne("OUTTIME", MODEL_G3.GetText(MODEL_G3.CurrentIndex, "OUTTIME"));
+                ItsMaria.AddOne("SALOUTKEY", MODEL_G3.GetText(MODEL_G3.CurrentIndex, "SALOUTKEY"));
                 ItsMaria.AddOne("OUTLIST", "NO");
                 DataSet ds = ItsMaria.Call();
                 if (ItsMaria.IsError)
@@ -334,7 +347,7 @@ namespace TML5000
 
             else if (commandName == "DEL_SALOUT")
             {
-                ShowMessageBox(commandName, "선택한 일자의 출하이력을 삭제합니다.");
+                ShowMessageBox(commandName, "선택한 출하를 취소합니다.\n재고가 다시 복원됩니다.");
                 return;
             }
         }
@@ -345,30 +358,11 @@ namespace TML5000
 
             if (commandName == "OUTCONFIRM")
             {
-                // 출하이력 생성
+                // 출고확정 (SALOUT.OUTYN = 'Y' + 재고 차감)
                 ItsMaria.Set("TML5000_R02", "MAKE_SALOUT");
                 ItsMaria.AddModel(MODEL_A1);
-                if (_salodrlist.Count > 0)
-                {
-                    for (int i = 0; i < _salodrlist.Count; i++)
-                    {
-                        ItsMaria.AddList("SALODRLIST", _salodrlist[i].odrkey);
-                        ItsMaria.AddList("ODRSEQLIST", _salodrlist[i].seq);
-                    }
-                }
-                else
-                {
-                    ShowMessageBox("", "선택한 수주가 없습니다.");
-                    return;
-                }
-
-                if (MODEL_G2.Rows.Count == 0)
-                {
-                    ShowMessageBox("", "스캔한 재고가 없습니다.");
-                    return;
-                }
-
-                ItsMaria.AddOne("EMPCD", MODEL_S1.GetValue("EMPCD"));
+                ItsMaria.AddList("SALODRLIST", _salodrlist[0].odrkey);
+                ItsMaria.AddList("ODRSEQLIST", _salodrlist[0].seq);
                 DataSet ds = ItsMaria.Call();
                 if (ItsMaria.IsError)
                 {
@@ -376,12 +370,12 @@ namespace TML5000
                     return;
                 }
 
-                string salGroupkey = ds.Tables[0].Rows[0]["SALOUTGROUPKEY"].ToString();
+                string saloutkey = ds.Tables[0].Rows[0]["SALOUTKEY"].ToString();
 
                 _salodrlist.Clear();
                 EventCommand("SEARCH");
 
-                MODEL_P1.SetValue("SALOUTGROUPKEY", salGroupkey);
+                MODEL_P1.SetValue("SALOUTKEY", saloutkey); //방금 확정한 출하로 이력 조회
                 PANEL_P1.Show();
 
                 EventCommand("SEARCH_HISTORY");
@@ -390,8 +384,7 @@ namespace TML5000
             else if (commandName == "DEL_SALOUT")
             {
                 ItsMaria.Set("TML5000_R02", "DEL_SALOUT");
-                ItsMaria.AddOne("SALOUTGROUPKEY", MODEL_G3.GetText(MODEL_G3.CurrentIndex, "SALOUTGROUPKEY"));
-                ItsMaria.AddOne("OUTTIME", MODEL_G3.GetText(MODEL_G3.CurrentIndex, "OUTTIME"));
+                ItsMaria.AddOne("SALOUTKEY", MODEL_G3.GetText(MODEL_G3.CurrentIndex, "SALOUTKEY"));
                 ItsMaria.Call();
                 if (ItsMaria.IsError)
                 {
@@ -407,23 +400,17 @@ namespace TML5000
         {
             if (e.Key == Key.Enter)
             {
-                ItsMaria.Set("TML5000_R02", "SCAN_LOT");
-                ItsMaria.AddModel(MODEL_S1);
-                ItsMaria.AddModel(MODEL_A1);
-                if (_salodrlist.Count > 0)
-                {
-                    for (int i = 0; i < _salodrlist.Count; i++)
-                    {
-                        ItsMaria.AddList("SALODRLIST", _salodrlist[i].odrkey);
-                        ItsMaria.AddList("ODRSEQLIST", _salodrlist[i].seq);
-                    }
-                }
-                else
+                if (_salodrlist.Count == 0)
                 {
                     ShowMessageBox("", "선택한 수주가 없습니다.");
                     return;
                 }
 
+                // 스캔 → SALOUT(미확정) + SALOUTLOT 바로 생성
+                ItsMaria.Set("TML5000_R02", "SCAN_LOT");
+                ItsMaria.AddModel(MODEL_A1);
+                ItsMaria.AddList("SALODRLIST", _salodrlist[0].odrkey);
+                ItsMaria.AddList("ODRSEQLIST", _salodrlist[0].seq);
                 DataSet ds = ItsMaria.Call();
                 if (ItsMaria.IsError)
                 {
@@ -433,16 +420,8 @@ namespace TML5000
                     return;
                 }
 
-                MODEL_G2.SetData(ds.Tables[0]);
-
-                int SUMSCANQTY = 0;
-
-                for (int i = 0; i < MODEL_G2.Rows.Count; i++)
-                {
-                    SUMSCANQTY += Convert.ToInt32(MODEL_G2.GetValue(i, "SCANQTY"));
-                }
-
-                MODEL_A1.SetValue("SUMQTY", SUMSCANQTY);
+                SetScanList(ds.Tables[0]);
+                cb_WARECD.IsEnabled = false; //스캔이 있으면 출고창고 고정
 
                 S_LOT.Value = "";
                 S_LOT.SetFocus();

@@ -31,7 +31,7 @@ ItsPage.Load = function () {
 ItsButton.EventSearch = function () {
 
     var maria = new ItsMaria('MST1004_R01', 'LIST_EQM_CALLEMP');
-    maria.AddPanel('pdiv2');
+    maria.AddPanel('sdiv1');
     maria.CallProc();
     if (maria.isError) {
         maria.ShowErrMsg();

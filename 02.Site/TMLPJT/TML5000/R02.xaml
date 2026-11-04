@@ -12,20 +12,19 @@
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
             <its:WrapContent x:Name="PANEL_S1" Width="980" Height="70">
-                <UserControl Width="5000" Height="5" />
+                <UserControl Width="5000" Height="20" />
                 <its:Combo GPCD="WARECD" LabelWidth="50" Label="외주처" Value="{Binding TMLWARE}" ReadOnly="True" Visibility="Collapsed"/>
                 <its:Date Label="납기일자" Width="180" Value="{Binding SDATE}" />
                 <its:Date HidenLabel="Y" Width="100" Value="{Binding EDATE}" />
-                <its:Pop GPCD="ITEMID" Label="품목코드" Width="250" Value="{Binding ITEMID}" ShowKeyPad="True" />
-                <its:Pop GPCD="CUSTCD" Label="납품처" Width="250" Value="{Binding CUSTCD}" ShowKeyPad="True" />
-                <its:Pop GPCD="EMPCD" Label="출하담당자" x:Name="S1_COMBO_EMPCD" Value="{Binding EMPCD}" Width="250" ShowKeyPad="True"/>
+                <its:Pop GPCD="ITEMID" Label="품목코드" Width="230" Value="{Binding ITEMID}" ShowKeyPad="True" />
+                <its:Pop GPCD="CUSTCD" Label="납품처" Width="230" Value="{Binding CUSTCD}" ShowKeyPad="True" />
             </its:WrapContent>
         </UserControl>
 
-        <its:Button Label="조 회" Width="100" Height="40" CommandName="SEARCH" 
-                    Canvas.Left="800" Canvas.Top="0"/>
-        <its:Button Label="이력조회" Width="100" Height="30" CommandName="VIEW_LOG" 
-                    BackColor="ORANGE" Canvas.Left="800" Canvas.Top="40"/>
+        <its:Button Label="조 회" Width="100" Height="40" CommandName="SEARCH"
+                    Canvas.Left="760" Canvas.Top="15"/>
+        <its:Button Label="이력조회" Width="100" Height="40" CommandName="VIEW_LOG"
+                    BackColor="ORANGE" Canvas.Left="870" Canvas.Top="15"/>
 
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="70">
             <Grid>
@@ -41,9 +40,9 @@
                         <its:Column Width="100" Header="품목코드" FieldName="ITEMCD" />
                         <its:Column Width="150" Header="품명" FieldName="ITEMNM" />
                         <its:Column Width="80" Header="규격" FieldName="ITEMSPEC" />
-                        <its:Column Width="70" Header="재고현황" FieldName="LOTQTY" DecimalPoint="0" />
                         <its:Column Width="70" Header="지시수량" FieldName="SALQTY" DecimalPoint="0"/>
                         <its:Column Width="70" Header="출고수량" FieldName="OUTQTY" DecimalPoint="0"/>
+                        <its:Column Width="70" Header="미확정" FieldName="OPENQTY" DecimalPoint="0"/>
                     </its:Grid.Columns>
                 </its:Grid>
             </Grid>
@@ -51,7 +50,6 @@
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="250">
             <its:WrapContent x:Name="PANEL_A1" Width="980" Height="30">
-                <its:Text Label="지시번호" Value="{Binding SALOUTGROUPKEY}" Visibility="Collapsed" />
                 <its:Text Label="지시번호_DT" Value="{Binding SALOUTKEY}" Visibility="Collapsed" />
                 <its:Date Label="출고일자" Width="180" Value="{Binding OUTTIME}" />
                 <its:Combo Label="출고창고" Value="{Binding WARECD}" GPCD="WARECD" x:Name="cb_WARECD"/>
@@ -78,19 +76,22 @@
             </Grid>
         </UserControl>
 
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="80" Canvas.Top="30">
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="113" Canvas.Top="36">
             <its:WrapContent x:Name="PANEL_P1" Width="750" Height="380">
                 <UserControl Width="600" Height="5"/>
                 <its:Date Label="조회일자" Width="170" Value="{Binding SDATE}"/>
                 <its:Date HidenLabel="Y" Width="100" Value="{Binding EDATE}"/>
                 <UserControl Width="15"/>
-                <its:Text Label="출하지시번호" Width="200" Value="{Binding SALOUTGROUPKEY}"/>
+                <its:Text Label="출하번호" Width="200" Value="{Binding SALOUTKEY}"/>
                 <its:Button Label="조 회" Width="80" Height="20" CommandName="SEARCH_HISTORY" />
                 <UserControl Width="752" Height="5"/>
                 <Grid>
                     <its:Grid x:Name="GRID_G3" Width="750" Height="200" Grid.ColumnSpan="3">
                         <its:Column Width="92" Header="출하일자" FieldName="OUTTIME" ALGIN="CENTER"/>
-                        <its:Column Width="92" Header="출하지시번호" FieldName="SALOUTGROUPKEY" ALGIN="CENTER"/>
+                        <its:Column Width="100" Header="출하번호" FieldName="SALOUTKEY" ALGIN="CENTER"/>
+                        <its:Column Width="130" Header="거래처" FieldName="CUSTNM"/>
+                        <its:Column Width="160" Header="품명" FieldName="ITEMNM"/>
+                        <its:Column Width="70" Header="출고수량" FieldName="OUTQTY" DecimalPoint="0"/>
                         <its:Column Width="70" Header="스캔갯수" FieldName="LOTCNT" DecimalPoint="0"/>
                         <its:Column Width="60" Header="발행" CellType="Button" ButtonText="▤" CommandName="REPRINT" />
                         <its:Column Width="60" Header="취소" CellType="Button" ButtonText="X" CommandName="DEL_SALOUT" />

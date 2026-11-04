@@ -1,0 +1,10 @@
+﻿/* 저장 버튼 테두리 제거 (TAL0001_R05 와 같은 모양) */
+#div3 .ItsButton_table {
+    border-color: transparent !important;
+}
+
+#div3 .l-btn-text {
+    font-size: 28px !important;
+    font-weight: bold !important;
+    line-height: 28px !important;
+}

@@ -1,0 +1,356 @@
+﻿<its:ItsPageTml x:Class="TML2010.R01"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:dxg="http://schemas.devexpress.com/winfx/2008/xaml/grid"
+      xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
+      xmlns:local="clr-namespace:TML2010"
+      xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
+      Width="1176" Height="576">
+    <Canvas Background="Silver">
+
+        <!--좌측 버튼-->
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
+            <its:WrapContent x:Name="PANEL_L1" Width="80" Height="576">
+                <its:Button Label="작업완료" Width="75" Height="60" SetFontSize="13" CommandName="WORK_DONE" BackColor="GREEN" FontWeight="Bold"/>
+                <UserControl Width="75" Height="40"/>
+                <its:Button Label="불량등록" Width="75" Height="60" SetFontSize="13" CommandName="POP_BAD" BackColor="RED" FontWeight="Bold"/>
+                <its:Button Label="비가동&#x0a;등록" Width="75" Height="60" SetFontSize="13" CommandName="POP_NON" FontWeight="Bold"/>
+                <its:Button Label="작업자" Width="75" Height="60" SetFontSize="13" CommandName="POP_EMP" FontWeight="Bold"/>
+                <its:Button Label="설비&#x0a;일상점검" Width="75" Height="60" SetFontSize="13" CommandName="POP_CHK" FontWeight="Bold"/>
+                <its:Button Label="자주검사&#x0a;등록" Width="75" Height="60" SetFontSize="13" CommandName="POP_PRCTEST" FontWeight="Bold"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--투입품번정보-->
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="80" Canvas.Top="0">
+            <its:WrapContent x:Name="PANEL_S1" Width="1096" Height="100">
+                <its:Combo Label="생산작업장" LabelWidth="95" Width="365" GPCD="LINECD" Value="{Binding LINECD}" REF01="07"/>
+                <its:Combo Label="생산공정" LabelWidth="95" Width="365" GPCD="PRCCD_LINE" Value="{Binding PRCCD}"/>
+                <its:Combo Label="생산라인" LabelWidth="95" Width="365" GPCD="EQMCD_LINE" Value="{Binding EQMCD}" x:Name="CMB_EQMCD"/>
+                <its:Text Label="생산품목코드" LabelWidth="95" Width="365" Value="{Binding ITEMCD}" ReadOnly="True"/>
+                <its:Text Label="생산품명" LabelWidth="95" Width="365" Value="{Binding ITEMNM}" ReadOnly="True"/>
+                <its:Text Label="생산규격" LabelWidth="95" Width="365" Value="{Binding ITEMSPEC}" ReadOnly="True"/>
+                <its:Text Label="계획수량(주간)" LabelWidth="95" Width="365" Value="{Binding PLANQTY_DAY}" ReadOnly="True"/>
+                <its:Text Label="계획수량(야간)" LabelWidth="95" Width="365" Value="{Binding PLANQTY_NIGHT}" ReadOnly="True"/>
+                <its:Text Label="투입바코드스캔" LabelWidth="95" Width="365" Value="{Binding SCANLOT}" x:Name="TXT_SCANLOT" KeyDown="TXT_SCANLOT_KeyDown"/>
+                <its:Text Label="품목ID" Value="{Binding ITEMID}" Visibility="Collapsed"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--투입 그리드-->
+        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="80" Canvas.Top="100">
+            <its:Grid x:Name="GRID_G1" Width="1096" Height="346">
+                <its:Grid.Columns>
+                    <its:Column Width="55" Header="삭제" CellType="Button" ButtonText="삭제" CommandName="DEL_INPUT"/>
+                    <its:Column Width="120" Header="품목코드" FieldName="ITEMCD"/>
+                    <its:Column Width="170" Header="품명" FieldName="ITEMNM"/>
+                    <its:Column Width="140" Header="규격" FieldName="ITEMSPEC"/>
+                    <its:Column Width="60" Header="구분" FieldName="ITEMCG" ALGIN="CENTER"/>
+                    <its:Column Width="100" Header="LOT NO" FieldName="LOTKEY" ALGIN="CENTER"/>
+                    <its:Column Width="45" Header="단위" FieldName="ITEMUNIT" ALGIN="CENTER"/>
+                    <its:Column Width="70" Header="사용량" FieldName="USEQTY" CellType="Number" ShowKeyPad="Y" ReadOnly="False"/>
+                    <its:Column Width="75" Header="잔여재고량" FieldName="LOTQTY" DecimalPoint="0"/>
+                    <its:Column Width="90" Header="HEAT NO" FieldName="HEATNO"/>
+                    <its:Column Width="100" Header="열처리LOTNO" FieldName="HEATLOTKEY"/>
+                    <its:Column Width="90" Header="창고" FieldName="WARECD" GPCD="WARECD"/>
+                    <its:Column Width="100" Header="투입키" FieldName="PRDINPUTKEY" Visible="False"/>
+                    <its:Column Width="80" Header="품목ID" FieldName="ITEMID" Visible="False"/>
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <!--생산실적정보-->
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="80" Canvas.Top="446">
+            <its:WrapContent x:Name="PANEL_B1" Width="490" Height="130">
+                <its:Combo Label="주야구분" LabelWidth="60" Width="190" GPCD="PP161" Value="{Binding DNTP}" REF05="07" x:Name="CMB_DNTP"/>
+                <its:Combo Label="생산구분" LabelWidth="60" Width="160" GPCD="PRDTP" Value="{Binding PRDTP}"/>
+                <its:Text Label="양품수량" LabelWidth="60" Width="130" Value="{Binding GOODQTY}" ReadOnly="True" x:Name="TXT_GOODQTY"/>
+                <its:Date Label="작업시작일" LabelWidth="60" Width="190" Value="{Binding WORKSDAY}"/>
+                <its:Time Label="시작시간" LabelWidth="60" Width="160" Value="{Binding WORKSTIME}"/>
+                <its:Number Label="불량수량" LabelWidth="60" Width="130" Value="{Binding BADQTY}" DecimalPoint="0" ReadOnly="True"/>
+                <its:Date Label="작업종료일" LabelWidth="60" Width="190" Value="{Binding WORKEDAY}"/>
+                <its:Time Label="종료시간" LabelWidth="60" Width="160" Value="{Binding WORKETIME}"/>
+                <its:Number Label="비가동(분)" LabelWidth="60" Width="130" Value="{Binding NONMIN}" DecimalPoint="0" ReadOnly="True"/>
+                <UserControl Width="350"/>
+                <its:Number Label="실가동(분)" LabelWidth="60" Width="130" Value="{Binding WORKMIN}" DecimalPoint="0" ReadOnly="True"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--생산실적 / 불량 / 비가동 탭-->
+        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="570" Canvas.Top="446">
+            <TabControl Width="606" Height="130">
+                <TabItem Header="작업자">
+                    <its:Grid x:Name="GRID_G2" Width="596" Height="95">
+                        <its:Grid.Columns>
+                            <its:Column Width="200" Header="사원코드" FieldName="EMPCD" ALGIN="CENTER"/>
+                            <its:Column Width="340" Header="사원명" FieldName="EMPNM"/>
+                        </its:Grid.Columns>
+                    </its:Grid>
+                </TabItem>
+                <TabItem Header="불 량">
+                    <its:Grid x:Name="GRID_G3" Width="596" Height="95">
+                        <its:Grid.Columns>
+                            <its:Column Width="55" Header="삭제" CellType="Button" ButtonText="삭제" CommandName="DEL_BAD"/>
+                            <its:Column Width="130" Header="등록시간" FieldName="BADTIME" ALGIN="CENTER"/>
+                            <its:Column Width="90" Header="불량명" FieldName="BADNM"/>
+                            <its:Column Width="70" Header="불량상세" FieldName="BADDETAIL" ALGIN="CENTER"/>
+                            <its:Column Width="65" Header="불량수량" FieldName="BADQTY" DecimalPoint="0"/>
+                            <its:Column Width="70" Header="대분류" FieldName="BADTP1NM" ALGIN="CENTER"/>
+                            <its:Column Width="70" Header="중분류" FieldName="BADTP2NM" ALGIN="CENTER"/>
+                            <its:Column Width="80" Header="불량코드" FieldName="BADCD" Visible="False"/>
+                        </its:Grid.Columns>
+                    </its:Grid>
+                </TabItem>
+                <TabItem Header="비가동">
+                    <its:Grid x:Name="GRID_G4" Width="596" Height="95">
+                        <its:Grid.Columns>
+                            <its:Column Width="90" Header="비가동유형" FieldName="NONTPNM" ALGIN="CENTER"/>
+                            <its:Column Width="110" Header="비가동명" FieldName="NONNM" ALGIN="CENTER"/>
+                            <its:Column Width="135" Header="시작시간" FieldName="NONSTIME" ALGIN="CENTER"/>
+                            <its:Column Width="135" Header="종료시간" FieldName="NONETIME" ALGIN="CENTER"/>
+                            <its:Column Width="70" Header="시간(분)" FieldName="NONMIN" DecimalPoint="0"/>
+                        </its:Grid.Columns>
+                    </its:Grid>
+                </TabItem>
+            </TabControl>
+        </UserControl>
+
+        <!--생산품목선택 팝업-->
+        <UserControl x:Name="POPUP_A1" Style="{DynamicResource TML_POP}" Canvas.Left="188" Canvas.Top="50" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A1" Width="800" Height="450">
+                <its:Text Label="스캔품번" Width="265" Value="{Binding ITEMCD}" ReadOnly="True"/>
+                <its:Text Label="스캔LOT NO" Width="265" Value="{Binding LOTKEY}" ReadOnly="True"/>
+                <its:Text Label="스캔HEAT NO" Width="265" Value="{Binding HEATNO}" ReadOnly="True"/>
+                <its:Text Label="스캔품명" Width="530" Value="{Binding ITEMNM}" ReadOnly="True"/>
+                <its:Text Label="스캔SP NO" Width="265" Value="{Binding SPNO}" ReadOnly="True"/>
+                <its:Check Label="계획 외 생산품번 선택" Value="{Binding OUTPLANYN}"/>
+                <UserControl Width="430"/>
+                <its:Button Label="확    인" Width="150" Height="40" SetFontSize="18" CommandName="SEL_ITEM" BackColor="DARKORANGE" FontWeight="Bold"/>
+                <its:Grid x:Name="GRID_G5" Width="795" Height="320">
+                    <its:Grid.Columns>
+                        <its:Column Width="260" Header="품목명" FieldName="ITEMNM"/>
+                        <its:Column Width="170" Header="품목코드" FieldName="ITEMCD"/>
+                        <its:Column Width="170" Header="규격" FieldName="ITEMSPEC"/>
+                        <its:Column Width="170" Header="SP NO" FieldName="SPNO"/>
+                        <its:Column Width="80" Header="품목ID" FieldName="ITEMID" Visible="False"/>
+                        <its:Column Width="80" Header="주간계획" FieldName="PLANQTY_DAY" Visible="False"/>
+                        <its:Column Width="80" Header="야간계획" FieldName="PLANQTY_NIGHT" Visible="False"/>
+                    </its:Grid.Columns>
+                </its:Grid>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--불량등록 팝업-->
+        <UserControl x:Name="POPUP_A2" Style="{DynamicResource TML_POP}" Canvas.Left="463" Canvas.Top="100" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A2" Width="330" Height="250">
+                <UserControl Width="330" Height="18"/>
+                <its:Combo Label="공장" LabelWidth="80" Width="300" GPCD="FACTORYCD" Value="{Binding FACTORYCD}" ReadOnly="True"/>
+                <its:Combo Label="대분류" LabelWidth="80" Width="300" GPCD="QM210" Value="{Binding BADTP1}"/>
+                <its:Combo Label="중분류" LabelWidth="80" Width="300" GPCD="QM220" Value="{Binding BADTP2}"/>
+                <its:Pop Label="불량코드" LabelWidth="80" Width="300" GPCD="BADCD" Value="{Binding BADCD}" ShowKeyPad="True"/>
+                <its:Text Label="불량상세" LabelWidth="80" Width="300" Value="{Binding BADDETAIL}"/>
+                <its:Number Label="불량수량" LabelWidth="80" Width="300" Value="{Binding BADQTY}" DecimalPoint="0" ShowKeyPad="True"/>
+                <UserControl Width="330" Height="10"/>
+                <UserControl Width="90"/>
+                <its:Button Label="저    장" Width="150" Height="40" SetFontSize="18" CommandName="SAVE_BAD" BackColor="RED" FontWeight="Bold"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--비가동등록 팝업-->
+        <UserControl x:Name="POPUP_A3" Style="{DynamicResource TML_POP}" Canvas.Left="288" Canvas.Top="50" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A3" Width="600" Height="450">
+                <UserControl Width="3000" Height="3"/>
+                <its:Date Label="시작시간" Value="{Binding NONSDAY}"/>
+                <its:Time HidenLabel="Y" Value="{Binding NONSTIME}" ShowSecond="Y"/>
+                <its:Button Label="시  작" x:Name="BTN_NONSTART" CommandName="START_NON" Width="70" Height="35" FontWeight="Bold"/>
+                <its:ButtonList x:Name="NONTP_LIST" PanelWidth="500" Height="100" Width="600"/>
+                <UserControl Width="600" Height="2" Background="Black"/>
+                <UserControl Height="10"/>
+                <its:ButtonList x:Name="NONCD_LIST" PanelWidth="500" Height="150" Width="600"/>
+                <UserControl Width="3000" Height="55"/>
+                <its:Text Label="비  고" Value="{Binding REMARK}" Width="305"/>
+                <UserControl Width="33"/>
+                <UserControl Width="3000"/>
+                <its:Date Label="종료시간" Value="{Binding NONEDAY}"/>
+                <its:Time HidenLabel="Y" Value="{Binding NONETIME}" ShowSecond="Y"/>
+                <its:Button Label="종  료" x:Name="BTN_NONEND" CommandName="END_NON" Width="70" Height="35" BackColor="IndianRed" FontWeight="Bold"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--작업자 선택 팝업-->
+        <UserControl x:Name="POPUP_A4" Style="{DynamicResource TML_POP}" Canvas.Left="338" Canvas.Top="50" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A4" Width="500" Height="450">
+                <UserControl Width="340"/>
+                <its:Button Label="저    장" Width="150" Height="40" SetFontSize="18" CommandName="SAVE_EMP" BackColor="DARKORANGE" FontWeight="Bold"/>
+                <its:Grid x:Name="GRID_G6" Width="495" Height="400">
+                    <its:Grid.Columns>
+                        <its:Column Width="60" Header="선택" IsRowCheck="True"/>
+                        <its:Column Width="160" Header="사원코드" FieldName="EMPCD" ALGIN="CENTER"/>
+                        <its:Column Width="220" Header="사원명" FieldName="EMPNM"/>
+                    </its:Grid.Columns>
+                </its:Grid>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--설비 일상점검 팝업 (TAL0001_R05 참고, 작업장·공정·라인은 메인 값)-->
+        <UserControl x:Name="POPUP_A5" Style="{DynamicResource TML_POP}" Canvas.Left="88" Canvas.Top="10" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A5" Width="1000" Height="540">
+                <UserControl Width="1000" Height="5"/>
+                <its:Combo Label="작업장" LabelWidth="80" Width="300" GPCD="LINECD" Value="{Binding LINECD}" REF01="07" ReadOnly="True"/>
+                <its:Combo Label="공정" LabelWidth="80" Width="300" GPCD="PRCCD_LINE" Value="{Binding PRCCD}" ReadOnly="True"/>
+                <its:Combo Label="라인" LabelWidth="80" Width="300" GPCD="EQMCD_LINE" Value="{Binding EQMCD}" ReadOnly="True"/>
+                <its:ButtonList x:Name="FANO_LIST" PanelWidth="980" Height="150" Width="1000"/>
+                <its:Date Label="조회일자" LabelWidth="80" Width="220" Value="{Binding SDATE}"/>
+                <its:Date HidenLabel="Y" Width="140" Value="{Binding EDATE}"/>
+                <its:Pop Label="작업자" LabelWidth="80" Width="300" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True"/>
+                <UserControl Width="1000" Height="2"/>
+                <its:Button Label="조    회" Width="150" Height="45" SetFontSize="18" CommandName="SEARCH_CHK" FontWeight="Bold"/>
+                <its:Button Label="점    검" Width="150" Height="45" SetFontSize="18" CommandName="POP_CHKADD" BackColor="GREEN" FontWeight="Bold"/>
+                <its:Button Label="수    정" Width="150" Height="45" SetFontSize="18" CommandName="POP_CHKEDIT" BackColor="GRAY" FontWeight="Bold"/>
+                <its:Button Label="삭    제" Width="150" Height="45" SetFontSize="18" CommandName="DEL_CHK" BackColor="RED" FontWeight="Bold"/>
+                <its:Button Label="문제점/조치사항" Width="200" Height="45" SetFontSize="18" CommandName="POP_CHKERR" FontWeight="Bold"/>
+                <its:Grid x:Name="GRID_G7" Width="250" Height="280">
+                    <its:Grid.Columns>
+                        <its:Column Width="130" Header="점검시간" FieldName="CHKTIME" ALGIN="CENTER"/>
+                        <its:Column Width="100" Header="점검자" FieldName="EMPCD" GPCD="EMPCD"/>
+                        <its:Column Width="100" Header="점검키" FieldName="CHKRSTKEY" Visible="False"/>
+                    </its:Grid.Columns>
+                </its:Grid>
+                <its:Grid x:Name="GRID_G8" Width="745" Height="280">
+                    <its:Grid.Columns>
+                        <its:Column Width="150" Header="점검명" FieldName="CHKKNDNM"/>
+                        <its:Column Width="110" Header="점검항목" FieldName="CHKLOC" GPCD="CHKLOC"/>
+                        <its:Column Width="110" Header="점검방법" FieldName="CHKMTH" GPCD="CHKMTH"/>
+                        <its:Column Width="100" Header="점검값" FieldName="CHKVALUE" ALGIN="CENTER"/>
+                        <its:Column Width="90" Header="점검주기" FieldName="CHKCYCLE" GPCD="CHKCYCLE"/>
+                        <its:Column Width="160" Header="비고" FieldName="REMARK"/>
+                    </its:Grid.Columns>
+                </its:Grid>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--자주검사 등록 팝업 (TAL2001_R01 참고, 작업장·공정·라인은 메인 값)-->
+        <UserControl x:Name="POPUP_A10" Style="{DynamicResource TML_POP}" Canvas.Left="0" Canvas.Top="49" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A10" Width="1176" Height="500">
+                <UserControl Width="1000" Height="5"/>
+                <its:Combo Label="작업장" LabelWidth="80" Width="365" GPCD="LINECD" Value="{Binding LINECD}" REF01="07" ReadOnly="True"/>
+                <its:Combo Label="공정" LabelWidth="80" Width="365" GPCD="PRCCD_LINE" Value="{Binding PRCCD}" ReadOnly="True"/>
+                <its:Combo Label="라인" LabelWidth="80" Width="365" GPCD="EQMCD_LINE" Value="{Binding EQMCD}" ReadOnly="True"/>
+                <its:Text Label="품목코드" LabelWidth="80" Width="365" Value="{Binding ITEMCD}" ReadOnly="True"/>
+                <its:Text Label="품목명" LabelWidth="80" Width="365" Value="{Binding ITEMNM}" ReadOnly="True"/>
+                <its:Text Label="규격" LabelWidth="80" Width="365" Value="{Binding ITEMSPEC}" ReadOnly="True"/>
+                <UserControl Width="1176" Height="5"/>
+                <its:Text Label="품목ID" Value="{Binding ITEMID}" Visibility="Collapsed"/>
+                <its:Date Label="검사일자" LabelWidth="80" Width="220" Value="{Binding TQMDATE}"/>
+                <its:Time HidenLabel="Y" Width="90" Value="{Binding TQMTIME}" ShowKeyPad="True" KeyDown="TIME_TQMTIME_KeyDown"/>
+                <its:Pop Label="검사자" LabelWidth="80" Width="300" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True"/>
+                <UserControl Width="30" Height="5"/>
+                <its:Button Label="검사항목 조회" Width="120" Height="35" SetFontSize="14" CommandName="SEARCH_STD" FontWeight="Bold"/>
+                <its:Grid x:Name="GRID_G10" Width="900" Height="400">
+                    <its:Grid.Columns>
+                        <its:Column Width="130" Header="검사항목" FieldName="STDNM"/>
+                        <its:Column Width="90" Header="세부항목" FieldName="STDPART" ALGIN="CENTER"/>
+                        <its:Column Width="80" Header="세부공정" FieldName="PRCDETAIL" GPCD="PRCDETAIL" ALGIN="CENTER"/>
+                        <its:Column Width="50" Header="특성" FieldName="FEATURE" ALGIN="CENTER"/>
+                        <its:Column Width="80" Header="검사방법" FieldName="STDCHKTP" GPCD="STDCHKTP"/>
+                        <its:Column Width="130" Header="검사규격" FieldName="STDJUDGE"/>
+                        <its:Column Width="80" Header="검사주기" FieldName="STDCYCLE" GPCD="STDCYCLE"/>
+                        <its:Column Width="90" Header="검사게이지" FieldName="STDMACHINE" GPCD="STDMACHINE"/>
+                        <its:Column Width="55" Header="시료수" FieldName="SAMPLESIZE" DecimalPoint="0"/>
+                        <its:Column Width="70" Header="최소값" FieldName="MINVAL" ALGIN="RIGHT"/>
+                        <its:Column Width="70" Header="최대값" FieldName="MAXVAL" ALGIN="RIGHT"/>
+                        <its:Column Width="70" Header="평균" FieldName="AVG" ALGIN="RIGHT"/>
+                        <its:Column Width="70" Header="판정" FieldName="JUDGENM" ALGIN="CENTER"/>
+                        <its:Column Width="60" Header="합불" FieldName="JUDGE" Visible="False"/>
+                        <its:Column Width="60" Header="검사키" FieldName="TQMRSTKEY" Visible="False"/>
+                        <its:Column Width="60" Header="리비전" FieldName="REVCD" Visible="False"/>
+                        <its:Column Width="60" Header="검사항목코드" FieldName="STDCD" Visible="False"/>
+                        <its:Column Width="60" Header="기준값" FieldName="STDVAL" Visible="False"/>
+                        <its:Column Width="60" Header="범위" FieldName="STDRANGE" Visible="False"/>
+                        <its:Column Width="60" Header="오차(-)" FieldName="STDMINUS" Visible="False"/>
+                        <its:Column Width="60" Header="오차(+)" FieldName="STDPLUS" Visible="False"/>
+                    </its:Grid.Columns>
+                </its:Grid>
+                <StackPanel Width="270" Height="400">
+                    <its:Grid x:Name="GRID_G11" Width="270" Height="310">
+                        <its:Grid.Columns>
+                            <its:Column Width="80" Header="검사값(L)" FieldName="VALUE" ReadOnly="False"  ShowKeyPad="true"/>
+                            <its:Column Width="80" Header="검사값(R)" FieldName="VALUE2" ReadOnly="False" ShowKeyPad="true"/>
+                            <its:Column Width="60" Header="판정" FieldName="JUDGE" ALGIN="CENTER"/>
+                            <its:Column Width="60" Header="검사값키" FieldName="VALUEKEY" Visible="False"/>
+                        </its:Grid.Columns>
+                    </its:Grid>
+                    <WrapPanel Margin="0,8,0,0">
+                        <UserControl Width="50" Height="5"/>
+                        <its:Check Label="합격" Value="{Binding OK}" Width="110"/>
+                        <its:Check Label="불합격" Value="{Binding NG}" Width="110"/>
+                    </WrapPanel>
+                    <its:Button Label="저    장" Width="150" Height="40" SetFontSize="18" CommandName="SAVE_PRCTEST" FontWeight="Bold" Margin="0,8,0,0"/>
+                </StackPanel>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--일상점검 등록·수정 팝업 (CHKRSTKEY 가 비어 있으면 등록, 있으면 수정)-->
+        <UserControl x:Name="POPUP_A6" Style="{DynamicResource TML_POP}" Canvas.Left="88" Canvas.Top="40" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A6" Width="1000" Height="480">
+                <UserControl Width="1000" Height="5"/>
+                <its:Date Label="점검일자" LabelWidth="70" Width="200" Value="{Binding BASEDATE}"/>
+                <its:Date Label="등록일자" LabelWidth="70" Width="200" Value="{Binding DATE}"/>
+                <its:Time HidenLabel="Y" Width="90" Value="{Binding BASETIME}"/>
+                <its:Pop Label="점검자" LabelWidth="60" Width="280" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True"/>
+                <its:Button Label="저    장" Width="150" Height="40" SetFontSize="18" CommandName="SAVE_CHK" BackColor="DARKORANGE" FontWeight="Bold"/>
+                <its:Text Label="점검키" Value="{Binding CHKRSTKEY}" Visibility="Collapsed"/>
+                <its:Grid x:Name="GRID_G9" Width="995" Height="420">
+                    <its:Grid.Columns>
+                        <its:Column Width="50" Header="순번" FieldName="SORTNO" ALGIN="CENTER"/>
+                        <its:Column Width="150" Header="점검명" FieldName="CHKKNDNM"/>
+                        <its:Column Width="110" Header="점검항목" FieldName="CHKLOC" GPCD="CHKLOC"/>
+                        <its:Column Width="110" Header="점검방법" FieldName="CHKMTH" GPCD="CHKMTH"/>
+                        <its:Column Width="90" Header="점검값구분" FieldName="CHKVALTP" GPCD="CHKVALTP"/>
+                        <its:Column Width="80" Header="점검주기" FieldName="CHKCYCLE" GPCD="CHKCYCLE"/>
+                        <its:Column Width="100" Header="점검값" FieldName="CHKVALUE" ALGIN="CENTER"/>
+                        <its:Column Width="60" Header="입력" CellType="Button" ButtonText="입력" CommandName="INPUT_CHKVAL"/>
+                        <its:Column Width="210" Header="비고" FieldName="REMARK" ReadOnly="False"/>
+                        <its:Column Width="60" Header="계획구분" FieldName="PLANTP" Visible="False"/>
+                        <its:Column Width="60" Header="점검코드" FieldName="CHKKNDCD" Visible="False"/>
+                        <its:Column Width="60" Header="설비리비전" FieldName="REVCD" Visible="False"/>
+                        <its:Column Width="60" Header="그룹리비전" FieldName="GRPREVCD" Visible="False"/>
+                    </its:Grid.Columns>
+                </its:Grid>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--점검값 입력 팝업 (숫자)-->
+        <UserControl x:Name="POPUP_A7" Style="{DynamicResource TML_POP}" Canvas.Left="423" Canvas.Top="180" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A7" Width="330" Height="130">
+                <UserControl Width="330" Height="18"/>
+                <its:Text Label="점검값" LabelWidth="80" Width="300" Value="{Binding CHKVALUE}" ShowKeyPad="True"/>
+                <UserControl Width="330" Height="10"/>
+                <UserControl Width="90"/>
+                <its:Button Label="등    록" Width="150" Height="40" SetFontSize="18" CommandName="SET_CHKVAL" BackColor="DARKORANGE" FontWeight="Bold"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--점검값 입력 팝업 (OK/NG)-->
+        <UserControl x:Name="POPUP_A8" Style="{DynamicResource TML_POP}" Canvas.Left="433" Canvas.Top="200" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A8" Width="310" Height="110">
+                <its:Button Label="OK" Width="150" Height="100" SetFontSize="24" CommandName="CHKVAL_OK" BackColor="GREEN" FontWeight="Bold"/>
+                <its:Button Label="NG" Width="150" Height="100" SetFontSize="24" CommandName="CHKVAL_NG" BackColor="RED" FontWeight="Bold"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--문제점/조치사항 팝업-->
+        <UserControl x:Name="POPUP_A9" Style="{DynamicResource TML_POP}" Canvas.Left="238" Canvas.Top="180" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A9" Width="700" Height="170">
+                <UserControl Width="700" Height="10"/>
+                <its:Text Label="문제점" LabelWidth="80" Width="680" Value="{Binding PROBLEM}"/>
+                <its:Text Label="조치사항" LabelWidth="80" Width="680" Value="{Binding SOLUTION}"/>
+                <UserControl Width="700" Height="10"/>
+                <UserControl Width="530"/>
+                <its:Button Label="저    장" Width="150" Height="40" SetFontSize="18" CommandName="SAVE_CHKERR" BackColor="DARKORANGE" FontWeight="Bold"/>
+            </its:WrapContent>
+        </UserControl>
+    </Canvas>
+</its:ItsPageTml>

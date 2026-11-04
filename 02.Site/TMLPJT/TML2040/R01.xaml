@@ -54,7 +54,7 @@
         </UserControl>
 
         <!--비가동 유형선택 팝업-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="250" Canvas.Top="0" >
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="288" Canvas.Top="1" >
             <its:WrapContent x:Name="PANEL_A1" Width="400" Height="450">
                 <its:Text Label="비가동키" Value="{Binding PRDNONKEY}" Visibility="Collapsed"/>
                 <its:Date Label="시작시간" Value="{Binding NONSDAY}" ReadOnly="True"/>
@@ -70,7 +70,7 @@
         </UserControl>
 
         <!--비가동 시작종료-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="150" Canvas.Top="0" >
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="188" Canvas.Top="1" >
             <its:WrapContent x:Name="PANEL_A3" Width="600" Height="450">
                 <UserControl Width="3000" Height="3"/>
                 <its:Date Label="시작시간" Value="{Binding NONSDAY}"  />
@@ -90,7 +90,7 @@
             </its:WrapContent>
         </UserControl>
 
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="200" Canvas.Top="90">
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="238" Canvas.Top="101">
             <its:WrapContent x:Name="PANEL_A4" Width="500" Height="250">
                 <UserControl Width="5000" Height="5"/>
                 <UserControl Width="10"/>

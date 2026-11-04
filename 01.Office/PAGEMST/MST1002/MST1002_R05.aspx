@@ -20,7 +20,27 @@
 
 <%-- BODY --%>
 <asp:Content ContentPlaceHolderID="CPH_BODY" Runat="Server">
-    <Its:div runat="server" Type="SplitSingle" TopHeightPc="70">
+    <Its:div runat="server" Type="SplitLeft" LeftWidthPc="70">
         <Its:grid runat="server" ID="grid1" />
     </Its:div>
+    <Its:split runat="server" Type="Vertical" />
+    <Its:div runat="server" Type="SplitRight">
+        <Its:tab runat="server" ID="tab1">
+            <Its:div runat="server" Type="SplitSingle" TabTitle="라인별 설비매칭" ID="div3">
+                <Its:grid runat="server" ID="grid2" />
+            </Its:div>
+        </Its:tab>
+    </Its:div>
+
+    <Its:pop runat="server" ID="pop_PRCDETAIL" Title="세부공정 관리" Width="650" Height="500">
+        <Its:div runat="server" Type="SplitTop" TopHeightPc="7">
+            <Its:combo runat="server" Label="라인" ID="cmb_POP_EQMCD" GPCD="EQMCD_LINE" InputWidth="200" LabelWidth="40" ReadOnly="true" MarginTop="5" />
+            <Its:button runat="server" Label="닫기" ID="btn_POP_CLOSE" Float="right" MarginRight="10" MarginTop="5" />
+            <Its:button runat="server" Label="저장" ID="btn_POP_SAVE" Float="right" MarginRight="10" MarginTop="5" BackColor="CustomButton" />
+        </Its:div>
+        <Its:split runat="server" Type="Horizon" Resizeable="false" />
+        <Its:div runat="server" Type="SplitDown">
+            <Its:grid runat="server" ID="grid_POP_PRCDETAIL" />
+        </Its:div>
+    </Its:pop>
 </asp:Content>

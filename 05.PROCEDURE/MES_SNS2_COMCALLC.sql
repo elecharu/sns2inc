@@ -1,0 +1,203 @@
+﻿CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.COMCALLC(
+  IN $PROCNAME  VARCHAR(50),
+  IN $CALLTYPE  VARCHAR(50), 
+  IN $TRANYN    VARCHAR(1),
+  IN $PARAM     MEDIUMTEXT
+)
+PROC: BEGIN
+-- *****************************************************************************
+-- 작성자: 김동학 2016-10-01: 
+-- 수정자: 김동학 2016-10-01: 
+-- *****************************************************************************
+
+  DECLARE _$CALLPROC MEDIUMTEXT;
+  DECLARE _$PARAM_NAME VARCHAR(100);
+  DECLARE _$PARAM_TYPE VARCHAR(100);
+  DECLARE _$DONEFLAG VARCHAR(5) DEFAULT 'START';
+  DECLARE _$CS CURSOR FOR 
+    SELECT PARAMETER_NAME, DATA_TYPE
+      FROM SYSTEM_PARAMETERS
+--       FROM information_schema.PARAMETERS
+      WHERE SPECIFIC_SCHEMA = DATABASE()
+      AND SPECIFIC_NAME = $PROCNAME;
+
+  -- SET MAX_SP_RECURSION_DEPTH = 10;
+
+-- *****************************************************************************
+  DECLARE EXIT HANDLER FOR SQLWARNING 
+  BEGIN
+    
+    IF IFNULL(@ERRMSG, '') = '' THEN 
+      GET DIAGNOSTICS CONDITION 1 @ERRMSG = MESSAGE_TEXT; 
+    END IF;
+
+    IF $TRANYN <> 'N' THEN ROLLBACK; END IF;
+    
+    CALL COMDEBUG(-1, @ERRMSG); 
+
+--     DELETE FROM COMDEBUG WHERE DEBUGTIME < ADDDATE_MONTH(GETDATE(), -1);
+--     INSERT INTO COMDEBUG (
+--       DEBUGNM, DEBUGTIME, DEBUGMSG, PROCNAME, 
+--       CALLTYPE, CALLPARAM, CALLEMP, CALLPRG, CALLHOST, CALLIP, CALLMAC
+--     ) VALUES (
+--       'SQLWARNING', GETTIME(), @ERR_PROC_MSG, $PROCNAME, 
+--       $CALLTYPE, $PARAM, @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+--     );
+
+    SELECT '_ERR_' AS RTNCODE, @ERRMSG AS ERRMSG, @ERR_PROC_MSG AS ERRDEBUG;
+
+  END;
+-- *****************************************************************************
+  DECLARE EXIT HANDLER FOR NOT FOUND 
+  BEGIN
+    
+    IF IFNULL(@ERRMSG, '') = '' THEN 
+      GET DIAGNOSTICS CONDITION 1 @ERRMSG = MESSAGE_TEXT; 
+    END IF;
+
+    IF $TRANYN <> 'N' THEN ROLLBACK; END IF;
+
+    CALL COMDEBUG(-1, @ERRMSG); 
+
+--     DELETE FROM COMDEBUG WHERE DEBUGTIME < ADDDATE_MONTH(GETDATE(), -1);
+--     INSERT INTO COMDEBUG (
+--       DEBUGNM, DEBUGTIME, DEBUGMSG, PROCNAME, 
+--       CALLTYPE, CALLPARAM, CALLEMP, CALLPRG, CALLHOST, CALLIP, CALLMAC
+--     ) VALUES (
+--       'NOT_FOUND', GETTIME(), @ERR_PROC_MSG, $PROCNAME, 
+--       $CALLTYPE, $PARAM, @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+--     );
+
+    SELECT '_ERR_' AS RTNCODE, @ERRMSG AS ERRMSG, @ERR_PROC_MSG AS ERRDEBUG;
+
+  END;
+-- *****************************************************************************
+  DECLARE EXIT HANDLER FOR SQLEXCEPTION 
+  BEGIN
+
+    IF IFNULL(@ERRMSG, '') = '' THEN 
+      GET DIAGNOSTICS CONDITION 1 @ERRMSG = MESSAGE_TEXT;
+    END IF;
+
+    IF $TRANYN <> 'N' THEN ROLLBACK; END IF;
+
+    CALL COMDEBUG(-1, @ERRMSG); 
+
+--     DELETE FROM COMDEBUG WHERE DEBUGTIME < ADDDATE_MONTH(GETDATE(), -1);
+--     INSERT INTO COMDEBUG (
+--       DEBUGNM, DEBUGTIME, DEBUGMSG, PROCNAME, 
+--       CALLTYPE, CALLPARAM, CALLEMP, CALLPRG, CALLHOST, CALLIP, CALLMAC
+--     ) VALUES (
+--       'SQLEXCEPTION', GETTIME(), @ERR_PROC_MSG, $PROCNAME, 
+--       $CALLTYPE, $PARAM, @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+--     );
+
+    SELECT '_ERR_' AS RTNCODE, @ERRMSG AS ERRMSG, @ERR_PROC_MSG AS ERRDEBUG;
+
+  END;
+-- *****************************************************************************
+  SET AUTOCOMMIT = 0;
+  START TRANSACTION;
+-- *****************************************************************************
+
+  SET @CALLEMP = GETPARAM($PARAM, 'CALLEMP');
+  SET @CALLPRG = GETPARAM($PARAM, 'CALLPRG');
+  SET @CALLHOST = GETPARAM($PARAM, 'CALLHOST');
+  SET @CALLIP = GETPARAM($PARAM, 'CALLIP');
+  SET @CALLMAC = GETPARAM($PARAM, 'CALLMAC');
+  SET @ERR_PROC_MSG = '';
+
+  SET @ERRMSG = '';
+  SET @DEBUGLOGYN = 'N';
+-- *****************************************************************************
+  SET _$CALLPROC = CONCAT('CALL ', $PROCNAME, '(');
+  BEGIN
+
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET _$DONEFLAG = 'END';
+    OPEN _$CS;  WHILE _$DONEFLAG <> 'END' DO
+
+      FETCH _$CS INTO _$PARAM_NAME, _$PARAM_TYPE;
+
+      IF _$DONEFLAG = 'START' THEN 
+
+        SET _$DONEFLAG ='LOOP';
+
+      ELSEIF _$DONEFLAG <> 'END' THEN
+
+        SET _$CALLPROC = CONCAT(_$CALLPROC, ',');
+
+      END IF;
+
+      IF _$DONEFLAG  <> 'END' THEN
+
+        IF _$PARAM_NAME = '$CALLTYPE' THEN
+  
+          SET _$CALLPROC = CONCAT(_$CALLPROC, '''', $CALLTYPE, '''');
+  
+        ELSE
+          
+          IF UPPER(_$PARAM_TYPE) IN ('DECIMAL', 'INT') THEN
+
+            SET _$CALLPROC = CONCAT(_$CALLPROC, 0 + GETPARAM($PARAM, _$PARAM_NAME), '');
+
+          ELSE
+
+            SET _$CALLPROC = CONCAT(_$CALLPROC, '''', GETPARAM($PARAM, _$PARAM_NAME), '''');
+
+          END IF;
+  
+        END IF;
+      END IF;
+
+    END WHILE; CLOSE _$CS;
+
+  END;
+
+  SET @CALLPROC = CONCAT(_$CALLPROC, ');');
+
+  PREPARE CALLPROC FROM @CALLPROC;
+  EXECUTE CALLPROC ;
+  DEALLOCATE PREPARE CALLPROC;
+-- *****************************************************************************
+  IF IFNULL(@ERRMSG, '') <> '' THEN
+
+    IF $TRANYN <> 'N' THEN ROLLBACK; END IF; 
+
+--     IF @DEBUGLOGYN = 'Y' THEN 
+-- 
+--       DELETE FROM COMDEBUG WHERE DEBUGTIME < ADDDATE_MONTH(GETDATE(), -1);
+--       INSERT INTO COMDEBUG (
+--         DEBUGNM, DEBUGTIME, DEBUGMSG, PROCNAME, 
+--         CALLTYPE, CALLPARAM, CALLEMP, CALLPRG, CALLHOST, CALLIP, CALLMAC
+--       ) VALUES (
+--         'ROLLBACK', GETTIME(), @ERR_PROC_MSG, $PROCNAME, 
+--         $CALLTYPE, $PARAM, @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+--       );
+-- 
+--     END IF;
+
+    SELECT '_ERR_' AS RTNCODE, @ERRMSG AS ERRMSG, @ERR_PROC_MSG AS ERRDEBUG;
+
+  ELSE
+
+    IF $TRANYN <> 'N' THEN COMMIT; END IF; 
+
+--     IF @DEBUGLOGYN = 'Y' THEN 
+-- 
+--       DELETE FROM COMDEBUG WHERE DEBUGTIME < ADDDATE_MONTH(GETDATE(), -1);
+--       INSERT INTO COMDEBUG (
+--         DEBUGNM, DEBUGTIME, DEBUGMSG, PROCNAME, 
+--         CALLTYPE, CALLPARAM, CALLEMP, CALLPRG, CALLHOST, CALLIP, CALLMAC
+--       ) VALUES (
+--         'COMMIT', GETTIME(), @ERR_PROC_MSG, $PROCNAME, 
+--         $CALLTYPE, $PARAM, @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+--       );
+-- 
+--     END IF;
+
+    SELECT '_SUC_' AS RTNCODE, 'SUCCESS' AS ERRMSG, @ERR_PROC_MSG AS ERRDEBUG;
+
+  END IF;
+-- *****************************************************************************
+END

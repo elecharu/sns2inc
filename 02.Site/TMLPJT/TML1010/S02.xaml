@@ -11,10 +11,11 @@
 
         <UserControl Canvas.Left="0" Canvas.Top="0" Style="{DynamicResource TML_PANEL}">
             <its:WrapContent x:Name="PANEL_S1" Width="980" Height="30">
-                <its:Date Label="생산일자" Value="{Binding SDATE}"/>
-                <its:Date Label="" LabelWidth="0" Width="120" Value="{Binding EDATE}"/>
+                <its:Date Label="생산일자" Width="180" Value="{Binding SDATE}"/>
+                <its:Date Label="" LabelWidth="0" Width="100" Value="{Binding EDATE}"/>
                 <its:Combo GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ReadOnly="True" x:Name="cb_CUSTCD"/>
                 <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True"/>
+                <UserControl Width="20"/>
                 <its:Button Label="조회" Width="80" CommandName="SEL_RST"/>
             </its:WrapContent>
         </UserControl>
@@ -33,7 +34,7 @@
                 </its:Grid.Columns>
             </its:Grid>
         </UserControl>
-        <UserControl Canvas.Left="50" Canvas.Top="50" Style="{DynamicResource TML_POP}" Width="800" Height="400" Visibility="Visible">
+        <UserControl Canvas.Left="90" Canvas.Top="40" Style="{DynamicResource TML_POP}" Width="800" Height="400" Visibility="Visible">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="30" />

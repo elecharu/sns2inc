@@ -164,6 +164,10 @@
     border-radius: 3px;
     pointer-events: none;
 }
+/* 분할영역(.SplitTop/.SplitDown .wj-flexgrid > div)의 height 100% 규칙에 늘어나지 않도록 */
+.ItsGrid.wj-flexgrid > div.ItsGrid_selInfo {
+    height: auto !important;
+}
 .itsgrid-selected-row {
     border-bottom: 1px solid indianred;
 }

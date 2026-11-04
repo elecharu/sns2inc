@@ -1,0 +1,8 @@
+--mes_dbtype=MARIADB
+--erp_dbtype=MSSQL
+--erp_host=203.228.186.109
+--erp_port=1433
+--erp_dbname=INTERFACE
+--erp_user=itsco
+--erp_password=itsco2024!
+--autorun=Y

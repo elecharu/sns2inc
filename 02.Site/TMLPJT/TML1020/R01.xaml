@@ -12,12 +12,15 @@
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
             <its:WrapContent x:Name="PANEL_S1" Width="980" Height="60">
-                <its:Date Label="입고일자" Value="{Binding SDATE}"/>
-                <its:Date Label="" LabelWidth="0" Width="120" Value="{Binding EDATE}"/>
+                <its:Date Label="입고일자" Width="180" Value="{Binding SDATE}"/>
+                <its:Date Label="" LabelWidth="0" Width="100" Value="{Binding EDATE}"/>
+                <UserControl Width="20"/>
                 <its:Button Label="입고 조회" CommandName="SEL_MTRIN" Width="100"/>
-                <UserControl Width="400"/>
-                <its:Text Label="거래명세서번호" LabelWidth="70" Value="{Binding INVOICEKEY}" KeyDown="Text_KeyDown"/>
+                <UserControl Width="580"/>
+                <its:Text Label="거래명세서번호" LabelWidth="70" Width="280" Value="{Binding INVOICEKEY}" KeyDown="Text_KeyDown"/>
+                <UserControl Width="20"/>
                 <its:Button Label="거래명세서 조회" CommandName="SEL_INVOICEKEY" Width="100" BackColor="GREEN"/>
+                <UserControl Width="400"/>
                 <its:Button Label="발주별 입고등록" CommandName="ADD_MTRODR_IN" Width="100" BackColor="GREEN"/>
             </its:WrapContent>
         </UserControl>
@@ -38,7 +41,7 @@
             </its:Grid>
         </UserControl>
 
-        <UserControl Canvas.Left="100" Canvas.Top="30" Style="{DynamicResource TML_POP}" Width="700" Height="400" Visibility="Hidden">
+        <UserControl Canvas.Left="140" Canvas.Top="40" Style="{DynamicResource TML_POP}" Width="700" Height="400" Visibility="Hidden">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="60" />
@@ -87,7 +90,7 @@
             </Grid>
         </UserControl>
 
-        <UserControl Canvas.Left="100" Canvas.Top="30" Style="{DynamicResource TML_POP}" Width="700" Height="400" Visibility="Hidden">
+        <UserControl Canvas.Left="140" Canvas.Top="40" Style="{DynamicResource TML_POP}" Width="700" Height="400" Visibility="Hidden">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="60"/>
@@ -145,7 +148,7 @@
             </Grid>
         </UserControl>
 
-        <UserControl Canvas.Left="100" Canvas.Top="30" Style="{DynamicResource TML_POP}" Width="700" Height="400" Visibility="Hidden">
+        <UserControl Canvas.Left="140" Canvas.Top="40" Style="{DynamicResource TML_POP}" Width="700" Height="400" Visibility="Hidden">
             <its:WrapContent x:Name="PANEL_A4">
                 <its:Grid x:Name="GRID_G5" Width="695" Height="370" >
                     <its:Column FieldName="ITEMCD" Width="120" Header="품목코드" ALGIN="Center"/>

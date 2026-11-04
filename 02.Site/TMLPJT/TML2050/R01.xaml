@@ -72,7 +72,7 @@
         </UserControl>
 
         <!--작업장 선택 팝업-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="80" Canvas.Top="18" Visibility="Hidden">
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="78" Canvas.Top="16" Visibility="Hidden">
             <its:WrapContent x:Name="PANEL_A2" Width="820" Height="420" Background="#FAFAFA">
                 <Grid Width="820" Height="420">
                     <Grid.RowDefinitions>
@@ -93,7 +93,7 @@
         </UserControl>
 
         <!--도착 등록 팝업-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="80" Canvas.Top="18">
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="78" Canvas.Top="16">
             <its:WrapContent x:Name="PANEL_A3" Width="820" Height="420" Background="#FAFAFA">
                 <Grid Width="820" Height="420">
                     <Grid.RowDefinitions>
@@ -151,7 +151,7 @@
         <!--수리시작 팝업
             호출 기준: 선택한 호출 카드의 설비로 수리 (라인 호출이면 그 라인 설비 중에서 선택)
             직접 수리: 선택한 카드 없이 작업장 설비구분 → 라인 → 설비 선택-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="80" Canvas.Top="18">
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="78" Canvas.Top="16">
             <its:WrapContent x:Name="PANEL_A4" Width="820" Height="420" Background="#FAFAFA">
                 <Grid Width="820" Height="420">
                     <Grid.RowDefinitions>
@@ -225,7 +225,7 @@
         </UserControl>
 
         <!--수리종료 팝업-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="80" Canvas.Top="18">
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="78" Canvas.Top="16">
             <its:WrapContent x:Name="PANEL_A5" Width="820" Height="420" Background="#FAFAFA">
                 <Grid Width="820" Height="420">
                     <Grid.RowDefinitions>
@@ -280,7 +280,7 @@
 
         <!--이력조회 팝업 (다른 현장 메뉴 팝업과 같은 TML_POP, 기본 글꼴)
             조회 일자 + 설비 콤보(조회 기준) + 이력조회/닫기 → 이력 그리드-->
-        <UserControl x:Name="HIS_LAYER" Style="{DynamicResource TML_POP}" Canvas.Left="80" Canvas.Top="18">
+        <UserControl x:Name="HIS_LAYER" Style="{DynamicResource TML_POP}" Canvas.Left="78" Canvas.Top="16">
             <its:WrapContent x:Name="PANEL_A6" Width="820" Height="420" Background="WhiteSmoke">
                 <StackPanel>
                     <!--조회 조건-->
@@ -318,7 +318,7 @@
         </UserControl>
 
         <!--호출 등록 팝업 (3단계)-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="80" Canvas.Top="18" Visibility="Hidden">
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="78" Canvas.Top="16" Visibility="Hidden">
             <its:WrapContent x:Name="PANEL_A1" Width="820" Height="420" Background="#FAFAFA">
                 <Grid Width="820" Height="420">
                     <Grid.RowDefinitions>

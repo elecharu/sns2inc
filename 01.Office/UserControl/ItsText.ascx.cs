@@ -207,7 +207,7 @@ public partial class ItsText : System.Web.UI.UserControl
     {
         set
         {
-            MarginBottom = value;
+            _MarginBottom = value;
         }
     }
 }

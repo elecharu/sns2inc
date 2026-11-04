@@ -48,7 +48,7 @@
                 <span>창모드</span>
             </div>
             <div class="loginifo" >
-                <span><%= loginUser %>님</span>
+                <span title="<%= loginUser %>님"><%= loginUser %>님</span>
             </div>
             <div class="logout_btn" onclick="logout()" >
                 <span>로그아웃</span>

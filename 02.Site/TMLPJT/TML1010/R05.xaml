@@ -51,7 +51,7 @@
         </UserControl>
 
         <!-- 발주 조회 및 입고 등록 팝업 -->
-        <UserControl x:Name="POP_IN" Canvas.Left="15" Canvas.Top="10" Style="{DynamicResource TML_POP}" Width="950" Height="545" Visibility="Collapsed">
+        <UserControl x:Name="POP_IN" Canvas.Left="15" Canvas.Top="17" Style="{DynamicResource TML_POP}" Width="950" Height="545" Visibility="Collapsed">
             <Grid Width="944" Height="510" Background="WhiteSmoke">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="58" />
@@ -139,7 +139,7 @@
         </UserControl>
 
         <!-- 입출고 이력 팝업 -->
-        <UserControl x:Name="POP_INOUT" Canvas.Left="15" Canvas.Top="30" Style="{DynamicResource TML_POP}" Width="950" Height="510" Visibility="Collapsed">
+        <UserControl x:Name="POP_INOUT" Canvas.Left="15" Canvas.Top="35" Style="{DynamicResource TML_POP}" Width="950" Height="510" Visibility="Collapsed">
             <its:WrapContent x:Name="PANEL_A1" Background="WhiteSmoke" Width="944" Height="475">
                 <its:Date Label="조회일자" LabelWidth="60" Width="184" Value="{Binding SDATE}" />
                 <its:Date HidenLabel="Y" Width="124" Value="{Binding EDATE}" />

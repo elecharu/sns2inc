@@ -134,6 +134,7 @@ namespace TML1010
             {
                 ItsMaria.Set("TML1010_R03", "ADD_RST");
 
+                ItsMaria.AddModel(MODEL_S1);
                 ItsMaria.AddModel(MODEL_A1);
                 ItsMaria.AddModel(MODEL_A2);
 

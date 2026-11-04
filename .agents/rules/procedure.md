@@ -60,3 +60,5 @@ trigger: always_on
 | **공통 감사 함수 표준** | [procedure_audit.md](procedure_audit.md) | 등록/수정 시 `CALLTIME()`, `CALLEMP()`, `CALLPRG()` 필수 호출 (NOW 대입 금지) |
 | **최상단 1일 1행 이력** | [procedure_history.md](procedure_history.md) | 최상단 `Modify:` 영역에 일자별 단 1행으로 간결하게 통합 요약 기록 |
 | **SQL 구조 및 JOIN 최소화** | [sql_structure.md](sql_structure.md) | 중복 JOIN 배제, 식별키 직접 연결, 불필요한 테이블 참조 제거 |
+| **기능별 테이블·값 명세** | [feature_spec.md](feature_spec.md) | 기능별 참조 테이블·조건 값·표시 컬럼·연동 동작을 정리해 작업 후 설명 및 이력 기록 |
+| **[최우선] 기존 방식 참조·공통 함수 활용·정밀 검증** | [priority_reference_verification.md](priority_reference_verification.md) | `GETKEY`·`COMSPLIT`·`COMERR`·감사 함수 등 공통 기능 우선 사용, 원본 프로시저로 테이블 관계·행 수 확인, 합계 기준 검증, 확인 후 변경, 격리 환경 실행 검증 |

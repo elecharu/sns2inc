@@ -1,0 +1,277 @@
+﻿
+2026-10-27 11:47:37	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:38	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:39	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:40	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:41	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:42	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:43	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:44	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:45	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:46	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:47	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:48	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:49	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:50	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:51	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:52	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:53	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:54	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:55	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:56	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:57	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:58	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
+2026-10-27 11:47:59	System.IO.FileNotFoundException: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt' 파일을 찾을 수 없습니다.
+파일 이름: 'D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\bin\Debug\MariaConfig.txt'
+   위치: System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   위치: System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding, Boolean detectEncodingFromByteOrderMarks, Int32 bufferSize, Boolean checkHost)
+   위치: System.IO.StreamReader..ctor(String path, Encoding encoding)
+   위치: System.IO.File.InternalReadAllLines(String path, Encoding encoding)
+   위치: ItsMaria.get_ConnString() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 21
+   위치: ItsMaria.Call() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\ItsMaria.cs:줄 119
+   위치: ITSIF_INTERFACE.MainLoop.IFReceive() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 87
+   위치: ITSIF_INTERFACE.MainLoop.IFTask() 파일 D:\업체별 자료\S&S INC 2공장\프로그램\ITSIF_INTERFACE_V2\MainLoop.cs:줄 60
