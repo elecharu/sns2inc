@@ -5,7 +5,7 @@ using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
-public partial class MST1004_R01 : BasePage
+public partial class MST1005_R01 : BasePage
 {
     protected void Page_Load(object sender, EventArgs e)
     {

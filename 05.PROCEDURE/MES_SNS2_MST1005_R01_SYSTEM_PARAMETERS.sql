@@ -1,0 +1,22 @@
+-- *****************************************************************************
+-- Comment: MST1005_R01 설비등급 평가등록 호출 파라미터 등록
+-- Create:  2026-11-05  한성수
+-- *****************************************************************************
+-- MST1005_R01 프로시저 저장 후 아래 트랜잭션을 실행
+START TRANSACTION;
+DELETE FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'MST1005_R01';
+
+INSERT INTO MES_SNS2.SYSTEM_PARAMETERS
+SELECT * FROM information_schema.PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'MST1005_R01';
+COMMIT;
+
+-- 정상 18건: SCORE_LIST 16번, CALLTYPE 17번, KEYWORD 18번
+SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
+FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'MST1005_R01'
+ORDER BY ORDINAL_POSITION;

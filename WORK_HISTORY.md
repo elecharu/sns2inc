@@ -17,6 +17,117 @@
 
 ## 🕒 2026-11-05 (목) 작업 내역
 
+### 8. MST1005_R01 평가표 결재 칸 빈칸 대각선 표시
+- **수정/대상 파일**: [04.Report/PAGEMST/MST1005/R01.cs](04.Report/PAGEMST/MST1005/R01.cs), [04.Report/PAGEMST/MST1005/R01.Designer.cs](04.Report/PAGEMST/MST1005/R01.Designer.cs), 01.Office/Reports·04.Report/bin MST1005.exe 재배포
+- **배경 및 원인**: 결재(작성·검토·승인) 칸에 값이 없으면 양식처럼 대각선으로 표시 요청
+- **작업 상세 내용**:
+  - 1. 결재 서명 칸 3개 위에 같은 위치·크기의 XRLine(LineDirection.BackSlant, 왼쪽 위 → 오른쪽 아래) 배치 (xrLineAprvWrite·Review·Approve)
+  - 2. 칸 값이 비어 있을 때만 대각선 표시 : 작성(평가자 없음), 검토(항상 빈칸 → 항상 표시), 승인(승인 전)
+- **검증 결과**: MSBuild Release 성공(경고 0), 승인·미승인 샘플 출력 비교(승인 : 검토만 대각선, 미승인 : 검토·승인 대각선, 1페이지), Designer 정적 점검(컴포넌트 93개 필드 일치, XRPanel 없음), 인코딩 확인. 미확인: VS 디자이너
+
+
+### 2. MST1005_R01 평가 팝업 점수별 평가기준 비고 추가, 등록 점수 자동 선택 및 상단 영역 정렬 보정
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_R01.sql](05.Procedure/MES_SNS2_MST1005_R01.sql), [01.Office/PAGEMST/MST1005/MST1005_R01.aspx](01.Office/PAGEMST/MST1005/MST1005_R01.aspx), [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js)
+- **배경 및 원인**: "설비등급 평가" 팝업창에서 우측 상단 점수별 평가기준 그리드(grid4)에 비고(REMARK) 컬럼 추가, 평가항목의 등록 점수 기준 행 자동 포커스 처리, 상단 평가등급 및 비고 영역의 시작·끝 위치 불일치 정렬 보정 요청
+- **작업 상세 내용**:
+  - 1. 프로시저 점수별 평가기준 비고 반환: LIST_EVAL_D2 분기에서 MSTEQM_GRADEREV_D2.REMARK 조회 컬럼 추가
+  - 2. 우측 상단 그리드(grid4) 비고 컬럼 추가: JS grid4 생성 시 "비고"(REMARK, width: 150) 컬럼 정의 추가
+  - 3. 등록 점수 기준 행 자동 선택: grid3 onSelect 시 현재 선택된 평가항목의 SCORE 값과 일치하는 grid4 행을 검색하여 Setkey 및 SetStore(selectIndex), SelectRow로 자동 선택(미등록 시 기존 방식대로 0번째 행 선택)
+  - 4. 상단 평가등급 및 비고 영역 정렬 보정: pop1_cmb_EQMGRADE InputWidth를 293 -> 289로 조정하여 상단 "설비명" 끝과 정확히 일치시키고 뒤따르는 "비고" 시작 위치를 "평가일자" 시작과 통일, pop1_txt_REMARK InputWidth를 530 -> 544로 조정하여 우측 끝을 상단 "평가자" 끝과 픽셀 단위로 정확히 일치
+- **검증 결과**: 구문 정적 검사 통과, 프로시저 UTF-8 (BOM 없음) + CRLF 및 화면 파일 UTF-8 with BOM + CRLF 바이너리 규정 준수 확인
+
+### 7. MST1005_R01 평가 팝업 합계점수 즉시 표시·등급기준 그리드 선택 불가·헤더 정렬, 평가표 상단 여백 조정
+- **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_R01.aspx](01.Office/PAGEMST/MST1005/MST1005_R01.aspx), [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js), [04.Report/PAGEMST/MST1005/R01.Designer.cs](04.Report/PAGEMST/MST1005/R01.Designer.cs), 01.Office/Reports·04.Report/bin MST1005.exe 재배포
+- **배경 및 원인**: 평가 팝업에서 점수를 선택해도 합계점수가 바로 바뀌지 않음, 설비등급 기준 그리드 선택 불가 요청, 팝업 헤더 컨트롤 시작·끝 정렬 요청, 평가표 결재 칸 왼쪽 간격 제거 및 제목 아래·본문 표 위 여백 추가 요청
+- **작업 상세 내용**:
+  - 1. 합계점수 : 원인 - ItsNum은 값 칸(숨김)과 표시 칸(ItsNumView)이 따로 있고 표시 칸은 change 이벤트에서 갱신되는데, SET_TOTAL이 ItsNum.SetValue(..., false)로 이벤트를 꺼서 값만 바뀌고 화면은 그대로였음 → 이벤트를 발생시켜 설정 (합계점수 onChanged 처리 없음)
+  - 2. 설비등급 기준 그리드(grid5) : selectMode 'None' (wijmo SelectionMode.None, 공통 컴포넌트 수정 없음)
+  - 3. 팝업 헤더 : 라벨 폭 70 통일, 열 시작 0·250·650 / 행 끝 1250 정렬 (설비코드·합계점수 250, 설비명·평가등급 400, 평가일자 250 + 평가자 350 = 비고 600), 안내 문구 왼쪽 여백 제거
+  - 4. 평가표 : 결재 칸을 설비 정보 표에 붙임(x 470, 작성·검토·승인 77·77·76), 제목·평가일자 아래 여백 5 → 20, 설비 정보와 본문 표 사이 여백 10 → 20 (PageHeader 높이 200 → 225)
+- **검증 결과**: 실제 jquery·ItsPage.js·ItsNum.js 테스트 페이지에서 합계점수 문제 재현(값 6, 표시 0) 및 수정 확인(16·19 즉시 표시), 실제 wijmo에서 selectionMode 'None' 클릭·select 호출 시 선택 0건 확인, 컨트롤 템플릿·프로젝트 CSS 미리보기로 헤더 폭 실측(수정 전 행 끝 948·1007 → 수정 후 열 시작 0·250·650, 행 끝 1250 일치), 레포트 MSBuild Release 성공·PNG 출력 확인(1페이지), JS 구문 검사, 인코딩 확인. 미확인: 실제 화면 팝업, VS 디자이너
+- **참고**: 이전 모의 테스트는 ItsNum 표시 칸을 흉내 내지 않아 합계점수 미표시를 잡지 못했음
+
+
+### 6. MST1005_R01 설비등급 평가표 상단 설비정보·결재 칸 및 설비등급 표 위치 양식 반영
+- **수정/대상 파일**: [04.Report/PAGEMST/MST1005/R01.cs](04.Report/PAGEMST/MST1005/R01.cs), [04.Report/PAGEMST/MST1005/R01.Designer.cs](04.Report/PAGEMST/MST1005/R01.Designer.cs), [05.Procedure/MES_SNS2_MST1005_R01.sql](05.Procedure/MES_SNS2_MST1005_R01.sql), 01.Office/Reports·04.Report/bin MST1005.exe 재배포
+- **배경 및 원인**: 실제 평가표 양식 이미지 기준으로 상단을 설비명/관리번호·규격/제작일자·라인명/관리책임자 + 결재(작성·검토·승인)로, 설비등급 표 제목을 한 칸 위로 올려 달라는 요청
+- **작업 상세 내용**:
+  - 1. 출력 평가 정보 (CALL_EVAL_RPT 첫 결과셋) : 공정·라인·설비그룹 개별 값 → 설비명(MSTEQM.EQMNM), 관리번호(FANO), 규격(EQMNM_DETAIL), 제작일자(MKDATE 연.월), 라인명(작업장 공정 라인 명칭), 관리책임자(MSTEQM.DEPTCD → MSTDEPT.DEPTNM + '장')
+  - 2. 상단 : 제목 "설비 등급 평가표" + 오른쪽 위 "평가일자 : YYYY년 MM월 DD일", 설비 정보 3행(값 2줄까지 표시), 오른쪽 결재 칸(결재 / 작성·검토·승인 : 작성 = 평가자, 검토 = 빈칸, 승인 = 승인자(승인 전 빈칸)), 결재 칸은 테두리 라벨로 배치(XRPanel 미사용)
+  - 3. 설비등급 표 : 제목 "설비 등급 표"를 마지막 평가항목 아래 칸으로 이동 (레포트에서 마지막 항목과 같은 항목키의 제목 행 추가 → 구분·NO·항목·평가·소계 병합이 제목 줄까지 이어짐, 서식 규칙 [ROWTP] == 'T' 노란색), 합계 칸은 분류 머리글 줄부터 시작
+- **검증 결과**: 헤더 SELECT 실DB 읽기 실행(I2G-001N : 규격 TSUGAMI_G350A-300 (1044), 제작일자 2014.12, 라인명 M1 열후 T1, 관리책임자 생산기술보전팀장 → 양식과 동일), MSBuild 15.0 Release Rebuild 성공(경고 0), 양식 이미지와 같은 값(점수 5·5·2·2·5, 합계 19, B)으로 PNG 출력 비교(1페이지, 설비명·규격 2줄 표시 및 결재 칸 높이 일치 수정 확인), exe 실행 확인, Designer 정적 점검(컴포넌트 90개 필드 일치, XRPanel 없음, 셀 폭 합계 470/731/301), 인코딩 확인. 미확인: VS 디자이너 열기, 서버 반영 후 실제 평가이력 출력
+- **적용 순서**: MST1005_R01 프로시저 다시 저장 (SYSTEM_PARAMETERS 변경 없음)
+
+
+### 5. MST1005_R01 설비등급 평가표 출력 레포트 신규 구현
+- **수정/대상 파일**: [04.Report/PAGEMST/MST1005/R01.cs](04.Report/PAGEMST/MST1005/R01.cs), [04.Report/PAGEMST/MST1005/R01.Designer.cs](04.Report/PAGEMST/MST1005/R01.Designer.cs), [04.Report/PAGEMST/MST1005/R01.resx](04.Report/PAGEMST/MST1005/R01.resx), [04.Report/PAGEMST/MST1005/MST1005.csproj](04.Report/PAGEMST/MST1005/MST1005.csproj) (sln·App.config·Program.cs·Properties 포함 신규 프로젝트), [05.Procedure/MES_SNS2_MST1005_R01.sql](05.Procedure/MES_SNS2_MST1005_R01.sql), [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js), 01.Office/Reports·04.Report/bin MST1005.exe 배포
+- **배경 및 원인**: 평가이력 그리드의 평가표출력 버튼에 연결할 평가표 레포트 요청 (양식 : 앞서 첨부된 설비등급 평가표 이미지)
+- **작업 상세 내용**:
+  - 1. 출력 데이터 (프로시저 MST1005_R01 / CALL_EVAL_RPT, 파라미터 추가 없음)
+    - 1) 평가 정보 : EQMGRADEEVAL, MSTEQM (설비코드, 설비명, 작업장(GPCD N_LINECD), 공정(FM100), 라인(FM113), 설비그룹(FM116), 평가일자, 평가자(사원명), 승인자(사원명), 승인일시, 합계점수, 평가등급)
+    - 2) 평가항목별 평가기준 : MSTEQM_GRADEREV_D, MSTEQM_GRADEREV_D2, EQMGRADEEVAL_D (평가기준 1줄당 1행 : 구분(GMTP 명칭), NO(항목 순번), 항목, 소계(평가 점수), 평가기준(n점 : 기준), 선택 여부)
+    - 3) 설비등급 기준 : MSTEQM_GRADEREV_SCORE (분류(FM110 명칭), 점수, 구분, 비고(점검주기))
+    - 4) 평가이력 없으면 "출력할 평가이력을 선택하세요."
+  - 2. 레포트 양식 (A4 세로, 1페이지)
+    - 1) 상단 : 제목 "설비등급 평가표", 평가 정보 3행 (승인 칸은 승인자 + 승인일자, 미승인은 "미승인")
+    - 2) 본문 : 구분·NO·항목·평가(5~1)·소계·평가기준, 구분은 같은 값 병합(세로 표기), NO·항목·평가·소계는 항목(GMCD) 단위 병합
+    - 3) 선택 점수 강조 : 평가 칸·평가기준 줄 녹색 (서식 규칙 [SCORE] == n, [SELYN] == 'Y')
+    - 4) 하단 : 합계(빨간색), 설비등급 표(최대 5등급, 평가등급 분류 파란색)
+  - 3. 화면 : 평가표출력 버튼 → new ItsXtraRpt('MST1005_R01') + EQMGRADEEVALKEY (기존 준비 중 안내 대체)
+  - 4. 신규 레포트 프로젝트 04.Report/PAGEMST/MST1005 (EQM1001 프로젝트 구성 복사, 프로젝트·어셈블리 GUID 신규)
+- **검증 결과**: 출력 SELECT 실DB 읽기 실행(가상 평가 1건 + 실제 리비전 261105000003 기준 : 26행, 경고 0건), MSBuild 15.0 Release Rebuild 성공(경고 0), 빌드한 레포트에 같은 데이터 바인딩해 PDF·PNG 출력 확인(1페이지, 병합·강조·등급표 정상, 행 높이 늘어남 문제는 병합 셀 CanGrow false로 수정), exe 실행 확인(R01 생성, 평가키 누락 안내), Designer 정적 점검(컴포넌트 89개 필드 일치, XRPanel 없음, BeginInit 테이블·this만, 셀 폭 합계 731/301), 인코딩 확인. 미확인: VS 디자이너 열기, 서버 프로시저 반영 후 실제 평가이력 출력
+- **적용 순서**: MST1005_R01 프로시저 다시 저장 (CALL_EVAL_RPT 분기 추가, SYSTEM_PARAMETERS 변경 없음)
+
+
+### 4. MST1005_R01 설비목록 작업장·공정·라인·설비그룹 셀 병합
+- **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js)
+- **배경 및 원인**: 다른 화면(MST1002_R06, MST1004_R01)처럼 설비목록의 작업장·공정·라인·설비그룹을 묶어서 표시 요청
+- **작업 상세 내용**:
+  - 1. 설비목록 그리드 : allowMerging 'Cells', 작업장·공정·라인·설비그룹 컬럼 allowMerging (기존 화면과 같은 방식)
+  - 2. 병합 범위 : 앞 컬럼까지 값이 모두 같은 행 안에서만 병합 (작업장 > 공정 > 라인 > 설비그룹), 화면 전용 getMergedRange 지정 (공통 ItsGrid 수정 없음)
+  - 3. 원인 : wijmo 기본 병합은 작업장이 달라도 공정·라인 값이 같으면 이어 붙임
+  - 4. 프로시저 변경 없음 (정렬이 작업장 → 공정 → 라인 → 설비코드)
+- **검증 결과**: 실제 wijmo 5.20203.748에서 기본 병합의 경계 넘김 재현(공정 B가 작업장 M1·M2에 걸침), 실DB 설비목록 254건에 화면 함수 원문 적용 : 잘못된 병합 0건 (기본 병합이면 경계를 넘는 곳 32곳), 렌더링 병합 확인, JS 구문 검사, 인코딩 확인. 미확인: 실제 화면
+
+
+### 3. MST1005_R01 설비등급 평가등록 신규 구현
+- **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_R01.aspx](01.Office/PAGEMST/MST1005/MST1005_R01.aspx), [01.Office/PAGEMST/MST1005/MST1005_R01.aspx.cs](01.Office/PAGEMST/MST1005/MST1005_R01.aspx.cs), [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js), [05.Procedure/MES_SNS2_MST1005_R01.sql](05.Procedure/MES_SNS2_MST1005_R01.sql), [05.Procedure/MES_SNS2_MST1005_R01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_R01_SYSTEM_PARAMETERS.sql), [06.Table/MES_SNS2_EQMGRADEEVAL.sql](06.Table/MES_SNS2_EQMGRADEEVAL.sql)
+- **배경 및 원인**: MST1004_R01 복사본으로 남아 있던 설비등급 평가등록 화면을 평가이력 CRUD 화면으로 구현 요청. 확정 사항 : 평가자는 헤더 EMPCD 컬럼 추가(REMP는 감사 컬럼), 자동계산 최근 1년 기준, 승인 시 설비등급 갱신, 평가표출력 레포트는 다음 작업
+- **작업 상세 내용**:
+  - 1. 조회
+    - 1) 조회조건 : 조회일자(평가일자 범위), 작업장(*LINECD), 공정(*EQMTP), 라인(*EQMGROUP1), 작업장→공정→라인 연동
+    - 2) 좌측 설비목록 : MSTEQM (USEYN = 'Y', FACTORYCD = '07') (작업장(MSTLINE 작업장명), 공정, 라인, 설비그룹, 설비코드, 설비명, 설비등급)
+    - 3) 우측 평가이력 : EQMGRADEEVAL (평가일자, 평가등급, 합계점수, 평가자(사원명), 승인자(사원명), 승인일시, 상세조회, 평가표출력, 삭제)
+    - 4) 설비 선택시 평가이력 조회
+    - 5) 프로시저 : MST1005_R01 / LIST_EQM, LIST_EVAL
+  - 2. 신규평가·상세조회 팝업
+    - 1) 평가기준 : 신규는 사용중 리비전(MSTEQM_GRADEREV USEYN = 'Y'), 기존은 평가이력의 REVCD
+    - 2) 평가항목 그리드 : MSTEQM_GRADEREV_D (구분, 평가항목, 계산구분, 산출값, 점수, 평가기준)
+    - 3) 계산구분 산출값 : 고장건수 = EQMREP (EQMREPTP = 'EQM01') 평가일자 1년 전 다음날 ~ 평가일자 발생 건수, 수리시간 = 같은 기간 수리시간(발생~완료, 분) 합계 ÷ 12, 사용개월 = 설치일자(MSTEQM.SETDATE) ~ 평가일자 개월 수
+    - 4) 계산구분 항목 점수 : MSTEQM_GRADEREV_D2 구간(최소값 이상 ~ 최대값 미만, 최소 = 최대면 그 값) 자동 판정, 계산구분 없는 항목은 오른쪽 점수별 평가기준 더블클릭(Enter)으로 선택
+    - 5) 합계점수·평가등급 : 항목 점수 합계, MSTEQM_GRADEREV_SCORE 구간으로 평가등급 표시
+    - 6) 평가일자 변경시 산출값·자동 점수 다시 조회 (직접 선택 점수 유지), 승인 이력은 저장 점수 표시·조회만
+    - 7) 프로시저 : LIST_EVAL_D, LIST_EVAL_D2, LIST_EVAL_SCORE
+  - 3. 저장
+    - 1) 평가 저장 : EQMGRADEEVAL (평가일자, 평가자 EMPCD, 합계점수, 평가등급, 비고), EQMGRADEEVAL_D (항목별 점수, 저장 때마다 다시 생성), 신규 평가키 GETKEY('EQMGRADEEVALKEY')
+    - 2) 저장 전 확인 : 평가자, 평가일자, 계산구분 없는 항목 점수가 점수별 평가기준에 있는지, 점수 없는 항목, 합계점수에 맞는 설비등급 기준, 승인 이력 수정 불가
+    - 3) 계산구분 항목 점수는 화면 값을 쓰지 않고 프로시저에서 다시 판정
+    - 4) 프로시저 : SAVE_EVAL (저장한 평가키 반환 → 평가이력 다시 선택)
+  - 4. 승인
+    - 1) 승인 팝업 : 승인자(기본 로그인 사원), 승인일자(기본 오늘)
+    - 2) 승인 저장 : EQMGRADEEVAL (APRVEMP, APRVTIME = 승인일자 + 현재 시각, EQMGRADE_BEFORE = 승인 전 MSTEQM.EQMGRADE), MSTEQM (EQMGRADE = 평가등급)
+    - 3) 막는 조건 : 이미 승인, 승인일자 < 평가일자, 같은 설비에 평가일자가 더 늦은 승인 이력
+    - 4) 프로시저 : APPROVE_EVAL
+  - 5. 삭제
+    - 1) 평가이력 삭제 버튼 : EQMGRADEEVAL_D, EQMGRADEEVAL (승인 이력 삭제 불가)
+    - 2) 프로시저 : DEL_EVAL
+  - 6. 평가표출력 : 버튼만 배치(준비 중 안내), 레포트는 다음 작업
+  - 7. 테이블 : 06.Table/MES_SNS2_EQMGRADEEVAL.sql 전체 정의(평가일자·등록/수정 시간·사원·프로그램 포함) + 평가자 EMPCD 추가, 기존 테이블용 ALTER 문 주석 포함
+  - 8. 파라미터 18건 (SCORE_LIST 16번, CALLTYPE 17번, KEYWORD 18번)
+- **검증 결과**: 실DB 읽기 전용 실행(I2C-002N 2026-11-05 : 고장 5건→3점, 월평균 77.17분→1점, 사용 114개월→2점, 등급 경계 -99.999~99 판정, 설비목록 254건, 경고 0건), Node 모의 테스트 17건 통과(조회·신규·자동/직접 점수·평가일자 변경·저장·승인 이력 잠금·삭제·승인·등급 경계·조회조건 연동), IF 25/25·WHILE 1/1 정적 점검, 인코딩 확인. 미확인: EMPCD 컬럼 반영 전이라 프로시저 컴파일·저장/승인/삭제 실행·실제 화면
+- **적용 순서**: 06.Table ALTER(EMPCD 추가) → MST1005_R01 프로시저 저장 → SYSTEM_PARAMETERS 등록(18건)
+
+
 ### 2. MST1005_S01 계산구분 빈 항목 높이 수정
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
 - **배경 및 원인**: 계산구분 콤보의 빈 항목이 목록에서 너무 좁게 표시됨 (공통 그리드 수정 없이 유지 결정)
