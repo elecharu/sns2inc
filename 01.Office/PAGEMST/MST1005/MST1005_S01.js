@@ -18,6 +18,7 @@ ItsPage.Load = function () {
         column.create('구분', 'GMTP', { width: 90, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'GMTP', readOnly: false }),
         column.create('평가항목', 'GMNM', { width: 200, readOnly: false }),
         column.create('계산구분', 'CALCTP', { width: 90, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CALCTP', readOnly: false }),
+        column.create('비고', 'REMARK', { width: 150, readOnly: false }),
         column.split()
     ]);
 
@@ -29,6 +30,7 @@ ItsPage.Load = function () {
         column.create('평가기준', 'SCORENM', { width: 220, readOnly: false }),
         column.create('최소값(이상)', 'MINVAL', { width: 85, align: 'right', readOnly: false }),
         column.create('최대값(미만)', 'MAXVAL', { width: 85, align: 'right', readOnly: false }),
+        column.create('비고', 'REMARK', { width: 150, readOnly: false }),
         column.split()
     ]);
 
@@ -62,8 +64,9 @@ ItsButton.EventSearch = function () {
     ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
 };
 
-// 2026-11-04 [리비전 그리드] 리비전 선택시 평가항목·설비등급 기준 조회
+// 2026-11-04 [리비전 그리드] 리비전 선택시 평가항목·설비등급 기준 조회 (2026-11-05 이전 리비전은 조회만 가능)
 ItsGrid.Event('grid1').onSelect = function () {
+    SET_EDIT_MODE(IS_LATEST_REV());
     ItsGrid.Clear('grid3');
     SEARCH_GRID('grid2', 'LIST_D');
     SEARCH_GRID('grid4', 'LIST_SCORE');
@@ -78,6 +81,33 @@ ItsGrid.Event('grid2').onSelect = function () {
 function IS_SAVED_ROW(gridId, rowIndex, orgField) {
     var org = ItsGrid.GetValue(gridId, rowIndex, orgField);
     return org !== undefined && org !== null && org !== '';
+}
+
+// 2026-11-05 [리비전 그리드] 선택 리비전이 가장 최근 리비전인지 여부
+function IS_LATEST_REV() {
+    var revNum = Number(ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'REVNUM')) || 0;
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if ((Number(ItsGrid.GetValue('grid1', i, 'REVNUM')) || 0) > revNum) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// 2026-11-05 [우측 영역 공통] 이전 리비전은 평가항목·점수별 평가기준·설비등급 기준을 조회만 (버튼 숨김, 그리드 읽기 전용)
+function SET_EDIT_MODE(isEdit) {
+    var arrBtn = ['btn_ADD_D', 'btn_SAVE_D', 'btn_DEL_D', 'btn_ADD_D2', 'btn_SAVE_D2', 'btn_DEL_D2', 'btn_ADD_SCORE', 'btn_SAVE_SCORE', 'btn_DEL_SCORE'];
+    for (var i = 0; i < arrBtn.length; i++) {
+        if (isEdit) {
+            ItsButton.Show(arrBtn[i]);
+        } else {
+            ItsButton.Hide(arrBtn[i]);
+        }
+    }
+
+    ItsGrid.Get('grid2').isReadOnly = !isEdit;
+    ItsGrid.Get('grid3').isReadOnly = !isEdit;
+    ItsGrid.Get('grid4').isReadOnly = !isEdit;
 }
 
 // 2026-11-04 [리비전 그리드] 선택 리비전 코드
@@ -183,7 +213,7 @@ ItsButton.Event('btn_SAVE_REV').onClick = function () {
     });
 };
 
-// 2026-11-04 [평가항목 영역] 체크한 평가항목 저장 (재조회 후 선택 항목 유지)
+// 2026-11-04 [평가항목 영역] 체크한 평가항목 저장 (2026-11-05 재조회 후 선택했던 행을 다시 선택, 신규 행은 발번된 코드로 선택)
 ItsButton.Event('btn_SAVE_D').onClick = function () {
     var arrRow = GET_CHECKED_ROWS('grid2');
 
@@ -193,7 +223,8 @@ ItsButton.Event('btn_SAVE_D').onClick = function () {
     }
 
     ItsMsg.Confirm(arrRow.length + '건을 저장하시겠습니까?', function () {
-        var gmcd = ItsGrid.GetValue('grid2', ItsGrid.GetCurrentIndex('grid2'), 'GMCD');
+        var curIdx = ItsGrid.GetCurrentIndex('grid2');
+        var gmcd = ItsGrid.GetValue('grid2', curIdx, 'GMCD');
         var maria = new ItsMaria('MST1005_S01', 'SAVE_D');
         maria.AddParam('REVCD', GET_REVCD());
 
@@ -203,12 +234,19 @@ ItsButton.Event('btn_SAVE_D').onClick = function () {
             maria.AddList('GMTP_LIST', ItsGrid.GetValue('grid2', arrRow[j], 'GMTP'));
             maria.AddList('CALCTP_LIST', ItsGrid.GetValue('grid2', arrRow[j], 'CALCTP'));
             maria.AddList('SORTNO_LIST', ItsGrid.GetValue('grid2', arrRow[j], 'SORTNO'));
+            maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid2', arrRow[j], 'REMARK'));
         }
 
         maria.CallProc();
         if (maria.isError) {
             maria.ShowErrMsg();
             return;
+        }
+
+        // 선택했던 행이 저장 대상이면 프로시저가 돌려준 코드(신규 행은 발번 코드)로 다시 선택
+        var pos = arrRow.indexOf(curIdx);
+        if (pos > -1 && maria.store.data.length > 0) {
+            gmcd = (maria.store.data[0]['GMCD_LIST'] || '').split('»')[pos];
         }
 
         ItsMsg.Alert(ItsMsg.CommonMsg.SaveComplete(arrRow.length));
@@ -264,6 +302,7 @@ ItsButton.Event('btn_SAVE_D2').onClick = function () {
             maria.AddList('D2_SCORENM_LIST', ItsGrid.GetValue('grid3', arrRow[j], 'SCORENM'));
             maria.AddList('D2_MINVAL_LIST', ItsGrid.GetValue('grid3', arrRow[j], 'MINVAL'));
             maria.AddList('D2_MAXVAL_LIST', ItsGrid.GetValue('grid3', arrRow[j], 'MAXVAL'));
+            maria.AddList('D2_REMARK_LIST', ItsGrid.GetValue('grid3', arrRow[j], 'REMARK'));
         }
 
         maria.CallProc();
