@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-11-04
+> **최종 갱신일**: 2026-11-05
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -15,7 +15,178 @@
 
 ---
 
+## 🕒 2026-11-05 (목) 작업 내역
+
+### 2. MST1005_S01 최소=최대 값 일치 허용 및 분류 변경 시 구간 겹침 원인 확인
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
+- **배경 및 원인**: B등급(15~20)을 D로 바꿀 때 D·B 구간 겹침 안내가 나오고, 최소값·최대값 0, 0 저장이 막힌다는 요청
+- **작업 상세 내용**:
+  - 1. 분류 변경 시 겹침 원인 : DB에 배포된 프로시저가 조회 시점 키(GR_ORG_EQMGRADE_LIST) 처리 전 버전이고 SYSTEM_PARAMETERS도 22건이라, 화면이 보낸 원래 등급(B)이 무시되어 B는 남고 D가 새로 추가됨 → 현재 프로시저·SYSTEM_PARAMETERS(24건) 반영 시 B 행이 D로 변경되어 해결 (코드 추가 수정 없음)
+  - 2. 최소 = 최대 허용 : 점수별 평가기준·설비등급 기준 모두 최소 > 최대만 차단 (안내: 최소값은 최대값보다 클 수 없습니다), 최소 = 최대(예: 0, 0)는 그 값과 같을 때로 판정하고 최대값 표기를 최소값으로 통일
+  - 3. 구간 겹침 확인 : 최소 = 최대 구간은 그 값 하나로 보고 겹침 판정 (0~0과 1~5 통과, 0~0과 0~5 차단, 5~10과 10~10 통과)
+  - 4. 평가등록(R01) 자동 계산도 같은 기준 필요 : 최소 이상 ~ 최대 미만, 최소 = 최대면 일치
+- **검증 결과**: 구간 판정 9개 사례 실DB 읽기 실행으로 기대값 일치(경고 0건), 배포 프로시저·SYSTEM_PARAMETERS 상태 실DB 조회로 원인 확인, IF/WHILE 짝·파라미터 24건 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
+
+
+### 1. MST1005_S01 기존 행 분류·점수 콤보 오류(Uncaught Error) 수정
+- **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql)
+- **배경 및 원인**: 리비전 갱신으로 복사된(저장된) 설비등급 행의 분류 콤보 클릭 시 Uncaught Error 발생. 원인: 저장 행의 키(분류·점수) 편집을 막으려고 onBeginningEdit에서 throw ''로 편집을 취소했는데, 콤보 드롭다운 클릭 경로(_MouseHandler._click → _toggleListBox → startEditing → onBeginningEdit)에서 예외가 잡히지 않고 그대로 브라우저 오류로 출력됨
+- **작업 상세 내용**:
+  - 1. 예외로 편집을 막던 grid3(점수)·grid4(분류) onBeginningEdit 제거 → 저장된 행도 분류·점수 수정 가능
+  - 2. 조회 시점 키 보관 : LIST_D2 SCORE AS ORG_SCORE, LIST_SCORE EQMGRADE AS ORG_EQMGRADE (숨김 컬럼, REVCD 반환·컬럼 대체)
+  - 3. 저장 : D2_ORG_SCORE_LIST·GR_ORG_EQMGRADE_LIST 추가 전송, 프로시저는 조회 시점 키와 다르면 기존 행의 키를 새 값으로 UPDATE (새 키가 이미 있으면 안내 후 저장 취소), 같으면 기존 UPSERT
+  - 4. 삭제 : 화면에서 바꾼 값이 아닌 조회 시점 키로 DB 삭제 (저장 행 판정도 ORG_ 값 기준, IS_SAVED_ROW)
+  - 5. 파라미터 22건 → 24건 (SYSTEM_PARAMETERS 재등록 필요)
+  - 6. 같은 throw 방식 편집 차단이 EQM1001_R03(4곳)·PRD7001_R02·R04에도 있으나 이번 요청 범위 밖이라 미수정
+- **검증 결과**: Node 모의 테스트(편집 차단 이벤트 없음, 분류·점수 변경 저장 시 조회 시점 키 전송, 변경 후 삭제 시 원래 키 삭제, 신규 행 빈 값) 통과, 변경 조회 SQL 실DB 읽기 실행(경고 0건), IF/ELSEIF/WHILE 짝·파라미터 24건 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면 콤보 동작
+---
+
+
 ## 🕒 2026-11-04 (수) 작업 내역
+
+### 2. MST1005_S01 설비등급 최대점수를 미만 기준으로 변경
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
+- **배경 및 원인**: 설비등급 기준도 점수별 평가기준과 같이 최소 이상·최대 미만으로 요청
+- **작업 상세 내용**:
+  - 1. 설비등급 기준 : MSTEQM_GRADEREV_SCORE 구간을 최소점수 이상 ~ 최대점수 미만으로 변경 (이전: 최대점수 이하)
+  - 2. 최소점수 = 최대점수도 저장 불가 (안내: {등급}등급의 최소점수(x)는 / 최대점수(y)보다 작아야 합니다.)
+  - 3. 구간 겹침 확인을 미만 기준으로 변경 : 경계값 공유(B 15~20, A 20~)는 허용, 안내 문구 최대점수(미만)
+  - 4. 화면 컬럼명 최대점수(이하) → 최대점수(미만)
+- **검증 결과**: 평가표 구간(A 20~/B 15~20/C 10~15/D 7~10/E 0~7) 겹침 없음, 19~21 입력 시 A·B와 겹침 검출 (실DB 읽기 실행, 경고 0건), JS 구문 검사, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
+
+
+### 2. MST1005_S01 리비전 삭제를 가장 최근 리비전만 허용
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
+- **배경 및 원인**: 리비전 삭제 시 신규(가장 최근) 리비전만 삭제 가능하고 기존 리비전은 삭제되지 않도록 요청
+- **작업 상세 내용**:
+  - 1. 리비전 삭제(DEL_REV) : MSTEQM_GRADEREV의 리비전 번호가 최대값보다 작으면 삭제 불가 (안내: 이전 리비전(REV n)은 삭제할 수 없습니다. / 가장 최근 리비전만 삭제할 수 있습니다.)
+  - 2. 기존 조건 유지 : 평가이력 있는 리비전 삭제 불가, 사용중 리비전 삭제 시 남은 최신 리비전을 사용중으로 변경
+- **검증 결과**: 실DB 읽기 실행으로 리비전별 삭제 가능 여부 판정 확인(경고 0건), IF 짝·인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
+
+
+### 2. MST1005_S01 긴 안내 문구 줄바꿈
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
+- **배경 및 원인**: 구간 겹침 등 긴 안내 문구가 한 줄로 길게 표시되어 줄바꿈 요청
+- **작업 상세 내용**:
+  - 1. 안내창(ItsMsg.Alert/Confirm)이 문구를 HTML로 넣고 white-space 설정이 없어 \n은 공백으로 보이므로 <br>로 줄바꿈
+  - 2. 프로시저 : 평가이력 잠금, 점수별 평가기준·설비등급 구간 겹침, 평가기준 최소·최대값 숫자/크기, 설비등급 최소·최대점수 크기 오류 문구를 문장·항목명 단위로 줄바꿈
+  - 3. 화면 : 리비전 갱신 확인(선택한 리비전을 복사하여 / 새 리비전을 생성하시겠습니까?), 평가항목 삭제 확인((점수별 평가기준 포함)) 줄바꿈
+- **검증 결과**: ItsMsg.js·ItsMsg.css 처리 방식 확인, JS 구문 검사, 인코딩 확인. 미확인: 실제 안내창 표시
+
+
+### 2. MST1005_S01 추가 행 번호를 빈 번호 우선으로 변경
+- **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
+- **배경 및 원인**: 1~5 중 1,2,3 삭제 후 추가 시 6,7,8로 채번되는 문제
+- **작업 상세 내용**:
+  - 1. 평가항목 NO(SORTNO)·점수별 평가기준 점수(SCORE) 추가 시 최대값+1 대신 그리드에 없는 가장 작은 번호 사용 (GET_NEXT_SORTNO → GET_NEXT_NO(그리드, 필드))
+  - 2. 예: 4,5만 남은 상태에서 추가 → 1, 2, 3, 다음은 6
+- **검증 결과**: Node 모의 테스트(4,5 남은 상태 4회 추가 1,2,3,6 / 빈 그리드 1 / 1,3 사이 2) 통과, 인코딩 확인. 미확인: 실제 화면
+
+
+### 2. MST1005_S01 점수별 평가기준 추가·저장·삭제 및 머리글 공백 축소
+- **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
+- **배경 및 원인**: 1~5점 자동 생성 대신 점수별 평가기준을 자유롭게 추가·삭제하고, 각 영역 머리글 아래 공백 축소 요청
+- **작업 상세 내용**:
+  - 1. 점수별 평가기준 자유 입력
+    - 1) 평가항목 신규 저장 시 1~5점 행 자동 생성 제거
+    - 2) 점수별 평가기준 [추가][저장][삭제] : MSTEQM_GRADEREV_D2, 추가는 저장된 평가항목 선택 시만 가능(점수 기본값 최대+1), 저장된 행의 점수는 수정 불가
+    - 3) 저장 : 없으면 INSERT·있으면 UPDATE, 점수 숫자 필수, 화면에서 같은 점수 중복 차단, 구간 겹침 확인 유지
+    - 4) 삭제 : 저장 행만 DB 삭제(DEL_D2 신설, 평가이력 잠금 대상), 신규 행은 화면에서만 제거
+  - 2. 영역 머리글 높이 축소 : 리비전 4→3, 설비등급 기준 13→8, 평가항목·점수별 평가기준 7→4.5 (TopHeightPc)
+  - 3. 파라미터 22건 유지 (SYSTEM_PARAMETERS 재등록 불필요)
+- **검증 결과**: Node 모의 테스트(자동 생성 제거, 점수기준 추가 기본값·점수 잠금·중복 차단·저장/삭제 파라미터, 미저장 항목 추가 차단) 통과, IF/WHILE 짝·파라미터 22건 정적 점검, JS 구문 검사, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면 머리글 높이
+
+
+### 2. MST1005_S01 설비등급 기준 평가표 대응 및 점수 구간 겹침 차단
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql), [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
+- **배경 및 원인**: 설비등급과 분류가 같은 개념, 평가표 비고가 점검주기인데 별도 비고가 있어 헷갈림. 테이블은 그대로 두고 조회·저장 SQL과 화면에서 불필요 컬럼만 제외 요청. 등급 점수 구간(예: D 5~9 = 5 이상 9 이하, E 0~4)이 겹치면 경고 후 저장 차단 요청
+- **작업 상세 내용**:
+  - 1. 설비등급 기준 : MSTEQM_GRADEREV_SCORE (분류(EQMGRADE, FM110), 점수(SCORENM), 최소점수(이상)(MINVAL), 최대점수(이하)(MAXVAL), 구분(MNGNM), 비고(점검주기)(CHKCYCLE2))
+    - 1) 조회·저장·리비전 복사에서 EQMGRADENM·SORTNO·USEYN·REMARK 제외 (테이블 컬럼은 유지, 신규 행은 기본값), 조회 순서는 공통코드 FM110 정렬순서
+    - 2) 최소·최대점수는 빈 값 또는 숫자, 둘 다 빈 값 불가, 최소점수 > 최대점수 불가
+    - 3) 저장 후 같은 리비전의 등급 구간(최소 이상 ~ 최대 이하)이 겹치면 겹치는 두 등급과 구간을 알려주고 저장 취소 (예: D등급(5~9)과 E등급(0~5)의 점수 구간이 겹칩니다)
+  - 2. 평가항목·점수별 평가기준 : 조회·저장·복사에서 REMARK 제외 (테이블 컬럼 유지)
+  - 3. 점수별 평가기준 : 같은 평가항목의 점수 구간(최소값 이상 ~ 최대값 미만)이 겹치면 해당 점수와 구간을 알려주고 저장 취소 (최소·최대 모두 빈 행은 제외)
+  - 4. 처음 작성한 테이블 컬럼 삭제 스크립트(TABLE_ALTER)·06.Table CREATE 문은 요청에 따라 삭제, 파라미터 22건
+- **검증 결과**: 겹침 확인 SQL 실DB 읽기 실행 (현재 데이터에서 D등급(5~9)·E등급(0~5) 겹침 문구 확인, 평가표 구간 A 20~/B 15~19/C 10~14/D 5~9/E 0~4 겹침 없음, 19~20 입력 시 A·B와 겹침 검출, 점수별 기준 이상~미만 경계 정상, 경고 0건), IF/WHILE 짝·파라미터 22건 정적 점검, JS 구문 검사, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
+
+
+### 2. MST1005_S01 리비전 상세 묶음 배치(C안) 적용
+- **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
+- **배경 및 원인**: 설비등급 기준이 리비전에만 종속되는데 평가항목과 같은 층에 있어 헷갈린다는 의견에 따라 후보 4안 중 C안 선택
+- **작업 상세 내용**:
+  - 1. 화면 배치 (C안 리비전 상세 묶음)
+    - 1) 왼쪽 리비전 목록은 그대로, 오른쪽은 위에 설비등급 기준·아래에 평가항목과 점수별 평가기준 배치
+    - 2) 오른쪽 위 설비등급 기준 : MSTEQM_GRADEREV_SCORE, 제목에 평가항목 점수 합계로 등급 판정 표기, 컬럼명 합계 최소(이상)·합계 최대(미만)
+    - 3) 하단 평가항목 | 점수별 평가기준 (기존 기능 동일)
+    - 4) 처음 넣은 선택 리비전 제목 띠(■ REV 2 (사용중) 기준)는 요청에 따라 제거
+  - 2. 프로시저·DB 변경 없음
+- **검증 결과**: JS 구문 검사, aspx div 짝(14/14)·컨트롤 ID 확인, 인코딩 확인. 미확인: 실제 화면 배치 비율
+
+
+### 2. MST1005_S01 평가항목 선택시 해당 점수별 평가기준만 조회
+- **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql)
+- **배경 및 원인**: 점수별 평가기준이 전 항목 표시되어 평가항목 클릭시 해당 항목만 보이도록 요청
+- **작업 상세 내용**:
+  - 1. 조회 연동 변경
+    - 1) 리비전 선택시 평가항목·설비등급 기준 조회, 점수별 평가기준은 비움
+    - 2) 평가항목 선택시 해당 항목의 점수별 평가기준만 조회 : MSTEQM_GRADEREV_D2 (REVCD, GMCD 조건, 1점부터), 평가항목 병합 컬럼 제거
+    - 3) 미저장 신규 평가항목 선택시 조회 안 함, 평가항목 저장 후 선택 항목 유지, 삭제 후 남은 선택 항목 기준 재조회
+  - 2. 프로시저 LIST_D2에 $GMCD 파라미터 추가 및 평가항목 조인 제거, SYSTEM_PARAMETERS 26건 → 27건
+- **검증 결과**: Node 모의 테스트(항목 선택별 조회 GMCD, 신규 항목 미조회, 저장·삭제 후 재조회 대상) 통과, 변경 조회 SQL 실DB 읽기 실행(경고 0건), 인코딩 확인. 미확인: MariaDB 컴파일·실제 화면
+
+
+### 2. MST1005_S01 영역별 저장 버튼으로 변경
+- **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
+- **배경 및 원인**: 오른쪽 영역 변경을 왼쪽 리비전 영역 저장 버튼 하나로 저장하는 구조라 어디서 저장하는지 알 수 없다는 요청
+- **작업 상세 내용**:
+  - 1. 영역별 저장 버튼
+    - 1) 리비전 [저장] : MSTEQM_GRADEREV 비고만 저장 (SAVE_REV, 평가이력과 무관하게 저장 가능)
+    - 2) 평가항목 [저장] : MSTEQM_GRADEREV_D 체크 행 저장 (SAVE_D), 신규 항목은 1~5점 행 생성 후 평가항목·점수별 평가기준 재조회
+    - 3) 점수별 평가기준 [저장] : MSTEQM_GRADEREV_D2 체크 행 저장 (SAVE_D2), 저장 후 평가기준만 재조회
+    - 4) 설비등급 기준 [저장] : MSTEQM_GRADEREV_SCORE 체크 행 저장 (SAVE_SCORE, 설비등급 중복 확인), 저장 후 설비등급만 재조회
+  - 2. 프로시저 통합 SAVE 분기를 SAVE_REV·SAVE_D·SAVE_D2·SAVE_SCORE로 분리 (검증 내용·파라미터 26건 동일, 평가이력 잠금은 SAVE_REV 제외)
+- **검증 결과**: Node 모의 테스트(영역별 저장 CALLTYPE·체크 행 전송·저장 후 재조회 범위·미체크 차단·설비등급 중복) 통과, IF/WHILE 짝·파라미터 정적 점검, 인코딩 확인. 미확인: MariaDB 컴파일·실제 화면
+
+
+### 2. MST1005_S01 설비등급기준 관리 화면 단순화 및 평가표 양식 반영
+- **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql)
+- **배경 및 원인**: 버튼·저장 단위가 많아 UI/UX가 복잡하다는 요청과 설비등급 평가표(항목별 1~5점 평가기준, 설비등급 표) 양식에 맞춘 수정 요청
+- **작업 상세 내용**:
+  - 1. 화면 단순화 (버튼 12개 → 7개)
+    - 1) 리비전 영역 [리비전 갱신][저장][삭제] : 저장 1번으로 리비전 비고·평가항목·점수별 평가기준·설비등급 기준의 체크(수정) 행 일괄 저장 (프로시저 SAVE 분기, 한 트랜잭션)
+    - 2) 평가항목 [추가][삭제] : MSTEQM_GRADEREV_D (NO, 구분(GMTP), 평가항목, 계산구분(CALCTP), 비고), 항목코드 숨김, 추가 시 NO 다음 번호·구분은 마지막 행과 같게
+    - 3) 점수별 평가기준 (버튼 없음) : MSTEQM_GRADEREV_D2 전 항목을 평가항목 순서·1점부터 표시, 평가항목 셀 병합 (평가항목, 점수, 평가기준, 최소값(이상), 최대값(미만), 비고)
+    - 4) 설비등급 기준 [추가][삭제] : MSTEQM_GRADEREV_SCORE (설비등급(FM110), 분류, 점수(출력), 최소점수(이상), 최대점수(미만), 관리구분, 점검주기, 정렬순번, 비고), 사용여부 화면 제외
+  - 2. 설비등급 평가표 양식 반영
+    - 1) 평가항목 신규 저장 시 1~5점 평가기준 행 자동 생성 (점수 직접 추가·삭제 없음)
+    - 2) 최소값·최대값은 빈 값 또는 숫자만 허용, 둘 다 있으면 최소값 < 최대값 (이상~미만 기준, 평가등록 화면 자동 계산용)
+    - 3) 프로시저 정리 : SAVE_REV·SAVE_D·SAVE_D2·DEL_D2·SAVE_SCORE 분기를 SAVE로 통합, 조회 미사용 컬럼 제거, SYSTEM_PARAMETERS 21건 → 26건
+  - 3. 설비 목록 기준 화면 요청은 취소되어 기존 리비전 기준 구성 유지 (해당 변경은 미착수)
+- **검증 결과**: Node 모의 테스트(세 그리드 연쇄 조회, 통합 저장 파라미터, 신규 항목·등급 추가값, 설비등급 중복·키 잠금, 삭제 DB/화면 구분, 리비전 갱신) 전체 통과, 조회·1~5점 생성·숫자 확인 SQL 실DB 읽기 실행(경고 0건), IF/WHILE 짝·파라미터 26건 정적 점검, 인코딩 확인. 미확인: MariaDB 프로시저 컴파일·저장 분기 실행, 실제 화면
+
+
+### 2. MST1005_S01 설비등급기준 관리 화면 구현
+- **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.aspx.cs](01.Office/PAGEMST/MST1005/MST1005_S01.aspx.cs), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql)
+- **배경 및 원인**: MST1004_R01을 복사한 MST1005_S01 페이지를 메뉴명(설비등급기준 관리)에 맞게 이름 정리하고 설비등급 평가기준 테이블(MSTEQM_GRADEREV, _D, _D2, _SCORE) 관리 기능 구현 요청
+- **작업 상세 내용**:
+  - 1. 조회
+    - 1) 리비전 조회 : MSTEQM_GRADEREV (사용중, 리비전, 비고)
+    - 2) 리비전 선택시 평가항목 그리드 : MSTEQM_GRADEREV_D (항목코드, 평가항목명, 평가항목구분(GMTP), 계산구분(CALCTP), 정렬순번, 비고)
+    - 3) 리비전 선택시 설비등급별 점수기준 그리드 : MSTEQM_GRADEREV_SCORE (설비등급(FM110), 설비등급명, 점수, 최소값, 최대값, 관리구분, 정기점검주기, 정렬순번, 사용여부, 비고)
+    - 4) 평가항목 선택시 평가항목별 점수기준 그리드 : MSTEQM_GRADEREV_D2 (점수, 평가기준, 최소값, 최대값, 비고)
+  - 2. 리비전
+    - 1) 리비전 갱신 : 선택 리비전의 D·D2·SCORE 복사, 리비전 번호 최대+1, 기존 사용중 해제 후 신규만 사용중 (리비전이 없으면 빈 리비전 생성)
+    - 2) 리비전 비고 저장, 리비전 삭제 : D·D2·SCORE 함께 삭제, 사용중 리비전 삭제 시 최신 리비전을 사용중으로 변경
+  - 3. 평가항목·점수기준 저장/삭제
+    - 1) 평가항목 저장 : MSTEQM_GRADEREV_D (신규 행 항목코드는 전체 최대+1, GMTP 필수·CALCTP 빈값 허용 공통코드 확인), 삭제 시 항목별 점수기준 함께 삭제
+    - 2) 평가항목별 점수기준 저장 : MSTEQM_GRADEREV_D2 (점수·평가기준 필수, 화면에서 점수 중복 확인, 저장된 점수는 수정 불가)
+    - 3) 설비등급별 점수기준 저장 : MSTEQM_GRADEREV_SCORE (설비등급 FM110 확인, 화면에서 설비등급 중복 확인, 저장된 설비등급은 수정 불가)
+    - 4) 변경 차단 : 평가이력 EQMGRADEEVAL에 해당 리비전이 있으면 리비전 삭제·기준 저장·삭제 불가 (리비전 갱신 후 변경)
+  - 4. 페이지 이름 정리 : MST1004_R01 복사본의 CodeFile·Inherits·스크립트 경로·클래스명·프로시저명을 MST1005_S01로 변경, 남아 있던 다른 화면 메뉴 주석 제거
+  - 5. 신규 프로시저는 SYSTEM_PARAMETERS 등록 스크립트(21건) 실행 필요
+- **검증 결과**: Node 모의 테스트(조회 연쇄, 행 추가·저장·삭제 파라미터, 키 수정 잠금, 0점 포함 중복 차단, 리비전 갱신·빈 리비전 생성) 전체 통과, 프로시저 SELECT문 실DB 읽기 실행으로 컬럼명 확인, IF/WHILE 짝·파라미터 사용 정적 점검, 인코딩(.aspx/.cs/.js BOM, .sql BOM 없음, CRLF) 확인. 미확인: MariaDB 컴파일·저장 분기 실행, 실제 화면 동작
+
 
 ### 2. 공유 규칙 다른 프로젝트 적용성 정비
 - **수정/대상 파일**: [.agents/rules/project_context.md](.agents/rules/project_context.md), [.agents/rules/report_file_structure.md](.agents/rules/report_file_structure.md), [.agents/rules/report_devexpress.md](.agents/rules/report_devexpress.md), [.agents/rules/framework_convention.md](.agents/rules/framework_convention.md)
@@ -2490,6 +2661,19 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql) | MST1005_S01 최소=최대 값 일치 허용 및 분류 변경 시 구간 겹침 원인 확인 | 구간 판정 9개 사례 실DB 읽기 실행으로 기대값 일치(경고 0건), 배포 프로시저·SYSTEM_PARAMETERS 상태 실DB 조회로 원인 확인, IF/WHILE 짝·파라미터 24건 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면 |
+| **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql) | MST1005_S01 기존 행 분류·점수 콤보 오류(Uncaught Error) 수정 | Node 모의 테스트(편집 차단 이벤트 없음, 분류·점수 변경 저장 시 조회 시점 키 전송, 변경 후 삭제 시 원래 키 삭제, 신규 행 빈 값) 통과, 변경 조회 SQL 실DB 읽기 실행(경고 0건), IF/ELSEIF/WHILE 짝·파라미터 24건 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면 콤보 동작 |
+| **완료** | [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js) | MST1005_S01 설비등급 최대점수를 미만 기준으로 변경 | 평가표 구간(A 20~/B 15~20/C 10~15/D 7~10/E 0~7) 겹침 없음, 19~21 입력 시 A·B와 겹침 검출 (실DB 읽기 실행, 경고 0건), JS 구문 검사, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면 |
+| **완료** | [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql) | MST1005_S01 리비전 삭제를 가장 최근 리비전만 허용 | 실DB 읽기 실행으로 리비전별 삭제 가능 여부 판정 확인(경고 0건), IF 짝·인코딩 확인. 미확인: 프로시저 컴파일·실제 화면 |
+| **완료** | [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js) | MST1005_S01 긴 안내 문구 줄바꿈 | ItsMsg.js·ItsMsg.css 처리 방식 확인, JS 구문 검사, 인코딩 확인. 미확인: 실제 안내창 표시 |
+| **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js) | MST1005_S01 추가 행 번호를 빈 번호 우선으로 변경 | Node 모의 테스트(4,5 남은 상태 4회 추가 1,2,3,6 / 빈 그리드 1 / 1,3 사이 2) 통과, 인코딩 확인. 미확인: 실제 화면 |
+| **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql) | MST1005_S01 점수별 평가기준 추가·저장·삭제 및 머리글 공백 축소 | Node 모의 테스트(자동 생성 제거, 점수기준 추가 기본값·점수 잠금·중복 차단·저장/삭제 파라미터, 미저장 항목 추가 차단) 통과, IF/WHILE 짝·파라미터 22건 정적 점검, JS 구문 검사, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면 머리글 높이 |
+| **완료** | [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js) | MST1005_S01 설비등급 기준 평가표 대응 및 점수 구간 겹침 차단 | 겹침 확인 SQL 실DB 읽기 실행, 정적 점검. 미확인: 프로시저 컴파일·실제 화면 |
+| **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js) | MST1005_S01 리비전 상세 묶음 배치(C안) 적용 | JS 구문 검사, aspx div 짝(14/14)·컨트롤 ID 확인, 인코딩 확인. 미확인: 실제 화면 배치 비율 |
+| **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql) | MST1005_S01 평가항목 선택시 해당 점수별 평가기준만 조회 | Node 모의 테스트(항목 선택별 조회 GMCD, 신규 항목 미조회, 저장·삭제 후 재조회 대상) 통과, 변경 조회 SQL 실DB 읽기 실행(경고 0건), 인코딩 확인. 미확인: MariaDB 컴파일·실제 화면 |
+| **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql) | MST1005_S01 영역별 저장 버튼으로 변경 | Node 모의 테스트(영역별 저장 CALLTYPE·체크 행 전송·저장 후 재조회 범위·미체크 차단·설비등급 중복) 통과, IF/WHILE 짝·파라미터 정적 점검, 인코딩 확인. 미확인: MariaDB 컴파일·실제 화면 |
+| **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql) | MST1005_S01 설비등급기준 관리 화면 단순화 및 평가표 양식 반영 | Node 모의 테스트(세 그리드 연쇄 조회, 통합 저장 파라미터, 신규 항목·등급 추가값, 설비등급 중복·키 잠금, 삭제 DB/화면 구분, 리비전 갱신) 전체 통과, 조회·1~5점 생성·숫자 확인 SQL 실DB 읽기 실행(경고 0건), IF/WHILE 짝·파라미터 26건 정적 점검, 인코딩 확인. 미확인: MariaDB 프로시저 컴파일·저장 분기 실행, 실제 화면 |
+| **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.aspx.cs](01.Office/PAGEMST/MST1005/MST1005_S01.aspx.cs), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql) | MST1005_S01 설비등급기준 관리 화면 구현 | Node 모의 테스트(조회 연쇄, 행 추가·저장·삭제 파라미터, 키 수정 잠금, 0점 포함 중복 차단, 리비전 갱신·빈 리비전 생성) 전체 통과, 프로시저 SELECT문 실DB 읽기 실행으로 컬럼명 확인, IF/WHILE 짝·파라미터 사용 정적 점검, 인코딩(.aspx/.cs/.js BOM, .sql BOM 없음, CRLF) 확인. 미확인: MariaDB 컴파일·저장 분기 실행, 실제 화면 동작 |
 | **완료** | [.agents/rules/project_context.md](.agents/rules/project_context.md), [.agents/rules/report_file_structure.md](.agents/rules/report_file_structure.md), [.agents/rules/report_devexpress.md](.agents/rules/report_devexpress.md), [.agents/rules/framework_convention.md](.agents/rules/framework_convention.md) | - | 단일 BOM/CRLF 확인 |
 | **완료** | [report_devexpress.md](.agents/rules/report_devexpress.md), [report_file_structure.md](.agents/rules/report_file_structure.md) | - | 단일 BOM/CRLF 확인 |
 | **완료** | [S01A.Designer.cs](04.Report/PAGEEQM/EQM1001/S01A.Designer.cs), [EQM1001.exe](01.Office/Reports/EQM1001.exe), [report_devexpress.md](.agents/rules/report_devexpress.md), [report_file_structure.md](.agents/rules/report_file_structure.md) | - | VS 2017 디자이너에서 S01A 정상 표시 확인(오류 페이지 없음). MSBuild Release Rebuild 성공. A-001 PNG 비교 시 상단 박스 픽셀 동일, 항목명 열 글자 서브픽셀 차이만 존재. 웹 컨트롤러 방식 실행·오류 안내 정상. 01.Office/Reports·04.Report/bin 배포 |
