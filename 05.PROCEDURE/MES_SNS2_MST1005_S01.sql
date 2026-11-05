@@ -268,6 +268,19 @@ CASE $CALLTYPE
             MPRG   = CALLPRG()
         WHERE REVCD = $REVCD
           AND GMCD = _$GMCD;
+
+        -- 계산구분이 없는 항목은 점수별 평가기준의 최소·최대값을 쓰지 않으므로 비움
+        IF _$CALCTP = '' THEN
+          UPDATE MSTEQM_GRADEREV_D2
+          SET MINVAL = '',
+              MAXVAL = '',
+              MTIME  = CALLTIME(),
+              MEMP   = CALLEMP(),
+              MPRG   = CALLPRG()
+          WHERE REVCD = $REVCD
+            AND GMCD = _$GMCD
+            AND (MINVAL <> '' OR MAXVAL <> '');
+        END IF;
       END IF;
 
       SET _$SAVEDGMCD = CONCAT(_$SAVEDGMCD, _$GMCD, '»');
@@ -302,6 +315,14 @@ CASE $CALLTYPE
       IF _$GMNM IS NULL THEN
         CALL COMERR('저장할 평가항목을 다시 조회하세요.');
         LEAVE PROC;
+      END IF;
+
+      -- 계산구분이 없는 항목은 최소·최대값을 쓰지 않으므로 비워서 저장
+      SET _$CALCTP = (SELECT CALCTP FROM MSTEQM_GRADEREV_D WHERE REVCD = $REVCD AND GMCD = _$GMCD LIMIT 1);
+
+      IF _$CALCTP = '' THEN
+        SET _$MINVAL = '';
+        SET _$MAXVAL = '';
       END IF;
 
       IF _$SCORE NOT REGEXP '^-?[0-9]{1,5}$' THEN

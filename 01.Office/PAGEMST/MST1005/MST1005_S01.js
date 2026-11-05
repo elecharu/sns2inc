@@ -22,6 +22,12 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
+    // 계산구분 콤보 맨 앞에 빈 항목 추가 (계산구분 없음 선택용, 빈 문자열이면 목록 높이가 줄어 공백 문자로 표시)
+    // ‼️@CALCTP => Tag 없음, @CALCTP 에 Tag 추가 시 빈값의 경우 높이가 7px이라 해당 페이지서만 JS를 통해서 구현
+    var calcMap = ItsGrid.Get('grid2').columns[ItsGrid.$colIndex('grid2', 'CALCTP')].dataMap;
+    calcMap.collectionView.sourceCollection.unshift({ Label: '\u00a0', Value: '' });
+    calcMap.collectionView.refresh();
+
     // 점수별 평가기준 그리드 (선택 평가항목의 점수별 기준)
     ItsGrid.Create('grid3', { isCheckBoxGrid: true }, [
         column.create('ORG_SCORE', 'ORG_SCORE', { width: 100, hidden: true }),
@@ -74,8 +80,24 @@ ItsGrid.Event('grid1').onSelect = function () {
 
 // 2026-11-04 [평가항목 그리드] 평가항목 선택시 해당 항목의 점수별 평가기준만 조회
 ItsGrid.Event('grid2').onSelect = function () {
+    SET_D2_RANGE_COLUMN();
     SEARCH_D2();
 };
+
+// 2026-11-05 [평가항목 그리드] 선택 행의 계산구분을 바꾸면 점수별 평가기준 최소·최대값 컬럼 표시 변경
+ItsGrid.Event('grid2').onChanged = function (rowIndex, field) {
+    if (field == 'CALCTP' && rowIndex == ItsGrid.GetCurrentIndex('grid2')) {
+        SET_D2_RANGE_COLUMN();
+    }
+};
+
+// 2026-11-05 [점수별 평가기준 그리드] 선택 평가항목의 계산구분이 없으면 최소·최대값 컬럼 숨김 (점수·평가기준·비고만 표시)
+function SET_D2_RANGE_COLUMN() {
+    var isRange = (ItsGrid.GetValue('grid2', ItsGrid.GetCurrentIndex('grid2'), 'CALCTP') || '') != '';
+
+    ItsGrid.Get('grid3').columns[ItsGrid.$colIndex('grid3', 'MINVAL')].visible = isRange;
+    ItsGrid.Get('grid3').columns[ItsGrid.$colIndex('grid3', 'MAXVAL')].visible = isRange;
+}
 
 // 2026-11-05 [그리드 공통] 저장된 행 여부 (조회 시점 키 ORG_ 값이 있으면 저장된 행)
 function IS_SAVED_ROW(gridId, rowIndex, orgField) {
