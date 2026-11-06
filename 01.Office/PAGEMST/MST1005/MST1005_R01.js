@@ -5,7 +5,7 @@ var EVAL_EDIT = true;
 
 /* 페이지 로드 시 수행 */
 ItsPage.Load = function () {
-    // 설비목록 그리드 (작업장·공정·라인·설비그룹 같은 값 셀 병합)
+    // 설비목록 그리드 (MST1002_R06과 같은 방식 : 작업장·공정·라인·설비그룹 같은 값 셀 병합, ItsGrid 공통 allowMerging)
     ItsGrid.Create('grid1', { isCheckBoxGrid: false, allowMerging: 'Cells' }, [
         column.create('작업장', 'LINENM', { width: 90, align: 'center', allowMerging: true }),
         column.create('공정', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', allowMerging: true }),
@@ -16,22 +16,6 @@ ItsPage.Load = function () {
         column.create('설비등급', 'EQMGRADE', { width: 70, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM110' }),
         column.split()
     ]);
-
-    // 설비목록 병합은 앞 컬럼까지 값이 같은 행 안에서만 (기본 병합은 작업장이 달라도 공정·라인이 같으면 이어 붙음)
-    ItsGrid.Get('grid1').getMergedRange = function (panel, r, c) {
-        if (panel.cellType != wijmo.grid.CellType.Cell || !panel.columns[c].allowMerging) {
-            return null;
-        }
-
-        var rng = new wijmo.grid.CellRange(r, c);
-        for (var i = r; i < panel.rows.length - 1 && IS_SAME_GROUP(panel, i, i + 1, c); i++) {
-            rng.row2 = i + 1;
-        }
-        for (var j = r; j > 0 && IS_SAME_GROUP(panel, j, j - 1, c); j--) {
-            rng.row = j - 1;
-        }
-        return rng.isSingleCell ? null : rng;
-    };
 
     // 평가이력 그리드
     ItsGrid.Create('grid2', { isCheckBoxGrid: false }, [
@@ -123,16 +107,6 @@ ItsCombo.Event('cmb_EQMTP').onChanged = function () {
 ItsGrid.Event('grid1').onSelect = function () {
     SEARCH_EVAL();
 };
-
-// 2026-11-05 [설비목록 그리드] 두 행의 병합 컬럼 값이 c 컬럼까지 모두 같은지 (작업장 > 공정 > 라인 > 설비그룹)
-function IS_SAME_GROUP(panel, r1, r2, c) {
-    for (var i = 0; i <= c; i++) {
-        if (panel.columns[i].allowMerging && panel.getCellData(r1, i, false) != panel.getCellData(r2, i, false)) {
-            return false;
-        }
-    }
-    return true;
-}
 
 // 2026-11-05 [설비목록 그리드] 선택 설비번호
 function GET_FANO() {
@@ -400,7 +374,7 @@ function GET_GRADE(tot) {
         }
 
         var isIn = (min != '' && min == max) ? tot == Number(min)
-                 : (min == '' || tot >= Number(min)) && (max == '' || tot < Number(max));
+            : (min == '' || tot >= Number(min)) && (max == '' || tot < Number(max));
         if (isIn) {
             return ItsGrid.GetValue('grid5', i, 'EQMGRADE');
         }
@@ -434,26 +408,34 @@ ItsPop.Event('pop1').onCancelBtnClick = function () {
     ItsPop.Close('pop1');
 };
 
-// 2026-11-05 [평가이력 영역] 승인 : 선택 평가이력의 승인자·승인일자 입력 (기본값 로그인 사원, 오늘)
+// 2026-11-06 [평가이력 영역] 승인 : 선택 평가이력의 승인자·승인일자·비고 입력 (기본값 로그인 사원, 오늘, 기존 평가비고)
 ItsButton.Event('btn_APRV').onClick = function () {
     if (GET_EVALKEY() == '') {
-        ItsMsg.Toast('평가이력을 선택하세요.');
+        ItsMsg.Alert('평가이력을 선택하세요.');
+        return;
+    }
+
+    // 2026-11-06 이미 승인된 평가이력은 승인 팝업을 열지 않음
+    if ((ItsGrid.GetValue('grid2', ItsGrid.GetCurrentIndex('grid2'), 'APRVTIME') || '') != '') {
+        ItsMsg.Alert('이미 승인된 평가이력입니다.');
         return;
     }
 
     ItsPage.InitData('pdiv2');
     ItsFind.SetValue('pop2_find_APRVEMP', ItsPage.EMPCD, false);
     ItsDate.SetValue('pop2_date_APRVDATE', ItsHelper.GetYearMonthDay(), false);
+    ItsText.SetValue('pop2_txt_REMARK', ItsGrid.GetValue('grid2', ItsGrid.GetCurrentIndex('grid2'), 'REMARK') || '', false);
     ItsPop.Open('pop2');
 };
 
-// 2026-11-05 [승인 팝업] 승인 저장 후 설비목록의 설비등급을 평가등급으로 표시, 평가이력 다시 조회
+// 2026-11-06 [승인 팝업] 승인 저장 (비고 포함) 후 설비목록의 설비등급을 평가등급으로 표시, 평가이력 다시 조회
 ItsPop.Event('pop2').onAddBtnClick = function () {
     ItsMsg.Confirm('승인 후에는 수정·삭제할 수 없고<br>설비등급이 평가등급으로 변경됩니다.<br>승인하시겠습니까?', function () {
         var key = GET_EVALKEY();
         var maria = new ItsMaria('MST1005_R01', 'APPROVE_EVAL');
         maria.AddPanel('pdiv2');
         maria.AddParam('EQMGRADEEVALKEY', key);
+        maria.AddParam('REMARK', ItsText.GetValue('pop2_txt_REMARK'));
         maria.CallProc();
         if (maria.isError) {
             maria.ShowErrMsg();

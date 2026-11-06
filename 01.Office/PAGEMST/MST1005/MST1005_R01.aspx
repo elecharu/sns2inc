@@ -87,11 +87,12 @@
         </Its:div>
     </Its:pop>
 
-    <Its:pop runat="server" ID="pop2" Type="add" Title="평가 승인" Width="380" Height="120" AddBtnName="승인">
+    <Its:pop runat="server" ID="pop2" Type="add" Title="평가 승인" Width="510" AddBtnName="승인">
         <Its:div runat="server" Type="SplitSingle" ID="pdiv2">
-            <Its:find runat="server" Label="승인자" ID="pop2_find_APRVEMP" Field="APRVEMP" GPCD="EMPCD" InputWidth="70" NameWidth="100" />
+            <Its:find runat="server" Label="승인자" ID="pop2_find_APRVEMP" Field="APRVEMP" GPCD="EMPCD" LabelWidth="70" InputWidth="70" NameWidth="110" />
+            <Its:date runat="server" Label="승인일자" ID="pop2_date_APRVDATE" Field="APRVDATE" LabelWidth="70" InputWidth="105" MarginLeft="8" />
             <Its:newline runat="server" />
-            <Its:date runat="server" Label="승인일자" ID="pop2_date_APRVDATE" Field="APRVDATE" />
+            <Its:text runat="server" Label="비고" ID="pop2_txt_REMARK" Field="REMARK" LabelWidth="70" InputWidth="385" MarginTop="6" />
         </Its:div>
     </Its:pop>
 </asp:Content>

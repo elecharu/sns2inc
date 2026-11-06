@@ -4,6 +4,7 @@ PROCEDURE `MES_SNS2`.`MST1005_R01`(
 -- Comment: 설비등급 평가등록
 -- Create: 	2026-11-05  	생성 			한성수
 -- Modify: 	2026-11-05 					한성수	설비 목록·평가이력 조회, 자동 점수·등급 판정, 평가 등록·승인, 점수기준 비고 추가, 평가표 출력
+-- Modify: 	2026-11-06 					한성수	승인 대기 평가이력이 있으면 신규 평가 차단, 평가·승인일자 오늘 이후 및 최종 승인 평가일자 이전 평가 차단, 평가 승인 시 비고(REMARK) 갱신 반영
 -- *****************************************************************************
   IN $SDATE             VARCHAR(10),   -- 조회 시작일자
   IN $EDATE             VARCHAR(10),   -- 조회 종료일자
@@ -34,6 +35,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$EVALDATE    VARCHAR(10);
   DECLARE _$EQMGRADE    VARCHAR(10);
   DECLARE _$APRVTIME    VARCHAR(19);
+  DECLARE _$LASTDATE    VARCHAR(10);   -- 설비의 최종 승인 평가일자
   DECLARE _$FIXCOUNT    DOUBLE;        -- 고장건수 (최근 1년)
   DECLARE _$FIXTIME     DOUBLE;        -- 월 평균 수리시간(분) (최근 1년 합계 ÷ 12)
   DECLARE _$USEMONTHS   DOUBLE;        -- 사용개월 (설치일자 ~ 평가일자)
@@ -54,6 +56,14 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     IF $EQMGRADEEVALKEY = '' THEN
       IF NOT EXISTS (SELECT 1 FROM MSTEQM WHERE FANO = $FANO LIMIT 1) THEN
         CALL COMERR('설비를 선택하세요.');
+        LEAVE PROC;
+      END IF;
+
+      -- 승인 대기중인 평가이력이 있으면 신규 평가 불가 (설비별 승인 대기 1건만 유지)
+      SET _$EVALDATE = (SELECT MAX(EVALDATE) FROM EQMGRADEEVAL WHERE FANO = $FANO AND APRVTIME = '');
+
+      IF _$EVALDATE IS NOT NULL THEN
+        CALL COMERR(CONCAT('승인 대기중인 평가이력(평가일자 ', _$EVALDATE, ')이 있습니다.<br>승인 대기중인 평가이력을 삭제 후 새로 생성해주세요.'));
         LEAVE PROC;
       END IF;
 
@@ -211,6 +221,19 @@ CASE $CALLTYPE
       LEAVE PROC;
     END IF;
 
+    -- 평가 이력은 날짜 순서대로만 쌓임 : 오늘 이후 불가, 최종 승인 평가일자 이전 불가 (같은 날짜는 허용)
+    IF $EVALDATE > LEFT(CALLTIME(), 10) THEN
+      CALL COMERR('평가일자는 오늘 이후로 입력할 수 없습니다.');
+      LEAVE PROC;
+    END IF;
+
+    SET _$LASTDATE = (SELECT MAX(EVALDATE) FROM EQMGRADEEVAL WHERE FANO = _$FANO AND APRVTIME <> '');
+
+    IF $EVALDATE < _$LASTDATE THEN
+      CALL COMERR(CONCAT('최종 승인 평가일자(', _$LASTDATE, ') 이전 날짜로 평가할 수 없습니다.'));
+      LEAVE PROC;
+    END IF;
+
     IF $EQMGRADEEVALKEY = '' THEN
       SET _$KEY = GETKEY('EQMGRADEEVALKEY');
     ELSE
@@ -342,6 +365,11 @@ CASE $CALLTYPE
       LEAVE PROC;
     END IF;
 
+    IF $APRVDATE > LEFT(CALLTIME(), 10) THEN
+      CALL COMERR('승인일자는 오늘 이후로 입력할 수 없습니다.');
+      LEAVE PROC;
+    END IF;
+
     IF $APRVDATE < _$EVALDATE THEN
       CALL COMERR(CONCAT('승인일자는 평가일자(', _$EVALDATE, ')보다 빠를 수 없습니다.'));
       LEAVE PROC;
@@ -357,6 +385,7 @@ CASE $CALLTYPE
     SET EQMGRADE_BEFORE = COALESCE((SELECT EQMGRADE FROM MSTEQM WHERE FANO = _$FANO LIMIT 1), ''),
         APRVEMP         = $APRVEMP,
         APRVTIME        = CONCAT($APRVDATE, ' ', RIGHT(CALLTIME(), 8)),
+        REMARK          = $REMARK,
         MTIME           = CALLTIME(),
         MEMP            = CALLEMP(),
         MPRG            = CALLPRG()
