@@ -1,0 +1,13 @@
+﻿<Application x:Class="TMLPRINT.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:TMLPRINT">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/ITSLIB;component/00_Style/Basic.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
+<!-- 현장 프로그램 출력물(XtraReport) 모음. 각 현장화면이 AAALIB\TMLPRINT.exe 를 참조해서 출력물 클래스를 쓴다 -->

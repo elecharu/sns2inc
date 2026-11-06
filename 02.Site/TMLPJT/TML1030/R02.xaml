@@ -1,0 +1,114 @@
+﻿<its:ItsPageTml xmlns:c1="http://schemas.componentone.com/winfx/2006/xaml"
+                x:Class="TML1030.R02"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:TML1030"
+      xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
+      Width="980" Height="580">
+
+    <Canvas Background="WhiteSmoke">
+
+        <!-- 상단 조회 패널 -->
+        <UserControl Canvas.Left="0" Canvas.Top="0" Style="{DynamicResource TML_PANEL}">
+            <its:WrapContent Width="980" Height="40" x:Name="PANEL_S1">
+                <its:Date Label="불출일자" LabelWidth="70" Width="200" Value="{Binding SDATE}" />
+                <its:Date HidenLabel="Y" Width="124" Value="{Binding EDATE}" />
+                <UserControl Width="12" />
+                <its:Button Width="140" Height="36" CommandName="SEARCH_RELEASE" Label="불출증 조회" SetFontSize="16" BackColor="SteelBlue" />
+                <UserControl Width="10" />
+                <its:Button Width="110" Height="36" CommandName="POP_RELEASE" Label="불출" SetFontSize="18" BackColor="Green" />
+                <UserControl Width="10" />
+                <its:Button Width="120" Height="36" CommandName="PRINT_RELEASE" Label="불출증 출력" SetFontSize="16" BackColor="SteelBlue" />
+            </its:WrapContent>
+        </UserControl>
+
+        <!-- 좌측: 불출증 헤더 -->
+        <UserControl Canvas.Left="0" Canvas.Top="40" Style="{DynamicResource TML_GRID}">
+            <its:Grid x:Name="GRID_G1" Width="430" Height="540">
+                <its:Grid.Columns>
+                    <its:Column Width="95" FieldName="RELEASEDATE" Header="불출일자" ALGIN="Center" />
+                    <its:Column Width="130" FieldName="EQMNM" Header="불출라인" />
+                    <its:Column Width="70" FieldName="TOTQTY" Header="총수량" ALGIN="Right" DecimalPoint="0" />
+                    <its:Column Width="80" FieldName="EMPNM_RELEASE" Header="불출자" ALGIN="Center" />
+                    <its:Column Width="50" FieldName="RECIEVEYN" Header="수령" ALGIN="Center" />
+                    <its:Column FieldName="RELEASEKEY" Header="불출증키" Visible="False" />
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <!-- 우측: 불출증 상세 -->
+        <UserControl Canvas.Left="430" Canvas.Top="40" Style="{DynamicResource TML_GRID}">
+            <its:Grid x:Name="GRID_G2" Width="550" Height="540">
+                <its:Grid.Columns>
+                    <its:Column Width="70" FieldName="ITEMID" Header="소모품ID" ALGIN="Center" />
+                    <its:Column Width="100" FieldName="ITEMCD" Header="소모품코드" ALGIN="Center" />
+                    <its:Column Width="130" FieldName="ITEMNM" Header="소모품명" />
+                    <its:Column Width="110" FieldName="ITEMSPEC" Header="규격" />
+                    <its:Column Width="70" FieldName="RELQTY" Header="불출수량" ALGIN="Right" DecimalPoint="0" />
+                    <its:Column Width="60" Header="불출삭제" CellType="Button" ButtonText="X" CommandName="DEL_RELEASE_DETAIL" />
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <!-- 불출 팝업: 불출일자·라인·불출자 + 소모품 필터 → 불출 소모품 리스트 → 불출증 생성·출력 -->
+        <UserControl x:Name="POP_RELEASE" Canvas.Left="10" Canvas.Top="10" Style="{DynamicResource TML_POP}" Width="960" Height="560" Visibility="Collapsed">
+            <Grid Width="954" Height="525" Background="WhiteSmoke">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="92" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="62" />
+                </Grid.RowDefinitions>
+                <its:WrapContent x:Name="PANEL_A1" Margin="10,8,10,0">
+                    <its:Date Label="불출일자" LabelWidth="60" Width="200" Value="{Binding RELEASEDATE}" />
+                    <UserControl Width="10" />
+                    <its:Combo Label="불출라인" LabelWidth="60" Width="300" GPCD="@OSCCONSUM_EQMCD" REF01="07" Value="{Binding EQMCD}" />
+                    <UserControl Width="10" />
+                    <its:Pop Label="불출자" LabelWidth="50" Width="300" GPCD="EMPCD" Value="{Binding EMPCD_RELEASE}" ShowKeyPad="True" />
+                    <UserControl Width="930" Height="8" />
+                    <its:Combo Label="제품" LabelWidth="60" Width="300" GPCD="*OSCCONSUM_TML_ITEMID_PRD" Value="{Binding ITEMID_PRD}" />
+                    <UserControl Width="10" />
+                    <its:Combo Label="세부공정" LabelWidth="60" Width="220" GPCD="*OSCCONSUM_TML_PRCDETAIL" Value="{Binding PRCDETAIL}" />
+                    <UserControl Width="10" />
+                    <its:Combo Label="터렛" LabelWidth="40" Width="180" GPCD="*OSCCONSUM_TML_TURRET" Value="{Binding TURRET}" />
+                    <UserControl Width="10" />
+                    <its:Button Label="소모품 조회" Width="130" Height="36" SetFontSize="16" CommandName="SEARCH_POP_ITEM" BackColor="SteelBlue" />
+                </its:WrapContent>
+                <Grid Grid.Row="1" Margin="10,0,10,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="52*" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="48*" />
+                    </Grid.ColumnDefinitions>
+                    <!-- 소모품 목록 (불출라인에 분류등록된 소모품) -->
+                    <Border BorderBrush="Black" BorderThickness="1" Background="White">
+                        <its:Grid x:Name="GRID_G3" Width="482" Height="368">
+                            <its:Grid.Columns>
+                                <its:Column Width="55" Header="추가" CellType="Button" ButtonText="▶" CommandName="ADD_POP_ITEM" />
+                                <its:Column Width="95" FieldName="ITEMCD" Header="소모품코드" ALGIN="Center" />
+                                <its:Column Width="130" FieldName="ITEMNM" Header="소모품명" />
+                                <its:Column Width="195" FieldName="ITEMSPEC" Header="규격" />
+                                <its:Column FieldName="ITEMID" Header="소모품ID" Visible="False" />
+                            </its:Grid.Columns>
+                        </its:Grid>
+                    </Border>
+                    <!-- 불출 소모품 리스트 -->
+                    <Border Grid.Column="2" BorderBrush="Black" BorderThickness="1" Background="White">
+                        <its:Grid x:Name="GRID_G4" Width="444" Height="368">
+                            <its:Grid.Columns>
+                                <its:Column Width="120" FieldName="ITEMNM" Header="소모품명" />
+                                <its:Column Width="180" FieldName="ITEMSPEC" Header="규격" />
+                                <its:Column Width="80" FieldName="RELQTY" Header="불출수량" ALGIN="Right" CellType="Number" DecimalPoint="0" ShowKeyPad="Y" ReadOnly="False" />
+                                <its:Column Width="55" Header="빼기" CellType="Button" ButtonText="X" CommandName="DEL_POP_ITEM" />
+                                <its:Column FieldName="ITEMID" Header="소모품ID" Visible="False" />
+                            </its:Grid.Columns>
+                        </its:Grid>
+                    </Border>
+                </Grid>
+                <its:Button Grid.Row="2" Width="300" Height="50" HorizontalAlignment="Center" Label="불출 (불출증 생성·출력)" CommandName="ADD_RELEASE" BackColor="Green" SetFontSize="20" />
+            </Grid>
+        </UserControl>
+
+    </Canvas>
+</its:ItsPageTml>

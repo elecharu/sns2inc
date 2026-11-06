@@ -1,0 +1,99 @@
+﻿<its:ItsPageTml xmlns:c1="http://schemas.componentone.com/winfx/2006/xaml"
+                x:Class="TML1030.R03"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:TML1030"
+      xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
+      Width="980" Height="580">
+
+    <Canvas Background="WhiteSmoke">
+
+        <!-- 상단 조회 패널 -->
+        <UserControl Canvas.Left="0" Canvas.Top="0" Style="{DynamicResource TML_PANEL}">
+            <its:WrapContent Width="980" Height="40" x:Name="PANEL_S1">
+                <its:Date Label="불출일자" LabelWidth="70" Width="200" Value="{Binding SDATE}" />
+                <its:Date HidenLabel="Y" Width="124" Value="{Binding EDATE}" />
+                <UserControl Width="12" />
+                <its:Button Width="140" Height="36" CommandName="SEARCH_RELEASE" Label="불출증 조회" SetFontSize="16" BackColor="SteelBlue" />
+                <UserControl Width="10" />
+                <its:Button Width="110" Height="36" CommandName="POP_RECEIVE" Label="수령" SetFontSize="18" BackColor="Green" />
+                <UserControl Width="10" />
+                <its:Button Width="110" Height="36" CommandName="SAVE_RECQTY" Label="저장" SetFontSize="16" BackColor="Orange" />
+                <UserControl Width="10" />
+                <its:Button Width="110" Height="36" CommandName="DEL_RECEIVE" Label="수령삭제" SetFontSize="16" BackColor="IndianRed" />
+                <UserControl Width="10" />
+                <its:Button Width="120" Height="36" CommandName="PRINT_RELEASE" Label="불출증 출력" SetFontSize="16" BackColor="SteelBlue" />
+            </its:WrapContent>
+        </UserControl>
+
+        <!-- 좌측: 불출증 헤더 (체크 = 수령삭제 대상) -->
+        <UserControl Canvas.Left="0" Canvas.Top="40" Style="{DynamicResource TML_GRID}">
+            <its:Grid x:Name="GRID_G1" Width="470" Height="540">
+                <its:Grid.Columns>
+                    <its:Column Width="45" Header="선택" CellType="Check" FieldName="ISCHECKED" IsRowCheck="True" />
+                    <its:Column Width="90" FieldName="RELEASEDATE" Header="불출일자" ALGIN="Center" />
+                    <its:Column Width="110" FieldName="EQMNM" Header="불출라인" />
+                    <its:Column Width="60" FieldName="TOTQTY" Header="총수량" ALGIN="Right" DecimalPoint="0" />
+                    <its:Column Width="75" FieldName="EMPNM_RELEASE" Header="불출자" ALGIN="Center" />
+                    <its:Column Width="75" FieldName="EMPNM_RECIEVE" Header="수령자" ALGIN="Center" />
+                    <its:Column FieldName="RELEASEKEY" Header="불출증키" Visible="False" />
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <!-- 우측: 불출증 상세 (수령수량 수정 후 [저장]) -->
+        <UserControl Canvas.Left="470" Canvas.Top="40" Style="{DynamicResource TML_GRID}">
+            <its:Grid x:Name="GRID_G2" Width="510" Height="540">
+                <its:Grid.Columns>
+                    <its:Column Width="65" FieldName="ITEMID" Header="소모품ID" ALGIN="Center" />
+                    <its:Column Width="95" FieldName="ITEMCD" Header="소모품코드" ALGIN="Center" />
+                    <its:Column Width="115" FieldName="ITEMNM" Header="소모품명" />
+                    <its:Column Width="95" FieldName="ITEMSPEC" Header="규격" />
+                    <its:Column Width="65" FieldName="RELQTY" Header="불출수량" ALGIN="Right" DecimalPoint="0" />
+                    <its:Column Width="70" FieldName="RECQTY" Header="수령수량" ALGIN="Right" CellType="Number" DecimalPoint="0" ShowKeyPad="Y" ReadOnly="False" />
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <!-- 수령 팝업: 불출증 스캔 → 내용 확인 → 수령일자·수령자·수령수량 → 수령 -->
+        <UserControl x:Name="POP_RECEIVE" Canvas.Left="60" Canvas.Top="20" Style="{DynamicResource TML_POP}" Width="860" Height="540" Visibility="Collapsed">
+            <Grid Width="854" Height="505" Background="WhiteSmoke">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="132" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="62" />
+                </Grid.RowDefinitions>
+                <its:WrapContent x:Name="PANEL_A1" Margin="10,8,10,0">
+                    <its:Text x:Name="txt_SCAN" Label="불출증 스캔" LabelWidth="90" Width="400" Value="{Binding SCANKEY}" KeyDown="txt_SCAN_KeyDown" />
+                    <UserControl Width="430" Height="10" />
+                    <its:Text Label="불출일자" LabelWidth="90" Width="260" Value="{Binding RELEASEDATE}" ReadOnly="True" />
+                    <UserControl Width="10" />
+                    <its:Text Label="불출라인" LabelWidth="70" Width="260" Value="{Binding EQMNM}" ReadOnly="True" />
+                    <UserControl Width="10" />
+                    <its:Text Label="불출자" LabelWidth="60" Width="230" Value="{Binding EMPNM_RELEASE}" ReadOnly="True" />
+                    <UserControl Width="830" Height="10" />
+                    <its:Date Label="수령일자" LabelWidth="90" Width="260" Value="{Binding RECIEVEDATE}" />
+                    <UserControl Width="10" />
+                    <its:Pop Label="수령자" LabelWidth="70" Width="330" GPCD="EMPCD" Value="{Binding EMPCD_RECIEVE}" ShowKeyPad="True" />
+                    <its:Text Value="{Binding RELEASEKEY}" Visibility="Collapsed" />
+                </its:WrapContent>
+                <Border Grid.Row="1" Margin="10,0,10,0" BorderBrush="Black" BorderThickness="1" Background="White">
+                    <its:Grid x:Name="GRID_G3" Width="832" Height="306">
+                        <its:Grid.Columns>
+                            <its:Column Width="130" FieldName="ITEMCD" Header="소모품코드" ALGIN="Center" />
+                            <its:Column Width="220" FieldName="ITEMNM" Header="소모품명" />
+                            <its:Column Width="220" FieldName="ITEMSPEC" Header="규격" />
+                            <its:Column Width="110" FieldName="RELQTY" Header="불출수량" ALGIN="Right" DecimalPoint="0" />
+                            <its:Column Width="120" FieldName="RECQTY" Header="수령수량" ALGIN="Right" CellType="Number" DecimalPoint="0" ShowKeyPad="Y" ReadOnly="False" />
+                            <its:Column FieldName="ITEMID" Header="소모품ID" Visible="False" />
+                        </its:Grid.Columns>
+                    </its:Grid>
+                </Border>
+                <its:Button Grid.Row="2" Width="260" Height="50" HorizontalAlignment="Center" Label="수령" CommandName="ADD_RECEIVE" BackColor="Green" SetFontSize="20" />
+            </Grid>
+        </UserControl>
+
+    </Canvas>
+</its:ItsPageTml>

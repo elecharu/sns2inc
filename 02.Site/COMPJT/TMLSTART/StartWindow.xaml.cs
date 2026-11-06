@@ -91,6 +91,7 @@ namespace TMLSTART
             downList.Add("ITSLOGIN.exe", "ITSLOGIN.exe");
             downList.Add("ITSLIB.exe", "ITSLIB.exe");
             downList.Add("TMLMAIN.exe", "TMLMAIN.exe");
+            downList.Add("TMLPRINT.exe", "TMLPRINT.exe");
 
             string[] dllList = webclient.DownloadString(serverUrl + "DllList.aspx").Split(new string[] { "|" }, StringSplitOptions.RemoveEmptyEntries);
             foreach (string dllName in dllList)

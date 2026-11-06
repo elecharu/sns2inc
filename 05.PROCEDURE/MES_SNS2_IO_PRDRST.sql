@@ -11,6 +11,7 @@ PROCEDURE MES_SNS2.IO_PRDRST(
 -- Create: 2026-10-29
 -- Modify: 2026-10-29 라인 불량을 실적 불량수량·PRDRSTBAD 로 반영
 --         2026-10-30 진행 중 비가동 확인, 비가동 작업키 연결
+--         2026-11-05 작업지시 주야구분(PRDINS.DNTP) 저장 (DAY/NIGHT)
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),      -- 공정
@@ -221,6 +222,7 @@ PROC: BEGIN
     , PRCCD
     , EQMCD
     , INSQTY
+    , DNTP
     , RTIME, REMP, RPRG)
   VALUES (
       _$PRDINSKEY
@@ -234,6 +236,7 @@ PROC: BEGIN
     , $PRCCD
     , $EQMCD
     , IFNULL(_$INSQTY, 0)
+    , IF($DNTP = 'PP161102N', 'NIGHT', 'DAY')  -- 주야구분: 야간이면 NIGHT, 주간이면 DAY
     , CALLTIME(), CALLEMP(), CALLPRG()
   );
 

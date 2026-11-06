@@ -13,7 +13,7 @@ ItsPage.Load = function () {
         column.create("정지로스", "STOPYN", { width: 80, align: 'center', columnType: enumColumnTypes.check  }),
         column.create("속도로스 ", "SPEEDYN", { width: 80, align: 'center', columnType: enumColumnTypes.check  }),
         column.create("고장여부", "BADYN", { width: 80, align: 'center', columnType: enumColumnTypes.check  }),
-        //column.create("비가동대분류", "NONGROUPCD1", { width: 100, align: 'center' }),
+        column.create("비가동대분류", "NONGROUPCD1", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'PP409' }),
         //column.create("비가동중분류", "NONGROUPCD2", { width: 100, align: 'center' }),
         column.create("사용여부", "USEYN", { width: 80, align: 'center', columnType: enumColumnTypes.check  }),
         column.create("비고", "REMARK", { width: 150}),

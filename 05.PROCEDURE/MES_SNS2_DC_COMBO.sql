@@ -6,6 +6,8 @@ PROCEDURE MES_SNS2.DC_COMBO(
 -- Modify: 2016-11-10 14:45: 
 --         2026-10-23 12:06:      LINECD: REF02 가 빈 값이면 사내 작업장(MSTLINE.OSCCUSTCD = '')만 조회
 --         2026-10-28 김영철:     OSCCONSUM_PRCCD/EQMCD/ITEMID_PRD/PRCDETAIL 추가 (MST3001_R05 외주처 소모품 그리드 행별 필터용)
+--         2026-11-04 김영철:     OSCCONSUM_TML_ITEMID_PRD/PRCDETAIL/TURRET 추가 (TML1030_R02 외주처 소모품 불출 팝업 필터, REF01 = 라인)
+--         2026-11-04 김영철:     OSCCONSUM_* 7개 분기의 빈 값 첫 행(SELECT '' ... UNION ALL) 제거
 -- *****************************************************************************
   IN $GPCD VARCHAR(20000),
   IN $REF01 VARCHAR(20),
@@ -580,11 +582,9 @@ PROC: BEGIN
 -- *****************************************************************************
 -- OSCCONSUM_* : MST3001_R05 외주처 소모품 그리드 콤보. 입력 REF01 = 공장.
 --   결과의 REF01/REF02 는 상위 분류값이며 화면이 행마다 이 값으로 목록을 거른다.
---   첫 행은 빈 값(선택 안 함). 원본이 0건이어도 그리드 콤보 로딩이 죽지 않게 항상 1건 이상 내려준다.
+--   빈 값 첫 행은 내려주지 않는다 (2026-11-04). 원본이 0건이면 그리드 콤보 로딩이 멈추니 원본 마스터를 먼저 채울 것.
   ELSEIF $GPCD = 'OSCCONSUM_PRCCD' THEN -- 작업장별 공정 (REF01 = 작업장)
 
-      SELECT '' AS Label, '' AS Value, '' AS REF01
-      UNION ALL
       SELECT OSCCONSUM_PRCCD.Label, OSCCONSUM_PRCCD.Value, OSCCONSUM_PRCCD.REF01
         FROM (
                SELECT DISTINCT MSTPRC.PRCNM AS Label, MSTPRC.PRCCD AS Value, MSTLINE_EQM.LINECD AS REF01
@@ -602,8 +602,6 @@ PROC: BEGIN
 -- *****************************************************************************
   ELSEIF $GPCD = 'OSCCONSUM_EQMCD' THEN -- 작업장·공정별 라인 (REF01 = 작업장, REF02 = 공정)
 
-      SELECT '' AS Label, '' AS Value, '' AS REF01, '' AS REF02
-      UNION ALL
       SELECT OSCCONSUM_EQMCD.Label, OSCCONSUM_EQMCD.Value, OSCCONSUM_EQMCD.REF01, OSCCONSUM_EQMCD.REF02
         FROM (
                SELECT MSTLINE_EQM.EQMNM AS Label, MSTLINE_EQM.EQMCD AS Value, MSTLINE_EQM.LINECD AS REF01, MSTLINE_EQM.PRCCD AS REF02
@@ -619,8 +617,6 @@ PROC: BEGIN
 -- *****************************************************************************
   ELSEIF $GPCD = 'OSCCONSUM_ITEMID_PRD' THEN -- 라인별 생산품목 (MSTEQM_STD, REF01 = 라인)
 
-      SELECT '' AS Label, '' AS Value, '' AS REF01
-      UNION ALL
       SELECT OSCCONSUM_ITEMID_PRD.Label, OSCCONSUM_ITEMID_PRD.Value, OSCCONSUM_ITEMID_PRD.REF01
         FROM (
                SELECT DISTINCT CONCAT(MSTITEM.ITEMCD, ' ', MSTITEM.ITEMNM) AS Label,
@@ -637,8 +633,6 @@ PROC: BEGIN
 -- *****************************************************************************
   ELSEIF $GPCD = 'OSCCONSUM_PRCDETAIL' THEN -- 라인별 세부공정 (MSTLINE_EQM_PRCDETAIL, 명칭은 공통코드 PRCDETAIL, REF01 = 라인)
 
-      SELECT '' AS Label, '' AS Value, '' AS REF01
-      UNION ALL
       SELECT OSCCONSUM_PRCDETAIL.Label, OSCCONSUM_PRCDETAIL.Value, OSCCONSUM_PRCDETAIL.REF01
         FROM (
                SELECT IFNULL(COMTYPE.TPNM, MSTLINE_EQM_PRCDETAIL.PRCDETAIL) AS Label,
@@ -656,6 +650,61 @@ PROC: BEGIN
                  ORDER BY MSTLINE_EQM_PRCDETAIL.EQMCD, MSTLINE_EQM_PRCDETAIL.PRCDETAIL
                  LIMIT 100000
              ) AS OSCCONSUM_PRCDETAIL;
+
+-- *****************************************************************************
+-- OSCCONSUM_TML_* : TML1030_R02 외주처 소모품 불출 팝업 필터. REF01 = 라인(EQMCD).
+--   그 라인에 분류등록(MSTITEM_OSCCONSUM_CLASSIFY)된 값만 내려준다. 전체/빈 값 행은 화면 GPCD 앞 * / @ 로 붙인다.
+  ELSEIF $GPCD = 'OSCCONSUM_TML_ITEMID_PRD' THEN -- 라인에 분류등록된 제품
+
+      SELECT OSCCONSUM_TML_ITEMID_PRD.Label, OSCCONSUM_TML_ITEMID_PRD.Value
+        FROM (
+               SELECT DISTINCT CONCAT(MSTITEM.ITEMCD, ' ', MSTITEM.ITEMNM) AS Label,
+                      CAST(MSTITEM.ITEMID AS CHAR) AS Value
+                 FROM MSTITEM_OSCCONSUM_CLASSIFY
+                 INNER JOIN MSTITEM
+                   ON MSTITEM.ITEMID = MSTITEM_OSCCONSUM_CLASSIFY.ITEMID_PRD
+                 WHERE MSTITEM_OSCCONSUM_CLASSIFY.FACTORYCD = '07'
+                   AND MSTITEM_OSCCONSUM_CLASSIFY.EQMCD = $REF01
+                 ORDER BY Label
+                 LIMIT 100000
+             ) AS OSCCONSUM_TML_ITEMID_PRD;
+
+-- *****************************************************************************
+  ELSEIF $GPCD = 'OSCCONSUM_TML_PRCDETAIL' THEN -- 라인에 분류등록된 세부공정 (명칭은 공통코드 PRCDETAIL)
+
+      SELECT OSCCONSUM_TML_PRCDETAIL.Label, OSCCONSUM_TML_PRCDETAIL.Value
+        FROM (
+               SELECT DISTINCT IFNULL(COMTYPE.TPNM, MSTITEM_OSCCONSUM_CLASSIFY.PRCDETAIL) AS Label,
+                      MSTITEM_OSCCONSUM_CLASSIFY.PRCDETAIL AS Value
+                 FROM MSTITEM_OSCCONSUM_CLASSIFY
+                 LEFT JOIN COMTYPE
+                   ON COMTYPE.GPCD = 'PRCDETAIL'
+                  AND COMTYPE.TPCD = MSTITEM_OSCCONSUM_CLASSIFY.PRCDETAIL
+                 WHERE MSTITEM_OSCCONSUM_CLASSIFY.FACTORYCD = '07'
+                   AND MSTITEM_OSCCONSUM_CLASSIFY.EQMCD = $REF01
+                   AND MSTITEM_OSCCONSUM_CLASSIFY.PRCDETAIL <> ''
+                 ORDER BY Value
+                 LIMIT 100000
+             ) AS OSCCONSUM_TML_PRCDETAIL;
+
+-- *****************************************************************************
+  ELSEIF $GPCD = 'OSCCONSUM_TML_TURRET' THEN -- 라인에 분류등록된 터렛 (명칭은 공통코드 TURRET)
+
+      SELECT OSCCONSUM_TML_TURRET.Label, OSCCONSUM_TML_TURRET.Value
+        FROM (
+               SELECT DISTINCT IFNULL(COMTYPE.TPNM, MSTITEM_OSCCONSUM_CLASSIFY.TURRET) AS Label,
+                      MSTITEM_OSCCONSUM_CLASSIFY.TURRET AS Value,
+                      IFNULL(COMTYPE.SORTNO, 0) AS SORTNO
+                 FROM MSTITEM_OSCCONSUM_CLASSIFY
+                 LEFT JOIN COMTYPE
+                   ON COMTYPE.GPCD = 'TURRET'
+                  AND COMTYPE.TPCD = MSTITEM_OSCCONSUM_CLASSIFY.TURRET
+                 WHERE MSTITEM_OSCCONSUM_CLASSIFY.FACTORYCD = '07'
+                   AND MSTITEM_OSCCONSUM_CLASSIFY.EQMCD = $REF01
+                   AND MSTITEM_OSCCONSUM_CLASSIFY.TURRET <> ''
+                 ORDER BY SORTNO, Value
+                 LIMIT 100000
+             ) AS OSCCONSUM_TML_TURRET;
 
 -- *****************************************************************************
   ELSEIF $GPCD = 'EQMCD_OQC' THEN

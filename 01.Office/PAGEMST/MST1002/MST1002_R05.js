@@ -15,7 +15,6 @@ ItsPage.Load = function () {
         column.create("라인명", "EQMNM", { width: 200}),
         column.create("세부공정", "PRCDETAILNM", { width: 200 }),
         column.create("세부공정 관리", "POP_PRCDETAIL", { width: 100, columnType: enumColumnTypes.button, iconCls: 'fa-pencil' }),
-        column.create("매칭설비", "FANONM", { width: 200 }),
         column.create("설비계획그룹", "GROUP_BC", { width: 100, align: 'center'}),
         column.create("원가부문", "CCCD", { width: 100, align: 'center' }),
         column.create("기준 C/T", "STD_CT", { width: 100, align: 'center' }),
@@ -31,10 +30,12 @@ ItsPage.Load = function () {
     ]);
 
     // 2026-11-03 [설비매칭] 선택한 라인과 같은 작업장의 설비: 체크한 설비만 그 라인에 매칭된다(MSTEQM_MATCH)
-    ItsGrid.Create('grid2', { isCheckBoxGrid: true }, [
+    ItsGrid.Create('grid2', { isCheckBoxGrid: true, allowMerging: 'Cells' }, [
+        column.create("작업장", "LINENM", { width: 120, align: 'center', allowMerging: true }),
+        column.create("설비구분", "EQMTP", { width: 103, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', allowMerging: true }),
+        column.create("설비대분류", "EQMGROUP1", { width: 104, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', allowMerging: true }),
         column.create("설비번호", "FANO", { width: 120, align: 'center' }),
         column.create("설비명", "EQMNM", { width: 200 }),
-        column.create("작업장", "LINENM", { width: 120, align: 'center' }),
     ]);
 
     // 2026-10-28 [세부공정] 라인별 세부공정 관리 팝업: 체크한 세부공정만 그 라인에 등록된다
@@ -82,6 +83,7 @@ function SearchEqmMatch(rowIndex) {
     }
 
     ItsGrid.SetStore('grid2', maria.store.YnToBool('isRowCheck'));
+    ItsGrid.Get('grid2').autoSizeColumns();
 }
 
 // 2026-11-03 [설비매칭] 선택한 라인에 체크한 설비는 매칭 등록, 체크를 푼 설비는 매칭 삭제
