@@ -8,6 +8,7 @@
 ---
 
 ## 📌 [기록 관리 가이드라인]
+
 1. **작업 추가 규칙**: 새로운 작업(화면, C#, SQL, 프로시저, 버그 수정 등)을 진행할 때마다 본 문서의 최신 날짜 섹션에 작업 항목과 상세 내용을 누적 기록합니다.
 2. **주석 및 네이밍 표준**: 소스코드에는 `// YYYY-MM-DD 기능설명` 표준을 준수하며, 본 문서에는 원인 분석, 설계 의도, 수정 파일 링크를 명시합니다.
 3. **컴파일 및 빌드 검증**: 소스 수정 후에는 반드시 컴파일 빌드 무결성(MSBuild 등)을 확인하고 그 결과를 기재합니다.
@@ -18,46 +19,51 @@
 ## 🕒 2026-11-06 (금) 작업 내역
 
 ### 1. MST1005_R01 승인 대기 평가이력이 있으면 신규평가 차단
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_R01.sql](05.Procedure/MES_SNS2_MST1005_R01.sql), [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js) (주석)
 - **배경 및 원인**: 승인 대기 평가이력이 있는 설비에 신규평가를 또 등록하면 승인 대기 이력이 2건 이상 생김
 - **작업 상세 내용**:
   - 1. 신규 평가(평가키 없음)의 평가 대상 확인 단계에 승인 대기(APRVTIME = '') 이력 검사 추가 → LIST_EVAL_D(팝업 열기 전)·SAVE_EVAL(저장 시) 모두 차단
-  - 2. 안내 문구 : "승인 대기중인 평가이력(평가일자 YYYY-MM-DD)이 있습니다. 승인 대기중인 평가이력을 삭제 후 새로 생성해주세요." (조회기간 밖 이력도 찾을 수 있게 평가일자 표시)
-  - 3. 화면은 기존 흐름 그대로 : 신규평가 버튼 → LIST_EVAL_D 오류 메시지 표시, 팝업 열지 않음
+  - 1. 안내 문구 : "승인 대기중인 평가이력(평가일자 YYYY-MM-DD)이 있습니다. 승인 대기중인 평가이력을 삭제 후 새로 생성해주세요." (조회기간 밖 이력도 찾을 수 있게 평가일자 표시)
+  - 1. 화면은 기존 흐름 그대로 : 신규평가 버튼 → LIST_EVAL_D 오류 메시지 표시, 팝업 열지 않음
 - **검증 결과**: 프로시저 IF/END IF 27쌍, BOM 없음·CRLF 확인, 운영 DB 읽기 조회(승인 대기 : I2AOC-01N 1건, 대상 없을 때 MAX 결과 NULL 확인). 미확인: 프로시저 서버 저장·화면 동작
 
 ### 2. MST1005_R01 평가 승인 팝업 한 줄 배치
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_R01.aspx](01.Office/PAGEMST/MST1005/MST1005_R01.aspx)
 - **배경 및 원인**: 평가 승인 팝업의 승인자·승인일자를 한 줄로 표시 요청
 - **작업 상세 내용**:
   - 1. 승인자·승인일자 사이 줄바꿈 제거, 라벨 폭 70으로 통일
-  - 2. 팝업 폭 380 → 500 (두 항목 합계 약 450px)
+  - 1. 팝업 폭 380 → 500 (두 항목 합계 약 450px)
 - **검증 결과**: 실제 ItsFind·ItsDate CSS로 그린 모형에서 한 줄 표시·폭 500 안에 들어감 확인. 미확인: 실제 화면
 
 ### 3. MST1005_R01 평가·승인일자 순서 검증 추가
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_R01.sql](05.Procedure/MES_SNS2_MST1005_R01.sql)
 - **배경 및 원인**: 미래 날짜(11-10·11-11)로 평가·승인한 뒤 오늘(11-06) 날짜로 신규평가를 저장하면, 저장은 되지만 "평가일자가 더 늦은 승인 이력" 검사로 승인할 수 없는 이력이 생김
 - **작업 상세 내용**:
   - 1. SAVE_EVAL : 평가일자 오늘 이후 불가 ("평가일자는 오늘 이후로 입력할 수 없습니다.")
-  - 2. SAVE_EVAL : 설비의 최종 승인 평가일자 이전 불가, 같은 날짜는 허용 ("최종 승인 평가일자(YYYY-MM-DD) 이전 날짜로 평가할 수 없습니다.")
-  - 3. APPROVE_EVAL : 승인일자 오늘 이후 불가 ("승인일자는 오늘 이후로 입력할 수 없습니다.")
-  - 4. 변수 _$LASTDATE(최종 승인 평가일자) 추가, 오늘 기준은 LEFT(CALLTIME(), 10)
+  - 1. SAVE_EVAL : 설비의 최종 승인 평가일자 이전 불가, 같은 날짜는 허용 ("최종 승인 평가일자(YYYY-MM-DD) 이전 날짜로 평가할 수 없습니다.")
+  - 1. APPROVE_EVAL : 승인일자 오늘 이후 불가 ("승인일자는 오늘 이후로 입력할 수 없습니다.")
+  - 1. 변수 _$LASTDATE(최종 승인 평가일자) 추가, 오늘 기준은 LEFT(CALLTIME(), 10)
 - **검증 결과**: IF/END IF 30쌍, BOM 없음·CRLF 확인, 운영 DB 읽기 조회로 조건 확인(I2AOC-01N 최종 승인 11-11 → 11-06 차단·11-11 허용, 11-11은 오늘 이후로 차단, 승인 이력 없는 설비는 NULL 비교로 통과). 미확인: 프로시저 서버 저장·화면 동작
 - **참고**: 기존 테스트 데이터(I2AOC-01N 11-10·11-11 승인)가 남아 있으면 11-11 전까지 이 설비는 신규평가 저장 불가, 승인 이력은 화면에서 삭제 불가하므로 DB 정리 필요
 
 ### 4. MST1005_R01 평가 승인 팝업 UI/UX 디자인 개선 및 비고(REMARK) 입력·저장 기능 추가
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_R01.aspx](01.Office/PAGEMST/MST1005/MST1005_R01.aspx), [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js), [05.Procedure/MES_SNS2_MST1005_R01.sql](05.Procedure/MES_SNS2_MST1005_R01.sql)
 - **배경 및 원인**: 기존 평가 승인 팝업(pop2)의 높이가 120px로 과도하게 좁아 헤더(40px) 및 푸터 버튼바(48px) 사이 본문이 32px로 찌그러져 UI/UX가 불량했으며, 승인 비고(REMARK)를 입력하고 DB에 저장할 수 있는 기능 부재
 - **작업 상세 내용**:
   - 1. 팝업 규격 및 상하 공백 최적화: Width 510 유지, 단일 폼 팝업 공통 표준에 따라 Height 속성을 제거하여 자동 높이(auto-height) 적용 (Height 지정 시 ItsPop.js의 open 이벤트에서 높이가 +45 중복 가산되어 발생하던 하단 71px 거대 공백 원천 제거, 상하 여백 완벽 밀착)
-  - 2. 1행 컨트롤 픽셀 정렬: 승인자(LabelWidth 70, InputWidth 70, NameWidth 110) + 승인일자(LabelWidth 70, InputWidth 105, MarginLeft 8) = 1행 총 너비 449px
-  - 3. 2행 비고(REMARK) 픽셀 정렬 및 행간 최적화: LabelWidth 70, InputWidth 385 (실측 기반 6px 보정), MarginTop 6 부여로 1행 달력 버튼 우측 끝선과 픽셀 단위 100% 일치
-  - 4. 3행 승인 주의사항 안내 문구 시작선 정렬: MarginTop 10, MarginLeft 70 설정으로 1·2행 입력 박스 좌측 시작선(X=70px)에 수직으로 정확히 맞추어 캡션 형태로 정렬, 공통 컴포넌트 BasePage.ColorList.GrayDark1 규격 적용
-  - 5. JS 데이터 바인딩 및 파라미터 전송: btn_APRV 클릭 시 선택된 평가이력의 기존 비고를 pop2_txt_REMARK에 기본 세팅, 승인 버튼(pop2.onAddBtnClick) 클릭 시 maria.AddParam('REMARK', ...)로 전송 보장
-  - 6. 프로시저 APPROVE_EVAL 비고 UPDATE 반영: UPDATE EQMGRADEEVAL 구문에 REMARK = $REMARK 추가 및 프로시저 헤더 1일 1행 수정 이력 갱신
+  - 1. 1행 컨트롤 픽셀 정렬: 승인자(LabelWidth 70, InputWidth 70, NameWidth 110) + 승인일자(LabelWidth 70, InputWidth 105, MarginLeft 8) = 1행 총 너비 449px
+  - 1. 2행 비고(REMARK) 픽셀 정렬 및 행간 최적화: LabelWidth 70, InputWidth 385 (실측 기반 6px 보정), MarginTop 6 부여로 1행 달력 버튼 우측 끝선과 픽셀 단위 100% 일치
+  - 1. 3행 승인 주의사항 안내 문구 시작선 정렬: MarginTop 10, MarginLeft 70 설정으로 1·2행 입력 박스 좌측 시작선(X=70px)에 수직으로 정확히 맞추어 캡션 형태로 정렬, 공통 컴포넌트 BasePage.ColorList.GrayDark1 규격 적용
+  - 1. JS 데이터 바인딩 및 파라미터 전송: btn_APRV 클릭 시 선택된 평가이력의 기존 비고를 pop2_txt_REMARK에 기본 세팅, 승인 버튼(pop2.onAddBtnClick) 클릭 시 maria.AddParam('REMARK', ...)로 전송 보장
+  - 1. 프로시저 APPROVE_EVAL 비고 UPDATE 반영: UPDATE EQMGRADEEVAL 구문에 REMARK = $REMARK 추가 및 프로시저 헤더 1일 1행 수정 이력 갱신
 - **검증 결과**: C# Enum.Parse 기반 BasePage.ColorList.GrayDark1 파싱 성공 검증(HEX 파싱 에러 재현 및 enum 정상 통과 확인), 파일 인코딩(ASPX/JS: UTF-8 with BOM, SQL: UTF-8 without BOM) 및 CRLF 개행 검증 통과, 1·2행 우측 끝선 실측 일치 확인, MST1005 레포트 MSBuild 15.0 Rebuild 성공(0 Error)
 
 ### 5. MST1005_R01 승인된 평가이력 선택 시 승인 팝업 차단
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js)
 - **배경 및 원인**: 이미 승인된 평가이력을 선택하고 승인 버튼을 누르면 평가 승인 팝업이 열림 (승인 저장은 프로시저가 막지만 팝업 자체는 열림)
 - **작업 상세 내용**: 승인 버튼 클릭 시 선택 행의 승인일시(APRVTIME)가 있으면 ItsMsg.Alert("이미 승인된 평가이력입니다.") 모달 메시지 팝업창 표시 후 팝업 열지 않음 (기존 Toast 안내에서 메시지 팝업창으로 변경)
@@ -65,16 +71,18 @@
 - **참고**: JS 캐시 버전(srcVersion)은 DB 값으로 고정이라 브라우저가 이전 JS를 쓰면 수정 전처럼 팝업이 열림 → 강력 새로고침(Ctrl+F5) 필요
 
 ### 6. MST1005_R01 설비목록 병합을 ItsGrid 공통 기능으로 교체
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js)
 - **배경 및 원인**: 설비목록 병합을 화면 전용 getMergedRange·IS_SAME_GROUP으로 구현해 다른 페이지와 방식이 다르고 비효율적
 - **작업 상세 내용**:
   - 1. MST1002_R06과 같은 방식 : grid1 옵션 allowMerging: 'Cells' + 컬럼별 allowMerging: true만 사용 (groupField 그룹 줄 없음)
-  - 2. 화면 전용 getMergedRange 재정의와 IS_SAME_GROUP 함수 삭제
-  - 3. INC 2공장 조회 범위 확인 (수정 없음) : 설비목록 LIST_EQM은 MSTEQM.FACTORYCD = '07'(MSTFACTORY 07 = INC 2공장) 고정, 작업장 콤보 REF01=07, 공정·라인 콤보(DC_COMBO EQMTP·EQMGROUP1)도 FACTORYCD = '07' 고정
+  - 1. 화면 전용 getMergedRange 재정의와 IS_SAME_GROUP 함수 삭제
+  - 1. INC 2공장 조회 범위 확인 (수정 없음) : 설비목록 LIST_EQM은 MSTEQM.FACTORYCD = '07'(MSTFACTORY 07 = INC 2공장) 고정, 작업장 콤보 REF01=07, 공정·라인 콤보(DC_COMBO EQMTP·EQMGROUP1)도 FACTORYCD = '07' 고정
 - **검증 결과**: 문법 검사(node --check) 통과, 남은 참조 없음, 인코딩(UTF-8 BOM·CRLF) 확인. 운영 DB 읽기 조회 : 07 사용 설비 254건, 작업장 콤보 대상 07 작업장 24개뿐, 평가이력 중 다른 공장 설비 0건, 설비코드 중복 0건. 미확인: 실제 화면
 - **참고**: 07 설비 중 작업장(LINECD)이 빈 설비 18건은 작업장 전체 조회 시 작업장 빈칸으로 표시됨
 
 ### 7. EQM1001_R03 점검계획서 특이사항(REMARK) 입력·관리 및 레포트 출력 연동
+
 - **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe, 01.Office/Reports/EQM1001.exe
 - **배경 및 원인**: 점검계획서 레포트 양식(R03)에 "특이사항" 컬럼이 존재함에도 화면 그리드에 입력 컬럼이 누락되어 관리할 수 없었고, 프로시저 CALL_PLAN_RPT에서 빈 문자열('')로 고정 반환되어 출력되지 않던 문제 개선 요청
 - **작업 상세 내용**:
@@ -82,12 +90,12 @@
     - 설비그룹 탭(grid_GRP2) 및 설비별 탭(grid3)에 `column.create('특이사항', 'REMARK', { width: 200, readOnly: false })` 추가
     - 정기점검 추가 팝업(grid10)에 `column.create('특이사항', 'REMARK', { width: 150, readOnly: false })` 추가
     - 설비그룹 복사 팝업(grid_GRP_COPY2) 및 설비별 복사 팝업(grid8)에 `column.create('특이사항', 'REMARK', { width: 150 })` 조회 컬럼 추가
-  - 2. 그리드 저장 전 편집 완료(FinishEditing) 보장:
+  - 1. 그리드 저장 전 편집 완료(FinishEditing) 보장:
     - `bdiv_GRP_btn_SAVE` 및 `bdiv3_btn_SAVE` 저장 버튼 클릭 시 `ItsGrid.FinishEditing`을 선행 호출하여 입력 중인 특이사항/정렬순서 셀 커밋 보장 (기존 `maria.AddList('REMARK_LIST', ...)` 전송 로직 유지)
-  - 3. 프로시저 점수/항목별 특이사항 반환 반영:
+  - 1. 프로시저 점수/항목별 특이사항 반환 반영:
     - `MES_SNS2_EQM1001_R03.sql`의 `CALL_PLAN_RPT` 분기에서 `'' AS REMARK` 하드코딩을 `COALESCE(MSTEQMREV_DETAIL.REMARK, '') AS REMARK`로 수정하여 실제 저장된 특이사항이 레포트 Detail row(cell_Detail_REMARK)에 정상 출력되도록 수정
     - 최상단 Modify 주석 1일 1행 압축 갱신
-  - 4. 레포트 프로젝트 빌드 및 배포:
+  - 1. 레포트 프로젝트 빌드 및 배포:
     - `04.Report/PAGEEQM/EQM1001/EQM1001.csproj` Release Rebuild (0 Error, 0 Warning) 및 최신 `EQM1001.exe`를 `01.Office/Reports/EQM1001.exe`로 동기화 배포
 - **검증 결과**:
   - Node.js 구문 검사(`node --check`) 통과
@@ -96,6 +104,7 @@
 - **적용 순서**: `MES_SNS2_EQM1001_R03.sql` 프로시저 서버 DB 재반영 (SYSTEM_PARAMETERS 변경 없음)
 
 ### 8. EQM1001 R03 레포트 타이틀 하단 여백(공백) 추가
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](04.Report/PAGEEQM/EQM1001/R03.Designer.cs), 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe, 01.Office/Reports/EQM1001.exe
 - **배경 및 원인**: "제조설비 정기 점검 시트" 레포트(R03) 출력 시 타이틀(xrLabelTitle)과 기본정보 테이블(xrTablePlanInfo)이 상하 여백 없이 밀착되어 가독성이 떨어지던 UI/UX 문제 개선 요청
 - **작업 상세 내용**:
@@ -103,9 +112,9 @@
     - 기본정보 테이블(`xrTablePlanInfo`)의 시작 위치 `LocationFloat`: `(0F, 37F)` -> `(0F, 57F)` (+20F)
     - 상세점검 헤더 테이블(`xrTableDetailHeader`)의 시작 위치 `LocationFloat`: `(0F, 112F)` -> `(0F, 132F)` (+20F)
     - 페이지 헤더 밴드(`PageHeader`) 높이 `HeightF`: `142F` -> `162F` (+20F)
-  - 2. A4 1페이지 출력 범위 안전성 검토:
+  - 1. A4 1페이지 출력 범위 안전성 검토:
     - A4 세로 가용 높이(1129F) 대비 Header(162F) + 기본 12행 Detail(516F) + Footer(128F) = 806F로 약 320F 이상 여유가 있어 2페이지로 넘어가지 않고 안정적으로 1페이지 출력 유지
-  - 3. 레포트 프로젝트 빌드 및 배포:
+  - 1. 레포트 프로젝트 빌드 및 배포:
     - `04.Report/PAGEEQM/EQM1001/EQM1001.csproj` Release Rebuild (0 Error, 0 Warning) 성공
     - 최신 `EQM1001.exe`를 `01.Office/Reports/EQM1001.exe`로 동기화 배포
 - **검증 결과**:
@@ -114,6 +123,7 @@
   - 배포된 `01.Office/Reports/EQM1001.exe` 실행 테스트 정상 완료
 
 ### 9. EQM1001 R03 레포트 점검항목 테이블 컬럼 폭 최적화 및 특이사항 칸 확장
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe, 01.Office/Reports/EQM1001.exe
 - **배경 및 원인**: 점검계획서 레포트(R03) 출력 시 "특이사항" 칸(기존 142.5px, 19.5%)이 너무 좁아 긴 메모나 조치 내역을 기재하기에 부족한 반면, "점검기기"(102px) 등 짧은 단어가 들어가는 컬럼의 여백 낭비가 심했던 문제 개선 요청
 - **작업 상세 내용**:
@@ -125,9 +135,9 @@
     - `점검판정`: 63.8px(Weight 0.08732) $\rightarrow$ **60px(Weight 0.08208)** (-3.8px)
     - `완료확인`: 57.7px(Weight 0.07889) $\rightarrow$ **54px(Weight 0.07387)** (-3.7px)
     - `특이사항`: 142.5px(Weight 0.19494) $\rightarrow$ **230px(Weight 0.31464)** (**+87.5px, +61.4% 대폭 확장!**)
-  - 2. 화면 그리드 일관성 보정:
+  - 1. 화면 그리드 일관성 보정:
     - `EQM1001_R03.js` 내 설비별 점검계획 탭(`grid3`)의 특이사항 컬럼 설정을 설비그룹 탭(`grid_GRP2`)과 동일하게 `width: 200, readOnly: false`로 통일
-  - 3. 레포트 프로젝트 빌드 및 배포:
+  - 1. 레포트 프로젝트 빌드 및 배포:
     - `04.Report/PAGEEQM/EQM1001/EQM1001.csproj` Release Rebuild (0 Error, 0 Warning) 성공
     - 최신 `EQM1001.exe`를 `01.Office/Reports/EQM1001.exe`로 동기화 배포
 - **검증 결과**:
@@ -137,14 +147,15 @@
   - MSBuild 15.0 Rebuild 성공 및 실행 파일 배포 확인
 
 ### 10. EQM1001_R03 설비별 점검계획 특이사항 편집 지원 및 정기점검 주기관리 점검자명(MSTEMP) 표시 수정
+
 - **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql)
 - **배경 및 원인**:
   - 1. "설비별 점검계획" 탭의 정기점검 목록(`grid3`)에서 "특이사항" 컬럼에 `readOnly: false` 속성이 누락되어 수정할 수 없던 문제
-  - 2. "정기점검 주기관리" 탭(`grid9`)에서 월별 점검자 조회 시 프로시저(`LIST_CYCLE_EQMCD`)가 공통코드 조회 함수 `GPCD('EMPCD', ...)`를 호출하여 사원 마스터(`MSTEMP`)를 조회하지 못하고 사원코드가 그대로 표시되던 문제
+  - 1. "정기점검 주기관리" 탭(`grid9`)에서 월별 점검자 조회 시 프로시저(`LIST_CYCLE_EQMCD`)가 공통코드 조회 함수 `GPCD('EMPCD', ...)`를 호출하여 사원 마스터(`MSTEMP`)를 조회하지 못하고 사원코드가 그대로 표시되던 문제
 - **작업 상세 내용**:
   - 1. 설비별 점검계획 탭 특이사항 편집 활성화:
     - `grid3` 특이사항 컬럼에 `width: 200, readOnly: false` 속성을 명시하여 진행 중 REV에서 특이사항 셀 인라인 수정 지원
-  - 2. 정기점검 주기관리 월별 점검자 사원명(`MSTEMP.EMPNM`) 조회 쿼리 수정:
+  - 1. 정기점검 주기관리 월별 점검자 사원명(`MSTEMP.EMPNM`) 조회 쿼리 수정:
     - `MES_SNS2_EQM1001_R03.sql`의 `LIST_CYCLE_EQMCD` 분기에서 `M01` ~ `M12`의 `GPCD('EMPCD', ...)` 호출을 사원 마스터 테이블 기반 서브쿼리 `COALESCE((SELECT EMPNM FROM MSTEMP WHERE EMPCD = CHKPLANEQM_YEARPLAN.MONTH_xx LIMIT 1), CHKPLANEQM_YEARPLAN.MONTH_xx)`로 교체 (매핑 실패 시 사원코드 fallback 보장)
     - 프로시저 상단 1일 1행 수정 이력 갱신
 - **검증 결과**:
@@ -153,13 +164,14 @@
 - **적용 순서**: `MES_SNS2_EQM1001_R03.sql` 프로시저 서버 DB 재반영 (SYSTEM_PARAMETERS 변경 없음)
 
 ### 11. EQM1001 R03 레포트 점검내용 및 특이사항 컬럼 폭 미세 조정
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](04.Report/PAGEEQM/EQM1001/R03.Designer.cs), 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe, 01.Office/Reports/EQM1001.exe
 - **배경 및 원인**: 레포트 출력 시 나머지 컬럼은 그대로 두고 "점검내용" 컬럼 폭을 조금 더 넓히고 "특이사항" 컬럼 폭을 조금 줄여달라는 사용자 요청 반영
 - **작업 상세 내용**:
   - 1. 나머지 컬럼(No 32.0px, 점검항목 105.0px, 점검기기 67.9px, 점검판정 59.0px, 완료확인 57.1px) 완전 고정 유지
-  - 2. `점검내용` (CHKCONTENT): 193.5px $\rightarrow$ **210.0px** (Weight `0.2872777017783858D`)로 확장 (+16.5px)
-  - 3. `특이사항` (REMARK): 216.5px $\rightarrow$ **200.0px** (Weight `0.27359785296522315D`)로 축소 (-16.5px)
-  - 4. Header 및 Detail 가중치 합계 `1.000000D`, 전체 폭 731.0px 일치 보장
+  - 1. `점검내용` (CHKCONTENT): 193.5px $\rightarrow$ **210.0px** (Weight `0.2872777017783858D`)로 확장 (+16.5px)
+  - 1. `특이사항` (REMARK): 216.5px $\rightarrow$ **200.0px** (Weight `0.27359785296522315D`)로 축소 (-16.5px)
+  - 1. Header 및 Detail 가중치 합계 `1.000000D`, 전체 폭 731.0px 일치 보장
 - **검증 결과**:
   - MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning)
   - `01.Office/Reports/EQM1001.exe` 동기화 배포 완료
@@ -168,526 +180,576 @@
 ---
 
 ### 12. EQM1001_R03 주기관리 점검자명 조회 최적화 (대안 A: MSTEMP 12회 일괄 LEFT JOIN)
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql)
 - **배경 및 원인**:
   - LIST_CYCLE_EQMCD 분기에서 12개 월별 점검자 컬럼(M01 ~ M12)마다 서브쿼리 (SELECT EMPNM FROM MSTEMP WHERE ...)를 수행하던 방식을 성능 및 유지보수 최적화를 위해 대안 A(12개 월 일괄 LEFT JOIN MSTEMP) 구조로 전환
 - **작업 상세 내용**:
   - 1. SELECT 절 내 12회 반복 서브쿼리 제거:
     - COALESCE(EMP01.EMPNM, CHKPLANEQM_YEARPLAN.MONTH_01) 형태로 간소화하여 매핑 실패 시 기존 사원코드 fallback 유지
-  - 2. FROM 절에 12회 LEFT JOIN MSTEMP EMPxx ON EMPxx.EMPCD = CHKPLANEQM_YEARPLAN.MONTH_xx 추가:
+  - 1. FROM 절에 12회 LEFT JOIN MSTEMP EMPxx ON EMPxx.EMPCD = CHKPLANEQM_YEARPLAN.MONTH_xx 추가:
     - 행 단위 서브쿼리 반복 실행 비용(Row-by-Row Evaluation)을 일괄 인덱스 조인으로 전환하여 쿼리 실행 속도 및 데이터베이스 부하 대폭 개선
 - **검증 결과**:
   - 파일 인코딩(단일 UTF-8 without BOM, CRLF 개행) 100% 무결성 확인
 - **적용 순서**: MES_SNS2_EQM1001_R03.sql 프로시저 서버 DB 재반영 (SYSTEM_PARAMETERS 변경 없음)
+
+### 13. EQM1001_S04 설비점검 이력 점검시트 출력(S04A) 추가
+
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_S04.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_S04.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_S04.js](01.Office/PAGEEQM/EQM1001/EQM1001_S04.js), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), [04.Report/PAGEEQM/EQM1001/S04A.Designer.cs](04.Report/PAGEEQM/EQM1001/S04A.Designer.cs), [04.Report/PAGEEQM/EQM1001/S04A.resx](04.Report/PAGEEQM/EQM1001/S04A.resx), [04.Report/PAGEEQM/EQM1001/EQM1001.csproj](04.Report/PAGEEQM/EQM1001/EQM1001.csproj), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
+- **배경 및 원인**: 설비점검 이력 화면(점검일자·점검유형·설비코드 검색)에서 선택한 점검이력을 R03(제조설비 정기 점검 시트) 양식으로 출력 요청. 하단 ReportFooter(확인·점검자·담당 서명란, 개정이력)만 제외하고 나머지는 동일, 데이터는 별도 프로시저 분기
+- **작업 상세 내용**:
+  - 1. 화면: 검색 영역 오른쪽 끝에 [점검시트 출력] 버튼(btn_PRINT) 추가, grid1 선택 행의 CHKRSTKEY로 `ItsXtraRpt('EQM1001_S04A')` 팝업 출력. 미선택 안내는 레포트에서 처리
+  - 1. 프로시저 EQM1001_S04 CALL_CHKRST_RPT 분기 추가
+    - 점검키 없음 → "출력할 점검이력을 선택해주세요."
+    - 상단(CHKRSTEQM + MSTEQM(FANO = EQMCD) + MSTLINE): EQMNM, EQMSPEC(EQMNM_DETAIL), EQMCD, CHKDATE(BASEDATE), LINENM, PROCESSNM(FM100)
+    - 항목(CHKRSTEQMKND): NO, CHKITEM(CHKLOC 명칭), CHKCONTENT(CHKKNDNM), CHKDEVICE(CHKMTH 명칭), CHKRESULT(CHKVALUE 점검값), CONFIRM(빈 값), REMARK. 정렬은 정기점검 화면과 같게 그룹 항목 → SORTNO → CHKKNDCD
+    - 선언부 2행 분리, BOM 제거(UTF-8 without BOM)
+  - 1. 레포트 S04A: R03.Designer.cs에서 ReportFooter 밴드와 하위 컨트롤(서명란·개정이력 26개)만 제거, 나머지 레이아웃·제목·컬럼 폭 동일. S04A.cs는 R03과 같은 구조(최소 12행 빈 행 채움)로 상단 점검일자(cell_Val_CHKDATE)까지 바인딩
+- **검증 결과**: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 R0602 경고 1건), exe를 01.Office/Reports·04.Report/bin에 배포(MD5 일치), exe 실행 시 점검키 미전달 안내 메시지 정상 출력(InitializeComponent 런타임 정상). 인코딩(.cs/.resx/.aspx/.js BOM+CRLF, .sql BOM 없음+CRLF) 확인. 미확인: 프로시저 서버 반영·실데이터 PDF 출력·VS 디자이너 열기·실제 화면
+- **적용 순서**: MES_SNS2_EQM1001_S04.sql 프로시저 서버 DB 재반영 (파라미터 변경 없음)
+
+### 14. EQM1001_S04 설비점검항목 그리드 특이사항(REMARK) 컬럼 추가
+
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_S04.js](01.Office/PAGEEQM/EQM1001/EQM1001_S04.js), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql)
+- **배경 및 원인**: 설비점검항목 그리드(grid2)에서 점검값 옆에 특이사항 표시 요청
+- **작업 상세 내용**:
+  - 1. grid2 점검값(CHKVALUE) 다음에 특이사항(REMARK, 폭 300, 읽기 전용) 컬럼 추가
+  - 1. LIST_CHKRSTEQMKND 조회에 CHKRSTEQMKND.REMARK 추가 (점검실적 항목 특이사항, TAL0001_R05 점검 입력에서 저장, 점검시트 출력 특이사항과 같은 값)
+- **검증 결과**: JS 구문 검사 통과, 인코딩(JS BOM+CRLF, SQL BOM 없음+CRLF) 확인. 미확인: 프로시저 서버 반영·실제 화면
+- **적용 순서**: MES_SNS2_EQM1001_S04.sql 프로시저 서버 DB 재반영 (13번과 함께 반영)
+
+### 15. EQM1001 R03 레포트 Visual Studio 디자이너 크래시 해결 및 다중 클래스 금지 규칙 정립
+
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.cs](04.Report/PAGEEQM/EQM1001/R03.cs), [04.Report/PAGEEQM/EQM1001/EQM1001.csproj](04.Report/PAGEEQM/EQM1001/EQM1001.csproj), [.agents/rules/report_devexpress.md](.agents/rules/report_devexpress.md), [.agents/rules/report_file_structure.md](.agents/rules/report_file_structure.md), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe), [04.Report/bin/EQM1001.exe](04.Report/bin/EQM1001.exe)
+- **배경 및 원인**:
+  - Visual Studio에서 `04.Report/PAGEEQM/EQM1001/R03.cs` 오픈 시 `이 파일에 디자인할 수 있는 클래스가 없으므로 디자이너에서 이 파일을 표시할 수 없습니다.` (스택: `CodeDomDesignerLoader.EnsureDocument` -> `VSCodeDomDesignerLoader.PerformLoad`) 크래시 발생
+  - 원인 분석: 기존 규칙 문서 및 레포트 파일에 과거 관례 명목으로 `public class R03A : R03` 형태의 파생 클래스가 동일 파일 내에 선언되어 있어, Visual Studio CodeDOM 디자이너 로더가 1개 파일 내 복수 컴포넌트를 처리하지 못하고 주(Primary) 디자이너 대상 바인딩에 실패함
+- **작업 상세 내용**:
+  - 1. 불필요한 `R03A` 파생 클래스 및 별도 파일 완전 삭제 및 `EQM1001.csproj` 등록 제외
+  - 1. `R03.cs`는 오직 `public partial class R03 : DevExpress.XtraReports.UI.XtraReport` 단일 클래스만 유지
+  - 1. 개발 규칙(`.agents/rules/report_devexpress.md`, `.agents/rules/report_file_structure.md`)에 "1개 파일 1개 레포트 클래스 원칙(단일 컴포넌트 원칙)" 명시 및 임의의 파생/호환 클래스 선언 전면 금지 규칙 확정
+  - 1. MSBuild Debug 및 Release 리빌드(0 Error, 0 Warning) 성공 후 최신 바이너리를 `04.Report/bin/EQM1001.exe` 및 `01.Office/Reports/EQM1001.exe`에 동기화 배포
+- **검증 결과**:
+  - CLI 실행 테스트(`EQM1001.exe R03 ...`) 정상 동작 확인
+  - 인코딩(.cs, .Designer.cs, .resx, .csproj, .md 모두 단일 UTF-8 with BOM, CRLF 개행) 100% 무결성 확인
 
 ---
 
 ## 🕒 2026-11-05 (목) 작업 내역
 
 ### 8. MST1005_R01 평가표 결재 칸 빈칸 대각선 표시
+
 - **수정/대상 파일**: [04.Report/PAGEMST/MST1005/R01.cs](04.Report/PAGEMST/MST1005/R01.cs), [04.Report/PAGEMST/MST1005/R01.Designer.cs](04.Report/PAGEMST/MST1005/R01.Designer.cs), 01.Office/Reports·04.Report/bin MST1005.exe 재배포
 - **배경 및 원인**: 결재(작성·검토·승인) 칸에 값이 없으면 양식처럼 대각선으로 표시 요청
 - **작업 상세 내용**:
   - 1. 결재 서명 칸 3개 위에 같은 위치·크기의 XRLine(LineDirection.BackSlant, 왼쪽 위 → 오른쪽 아래) 배치 (xrLineAprvWrite·Review·Approve)
-  - 2. 칸 값이 비어 있을 때만 대각선 표시 : 작성(평가자 없음), 검토(항상 빈칸 → 항상 표시), 승인(승인 전)
+  - 1. 칸 값이 비어 있을 때만 대각선 표시 : 작성(평가자 없음), 검토(항상 빈칸 → 항상 표시), 승인(승인 전)
 - **검증 결과**: MSBuild Release 성공(경고 0), 승인·미승인 샘플 출력 비교(승인 : 검토만 대각선, 미승인 : 검토·승인 대각선, 1페이지), Designer 정적 점검(컴포넌트 93개 필드 일치, XRPanel 없음), 인코딩 확인. 미확인: VS 디자이너
 
-
 ### 2. MST1005_R01 평가 팝업 점수별 평가기준 비고 추가, 등록 점수 자동 선택 및 상단 영역 정렬 보정
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_R01.sql](05.Procedure/MES_SNS2_MST1005_R01.sql), [01.Office/PAGEMST/MST1005/MST1005_R01.aspx](01.Office/PAGEMST/MST1005/MST1005_R01.aspx), [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js)
 - **배경 및 원인**: "설비등급 평가" 팝업창에서 우측 상단 점수별 평가기준 그리드(grid4)에 비고(REMARK) 컬럼 추가, 평가항목의 등록 점수 기준 행 자동 포커스 처리, 상단 평가등급 및 비고 영역의 시작·끝 위치 불일치 정렬 보정 요청
 - **작업 상세 내용**:
   - 1. 프로시저 점수별 평가기준 비고 반환: LIST_EVAL_D2 분기에서 MSTEQM_GRADEREV_D2.REMARK 조회 컬럼 추가
-  - 2. 우측 상단 그리드(grid4) 비고 컬럼 추가: JS grid4 생성 시 "비고"(REMARK, width: 150) 컬럼 정의 추가
-  - 3. 등록 점수 기준 행 자동 선택: grid3 onSelect 시 현재 선택된 평가항목의 SCORE 값과 일치하는 grid4 행을 검색하여 Setkey 및 SetStore(selectIndex), SelectRow로 자동 선택(미등록 시 기존 방식대로 0번째 행 선택)
-  - 4. 상단 평가등급 및 비고 영역 정렬 보정: pop1_cmb_EQMGRADE InputWidth를 293 -> 289로 조정하여 상단 "설비명" 끝과 정확히 일치시키고 뒤따르는 "비고" 시작 위치를 "평가일자" 시작과 통일, pop1_txt_REMARK InputWidth를 530 -> 544로 조정하여 우측 끝을 상단 "평가자" 끝과 픽셀 단위로 정확히 일치
+  - 1. 우측 상단 그리드(grid4) 비고 컬럼 추가: JS grid4 생성 시 "비고"(REMARK, width: 150) 컬럼 정의 추가
+  - 1. 등록 점수 기준 행 자동 선택: grid3 onSelect 시 현재 선택된 평가항목의 SCORE 값과 일치하는 grid4 행을 검색하여 Setkey 및 SetStore(selectIndex), SelectRow로 자동 선택(미등록 시 기존 방식대로 0번째 행 선택)
+  - 1. 상단 평가등급 및 비고 영역 정렬 보정: pop1_cmb_EQMGRADE InputWidth를 293 -> 289로 조정하여 상단 "설비명" 끝과 정확히 일치시키고 뒤따르는 "비고" 시작 위치를 "평가일자" 시작과 통일, pop1_txt_REMARK InputWidth를 530 -> 544로 조정하여 우측 끝을 상단 "평가자" 끝과 픽셀 단위로 정확히 일치
 - **검증 결과**: 구문 정적 검사 통과, 프로시저 UTF-8 (BOM 없음) + CRLF 및 화면 파일 UTF-8 with BOM + CRLF 바이너리 규정 준수 확인
 
 ### 7. MST1005_R01 평가 팝업 합계점수 즉시 표시·등급기준 그리드 선택 불가·헤더 정렬, 평가표 상단 여백 조정
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_R01.aspx](01.Office/PAGEMST/MST1005/MST1005_R01.aspx), [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js), [04.Report/PAGEMST/MST1005/R01.Designer.cs](04.Report/PAGEMST/MST1005/R01.Designer.cs), 01.Office/Reports·04.Report/bin MST1005.exe 재배포
 - **배경 및 원인**: 평가 팝업에서 점수를 선택해도 합계점수가 바로 바뀌지 않음, 설비등급 기준 그리드 선택 불가 요청, 팝업 헤더 컨트롤 시작·끝 정렬 요청, 평가표 결재 칸 왼쪽 간격 제거 및 제목 아래·본문 표 위 여백 추가 요청
 - **작업 상세 내용**:
   - 1. 합계점수 : 원인 - ItsNum은 값 칸(숨김)과 표시 칸(ItsNumView)이 따로 있고 표시 칸은 change 이벤트에서 갱신되는데, SET_TOTAL이 ItsNum.SetValue(..., false)로 이벤트를 꺼서 값만 바뀌고 화면은 그대로였음 → 이벤트를 발생시켜 설정 (합계점수 onChanged 처리 없음)
-  - 2. 설비등급 기준 그리드(grid5) : selectMode 'None' (wijmo SelectionMode.None, 공통 컴포넌트 수정 없음)
-  - 3. 팝업 헤더 : 라벨 폭 70 통일, 열 시작 0·250·650 / 행 끝 1250 정렬 (설비코드·합계점수 250, 설비명·평가등급 400, 평가일자 250 + 평가자 350 = 비고 600), 안내 문구 왼쪽 여백 제거
-  - 4. 평가표 : 결재 칸을 설비 정보 표에 붙임(x 470, 작성·검토·승인 77·77·76), 제목·평가일자 아래 여백 5 → 20, 설비 정보와 본문 표 사이 여백 10 → 20 (PageHeader 높이 200 → 225)
+  - 1. 설비등급 기준 그리드(grid5) : selectMode 'None' (wijmo SelectionMode.None, 공통 컴포넌트 수정 없음)
+  - 1. 팝업 헤더 : 라벨 폭 70 통일, 열 시작 0·250·650 / 행 끝 1250 정렬 (설비코드·합계점수 250, 설비명·평가등급 400, 평가일자 250 + 평가자 350 = 비고 600), 안내 문구 왼쪽 여백 제거
+  - 1. 평가표 : 결재 칸을 설비 정보 표에 붙임(x 470, 작성·검토·승인 77·77·76), 제목·평가일자 아래 여백 5 → 20, 설비 정보와 본문 표 사이 여백 10 → 20 (PageHeader 높이 200 → 225)
 - **검증 결과**: 실제 jquery·ItsPage.js·ItsNum.js 테스트 페이지에서 합계점수 문제 재현(값 6, 표시 0) 및 수정 확인(16·19 즉시 표시), 실제 wijmo에서 selectionMode 'None' 클릭·select 호출 시 선택 0건 확인, 컨트롤 템플릿·프로젝트 CSS 미리보기로 헤더 폭 실측(수정 전 행 끝 948·1007 → 수정 후 열 시작 0·250·650, 행 끝 1250 일치), 레포트 MSBuild Release 성공·PNG 출력 확인(1페이지), JS 구문 검사, 인코딩 확인. 미확인: 실제 화면 팝업, VS 디자이너
 - **참고**: 이전 모의 테스트는 ItsNum 표시 칸을 흉내 내지 않아 합계점수 미표시를 잡지 못했음
 
-
 ### 6. MST1005_R01 설비등급 평가표 상단 설비정보·결재 칸 및 설비등급 표 위치 양식 반영
+
 - **수정/대상 파일**: [04.Report/PAGEMST/MST1005/R01.cs](04.Report/PAGEMST/MST1005/R01.cs), [04.Report/PAGEMST/MST1005/R01.Designer.cs](04.Report/PAGEMST/MST1005/R01.Designer.cs), [05.Procedure/MES_SNS2_MST1005_R01.sql](05.Procedure/MES_SNS2_MST1005_R01.sql), 01.Office/Reports·04.Report/bin MST1005.exe 재배포
 - **배경 및 원인**: 실제 평가표 양식 이미지 기준으로 상단을 설비명/관리번호·규격/제작일자·라인명/관리책임자 + 결재(작성·검토·승인)로, 설비등급 표 제목을 한 칸 위로 올려 달라는 요청
 - **작업 상세 내용**:
   - 1. 출력 평가 정보 (CALL_EVAL_RPT 첫 결과셋) : 공정·라인·설비그룹 개별 값 → 설비명(MSTEQM.EQMNM), 관리번호(FANO), 규격(EQMNM_DETAIL), 제작일자(MKDATE 연.월), 라인명(작업장 공정 라인 명칭), 관리책임자(MSTEQM.DEPTCD → MSTDEPT.DEPTNM + '장')
-  - 2. 상단 : 제목 "설비 등급 평가표" + 오른쪽 위 "평가일자 : YYYY년 MM월 DD일", 설비 정보 3행(값 2줄까지 표시), 오른쪽 결재 칸(결재 / 작성·검토·승인 : 작성 = 평가자, 검토 = 빈칸, 승인 = 승인자(승인 전 빈칸)), 결재 칸은 테두리 라벨로 배치(XRPanel 미사용)
-  - 3. 설비등급 표 : 제목 "설비 등급 표"를 마지막 평가항목 아래 칸으로 이동 (레포트에서 마지막 항목과 같은 항목키의 제목 행 추가 → 구분·NO·항목·평가·소계 병합이 제목 줄까지 이어짐, 서식 규칙 [ROWTP] == 'T' 노란색), 합계 칸은 분류 머리글 줄부터 시작
+  - 1. 상단 : 제목 "설비 등급 평가표" + 오른쪽 위 "평가일자 : YYYY년 MM월 DD일", 설비 정보 3행(값 2줄까지 표시), 오른쪽 결재 칸(결재 / 작성·검토·승인 : 작성 = 평가자, 검토 = 빈칸, 승인 = 승인자(승인 전 빈칸)), 결재 칸은 테두리 라벨로 배치(XRPanel 미사용)
+  - 1. 설비등급 표 : 제목 "설비 등급 표"를 마지막 평가항목 아래 칸으로 이동 (레포트에서 마지막 항목과 같은 항목키의 제목 행 추가 → 구분·NO·항목·평가·소계 병합이 제목 줄까지 이어짐, 서식 규칙 [ROWTP] == 'T' 노란색), 합계 칸은 분류 머리글 줄부터 시작
 - **검증 결과**: 헤더 SELECT 실DB 읽기 실행(I2G-001N : 규격 TSUGAMI_G350A-300 (1044), 제작일자 2014.12, 라인명 M1 열후 T1, 관리책임자 생산기술보전팀장 → 양식과 동일), MSBuild 15.0 Release Rebuild 성공(경고 0), 양식 이미지와 같은 값(점수 5·5·2·2·5, 합계 19, B)으로 PNG 출력 비교(1페이지, 설비명·규격 2줄 표시 및 결재 칸 높이 일치 수정 확인), exe 실행 확인, Designer 정적 점검(컴포넌트 90개 필드 일치, XRPanel 없음, 셀 폭 합계 470/731/301), 인코딩 확인. 미확인: VS 디자이너 열기, 서버 반영 후 실제 평가이력 출력
 - **적용 순서**: MST1005_R01 프로시저 다시 저장 (SYSTEM_PARAMETERS 변경 없음)
 
-
 ### 5. MST1005_R01 설비등급 평가표 출력 레포트 신규 구현
+
 - **수정/대상 파일**: [04.Report/PAGEMST/MST1005/R01.cs](04.Report/PAGEMST/MST1005/R01.cs), [04.Report/PAGEMST/MST1005/R01.Designer.cs](04.Report/PAGEMST/MST1005/R01.Designer.cs), [04.Report/PAGEMST/MST1005/R01.resx](04.Report/PAGEMST/MST1005/R01.resx), [04.Report/PAGEMST/MST1005/MST1005.csproj](04.Report/PAGEMST/MST1005/MST1005.csproj) (sln·App.config·Program.cs·Properties 포함 신규 프로젝트), [05.Procedure/MES_SNS2_MST1005_R01.sql](05.Procedure/MES_SNS2_MST1005_R01.sql), [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js), 01.Office/Reports·04.Report/bin MST1005.exe 배포
 - **배경 및 원인**: 평가이력 그리드의 평가표출력 버튼에 연결할 평가표 레포트 요청 (양식 : 앞서 첨부된 설비등급 평가표 이미지)
 - **작업 상세 내용**:
   - 1. 출력 데이터 (프로시저 MST1005_R01 / CALL_EVAL_RPT, 파라미터 추가 없음)
     - 1) 평가 정보 : EQMGRADEEVAL, MSTEQM (설비코드, 설비명, 작업장(GPCD N_LINECD), 공정(FM100), 라인(FM113), 설비그룹(FM116), 평가일자, 평가자(사원명), 승인자(사원명), 승인일시, 합계점수, 평가등급)
-    - 2) 평가항목별 평가기준 : MSTEQM_GRADEREV_D, MSTEQM_GRADEREV_D2, EQMGRADEEVAL_D (평가기준 1줄당 1행 : 구분(GMTP 명칭), NO(항목 순번), 항목, 소계(평가 점수), 평가기준(n점 : 기준), 선택 여부)
-    - 3) 설비등급 기준 : MSTEQM_GRADEREV_SCORE (분류(FM110 명칭), 점수, 구분, 비고(점검주기))
-    - 4) 평가이력 없으면 "출력할 평가이력을 선택하세요."
-  - 2. 레포트 양식 (A4 세로, 1페이지)
+    - 1) 평가항목별 평가기준 : MSTEQM_GRADEREV_D, MSTEQM_GRADEREV_D2, EQMGRADEEVAL_D (평가기준 1줄당 1행 : 구분(GMTP 명칭), NO(항목 순번), 항목, 소계(평가 점수), 평가기준(n점 : 기준), 선택 여부)
+    - 1) 설비등급 기준 : MSTEQM_GRADEREV_SCORE (분류(FM110 명칭), 점수, 구분, 비고(점검주기))
+    - 1) 평가이력 없으면 "출력할 평가이력을 선택하세요."
+  - 1. 레포트 양식 (A4 세로, 1페이지)
     - 1) 상단 : 제목 "설비등급 평가표", 평가 정보 3행 (승인 칸은 승인자 + 승인일자, 미승인은 "미승인")
-    - 2) 본문 : 구분·NO·항목·평가(5~1)·소계·평가기준, 구분은 같은 값 병합(세로 표기), NO·항목·평가·소계는 항목(GMCD) 단위 병합
-    - 3) 선택 점수 강조 : 평가 칸·평가기준 줄 녹색 (서식 규칙 [SCORE] == n, [SELYN] == 'Y')
-    - 4) 하단 : 합계(빨간색), 설비등급 표(최대 5등급, 평가등급 분류 파란색)
-  - 3. 화면 : 평가표출력 버튼 → new ItsXtraRpt('MST1005_R01') + EQMGRADEEVALKEY (기존 준비 중 안내 대체)
-  - 4. 신규 레포트 프로젝트 04.Report/PAGEMST/MST1005 (EQM1001 프로젝트 구성 복사, 프로젝트·어셈블리 GUID 신규)
+    - 1) 본문 : 구분·NO·항목·평가(5~1)·소계·평가기준, 구분은 같은 값 병합(세로 표기), NO·항목·평가·소계는 항목(GMCD) 단위 병합
+    - 1) 선택 점수 강조 : 평가 칸·평가기준 줄 녹색 (서식 규칙 [SCORE] == n, [SELYN] == 'Y')
+    - 1) 하단 : 합계(빨간색), 설비등급 표(최대 5등급, 평가등급 분류 파란색)
+  - 1. 화면 : 평가표출력 버튼 → new ItsXtraRpt('MST1005_R01') + EQMGRADEEVALKEY (기존 준비 중 안내 대체)
+  - 1. 신규 레포트 프로젝트 04.Report/PAGEMST/MST1005 (EQM1001 프로젝트 구성 복사, 프로젝트·어셈블리 GUID 신규)
 - **검증 결과**: 출력 SELECT 실DB 읽기 실행(가상 평가 1건 + 실제 리비전 261105000003 기준 : 26행, 경고 0건), MSBuild 15.0 Release Rebuild 성공(경고 0), 빌드한 레포트에 같은 데이터 바인딩해 PDF·PNG 출력 확인(1페이지, 병합·강조·등급표 정상, 행 높이 늘어남 문제는 병합 셀 CanGrow false로 수정), exe 실행 확인(R01 생성, 평가키 누락 안내), Designer 정적 점검(컴포넌트 89개 필드 일치, XRPanel 없음, BeginInit 테이블·this만, 셀 폭 합계 731/301), 인코딩 확인. 미확인: VS 디자이너 열기, 서버 프로시저 반영 후 실제 평가이력 출력
 - **적용 순서**: MST1005_R01 프로시저 다시 저장 (CALL_EVAL_RPT 분기 추가, SYSTEM_PARAMETERS 변경 없음)
 
-
 ### 4. MST1005_R01 설비목록 작업장·공정·라인·설비그룹 셀 병합
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js)
 - **배경 및 원인**: 다른 화면(MST1002_R06, MST1004_R01)처럼 설비목록의 작업장·공정·라인·설비그룹을 묶어서 표시 요청
 - **작업 상세 내용**:
   - 1. 설비목록 그리드 : allowMerging 'Cells', 작업장·공정·라인·설비그룹 컬럼 allowMerging (기존 화면과 같은 방식)
-  - 2. 병합 범위 : 앞 컬럼까지 값이 모두 같은 행 안에서만 병합 (작업장 > 공정 > 라인 > 설비그룹), 화면 전용 getMergedRange 지정 (공통 ItsGrid 수정 없음)
-  - 3. 원인 : wijmo 기본 병합은 작업장이 달라도 공정·라인 값이 같으면 이어 붙임
-  - 4. 프로시저 변경 없음 (정렬이 작업장 → 공정 → 라인 → 설비코드)
+  - 1. 병합 범위 : 앞 컬럼까지 값이 모두 같은 행 안에서만 병합 (작업장 > 공정 > 라인 > 설비그룹), 화면 전용 getMergedRange 지정 (공통 ItsGrid 수정 없음)
+  - 1. 원인 : wijmo 기본 병합은 작업장이 달라도 공정·라인 값이 같으면 이어 붙임
+  - 1. 프로시저 변경 없음 (정렬이 작업장 → 공정 → 라인 → 설비코드)
 - **검증 결과**: 실제 wijmo 5.20203.748에서 기본 병합의 경계 넘김 재현(공정 B가 작업장 M1·M2에 걸침), 실DB 설비목록 254건에 화면 함수 원문 적용 : 잘못된 병합 0건 (기본 병합이면 경계를 넘는 곳 32곳), 렌더링 병합 확인, JS 구문 검사, 인코딩 확인. 미확인: 실제 화면
 
-
 ### 3. MST1005_R01 설비등급 평가등록 신규 구현
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_R01.aspx](01.Office/PAGEMST/MST1005/MST1005_R01.aspx), [01.Office/PAGEMST/MST1005/MST1005_R01.aspx.cs](01.Office/PAGEMST/MST1005/MST1005_R01.aspx.cs), [01.Office/PAGEMST/MST1005/MST1005_R01.js](01.Office/PAGEMST/MST1005/MST1005_R01.js), [05.Procedure/MES_SNS2_MST1005_R01.sql](05.Procedure/MES_SNS2_MST1005_R01.sql), [05.Procedure/MES_SNS2_MST1005_R01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_R01_SYSTEM_PARAMETERS.sql), [06.Table/MES_SNS2_EQMGRADEEVAL.sql](06.Table/MES_SNS2_EQMGRADEEVAL.sql)
 - **배경 및 원인**: MST1004_R01 복사본으로 남아 있던 설비등급 평가등록 화면을 평가이력 CRUD 화면으로 구현 요청. 확정 사항 : 평가자는 헤더 EMPCD 컬럼 추가(REMP는 감사 컬럼), 자동계산 최근 1년 기준, 승인 시 설비등급 갱신, 평가표출력 레포트는 다음 작업
 - **작업 상세 내용**:
   - 1. 조회
     - 1) 조회조건 : 조회일자(평가일자 범위), 작업장(*LINECD), 공정(*EQMTP), 라인(*EQMGROUP1), 작업장→공정→라인 연동
-    - 2) 좌측 설비목록 : MSTEQM (USEYN = 'Y', FACTORYCD = '07') (작업장(MSTLINE 작업장명), 공정, 라인, 설비그룹, 설비코드, 설비명, 설비등급)
-    - 3) 우측 평가이력 : EQMGRADEEVAL (평가일자, 평가등급, 합계점수, 평가자(사원명), 승인자(사원명), 승인일시, 상세조회, 평가표출력, 삭제)
-    - 4) 설비 선택시 평가이력 조회
-    - 5) 프로시저 : MST1005_R01 / LIST_EQM, LIST_EVAL
-  - 2. 신규평가·상세조회 팝업
+    - 1) 좌측 설비목록 : MSTEQM (USEYN = 'Y', FACTORYCD = '07') (작업장(MSTLINE 작업장명), 공정, 라인, 설비그룹, 설비코드, 설비명, 설비등급)
+    - 1) 우측 평가이력 : EQMGRADEEVAL (평가일자, 평가등급, 합계점수, 평가자(사원명), 승인자(사원명), 승인일시, 상세조회, 평가표출력, 삭제)
+    - 1) 설비 선택시 평가이력 조회
+    - 1) 프로시저 : MST1005_R01 / LIST_EQM, LIST_EVAL
+  - 1. 신규평가·상세조회 팝업
     - 1) 평가기준 : 신규는 사용중 리비전(MSTEQM_GRADEREV USEYN = 'Y'), 기존은 평가이력의 REVCD
-    - 2) 평가항목 그리드 : MSTEQM_GRADEREV_D (구분, 평가항목, 계산구분, 산출값, 점수, 평가기준)
-    - 3) 계산구분 산출값 : 고장건수 = EQMREP (EQMREPTP = 'EQM01') 평가일자 1년 전 다음날 ~ 평가일자 발생 건수, 수리시간 = 같은 기간 수리시간(발생~완료, 분) 합계 ÷ 12, 사용개월 = 설치일자(MSTEQM.SETDATE) ~ 평가일자 개월 수
-    - 4) 계산구분 항목 점수 : MSTEQM_GRADEREV_D2 구간(최소값 이상 ~ 최대값 미만, 최소 = 최대면 그 값) 자동 판정, 계산구분 없는 항목은 오른쪽 점수별 평가기준 더블클릭(Enter)으로 선택
-    - 5) 합계점수·평가등급 : 항목 점수 합계, MSTEQM_GRADEREV_SCORE 구간으로 평가등급 표시
-    - 6) 평가일자 변경시 산출값·자동 점수 다시 조회 (직접 선택 점수 유지), 승인 이력은 저장 점수 표시·조회만
-    - 7) 프로시저 : LIST_EVAL_D, LIST_EVAL_D2, LIST_EVAL_SCORE
-  - 3. 저장
+    - 1) 평가항목 그리드 : MSTEQM_GRADEREV_D (구분, 평가항목, 계산구분, 산출값, 점수, 평가기준)
+    - 1) 계산구분 산출값 : 고장건수 = EQMREP (EQMREPTP = 'EQM01') 평가일자 1년 전 다음날 ~ 평가일자 발생 건수, 수리시간 = 같은 기간 수리시간(발생~완료, 분) 합계 ÷ 12, 사용개월 = 설치일자(MSTEQM.SETDATE) ~ 평가일자 개월 수
+    - 1) 계산구분 항목 점수 : MSTEQM_GRADEREV_D2 구간(최소값 이상 ~ 최대값 미만, 최소 = 최대면 그 값) 자동 판정, 계산구분 없는 항목은 오른쪽 점수별 평가기준 더블클릭(Enter)으로 선택
+    - 1) 합계점수·평가등급 : 항목 점수 합계, MSTEQM_GRADEREV_SCORE 구간으로 평가등급 표시
+    - 1) 평가일자 변경시 산출값·자동 점수 다시 조회 (직접 선택 점수 유지), 승인 이력은 저장 점수 표시·조회만
+    - 1) 프로시저 : LIST_EVAL_D, LIST_EVAL_D2, LIST_EVAL_SCORE
+  - 1. 저장
     - 1) 평가 저장 : EQMGRADEEVAL (평가일자, 평가자 EMPCD, 합계점수, 평가등급, 비고), EQMGRADEEVAL_D (항목별 점수, 저장 때마다 다시 생성), 신규 평가키 GETKEY('EQMGRADEEVALKEY')
-    - 2) 저장 전 확인 : 평가자, 평가일자, 계산구분 없는 항목 점수가 점수별 평가기준에 있는지, 점수 없는 항목, 합계점수에 맞는 설비등급 기준, 승인 이력 수정 불가
-    - 3) 계산구분 항목 점수는 화면 값을 쓰지 않고 프로시저에서 다시 판정
-    - 4) 프로시저 : SAVE_EVAL (저장한 평가키 반환 → 평가이력 다시 선택)
-  - 4. 승인
+    - 1) 저장 전 확인 : 평가자, 평가일자, 계산구분 없는 항목 점수가 점수별 평가기준에 있는지, 점수 없는 항목, 합계점수에 맞는 설비등급 기준, 승인 이력 수정 불가
+    - 1) 계산구분 항목 점수는 화면 값을 쓰지 않고 프로시저에서 다시 판정
+    - 1) 프로시저 : SAVE_EVAL (저장한 평가키 반환 → 평가이력 다시 선택)
+  - 1. 승인
     - 1) 승인 팝업 : 승인자(기본 로그인 사원), 승인일자(기본 오늘)
-    - 2) 승인 저장 : EQMGRADEEVAL (APRVEMP, APRVTIME = 승인일자 + 현재 시각, EQMGRADE_BEFORE = 승인 전 MSTEQM.EQMGRADE), MSTEQM (EQMGRADE = 평가등급)
-    - 3) 막는 조건 : 이미 승인, 승인일자 < 평가일자, 같은 설비에 평가일자가 더 늦은 승인 이력
-    - 4) 프로시저 : APPROVE_EVAL
-  - 5. 삭제
+    - 1) 승인 저장 : EQMGRADEEVAL (APRVEMP, APRVTIME = 승인일자 + 현재 시각, EQMGRADE_BEFORE = 승인 전 MSTEQM.EQMGRADE), MSTEQM (EQMGRADE = 평가등급)
+    - 1) 막는 조건 : 이미 승인, 승인일자 < 평가일자, 같은 설비에 평가일자가 더 늦은 승인 이력
+    - 1) 프로시저 : APPROVE_EVAL
+  - 1. 삭제
     - 1) 평가이력 삭제 버튼 : EQMGRADEEVAL_D, EQMGRADEEVAL (승인 이력 삭제 불가)
-    - 2) 프로시저 : DEL_EVAL
-  - 6. 평가표출력 : 버튼만 배치(준비 중 안내), 레포트는 다음 작업
-  - 7. 테이블 : 06.Table/MES_SNS2_EQMGRADEEVAL.sql 전체 정의(평가일자·등록/수정 시간·사원·프로그램 포함) + 평가자 EMPCD 추가, 기존 테이블용 ALTER 문 주석 포함
-  - 8. 파라미터 18건 (SCORE_LIST 16번, CALLTYPE 17번, KEYWORD 18번)
+    - 1) 프로시저 : DEL_EVAL
+  - 1. 평가표출력 : 버튼만 배치(준비 중 안내), 레포트는 다음 작업
+  - 1. 테이블 : 06.Table/MES_SNS2_EQMGRADEEVAL.sql 전체 정의(평가일자·등록/수정 시간·사원·프로그램 포함) + 평가자 EMPCD 추가, 기존 테이블용 ALTER 문 주석 포함
+  - 1. 파라미터 18건 (SCORE_LIST 16번, CALLTYPE 17번, KEYWORD 18번)
 - **검증 결과**: 실DB 읽기 전용 실행(I2C-002N 2026-11-05 : 고장 5건→3점, 월평균 77.17분→1점, 사용 114개월→2점, 등급 경계 -99.999~99 판정, 설비목록 254건, 경고 0건), Node 모의 테스트 17건 통과(조회·신규·자동/직접 점수·평가일자 변경·저장·승인 이력 잠금·삭제·승인·등급 경계·조회조건 연동), IF 25/25·WHILE 1/1 정적 점검, 인코딩 확인. 미확인: EMPCD 컬럼 반영 전이라 프로시저 컴파일·저장/승인/삭제 실행·실제 화면
 - **적용 순서**: 06.Table ALTER(EMPCD 추가) → MST1005_R01 프로시저 저장 → SYSTEM_PARAMETERS 등록(18건)
 
-
 ### 2. MST1005_S01 계산구분 빈 항목 높이 수정
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
 - **배경 및 원인**: 계산구분 콤보의 빈 항목이 목록에서 너무 좁게 표시됨 (공통 그리드 수정 없이 유지 결정)
 - **작업 상세 내용**:
   - 1. 원인 : 빈 문자열 항목은 wijmo 목록에서 글자가 없어 높이가 7px로 줄어듦 (다른 항목 30px)
-  - 2. 빈 항목 표시값을 공백 문자(\u00a0)로 변경, 값은 빈 값 그대로 (저장·조회 영향 없음)
+  - 1. 빈 항목 표시값을 공백 문자(\u00a0)로 변경, 값은 빈 값 그대로 (저장·조회 영향 없음)
 - **검증 결과**: 실제 wijmo 5.20203.748 테스트 페이지에서 항목 높이 빈 문자열 7px → 공백 문자 30px(다른 항목과 동일), 선택 값 빈 값, 그리드 표시·값 정상 확인, JS 구문 검사, 인코딩 확인. 미확인: 실제 화면
 
-
 ### 2. MST1005_S01 계산구분 콤보 표시 오류 수정
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
 - **배경 및 원인**: 계산구분 콤보에 공백을 넣으려고 gpcd를 @CALCTP로 바꾼 뒤 콤보 목록과 기존 값이 모두 빈칸으로 표시됨. 원인: 공통 그리드가 @ 접두어 시 맨 앞에 {Label, Value, Tag} 빈 항목을 넣고, 첫 항목의 세 번째 키(Tag)를 표시 컬럼으로 잡는데 DC_COMBO 공통코드 결과는 Label·Value만 있어 모든 항목이 빈 표시가 됨 (그리드에서 @를 쓰는 화면이 없는 이유)
 - **작업 상세 내용**:
   - 1. gpcd를 CALCTP로 원복
-  - 2. 그리드 생성 직후 계산구분 컬럼 DataMap 목록 맨 앞에 {Label: '', Value: ''} 빈 항목을 추가하고 refresh (공통 컴포넌트 수정 없음)
-  - 3. 참고 : 그리드 메뉴 스타일초기화 시 공통 그리드가 DataMap을 다시 만들어 새로고침 전까지 빈 항목만 빠짐 (이름 표시는 정상)
+  - 1. 그리드 생성 직후 계산구분 컬럼 DataMap 목록 맨 앞에 {Label: '', Value: ''} 빈 항목을 추가하고 refresh (공통 컴포넌트 수정 없음)
+  - 1. 참고 : 그리드 메뉴 스타일초기화 시 공통 그리드가 DataMap을 다시 만들어 새로고침 전까지 빈 항목만 빠짐 (이름 표시는 정상)
 - **검증 결과**: 실제 wijmo 5.20203.748로 만든 테스트 페이지에서 @ 방식 표시 오류 재현(목록 ["",null,null,null]) 및 수정 방식 확인(목록 ["",고장건수,수리시간,사용개월], 그리드 표시 고장건수·사용개월, 빈 항목 선택 시 값·표시 빈 값), JS 구문 검사, 인코딩 확인. 미확인: 실제 화면
 
-
 ### 2. MST1005_S01 계산구분 공백 항목의 최소·최대값 숨김 및 저장 시 비움
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
 - **배경 및 원인**: 계산구분이 공백인 평가항목은 점수별 평가기준에서 점수·평가기준·비고만 쓰도록 요청 (숨기고 저장 시 비움 방식 선택)
 - **작업 상세 내용**:
   - 1. 화면 : 평가항목 선택 시 계산구분이 공백이면 점수별 평가기준의 최소값(이상)·최대값(미만) 컬럼 숨김, 값이 있으면 표시 (SET_D2_RANGE_COLUMN), 선택 행의 계산구분 칸 변경 시 바로 반영
-  - 2. 평가항목 저장(SAVE_D) : 기존 항목을 계산구분 공백으로 저장하면 그 항목 점수별 평가기준(MSTEQM_GRADEREV_D2)의 최소·최대값을 비움 (값이 있는 행만 UPDATE)
-  - 3. 점수별 평가기준 저장(SAVE_D2) : 저장된 평가항목의 계산구분이 공백이면 최소·최대값을 비워서 저장 (숫자·구간 겹침 확인 대상 아님)
-  - 4. 파라미터 변경 없음 (26건)
+  - 1. 평가항목 저장(SAVE_D) : 기존 항목을 계산구분 공백으로 저장하면 그 항목 점수별 평가기준(MSTEQM_GRADEREV_D2)의 최소·최대값을 비움 (값이 있는 행만 UPDATE)
+  - 1. 점수별 평가기준 저장(SAVE_D2) : 저장된 평가항목의 계산구분이 공백이면 최소·최대값을 비워서 저장 (숫자·구간 겹침 확인 대상 아님)
+  - 1. 파라미터 변경 없음 (26건)
 - **검증 결과**: Node 모의 테스트(계산구분 유무별 컬럼 숨김/표시, 선택 행 계산구분 변경 즉시 반영, 다른 행·다른 칸 변경 무시) 통과, 비움 대상·계산구분 조회 SQL 실DB 읽기 실행(현재 대상 0건, 경고 0건), IF 42/42 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
 
-
 ### 2. MST1005_S01 계산구분 콤보 공백 항목 추가
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
 - **배경 및 원인**: 평가항목 계산구분 콤보에 공백 선택 요청
 - **작업 상세 내용**:
   - 1. 평가항목 그리드 계산구분 콤보 gpcd를 CALCTP → @CALCTP로 변경 (공통 그리드의 @ 접두어 : 목록 맨 앞에 빈 항목 추가, 코드 조회 시 @ 제거)
-  - 2. 프로시저는 이미 계산구분 빈 값 허용이라 변경 없음
-  - 3. 참고 : 그리드 메뉴 스타일초기화 시 공통 그리드가 @를 제거하지 않고 코드를 다시 조회해, 새로고침 전까지 계산구분이 코드값으로 보일 수 있음 (공통 컴포넌트 영역)
+  - 1. 프로시저는 이미 계산구분 빈 값 허용이라 변경 없음
+  - 1. 참고 : 그리드 메뉴 스타일초기화 시 공통 그리드가 @를 제거하지 않고 코드를 다시 조회해, 새로고침 전까지 계산구분이 코드값으로 보일 수 있음 (공통 컴포넌트 영역)
 - **검증 결과**: 공통 그리드 ItsGrid.js 콤보 생성 경로(@ 처리) 확인, JS 구문 검사, 인코딩 확인. 미확인: 실제 화면 콤보
 
-
 ### 2. MST1005_S01 상단 기준 저장·삭제 검증 분기 완전 분리
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
 - **배경 및 원인**: 기준 저장(SAVE)과 삭제(DEL)가 한 조건문 블록 안에 묶여 있어 가독성이 떨어지고 수정 시 혼동이 발생하는 문제를 해결하기 위해 독립 분기로 분리 요청
 - **작업 상세 내용**:
   - 1. 기준 저장 검증(3-1): IN ('SAVE_D', 'SAVE_D2', 'SAVE_SCORE') 전용 블록으로 분리하여 이전 리비전 차단 및 평가이력 존재 시 변경 차단 안내만 명확히 처리 (비고 저장 SAVE_REV는 허용)
-  - 2. 삭제 검증(3-2): LIKE 'DEL_%' 전용 블록으로 분리하여 이전 리비전 삭제 차단 및 평가이력 존재 시 삭제 차단 안내만 독립적으로 처리
-  - 3. 최상단 Modify 주석 1일 1행 원칙에 맞춰 갱신
+  - 1. 삭제 검증(3-2): LIKE 'DEL_%' 전용 블록으로 분리하여 이전 리비전 삭제 차단 및 평가이력 존재 시 삭제 차단 안내만 독립적으로 처리
+  - 1. 최상단 Modify 주석 1일 1행 원칙에 맞춰 갱신
 - **검증 결과**: 구문 정적 점검 통과, UTF-8 with BOM 및 CRLF 인코딩 준수 확인
 
 ### 2. MST1005_S01 상단 공통 검증 조건문 단순화 및 직관성 개선
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
 - **배경 및 원인**: 10개에 달하는 $CALLTYPE을 일일이 나열하고 부정형(<> 'SAVE_REV')을 중복 사용하여 가독성과 유지보수성이 저하되었던 상단 공통 검증 로직 간소화 요청
 - **작업 상세 내용**:
   - 1. 리비전 선택 확인 단순화: 긴 나열 대신 NOT IN ('LIST_REV', 'RENEW_REV') AND $REVCD = '' 형태로 축약하여 누락 위험 원천 방지
-  - 2. 저장·삭제 공통 묶음: $CALLTYPE LIKE 'SAVE_%' OR $CALLTYPE LIKE 'DEL_%' 패턴 매칭으로 리비전 존재 확인 1회 수행
-  - 3. 부정 조건문 제거 및 명시화: <> 'SAVE_REV' 대신 IN ('SAVE_D', 'SAVE_D2', 'SAVE_SCORE') OR LIKE 'DEL_%' 형태로 명시하여 삭제(DEL) 작업이 포함됨을 직관적으로 확인 가능하도록 변경
-  - 4. 최상단 Modify 주석 1일 1행 원칙에 맞춰 갱신
+  - 1. 저장·삭제 공통 묶음: $CALLTYPE LIKE 'SAVE_%' OR $CALLTYPE LIKE 'DEL_%' 패턴 매칭으로 리비전 존재 확인 1회 수행
+  - 1. 부정 조건문 제거 및 명시화: <> 'SAVE_REV' 대신 IN ('SAVE_D', 'SAVE_D2', 'SAVE_SCORE') OR LIKE 'DEL_%' 형태로 명시하여 삭제(DEL) 작업이 포함됨을 직관적으로 확인 가능하도록 변경
+  - 1. 최상단 Modify 주석 1일 1행 원칙에 맞춰 갱신
 - **검증 결과**: 구문 정적 점검 통과, UTF-8 (BOM 없음) + CRLF 인코딩 준수 확인
 
 ### 2. MST1005_S01 평가이력(EQMGRADEEVAL) 존재 시 삭제 차단 명시화
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
 - **배경 및 원인**: 해당 리비전으로 등록된 평가이력(EQMGRADEEVAL)이 있을 때 안내 문구가 "변경할 수 없습니다"로만 되어 있어 삭제 시 안내가 부적절하고 삭제 차단 여부가 불명확했던 문제 개선 요청
 - **작업 상세 내용**:
   - 1. 공통 확인 주석 갱신: 리비전 변경·삭제 공통 확인 및 평가이력 존재 시 변경·삭제 불가 명시
-  - 2. 삭제 분기 안내 추가: $CALLTYPE LIKE 'DEL_%'(DEL_REV, DEL_D, DEL_D2, DEL_SCORE)일 경우 "해당 리비전으로 등록한 평가이력이 있어서 삭제할 수 없습니다." 전용 안내 출력
-  - 3. 저장/변경 분기: 기존대로 "해당 리비전으로 등록한 평가이력이 있어서 변경할 수 없습니다.<br>리비전 갱신 후 변경하세요." 유지
+  - 1. 삭제 분기 안내 추가: $CALLTYPE LIKE 'DEL_%'(DEL_REV, DEL_D, DEL_D2, DEL_SCORE)일 경우 "해당 리비전으로 등록한 평가이력이 있어서 삭제할 수 없습니다." 전용 안내 출력
+  - 1. 저장/변경 분기: 기존대로 "해당 리비전으로 등록한 평가이력이 있어서 변경할 수 없습니다.<br>리비전 갱신 후 변경하세요." 유지
 - **검증 결과**: 구문 정적 점검 통과, UTF-8 with BOM 및 CRLF 인코딩 준수 확인
 
 ### 2. MST1005_S01 점수별 평가기준(SAVE_D2) 검증 로직 단순화
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
 - **배경 및 원인**: 프로시저 내 불필요하거나 과도한 정규식(REGEXP) 검증을 단순화하여 가독성 향상 요청
 - **작업 상세 내용**:
-  - 1. 필수 권장 유지: 사용자 직접 입력값인 점수(_$SCORE, 5자리 정수) 및 최소·최대값(_$MINVAL, _$MAXVAL, 실수 포맷) 정규식 검증 유지
-  - 2. 단순화 적용: 평가항목(_$GMCD) 정규식을 단순 빈 값(= '') 체크로 간소화(이후 DB 조회에서 유효성 검증), 조회 시점 키(_$ORGKEY)의 중복 정규식 검증 블록 제거(이후 EXISTS 및 CAST 비교로 이미 보장)
-  - 3. 최상단 Modify 주석 1일 1행 원칙에 맞춰 갱신
+  - 1. 필수 권장 유지: 사용자 직접 입력값인 점수(_$SCORE, 5자리 정수) 및 최소·최대값(_$MINVAL,_$MAXVAL, 실수 포맷) 정규식 검증 유지
+  - 1. 단순화 적용: 평가항목(_$GMCD) 정규식을 단순 빈 값(= '') 체크로 간소화(이후 DB 조회에서 유효성 검증), 조회 시점 키(_$ORGKEY)의 중복 정규식 검증 블록 제거(이후 EXISTS 및 CAST 비교로 이미 보장)
+  - 1. 최상단 Modify 주석 1일 1행 원칙에 맞춰 갱신
 - **검증 결과**: 구문 점검 통과, UTF-8 with BOM 및 CRLF 인코딩 준수 확인
 
 ### 2. MST1005_S01 화면 3구역 배치 변경
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx)
 - **배경 및 원인**: 그리드 영역을 3구역으로 나눠 설비등급 기준을 3번, 평가항목을 2번 상단, 점수별 평가기준을 2번 하단에 배치 요청
 - **작업 상세 내용**:
   - 1. 1구역(왼쪽 20%) : 리비전 (변경 없음)
-  - 2. 2구역(가운데, 오른쪽 영역의 50%) : 상단 평가항목, 하단 점수별 평가기준 (각 50%, 머리글 높이 6%)
-  - 3. 3구역(오른쪽, 오른쪽 영역의 50%) : 설비등급 기준 전체 높이 (머리글 높이 3%, 리비전과 동일)
-  - 4. 버튼·그리드 ID와 라벨 문구(점수별 평가기준 표기 포함)는 그대로, JS·프로시저 변경 없음
+  - 1. 2구역(가운데, 오른쪽 영역의 50%) : 상단 평가항목, 하단 점수별 평가기준 (각 50%, 머리글 높이 6%)
+  - 1. 3구역(오른쪽, 오른쪽 영역의 50%) : 설비등급 기준 전체 높이 (머리글 높이 3%, 리비전과 동일)
+  - 1. 버튼·그리드 ID와 라벨 문구(점수별 평가기준 표기 포함)는 그대로, JS·프로시저 변경 없음
 - **검증 결과**: aspx div 짝(14/14)·asp:Content 짝·버튼/그리드 ID 16개 확인, 인코딩(단일 BOM·CRLF) 확인. 미확인: 실제 화면 비율
 
-
 ### 2. MST1005_S01 프로시저 튜닝 (공통 확인 통합·중복 조회/JOIN·변수 정리)
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
 - **배경 및 원인**: 프로시저 변수가 많고 불필요한 코드·JOIN·변수 정리 및 SQL 튜닝 요청
 - **작업 상세 내용**:
   - 1. 공통 확인 통합 : 리비전 미선택 확인(LIST_D·LIST_SCORE·SAVE_REV 등 개별 중복 제거), 존재 확인을 SAVE_REV까지 공통으로, 이전 리비전 차단과 DEL_REV 최신 리비전 확인을 한 번의 MAX 조회로 통합(DEL_REV 리비전 재조회 제거)
-  - 2. 변수 20개 → 18개 : 안내 문구 변수 _$NAME을 _$MSG로 통합, _$USEYN 제거
-  - 3. 점수별 평가기준 구간 겹침 : 평가항목 이름 LEFT JOIN 제거(저장 중 조회한 _$GMNM 사용), 겹침 조건은 기존 자기 조인 형태 유지 (파생 테이블로 바꿨던 구조는 복잡하다는 요청에 따라 원복)
-  - 4. 신규·수정 저장 : EXISTS 확인 후 UPDATE/INSERT 분기를 INSERT … ON DUPLICATE KEY UPDATE 한 문장으로 (점수별 평가기준·설비등급 기준, 키 변경 분기는 유지)
-  - 5. 리비전 삭제 후 사용중 처리 : 삭제 전 사용여부 조회 없이 남은 가장 최근 리비전만 Y, 나머지 N으로 바뀌는 행만 UPDATE
-  - 6. 유지 : 설비등급 조회의 COMTYPE JOIN(FM110 정렬순서용), 겹침 안내의 COMTYPE JOIN(등급명 표시용)
-  - 7. 동작 변경 없음, 파라미터 26건 그대로, Modify 이력 1행 추가
+  - 1. 변수 20개 → 18개 : 안내 문구 변수 _$NAME을 _$MSG로 통합,_$USEYN 제거
+  - 1. 점수별 평가기준 구간 겹침 : 평가항목 이름 LEFT JOIN 제거(저장 중 조회한 _$GMNM 사용), 겹침 조건은 기존 자기 조인 형태 유지 (파생 테이블로 바꿨던 구조는 복잡하다는 요청에 따라 원복)
+  - 1. 신규·수정 저장 : EXISTS 확인 후 UPDATE/INSERT 분기를 INSERT … ON DUPLICATE KEY UPDATE 한 문장으로 (점수별 평가기준·설비등급 기준, 키 변경 분기는 유지)
+  - 1. 리비전 삭제 후 사용중 처리 : 삭제 전 사용여부 조회 없이 남은 가장 최근 리비전만 Y, 나머지 N으로 바뀌는 행만 UPDATE
+  - 1. 유지 : 설비등급 조회의 COMTYPE JOIN(FM110 정렬순서용), 겹침 안내의 COMTYPE JOIN(등급명 표시용)
+  - 1. 동작 변경 없음, 파라미터 26건 그대로, Modify 이력 1행 추가
 - **검증 결과**: 구간 겹침 신규 구조 12개 사례 기대값 일치, 실데이터 전 리비전·평가항목 대상 기존·신규 쿼리 결과 동일, 리비전 삭제 후 사용중 처리 미리보기(REV 2 삭제 시 REV 1만 Y) 실DB 읽기 실행(경고 0건), IF 36/36·WHILE 6/6 짝·미사용 변수 0건 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·저장 분기 실제 실행
 
-
 ### 2. MST1005_S01 화면 글자 수 검증(CHECK_LENGTH) 제거
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
 - **배경 및 원인**: JS에서 길이까지 제한하는 검증은 불필요하다는 요청
 - **작업 상세 내용**:
   - 1. CHECK_LENGTH 함수와 리비전 비고·평가항목·점수별 평가기준·설비등급 기준 저장 전 글자 수 확인 호출 4곳 전부 삭제
-  - 2. 입력 검증은 프로시저에서 DB 컬럼 정의 기준으로만 처리 (화면 길이·범위 검증 추가 금지)
+  - 1. 입력 검증은 프로시저에서 DB 컬럼 정의 기준으로만 처리 (화면 길이·범위 검증 추가 금지)
 - **검증 결과**: JS 구문 검사, CHECK_LENGTH 잔여 0건, 인코딩 확인. 미확인: 실제 화면
 
-
 ### 2. MST1005_S01 평가항목·점수별 평가기준 비고 추가
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql)
 - **배경 및 원인**: 평가항목·점수별 평가기준 그리드에 비고(REMARK) 칸 추가 요청
 - **작업 상세 내용**:
   - 1. 평가항목 : MSTEQM_GRADEREV_D.REMARK 조회(LIST_D)·저장(SAVE_D, REMARK_LIST), 그리드 비고 컬럼 추가
-  - 2. 점수별 평가기준 : MSTEQM_GRADEREV_D2.REMARK 조회(LIST_D2)·저장(SAVE_D2 점수 변경·수정·신규 모두, D2_REMARK_LIST), 그리드 비고 컬럼 추가
-  - 3. 리비전 갱신 시 두 테이블 비고도 함께 복사
-  - 4. 비고는 컬럼 크기(VARCHAR(1000)) 기준 화면 저장 전 1000자 확인, 프로시저 변수 _$REMARK VARCHAR(1000)
-  - 5. 파라미터 24건 → 26건 (SYSTEM_PARAMETERS 재등록 필요)
+  - 1. 점수별 평가기준 : MSTEQM_GRADEREV_D2.REMARK 조회(LIST_D2)·저장(SAVE_D2 점수 변경·수정·신규 모두, D2_REMARK_LIST), 그리드 비고 컬럼 추가
+  - 1. 리비전 갱신 시 두 테이블 비고도 함께 복사
+  - 1. 비고는 컬럼 크기(VARCHAR(1000)) 기준 화면 저장 전 1000자 확인, 프로시저 변수 _$REMARK VARCHAR(1000)
+  - 1. 파라미터 24건 → 26건 (SYSTEM_PARAMETERS 재등록 필요)
 - **검증 결과**: Node 모의 테스트(그리드 컬럼, 비고 전송, 1000자 초과 차단) 통과, 비고 포함 조회·복사 SELECT 실DB 읽기 실행(경고 0건), IF 짝·파라미터 26건 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
 
-
 ### 2. MST1005_S01 입력 검증을 DB 컬럼 정의 기준으로 정리
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
 - **배경 및 원인**: 글자 수·범위 제한은 임의 값이 아니라 DB에 구성된 컬럼 범위 안에서만 검증하도록 요청
 - **작업 상세 내용**:
   - 1. 기준 : 각 값이 저장되는 DB 컬럼 정의만 사용 (임의로 정했던 -99999.99 ~ 99999.99 제한 제거)
-  - 2. 최소·최대값(VARCHAR(100)) : 숫자 형식만 확인, 길이 100자는 화면 저장 전 확인, 크기 비교·구간 겹침은 실수(DOUBLE) 비교로 변경해 긴 숫자도 범위 초과 오류 없음, 최소 = 최대 구간 판정은 보정값 없이 끝값 포함 비교
-  - 3. 점수(DECIMAL(5,0)) : -99999 ~ 99999 정수, NO(DECIMAL(20,0)) : 20자리 이내 정수 (프로시저 변수 VARCHAR(20)이라 화면에서 20자 초과 사전 차단)
-  - 4. 글자 수(화면 저장 전) : 평가항목·평가기준·등급 점수·구분·최소·최대값 100자, 비고(점검주기) 10자, 리비전 비고 1000자
-  - 5. 겹침 안내 문구는 안내 변수 크기(500자) 안으로 자름, 프로시저 변수·파라미터 크기는 원래대로 유지
+  - 1. 최소·최대값(VARCHAR(100)) : 숫자 형식만 확인, 길이 100자는 화면 저장 전 확인, 크기 비교·구간 겹침은 실수(DOUBLE) 비교로 변경해 긴 숫자도 범위 초과 오류 없음, 최소 = 최대 구간 판정은 보정값 없이 끝값 포함 비교
+  - 1. 점수(DECIMAL(5,0)) : -99999 ~ 99999 정수, NO(DECIMAL(20,0)) : 20자리 이내 정수 (프로시저 변수 VARCHAR(20)이라 화면에서 20자 초과 사전 차단)
+  - 1. 글자 수(화면 저장 전) : 평가항목·평가기준·등급 점수·구분·최소·최대값 100자, 비고(점검주기) 10자, 리비전 비고 1000자
+  - 1. 겹침 안내 문구는 안내 변수 크기(500자) 안으로 자름, 프로시저 변수·파라미터 크기는 원래대로 유지
 - **검증 결과**: 구간 겹침 12개 사례(긴 음수·99자리 숫자·소수 경계 포함) 실DB 읽기 실행 기대값 일치(경고 0건), JS 구문 검사, IF 짝·파라미터 24건 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
 
-
 ### 2. MST1005_S01 숫자 범위·글자 수 초과 오류 안내 처리
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
 - **배경 및 원인**: 최소·최대값에 -9999999999, -99.999 같은 값이 그대로 저장되고, -99999999999999999 입력 시 Out of range value for column '(null)' 오류 발생. 원인: 최소·최대값 자리수 제한이 없어 겹침 확인 등의 DECIMAL(18,4) 변환에서 범위 초과 경고(1264)가 DB 오류로 표시됨
 - **작업 상세 내용**:
   - 1. 최소·최대값(점수별 평가기준·설비등급 기준) : -99999.99 ~ 99999.99, 소수 둘째 자리까지만 허용, 벗어나면 범위 안내 후 저장 취소
-  - 2. 평가항목 NO : 0 ~ 99999 정수 (DECIMAL 범위 초과 오류 방지)
-  - 3. 글자 수 확인 : 화면 저장 전에 평가항목명·평가기준·최소·최대값·등급 점수·구분 100자, 비고(점검주기) 10자, 리비전 비고 1000자 초과 시 현재 글자 수와 함께 안내 후 저장 안 함 (CHECK_LENGTH, DB 영문 Data too long 오류 방지)
-  - 4. 프로시저 변수·파라미터 크기는 원래대로 유지 (처음 넓혔던 VARCHAR(4000)·MEDIUMTEXT 변경과 프로시저 글자 수 확인은 요청에 따라 원복)
-  - 5. 이미 저장된 범위 밖 값(점수별 평가기준 -9999.4561·-1.5867, E등급 -99.999)은 다음 저장 시 차단되므로 수정 필요
+  - 1. 평가항목 NO : 0 ~ 99999 정수 (DECIMAL 범위 초과 오류 방지)
+  - 1. 글자 수 확인 : 화면 저장 전에 평가항목명·평가기준·최소·최대값·등급 점수·구분 100자, 비고(점검주기) 10자, 리비전 비고 1000자 초과 시 현재 글자 수와 함께 안내 후 저장 안 함 (CHECK_LENGTH, DB 영문 Data too long 오류 방지)
+  - 1. 프로시저 변수·파라미터 크기는 원래대로 유지 (처음 넓혔던 VARCHAR(4000)·MEDIUMTEXT 변경과 프로시저 글자 수 확인은 요청에 따라 원복)
+  - 1. 이미 저장된 범위 밖 값(점수별 평가기준 -9999.4561·-1.5867, E등급 -99.999)은 다음 저장 시 차단되므로 수정 필요
 - **검증 결과**: 범위 확인식(-9999999999·-99.999·-99999999999999999 차단, -99999.99·144·0.5 통과, NO 123456 차단)과 범위 초과 경고(1264) 재현 실DB 읽기 실행, Node 모의 테스트(비고 1001자·평가항목 101자·최소값 101자·비고(점검주기) 11자 차단, 한도 이내 저장) 통과, IF/WHILE 짝·파라미터 24건 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
 
-
 ### 2. MST1005_S01 저장 행 선택 유지·공백 제거·점수 음수 허용·이전 리비전 조회 전용
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
 - **배경 및 원인**: 실사용 검증 목록 중 13·14·15·16·11번 수정 요청 (15번은 점수 컬럼이 DECIMAL(5,0)이라 정수 유지로 결정)
 - **작업 상세 내용**:
   - 1. (13) 평가항목 저장 : SAVE_D가 저장한 행 순서대로 평가항목코드 반환(GMCD_LIST), 선택했던 행이 저장 대상이면 그 코드(신규는 발번 코드)로 다시 선택해 바로 점수 추가 가능
-  - 2. (14) 점수별 평가기준·설비등급 기준 최소·최대값 앞뒤 공백 제거(TRIM) 후 확인·저장
-  - 3. (15) 점수는 정수만(음수 가능, -99999 ~ 99999, 테이블 DECIMAL(5,0) 그대로), 안내 문구 점수는 정수(음수 가능)로 입력하세요, 최소·최대값은 음수·소수 허용, 저장 행 점수 변경 비교는 숫자 기준 (처음 작성한 소수 허용·테이블 변경 스크립트는 요청에 따라 취소)
-  - 4. (16) 리비전 미선택은 리비전을 선택하세요, 삭제된 리비전은 선택한 리비전이 없습니다 / 다시 조회하세요로 구분 (공통 확인·비고 저장)
-  - 5. (11) 이전 리비전 조회 전용 : 프로시저에서 평가항목·점수별 평가기준·설비등급 기준 저장·삭제 차단(이전 리비전(REV n)은 조회만 가능합니다), 화면은 이전 리비전 선택 시 추가·저장·삭제 버튼 숨김과 그리드 읽기 전용, 리비전 비고 저장·리비전 갱신(이전 리비전 복사)은 유지
+  - 1. (14) 점수별 평가기준·설비등급 기준 최소·최대값 앞뒤 공백 제거(TRIM) 후 확인·저장
+  - 1. (15) 점수는 정수만(음수 가능, -99999 ~ 99999, 테이블 DECIMAL(5,0) 그대로), 안내 문구 점수는 정수(음수 가능)로 입력하세요, 최소·최대값은 음수·소수 허용, 저장 행 점수 변경 비교는 숫자 기준 (처음 작성한 소수 허용·테이블 변경 스크립트는 요청에 따라 취소)
+  - 1. (16) 리비전 미선택은 리비전을 선택하세요, 삭제된 리비전은 선택한 리비전이 없습니다 / 다시 조회하세요로 구분 (공통 확인·비고 저장)
+  - 1. (11) 이전 리비전 조회 전용 : 프로시저에서 평가항목·점수별 평가기준·설비등급 기준 저장·삭제 차단(이전 리비전(REV n)은 조회만 가능합니다), 화면은 이전 리비전 선택 시 추가·저장·삭제 버튼 숨김과 그리드 읽기 전용, 리비전 비고 저장·리비전 갱신(이전 리비전 복사)은 유지
 - **검증 결과**: Node 모의 테스트(최신/이전 리비전 버튼·읽기 전용 전환, 신규 항목 저장 후 발번 코드 선택·점수기준 조회, 비저장 행 선택 유지) 통과, 정수 점수 확인식(-3·5 통과, 1.5·123456 차단)·공백 제거·숫자 비교·이전 리비전 판정 실DB 읽기 실행(경고 0건), IF/WHILE 짝·파라미터 24건 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
 
-
 ### 2. MST1005_S01 최소=최대 값 일치 허용 및 분류 변경 시 구간 겹침 원인 확인
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
 - **배경 및 원인**: B등급(15~20)을 D로 바꿀 때 D·B 구간 겹침 안내가 나오고, 최소값·최대값 0, 0 저장이 막힌다는 요청
 - **작업 상세 내용**:
   - 1. 분류 변경 시 겹침 원인 : DB에 배포된 프로시저가 조회 시점 키(GR_ORG_EQMGRADE_LIST) 처리 전 버전이고 SYSTEM_PARAMETERS도 22건이라, 화면이 보낸 원래 등급(B)이 무시되어 B는 남고 D가 새로 추가됨 → 현재 프로시저·SYSTEM_PARAMETERS(24건) 반영 시 B 행이 D로 변경되어 해결 (코드 추가 수정 없음)
-  - 2. 최소 = 최대 허용 : 점수별 평가기준·설비등급 기준 모두 최소 > 최대만 차단 (안내: 최소값은 최대값보다 클 수 없습니다), 최소 = 최대(예: 0, 0)는 그 값과 같을 때로 판정하고 최대값 표기를 최소값으로 통일
-  - 3. 구간 겹침 확인 : 최소 = 최대 구간은 그 값 하나로 보고 겹침 판정 (0~0과 1~5 통과, 0~0과 0~5 차단, 5~10과 10~10 통과)
-  - 4. 평가등록(R01) 자동 계산도 같은 기준 필요 : 최소 이상 ~ 최대 미만, 최소 = 최대면 일치
+  - 1. 최소 = 최대 허용 : 점수별 평가기준·설비등급 기준 모두 최소 > 최대만 차단 (안내: 최소값은 최대값보다 클 수 없습니다), 최소 = 최대(예: 0, 0)는 그 값과 같을 때로 판정하고 최대값 표기를 최소값으로 통일
+  - 1. 구간 겹침 확인 : 최소 = 최대 구간은 그 값 하나로 보고 겹침 판정 (0~0과 1~5 통과, 0~0과 0~5 차단, 5~10과 10~10 통과)
+  - 1. 평가등록(R01) 자동 계산도 같은 기준 필요 : 최소 이상 ~ 최대 미만, 최소 = 최대면 일치
 - **검증 결과**: 구간 판정 9개 사례 실DB 읽기 실행으로 기대값 일치(경고 0건), 배포 프로시저·SYSTEM_PARAMETERS 상태 실DB 조회로 원인 확인, IF/WHILE 짝·파라미터 24건 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
 
-
 ### 1. MST1005_S01 기존 행 분류·점수 콤보 오류(Uncaught Error) 수정
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql)
 - **배경 및 원인**: 리비전 갱신으로 복사된(저장된) 설비등급 행의 분류 콤보 클릭 시 Uncaught Error 발생. 원인: 저장 행의 키(분류·점수) 편집을 막으려고 onBeginningEdit에서 throw ''로 편집을 취소했는데, 콤보 드롭다운 클릭 경로(_MouseHandler._click → _toggleListBox → startEditing → onBeginningEdit)에서 예외가 잡히지 않고 그대로 브라우저 오류로 출력됨
 - **작업 상세 내용**:
   - 1. 예외로 편집을 막던 grid3(점수)·grid4(분류) onBeginningEdit 제거 → 저장된 행도 분류·점수 수정 가능
-  - 2. 조회 시점 키 보관 : LIST_D2 SCORE AS ORG_SCORE, LIST_SCORE EQMGRADE AS ORG_EQMGRADE (숨김 컬럼, REVCD 반환·컬럼 대체)
-  - 3. 저장 : D2_ORG_SCORE_LIST·GR_ORG_EQMGRADE_LIST 추가 전송, 프로시저는 조회 시점 키와 다르면 기존 행의 키를 새 값으로 UPDATE (새 키가 이미 있으면 안내 후 저장 취소), 같으면 기존 UPSERT
-  - 4. 삭제 : 화면에서 바꾼 값이 아닌 조회 시점 키로 DB 삭제 (저장 행 판정도 ORG_ 값 기준, IS_SAVED_ROW)
-  - 5. 파라미터 22건 → 24건 (SYSTEM_PARAMETERS 재등록 필요)
-  - 6. 같은 throw 방식 편집 차단이 EQM1001_R03(4곳)·PRD7001_R02·R04에도 있으나 이번 요청 범위 밖이라 미수정
+  - 1. 조회 시점 키 보관 : LIST_D2 SCORE AS ORG_SCORE, LIST_SCORE EQMGRADE AS ORG_EQMGRADE (숨김 컬럼, REVCD 반환·컬럼 대체)
+  - 1. 저장 : D2_ORG_SCORE_LIST·GR_ORG_EQMGRADE_LIST 추가 전송, 프로시저는 조회 시점 키와 다르면 기존 행의 키를 새 값으로 UPDATE (새 키가 이미 있으면 안내 후 저장 취소), 같으면 기존 UPSERT
+  - 1. 삭제 : 화면에서 바꾼 값이 아닌 조회 시점 키로 DB 삭제 (저장 행 판정도 ORG_값 기준, IS_SAVED_ROW)
+  - 1. 파라미터 22건 → 24건 (SYSTEM_PARAMETERS 재등록 필요)
+  - 1. 같은 throw 방식 편집 차단이 EQM1001_R03(4곳)·PRD7001_R02·R04에도 있으나 이번 요청 범위 밖이라 미수정
 - **검증 결과**: Node 모의 테스트(편집 차단 이벤트 없음, 분류·점수 변경 저장 시 조회 시점 키 전송, 변경 후 삭제 시 원래 키 삭제, 신규 행 빈 값) 통과, 변경 조회 SQL 실DB 읽기 실행(경고 0건), IF/ELSEIF/WHILE 짝·파라미터 24건 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면 콤보 동작
----
 
+---
 
 ## 🕒 2026-11-04 (수) 작업 내역
 
 ### 2. MST1005_S01 설비등급 최대점수를 미만 기준으로 변경
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
 - **배경 및 원인**: 설비등급 기준도 점수별 평가기준과 같이 최소 이상·최대 미만으로 요청
 - **작업 상세 내용**:
   - 1. 설비등급 기준 : MSTEQM_GRADEREV_SCORE 구간을 최소점수 이상 ~ 최대점수 미만으로 변경 (이전: 최대점수 이하)
-  - 2. 최소점수 = 최대점수도 저장 불가 (안내: {등급}등급의 최소점수(x)는 / 최대점수(y)보다 작아야 합니다.)
-  - 3. 구간 겹침 확인을 미만 기준으로 변경 : 경계값 공유(B 15~20, A 20~)는 허용, 안내 문구 최대점수(미만)
-  - 4. 화면 컬럼명 최대점수(이하) → 최대점수(미만)
+  - 1. 최소점수 = 최대점수도 저장 불가 (안내: {등급}등급의 최소점수(x)는 / 최대점수(y)보다 작아야 합니다.)
+  - 1. 구간 겹침 확인을 미만 기준으로 변경 : 경계값 공유(B 15~20, A 20~)는 허용, 안내 문구 최대점수(미만)
+  - 1. 화면 컬럼명 최대점수(이하) → 최대점수(미만)
 - **검증 결과**: 평가표 구간(A 20~/B 15~20/C 10~15/D 7~10/E 0~7) 겹침 없음, 19~21 입력 시 A·B와 겹침 검출 (실DB 읽기 실행, 경고 0건), JS 구문 검사, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
 
-
 ### 2. MST1005_S01 리비전 삭제를 가장 최근 리비전만 허용
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
 - **배경 및 원인**: 리비전 삭제 시 신규(가장 최근) 리비전만 삭제 가능하고 기존 리비전은 삭제되지 않도록 요청
 - **작업 상세 내용**:
   - 1. 리비전 삭제(DEL_REV) : MSTEQM_GRADEREV의 리비전 번호가 최대값보다 작으면 삭제 불가 (안내: 이전 리비전(REV n)은 삭제할 수 없습니다. / 가장 최근 리비전만 삭제할 수 있습니다.)
-  - 2. 기존 조건 유지 : 평가이력 있는 리비전 삭제 불가, 사용중 리비전 삭제 시 남은 최신 리비전을 사용중으로 변경
+  - 1. 기존 조건 유지 : 평가이력 있는 리비전 삭제 불가, 사용중 리비전 삭제 시 남은 최신 리비전을 사용중으로 변경
 - **검증 결과**: 실DB 읽기 실행으로 리비전별 삭제 가능 여부 판정 확인(경고 0건), IF 짝·인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
 
-
 ### 2. MST1005_S01 긴 안내 문구 줄바꿈
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
 - **배경 및 원인**: 구간 겹침 등 긴 안내 문구가 한 줄로 길게 표시되어 줄바꿈 요청
 - **작업 상세 내용**:
   - 1. 안내창(ItsMsg.Alert/Confirm)이 문구를 HTML로 넣고 white-space 설정이 없어 \n은 공백으로 보이므로 <br>로 줄바꿈
-  - 2. 프로시저 : 평가이력 잠금, 점수별 평가기준·설비등급 구간 겹침, 평가기준 최소·최대값 숫자/크기, 설비등급 최소·최대점수 크기 오류 문구를 문장·항목명 단위로 줄바꿈
-  - 3. 화면 : 리비전 갱신 확인(선택한 리비전을 복사하여 / 새 리비전을 생성하시겠습니까?), 평가항목 삭제 확인((점수별 평가기준 포함)) 줄바꿈
+  - 1. 프로시저 : 평가이력 잠금, 점수별 평가기준·설비등급 구간 겹침, 평가기준 최소·최대값 숫자/크기, 설비등급 최소·최대점수 크기 오류 문구를 문장·항목명 단위로 줄바꿈
+  - 1. 화면 : 리비전 갱신 확인(선택한 리비전을 복사하여 / 새 리비전을 생성하시겠습니까?), 평가항목 삭제 확인((점수별 평가기준 포함)) 줄바꿈
 - **검증 결과**: ItsMsg.js·ItsMsg.css 처리 방식 확인, JS 구문 검사, 인코딩 확인. 미확인: 실제 안내창 표시
 
-
 ### 2. MST1005_S01 추가 행 번호를 빈 번호 우선으로 변경
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
 - **배경 및 원인**: 1~5 중 1,2,3 삭제 후 추가 시 6,7,8로 채번되는 문제
 - **작업 상세 내용**:
   - 1. 평가항목 NO(SORTNO)·점수별 평가기준 점수(SCORE) 추가 시 최대값+1 대신 그리드에 없는 가장 작은 번호 사용 (GET_NEXT_SORTNO → GET_NEXT_NO(그리드, 필드))
-  - 2. 예: 4,5만 남은 상태에서 추가 → 1, 2, 3, 다음은 6
+  - 1. 예: 4,5만 남은 상태에서 추가 → 1, 2, 3, 다음은 6
 - **검증 결과**: Node 모의 테스트(4,5 남은 상태 4회 추가 1,2,3,6 / 빈 그리드 1 / 1,3 사이 2) 통과, 인코딩 확인. 미확인: 실제 화면
 
-
 ### 2. MST1005_S01 점수별 평가기준 추가·저장·삭제 및 머리글 공백 축소
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
 - **배경 및 원인**: 1~5점 자동 생성 대신 점수별 평가기준을 자유롭게 추가·삭제하고, 각 영역 머리글 아래 공백 축소 요청
 - **작업 상세 내용**:
   - 1. 점수별 평가기준 자유 입력
     - 1) 평가항목 신규 저장 시 1~5점 행 자동 생성 제거
-    - 2) 점수별 평가기준 [추가][저장][삭제] : MSTEQM_GRADEREV_D2, 추가는 저장된 평가항목 선택 시만 가능(점수 기본값 최대+1), 저장된 행의 점수는 수정 불가
-    - 3) 저장 : 없으면 INSERT·있으면 UPDATE, 점수 숫자 필수, 화면에서 같은 점수 중복 차단, 구간 겹침 확인 유지
-    - 4) 삭제 : 저장 행만 DB 삭제(DEL_D2 신설, 평가이력 잠금 대상), 신규 행은 화면에서만 제거
-  - 2. 영역 머리글 높이 축소 : 리비전 4→3, 설비등급 기준 13→8, 평가항목·점수별 평가기준 7→4.5 (TopHeightPc)
-  - 3. 파라미터 22건 유지 (SYSTEM_PARAMETERS 재등록 불필요)
+    - 1) 점수별 평가기준 [추가][저장][삭제] : MSTEQM_GRADEREV_D2, 추가는 저장된 평가항목 선택 시만 가능(점수 기본값 최대+1), 저장된 행의 점수는 수정 불가
+    - 1) 저장 : 없으면 INSERT·있으면 UPDATE, 점수 숫자 필수, 화면에서 같은 점수 중복 차단, 구간 겹침 확인 유지
+    - 1) 삭제 : 저장 행만 DB 삭제(DEL_D2 신설, 평가이력 잠금 대상), 신규 행은 화면에서만 제거
+  - 1. 영역 머리글 높이 축소 : 리비전 4→3, 설비등급 기준 13→8, 평가항목·점수별 평가기준 7→4.5 (TopHeightPc)
+  - 1. 파라미터 22건 유지 (SYSTEM_PARAMETERS 재등록 불필요)
 - **검증 결과**: Node 모의 테스트(자동 생성 제거, 점수기준 추가 기본값·점수 잠금·중복 차단·저장/삭제 파라미터, 미저장 항목 추가 차단) 통과, IF/WHILE 짝·파라미터 22건 정적 점검, JS 구문 검사, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면 머리글 높이
 
-
 ### 2. MST1005_S01 설비등급 기준 평가표 대응 및 점수 구간 겹침 차단
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql), [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
 - **배경 및 원인**: 설비등급과 분류가 같은 개념, 평가표 비고가 점검주기인데 별도 비고가 있어 헷갈림. 테이블은 그대로 두고 조회·저장 SQL과 화면에서 불필요 컬럼만 제외 요청. 등급 점수 구간(예: D 5~9 = 5 이상 9 이하, E 0~4)이 겹치면 경고 후 저장 차단 요청
 - **작업 상세 내용**:
   - 1. 설비등급 기준 : MSTEQM_GRADEREV_SCORE (분류(EQMGRADE, FM110), 점수(SCORENM), 최소점수(이상)(MINVAL), 최대점수(이하)(MAXVAL), 구분(MNGNM), 비고(점검주기)(CHKCYCLE2))
     - 1) 조회·저장·리비전 복사에서 EQMGRADENM·SORTNO·USEYN·REMARK 제외 (테이블 컬럼은 유지, 신규 행은 기본값), 조회 순서는 공통코드 FM110 정렬순서
-    - 2) 최소·최대점수는 빈 값 또는 숫자, 둘 다 빈 값 불가, 최소점수 > 최대점수 불가
-    - 3) 저장 후 같은 리비전의 등급 구간(최소 이상 ~ 최대 이하)이 겹치면 겹치는 두 등급과 구간을 알려주고 저장 취소 (예: D등급(5~9)과 E등급(0~5)의 점수 구간이 겹칩니다)
-  - 2. 평가항목·점수별 평가기준 : 조회·저장·복사에서 REMARK 제외 (테이블 컬럼 유지)
-  - 3. 점수별 평가기준 : 같은 평가항목의 점수 구간(최소값 이상 ~ 최대값 미만)이 겹치면 해당 점수와 구간을 알려주고 저장 취소 (최소·최대 모두 빈 행은 제외)
-  - 4. 처음 작성한 테이블 컬럼 삭제 스크립트(TABLE_ALTER)·06.Table CREATE 문은 요청에 따라 삭제, 파라미터 22건
+    - 1) 최소·최대점수는 빈 값 또는 숫자, 둘 다 빈 값 불가, 최소점수 > 최대점수 불가
+    - 1) 저장 후 같은 리비전의 등급 구간(최소 이상 ~ 최대 이하)이 겹치면 겹치는 두 등급과 구간을 알려주고 저장 취소 (예: D등급(5~9)과 E등급(0~5)의 점수 구간이 겹칩니다)
+  - 1. 평가항목·점수별 평가기준 : 조회·저장·복사에서 REMARK 제외 (테이블 컬럼 유지)
+  - 1. 점수별 평가기준 : 같은 평가항목의 점수 구간(최소값 이상 ~ 최대값 미만)이 겹치면 해당 점수와 구간을 알려주고 저장 취소 (최소·최대 모두 빈 행은 제외)
+  - 1. 처음 작성한 테이블 컬럼 삭제 스크립트(TABLE_ALTER)·06.Table CREATE 문은 요청에 따라 삭제, 파라미터 22건
 - **검증 결과**: 겹침 확인 SQL 실DB 읽기 실행 (현재 데이터에서 D등급(5~9)·E등급(0~5) 겹침 문구 확인, 평가표 구간 A 20~/B 15~19/C 10~14/D 5~9/E 0~4 겹침 없음, 19~20 입력 시 A·B와 겹침 검출, 점수별 기준 이상~미만 경계 정상, 경고 0건), IF/WHILE 짝·파라미터 22건 정적 점검, JS 구문 검사, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면
 
-
 ### 2. MST1005_S01 리비전 상세 묶음 배치(C안) 적용
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js)
 - **배경 및 원인**: 설비등급 기준이 리비전에만 종속되는데 평가항목과 같은 층에 있어 헷갈린다는 의견에 따라 후보 4안 중 C안 선택
 - **작업 상세 내용**:
   - 1. 화면 배치 (C안 리비전 상세 묶음)
     - 1) 왼쪽 리비전 목록은 그대로, 오른쪽은 위에 설비등급 기준·아래에 평가항목과 점수별 평가기준 배치
-    - 2) 오른쪽 위 설비등급 기준 : MSTEQM_GRADEREV_SCORE, 제목에 평가항목 점수 합계로 등급 판정 표기, 컬럼명 합계 최소(이상)·합계 최대(미만)
-    - 3) 하단 평가항목 | 점수별 평가기준 (기존 기능 동일)
-    - 4) 처음 넣은 선택 리비전 제목 띠(■ REV 2 (사용중) 기준)는 요청에 따라 제거
-  - 2. 프로시저·DB 변경 없음
+    - 1) 오른쪽 위 설비등급 기준 : MSTEQM_GRADEREV_SCORE, 제목에 평가항목 점수 합계로 등급 판정 표기, 컬럼명 합계 최소(이상)·합계 최대(미만)
+    - 1) 하단 평가항목 | 점수별 평가기준 (기존 기능 동일)
+    - 1) 처음 넣은 선택 리비전 제목 띠(■ REV 2 (사용중) 기준)는 요청에 따라 제거
+  - 1. 프로시저·DB 변경 없음
 - **검증 결과**: JS 구문 검사, aspx div 짝(14/14)·컨트롤 ID 확인, 인코딩 확인. 미확인: 실제 화면 배치 비율
 
-
 ### 2. MST1005_S01 평가항목 선택시 해당 점수별 평가기준만 조회
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql)
 - **배경 및 원인**: 점수별 평가기준이 전 항목 표시되어 평가항목 클릭시 해당 항목만 보이도록 요청
 - **작업 상세 내용**:
   - 1. 조회 연동 변경
     - 1) 리비전 선택시 평가항목·설비등급 기준 조회, 점수별 평가기준은 비움
-    - 2) 평가항목 선택시 해당 항목의 점수별 평가기준만 조회 : MSTEQM_GRADEREV_D2 (REVCD, GMCD 조건, 1점부터), 평가항목 병합 컬럼 제거
-    - 3) 미저장 신규 평가항목 선택시 조회 안 함, 평가항목 저장 후 선택 항목 유지, 삭제 후 남은 선택 항목 기준 재조회
-  - 2. 프로시저 LIST_D2에 $GMCD 파라미터 추가 및 평가항목 조인 제거, SYSTEM_PARAMETERS 26건 → 27건
+    - 1) 평가항목 선택시 해당 항목의 점수별 평가기준만 조회 : MSTEQM_GRADEREV_D2 (REVCD, GMCD 조건, 1점부터), 평가항목 병합 컬럼 제거
+    - 1) 미저장 신규 평가항목 선택시 조회 안 함, 평가항목 저장 후 선택 항목 유지, 삭제 후 남은 선택 항목 기준 재조회
+  - 1. 프로시저 LIST_D2에 $GMCD 파라미터 추가 및 평가항목 조인 제거, SYSTEM_PARAMETERS 26건 → 27건
 - **검증 결과**: Node 모의 테스트(항목 선택별 조회 GMCD, 신규 항목 미조회, 저장·삭제 후 재조회 대상) 통과, 변경 조회 SQL 실DB 읽기 실행(경고 0건), 인코딩 확인. 미확인: MariaDB 컴파일·실제 화면
 
-
 ### 2. MST1005_S01 영역별 저장 버튼으로 변경
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql)
 - **배경 및 원인**: 오른쪽 영역 변경을 왼쪽 리비전 영역 저장 버튼 하나로 저장하는 구조라 어디서 저장하는지 알 수 없다는 요청
 - **작업 상세 내용**:
   - 1. 영역별 저장 버튼
     - 1) 리비전 [저장] : MSTEQM_GRADEREV 비고만 저장 (SAVE_REV, 평가이력과 무관하게 저장 가능)
-    - 2) 평가항목 [저장] : MSTEQM_GRADEREV_D 체크 행 저장 (SAVE_D), 신규 항목은 1~5점 행 생성 후 평가항목·점수별 평가기준 재조회
-    - 3) 점수별 평가기준 [저장] : MSTEQM_GRADEREV_D2 체크 행 저장 (SAVE_D2), 저장 후 평가기준만 재조회
-    - 4) 설비등급 기준 [저장] : MSTEQM_GRADEREV_SCORE 체크 행 저장 (SAVE_SCORE, 설비등급 중복 확인), 저장 후 설비등급만 재조회
-  - 2. 프로시저 통합 SAVE 분기를 SAVE_REV·SAVE_D·SAVE_D2·SAVE_SCORE로 분리 (검증 내용·파라미터 26건 동일, 평가이력 잠금은 SAVE_REV 제외)
+    - 1) 평가항목 [저장] : MSTEQM_GRADEREV_D 체크 행 저장 (SAVE_D), 신규 항목은 1~5점 행 생성 후 평가항목·점수별 평가기준 재조회
+    - 1) 점수별 평가기준 [저장] : MSTEQM_GRADEREV_D2 체크 행 저장 (SAVE_D2), 저장 후 평가기준만 재조회
+    - 1) 설비등급 기준 [저장] : MSTEQM_GRADEREV_SCORE 체크 행 저장 (SAVE_SCORE, 설비등급 중복 확인), 저장 후 설비등급만 재조회
+  - 1. 프로시저 통합 SAVE 분기를 SAVE_REV·SAVE_D·SAVE_D2·SAVE_SCORE로 분리 (검증 내용·파라미터 26건 동일, 평가이력 잠금은 SAVE_REV 제외)
 - **검증 결과**: Node 모의 테스트(영역별 저장 CALLTYPE·체크 행 전송·저장 후 재조회 범위·미체크 차단·설비등급 중복) 통과, IF/WHILE 짝·파라미터 정적 점검, 인코딩 확인. 미확인: MariaDB 컴파일·실제 화면
 
-
 ### 2. MST1005_S01 설비등급기준 관리 화면 단순화 및 평가표 양식 반영
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql)
 - **배경 및 원인**: 버튼·저장 단위가 많아 UI/UX가 복잡하다는 요청과 설비등급 평가표(항목별 1~5점 평가기준, 설비등급 표) 양식에 맞춘 수정 요청
 - **작업 상세 내용**:
   - 1. 화면 단순화 (버튼 12개 → 7개)
     - 1) 리비전 영역 [리비전 갱신][저장][삭제] : 저장 1번으로 리비전 비고·평가항목·점수별 평가기준·설비등급 기준의 체크(수정) 행 일괄 저장 (프로시저 SAVE 분기, 한 트랜잭션)
-    - 2) 평가항목 [추가][삭제] : MSTEQM_GRADEREV_D (NO, 구분(GMTP), 평가항목, 계산구분(CALCTP), 비고), 항목코드 숨김, 추가 시 NO 다음 번호·구분은 마지막 행과 같게
-    - 3) 점수별 평가기준 (버튼 없음) : MSTEQM_GRADEREV_D2 전 항목을 평가항목 순서·1점부터 표시, 평가항목 셀 병합 (평가항목, 점수, 평가기준, 최소값(이상), 최대값(미만), 비고)
-    - 4) 설비등급 기준 [추가][삭제] : MSTEQM_GRADEREV_SCORE (설비등급(FM110), 분류, 점수(출력), 최소점수(이상), 최대점수(미만), 관리구분, 점검주기, 정렬순번, 비고), 사용여부 화면 제외
-  - 2. 설비등급 평가표 양식 반영
+    - 1) 평가항목 [추가][삭제] : MSTEQM_GRADEREV_D (NO, 구분(GMTP), 평가항목, 계산구분(CALCTP), 비고), 항목코드 숨김, 추가 시 NO 다음 번호·구분은 마지막 행과 같게
+    - 1) 점수별 평가기준 (버튼 없음) : MSTEQM_GRADEREV_D2 전 항목을 평가항목 순서·1점부터 표시, 평가항목 셀 병합 (평가항목, 점수, 평가기준, 최소값(이상), 최대값(미만), 비고)
+    - 1) 설비등급 기준 [추가][삭제] : MSTEQM_GRADEREV_SCORE (설비등급(FM110), 분류, 점수(출력), 최소점수(이상), 최대점수(미만), 관리구분, 점검주기, 정렬순번, 비고), 사용여부 화면 제외
+  - 1. 설비등급 평가표 양식 반영
     - 1) 평가항목 신규 저장 시 1~5점 평가기준 행 자동 생성 (점수 직접 추가·삭제 없음)
-    - 2) 최소값·최대값은 빈 값 또는 숫자만 허용, 둘 다 있으면 최소값 < 최대값 (이상~미만 기준, 평가등록 화면 자동 계산용)
-    - 3) 프로시저 정리 : SAVE_REV·SAVE_D·SAVE_D2·DEL_D2·SAVE_SCORE 분기를 SAVE로 통합, 조회 미사용 컬럼 제거, SYSTEM_PARAMETERS 21건 → 26건
-  - 3. 설비 목록 기준 화면 요청은 취소되어 기존 리비전 기준 구성 유지 (해당 변경은 미착수)
+    - 1) 최소값·최대값은 빈 값 또는 숫자만 허용, 둘 다 있으면 최소값 < 최대값 (이상~미만 기준, 평가등록 화면 자동 계산용)
+    - 1) 프로시저 정리 : SAVE_REV·SAVE_D·SAVE_D2·DEL_D2·SAVE_SCORE 분기를 SAVE로 통합, 조회 미사용 컬럼 제거, SYSTEM_PARAMETERS 21건 → 26건
+  - 1. 설비 목록 기준 화면 요청은 취소되어 기존 리비전 기준 구성 유지 (해당 변경은 미착수)
 - **검증 결과**: Node 모의 테스트(세 그리드 연쇄 조회, 통합 저장 파라미터, 신규 항목·등급 추가값, 설비등급 중복·키 잠금, 삭제 DB/화면 구분, 리비전 갱신) 전체 통과, 조회·1~5점 생성·숫자 확인 SQL 실DB 읽기 실행(경고 0건), IF/WHILE 짝·파라미터 26건 정적 점검, 인코딩 확인. 미확인: MariaDB 프로시저 컴파일·저장 분기 실행, 실제 화면
 
-
 ### 2. MST1005_S01 설비등급기준 관리 화면 구현
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1005/MST1005_S01.aspx](01.Office/PAGEMST/MST1005/MST1005_S01.aspx), [MST1005_S01.aspx.cs](01.Office/PAGEMST/MST1005/MST1005_S01.aspx.cs), [MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql), [MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S01_SYSTEM_PARAMETERS.sql)
-- **배경 및 원인**: MST1004_R01을 복사한 MST1005_S01 페이지를 메뉴명(설비등급기준 관리)에 맞게 이름 정리하고 설비등급 평가기준 테이블(MSTEQM_GRADEREV, _D, _D2, _SCORE) 관리 기능 구현 요청
+- **배경 및 원인**: MST1004_R01을 복사한 MST1005_S01 페이지를 메뉴명(설비등급기준 관리)에 맞게 이름 정리하고 설비등급 평가기준 테이블(MSTEQM_GRADEREV,_D, _D2,_SCORE) 관리 기능 구현 요청
 - **작업 상세 내용**:
   - 1. 조회
     - 1) 리비전 조회 : MSTEQM_GRADEREV (사용중, 리비전, 비고)
-    - 2) 리비전 선택시 평가항목 그리드 : MSTEQM_GRADEREV_D (항목코드, 평가항목명, 평가항목구분(GMTP), 계산구분(CALCTP), 정렬순번, 비고)
-    - 3) 리비전 선택시 설비등급별 점수기준 그리드 : MSTEQM_GRADEREV_SCORE (설비등급(FM110), 설비등급명, 점수, 최소값, 최대값, 관리구분, 정기점검주기, 정렬순번, 사용여부, 비고)
-    - 4) 평가항목 선택시 평가항목별 점수기준 그리드 : MSTEQM_GRADEREV_D2 (점수, 평가기준, 최소값, 최대값, 비고)
-  - 2. 리비전
+    - 1) 리비전 선택시 평가항목 그리드 : MSTEQM_GRADEREV_D (항목코드, 평가항목명, 평가항목구분(GMTP), 계산구분(CALCTP), 정렬순번, 비고)
+    - 1) 리비전 선택시 설비등급별 점수기준 그리드 : MSTEQM_GRADEREV_SCORE (설비등급(FM110), 설비등급명, 점수, 최소값, 최대값, 관리구분, 정기점검주기, 정렬순번, 사용여부, 비고)
+    - 1) 평가항목 선택시 평가항목별 점수기준 그리드 : MSTEQM_GRADEREV_D2 (점수, 평가기준, 최소값, 최대값, 비고)
+  - 1. 리비전
     - 1) 리비전 갱신 : 선택 리비전의 D·D2·SCORE 복사, 리비전 번호 최대+1, 기존 사용중 해제 후 신규만 사용중 (리비전이 없으면 빈 리비전 생성)
-    - 2) 리비전 비고 저장, 리비전 삭제 : D·D2·SCORE 함께 삭제, 사용중 리비전 삭제 시 최신 리비전을 사용중으로 변경
-  - 3. 평가항목·점수기준 저장/삭제
+    - 1) 리비전 비고 저장, 리비전 삭제 : D·D2·SCORE 함께 삭제, 사용중 리비전 삭제 시 최신 리비전을 사용중으로 변경
+  - 1. 평가항목·점수기준 저장/삭제
     - 1) 평가항목 저장 : MSTEQM_GRADEREV_D (신규 행 항목코드는 전체 최대+1, GMTP 필수·CALCTP 빈값 허용 공통코드 확인), 삭제 시 항목별 점수기준 함께 삭제
-    - 2) 평가항목별 점수기준 저장 : MSTEQM_GRADEREV_D2 (점수·평가기준 필수, 화면에서 점수 중복 확인, 저장된 점수는 수정 불가)
-    - 3) 설비등급별 점수기준 저장 : MSTEQM_GRADEREV_SCORE (설비등급 FM110 확인, 화면에서 설비등급 중복 확인, 저장된 설비등급은 수정 불가)
-    - 4) 변경 차단 : 평가이력 EQMGRADEEVAL에 해당 리비전이 있으면 리비전 삭제·기준 저장·삭제 불가 (리비전 갱신 후 변경)
-  - 4. 페이지 이름 정리 : MST1004_R01 복사본의 CodeFile·Inherits·스크립트 경로·클래스명·프로시저명을 MST1005_S01로 변경, 남아 있던 다른 화면 메뉴 주석 제거
-  - 5. 신규 프로시저는 SYSTEM_PARAMETERS 등록 스크립트(21건) 실행 필요
+    - 1) 평가항목별 점수기준 저장 : MSTEQM_GRADEREV_D2 (점수·평가기준 필수, 화면에서 점수 중복 확인, 저장된 점수는 수정 불가)
+    - 1) 설비등급별 점수기준 저장 : MSTEQM_GRADEREV_SCORE (설비등급 FM110 확인, 화면에서 설비등급 중복 확인, 저장된 설비등급은 수정 불가)
+    - 1) 변경 차단 : 평가이력 EQMGRADEEVAL에 해당 리비전이 있으면 리비전 삭제·기준 저장·삭제 불가 (리비전 갱신 후 변경)
+  - 1. 페이지 이름 정리 : MST1004_R01 복사본의 CodeFile·Inherits·스크립트 경로·클래스명·프로시저명을 MST1005_S01로 변경, 남아 있던 다른 화면 메뉴 주석 제거
+  - 1. 신규 프로시저는 SYSTEM_PARAMETERS 등록 스크립트(21건) 실행 필요
 - **검증 결과**: Node 모의 테스트(조회 연쇄, 행 추가·저장·삭제 파라미터, 키 수정 잠금, 0점 포함 중복 차단, 리비전 갱신·빈 리비전 생성) 전체 통과, 프로시저 SELECT문 실DB 읽기 실행으로 컬럼명 확인, IF/WHILE 짝·파라미터 사용 정적 점검, 인코딩(.aspx/.cs/.js BOM, .sql BOM 없음, CRLF) 확인. 미확인: MariaDB 컴파일·저장 분기 실행, 실제 화면 동작
 
-
 ### 2. 공유 규칙 다른 프로젝트 적용성 정비
+
 - **수정/대상 파일**: [.agents/rules/project_context.md](.agents/rules/project_context.md), [.agents/rules/report_file_structure.md](.agents/rules/report_file_structure.md), [.agents/rules/report_devexpress.md](.agents/rules/report_devexpress.md), [.agents/rules/framework_convention.md](.agents/rules/framework_convention.md)
 - **배경 및 원인**: 규칙을 여러 프로젝트에 공유하므로 이 프로젝트 전용 경로·파일·버전에 의존하는 부분 정비 요청
 - **작업 상세 내용**:
   - project_context.md에 {REPORT_ROOT}·{REPORT_BIN}·기준 레포트 판별 추가, 규칙 속 실제 화면ID는 사례로만 사용하고 버전은 csproj 기준 확인하도록 명시. report_file_structure.md: EQM1001/R03 필수 참조 제거, 사례 값 안내, csproj 예시 {리포트ID}화, 빈 resx 전문 수록, DevExpress Version 값 csproj 기준, 배포 경로 {REPORT_BIN}. report_devexpress.md: 기준 레포트·exe 실행 경로·배포 경로·MSBuild 버전 일반화, 알려진 원인 표에 확인 환경 명시. framework_convention.md 레포트 참조·임시폴더 경로 일반화. 오늘 작성한 작업 이력 링크를 절대경로에서 상대경로로 정정
 - **검증 결과**: 단일 BOM/CRLF 확인
 
-
 ### 2. 레포트 디자이너 오류 진단 절차 규칙화
+
 - **수정/대상 파일**: [report_devexpress.md](.agents/rules/report_devexpress.md), [report_file_structure.md](.agents/rules/report_file_structure.md)
 - **배경 및 원인**: S01A 디자이너 오류를 호출 스택 확인 없이 RowSpan으로 추측 수정해 재발한 과정을 규칙에 반영해 재발 방지 요청
 - **작업 상세 내용**:
   - report_devexpress.md 2-5 신설: 런타임/디자이너 구분 → 호출 스택 확보(필수) → R03과 비교 → 의심 요소 하나씩 제거하는 소거법 → 허용 패턴 수정 → VS 디자이너·exe·출력 비교 3중 검증 → 확정 원인만 규칙화 및 오판 정정 기록. 실사례로 확인된 알려진 원인 표(XRPanel, 헬퍼 호출, XRTableRow BeginInit) 추가. report_file_structure.md 체크리스트에 2-5 연결
 - **검증 결과**: 단일 BOM/CRLF 확인
 
-
 ### 2. EQM1001_S01A VS 디자이너 component null 오류 실제 원인(XRPanel) 해결
+
 - **수정/대상 파일**: [S01A.Designer.cs](04.Report/PAGEEQM/EQM1001/S01A.Designer.cs), [EQM1001.exe](01.Office/Reports/EQM1001.exe), [report_devexpress.md](.agents/rules/report_devexpress.md), [report_file_structure.md](.agents/rules/report_file_structure.md)
 - **배경 및 원인**: RowSpan 제거 후에도 VS 디자이너에서 '값은 null일 수 없습니다. 매개 변수 이름: component' 오류 지속
 - **작업 상세 내용**:
   - VS 오류 페이지 호출 스택 확인: DesignerHost.GetDesigner ← VSLockService.CanChangeComponent ← XRControlDesignerBase.get_Locked ← XRControlDesigner.OnLoadComplete. R03 정상, S01A에서 XRPanel만 제거한 변형이 VS 디자이너에서 정상 로드되어 원인을 자식 컨트롤을 담는 XRPanel(xrPanelHeader)로 확정. 패널을 빈 테두리 XRLabel(xrLabelHeaderBox 731x56)로 교체하고 로고·제목을 PageHeader에 직접 배치. report_devexpress.md 2-4를 RowSpan 금지에서 XRPanel 금지로 정정, report_file_structure.md 본문·체크리스트 정정(VS 디자이너 열기 확인 항목 추가)
 - **검증 결과**: VS 2017 디자이너에서 S01A 정상 표시 확인(오류 페이지 없음). MSBuild Release Rebuild 성공. A-001 PNG 비교 시 상단 박스 픽셀 동일, 항목명 열 글자 서브픽셀 차이만 존재. 웹 컨트롤러 방식 실행·오류 안내 정상. 01.Office/Reports·04.Report/bin 배포
 
-
 ### 2. EQM1001_S01A RowSpan 제거 (원인 오판 — 3번 항목에서 실제 원인 XRPanel 해결)
+
 - **수정/대상 파일**: [S01A.Designer.cs](04.Report/PAGEEQM/EQM1001/S01A.Designer.cs), [EQM1001.exe](01.Office/Reports/EQM1001.exe), [report_devexpress.md](.agents/rules/report_devexpress.md), [report_file_structure.md](.agents/rules/report_file_structure.md)
 - **배경 및 원인**: R03 구조 전환 후 VS 디자이너에서 '값은 null일 수 없습니다. 매개 변수 이름: component' 오류. 빌드·런타임은 정상이라 디자이너 전용 문제로 판단
 - **작업 상세 내용**:
   - CodeDOM 디자이너 로더(DesignSurface+CodeDomDesignerLoader) 재현 결과 RowSpan 대입이 셀이 행·테이블에 들어가기 전에 실행됨 확인. 카테고리 셀(cell_Cat_*) 3개와 병합 아래 빈 셀 18개 제거, 독립 XRLabel(xrLabelCatEQM/BUY/USE, 32F 폭) 추가, 테이블 X=32F·폭 323F로 이동. RowSpan 금지 규칙을 추가했으나 오류가 계속되어 3번 항목에서 XRPanel 규칙으로 정정
 - **검증 결과**: MSBuild Release Rebuild 성공. CodeDOM 로더 S01A 오류 0건(누락 필드 음성대조 검출 확인). A-001 PNG 비교 시 선·크기·값 동일, 항목명 열 글자 서브픽셀 차이만 존재. 웹 컨트롤러 방식 실행 정상, 오류 안내 정상. 01.Office/Reports·04.Report/bin 배포. 실제 VS 디자이너 열기는 사용자 확인 필요
 
-
 ### 1. EQM1001_S01A 설비이력카드 레포트 표준 구조(R03 기준) 전환 및 레포트 파일 구조 규칙 제정
+
 - **수정/대상 파일**: [S01A.cs](04.Report/PAGEEQM/EQM1001/S01A.cs), [S01A.Designer.cs](04.Report/PAGEEQM/EQM1001/S01A.Designer.cs), [S01A.resx](04.Report/PAGEEQM/EQM1001/S01A.resx), [EQM1001.exe](01.Office/Reports/EQM1001.exe), [report_file_structure.md](.agents/rules/report_file_structure.md), [report_devexpress.md](.agents/rules/report_devexpress.md), [framework_convention.md](.agents/rules/framework_convention.md)
 - **배경 및 원인**: 모든 레포트를 EQM1001/R03 3개 파일 구조로 작성하도록 규칙화 요청, S01A는 기본 생성자 없음·DB 접속정보 하드코딩·Designer 내 헬퍼 메서드(CreateSpecRow/CreateCatCell/CreateHeaderCell/InitDataCell) 호출로 표준 위반
 - **작업 상세 내용**:
   - report_file_structure.md 신규 제정(폴더/csproj/cs/Designer/resx 구조·명명·A4 기본값·체크리스트). S01A.cs: 기본 생성자+this() 체이닝, DbServer 등 하드코딩 제거(ITS_CONFIG_MARIA.xml 사용), BindReportData/LoadLogo/LoadImage/Value 분리, MODEL_S1 추가. S01A.Designer.cs: 헬퍼 호출을 순수 대입문으로 전개(행 18개·카테고리/라벨 셀 명명 cell_Cat_/cell_Lbl_/cell_Hdr_), 밴드 순서 R03 기준 정렬, 레이아웃 값(여백 45, 폰트, 폭) 기존 유지. S01A.resx: 표준 빈 resx로 교체
 - **검증 결과**: MSBuild 15.0 Release Rebuild 성공. 기존/신규 exe로 EQMCD=A-001 출력 비교 시 HTML·이미지 완전 동일, PDF는 생성일시·문서ID만 차이. 미존재 설비·파라미터 누락 안내 메시지 정상. 01.Office/Reports, 04.Report/bin 배포 및 단일 BOM/CRLF 확인. Visual Studio 디자이너 열기는 미확인
----
 
+---
 
 ## 🕒 2026-10-23 (금) 작업 내역
 
 ### 2. EQM1001_R04 정기점검 등록·수정 팝업 항목 CHKTP 02 REV 제한
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R04.sql
 - **배경 및 원인**: 등록(grid2)·수정(grid3) 팝업 항목을 MSTEQMREV_HEADER.CHKTP = '02' REV만 표시 요청
 - **작업 상세 내용**:
   - LIST_PLAN_EQM02 승인 REV 조회 및 ADD_CHKRSTEQM 승인본 검증에 CHKTP = '02' 추가, SEARCH_CHKRSTEQM HEADER LEFT JOIN을 INNER JOIN + CHKTP = '02'로 변경, Modify 이력 1행 추가
 - **검증 결과**: 단일 BOM/CRLF 검증 완료, 기존 HEADER CHKTP 데이터 보정 필요 여부 사용자 확인 필요
 
-
 ### 1. EQM1001_R03 REV HEADER 생성 시 CHKTP 정기점검(02) 저장
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql
 - **배경 및 원인**: MSTEQMREV_HEADER 신규 REV 생성 시 점검구분(CHKTP) 값 미저장
 - **작업 상세 내용**:
   - 정기점검 CRUD 공통 신규 REV 생성 INSERT에 CHKTP = '02' 추가, 최상단 Modify 2026-10-23 이력 1행 추가 (HEADER INSERT는 R03 단 1곳, R04는 조회만 수행)
 - **검증 결과**: 단일 BOM/CRLF 검증 완료, 실서버 DB 반영은 사용자 진행
----
 
+---
 
 ## 🕒 2026-10-20 (화) 작업 내역
 
 ### 1. EQM1001_R03 설비별 점검계획 탭 그리드(grid1) 설비그룹 공통 콤보(FM116) 바인딩 적용
+
 - **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
 - **배경 및 원인**:
   - `framework_convention.md` 제6조(그리드 공통코드 콤보 컬럼 표준 연동 규칙)에 따라, `EQM1001_R03.js`의 설비별 점검계획 탭 좌측 그리드(`grid1`)에서 코드 컬럼(`EQMGUBUN`)을 단순 텍스트로 두고 명칭 컬럼(`EQMGRPNM`)을 `hidden: true`로 숨기던 기존 비표준 방식을 제거하고, 공통 프레임워크 컴포넌트(`ItsGrid`의 `enumColumnTypes.combo`) 표준 바인딩으로 일치화 요청.
@@ -703,6 +765,7 @@
 ---
 
 ### 2. EQM1001_R03 프로시저 설비 목록 조회(LIST_MSTEQM) 잉여 컬럼(EQMGRPNM) 및 COMTYPE 조인 제거
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql)
 - **배경 및 원인**:
   - 화면 `grid1`에서 `EQMGUBUN`을 공통 콤보(`enumColumnTypes.combo, gpcd: 'FM116'`)로 자동 매핑함에 따라, 프로시저에서 설비그룹명(`EQMGRPNM`)을 추출하기 위해 수행하던 `COMTYPE` 조인 및 반환 컬럼이 완전히 불필요한 잉여 로직이 됨.
@@ -722,6 +785,7 @@
 ## 🕒 2026-10-19 (월) 작업 내역
 
 ### 9. SYSLABEL EQMPARTS(설비부품 라벨) 양식 폭 확장 및 폰트 크기 최적화 (글자 잘림 방지)
+
 - **수정/대상 파일**: [05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql)
 - **배경 및 원인**:
   - 현장 터미널에서 바코드 라벨(50mm × 25mm) 출력 시 부품명(`ITEMNM`)이 긴 경우 뒷부분이 잘려서 출력되는 현상 발생 (`[테스트] 설`까지만 출력되고 짤림).
@@ -736,6 +800,7 @@
   - `05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql` 단일 UTF-8 with BOM 및 CRLF 개행 바이너리 무결성 검증 완료.
 
 ### 8. TML1010_R05 입출고 확인·에러 팝업 메시지 단일 문장 간소화 및 잉여 컨트롤·변수 자체 삭제
+
 - **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs)
 - **배경 및 원인**:
   - 현장 터미널 화면에서 확인 팝업 및 라벨 출력 실패 팝업 메시지가 여러 줄로 길어지면서 메시지박스 UI 타이틀("Message")과 본문 텍스트가 겹치고 레이아웃이 깨지는 UI/UX 결함 발생.
@@ -753,6 +818,7 @@
   - `R05.xaml`, `R05.xaml.cs` 단일 UTF-8 BOM 및 CRLF 개행 3단계 바이너리 검증 완료.
 
 ### 7. TML1010_R05 쓰레기 코드 전수 무결성 검증 및 불필요한 잉여 코드 자체 삭제 의무화 규칙 제정
+
 - **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [.agents/rules/Optimization.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/Optimization.md), [.agents/rules/validation.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/validation.md)
 - **배경 및 원인**:
   - `R05.xaml` 및 `R05.xaml.cs` 내 불필요한 쓰레기 코드(미사용 컨트롤, 임시 우회 로직, 잉여 바인딩 등)가 일절 없는지 확실한 전수 무결성 검증 요청.
@@ -771,6 +837,7 @@
   - `Optimization.md`, `validation.md` 단일 UTF-8 BOM 및 CRLF 개행 바이너리 무결성 검증 완료.
 
 ### 6. TML1010_R05 C# 생성자 내 불필요한 DataView 필터링 코드 완전 제거
+
 - **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs)
 - **배경 및 원인**:
   - 화면 비하인드 코드 생성자에서 `cmb_INTP` 및 `cmb_OUTTP`에 인위적으로 걸려 있던 `DataView(..., "Value LIKE 'IN_%'")`, `DataView(..., "Value LIKE 'OUT_%'")` 코드는 `framework_convention.md` 제5조 규칙에 위배될 뿐만 아니라, `cmb_INTP`는 숨김(Collapsed) 컨트롤이고 출고는 기본값(`OUT_01`)으로 이미 자동 세팅되므로 완전히 불필요한 잉여 코드임. 사용자 요청에 따라 전면 삭제함.
@@ -782,6 +849,7 @@
   - 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료.
 
 ### 5. MST1002_R06 설비그룹 공통 콤보(FM116) 바인딩 적용 및 그리드 콤보 연동 규칙 제정
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST1002/MST1002_R06.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST1002/MST1002_R06.js), [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md)
 - **배경 및 원인**:
   - `MST1002_R06.js`에서 설비그룹코드(`EQMGUBUN`)를 `hidden: true`로 숨기고 설비그룹명(`EQMGRPNM`)을 별도의 텍스트 컬럼으로 표시하던 비표준 중복 구조를 제거하고, `EQMGROUP1~3`(설비대/중/소분류)과 동일하게 공통 컴포넌트(`ItsGrid`의 `enumColumnTypes.combo`) 자동 바인딩으로 일치화 요청.
@@ -793,25 +861,27 @@
   - `framework_convention.md`:
     - 제6조(그리드 공통코드 콤보 컬럼 표준 연동 규칙) 신규 제정:
       - 1) 코드 hidden 및 명칭 텍스트 컬럼 분리 선언 절대 금지.
-      - 2) 공통 컴포넌트(`columnType: enumColumnTypes.combo, gpcd: '...'`) 표준 바인딩 의무화.
-      - 3) 프로시저 SELECT 절 내 단순 명칭 표시용 `COMTYPE` 중복 조인 배제 연계.
+      - 1) 공통 컴포넌트(`columnType: enumColumnTypes.combo, gpcd: '...'`) 표준 바인딩 의무화.
+      - 1) 프로시저 SELECT 절 내 단순 명칭 표시용 `COMTYPE` 중복 조인 배제 연계.
 - **검증 결과**:
   - `MST1002_R06.js` Node.js Function 구문 검사 통과 (Syntax OK).
   - 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료.
 
 ### 4. 공통코드(GPCD) 그룹 분리 및 ItsCombo 연동 표준 규칙 제정
+
 - **수정/대상 파일**: [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md)
 - **배경 및 원인**:
   - 화면 비하인드 코드에서 `DataView`나 `LIKE` 문을 사용해 공통코드를 인위적으로 분기/필터링하는 비표준 구현을 영구 금지하고, 프레임워크(`ItsCombo.xaml.cs`) 및 공통 프로시저(`DC_COMBO`)의 표준 연동 방식을 규칙화함.
 - **작업 상세 내용**:
   - `framework_convention.md`에 제5조(공통코드 그룹 분리 및 ItsCombo 표준 연동 규칙) 신규 제정:
     - 1) C# 비하인드 코드 내 `DataView` 필터링 및 `LIKE` 문자열 검색 코드 전면 금지.
-    - 2) 성격이 다른 코드(입고/출고 등)는 처음부터 그룹코드(`GPCD`) 자체를 완전 분리(`INTP_...`, `OUTTP_...`)하여 관리하는 [정석 방식 1] 원칙 명문화.
-    - 3) C# 코드 없이 XAML 태그(`GPCD="..."`) 또는 JS 선언만으로 프레임워크 100% 자동 바인딩 보장.
-    - 4) 공통 컴포넌트(`ItsCombo`, `ItsFind`, `ItsPop`, `ItsGrid` 등) 기본 함수 최우선 활용 의무화.
+    - 1) 성격이 다른 코드(입고/출고 등)는 처음부터 그룹코드(`GPCD`) 자체를 완전 분리(`INTP_...`, `OUTTP_...`)하여 관리하는 [정석 방식 1] 원칙 명문화.
+    - 1) C# 코드 없이 XAML 태그(`GPCD="..."`) 또는 JS 선언만으로 프레임워크 100% 자동 바인딩 보장.
+    - 1) 공통 컴포넌트(`ItsCombo`, `ItsFind`, `ItsPop`, `ItsGrid` 등) 기본 함수 최우선 활용 의무화.
 - **검증 결과**: 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료.
 
 ### 3. TML1010_R05 실제 DB 공통코드(INOUTTP_EQMPARTS) 엄격 준수 및 ENDYN 표준화 적용
+
 - **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql)
 - **배경 및 원인**:
   - 사용자 지침에 따라 실제 DB에 등록되어 있는 기존 공통코드(`INOUTTP_EQMPARTS`: `IN_01` 구매입고, `OUT_01` 부품교체)만을 엄격히 사용하며, 임의의 신규 코드나 DML을 배제하고 기존 환경을 유지함.
@@ -830,236 +900,242 @@
   - 소스 3개 파일 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료.
 
 ### 2. TML1010_R05 라벨 출력 반환데이터(ITEMNM, ITEMCD, ITEMID) 최적화 및 ENDYN 표준화
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs)
 - **배경 및 원인**: SYSLABEL의 EQMPARTS 양식에 맞춰 LABEL_REPRINT 및 IN_EQMPARTS 분기에서 불필요한 조인 제거 및 ITEMNM, ITEMCD, ITEMID 3개 컬럼 반환으로 단일화, ENDYN 과잉보호 조건 표준화(AND MSTITEM.ENDYN = 'N'), R05 라벨 출력 및 입고 시 라벨 자동출력 오류처리 검증
 - **작업 상세 내용**:
   - 프로시저 LABEL_REPRINT 및 IN_EQMPARTS 분기의 2번째 테이블 반환 쿼리를 SELECT MSTITEM.ITEMNM, MSTITEM.ITEMCD, MSTITEM.ITEMID FROM MSTITEM WHERE MSTITEM.ITEMID =  로 통일, 라인 79 ENDYN 조건 표준화 완료, C# PrintLabel 모듈 및 예외처리 안전성 최종 검증 완료
 - **검증 결과**: 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료, SYSLABEL XMLDATA 실제 필드 매핑 일치 확인
 
-
 ### 2. TML1010_R05 설비부품 입출고 미사용 파라미터(ITEMCD, KEYWORD, REMARK) 완전 제거 및 C# 모델 정리
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql), [05.Procedure/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs)
 - **배경 및 원인**: 화면 UI/UX에 검색창 및 비고란이 없음에도 프로시저와 C# 모델에 남아 리소스를 소모하던 미사용 파라미터(, , ) 전면 제거 요청
 - **작업 상세 내용**:
   - 프로시저 선언부 , ,  제거(18건->15건), 입출고 이력 REMARK 빈문자열 직접 대입, C# R05.xaml.cs SEARCH_EQMPARTS 잉여 파라미터 전송 및 MODEL_A2의 ITEMCD 불필요 필드 제거, SYSTEM_PARAMETERS 주석 15건 갱신
 - **검증 결과**: 단일 UTF-8 with BOM 및 CRLF 개행 3단계 바이너리 검증 완료, Roslyn C# 컴파일 성공(0 Error), 프로시저-C#-파라미터등록 1:1 일치 확인
 
-
 ### 1. TML1010_R05 재고조회 잉여 검색조건(KEYWORD/ITEMCD/ITEMSPEC) 전면 제거 및 2공장 등록부품 정밀 필터화
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql)
 - **배경 및 원인**: 화면 UI/UX에 검색창이 전혀 없음에도 불구하고 프로시저에 남아있던 불필요한 KEYWORD/ITEMCD/ITEMNM/ITEMSPEC 검색 조건으로 인한 코드 비대화 및 3,823건 과다 조회 문제
 - **작업 상세 내용**:
   - UI에 없는 KEYWORD, ITEMCD 등 잉여 LIKE 조건문 10줄 전면 삭제, MSTITEM_EQMPARTS.ITEMID IS NOT NULL 조건을 단독 적용하여 2공장 관리 부품(11건)만 초고속 조회되도록 WHERE 절 5줄로 완전 슬림화, 최상단 Modify 1일 1행 압축 유지
 - **검증 결과**: 단일 UTF-8 with BOM(ef bb bf) 및 표준 CRLF 개행 무결성 100% 검증 통과
 
-
 ### 2. TML1010_R05 라벨 출력 로직 분기별 독립 완결형 표준 구조 개편
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql)
 - **배경 및 원인**: END CASE 바깥에 존재하던 IF CALLTYPE 라벨 공통 블록으로 인한 분기별 흐름 단절 및 유지보수 혼선 방지
 - **작업 상세 내용**:
   - END CASE 하단 공통 IF문 완전 제거, IN_EQMPARTS(입고완료 라벨출력) 및 LABEL_REPRINT(재발행 라벨출력) 각 분기 내부로 라벨 데이터셋 2개 SELECT를 배치하여 분기별 완결형 표준 구조(END CASE; END)로 일치화, 최상단 Modify 1일 1행 압축 유지
 - **검증 결과**: 단일 UTF-8 with BOM(ef bb bf) 및 표준 CRLF 개행 무결성 100% 검증 통과
 
-
 ### 3. TML1010_R05 설비부품 재고조회 WHERE 절 조건문 단순화 및 IFNULL 반복 제거
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql)
 - **배경 및 원인**: L77-L90의 기괴한 복합 조건(IFNULL($KEYWORD, '') <> '' OR IFNULL($ITEMCD, '') <> '' OR MSTITEM_EQMPARTS.ITEMID IS NOT NULL) 및 반복된 IFNULL 호출로 인한 가독성 저해 및 사용자 개선 요청
 - **작업 상세 내용**:
   - PROC: BEGIN 직후 파라미터($KEYWORD, $ITEMCD, $SDATE, $EDATE, $CUSTCD) 단 1회 기본값 정규화, LIST_EQMPARTS의 복합 억지 조건 전면 삭제 및 표준 8줄 WHERE 절로 단순화, LIST_ODR_EQMPARTS 및 LIST_INOUT_EQMPARTS 날짜/거래처 조건문 일관성 정리, 최상단 Modify 1일 1행 압축 유지
 - **검증 결과**: 단일 UTF-8 with BOM(ef bb bf) 및 표준 CRLF 개행 무결성 100% 검증 통과
 
-
 ### 4. TML1010_R05 과잉보호 조건문 및 NULLIF 제거, INC 2공장(07) 및 법인(60) 하드코딩 직관화
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql)
 - **배경 및 원인 분석**:
   - 사용자 요청에 따라 프로시저 내 불필요한 과잉보호 조건문과 복잡한 `NULLIF` 식을 제거하고, 프로젝트 내 다른 프로시저 표준을 준수하여 간결하고 직관적으로 단순화
   - 공장코드는 07(INC 2공장)로 고정이므로 불필요한 다중 방어 로직 대신 하드코딩 처리
 - **작업 상세 내용**:
   - 1) **상단 3중 불필요 사전조회 제거**: `MSTFACTORY` 조회/검증, `MSTITEM` 검증 조회, `MSTEMP` 존재 조회 등 3개의 사전 DB 쿼리를 제거하고 `$ITEMID` 빈값 검증 및 `$EMPCD` 입력 검증으로 슬림화
-  - 2) **NULLIF 및 복합식 완전 제거**: 발주 조회(`LIST_ODR_EQMPARTS`) 및 입고등록(`IN_EQMPARTS`)의 `COALESCE(NULLIF(MTRODR.INFACTORYCD, ''), MTRODR.ODRFACTORY) = '07'` 과잉 복합식을 다른 발주 프로시저(`MTR0001_R04`)와 동일하게 `MTRODR.ODRFACTORY = '07'`로 완전 단순화
-  - 3) **INC 2공장(07) 및 법인(60) 하드코딩 직관화**: `MSTITEM.COMPANYCD = '60'`, `MSTITEM_EQMPARTS.FACTORYCD = '07'` 하드코딩 및 조인 내 불필요 조건(`MSTITEM_EQMPARTS.LOCACD <> ''`) 제거
-  - 4) **인위적 문자열 검증 제거 및 IFNULL 표준화**: 입고/출고 구분의 `LEFT(..., 3) <> 'IN_'`, `LEFT(..., 4) <> 'OUT_'` 과잉 문자열 자르기 검증을 제거하고, `COALESCE` 남발을 프로젝트 표준인 `IFNULL`로 정돈
-  - 5) **변수 정리 및 파라미터 직접 사용**: 불필요해진 `_$ITEMID`, `_$COMPANYCD` 지역변수를 제거하고 `$ITEMID` 직접 바인딩
+  - 1) **NULLIF 및 복합식 완전 제거**: 발주 조회(`LIST_ODR_EQMPARTS`) 및 입고등록(`IN_EQMPARTS`)의 `COALESCE(NULLIF(MTRODR.INFACTORYCD, ''), MTRODR.ODRFACTORY) = '07'` 과잉 복합식을 다른 발주 프로시저(`MTR0001_R04`)와 동일하게 `MTRODR.ODRFACTORY = '07'`로 완전 단순화
+  - 1) **INC 2공장(07) 및 법인(60) 하드코딩 직관화**: `MSTITEM.COMPANYCD = '60'`, `MSTITEM_EQMPARTS.FACTORYCD = '07'` 하드코딩 및 조인 내 불필요 조건(`MSTITEM_EQMPARTS.LOCACD <> ''`) 제거
+  - 1) **인위적 문자열 검증 제거 및 IFNULL 표준화**: 입고/출고 구분의 `LEFT(..., 3) <> 'IN_'`, `LEFT(..., 4) <> 'OUT_'` 과잉 문자열 자르기 검증을 제거하고, `COALESCE` 남발을 프로젝트 표준인 `IFNULL`로 정돈
+  - 1) **변수 정리 및 파라미터 직접 사용**: 불필요해진 `_$ITEMID`, `_$COMPANYCD` 지역변수를 제거하고 `$ITEMID` 직접 바인딩
 - **검증 결과**:
   - 단일 UTF-8 with BOM (`\xef\xbb\xbf`) 및 CRLF 개행 3단계 바이너리 무결성 100% 통과
   - 내부 코드 라인 날짜 주석 0건, 최상단 Modify 이력 1일 1행 원칙 준수
 
 ### 5. TML1010_R05 공장 고정 범위 확정
+
 - **수정/대상 파일**: WORK_HISTORY.md
 - **배경 및 원인**: 입출고 이력 공장 구분 컬럼 추가 여부에 대한 사용자 답변 수신
 - **작업 상세 내용**:
   - 사용자가 화면·전용 프로시저만 07로 고정하도록 확정; INOUT_EQMPARTS 테이블 구조 및 기존 이력 유지, 공장 컬럼 추가SQL 작성하지 않음; 앞선 소스·실행파일 반영 범위와 일치
 - **검증 결과**: 직전 반영 내용과 사용자 선택 일치 확인; 소스·DB·실행파일 추가 변경 없음; 운영 프로시저 저장 후 SYSTEM_PARAMETERS 등록SQL 적용은 사용자 진행
 
-
 ### 6. TML1010_R05 INC 2공장 고정 및 로그인 입고자 초기화
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml, R05.xaml.cs, 05.Procedure/MES_SNS2_TML1010_R05.sql, MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql
 - **배경 및 원인**: INC 2공장 전용 화면으로 공장 선택 제거 및 로그인 사원 기본 입고자 확인 요청
 - **작업 상세 내용**:
   - 공장 콤보·검색모델·FACTORYCD 모델필드·전송·조회 반환컬럼·프로시저 입력 제거; 법인·재고·발주 입고공장·라벨은 07 고정; 프로시저 입력 19에서 18로 변경 및 메타데이터 등록SQL 갱신; 팝업 열기마다 로그인 EMPCD를 trim하여 설정하고 NULL·공백은 빈 값 처리; 사용자ID 임의 대체 없음. 이력 테이블에는 공장 컬럼이 없으므로 공장별 기존 이력 분리는 미적용하며 별도 선택 요청
 - **검증 결과**: 실제 DB SELECT로 공장07/법인60 및 307컬럼·로그인 사원 연결·공통사원팝업07조건·기존19파라미터 확인; 네트워크 차단 MariaDB10.2에서 수정 프로시저 컴파일 및16검증 통과(07재고입출고·06재고보존·발주공장우선/대체·타공장입고거절·사원누락·라벨·이력·18입력); 후보의 실제 입고자 문장을 공통모델로 컴파일한5검증 통과; 최종4파일 후보해시일치·단일BOM/CRLF·잔여공장입력검색 통과; Release 빌드 성공 및 실행파일3곳/PDB일치. 운영DB SELECT 외 변경 없음, DB에는 프로시저 저장 후 SYSTEM_PARAMETERS 등록SQL 실행 필요
 
-
 ### 2. TML1010_R05 입고등록 영역 35% 확대
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml
 - **배경 및 원인**: 오른쪽 입고등록 영역 30%가 좁아 35%로 확대 요청
 - **작업 상세 내용**:
   - 입고 팝업 비율 65:35로 조정; 오른쪽 패널 255에서 300, 입력칸 250에서 295, 버튼 230에서 275로 확대; 왼쪽 그리드 590 및 거래처 컬럼 180으로 조정하여 모든 컬럼 폭 확보
 - **검증 결과**: 원본 반영 전 XML 및 공통 컴포넌트 독립 WPF 배치 검증; 65:35 비율 및 입력 항목 경계 정상; UTF-8 단일 BOM 및 CRLF 정상; Release 빌드 성공; 실행파일 3곳 및 PDB 해시 일치
 
-
 ### 2. TML1010_R05 입고 팝업 7:3 배치 조정
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml
 - **배경 및 원인**: 발주 그리드 폭이 좁아 컬럼 내용이 잘려 왼쪽과 오른쪽 영역을 7:3으로 조정 요청
 - **작업 상세 내용**:
   - 입고 팝업 열을 7*:12:3*로 배치; 그리드 498에서 636 및 거래처 컬럼 108에서 220으로 확대; 오른쪽 패널 255, 입력칸 250 및 라벨 80, 등록 버튼 230으로 축소; 다른 팝업과 업무 동작 유지
 - **검증 결과**: 원본 반영 전 XML 및 폭 계산 검증; 실제 공통 컴포넌트로 DB 조회 없는 독립 WPF 렌더링 및 입력 컨트롤 경계 확인; 단일 UTF-8 BOM과 CRLF 정상; Release 빌드 성공; 실행파일 3곳 및 PDB 해시 일치
 
-
 ### 2. TML1010_R05 발주 선택 컬럼 너비 확대
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml
 - **배경 및 원인**: 입고 팝업 발주 목록의 선택 헤더가 좁아 문구가 잘림
 - **작업 상세 내용**:
   - SEL_ODR 컬럼 너비만 40에서 60으로 확대; 다른 컬럼과 선택 동작 유지
 - **검증 결과**: 수정 전 XML과 전체 컬럼 폭 검증; UTF-8 단일 BOM 및 CRLF 확인; Release 빌드 성공; 실행파일 3곳 SHA256 일치
 
-
 ### 2. TML1010_R05 발주 그리드 부분입고 하늘색 표시 제거
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml.cs, 02.Site/AAABIN/TML1010.exe·pdb, 02.Site/TMLPJT/TML1010/TML1010.exe
 - **배경 및 원인**: 사용자가 부분입고 하늘색 표시 제거 요청. 해당 색상은 이전 참조 화면 적용 과정에서 추가했던 부가 표시
 - **작업 상세 내용**:
   - 발주 조회 초기색·이전 선택 복원색·재클릭 해제색의 PREV_INQTY 기반 SKYBLUE/WHITE 분기를 모두 WHITE로 통일. 선택 판단 조건의 SKYBLUE 항목도 삭제. 선택 행 YELLOW, 단일 선택, 발주키/순번/입고수량 전달·해제 및 사원·저장·라벨 동작 유지. 후보 검증 후 C#만 반영하고 Release 재빌드. 이전 사용자 승인 범위의 TML1010 PID50496 종료 후 로컬 AAABIN EXE/PDB와 프로젝트 EXE 반영
 - **검증 결과**: 원본 적용 전 후보에서 하늘색 분기3곳과 선택 조건1곳 제거 확인, 색상/관련 주석 외 업무 C# 원문 불변 비교 통과, 후보·실프로젝트 MSBuild 성공. 최종 C# SKYBLUE 잔여0건, WHITE 복원3곳·YELLOW 선택 유지 확인. 배포3경로 EXE SHA256=8C002B553FDB60B46C79AEAFA4E8E7BA2F1C5C774969744547E9F939763029A0 및 PDB 해시 일치, 단일BOM/CRLF 확인. XAML/SQL/테스트데이터SQL/csproj/App 해시 불변. DB 접근 없음. 검증 후보·중간빌드 등 임시 파일 마무리 삭제
 
-
 ### 2. TML1010_R05 발주 선택 로직을 TML5000_R02 BACKGROUND 방식으로 통일
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml.cs, 02.Site/AAABIN/TML1010.exe·pdb, 02.Site/TMLPJT/TML1010/TML1010.exe
 - **배경 및 원인**: 참조 화면과 같은 선택 관련 로직 요청. 기존 R05는 발주키·순번 일치 여부로 해제를 판단하고 모든 행을 흰색으로 덮어써 부분입고 행의 원래 색을 보존하지 않았음
 - **작업 상세 내용**:
   - 발주 조회 후 미입고 WHITE·기입고량이 있는 행 SKYBLUE 초기화. 참조 TML5000_R02와 같이 BACKGROUND WHITE/SKYBLUE에서 선택 시 YELLOW, 해제 시 원래 색 복원. 기존 사용자 확정 사항인 발주1건 선택을 유지하며 다른 발주 선택 시 기존 YELLOW 행만 복원. 선택된 발주키·순번·잔량을 입력모델에 보관, 해제 시 키·순번·수량 초기화. 일반 행 포커스 이동은 선택 대상/입력량에 영향 없음. XAML 공통 삼각형 버튼·입고자/라벨/저장/조회 SQL 유지. 후보 사전 검증 후 업무 C# 적용, Release 빌드, 앞서 승인된 종료·배포 방식으로 해당 프로젝트 TML1010 PID47456 종료 후 로컬 실행파일 반영
 - **검증 결과**: 공통 ITSLIB 실제 그리드와 현재 XAML GRID_ODR를 사용하여 native 버튼 클릭을 컴파일된 R05.EventCommand에 연결. DB 의존 생성자는 제외하고 선택 이벤트가 사용하는 모델을 주입한 격리 검증에서 후보·최종 AAABIN 실행본 각25개 통과: WHITE/SKYBLUE 초기색, YELLOW 선택/원래색 복원, 같은 키 다른 순번·다른 발주 선택, 단일 선택, 일반 포커스와 입고대상 분리, 사원/입력량 보존, 재조회 초기화, BACKGROUND 상태 우선, 빈 목록. PNG 시각 확인. 후보·실프로젝트 빌드 오류0, 배포3경로 EXE SHA256=5E57F1C8AFDE824CBACD293DE92191BDACA263B9C135D1530872DA29989210B4 일치 및 PDB 일치. C# 선택/초기색 영역 외 불변, XAML/SQL/테스트데이터SQL/csproj/App 해시 보존. 단일BOM/CRLF 확인. 실제 DB 접근 없음. 임시 빌드·검증자료 마무리 삭제
 
-
 ### 2. TML1010_R05 전체 기능 시험용 테스트 데이터 생성 SQL 작성
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_TML1010_R05_TEST_DATA.sql
 - **배경 및 원인**: 설비부품 재고조회·출고·발주선택·입고·입출고이력·라벨 출력을 직접 시험할 수 있는 충분한 수량의 테스트 데이터 한 세트 SQL 요청
 - **작업 상세 내용**:
   - INC 2공장07 전용 부품000-TEST-R05를 AUTO_INCREMENT 품목키로 생성. 현재고10000·안전재고100, 발주TEST-R05의1번행은 발주승인/발주10000/입고0,2번행은 납품진행/발주20000/입고10000으로 각각 입고가능10000. 초기재고10000의 입고이력은 발주키TEST-R05·순번2와 연결. 기존 구매 거래처·공장 사원·로케이션은 참조만 하며 신규 공통마스터/테이블/프로시저 생성 없음. MariaDB BEGIN NOT ATOMIC 익명블록·트랜잭션·오류 롤백·감사함수 및 세션값 복구 적용. 기존 테스트 부품/발주 발견 시 재실행을 중단하여 진행 결과 보존. 생성 결과 SELECT와 화면 시험 순서를 같은 파일에 제공
 - **검증 결과**: 실제 DB SELECT로316컬럼·AUTO_INCREMENT·발주 FK·거래처 구매플래그1·단위DM150100/EA·사원/로케이션·감사함수·라벨·InnoDB5테이블·R05 라벨 분기 준비 상태 확인. 동일 메타데이터 MariaDB10.2 격리 환경에서 전체 SQL 파일 그대로 실행 성공. 실제 R05 프로시저와 연결한31개 검증 통과: 부품1건 조회, 승인/납품진행 발주2행, 출고100→9900·입고200→10100·잔량10000 전체입고→20100, 완료발주 제외, 이력/라벨데이터/재출력 무변경, 기존 업무·공통마스터 불변, 재실행 결과 보존, 말단 이력키 충돌 시 전체롤백, 단위 누락 차단, 다른 자동 품목키 생성과 감사세션 복구. 최종 파일과 검증 후보 바이트 일치, 단일BOM/CRLF 및 INSERT 전용 확인. 테스트 컨테이너·임시스크립트·DB추출·실행파일 전부 삭제. 실제 DB에는 SELECT 외 실행하지 않음
 
-
 ### 2. TML1010_R05 사용자 승인 후 실행 프로그램 종료 및 최신 실행본 배포
+
 - **수정/대상 파일**: 02.Site/AAABIN/TML1010.exe·pdb, 02.Site/TMLPJT/TML1010/TML1010.exe
 - **배경 및 원인**: 사용자가 실행 중인 TML1010 종료 후 새 버전 반영을 명시 승인하여 이전 배포 대기 상태 해소
 - **작업 상세 내용**:
   - 현재 업무 소스의 출고자 선택·발주 ON/OFF·프로시저 기반 라벨 출력 유지 확인 후 최신 소스로 Release 재빌드. 해당 프로젝트 AAABIN에서 실행 중이던 PID28892만 종료. Release EXE/PDB를 AAABIN에 반영하고 프로젝트 루트 EXE도 갱신. 업무 소스와 실제 서버 DB는 변경하지 않음
 - **검증 결과**: MSBuild 성공. Release·AAABIN·프로젝트 루트 EXE 3경로 SHA256=1C70A2741E96412CACB7D53DB11AA2AA3AC2BFC282F34485D563055B49CE7862 일치, Release/AAABIN PDB 해시 일치. 기존 후보의72개 및 최종 빌드61개 검증을 수행했던 소스 유지. 임시 중간빌드 폴더는 마무리 삭제
 
-
 ### 2. TML1010_R05 출고자 선택·발주 단일선택·프로시저 기반 라벨 출력 반영
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml, 02.Site/TMLPJT/TML1010/R05.xaml.cs, 05.Procedure/MES_SNS2_TML1010_R05.sql
 - **배경 및 원인**: 출고자는 로그인 사원 고정 저장, 발주 선택 버튼은 재클릭 해제 불가, 라벨 데이터는 화면 행을 복사하여 생성하던 상태. 출고자 입력·참조 화면과 같은 선택 버튼·프로시저 출력 데이터 기반 공통 라벨 발행 요청
 - **작업 상세 내용**:
   - 공통 EMPCD 출고자 Pop 추가 및 로그인 사원 기본값 설정; 선택한 출고자를 AddModel로 저장하고 로그인 사원 강제 덮어쓰기 제거. 출고 팝업440x318, 좌표270·131로 공통 TML 스타일에서 중앙 유지. 입고자 영역 유지. GRID_ODR만 참조 TML5000_R02의 기본 gridbuttonstyle과 삼각형 선택 버튼 사용. 한 건 선택·동일 키/순번 재클릭 해제·다른 선택 이동·행 포커스와 실제 입고 대상 분리. 입고 응답과 LABEL_REPRINT에서 양식코드 EQMPARTS 및 출력용 데이터 반환; C#은 ItsBarcode(양식코드)·SetDataTable·Print(false) 사용. 입고는 입고수량/일자, 재발행은 현재고/오늘 기준. 출력 실패 시 이미 저장된 입고를 유지하고 별도 오류 안내. 공통 입출고자 검증 및 재고 행 FOR UPDATE 추가. 파라미터19개 이름/순서 유지, 테이블 구조와 공통 객체 변경 없음
 - **검증 결과**: 실제 DB SELECT로316컬럼·발주/입출고 코드·EQMPARTS XML·파라미터19개 확인. 동일 메타데이터의 MariaDB10.2 격리 DB와 테스트 코드 없는 실제 후보 WPF 실행본에서72개 검증 통과: 정상·누락/잘못된 사원·0/음수/초과수량·타품목/타공장/잘못된 상태 거절 및 저장 보존, 발주키/순번/사원 저장, 현재고 증감, 부분/완료 상태, 재발행 무변경, 실제 선택 버튼 ON/OFF·단일선택·포커스 분리, 출고자 기본값/선택값, 입고자 보존, 라벨 실패 후 입고1회 저장. 실프로젝트 Release 빌드 성공 및 최종 빌드61개 SQL/UI 스모크 통과. 동시 출고4+4/현재고5 테스트는1건 성공·1건 재고부족, 최종재고1·이력1건 확인. 소스BOM/CRLF·호출분기·파라미터 정합성 통과, csproj/App/메타등록SQL 불변. 새 실행본 SHA256=06759DB944270183EBC478A7C860BD4704157AD0C342B32CCC9B18555F4F1159. 프로젝트 루트 EXE 반영 완료. 운영DB SELECT 외 변경·실물인쇄 없음. 테스트 전용 컨테이너 및 임시폴더/후보/스크립트/PNG/DB추출자료 모두 삭제
 
-
 ### 2. TML1010_R05 공통 스타일 적용 시 출고 팝업 화면 이탈 수정 및 임시파일 정리
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml, 02.Site/AAABIN/TML1010.exe·pdb, 02.Site/TMLPJT/TML1010/TML1010.exe
 - **배경 및 원인**: 이전 검증은 TML 페이지 스타일이 적용되지 않은 환경이었다. 실제 TML 스타일과 Frame 호스팅에서는 Canvas.ActualWidth가 0이고, 이 값을 바인딩한 추가 Grid가 팝업을 X=-220으로 배치하여 화면 밖으로 밀리는 오류를 재현
 - **작업 상세 내용**:
   - 바깥 Grid와 ActualWidth·ActualHeight 바인딩을 제거하고 기존 프로젝트 방식인 Canvas 직속 TML_POP으로 복원. 980x580 페이지 기준 출고 팝업 440x286, 좌표270·147로 중앙 배치. 내부 입력·버튼, 입고자 영역, C#·프로시저·프로젝트·App.xaml 원문 보존. 원본 적용 전 별도 빌드 검증 후 실제 프로젝트 Release 빌드 및 로컬 실행파일 교체. 이전 검증자료 ZIP·이미지·스크립트·잠금 백업과 이번 테스트 자료를 포함한 임시폴더10개, 전용 테스트 컨테이너2개 삭제 완료. 이전 발주 선택 ON/OFF 후보도 임시폴더와 함께 정리했으며 업무 소스에는 미반영 상태 유지
 - **검증 결과**: 기존 배포본 오류 재현 후 수정 후보와 최종 AAABIN 실행본 모두 실제 R05 생성자·공통 TML 스타일·Frame·ITSLIB·격리 MariaDB를 사용한23개 검증 통과. 공통 출고 버튼→팝업 표시, 품목 표시·읽기전용·수량 바인딩·공통코드, X닫기·재열기, 800x600·1280x800·1920x1080 확대축소 중앙·화면경계, 입고·이력 팝업 및 입고자 기본값 보존, 실적 생성 없음 확인. 후보·실프로젝트 빌드 오류0, 실행파일3경로 SHA256=1F86DF210632E583B8A9C49AC9195354E8AEAA86531320F1D2DE077667180D5B 일치. C#/SQL/csproj/App 해시 불변, 출고 영역 외 XAML 불변, 단일BOM/CRLF 확인. 운영DB 변경·물리 프린터 출력 없음
 
-
 ### 1. TML1010_R05 출고 팝업 중앙정렬 및 내부 여백 정리
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml, 02.Site/AAABIN/TML1010.exe·pdb, 02.Site/TMLPJT/TML1010/TML1010.exe
 - **배경 및 원인**: 출고 팝업의 고정 좌표와 과도한 하단 여백 정리 요청. 입고자 코드칸 변경 요청은 사용자가 취소하여 기존 유지
 - **작업 상세 내용**:
   - 출고 팝업만 부모 Canvas 실제 크기를 따르는 Grid 중앙에 배치. 가로 440px·내용에 따른 세로 286px, 내부 여백 16px 및 32px 입력 행으로 정리. 등록 버튼 중앙 배치. 공통 TML_POP·WrapContent·입력 컴포넌트 유지. 입고자 마크업과 R05.xaml.cs 및 프로시저는 변경하지 않음. 최종 Release 빌드·로컬 실행파일 교체
 - **검증 결과**: DB 연결 없이 실제 ITSLIB 공통 컴포넌트로 980x580·900x480·1280x720 중앙·경계, 입력 바인딩, 수량 변경, 닫기·재열기 등 18개 검증 통과 및 PNG 확인. 후보·최종 빌드 성공, 배포 EXE SHA256 일치, 출고 영역 외 원문 및 C#/SQL 해시 보존, 단일 BOM/CRLF 확인
----
 
+---
 
 ## 🕒 2026-10-16 (금) 작업 내역
 
 ### 13. TML1010_R05 설비부품 재고조회 3,823건 원인 규명 및 프로시저 잉여 조인/코드 전면 최적화
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_TML1010_R05.sql)
 - **배경 및 원인 분석**:
   - 07(INC 2공장) 기준 설비부품 재고조회 시 3,823건이 출력되는 현상에 대한 원인 규명 요청
   - 프로시저 내 불필요한 미사용 항목, 잉여 조인 및 중복 쿼리 전면 정리 요청
 - **작업 상세 내용**:
   - 1) **3,823건 발생 원인 규명**: 07공장의 법인인 60(INC)의 설비부품(`ITEMCG='DM100700'`) 활성 마스터 총수가 정확히 3,823건이며, 기존 쿼리가 `MSTITEM`(품목 마스터 전체)을 기준으로 `LEFT JOIN MSTITEM_EQMPARTS`를 수행하여 재고가 0인 마스터 품목까지 전부 출력하고 있었음을 실제 DB 데이터 조사를 통해 규명
-  - 2) **재고조회 쿼리 필터링 최적화**: 평소 기본 조회 시에는 07공장 관리 부품(`MSTITEM_EQMPARTS.ITEMID IS NOT NULL`) 위주로 11건만 초고속 조회되고, 부품코드/명 검색어 입력 시에만 마스터 전체에서 검색될 수 있도록 조건 분기 최적화 (불필요한 3,800여 개 빈 데이터 출력 방지)
-  - 3) **발주 조회 중복 조인 제거**: 공통 검증부에서 `$ITEMID`의 법인/설비부품 유효성을 사전 일원화하여, `LIST_ODR_EQMPARTS` 내부의 불필요한 `INNER JOIN MSTITEM` 및 중복 조건 완전 제거
-  - 4) **기존 재고량 취득 간소화**: `IN_EQMPARTS` 및 `OUT_EQMPARTS`의 기존 재고량(`_$OLDQTY`) 취득을 단일 `COALESCE` 스칼라 쿼리로 직관화
-  - 5) **로케이션 조인 최적화**: 로케이션 코드 부재 시 무의미한 조인 시도를 방지하도록 `AND MSTITEM_EQMPARTS.LOCACD <> ''` 조건 추가
+  - 1) **재고조회 쿼리 필터링 최적화**: 평소 기본 조회 시에는 07공장 관리 부품(`MSTITEM_EQMPARTS.ITEMID IS NOT NULL`) 위주로 11건만 초고속 조회되고, 부품코드/명 검색어 입력 시에만 마스터 전체에서 검색될 수 있도록 조건 분기 최적화 (불필요한 3,800여 개 빈 데이터 출력 방지)
+  - 1) **발주 조회 중복 조인 제거**: 공통 검증부에서 `$ITEMID`의 법인/설비부품 유효성을 사전 일원화하여, `LIST_ODR_EQMPARTS` 내부의 불필요한 `INNER JOIN MSTITEM` 및 중복 조건 완전 제거
+  - 1) **기존 재고량 취득 간소화**: `IN_EQMPARTS` 및 `OUT_EQMPARTS`의 기존 재고량(`_$OLDQTY`) 취득을 단일 `COALESCE` 스칼라 쿼리로 직관화
+  - 1) **로케이션 조인 최적화**: 로케이션 코드 부재 시 무의미한 조인 시도를 방지하도록 `AND MSTITEM_EQMPARTS.LOCACD <> ''` 조건 추가
 - **검증 결과**:
   - MariaDB 독립 검증 스크립트 실행으로 최적화된 재고조회(기본 11건 / 키워드 검색 시 마스터 매칭) 정상 동작 확인
   - 단일 UTF-8 with BOM (`\xef\xbb\xbf`) 및 CRLF 개행 무결성 100% 통과, 서버 DB DDL/DML 직접 실행 금지 원칙 준수
 
 ### 3. TML1010_R05 입고자 기본값 및 승인 발주 입고 처리 정정
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml, 02.Site/TMLPJT/TML1010/R05.xaml.cs, 05.Procedure/MES_SNS2_TML1010_R05.sql, 05.Procedure/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql
 - **배경 및 원인**: 입고지로 잘못 구현된 입력을 로그인 사원 기본값의 입고자로 정정하고 승인·납품진행 발주만 입고해야 함
 - **작업 상세 내용**:
   - 공통 EMPCD 팝업 적용, 로그인 EMPCD 기본값 및 사용자 변경값 보존, 공통 SetBackColor로 단일 선택 발주 노란색 표시, 조회·저장 상태 MM110201/MM110300 제한, INCUSTCD 파라미터·전송·헤더 갱신 제거, 이력의 입고자·발주키·순번 저장, 기존 EQMPARTS 라벨과 ItsBarcode 연결, 조회 갱신 전 라벨 데이터 보존 및 프린터 오류 분리, 19개 파라미터 등록 SQL 갱신, 실행파일 재빌드·로컬 배포
 - **검증 결과**: 실제 DB SELECT로 코드·스키마·공통 사원 팝업 확인; MariaDB 10.2 격리 DB 27개 및 실제 WPF 공통 컴포넌트 15개 검증 통과; 후보·최종 빌드 성공; 원본과 배포 실행파일 SHA256 일치; 실제 DB 변경 및 물리 프린터 출력 없음
 
-
 ### 3. TML1010_R05 입고·출고·이력 팝업 표준 화면 정리 및 발주키 저장 검증
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml, 02.Site/TMLPJT/TML1010/R05.xaml.cs, 05.Procedure/MES_SNS2_TML1010_R05.sql, 05.Procedure/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql, 02.Site/AAABIN/TML1010.exe·pdb
 - **배경 및 원인**: 요청 이미지와 다른 팝업 구성 및 공통 TML_POP에 고정된 어두운 제목줄. 이력은 요청한 6개 컬럼·RTIME ASC와 달랐고 입고 발주 연결키 필수 관리 필요
 - **작업 상세 내용**:
   - 공통 TML_POP 템플릿·X 이벤트를 그대로 사용하고 R05에서 제목줄·테두리만 SteelBlue 적용. 공통 WrapContent Show/Close로 배경 화면 비활성/복원 처리. 입고는 상단 발주일자·거래처 공통 Pop 검색, 좌측 선택/발주일자/거래처/발주량/입고량/발주잔량 그리드, 우측 읽기전용 코드·명·규격과 입고지 공통 Pop·입고일자·입고량·공통 초록 버튼으로 구성. 출고는 일자·코드·명·구분·수량과 공통 주황 버튼으로 정리. 이력은 발생일자·입/출·입출고유형·입고량·출고량·처리자 6개와 RTIME ASC, INOUTKEY ASC 정렬. 입고 시 발주키·순번 필수 검증 및 INOUT_EQMPARTS 저장, 현재고는 MSTITEM_EQMPARTS 반영. 기존 기준에 따라 입고지는 MTRODR.INCUSTCD에 변경 시 저장. 불필요한 이력 MSTITEM JOIN과 미사용 팝업 닫기 명령 제거. CUSTCD·INCUSTCD 2개 입력 추가(18→20), 전용 메타데이터 등록 SQL 갱신
 - **검증 결과**: 실DB SELECT로 277컬럼·현행18파라미터·입출고/발주 코드·공통 거래처 Pop·GPCD 사원명 조회 지원 확인. MariaDB10.2 격리환경에서 프로시저 컴파일, 이력6필드·발생일자 역순 데이터의 RTIME 정렬·날짜 범위·입출고량·사원명, 발주기간/거래처 필터, 발주키/순번 저장, 타품목/타공장/초과입고 거절 및 롤백, 재고 증감·발주입고지·부분/완료 입고 검증. 실제 R05+ITSLIB를 격리DB에 연결하여 3개 팝업 렌더 이미지 확인, 숨은 키·입고지·재고 저장, X 닫기·배경활성 복원 통과. 등록SQL 20건 및 다른 프로시저 메타데이터 보존 검증. 실소스 Release 빌드 성공, AAABIN·프로젝트 실행파일 SHA256 일치. 4파일 단일 BOM/CRLF, 이전 메인 재고 쿼리 보존 검증. 공통 소스·실DB DDL/DML 미변경
 
-
 ### 3. TML1010_R05 설비부품 재고의 공장·법인 분리 및 중복 조회 수정
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml, 02.Site/TMLPJT/TML1010/R05.xaml.cs, 05.Procedure/MES_SNS2_TML1010_R05.sql, 02.Site/AAABIN/TML1010.exe·pdb
 - **배경 및 원인**: 공장 기본값이 공란이고 MSTITEM 법인 조건이 없어 법인20·60의 동일 코드와 여러 공장 재고가 섞임. 품목코드 LIMIT 1 저장 및 존재하지 않는 INOUT_SUBSTOCK 참조도 확인
 - **작업 상세 내용**:
   - 공통 FACTORYCD 콤보의 07(INC 2공장)을 기본 선택하고 MSTFACTORY에서 법인코드를 1회 조회. DM100700·미종료 품목만 해당 법인에서 조회하고 ITEMID+FACTORYCD로 재고 연결. 발주헤더 존재 조건은 메인 목록에 사용하지 않음. 팝업 모델에 숨은 ITEMID·FACTORYCD를 미리 등록하여 초기화 유실을 방지하고 AddModel로 전달. 실제 INOUT_EQMPARTS의 ITEMID·INOUTTP_EQMPARTS·발주키 컬럼 사용. 공통 입출고 구분코드와 MM110 발주상태 정합성 반영. 다른 법인의 품목 저장·타공장 발주·초과 입고 차단 및 부분입고 중복가산 수정
 - **검증 결과**: 실서버 SELECT로 기존7225행/7216품목에서 수정3823행/3823품목 확인. 3821코드 중 자동적재4·5는 같은 법인의 별도 ITEMID 두 건씩이므로 보존. MariaDB10.2 격리환경에서 프로시저 컴파일, 18개 파라미터, NULL·빈공장·다른법인·유형·종료·무재고·부족재고·소수입출고·발주부분/완료·오류롤백 검증 통과. 실제 R05+ITSLIB를 로컬 테스트DB에 연결하여 기본 공장명·팝업키·변경된 공장콤보와 저장공장 분리·입출고·이력 확인. 실소스 MSBuild Release 성공(기존 obj/Release 파일 잠금으로 전용 중간출력경로 사용), AAABIN·프로젝트 실행파일 SHA256 일치. UTF-8 단일BOM/CRLF 통과. 실DB 및 공통객체 변경 없음
 
-
 ### 12. 형상 관리 대상 제외를 위한 .gitignore 임시 폴더(.tmp*) 등록 및 작업 정리
+
 - **수정/대상 파일**: [.gitignore](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.gitignore), [WORK_HISTORY.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/WORK_HISTORY.md)
 - **배경 및 원인 분석**:
   - 임시 작업 및 분석 폴더(`.tmp-r05-stock-audit`, `.tmp-tml-r05-buttons`)가 Git untracked 상태로 노출되던 문제를 방지하기 위해 사용자의 요청에 따라 `.gitignore`에 영구 제외 규칙 등록
 - **작업 상세 내용**:
   - 1) **.gitignore 규칙 추가 ([.gitignore](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.gitignore))**: `.tmp*`, `**/.tmp*`, `.tmp-*/`, `**/.tmp-*/` 및 구체적 폴더(`.tmp-r05-stock-audit/`, `.tmp-tml-r05-buttons/`)를 등록하여 향후 생성되는 모든 임시 디렉터리가 자동 제외되도록 설정
-  - 2) **임시 테스트 바이너리 정리**: `02.Site/AAALIB`에 잔류하던 임시 테스트 실행파일(`test_maria*.exe`, `inspect_server_db.exe`, `check_db_r05.exe`) 일괄 삭제 정리
+  - 1) **임시 테스트 바이너리 정리**: `02.Site/AAALIB`에 잔류하던 임시 테스트 실행파일(`test_maria*.exe`, `inspect_server_db.exe`, `check_db_r05.exe`) 일괄 삭제 정리
 - **검증 결과**: `git status` 확인 시 `.tmp*` 디렉터리 및 임시 바이너리가 깔끔하게 제외됨 확인, `.gitignore` 단일 UTF-8 with BOM 및 CRLF 개행 무결성 100% 통과
 
 ### 3. [TML1010_R05] 이미지 기준 회색 그리드 버튼 및 출력 문구 적용
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml, 02.Site/TMLPJT/TML1010/R05.xaml.cs, 02.Site/AAABIN/TML1010.exe
 - **배경 및 원인**: 공통 기본 버튼의 검은 배경·흰 글씨가 사용자 지정 이미지의 회색 배경·검은 글씨와 달랐음
 - **작업 상세 내용**:
   - 라벨출력 컬럼 ButtonText를 출력으로 변경; 화면 전용 StyleGrid 리소스 사본에 기본 WPF 사각 버튼 외형 적용; 공통 BUTTON_COLUMN 템플릿·Loaded·Click 처리와 기존 CommandName 유지; 리플렉션·자체 클릭 핸들러 없이 외형만 변경; 최종 Release 빌드 및 EXE/PDB 로컬 배포
 - **검증 결과**: 실제 ITSLIB 공통 버튼 5종을 DB 연결 없이 렌더링하여 회색 배경·검은 글씨 및 5개 명령·선택행 유지 검증; 참조 이미지와 렌더링 PNG 비교; 공통 원본 리소스와 화면 전용 리소스 별도 인스턴스 확인; MSBuild 오류0; 단일BOM/CRLF 및 배포파일 해시 일치
 
-
 ### 3. [TML1010_R05] 공통 버튼 복원 및 DM150 단위 표시 통일
+
 - **수정/대상 파일**: 02.Site/TMLPJT/TML1010/R05.xaml, 02.Site/TMLPJT/TML1010/R05.xaml.cs, 05.Procedure/MES_SNS2_TML1010_R05.sql, 02.Site/AAABIN/TML1010.exe
 - **배경 및 원인**: 작업 이력과 업데이트된 규칙 전체 확인; 서버 구버전 GPCD ITEMUNIT 호출과 로컬 커스텀 버튼 템플릿·정적 리플렉션 이벤트 연결 오류 확인
 - **작업 상세 내용**:
   - DE R01과 현재 S02의 공통 컴포넌트 사용방식 참조; 페이지 gridbuttonstyle/BUTTON_COLUMN 및 리플렉션 핸들러 제거; 두 그리드 GPCD DM150 지정; 입출고 팝업 단위를 공통 읽기전용 콤보로 변경하고 확인 문구 SelectedLabel 사용; 재고·이력 SQL은 원본 ITEMUNIT 코드 반환; 입출고 저장 분기와 명령·파라미터 18개 유지; 최종 Release 빌드 후 로컬 AAABIN EXE/PDB 갱신
 - **검증 결과**: 격리 MariaDB10.2.44 SQL 컴파일 및 9개 재고/2개 이력 확인; 실제 ITSLIB를 사용하는 WPF 검증 17건 통과(6종 단위/NULL·빈값/미등록단위/선택행/공통 입출고·이력 버튼/읽기전용 팝업/발주번호·수량 반영); 화면 PNG 렌더링 점검; MSBuild 오류0; 서버 파라미터·등록정보18건 일치; 배포 SHA256 및 단일BOM/CRLF 검증
 
-
 ### 11. TML1010_R05 설비부품 단위코드(DM150) 정규화 및 그리드 버튼 원래 직사각형 회색 디자인 완벽 복원
+
 - **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [05.PROCEDURE/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05.sql), [02.Site/AAABIN/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe)
 - **배경 및 원인 분석**:
   - 1) **단위 컬럼 에러(`ERRO...`) 원인**: 설비부품(`MSTITEM.ITEMUNIT`)의 단위코드가 `DM150100`(EA) 등 `DM150` 그룹인데, 프로시저에서 구버전의 `GPCD('ITEMUNIT', ...)`를 호출하여 MariaDB `GPCD` 함수가 코드그룹 불일치로 `ERROR ITEMUNIT: DM150100`을 반환한 것임
-  - 2) **그리드 버튼 디자인 불일치 원인**: `ITSLIB`의 `BUTTON_COLUMN`이 참조하는 `gridbuttonstyle`이 기본적으로 어두운 남색 알약형(`Background="#262938"`, `CornerRadius="5"`)으로 선언되어 있어, 사용자가 의도한 원래 MES 표준 직사각형 회색 버튼과 이질감이 발생함
+  - 1) **그리드 버튼 디자인 불일치 원인**: `ITSLIB`의 `BUTTON_COLUMN`이 참조하는 `gridbuttonstyle`이 기본적으로 어두운 남색 알약형(`Background="#262938"`, `CornerRadius="5"`)으로 선언되어 있어, 사용자가 의도한 원래 MES 표준 직사각형 회색 버튼과 이질감이 발생함
 - **작업 상세 내용**:
   - 1) **단위 조회 정상화 ([MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05.sql))**: `LIST_EQMPARTS` 및 `LIST_INOUT_EQMPARTS` 분기에서 단위를 `COALESCE(GPCD('DM150', MSTITEM.ITEMUNIT), MSTITEM.ITEMUNIT, 'EA') AS ITEMUNIT`로 수정하여 정상 단위명(EA, KG, SET 등) 반환 적용
-  - 2) **원래 버튼 디자인 복원 ([R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml))**: `<its:ItsPageTml.Resources>`에 직사각형 회색 버튼 스타일(`Background="#E1E1E1"`, `BorderBrush="#707070"`, `CornerRadius="0"`, `Foreground="#000000"`, `Margin="2,1,2,1"`) 및 `BUTTON_COLUMN`을 재정의하여 사용자 요청 이미지와 100% 동일하게 복원
-  - 3) **버튼 이벤트 브릿지 연동 ([R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs))**: `BUTTON_COLUMN_LOADED` 리플렉션 핸들러를 구현하여 기존 `CommandRun`(입고/출고/이력/라벨) 동작 완벽 보존
-  - 4) **빌드 및 배포**: MSBuild 15.0 빌드 성공 (0 Error, 0 Warning) 및 최신 바이너리([02.Site/AAABIN/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe)) 배포 완료
+  - 1) **원래 버튼 디자인 복원 ([R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml))**: `<its:ItsPageTml.Resources>`에 직사각형 회색 버튼 스타일(`Background="#E1E1E1"`, `BorderBrush="#707070"`, `CornerRadius="0"`, `Foreground="#000000"`, `Margin="2,1,2,1"`) 및 `BUTTON_COLUMN`을 재정의하여 사용자 요청 이미지와 100% 동일하게 복원
+  - 1) **버튼 이벤트 브릿지 연동 ([R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs))**: `BUTTON_COLUMN_LOADED` 리플렉션 핸들러를 구현하여 기존 `CommandRun`(입고/출고/이력/라벨) 동작 완벽 보존
+  - 1) **빌드 및 배포**: MSBuild 15.0 빌드 성공 (0 Error, 0 Warning) 및 최신 바이너리([02.Site/AAABIN/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe)) 배포 완료
 - **검증 결과**: MSBuild 컴파일 0 Error 통과, 4개 파일 단일 UTF-8 with BOM 및 CRLF 3단계 바이너리 무결성 100% 통과
 
 ### 10. TML1010_R05 "Case not found for CASE statement" 오류 원인 정밀 규명 및 DB 반영 가이드
+
 - **대상 파일**: [05.PROCEDURE/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05.sql), [05.PROCEDURE/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs)
 - **배경 및 원인 분석**:
   - 화면 실행 시 `"설비부품 조회 오류: Case not found for CASE statement"` 팝업 발생 보고
@@ -1067,100 +1143,109 @@
   - 또한 `SYSTEM_PARAMETERS` 역시 구버전 12개 파라미터만 등록되어 있어, 로컬의 최신 `MES_SNS2_TML1010_R05.sql` 프로시저 본체가 서버 DB에 컴파일되지 않은 상태에서 프로그램이 실행된 것이 원인임을 규명
 - **해결 및 조치 가이드**:
   - 1) **1단계 (프로시저 생성)**: DBeaver Routine Editor(소스 탭 저장) 또는 `Alt + X`(스크립트 전체 실행)를 통해 [MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05.sql)을 서버 DB에 최신 컴파일
-  - 2) **2단계 (파라미터 동기화)**: 프로시저가 생성된 후 [MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql)을 실행하여 신규 18개 파라미터 등록
-  - 3) **프로그램 재실행**: 터미널 프로그램 실행 시 설비부품 그리드 정상 조회 확인
+  - 1) **2단계 (파라미터 동기화)**: 프로시저가 생성된 후 [MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql)을 실행하여 신규 18개 파라미터 등록
+  - 1) **프로그램 재실행**: 터미널 프로그램 실행 시 설비부품 그리드 정상 조회 확인
 - **검증 결과**: 서버 DB 프로시저 정의 비교 완료, 프로시저 컴파일 오류 방지 가이드(`procedure_compile.md`) 준수 안내
 
 ### 9. TML1010_R05 상단 UI 필터 정돈(부품검색 삭제, 공장 콤보 확대) 및 데이터 미조회 원인 해결 (SYSTEM_PARAMETERS 연동)
+
 - **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [05.PROCEDURE/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05.sql), [05.PROCEDURE/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql), [02.Site/AAABIN/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe)
-- **배경 및 원인**: 
+- **배경 및 원인**:
   - 1) 사용자 요청에 따라 상단 패널의 불필요한 '부품검색' 텍스트박스 제거 및 '공장' 콤보 너비 대폭 확대(Width="260")
-  - 2) 화면 실행 시 메인 그리드에 데이터가 전혀 나오지 않던 결함 정밀 원인 분석: 프로시저가 DB에 미반영 상태이거나 MariaDB 서버의 SYSTEM_PARAMETERS 테이블에 TML1010_R05가 등록되지 않아 ItsMaria 호출 시 파라미터 0개 전송(Incorrect number of arguments expected 12/18, got 0)으로 에러 발생 규명
+  - 1) 화면 실행 시 메인 그리드에 데이터가 전혀 나오지 않던 결함 정밀 원인 분석: 프로시저가 DB에 미반영 상태이거나 MariaDB 서버의 SYSTEM_PARAMETERS 테이블에 TML1010_R05가 등록되지 않아 ItsMaria 호출 시 파라미터 0개 전송(Incorrect number of arguments expected 12/18, got 0)으로 에러 발생 규명
 - **작업 상세 내용**:
   - 1) **상단 UI 정돈 ([R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml))**: 부품검색 Text 컨트롤 및 간격 여백 제거, cmb_FACTORYCD 폭 130 -> 260으로 2배 확대 적용
-  - 2) **조회 조건 유연화 ([MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05.sql))**: LIST_EQMPARTS 분기에서 FACTORYCD 빈 값일 경우 전체 공장 설비부품(ITEMCG='DM100700')을 표시하고, 선택 시에만 해당 공장 재고를 필터링하도록 보완
-  - 3) **SYSTEM_PARAMETERS 등록 스크립트 작성 ([MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql))**: TML1010_R05 프로시저 저장 후 information_schema.PARAMETERS를 SYSTEM_PARAMETERS로 등록하는 정석 스크립트 신규 제공
-  - 4) **조회 로직 및 오류 안내 강화 ([R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs))**: SEARCH_EQMPARTS 호출 시 공장 콤보 값 전달, 에러 발생 시 try-catch에서 삼키지 않고 ShowMessageBox로 상세 오류 안내
-  - 5) **빌드 및 배포**: MSBuild 15.0 Debug 및 Release 빌드 0 Error 통과, AAABIN/TML1010.exe 배포 완료
+  - 1) **조회 조건 유연화 ([MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05.sql))**: LIST_EQMPARTS 분기에서 FACTORYCD 빈 값일 경우 전체 공장 설비부품(ITEMCG='DM100700')을 표시하고, 선택 시에만 해당 공장 재고를 필터링하도록 보완
+  - 1) **SYSTEM_PARAMETERS 등록 스크립트 작성 ([MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql))**: TML1010_R05 프로시저 저장 후 information_schema.PARAMETERS를 SYSTEM_PARAMETERS로 등록하는 정석 스크립트 신규 제공
+  - 1) **조회 로직 및 오류 안내 강화 ([R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs))**: SEARCH_EQMPARTS 호출 시 공장 콤보 값 전달, 에러 발생 시 try-catch에서 삼키지 않고 ShowMessageBox로 상세 오류 안내
+  - 1) **빌드 및 배포**: MSBuild 15.0 Debug 및 Release 빌드 0 Error 통과, AAABIN/TML1010.exe 배포 완료
 - **검증 결과**: MSBuild 컴파일 0 Error 통과, 4개 파일 단일 UTF-8 with BOM 및 CRLF 개행 무결성 100% 통과
 
 ### 8. TML1010_R05 부자재에서 설비부품 입출고 관리 전면 전환 및 5대 핵심 기능 구현
+
 - **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [05.PROCEDURE/MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05.sql), [02.Site/AAABIN/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe), [02.Site/TMLPJT/TML1010/bin/Release/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/bin/Release/TML1010.exe)
 - **배경 및 원인**: 사용자 요청에 따라 현장터미널 R05 화면을 기존의 '부자재 관리'에서 '설비부품 입출고 관리'로 전면 전환하고, 화면 내 모든 '부자재' 용어를 '설비부품'으로 변경하며, 11개 컬럼 그리드 및 발주조회 입고/출고/이력/라벨출력 5대 핵심 기능 구현
 - **작업 상세 내용**:
   - 1) **11개 컬럼 그리드 구성 ([R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml))**: 설비부품코드(ITEMCD), 설비부품명(ITEMNM), 중요도등급(GRADE), 로케이션(LOCANM), 안전재고량(SAFEQTY), 현재고량(LOTQTY), 단위(ITEMUNIT), 입고(버튼), 출고(버튼), 입출고 이력(버튼), 라벨출력(버튼) 표준 11개 컬럼 완벽 배치
-  - 2) **설비부품 현재고 조회 (SEARCH_EQMPARTS)**: 상단 파란색 버튼 [설비부품 재고조회], 부품검색 텍스트 및 공장 콤보 필터 구성, 안전재고 미달 시 핑크색(BACKGROUND='PINK') 강조 표시
-  - 3) **발주조회 기반 입고등록 팝업 (POP_IN_EQMPARTS / IN_EQMPARTS)**: 선택 부품의 진행 발주 목록(MTRODR/MTRODRD) 조회 그리드(GRID_ODR) 연동, 발주 행 [선택] 시 발주번호/발주순번/잔여수량 자동 바인딩, 입고등록 시 MSTITEM_EQMPARTS 재고 누적 및 MTRODRD 상태 자동 갱신
-  - 4) **출고등록 팝업 (POP_OUT_EQMPARTS / OUT_EQMPARTS)**: 출고일자, 출고구분, 출고수량, 사유/비고 입력 팝업 구성, 현재고량 초과 검증 방어 로직 및 MSTITEM_EQMPARTS 재고 차감 처리
-  - 5) **입출고 이력 조회 팝업 (POP_EQM_INOUT / SEARCH_INOUT_EQMPARTS)**: 기간별(SDATE~EDATE) 설비부품 입출고 내역 그리드(GRID_G2) 연동 및 작업자/이전재고/구분 조회
-  - 6) **라벨출력 버튼 연동 (POP_PRINT_LABEL)**: 선택 부품코드/부품명/로케이션에 대한 바코드 라벨 출력 안내 제공
-  - 7) **프로시저 전면 개편 ([MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05.sql))**: LIST_EQMPARTS, LIST_ODR_EQMPARTS, IN_EQMPARTS, OUT_EQMPARTS, LIST_INOUT_EQMPARTS 분기 구현, 공통 감사함수(CALLTIME, CALLEMP, CALLPRG) 필수 적용 및 2행 분리 개행/1일 1행 이력 표준 준수
-  - 8) **빌드 및 배포**: MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 바이너리(02.Site/AAABIN/TML1010.exe) 배포 완료
+  - 1) **설비부품 현재고 조회 (SEARCH_EQMPARTS)**: 상단 파란색 버튼 [설비부품 재고조회], 부품검색 텍스트 및 공장 콤보 필터 구성, 안전재고 미달 시 핑크색(BACKGROUND='PINK') 강조 표시
+  - 1) **발주조회 기반 입고등록 팝업 (POP_IN_EQMPARTS / IN_EQMPARTS)**: 선택 부품의 진행 발주 목록(MTRODR/MTRODRD) 조회 그리드(GRID_ODR) 연동, 발주 행 [선택] 시 발주번호/발주순번/잔여수량 자동 바인딩, 입고등록 시 MSTITEM_EQMPARTS 재고 누적 및 MTRODRD 상태 자동 갱신
+  - 1) **출고등록 팝업 (POP_OUT_EQMPARTS / OUT_EQMPARTS)**: 출고일자, 출고구분, 출고수량, 사유/비고 입력 팝업 구성, 현재고량 초과 검증 방어 로직 및 MSTITEM_EQMPARTS 재고 차감 처리
+  - 1) **입출고 이력 조회 팝업 (POP_EQM_INOUT / SEARCH_INOUT_EQMPARTS)**: 기간별(SDATE~EDATE) 설비부품 입출고 내역 그리드(GRID_G2) 연동 및 작업자/이전재고/구분 조회
+  - 1) **라벨출력 버튼 연동 (POP_PRINT_LABEL)**: 선택 부품코드/부품명/로케이션에 대한 바코드 라벨 출력 안내 제공
+  - 1) **프로시저 전면 개편 ([MES_SNS2_TML1010_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_TML1010_R05.sql))**: LIST_EQMPARTS, LIST_ODR_EQMPARTS, IN_EQMPARTS, OUT_EQMPARTS, LIST_INOUT_EQMPARTS 분기 구현, 공통 감사함수(CALLTIME, CALLEMP, CALLPRG) 필수 적용 및 2행 분리 개행/1일 1행 이력 표준 준수
+  - 1) **빌드 및 배포**: MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 바이너리(02.Site/AAABIN/TML1010.exe) 배포 완료
 - **검증 결과**: MSBuild 컴파일 0 Error 통과, 3개 파일(R05.xaml, R05.xaml.cs, MES_SNS2_TML1010_R05.sql) 3단계 바이너리 무결성(단일 BOM, 중복 BOM 부존재, CRLF) 100% 검증 통과
 
 ### 1. EQM1001_R03 제조설비 정기 점검 시트 DevExpress Report Designer 표준 호환 전면 구축
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.cs), [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [04.Report/PAGEEQM/EQM1001/R03.resx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.resx), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe)
 - **배경 및 원인**: 기존 R03 리포트가 비하인드 C# 코드(BuildReport)에서 컨트롤을 동적으로 생성하여 Visual Studio 디자인 뷰에서 빈 화면이 표시되고 DevExpress Designer 기능을 이용할 수 없던 문제를 해결하기 위해, 사용자 요청(S01B 템플릿 기준)에 따라 Visual Studio DevExpress Report Designer 표준 형식으로 전면 재구축 요청
 - **작업 상세 내용**:
   - 1) [R03.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.Designer.cs)에 TopMargin, BottomMargin, PageHeader(타이틀, 설비정보 테이블, 점검헤더 테이블), Detail(점검항목 그리드 바인딩 행), ReportFooter(확인/점검자/담당 결재란, 개정이력 4개 행 및 헤더), PageFooter(계획서 라벨) 등 전체 리포트 컨트롤을 DevExpress Designer 표준 코드로 완전 구성
-  - 2) [R03.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.cs)는 사용자 첨부 기준(S01B)에 맞추어 매개변수 없는 기본 생성자 `public R03() { InitializeComponent(); }`, 파라미터 생성자 `public R03(Dictionary<string, string> param) : this()`, 데이터 바인딩 로직(`BindReportData`, `BindRevHistory`), `MODEL_S1` 클래스 및 호환용 `R03A` 파생 클래스로 구조 정규화
-  - 3) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 바이너리([01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe)) 배포 완료
-  - 4) DesignSurface 로드 테스트를 통해 DesignerHost 인스턴스화 및 ReportDesigner 정상 진입 검증
+  - 1) [R03.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.cs)는 사용자 첨부 기준(S01B)에 맞추어 매개변수 없는 기본 생성자 `public R03() { InitializeComponent(); }`, 파라미터 생성자 `public R03(Dictionary<string, string> param) : this()`, 데이터 바인딩 로직(`BindReportData`, `BindRevHistory`), `MODEL_S1` 클래스 및 호환용 `R03A` 파생 클래스로 구조 정규화
+  - 1) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 바이너리([01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe)) 배포 완료
+  - 1) DesignSurface 로드 테스트를 통해 DesignerHost 인스턴스화 및 ReportDesigner 정상 진입 검증
 - **검증 결과**: MSBuild 컴파일 0 Error 통과, DesignSurface 인스턴스화 통과, 단일 UTF-8 with BOM 및 CRLF 개행 무결성 100% 확인
 
 ### 3. EQM1001_R03 리포트 DB 연결 표준 정규화 및 DevExpress XtraReport 디자이너 개발 규칙 수립
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.cs), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe), [.agents/rules/report_devexpress.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/report_devexpress.md), [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md)
 - **배경 및 원인**: 사용자의 요청에 따라 R03.cs 내에 하드코딩되어 있던 CreateMaria 헬퍼 메서드(DB IP, Port, 암호 설정)를 프로젝트 표준 템플릿(S01A/S01B)과 동일하게 제거하고 new ItsMaria(...) 기본 생성자로 정규화하며, 향후 모든 신규/수정 리포트가 Visual Studio DevExpress Report Designer 표준 방식을 준수하도록 .agents/rules/에 공식 개발 규칙 문서화
 - **작업 상세 내용**:
   - 1) [R03.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.cs): CreateMaria 수동 설정 블록 완전 제거, new ItsMaria("EQM1001_R03", "CALL_PLAN_RPT") 표준 호출로 일치 (ITS_CONFIG_MARIA.xml 자동 로드 활용)
-  - 2) [.agents/rules/report_devexpress.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/report_devexpress.md): DevExpress XtraReport 디자이너 표준 개발 규칙 신규 제정 (C# 코드 동적 생성 금지, 디자이너 3개 파일 세트 cs/Designer.cs/resx 표준, 기본 생성자 public R03() { InitializeComponent(); } 필수, components 컨테이너 선언/초기화, InitializeComponent() 내 임의 헬퍼 메서드 호출 금지, XRTableRow의 ISupportInitialize 미지원 주의, CreateMaria 하드코딩 금지, ItsMaria/ItsSecurity 공통 컴포넌트 함수 최우선 적극 활용 및 불필요한 자체 헬퍼 제작 금지, MODEL_S1 내부 모델 선언 및 MSBuild 검증/배포 절차 명시)
-  - 3) [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md): 1절에 화면·스크립트·백엔드·리포트 전반의 공통 컴포넌트/함수 지원 여부 선행 확인 및 최우선 적극 활용(Framework-First & Common Utility Usage) 규칙 대폭 강화 (C# 코드 동적 생성 금지, 디자이너 3개 파일 세트 cs/Designer.cs/resx 표준, 기본 생성자 public R03() { InitializeComponent(); } 필수, components 컨테이너 선언/초기화, InitializeComponent() 내 임의 헬퍼 메서드 호출 금지, XRTableRow의 ISupportInitialize 미지원 주의, CreateMaria 하드코딩 금지, MODEL_S1 내부 모델 선언 및 MSBuild 검증/배포 절차 명시)
-  - 4) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 바이너리(01.Office/Reports/EQM1001.exe, 04.Report/bin/EQM1001.exe) 배포 완료
+  - 1) [.agents/rules/report_devexpress.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/report_devexpress.md): DevExpress XtraReport 디자이너 표준 개발 규칙 신규 제정 (C# 코드 동적 생성 금지, 디자이너 3개 파일 세트 cs/Designer.cs/resx 표준, 기본 생성자 public R03() { InitializeComponent(); } 필수, components 컨테이너 선언/초기화, InitializeComponent() 내 임의 헬퍼 메서드 호출 금지, XRTableRow의 ISupportInitialize 미지원 주의, CreateMaria 하드코딩 금지, ItsMaria/ItsSecurity 공통 컴포넌트 함수 최우선 적극 활용 및 불필요한 자체 헬퍼 제작 금지, MODEL_S1 내부 모델 선언 및 MSBuild 검증/배포 절차 명시)
+  - 1) [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md): 1절에 화면·스크립트·백엔드·리포트 전반의 공통 컴포넌트/함수 지원 여부 선행 확인 및 최우선 적극 활용(Framework-First & Common Utility Usage) 규칙 대폭 강화 (C# 코드 동적 생성 금지, 디자이너 3개 파일 세트 cs/Designer.cs/resx 표준, 기본 생성자 public R03() { InitializeComponent(); } 필수, components 컨테이너 선언/초기화, InitializeComponent() 내 임의 헬퍼 메서드 호출 금지, XRTableRow의 ISupportInitialize 미지원 주의, CreateMaria 하드코딩 금지, MODEL_S1 내부 모델 선언 및 MSBuild 검증/배포 절차 명시)
+  - 1) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 바이너리(01.Office/Reports/EQM1001.exe, 04.Report/bin/EQM1001.exe) 배포 완료
 - **검증 결과**: MSBuild 컴파일 0 Error 통과, 모든 수정 및 신규 파일 단일 UTF-8 with BOM 및 CRLF 개행 무결성 100% 확인
 
 ### 4. EQM1001_R03 리포트 PageFooter 밴드 제거 및 재빌드·배포
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe), [04.Report/bin/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/bin/EQM1001.exe)
 - **배경 및 원인**: 사용자 요청에 따라 정기점검 계획서 하단 불필요한 PageFooter 밴드(제조설비 정기 점검 계획서 라벨)를 제거하고 Visual Studio DevExpress Report Designer 표준 코드 정리 및 재빌드·배포 요청
 - **작업 상세 내용**:
   - 1) [R03.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/R03.Designer.cs): PageFooterBand 초기화, xrLabelFooter 컨트롤 선언, PageFooter 밴드 속성 블록, Bands.AddRange 내 PageFooter 등록 및 필드 선언부 완전 제거
-  - 2) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning)
-  - 3) 최신 실행파일([01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe) 및 [04.Report/bin/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/bin/EQM1001.exe)) 복사 배포 완료
+  - 1) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning)
+  - 1) 최신 실행파일([01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe) 및 [04.Report/bin/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/bin/EQM1001.exe)) 복사 배포 완료
 - **검증 결과**: MSBuild 컴파일 0 Error 통과, 단일 UTF-8 with BOM 및 CRLF 개행 무결성 100% 확인
 
 ### 6. TML1010 실행 시작 화면(StartupUri) R05.xaml 전환 및 빌드
+
 - **수정/대상 파일**: [02.Site/TMLPJT/TML1010/App.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/App.xaml), [02.Site/AAABIN/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe), [02.Site/TMLPJT/TML1010/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/TML1010.exe)
 - **배경 및 원인**: Visual Studio에서 솔루션 실행 시 기존 설정에 따라 R04.xaml이 시작 페이지로 뜨던 것을, 신규 작업 대상인 R05.xaml 페이지가 바로 뜨도록 시작 화면 전환 요청
 - **작업 상세 내용**:
   - 1) [App.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/App.xaml): StartupUri="R04.xaml"을 StartupUri="R05.xaml"로 변경
-  - 2) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 바이너리(02.Site/AAABIN/TML1010.exe) 배포 완료
+  - 1) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 바이너리(02.Site/AAABIN/TML1010.exe) 배포 완료
 - **검증 결과**: MSBuild 컴파일 0 Error 통과, 단일 UTF-8 with BOM 및 CRLF 개행 무결성 100% 확인
 
 ### 5. TML1010 부자재 재고/입출고 화면(R05.xaml, R05.xaml.cs) 프로젝트 연동 및 컴파일·배포 완료
+
 - **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [02.Site/TMLPJT/TML1010/TML1010.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/TML1010.csproj), [02.Site/AAABIN/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe), [02.Site/TMLPJT/TML1010/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/TML1010.exe)
 - **배경 및 원인**: 사용자 요청에 따라 TML1010 프로젝트에 R05.xaml 및 R05.xaml.cs를 포함하여 화면 출력이 가능하도록 연동하고, R01 복사본 상태였던 클래스명 중복(x:Class, partial class R01) 및 컴파일 오류(ITSLIB.Combo DisplayText) 해결 요청
 - **작업 상세 내용**:
   - 1) [R05.xaml](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml): 루트 태그 x:Class="TML1010.R05"로 클래스 식별자 수정
-  - 2) [R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs): 클래스명 public partial class R05, 생성자 public R05(), ITSLIB.Combo 프로퍼티 DisplayText -> SelectedLabel 교정 및 화면 전용 안전 try-catch 방어 적용
-  - 3) [TML1010.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/TML1010.csproj): Compile Include="R05.xaml.cs" 및 Page Include="R05.xaml" 빌드 아이템 등록
-  - 4) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 바이너리(02.Site/AAABIN/TML1010.exe, 02.Site/TMLPJT/TML1010/TML1010.exe) 배포 완료
+  - 1) [R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs): 클래스명 public partial class R05, 생성자 public R05(), ITSLIB.Combo 프로퍼티 DisplayText -> SelectedLabel 교정 및 화면 전용 안전 try-catch 방어 적용
+  - 1) [TML1010.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/TML1010.csproj): Compile Include="R05.xaml.cs" 및 Page Include="R05.xaml" 빌드 아이템 등록
+  - 1) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 바이너리(02.Site/AAABIN/TML1010.exe, 02.Site/TMLPJT/TML1010/TML1010.exe) 배포 완료
 - **검증 결과**: MSBuild 컴파일 0 Error 통과, 단일 UTF-8 with BOM 및 CRLF 개행 무결성 100% 확인
 
 ### 7. TML1010_R05 부자재 재고/입출고 프로시저명 전면 교체 및 재빌드·배포
+
 - **수정/대상 파일**: [02.Site/TMLPJT/TML1010/R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs), [02.Site/AAABIN/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe), [02.Site/TMLPJT/TML1010/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/TML1010.exe)
 - **배경 및 원인**: R05.xaml.cs 내부의 프로시저 호출부 4곳에 기존 R01 명칭(TML1010_R01)이 남아있던 결함을 발견하여, 화면 고유 프로시저인 TML1010_R05로 전면 교체 요청
 - **작업 상세 내용**:
   - 1) [R05.xaml.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/R05.xaml.cs): 프로시저 호출부 4곳(LIST_SUBSTOCK, LIST_INOUT_SUBSTOCK, IN_SUBSTOCK, OUT_SUBSTOCK) 내 'TML1010_R01'을 'TML1010_R05'로 일괄 전면 교체
-  - 2) 실행 중이던 테스트 프로세스 잠금 해제 후 MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning)
-  - 3) 최신 바이너리([02.Site/AAABIN/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe), [02.Site/TMLPJT/TML1010/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/TML1010.exe)) 배포 완료
+  - 1) 실행 중이던 테스트 프로세스 잠금 해제 후 MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning)
+  - 1) 최신 바이너리([02.Site/AAABIN/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/AAABIN/TML1010.exe), [02.Site/TMLPJT/TML1010/TML1010.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/02.Site/TMLPJT/TML1010/TML1010.exe)) 배포 완료
 - **검증 결과**: 소스 내 R01 잔여 참조 0건 전수 검증 통과, MSBuild 컴파일 0 Error 통과, 단일 UTF-8 with BOM 및 CRLF 개행 무결성 100% 확인
 
 ### 2. EQM1001_S01A 설비이력카드 Visual Studio 디자이너 호환성 확보 및 기본 생성자 보완
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/S01A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/S01A.cs), [04.Report/PAGEEQM/EQM1001/S01A.Designer.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/S01A.Designer.cs), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe)
 - **배경 및 원인**: Visual Studio Report Designer에서 S01A.cs 열기 시 헬퍼 메서드 제거 및 XRTableRow BeginInit 제외 후 발생한 '값은 null일 수 없습니다. 매개 변수 이름: component' 오류 해결
 - **작업 상세 내용**:
   - 1) S01A.cs에 기본 생성자 public S01A() { InitializeComponent(); } 추가 및 기존 생성자 : this() 연결
-  - 2) S01A.Designer.cs InitializeComponent() 최상단에 this.components = new System.ComponentModel.Container(); 초기화 반영
-  - 3) MSBuild 15.0 Rebuild 성공 및 최신 바이너리 배포 완료
+  - 1) S01A.Designer.cs InitializeComponent() 최상단에 this.components = new System.ComponentModel.Container(); 초기화 반영
+  - 1) MSBuild 15.0 Rebuild 성공 및 최신 바이너리 배포 완료
 - **검증 결과**: MSBuild 컴파일 0 Error 통과, 단일 UTF-8 with BOM 및 CRLF 무결성 통과
 
 ---
@@ -1168,86 +1253,87 @@
 ## 🕒 2026-10-15 (목) 작업 내역
 
 ### 2. MES_SNS2_MTR0001_R04 사원 조인 조건 간소화 (ODREMPID 단일 기준 정규화)
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_MTR0001_R04.sql
 - **배경 및 원인**: 사용자 요청에 따라 MSTEMP 조인 시 ODREMPID > 0 및 EMPCD 조건을 제거하고, ODREMPID 단일 기준으로 간소화하면서 DOUBLE 변환 에러가 발생하지 않도록 정규화
 - **작업 상세 내용**:
   - 1) LIST_MTRODR 및 CALL_RPT 분기 내 MSTEMP 조인을 LEFT JOIN MSTEMP ON MSTEMP.EMPID = CAST(MTRODR.ODREMPID AS CHAR) 단일 조건으로 간소화. 2) ODREMPID > 0 및 EMPCD 조건 완전 제거. 3) CAST(... AS CHAR) 명시적 형변환을 유지하여 Truncated incorrect DOUBLE value 에러 및 오매칭 원천 차단. 4) UTF-8 with BOM 무결성 검증 완료
 - **검증 결과**: 전체 1,141건 대상 전수 테스트 결과 Warning 및 Error 0건 통과
 
-
 ### 2. MES_SNS2_MTR0001_R04 사원 조인 타입 불일치 및 DOUBLE 변환 에러 해결
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_MTR0001_R04.sql
 - **배경 및 원인**: MSTEMP.EMPID(VARCHAR)와 MTRODR.ODREMPID(INT) 간 암시적 형변환으로 인해 MSTEMP 내 빈 문자열('') 행과 비교 시 MariaDB 1292 Truncated incorrect DOUBLE value 에러 발생
 - **작업 상세 내용**:
   - 1) MSTEMP 조인 조건에 ODREMPID > 0 및 CAST(MTRODR.ODREMPID AS CHAR) 명시적 형변환 적용. 2) LIST_MTRODR의 ODREMPID 바인딩도 CASE WHEN 명시적 형변환으로 통일하여 빈 문자열('')과의 DOUBLE 변환 에러 및 미지정 발주에 MES관리자가 오매칭되는 현상 원천 차단. 3) 최상단 Modify 1일 1행 이력 갱신 및 단일 UTF-8 with BOM 무결성 검증 완료
 - **검증 결과**: 전체 1,141건 발주 대상 테스트 결과 에러 및 Warnings 0건 통과
 
-
 ### 2. EQM1001 정기점검 계획서 리포트 파일명 R03 기준으로 전수 재수정 및 빌드/배포
+
 - **수정/대상 파일**: 04.Report/PAGEEQM/EQM1001/R03.cs, 04.Report/PAGEEQM/EQM1001/R03.Designer.cs, 04.Report/PAGEEQM/EQM1001/R03.resx, 04.Report/PAGEEQM/EQM1001/EQM1001.csproj, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/Reports/EQM1001.exe
 - **배경 및 원인**: 설비점검계획서 리포트 명칭을 S03이 아닌 R03 기준으로 생성 및 호출하도록 사용자 요구사항 재수정
 - **작업 상세 내용**:
-  - 1) S03A.* 파일들을 R03.*로 이름 변경(R03.cs, R03.Designer.cs, R03.resx) 및 클래스명 public partial class R03 : XtraReport 로 수정(R03A 호환 파생클래스 포함). 2) EQM1001.csproj 내 R03 매핑 갱신. 3) EQM1001_R03.js 내 ItsXtraRpt('EQM1001_R03') 호출부 변경. 4) MSBuild Release 리빌드 성공(0 Error, 0 Warning) 후 01.Office/Reports/EQM1001.exe 배포 완료
+  - 1) S03A.*파일들을 R03.*로 이름 변경(R03.cs, R03.Designer.cs, R03.resx) 및 클래스명 public partial class R03 : XtraReport 로 수정(R03A 호환 파생클래스 포함). 2) EQM1001.csproj 내 R03 매핑 갱신. 3) EQM1001_R03.js 내 ItsXtraRpt('EQM1001_R03') 호출부 변경. 4) MSBuild Release 리빌드 성공(0 Error, 0 Warning) 후 01.Office/Reports/EQM1001.exe 배포 완료
 - **검증 결과**: 단일 UTF-8 with BOM 및 CRLF 개행 무결성 5개 파일 100% 통과, MSBuild Release 빌드 성공, 바이너리 배포 및 Git 상태 검증 완료
 
-
 ### 2. MES_SNS2_MTR0001_R04 사원 조인 조건 간소화 (ODREMPID > 0 제거 및 식별키 직접 조인)
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_MTR0001_R04.sql
 - **배경 및 원인**: 사원 조인 시 방어 목적으로 작성되었던 불필요한 ODREMPID > 0 조건 제거 및 직관적인 표준 조인 형태로 간소화 요청
 - **작업 상세 내용**:
   - 1) LIST_MTRODR 및 CALL_RPT 분기 내 MSTEMP 조인을 LEFT JOIN MSTEMP ON MSTEMP.EMPID = MTRODR.ODREMPID 로 간소화. 2) 최상단 Modify 1일 1행 이력 갱신. 3) 단일 UTF-8 with BOM 및 CRLF 개행 무결성 검증 완료
 - **검증 결과**: 실제 DB SELECT 쿼리 테스트 결과 '생산관리2팀 (정영진 Senior 010-9960-2345)' 동일 정상 반환 확인, 인코딩 무결성 통과 (실서버 프로시저 반영은 규칙에 따라 사용자 직접 진행)
 
-
 ### 2. MES_SNS2_MTR0001_R04 발주서 출력 리포트 데이터 조회(CALL_RPT) 부서명 조인 및 직위코드(HR151) 보완
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_MTR0001_R04.sql
 - **배경 및 원인**: CALL_RPT 분기 내 담당자 정보(EMPINFO) 조회 시 GPCD('DEPTCD', ...) 및 GPCD('POSBC', ...) 호출 오류로 인해 'ERROR DEPTCD: ...', 'ERROR POSBC: ...' 형태의 이상 문자열이 출력되는 문제 해결 요청
 - **작업 상세 내용**:
   - 1) 부서 코드그룹 미존재에 따른 MSTDEPT 테이블 LEFT JOIN 추가 및 MSTDEPT.DEPTNM 바인딩. 2) 직위 코드그룹 POSBC를 올바른 공통코드 그룹인 HR151로 변경하여 정상 직위명 바인딩. 3) 최상단 Modify 이력 1일 1행 규칙 갱신 및 파일 인코딩(단일 UTF-8 with BOM, CRLF) 무결성 검증 완료
 - **검증 결과**: 실제 DB SELECT 쿼리 테스트 결과 '생산관리2팀 (정영진 Senior 010-9960-2345)' 정상 출력 확인, BOM/CRLF 무결성 검증 완료 (실서버 프로시저 반영은 규칙에 따라 사용자 직접 진행)
 
-
 ### 2. EQM1001 정기점검 계획서 리포트 담당 화면 이전(R05->R03)에 따른 S05A->S03A 명칭 및 참조 전수 변경
+
 - **수정/대상 파일**: 04.Report/PAGEEQM/EQM1001/S03A.cs, 04.Report/PAGEEQM/EQM1001/S03A.Designer.cs, 04.Report/PAGEEQM/EQM1001/S03A.resx, 04.Report/PAGEEQM/EQM1001/EQM1001.csproj, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/Reports/EQM1001.exe
 - **배경 및 원인**: 원래 R05(설비점검계획 승인)에 속해 있던 점검계획서 출력이 R03(설비점검계획) 화면으로 담당 페이지가 이전됨에 따라, 리포트 명칭을 S05A에서 S03A로 변경하고 관련 프로젝트 설정 및 호출부를 전수 동기화 요청
 - **작업 상세 내용**:
-  - 1) 04.Report/PAGEEQM/EQM1001/S05A.* 파일 3종을 S03A.*로 이름 변경 및 클래스명(partial class S03A, public S03A) 수정. 2) EQM1001.csproj 내 Compile/EmbeddedResource 매핑 S03A로 갱신. 3) EQM1001_R03.js 내 ItsXtraRpt('EQM1001_S03A') 호출부 및 날짜 주석 반영. 4) 기존 S05A 파일 정리 및 MSBuild 15 Release 리빌드(0 Error, 0 Warning) 후 01.Office/Reports/EQM1001.exe 배포 완료
+  - 1) 04.Report/PAGEEQM/EQM1001/S05A.*파일 3종을 S03A.*로 이름 변경 및 클래스명(partial class S03A, public S03A) 수정. 2) EQM1001.csproj 내 Compile/EmbeddedResource 매핑 S03A로 갱신. 3) EQM1001_R03.js 내 ItsXtraRpt('EQM1001_S03A') 호출부 및 날짜 주석 반영. 4) 기존 S05A 파일 정리 및 MSBuild 15 Release 리빌드(0 Error, 0 Warning) 후 01.Office/Reports/EQM1001.exe 배포 완료
 - **검증 결과**: 단일 UTF-8 with BOM 및 CRLF 개행 무결성 5개 파일 100% 통과, MSBuild Release 리빌드 성공(0 Error, 0 Warning), 01.Office/Reports/EQM1001.exe(26,112 bytes) 배포 및 Git 상태 검증 완료
 
-
 ### 2. MTR0001_S04A 승인일자 임시 생략 반영 리빌드 및 MTR0001_R04 프로시저 조인 컬럼 오타 수정
+
 - **수정/대상 파일**: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe), [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql)
 - **배경 및 원인**: 발주서 출력(S04A.cs) 승인일자 데이터 부재에 따른 임시 주석 처리 반영 재빌드 및 배포, MTR0001_R04.sql 프로시저 전체 SQL 구문 검증 요청
 - **작업 상세 내용**:
   - 1) S04A.cs 승인일자 텍스트 바인딩 주석 처리 반영 후 MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 2) 최신 MTR0001.exe 및 pdb 파일 01.Office/Reports/ 경로 배포 완료 3) MTR0001_R04.sql 전수 검증 결과, CALL_RPT 분기 사원 조인문 112행의 오타(MTRODR.EMPID -> MTRODR.ODREMPID) 발견 및 즉시 정상화 완료 4) UTF-8 with BOM 및 CRLF 개행 무결성 확인
 - **검증 결과**: MSBuild 컴파일 통과 (0 Error, 0 Warning), MTR0001_R04.sql 112행 컬럼 오타 수정 및 전체 쿼리 문법 정합성 확인 완료
 
-
 ### 2. EQM1001 및 MTR0001 리포트 프로젝트 MSBuild 리빌드 및 최신 실행파일 배포
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/EQM1001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEEQM/EQM1001/EQM1001.csproj), [04.Report/PAGEMTR/MTR0001/MTR0001.csproj](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/MTR0001.csproj), [01.Office/Reports/EQM1001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/EQM1001.exe), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
 - **배경 및 원인**: 설비관리(EQM1001) 및 자재발주관리(MTR0001) 리포트 2개 프로젝트 전체 재컴파일 및 01.Office/Reports 최신 바이너리 교체 요청
 - **작업 상세 내용**:
   - 1) EQM1001.csproj MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 2) MTR0001.csproj MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 3) 생성된 최신 바이너리(EQM1001.exe, EQM1001.pdb, MTR0001.exe, MTR0001.pdb)를 01.Office/Reports/ 경로로 덮어쓰기 배포 완료
 - **검증 결과**: MSBuild 컴파일 통과 (0 Error, 0 Warning), 01.Office/Reports/ 내 최신 바이너리 타임스탬프(14:37) 갱신 확인
 
-
 ### 2. MTR0001_R04 발주서 출력 검증 로직 프로시저(MTR0001_R04 CALL_RPT) 이동 및 화면 스크립트 간결화
+
 - **수정/대상 파일**: [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
 - **배경 및 원인**: 화면(JS) 및 C# 리포트 비하인드에서 수행하던 발주번호 선택 유무 검증 로직을 DB 프로시저(CALL_RPT) 내부로 이동하여 검증 단일화 및 화면 스크립트 간결화 요청
 - **작업 상세 내용**:
   - 1) MTR0001_R04.sql CALL_RPT 분기 상단에 IF COALESCE(, '') = '' THEN CALL COMERR('출력할 발주를 선택해주세요.'); LEAVE PROC; END IF; 추가 2) MTR0001_R04.js btn_PRINT 클릭 이벤트 내 rowIndex / !mtrOdrKey 다중 if 분기 제거하고 mtrOdrKey 취득 후 rpt.CallPop() 직접 호출 3) S04A.cs 파라미터 검증 throw 제거 후 maria.CallProc()로 프로시저 에러 직접 전파 4) MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning) 및 최신 MTR0001.exe 배포 완료
 - **검증 결과**: MSBuild 컴파일 통과 (0 Error, 0 Warning), 전 파일 단일 UTF-8 BOM(\xef\xbb\xbf) 및 CRLF 개행 무결성 확인
 
-
 ### 2. MTR0001_R04 프로시저 Table 0 쿼리 종료 세미콜론(;) 누락 구문 오류 해결
+
 - **수정/대상 파일**: [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql)
 - **배경 및 원인**: 과잉 방어코드 정리 시 LIMIT 1; 제거 과정에서 WHERE 절 뒤 세미콜론(;)이 함께 탈락하여 Table 1 SELECT 문과 연결되며 SQL 문법 오류(SQL Error [1064]) 발생
 - **작업 상세 내용**:
   - CALL_RPT 분기 Table 0(발주 헤더 쿼리) WHERE 절 끝에 세미콜론(WHERE MTRODR.MTRODRKEY = ;) 정상 반영, 단일 UTF-8 with BOM 및 Windows CRLF 개행 무결성 확인 및 정규화 완료
 - **검증 결과**: 프로시저 전체 문법 및 세미콜론 종결자 무결성 확인, 단일 UTF-8 BOM(\xef\xbb\xbf) 및 CRLF 개행 검증 통과
 
-
 ### 8. MTR0001_R04 프로시저 MTR0001_R01 원본 기반 쿼리 표준화 및 과잉 방어코드 전면 제거
+
 - **수정/대상 파일**: [05.PROCEDURE/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R04.sql)
 - **배경 및 원인**: 기존 `MTR0001_R01` 기반의 깔끔하고 직관적인 쿼리 스타일로 통일하고, 과도하게 중첩된 방어 코드(불필요한 SET문, 텍스트 컬럼 COALESCE 남발, 복잡한 인라인 중첩, OR 조인 조건) 전면 제거 요청
 - **작업 상세 내용**:
@@ -1261,6 +1347,7 @@
   - 실제 서버 DB 미반영 (사용자 DBeaver 루틴 에디터 직접 반영 대상)
 
 ### 7. MTR0001_S04A 승인일자 바인딩(MTRODRDATE 기준) 수정에 따른 리포트 재빌드 및 배포
+
 - **수정/대상 파일**: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
 - **배경 및 원인**: 발주서 우측 상단 발주승인완료 도장 박스의 날짜를 `MTRODRDATE` 직접 바인딩으로 수정한 소스코드 반영 및 재빌드 배포 요청
 - **작업 상세 내용**:
@@ -1273,6 +1360,7 @@
   - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 확인
 
 ### 6. MTR0001_S04A 사용자 직접 수정 소스코드 검증, MSBuild 리빌드 및 최신 실행 파일 배포
+
 - **수정/대상 파일**: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
 - **배경 및 원인**: 사용자의 S04A.cs 직접 수정 후 재컴파일 및 오피스 배포 경로(`01.Office/Reports/MTR0001.exe`) 적용 요청
 - **작업 상세 내용**:
@@ -1285,6 +1373,7 @@
   - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 확인
 
 ### 5. MTR0001_S04A 발주서 안내문/비고 볼드(Bold) 서식 반영 및 리포트 재빌드 배포
+
 - **수정/대상 파일**: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
 - **배경 및 원인**: 발주서 출력 리포트 하단 업체 요청 사항 비고 내용(`reqContent`) 및 3줄 안내문(`notice1`, `notice2`, `notice3`)의 시인성 강화를 위해 Bold 서식 적용 후 재빌드 및 배포 요청
 - **작업 상세 내용**:
@@ -1297,40 +1386,41 @@
   - 배포 파일 일치 확인 및 단일 UTF-8 with BOM (`\xef\xbb\xbf`), CRLF 개행 무결성 확인
 
 ### 2. [MTR0001_R04] 발주 조회조건 간소화 및 사업장 연결 검증
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_MTR0001_R04.sql
 - **배경 및 원인**: 날짜 컬럼을 매 행 LEFT/REPLACE로 가공하고 공장 검색식이 길어 조회조건 정리 요청
 - **작업 상세 내용**:
   - 날짜 입력값 형식을 비교 시 변환하고 저장 날짜는 직접 비교; 검색 파라미터 NULL 처리는 분기 시작에서 1회 수행; 발주·입고 공장 비교를 IN으로 묶고 입고공장 미지정 포함 기준 유지; 사용자 변경의 발주공장→MSTFACTORY→MSTBDV 연결 유지 및 SELECT 확인; 상세·출력 분기와 파라미터 8개 유지
 - **검증 결과**: 실제 DB SELECT 전후 5조건 결과·정렬·중복 일치(전체75/기간51/당일1/07공장0/NULL75); 발주일자1137건 YYYY-MM-DD 확인; 공장06→사업장61/07→71 연결 및 JOIN 행수 검증; 격리 MariaDB10.2.44 전후 컴파일 및20조건 비교/잘못된 날짜 검증 통과; 날짜 인덱스 부재로 실행계획 동일; 단일BOM/CRLF 확인
 
-
 ### 2. MTR0001_R04 품목조건 단순화 및 공장 마스터 기반 사업장 연결
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_MTR0001_R04.sql
 - **배경 및 원인**: 중복 품목유형 조건 및 07이면71·그외61 고정 CASE 개선 요청, 61/71 사업장 의미 확인 요청
 - **작업 상세 내용**:
   - 실제 DB에서 MSTBDV61=아이앤씨_보령,71=아이앤씨_보령2공장 및 MSTFACTORY06→61/07→71 등록 확인. CALL_RPT에서 발주공장 우선·비어있으면 입고공장으로 MSTFACTORY를 연결한 뒤 BDVCD로 MSTBDV 직접 연결. 미등록 공장에 61 강제대입과 고정 회사정보 대체값 제거, 등록 정보가 없으면 공란. 헤더·상세 ITEMCG 중복 등식 제거하고 LIKE DM1007%로 단순화, 상세 NULL 허용은 기존대로 유지. 사용자 컬럼 설명11개 보존 및 동일 날짜 Modify 한 줄 병합, 입력8개 유지
 - **검증 결과**: 실제 SELECT로 사업장10건·공장7건과 컬럼·PK 확인. 발주1137건 사업장매핑 전후 일치, 헤더75건·상세249건 및 06/07 표본 발주서 헤더값 전후 동일. 네트워크차단 MariaDB10.2.44에서 컴파일, 기존/신규공장, 빈공장대체, 발주공장우선, 미등록 공란, 마스터변경반영, 품목조건NULL·순서동등성 포함 총13검증 통과. 단일BOM/CRLF 정상. 실제 서버 DDL/DML 없음, C#·화면소스 변경 없음
 
-
 ### 2. MTR0001_R04 발주서 컬럼 설명 주석 복구 및 조건 설명
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_MTR0001_R04.sql
 - **배경 및 원인**: 사용자가 제공한 발주서 반환 컬럼 설명 주석11개 복구 및 품목유형 필터·사업장 CASE 연결 해석 요청
 - **작업 상세 내용**:
   - APRVDATE·거래처정보·사업장정보11개 컬럼 인라인 주석을 제공된 문구로 복구, 동일 날짜 Modify 한 줄에 반영. 실행SQL 변경 없음. 기존 업무 주석 유지와 필요한 테이블만 연결하는 선호 확인
 - **검증 결과**: 주석 제거 후 수정 전후 SQL 문자열 동일 확인,11개 별칭 일치 확인, 단일BOM/CRLF 정상. 주석만 수정하여 DB실행·프로시저컴파일 미진행
 
-
 ### 2. MTR0001_R04 타 공장 사원 참조 제거 및 미매칭 원래 코드 표시
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_MTR0001_R04.sql
 - **배경 및 원인**: 현재 공장 MES_SNS2의 사원정보만 사용하고 사원 미등록 시 원래 발주 사원코드를 표시하도록 요청
 - **작업 상세 내용**:
   - LIST_MTRODR 및 CALL_RPT에서 MES_SNS.MSTEMP JOIN2개와 SNS_EMP 참조 제거. 현재 공장 EMPID/EMPCD 매칭 이름 사용, 매칭 또는 유효 이름이 없으면 MTRODR.ODREMPID 원본 코드 표시. 발주서 EMPINFO의 고정 사원명·직급·휴대폰·부서 대체값 제거, 실제 소속·직급·연락처만 조합. 기존 0/NULL코드는 공란 유지. 최신 SQL의 CUSTCD·MTRODRSEQ 복원 상태 등 다른 사용자 변경 보존, 동일 날짜 Modify 한 줄 병합
 - **검증 결과**: 실제 DB SELECT로 현재 공장 사원 매핑과 6개테이블307컬럼 확인, 4318/4328/4329/4438은 현재 공장 미매칭. 수정 SELECT로 발주75건·표본 발주서1건 원래코드 표시 확인. MES_SNS DB 없이 네트워크 차단 MariaDB10.2.44 컴파일 및11건 검증 통과. 입력8개·상세분기 유지, ASPX·JS·비하인드·S04A 해시 동일, 단일BOM/CRLF 정상. 실서버 DDL/DML 없음
 
-
 ### 4. MTR0001_S04A 설비부품 발주서 상단 마진 확대(15F➔45F), 로고·승인박스 확대 및 좌측 밀착 정렬
+
 - **수정/대상 파일**: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs), [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
-- **배경 및 원인**: 
+- **배경 및 원인**:
   - 발주서 출력 리포트 상단 영역이 용지 맨 윗단에 너무 바짝 붙어있어(기존 TopMargin 15F) 상단 여백 폭 확보 요청
   - 상단 로고 이미지와 승인 도장 박스 크기 확대 및 가시성 개선 요청
   - `ImageSizeMode.ZoomImage` 기본 중앙 정렬(`MiddleCenter`)로 인한 로고 좌측 빈 여백(26.6F) 제거 요청
@@ -1346,14 +1436,15 @@
   - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료
 
 ### 2. MTR0001_R04 화면·발주서 미사용 반환 컬럼과 JOIN 제거
+
 - **수정/대상 파일**: 01.Office/PAGEMTR/MTR0001/MTR0001_R04.js, 05.Procedure/MES_SNS2_MTR0001_R04.sql
 - **배경 및 원인**: 최신 ASPX·비하인드·JS·S04A를 대상으로 실제 DB SELECT 및 사용처 분석 후 불필요한 컬럼 제거 요청
 - **작업 상세 내용**:
   - JS 숨김 CUSTCD/MTRODRSEQ/ODRDELEMPID 제거, 상세 조회 AddRecord 전체 전송을 MTRODRKEY만 명시 전송으로 변경. SQL 헤더 CUSTCD, 상세 MTRODRSEQ/ODRDELEMPID, 보고서헤더 MTRODRSTT/APRVSTTNM/CUSTCD, 보고서품목 NO/MTRODRSEQ/ITEMCD 제거(반환 컬럼 분기 합계9개). 상세 사원 JOIN2개 및 리포트 상태명 COMTYPE JOIN1개 제거. MTRODRSEQ 정렬·CUSTCD 검색 유지, 입력 파라미터8개 유지. ASPX·비하인드·S04A의 데이터 사용은 필요한 것으로 확인하여 내용 및 배포 바이너리 변경 없음
 - **검증 결과**: 실제 DB SELECT로 8개 테이블362컬럼·인덱스15행·프로시저입력8개 확인. 수정 전후 실제 헤더75건·상세249건 및 표본 보고서 헤더1/품목3건 유지 컬럼값과 정렬 일치. Node VM/정적14건, 네트워크차단 MariaDB10.2.44 컴파일·필터·정렬·NULL키·결과셋8건 통과. S04A 복사본 테스트 생성자만 추가하여 C#컴파일 및 실제 DevExpress CreateDocument로 전후 컨트롤 내용·배치와1페이지, 빈품목·NULL품목3건 확인. JS문법·단일BOM/CRLF 통과. 실서버 DDL/DML·브라우저E2E·프로덕션C#변경 없음
 
-
 ### 3. Git 무시 목록(.gitignore)에 Subversion(.svn, wc.db) 등록 및 기존 추적 파일(4,179건) Git 인덱스 전면 삭제
+
 - **수정/대상 파일**: [.gitignore](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.gitignore), Git 인덱스
 - **배경 및 원인**: SVN 작업 복사본의 `.svn` 디렉터리 및 `wc.db` 관련 메타데이터 파일들이 Git 인덱스에 기존 4,179건이나 추적(tracked)되어 있어, SVN 업데이트 시마다 변경사항이 지속 발생하는 문제 해결 요청
 - **작업 상세 내용**:
@@ -1366,25 +1457,27 @@
   - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료
 
 ### 2. 사용 중단 컬럼의 JS·SQL·프로시저 최종 검증 규칙 추가
+
 - **수정/대상 파일**: .agents/rules/validation.md
 - **배경 및 원인**: 읽기 전용 또는 사용 중단 컬럼의 전송·분해·저장 코드가 잔존하여 다른 데이터 초기화 등 문제가 재발하지 않도록 최종 검증 단계 규칙화 요청
 - **작업 상세 내용**:
   - validation.md 5절에 사용 중단 범위와 실제 DB 기본값 확인, 호출 경로 전체 추적, 주석 코드 포함 제거, 제외값 의존 조건 제거, 파라미터 등록 일치, 기존값 보존·신규 기본값·팝업 동작 검증, 완료 전 재검색 및 검증 범위 기록 8항 추가. 조회·별도 팝업 사용처 유지 이유 명시 및 실서버 변경 금지 규칙 연결
 - **검증 결과**: 기존 1~4절 내용 유지 및 변경 diff 확인. 단일 UTF-8 BOM/CRLF 확인. 문서 변경만 수행하여 업무 소스·DB 테스트 및 실제 서버 반영 없음
 
-
 ### 1. MST3001_R03 조회 전용 현재고·로케이션명 저장 경로 제거
+
 - **수정/대상 파일**: 01.Office/PAGEMST/MST3001/MST3001_R03.js, 05.Procedure/MES_SNS2_MST3001_R03.sql, 05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql
 - **배경 및 원인**: 현재고와 메인 로케이션명은 수정 불가이나 주석 처리된 전송 코드 및 프로시저 입력·분해·저장 의존이 잔존. 이름 미전송 시 SAVE_ITEM이 로케이션 코드까지 초기화하는 조건 확인
 - **작업 상세 내용**:
   - 메인 저장은 ITEMID/GRADE/SAFEQTY/LOCACD 4종 목록만 전송. LOTQTY_LIST 입력·지역변수·분해·신규 INSERT 대입 제거, LOCANM 저장 및 변경비교·원본 보관·직접 수정 분기 제거. LOCANM readonly 명시, Delete는 코드 선택 범위만 처리. SAVE_ITEM의 이름 빈값에 의존한 코드 초기화 제거. LOCANM_LIST와 관련 변수는 로케이션 기준정보 팝업 CRUD용으로 유지. 파라미터 14→13 및 등록 SQL 설명 갱신
 - **검증 결과**: 실서버 SELECT로 3개 테이블 112컬럼 확인, LOTQTY 기본값0 확인. 공통 ItsGrid 실제 소스를 사용한 Node VM 검증14건 및 네트워크 차단 MariaDB10.2.44에서 컴파일·현재고보존·코드단독저장·신규기본값·팝업CRUD·등록13건 검증13건, 총27건 통과. JS문법 및 단일BOM/CRLF 확인. 실서버 DDL/DML 및 브라우저 E2E 미실행
----
 
+---
 
 ## 🕒 2026-10-14 (수) 작업 내역
 
 ### 23. 공통 프레임워크 우선 활용 및 기존 화면 참조 규칙 추가, 레포트 임시 파일 정리 및 .gitignore 등록
+
 - **수정 및 신규 파일**:
   - 신규 규칙: [.agents/rules/framework_convention.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/framework_convention.md)
   - 환경 설정: [.gitignore](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.gitignore)
@@ -1408,6 +1501,7 @@
   - 모든 신규/수정 파일 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료.
 
 ### 22. MTR0001_R04 및 EQM1001_R03 리포트 호출 시 불필요한 rpt.FileName 제거 및 프레임워크 표준 정돈
+
 - **수정 파일**:
   - 화면 스크립트: [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
 - **배경 및 사용자 피드백**:
@@ -1424,6 +1518,7 @@
   - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료.
 
 ### 21. MST3001_R03 드래그 선택 영역 Delete 키 삭제 시 로케이션명 잔존 결함 원인 분석 및 캡처링 이벤트 해결
+
 - **수정 파일**:
   - 화면 스크립트: [01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
 - **배경 및 사용자 피드백**:
@@ -1444,6 +1539,7 @@
   - 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료.
 
 ### 20. .agents/rules 프로시저 개발 규칙 글자 수 초과 해소 및 주제별 5대 세분화(모듈화) 리팩토링 완료
+
 - **수정 및 신규 파일**:
   - 기존 규칙 슬림화: [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md) (21.5KB ➔ 5.7KB)
   - 서버 다운 방지 규칙 분리 신설: [.agents/rules/procedure_subquery.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure_subquery.md)
@@ -1475,6 +1571,7 @@
   - 모든 규칙 파일 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 100% 완료.
 
 ### 19. MST3001_R03 Delete 키 및 드래그 다중 행 삭제 시 로케이션 동기화 및 DB 삭제(비움) 반영
+
 - **수정 파일**:
   - 화면 스크립트: [01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
   - DB 프로시저: [05.Procedure/MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql)
@@ -1502,6 +1599,7 @@
   - 수정된 파일(`MST3001_R03.js`, `MES_SNS2_MST3001_R03.sql`, `WORK_HISTORY.md`) 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 무결성 검증 완료.
 
 ### 18. MST3001_R03 중요도등급(GRADE) 수정·저장 및 현재고(LOTQTY) 입력 차단 연동, 프로시저 공통 감사함수(CALLTIME/CALLEMP/CALLPRG) 강제 규칙 제정 및 적용
+
 - **수정 파일**:
   - 개발 규칙 문서: [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md)
   - 화면 스크립트: [01.Office/PAGEMST/MST3001/MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
@@ -1536,6 +1634,7 @@
   - 수정된 모든 파일(`procedure.md`, `MST3001_R03.sql`, `SYSTEM_PARAMETERS.sql`, `MST3001_R03.js`) 단일 UTF-8 with BOM (`\xef\xbb\xbf`), 중복 BOM 없음, CRLF 개행 바이너리 무결성 검증 완료.
 
 ### 17. MTR0001_S04A 로고 크기 확대, 거래처명 상단 마진 추가 및 기본 정보 5개 행 전체 텍스트 Bold 적용
+
 - **수정 파일**:
   - 리포트 C# 소스: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs)
   - 실행 바이너리 배포: [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
@@ -1561,6 +1660,7 @@
   - 단일 UTF-8 with BOM 및 CRLF 무결성 검증 통과.
 
 ### 16. MTR0001_S04A 거래처명 상하 여백 확대, 품목 그리드 헤더 높이(0.9배, 32.4F) 및 합계행 높이 데이터행 동일(36F) 일치
+
 - **수정 파일**:
   - 리포트 C# 소스: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs)
   - 실행 바이너리 배포: [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
@@ -1587,6 +1687,7 @@
   - 단일 UTF-8 with BOM 및 CRLF 무결성 검증 통과.
 
 ### 15. MTR0001_S04A 합계 행 수량·총금액 우측 마진(패딩) 추가 및 1~15행 품목 내용 구간 높이 1.3배 확대(36F)
+
 - **수정 파일**:
   - 리포트 C# 소스: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs)
   - 실행 바이너리 배포: [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
@@ -1611,6 +1712,7 @@
   - 단일 UTF-8 with BOM 및 CRLF 무결성 검증 통과.
 
 ### 14. MTR0001_S04A 상단 발주번호/발주일자 시작·끝선 완벽 일치 및 발주 품목 1~15행 균등 높이(25F) 고정화·합계 우측정렬 완료
+
 - **수정 파일**:
   - 리포트 C# 소스: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs)
   - 실행 바이너리 배포: [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
@@ -1637,6 +1739,7 @@
   - 단일 UTF-8 with BOM 및 CRLF 무결성 검증 통과.
 
 ### 13. MTR0001_S04A 설비부품 발주서 상단 행별 독립 XRTable 분리 및 품목 그리드 3단 분리 렌더링 최적화
+
 - **수정 파일**:
   - 리포트 C# 소스: [04.Report/PAGEMTR/MTR0001/S04A.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/04.Report/PAGEMTR/MTR0001/S04A.cs)
   - 실행 바이너리 배포: [01.Office/Reports/MTR0001.exe](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/Reports/MTR0001.exe)
@@ -1661,6 +1764,7 @@
   - 실테스트 실행 후 생성된 HTML 텍스트 정밀 파싱 검증: `"대 표 자"`, `"사업자번호"`, `"발 주 번 호"`, `"발주일자"`, `"납기일자"`, `"담 당 자"`, `"합    계"` 전 라벨 100% 온전 출력 및 그리드 헤더 높이 20px(23F) 정상 확인 완료.
 
 ### 12. MTR0001_R04 설비부품 발주서 출력 리포트(S04A) 신규 구현 및 DevExpress XtraReports 기반 PDF 양식 매핑
+
 - **수정/신규 파일**:
   - 화면 마크업: [01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx)
   - 클라이언트 스크립트: [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js)
@@ -1694,6 +1798,7 @@
   - 모든 파일 단일 UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 확인 완료.
 
 ### 11. MTR0001_R01(18건) 대비 MTR0001_R04(0건) 조회 결과 차이점 정밀 원인 분석 및 DB 실데이터 검증
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R01.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R01.aspx), [01.Office/PAGEMTR/MTR0001/MTR0001_R01.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R01.js)
 - **배경 및 사용자 질의**:
   - "MTR0001_R01 페이지에서는 발주조회를 할 경우 INC 2공장에서 총 18개의 데이터가 나오는데 왜 우리가 짠 부분에서는 0건이 나오나요?? 어떤 차이점인지 알려주면 고마울 것 같습니다"
@@ -1714,6 +1819,7 @@
   - 2안: 설비부품 전용 화면 목적을 유지하고, INC 2공장의 설비부품 신규 발주 데이터 등록 또는 INC 1공장(`06`) 발주 데이터 연계.
 
 ### 10. MTR0001_R04 구매담당자 사원번호(4328, 4329 등) 사원명 매핑 및 INC 2공장(07) 디폴트 확정
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js)
 - **배경 및 원인 분석**:
   - 사용자가 "07이 기본이고 06은 나중에 통합하기 위해 남겨진 공장입니다. 07을 그대로 유지하는것이 맞습니다. 근데 문제는 좌측 그리드에서 구매 담당자 이름이 이상합니다. 숫자로 나오는데 4328, 4329 이 부분 똑바로 해주세요"라고 요청.
@@ -1731,7 +1837,7 @@
     - `LIST_MTRODRD`: 우측 상세의 `MTRODRD.ODRDELEMPID`도 동일하게 `ODRDELEMPID > 0` 및 `CAST AS CHAR` 안전 조인 적용.
     - `CASE WHEN COALESCE(ODREMPID, 0) = 0 THEN '' ELSE COALESCE(MSTEMP.EMPNM, SNS_EMP.EMPNM, CAST(ODREMPID AS CHAR)) END`로 미지정 시 깔끔한 빈 문자열 반환.
     - 최상단 `Modify` 이력 1일 1행 압축 갱신 (`procedure_history.md` 준수).
-  - 2) **클라이언트 스크립트 공장 디폴트 확정 ([MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js))**:
+  - 1) **클라이언트 스크립트 공장 디폴트 확정 ([MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js))**:
     - 초기 로드(`ItsPage.Load`) 및 법인 변경(`onChanged`) 시 `ItsCombo.SetValueByIndex('sdiv1_combo_FACTORYCD', 2)`와 함께 `ItsCombo.SetValue('sdiv1_combo_FACTORYCD', '07')`를 명시하여 "INC 2공장(07)" 기본 선택 보장.
     - 함수 상단 날짜 주석 작성 (`Optimization.md` 준수).
 - **검증 결과**:
@@ -1742,6 +1848,7 @@
   - 전체 파일 단일 UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 확인 완료.
 
 ### 9. 실제 DB 스키마 직접 검증(DESC/SELECT) 및 MTRODR.MTRODRSEQ 제거·ITEMID 정수형 PK 조인 완전 정상화
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js)
 - **배경 및 원인 분석**:
   - `Unknown column 'MTRODR.MTRODRSEQ' in 'field list'` 에러 발생.
@@ -1754,7 +1861,7 @@
     - `LIST_MTRODR`: SELECT 절에서 존재하지 않는 `MTRODR.MTRODRSEQ` 컬럼을 완전히 제거하고, 실제 존재하는 헤더 컬럼(`MTRODRDATE`, `MTRODRKEY`, `MTRODRSTT`, `CUSTCD`, `CUSTNM`, `EXPDATE`, `ODREMPID`)만 정확히 조회.
     - 품목 조인 조건: `I.ITEMID = D.ITEMID`로 정수형 PK 직접 조인 적용 및 설비부품(`ITEMCG = 'DM100700' OR ITEMCG LIKE 'DM1007%' OR ITEMCG = 'DM100750'`) 인라인 뷰 필터링.
     - `LIST_MTRODRD`: 상세 조회 시 `MSTITEM.ITEMID = MTRODRD.ITEMID`로 직접 조인하여 품목코드(`ITEMCD`), 품명(`ITEMNM`), 규격(`ITEMSPEC`) 정확 반환.
-  - 2) **클라이언트 스크립트 그리드 동기화 ([MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js))**:
+  - 1) **클라이언트 스크립트 그리드 동기화 ([MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js))**:
     - 좌측 발주헤더 그리드(`grid1`)에서 존재하지 않는 컬럼인 `MTRODRSEQ`를 제거하고 실제 발주헤더 데이터 구조와 1:1 일치.
 - **실제 DB 쿼리 실행 검증 결과**:
   - `DESC MTRODR`, `DESC MTRODRD`, `DESC MSTITEM` 컬럼 타입 및 제약조건 전수 확인 완료.
@@ -1763,6 +1870,7 @@
   - 소스 파일 단일 UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 확인 완료.
 
 ### 8. 이중 BOM 파서 크래시 원인 분석 및 인코딩·ASPX 공통 규칙 강화
+
 - **수정/대상 파일**: [.agents/rules/encoding.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/encoding.md), [.agents/rules/aspx_cs_comment.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/aspx_cs_comment.md), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx)
 - **배경 및 원인 분석**:
   - `MTR0001_R04.aspx` 접속 시 `Content 컨트롤이 포함된 콘텐츠 페이지에는 Content 컨트롤만 사용할 수 있습니다. 줄 1:` 구문 분석 오류 발생.
@@ -1776,18 +1884,19 @@
     - ASP.NET 콘텐츠 페이지 줄 1 파서 크래시 및 스크립트 구문 오류 실사례 주의사항 명시.
     - 파일 저장 후 **3단계 바이너리 검증**(1단계: 단일 BOM 존재, 2단계: 중복 BOM 부존재 `buf.slice(0, 6)`, 3단계: 표준 CRLF 및 중복 개행 부존재) 의무화.
     - 기존 BOM(`\uFEFF`)을 전면 제거한 후 단 1개의 BOM 바이트만 결합하는 Node.js 안전 정규화 스크립트 표준 패턴 가이드 추가.
-  - 2) **ASPX 규칙 강화 ([.agents/rules/aspx_cs_comment.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/aspx_cs_comment.md))**:
+  - 1) **ASPX 규칙 강화 ([.agents/rules/aspx_cs_comment.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/aspx_cs_comment.md))**:
     - `1-1. <asp:Content> 외부 텍스트 및 중복 BOM 유입 절대 금지 (줄 1 파서 크래시 방지)` 조항 신규 제정.
     - 콘텐츠 페이지 바깥 영역 텍스트 배제 및 단일 BOM 3바이트 무결성 유지 표준화.
-  - 3) **실서버 렌더링 검증 ([MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx))**:
+  - 1) **실서버 렌더링 검증 ([MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx))**:
     - 중복 BOM 제거 후 단일 BOM으로 복구. 로컬 웹서버(IIS Express) 실제 HTTP GET 요청 검증 결과 **HTTP 200 OK**, `grid1`, `grid2` 정상 로딩 확인.
 - **검증 결과**:
   - [.agents/rules/encoding.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/encoding.md), [.agents/rules/aspx_cs_comment.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/aspx_cs_comment.md) 모두 단일 BOM(True), CRLF(True), LFOnly(False) 통과.
   - IIS Express `http://localhost:55085/PAGEMTR/MTR0001/MTR0001_R04.aspx` HTTP 200 정상 응답 확인.
 
 ### 7. MTR0001_R04 원본 기반(MTR0001_R01) 복원, INC 2공장 디폴트 설정 및 설비부품 발주헤더 필터링 구현
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx)
-- **배경 및 사용자 요구사항**: 
+- **배경 및 사용자 요구사항**:
   - `MTR0001_R01.aspx` 및 `MTR0001_R01.js`를 원본 기반으로 재정립.
   - 최초 접속 시 공장 콤보박스에 **"INC 2공장"**이 디폴트로 선택되어야 함.
   - 좌측 그리드(`grid1`)는 **"발주디테일에 설비부품이 있는 발주헤더만 조회"** 조건이 필수 적용되어야 함.
@@ -1800,21 +1909,22 @@
     - 날짜 및 공장 조건 안정화: `$SDATE`/`$EDATE` 하이픈 제거 전처리 후 앞 8자리 비교로 날짜 포맷 무관 안전 조회, `$FACTORYCD`가 공백이거나 발주헤더 공장 컬럼이 공백인 경우도 포괄하여 조회 0건 결함 방지.
     - `MTR0001_R01` 좌측 그리드 사양에 맞추어 `MTRODR.MTRODRSEQ` 컬럼 추가 반환.
     - 최상단 `CREATE DEFINER` 2행 개행 선언 및 `Modify` 1일 1행 작성 준수.
-  - 2) **클라이언트 스크립트 MTR0001_R01 원본 기반 복원 및 INC 2공장 디폴트 확정 ([MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js))**:
+  - 1) **클라이언트 스크립트 MTR0001_R01 원본 기반 복원 및 INC 2공장 디폴트 확정 ([MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js))**:
     - `ItsPage.Load`에서 `MTR0001_R01`의 그리드 컬럼 구성(좌측 발주일자, 발주번호, 발주순번(hidden), 발주상태, 거래처코드(hidden), 거래처명, 납기일자, 구매담당자 / 우측 발주상세 13개 컬럼)을 정밀 복원.
     - 공장 디폴트 설정: 법인 기본값 60 고정(`SetValue('sdiv1_combo_COMPANYCD', '60')`)과 함께 공장 콤보 REF01 지정 및 `SetValueByIndex('sdiv1_combo_FACTORYCD', 2)`를 명시하여 화면 최초 로드 시 "INC 2공장"이 확실하게 선택되도록 구현.
     - 법인 변경 이벤트(`onChanged`)에서도 `SetValueByIndex('sdiv1_combo_FACTORYCD', 2)`를 유지하여 INC 2공장 기본 선택 보장.
     - `ItsGrid.Event('grid1').onSelect`에서 `AddPanel('sdiv1')` 및 `AddRecord('grid1', rowIndex)`를 통해 원본 패턴과 동일하게 발주번호를 전달하고 `grid2` 바인딩 및 컬럼 자동 너비 조절 적용.
     - 함수/이벤트 블록 최상단 `// 2026-10-14 [설비부품 발주관리] ...` 날짜 주석 작성 (`Optimization.md` 준수).
-  - 3) **화면 마크업 점검 ([MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx))**:
+  - 1) **화면 마크업 점검 ([MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx))**:
     - `SplitLeft`/`SplitRight` 2단 레이아웃 및 검색 패널 무주석 순수 ASP.NET 마크업 유지 (`aspx_cs_comment.md` 준수).
 - **검증 결과**:
   - Node.js 구문 검사(`node -c 01.Office/PAGEMTR/MTR0001/MTR0001_R04.js`) 오류 0건 통과.
   - 05.Procedure/MES_SNS2_MTR0001_R04.sql, MTR0001_R04.js, MTR0001_R04.aspx 3개 파일 전체 UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 확인 완료 (BOM: true, DoubleCR: false, LFOnly: false).
 
 ### 6. MTR0001_R04 DOUBLE 형변환 오류 해결 및 실무 표준 JS·SQL 리팩터링
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js)
-- **배경 및 원인**: 
+- **배경 및 원인**:
   - `Truncated incorrect DOUBLE value: '7-열처리설비-00001'` 런타임 SQL 에러 지속 발생.
   - 원인 규명:
     - `MTRODRD.ITEMID`와 `MSTITEM.ITEMID`/`ITEMCD` 조인 시 한쪽이 숫자형이고 한쪽이 문자열일 경우, MariaDB 옵티마이저가 문자열 `'7-열처리설비-00001'`을 DOUBLE로 변환하려다 에러 발생.
@@ -1827,7 +1937,7 @@
     - 품목구분 조건을 `(I.ITEMCG = 'DM100700' OR I.ITEMCG LIKE 'DM1007%' OR I.ITEMCG = 'DM100750')`로 확장하여 설비부품 전체 포괄.
     - `LIST_MTRODRD` 결과 반환 시 `COALESCE(MSTITEM.ITEMCD, CAST(MTRODRD.ITEMID AS CHAR)) AS ITEMCD` 적용으로 품목 마스터 미등록 부품도 발주 데이터 유실 없이 화면 표시 보장.
     - 최상단 `Modify` 이력 1일 1행 갱신 (`procedure_history.md` 준수).
-  - 2) **클라이언트 JS 실무 표준화 (`MTR0001_R04.js`)**:
+  - 1) **클라이언트 JS 실무 표준화 (`MTR0001_R04.js`)**:
     - `ItsButton.EventSearch`: 조회 성공 시 데이터가 1건 이상이면 첫 번째 행을 자동 선택(`ItsGrid.SelectRow('grid1', 0);`)하여 우측 상세 그리드 즉시 바인딩 (실무 표준 UX 적용).
     - `ItsGrid.Event('grid1').onSelect`: 행 선택 시 `MTRODRKEY` 유효성 검사 및 `maria.AddParam('MTRODRKEY', odrKey)` 명시적 전달로 안전성 강화.
     - `ItsCombo.Event('sdiv1_combo_COMPANYCD').onChanged`: 공장 콤보 연동 시 하드코딩 인덱스(2)를 전체 선택(`SetValueByIndex(..., 0)`)으로 정상화하여 타 공장 데이터 누락 방지.
@@ -1836,34 +1946,36 @@
   - UTF-8 with BOM 및 CRLF 개행 무결성 검증 통과 (BOM: true, DoubleCR: false).
 
 ### 5. MTR0001_R04 설비부품 발주관리(발주헤더·상세 분리 조회) 구현 및 procedure.md 컬럼 가로 나열 규칙 갱신
+
 - **수정/대상 파일**: [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [05.Procedure/MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [05.Procedure/MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx), [01.Office/PAGEMTR/MTR0001/MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js)
-- **배경 및 원인**: 
+- **배경 및 원인**:
   - 1) 설비부품 발주 화면에서 좌측 그리드(`grid1`)는 설비부품이 포함된 발주헤더(`MTRODR`)만 조회하고, 우측 그리드(`grid2`)는 선택된 발주헤더의 상세 품목(`MTRODRD`)을 조회하는 2단 분리 조회 기능 구현 요청.
-  - 2) 프로시저 작성 시 다른 테이블을 복잡하게 참조하지 않는 경우 무의미하게 세로로 1컬럼씩 나열하지 않고 연관 컬럼들을 한 줄에 가로로 나열하도록 규칙 업데이트 요청.
+  - 1) 프로시저 작성 시 다른 테이블을 복잡하게 참조하지 않는 경우 무의미하게 세로로 1컬럼씩 나열하지 않고 연관 컬럼들을 한 줄에 가로로 나열하도록 규칙 업데이트 요청.
 - **작업 상세 내용**:
   - 1) **프로시저 규칙 갱신 (`procedure.md`)**: 단일 테이블 및 복잡한 참조가 없는 SELECT/INSERT 절 작성 시 한 줄에 여러 컬럼을 그룹화하여 가로로 나열하는 표준 규칙 추가.
-  - 2) **프로시저 분리 구현 (`MES_SNS2_MTR0001_R04.sql`)**:
+  - 1) **프로시저 분리 구현 (`MES_SNS2_MTR0001_R04.sql`)**:
     - `LIST_MTRODR`: `MTRODRD`와 `MSTITEM(ITEMCG = 'DM100700')` 인라인 뷰 조인을 통해 설비부품이 포함된 발주헤더만 행 중복 없이 1건씩 추출 (서버 다운 방지 원칙 준수).
     - `LIST_MTRODRD`: 선택된 발주번호(`$MTRODRKEY`)에 해당하는 설비부품 상세 목록 조회.
     - 단일 테이블/비참조 컬럼들을 한 줄 다중 컬럼 형태로 가로 정렬하여 가독성 및 압축성 최적화.
-  - 3) **화면 마크업 정비 (`MTR0001_R04.aspx`)**: `MTR0001_R04` 전용 CodeFile/Inherits 및 JS 스크립트 연결 정상화, `SplitLeft`/`SplitRight` 2단 그리드 구조 확정 (`aspx_cs_comment.md` 무주석 원칙 준수).
-  - 4) **화면 스크립트 연동 (`MTR0001_R04.js`)**: `LIST_MTRODR` 및 `grid1.onSelect` 시 `LIST_MTRODRD` 호출 연동, 날짜 주석 작성.
+  - 1) **화면 마크업 정비 (`MTR0001_R04.aspx`)**: `MTR0001_R04` 전용 CodeFile/Inherits 및 JS 스크립트 연결 정상화, `SplitLeft`/`SplitRight` 2단 그리드 구조 확정 (`aspx_cs_comment.md` 무주석 원칙 준수).
+  - 1) **화면 스크립트 연동 (`MTR0001_R04.js`)**: `LIST_MTRODR` 및 `grid1.onSelect` 시 `LIST_MTRODRD` 호출 연동, 날짜 주석 작성.
 - **검증 결과**:
   - Node.js 구문 검사(`node -c`) 오류 0건 통과.
   - IIS Express HTTP 200 정상 렌더링 검증 완료.
   - 전체 파일 UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료.
 
 ### 4. MST3001_R03 프로젝트 코딩 규칙 기반 리팩토링 및 네이밍·주석 표준화
+
 - **수정/대상 파일**: [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
 - **배경 및 원인**: 프로젝트 코딩 컨벤션(`coding_convention.md`), 최적화 규칙(`Optimization.md`), 주석 표준에 맞추어 `MST3001_R03.js` 소스의 직관적인 네이밍 적용, 날짜 주석 보강, 가독성 및 무결성 향상 요청.
 - **작업 상세 내용**:
   - 1) **변수 네이밍 표준화 (`coding_convention.md`)**:
     - 체크/수정 행 배열 변수명을 표준 약어인 `arrRows`로 통일 (`var arrRows = GetCheckedRows(...)`).
     - 함수 파라미터명을 도메인 의미에 부합하도록 직관적으로 정돈 (`code, name` ➔ `locaCd, locaNm`, `checkChanges` ➔ `isCheckChange`).
-  - 2) **주석 표준 준수 (`Optimization.md`)**:
+  - 1) **주석 표준 준수 (`Optimization.md`)**:
     - 신규/변경 함수 및 핸들러 상단 `// YYYY-MM-DD [위치] 상세 기능` 표준 날짜 주석 유지 및 보강 (누락되었던 `sdiv1_combo_ITEMCG.onChanged` 이벤트 상단 날짜 주석 추가).
     - 기존 날짜 주석 일체 보존 및 인위적인 AI 번호 매기기 주석 배제.
-  - 3) **로직 무결성 및 성능 보존**:
+  - 1) **로직 무결성 및 성능 보존**:
     - `ItsGrid.finishEditing()` 및 `grid.deferUpdate` 블록 내 일괄 처리 구조를 100% 보존하여 렌더링 깜빡임 및 성능 저하 방지.
     - 기존 로직 흐름(로케이션 더블클릭/Enter 팝업 연동, Delete 키 초기화, 저장/삭제 파라미터 전달 등) 훼손 없이 순수 리팩토링 수행.
 - **검증 결과**:
@@ -1871,39 +1983,41 @@
   - UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 검증 통과 (BOM: true, Solo LF: 0, Double CR: 0).
 
 ### 3. MST3001_R03 그리드 이벤트 정리 및 저장 반복 접근 축소
+
 - **수정/대상 파일**: 01.Office/PAGEMST/MST3001/MST3001_R03.js
 - **배경 및 원인**: 그리드 이벤트 중복 처리와 저장 시 전체 행 반복 접근 정리 요청
 - **작업 상세 내용**:
   - 더블클릭과 Enter를 OpenLoca로 통합하고 공통 셀 수정 자동 체크 재사용. GetCheckedRows에서 편집 확정 및 수정·선택 행을 한 번 수집하고 SetLoca에서 화면 갱신 묶음 처리. 직접 입력 시 로케이션 코드 초기화, 팝업 원본 행 유지, 삭제 원본 코드 사용. 그리드 컬럼 및 전용 프로시저 호출 5종과 파라미터 유지
 - **검증 결과**: 실제 ItsGrid 소스와 Wijmo 2018·2020 라이브러리를 사용한 격리 Edge 브라우저 17개 시나리오씩 34개 통과. 1000행 1건 선택 저장 시 GetValue 호출 10006회에서 0회. 브라우저 테스트의 DB·팝업 연동은 대역이며 운영 화면 및 DB 실처리는 미실행. Node 문법과 BOM/CRLF 검증 통과
 
-
 ### 1. MST3001_R03 메인 그리드 로케이션 값 존재 시 수정(전체 목록 팝업) 및 삭제(Delete 키·빈값 초기화·SAVE_ITEM 연동) 오류 해결, pop_LOCA 팝업 비율(600×500) 최적화
+
 - **수정/대상 파일**: [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql)
-- **배경 및 원인**: 
+- **배경 및 원인**:
   - 1) **수정 불가 원인**: 메인 그리드 로케이션 셀에 값이 있는 상태에서 더블클릭/엔터 시 `ItsPop.OpenFindCOM`에 `keyword: curVal`을 넘겨 단 1건만 조회되거나 팝업이 즉시 닫혀 타 로케이션으로의 변경(수정)이 불가능했던 현상.
-  - 2) **삭제 불가 원인**: 로케이션 셀의 내용을 지우거나 Delete 키를 눌렀을 때 숨은 필드 `LOCACD`가 동기화되지 않고, 프로시저 `SAVE_ITEM`에서도 `LOCACD_LIST`를 파싱/전송하지 않아 로케이션 초기화(삭제)가 DB에 정상 반영되지 않던 현상.
-  - 3) **팝업 비율**: 로케이션 관리 팝업(`pop_LOCA`)이 800×480으로 가로로 과도하게 넓어 컬럼 2개 대비 비효율적이었던 사각형 비율 개선 요청 (공통 컴포넌트 `findPop_COM`은 시스템 공통 규격 준수 유지).
+  - 1) **삭제 불가 원인**: 로케이션 셀의 내용을 지우거나 Delete 키를 눌렀을 때 숨은 필드 `LOCACD`가 동기화되지 않고, 프로시저 `SAVE_ITEM`에서도 `LOCACD_LIST`를 파싱/전송하지 않아 로케이션 초기화(삭제)가 DB에 정상 반영되지 않던 현상.
+  - 1) **팝업 비율**: 로케이션 관리 팝업(`pop_LOCA`)이 800×480으로 가로로 과도하게 넓어 컬럼 2개 대비 비효율적이었던 사각형 비율 개선 요청 (공통 컴포넌트 `findPop_COM`은 시스템 공통 규격 준수 유지).
 - **작업 상세 내용**:
   - 1) **로케이션 수정 시 전체 목록 오픈 ([MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js))**: `grid1.onKeydownEnter`에서 `ItsPop.OpenFindCOM({ gpcd: 'LOCACD_EQMPARTS', keyword: '' })`로 호출하도록 수정하여, 기존 값이 존재하더라도 전체 로케이션 목록이 시원하게 노출되어 사용자가 원하는 다른 로케이션을 선택하여 수정할 수 있도록 조치.
-  - 2) **로케이션 삭제 인터랙션 지원 ([MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js))**:
+  - 1) **로케이션 삭제 인터랙션 지원 ([MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js))**:
     - `grid1.onKeydown`: Delete 키(`keyCode === 46`) 입력 시 `LOCACD`와 `LOCANM`을 모두 `''`로 즉시 초기화하고 해당 행 체크박스 선택(`CheckRow`).
     - `grid1.onChanged`: 셀 편집으로 `LOCANM`이 빈 값이 될 경우 `LOCACD`도 빈 값으로 자동 동기화.
     - `ItsButton.EventSave` & `ItsButton.EventSearch`: `_ORG_LOCACD` 보관 및 변경 감지 조건에 `curLocaCd !== orgLocaCd` 추가, `maria.AddList('LOCACD_LIST', locaCd)` 전달 추가.
-  - 3) **프로시저 삭제/수정 처리 ([MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql))**: `SAVE_ITEM` 분기에서 `LOCACD_LIST`를 함께 분리(`COMSPLIT`)하고, `LOCANM`이 비어있으면 `LOCACD`도 빈 값(`''`)으로 확정하여 `MSTITEM_EQMPARTS.LOCACD = ''`로 정상 초기화(삭제)되도록 개선 (최상단 Modify 1일 1행 원칙 준수).
-  - 4) **로케이션 관리 팝업 디자인 비율 최적화 ([MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx) & [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js))**: `pop_LOCA` 규격을 `Width="600" Height="500"`의 안정적인 황금 직사각형 비율로 전환하고, `grid_LOCA` 컬럼 너비(코드 180, 명 360)를 팝업 너비에 최적 밀착. 공통 컴포넌트인 `MasterBase.master` 및 `ItsPop.js`는 원본 유지.
+  - 1) **프로시저 삭제/수정 처리 ([MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql))**: `SAVE_ITEM` 분기에서 `LOCACD_LIST`를 함께 분리(`COMSPLIT`)하고, `LOCANM`이 비어있으면 `LOCACD`도 빈 값(`''`)으로 확정하여 `MSTITEM_EQMPARTS.LOCACD = ''`로 정상 초기화(삭제)되도록 개선 (최상단 Modify 1일 1행 원칙 준수).
+  - 1) **로케이션 관리 팝업 디자인 비율 최적화 ([MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx) & [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js))**: `pop_LOCA` 규격을 `Width="600" Height="500"`의 안정적인 황금 직사각형 비율로 전환하고, `grid_LOCA` 컬럼 너비(코드 180, 명 360)를 팝업 너비에 최적 밀착. 공통 컴포넌트인 `MasterBase.master` 및 `ItsPop.js`는 원본 유지.
 - **검증 결과**:
   - Node.js 구문 검사(`node -c`) 통과 (오류 0건).
   - UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 검증 통과 (BOM: true, DoubleCR: false, BareLF: 0).
   - IIS Express HTTP 200 정상 응답 및 신규 규격 렌더링 무결성 검증 완료.
 
 ### 2. 프로시저 최상단 선언부 서식 규칙(CREATE DEFINER / PROCEDURE 2행 개행) 정정 및 표준화 적용
+
 - **수정/대상 파일**: [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [.agents/rules/procedure_history.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure_history.md), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql)
 - **배경 및 원인**: 프로시저 최상단 선언부 작성 시 `CREATE DEFINER=... PROCEDURE ...(...)` 형태로 한 줄에 붙여 쓰는 것은 DBeaver/HeidiSQL 루틴 에디터 및 소스 뷰 가독성과 프로젝트 컨벤션에 어긋나므로, 반드시 2행으로 분리 개행하여 작성하도록 규칙 정정 및 주요 프로시저 파일 적용 요청.
 - **작업 상세 내용**:
   - 1) `procedure.md`: `### 0-3. [프로시저 최상단 선언부 서식 표준] CREATE DEFINER 및 PROCEDURE 2행 개행 선언 강제 (한 줄 선언 절대 금지)` 신규 조항 추가 및 표준 예시(`CREATE DEFINER=...\nPROCEDURE ...(`) 명시. 기존 `0-2` 섹션 예시도 2행 개행 형태로 동기화.
-  - 2) `procedure_history.md`: `3. 정렬 및 포맷 표준` 템플릿 상단에 `CREATE DEFINER=\`root\`@\`%\`\nPROCEDURE \`MES_SNS2\`.\`[프로시저명]\`(` 2행 개행 선언부 반영.
-  - 3) **프로시저 파일 표준화 적용**: [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql) 최상단 선언부를 `CREATE DEFINER=\`root\`@\`%\`\nPROCEDURE \`MES_SNS2\`.\`프로시저명\`(` 2행 개행 분리 형태로 통일 정규화 완료 (최상단 Modify 이력 1일 1행 원칙 준수).
+  - 1) `procedure_history.md`: `3. 정렬 및 포맷 표준` 템플릿 상단에 `CREATE DEFINER=\`root\`@\`%\`\nPROCEDURE \`MES_SNS2\`.\`[프로시저명]\`(` 2행 개행 선언부 반영.
+  - 1) **프로시저 파일 표준화 적용**: [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql) 최상단 선언부를 `CREATE DEFINER=\`root\`@\`%\`\nPROCEDURE \`MES_SNS2\`.\`프로시저명\`(` 2행 개행 분리 형태로 통일 정규화 완료 (최상단 Modify 이력 1일 1행 원칙 준수).
 - **검증 결과**: 규칙 파일 및 대상 프로시저 파일 모두 UTF-8 with BOM 및 CRLF 개행 무결성 검증 통과 (BOM: true, DoubleCR: false, BareLF: 0).
 
 ---
@@ -1911,81 +2025,87 @@
 ## 🕒 2026-10-13 (화) 작업 내역
 
 ### 8. MST3001_R03 공통 마스터 코드검색 팝업(ItsPop.OpenFindCOM) B안 정석 적용 및 DC_FIND 로컬 분기 추가
+
 - **수정/대상 파일**: [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_DC_FIND.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_DC_FIND.sql)
 - **배경 및 원인**: 개별 화면마다 중복 팝업 태그와 JS 코드를 작성하는 방식을 지양하고, 마스터 페이지(`MasterBase.master`)에 탑재된 전역 공통 코드검색 팝업(`findPop_COM`) 및 프레임워크 표준 호출 API(`ItsPop.OpenFindCOM`)를 활용하는 프로젝트 표준 "B안" 적용 요청.
 - **작업 상세 내용**:
   - 1) 화면 마크업 간소화(`MST3001_R03.aspx`): 화면 전용 팝업 마크업(`pop_FIND_LOCA`)을 전면 삭제하여 화면 태그를 깔끔하게 슬림화(`aspx_cs_comment.md` 준수).
-  - 2) 화면 스크립트 표준화 및 슬림화(`MST3001_R03.js`): 화면 전용 팝업 변수(`_targetGrid1Row`), 그리드 선언(`grid_FIND_LOCA`), 이벤트 및 검색 함수 등 비표준 코드 약 60줄 전면 제거. 메인 그리드 `grid1.onKeydownEnter`에서 `ItsPop.OpenFindCOM({ gpcd: 'LOCACD_EQMPARTS', keyword: curVal }, function (res) { ... })` 호출로 교체하여, 로케이션 선택 시 콜백을 통해 `LOCACD`/`LOCANM` 바인딩 및 `CheckRow`가 8줄의 간결한 코드로 완벽 처리되도록 표준화.
-  - 3) 공통 코드검색 프로시저 분기 추가(`MES_SNS2_DC_FIND.sql`): `DC_FIND` 프로시저 로컬 소스에 `LOCACD_EQMPARTS_HEAD`(헤더 정의: 로케이션코드 150, 로케이션명 350), `LOCACD_EQMPARTS_LIST`(키워드 부분검색 쿼리), `LOCACD_EQMPARTS_INFO`(단건 코드 조회) 분기 구현.
+  - 1) 화면 스크립트 표준화 및 슬림화(`MST3001_R03.js`): 화면 전용 팝업 변수(`_targetGrid1Row`), 그리드 선언(`grid_FIND_LOCA`), 이벤트 및 검색 함수 등 비표준 코드 약 60줄 전면 제거. 메인 그리드 `grid1.onKeydownEnter`에서 `ItsPop.OpenFindCOM({ gpcd: 'LOCACD_EQMPARTS', keyword: curVal }, function (res) { ... })` 호출로 교체하여, 로케이션 선택 시 콜백을 통해 `LOCACD`/`LOCANM` 바인딩 및 `CheckRow`가 8줄의 간결한 코드로 완벽 처리되도록 표준화.
+  - 1) 공통 코드검색 프로시저 분기 추가(`MES_SNS2_DC_FIND.sql`): `DC_FIND` 프로시저 로컬 소스에 `LOCACD_EQMPARTS_HEAD`(헤더 정의: 로케이션코드 150, 로케이션명 350), `LOCACD_EQMPARTS_LIST`(키워드 부분검색 쿼리), `LOCACD_EQMPARTS_INFO`(단건 코드 조회) 분기 구현.
 - **검증 결과**: Node.js 구문 검사(`node -c`) 통과(오류 0건), UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료. IIS Express(포트 55085) HTTP 200 정상 응답 및 불필요 마크업 미생성 확인 완료.
 
 ### 7. MST3001_R03 코드 검색 전용 팝업(pop_FIND_LOCA) 신규 구현 및 키워드 조회 연동
+
 - **수정/대상 파일**: [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
 - **배경 및 원인**: 기존 관리 팝업(`pop_LOCA`)을 재활용하지 않고, 공통 코드 검색 팝업 스타일과 동일한 별도의 신규 코드 검색 팝업(`pop_FIND_LOCA`, Title="코드 검색")을 생성하여 상단 키워드 입력창 및 `[Q 조회]` 버튼을 통한 로케이션 검색 지원 요청.
 - **작업 상세 내용**:
   - 1) 팝업 UI 분리 및 마크업 구현(`MST3001_R03.aspx`): 기존 `pop_LOCA`는 순수 관리 전용으로 원상복구(선택 버튼 `btn_POP_APPLY` 제거)하고, 첨부 이미지 스타일의 독립적인 신규 팝업 `pop_FIND_LOCA`(Title="코드 검색", Width="600", Height="450")를 생성하여 상단 `BorderBlock` 패널(키워드 텍스트박스 `txt_FIND_LOCA_KEYWORD`, 돋보기 조회 버튼 `btn_FIND_LOCA_SEARCH`) 및 하단 결과 그리드(`grid_FIND_LOCA`) 배치.
-  - 2) 전용 그리드 생성 및 이벤트 연동(`MST3001_R03.js`): `grid_FIND_LOCA` 그리드(로케이션코드 180, 로케이션명 350) 정의. 메인 그리드(`grid1`) 로케이션 셀 더블클릭/엔터 시 `pop_FIND_LOCA` 팝업 오픈 및 현재 셀 값 키워드 설정 후 즉시 조회(`SearchFindLoca`).
-  - 3) 키워드 검색 및 바인딩(`MST3001_R03.js`): 키워드 텍스트박스 Enter(`onKeyEnter`) 및 조회 버튼 클릭 시 프로시저 `SEL_LOCA`를 호출하여 로케이션 목록 조회. 검색 결과 행 더블클릭 또는 Enter 시 메인 그리드 행(`_targetGrid1Row`)에 `LOCACD`/`LOCANM` 자동 바인딩 및 체크박스 자동 선택(`CheckRow`) 후 팝업 종료.
-  - 4) 관리 팝업(`pop_LOCA`) 분리 유지: 상단 검색영역의 [로케이션 기준정보 관리](`btn_LOCA_MNG`) 클릭 시에는 기존 `pop_LOCA`가 열려 조회·저장·행추가·삭제 작업을 독립적으로 수행하도록 분리.
-  - 5) 컬럼 너비 강제 축소 방지 및 팝업 규격 최적화(`MST3001_R03.js` & `MST3001_R03.aspx`): 조회 시 컬럼 너비 설정을 무시하고 글자 크기대로 자동 축소시키던 `ItsGrid.Get('grid1').autoSizeColumns()` 호출을 제거하여 `width: 160`이 정상 고정되도록 조치. 사용자 팝업 확대(800×480)에 맞추어 `grid_FIND_LOCA` 높이(390) 및 컬럼 너비(코드 220, 명 520) 비율 최적화.
-  - 6) `setTimeout` 제거 및 프레임워크 표준 `onPopOpened` 전환(`MST3001_R03.js`): 팝업 오픈 시 인위적인 `setTimeout` 지연 코드를 전면 제거하고, 프레임워크 공식 라이프사이클 이벤트인 `ItsPop.Event('pop_FIND_LOCA').onPopOpened`를 통해 팝업 오픈 완료 시 `ItsText.Focus`가 깔끔하게 실행되도록 실무 표준 방식으로 개선.
+  - 1) 전용 그리드 생성 및 이벤트 연동(`MST3001_R03.js`): `grid_FIND_LOCA` 그리드(로케이션코드 180, 로케이션명 350) 정의. 메인 그리드(`grid1`) 로케이션 셀 더블클릭/엔터 시 `pop_FIND_LOCA` 팝업 오픈 및 현재 셀 값 키워드 설정 후 즉시 조회(`SearchFindLoca`).
+  - 1) 키워드 검색 및 바인딩(`MST3001_R03.js`): 키워드 텍스트박스 Enter(`onKeyEnter`) 및 조회 버튼 클릭 시 프로시저 `SEL_LOCA`를 호출하여 로케이션 목록 조회. 검색 결과 행 더블클릭 또는 Enter 시 메인 그리드 행(`_targetGrid1Row`)에 `LOCACD`/`LOCANM` 자동 바인딩 및 체크박스 자동 선택(`CheckRow`) 후 팝업 종료.
+  - 1) 관리 팝업(`pop_LOCA`) 분리 유지: 상단 검색영역의 [로케이션 기준정보 관리](`btn_LOCA_MNG`) 클릭 시에는 기존 `pop_LOCA`가 열려 조회·저장·행추가·삭제 작업을 독립적으로 수행하도록 분리.
+  - 1) 컬럼 너비 강제 축소 방지 및 팝업 규격 최적화(`MST3001_R03.js` & `MST3001_R03.aspx`): 조회 시 컬럼 너비 설정을 무시하고 글자 크기대로 자동 축소시키던 `ItsGrid.Get('grid1').autoSizeColumns()` 호출을 제거하여 `width: 160`이 정상 고정되도록 조치. 사용자 팝업 확대(800×480)에 맞추어 `grid_FIND_LOCA` 높이(390) 및 컬럼 너비(코드 220, 명 520) 비율 최적화.
+  - 1) `setTimeout` 제거 및 프레임워크 표준 `onPopOpened` 전환(`MST3001_R03.js`): 팝업 오픈 시 인위적인 `setTimeout` 지연 코드를 전면 제거하고, 프레임워크 공식 라이프사이클 이벤트인 `ItsPop.Event('pop_FIND_LOCA').onPopOpened`를 통해 팝업 오픈 완료 시 `ItsText.Focus`가 깔끔하게 실행되도록 실무 표준 방식으로 개선.
 - **검증 결과**: Node.js 구문 검사(`node -c`) 통과, UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료. IIS Express(포트 55085) HTTP 200 정상 응답 및 신규 팝업(`pop_FIND_LOCA`, `grid_FIND_LOCA`) 렌더링 무결성 검증 완료.
 
 ### 6. MST3001_R03 메인 그리드 로케이션 셀 더블클릭 시 팝업 선택 연동 구현
+
 - **수정/대상 파일**: [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
 - **배경 및 원인**: 메인 그리드(grid1)의 로케이션 셀을 더블클릭했을 때 로케이션 기준정보 팝업을 열어 로케이션을 선택하면, 해당 행의 로케이션 정보(코드/명)가 자동으로 바인딩되고 체크박스가 선택되는 실무 표준 Find 컬럼 인터랙션 적용 요청.
 - **작업 상세 내용**:
   - 1) 그리드 컬럼 속성(`MST3001_R03.js`): 메인 그리드의 "로케이션" 컬럼을 `columnType: enumColumnTypes.find`로 전환하여 찾기 가능 셀로 시각화.
-  - 2) 메인 그리드 이벤트 연동(`MST3001_R03.js`): `grid1.onDoubleClick` -> `grid1.onKeydownEnter` 연동을 통해 로케이션 셀에서 더블클릭/Enter 입력 시 대상 행(`_targetGrid1Row`)을 저장하고 `pop_LOCA` 팝업 자동 오픈 및 조회(`SearchLoca`).
-  - 3) 팝업 선택 연동(`MST3001_R03.js` & `MST3001_R03.aspx`): 팝업 상단에 [선택](`btn_POP_APPLY`) 버튼을 추가하고, `grid_LOCA` 행 더블클릭 또는 [선택] 클릭 시 선택한 로케이션의 `LOCACD`와 `LOCANM`을 메인 행에 `SetValue` 및 `CheckRow` 처리 후 팝업 자동 종료.
+  - 1) 메인 그리드 이벤트 연동(`MST3001_R03.js`): `grid1.onDoubleClick` -> `grid1.onKeydownEnter` 연동을 통해 로케이션 셀에서 더블클릭/Enter 입력 시 대상 행(`_targetGrid1Row`)을 저장하고 `pop_LOCA` 팝업 자동 오픈 및 조회(`SearchLoca`).
+  - 1) 팝업 선택 연동(`MST3001_R03.js` & `MST3001_R03.aspx`): 팝업 상단에 [선택](`btn_POP_APPLY`) 버튼을 추가하고, `grid_LOCA` 행 더블클릭 또는 [선택] 클릭 시 선택한 로케이션의 `LOCACD`와 `LOCANM`을 메인 행에 `SetValue` 및 `CheckRow` 처리 후 팝업 자동 종료.
 - **검증 결과**: 전 파일 UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료. JS 구문 검사 통과 및 IIS Express HTTP 200 정상 렌더링 검증 완료.
 
 ### 5. MST3001_R03 안전재고 대비 현재고 부족 시 핑크색(BACKGROUND) 공통 컴포넌트 연동
+
 - **수정/대상 파일**: [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
 - **배경 및 원인**: 설비부품 기준정보 화면 그리드에서 부품의 현재고(LOTQTY)가 안전재고(SAFEQTY)보다 적을 경우, 공통 컴포넌트(ItsGrid)의 배경색 지원 기능을 활용하여 행 배경을 핑크색(PINK)으로 강조 표기하도록 요청.
 - **작업 상세 내용**:
   - 1) 공통 컴포넌트 메커니즘 분석(`ItsGrid.js`): `ItsGrid.itemFormatter`에서 행 데이터의 `BACKGROUND` 필드 값(`$obj.rows[r]._data['BACKGROUND']`)을 읽어 셀 배경색(`cell.style.backgroundColor`)으로 자동 반영하는 표준 규약 확인.
-  - 2) 프로시저 SELECT 확장(`MES_SNS2_MST3001_R03.sql`): `SEL_ITEM` 분기에서 `CASE WHEN COALESCE(MSTITEM_EQMPARTS.LOTQTY, 0) < COALESCE(MSTITEM_EQMPARTS.SAFEQTY, 0) THEN 'PINK' ELSE '' END AS BACKGROUND` 컬럼을 SELECT 절에 추가하여 조회 시 재고 부족 행 자동 핑크색 렌더링.
-  - 3) 화면 스크립트(`MST3001_R03.js`): 화면에서 프레임워크 내부 객체(`_data['BACKGROUND']`)를 임의 조작하거나 `grid.refresh()` 깜빡임을 유발하는 비표준 코드를 배제하고, 프로젝트 실무 표준에 맞추어 `grid1.onChanged`는 단순 `CheckRow`만 수행하며 저장 후 자동 재조회 시 프로시저(`SEL_ITEM`)가 계산한 최신 `BACKGROUND`가 일관성 있게 렌더링되도록 단순화.
+  - 1) 프로시저 SELECT 확장(`MES_SNS2_MST3001_R03.sql`): `SEL_ITEM` 분기에서 `CASE WHEN COALESCE(MSTITEM_EQMPARTS.LOTQTY, 0) < COALESCE(MSTITEM_EQMPARTS.SAFEQTY, 0) THEN 'PINK' ELSE '' END AS BACKGROUND` 컬럼을 SELECT 절에 추가하여 조회 시 재고 부족 행 자동 핑크색 렌더링.
+  - 1) 화면 스크립트(`MST3001_R03.js`): 화면에서 프레임워크 내부 객체(`_data['BACKGROUND']`)를 임의 조작하거나 `grid.refresh()` 깜빡임을 유발하는 비표준 코드를 배제하고, 프로젝트 실무 표준에 맞추어 `grid1.onChanged`는 단순 `CheckRow`만 수행하며 저장 후 자동 재조회 시 프로시저(`SEL_ITEM`)가 계산한 최신 `BACKGROUND`가 일관성 있게 렌더링되도록 단순화.
 - **검증 결과**: 전 파일 UTF-8 with BOM, CRLF 개행 및 JS 구문 검사 무결성 확인 완료.
 
 ### 4. MST3001_R03 로케이션 코드 수정 시 중복 검증 추가 및 실무 표준 SQL 튜닝
+
 - **수정/대상 파일**: [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js)
 - **배경 및 원인**: 로케이션 코드 수정 또는 신규 등록 시 이미 등록된 로케이션 코드를 입력했을 때 중복 키 에러나 의도치 않은 데이터 왜곡을 방지하기 위한 사전 검증 처리 및 실무 표준 SQL 성능 튜닝 요청.
 - **작업 상세 내용**:
   - 1) 프로시저 중복 검증(`MES_SNS2_MST3001_R03.sql`): `SAVE_LOCA` 분기에서 신규 등록 시 기존 코드와의 중복, 수정 시 타 행 코드와의 중복을 단일 인덱스 쿼리(`IF EXISTS (SELECT 1 FROM MSTLOCA_EQMPARTS WHERE LOCACD = _$LOCACD AND LOCACD <> _$OLD_LOCACD LIMIT 1)`)로 철저히 검증하고, 중복 시 `CALL COMERR(CONCAT('이미 등록된 로케이션 코드입니다. [', _$LOCACD, ']')); LEAVE PROC;` 에러 처리.
-  - 2) 실무 표준 SQL 튜닝(`MES_SNS2_MST3001_R03.sql`):
+  - 1) 실무 표준 SQL 튜닝(`MES_SNS2_MST3001_R03.sql`):
     - 불필요한 중복 SELECT 제거: 기존 UPDATE 분기 전의 `EXISTS` 조회 및 신규 분기 전의 `EXISTS` 조회를 제거하여, 중복 검증 통과 후 `_$OLD_LOCACD <> ''`이면 즉시 UPDATE, 없으면 즉시 INSERT로 직행시켜 I/O 절감.
-  - 3) 화면 스크립트(`MST3001_R03.js`): 화면단 유효성 검사를 완전히 제거하고, 단순히 선택된 행 목록을 프로시저로 전달하여 모든 유효성 검증(필수값 체크, 중복 체크 등)이 프로시저(`SAVE_LOCA`)에서 전담·일원화되어 처리되도록 정리.
+  - 1) 화면 스크립트(`MST3001_R03.js`): 화면단 유효성 검사를 완전히 제거하고, 단순히 선택된 행 목록을 프로시저로 전달하여 모든 유효성 검증(필수값 체크, 중복 체크 등)이 프로시저(`SAVE_LOCA`)에서 전담·일원화되어 처리되도록 정리.
 - **검증 결과**: UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료. 프로시저 내부 쿼리 라인 날짜 주석 미포함 및 최상단 Modify 1일 1행 원칙 준수 확인.
 
 ### 3. MST3001_R03 설비부품 중요도·재고·로케이션 컬럼 추가, SEL_ITEM 쿼리 최적화, 로케이션 관리 팝업(코드 직접입력) 및 메인 그리드 재고·로케이션 수정·자동선택 저장 구현
+
 - **수정/대상 파일**: [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql), [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [.agents/rules/procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md)
 - **배경 및 원인**: 설비부품 기준정보 화면에 중요도등급·안전재고·현재고·로케이션 컬럼 추가 및 헤더 필터 우측 로케이션 기준정보 관리 팝업(조회·행추가·저장·삭제) 기능 구현 요청. 기존 SEL_ITEM의 80여 개 미사용 컬럼 다중 조회에 따른 비효율을 해결하고 화면 필수 18개 컬럼으로 슬림화 최적화 요청. 사용자 요청에 따라 로케이션 기준정보 관리 팝업의 로케이션코드(LOCACD)를 사용자가 직접 입력할 수 있도록 수정하고, 프로시저의 GETKEY 자동 채번을 제거하여 사용자가 입력한 코드값으로 직접 저장되도록 전환. 사용자 지정 MST3001_R03(L26-L70)의 표준 들여쓰기 서식을 공통 개발 규칙(.agents/rules/procedure.md)에 정식 반영. 추가로 메인 그리드(grid1)의 안전재고(SAFEQTY), 현재고(LOTQTY), 로케이션(LOCANM) 컬럼을 수정 가능(readOnly: false)하도록 전환하고, 상단 공통 헤더의 [저장] 버튼 클릭 시 수정한 항목들에 대해 왼쪽 체크박스가 자동 선택되어 선택된 항목들만 DB에 일괄 저장되도록 구현.
 - **작업 상세 내용**:
   - 1) 로케이션 팝업 그리드(MST3001_R03.js): grid_LOCA에서 로케이션코드(LOCACD) 컬럼을 `readOnly: false`로 전환하여 사용자 직접 입력 지원. 팝업 저장(`btn_POP_SAVE`) 시 로케이션코드 및 로케이션명 필수 입력 유효성 검사 추가.
-  - 2) 메인 그리드 및 저장(MST3001_R03.js): grid1 생성을 `isCheckBoxGrid: true`로 변경하여 체크박스 그리드 활성화. 안전재고(SAFEQTY), 현재고(LOTQTY), 로케이션(LOCANM) 3개 컬럼에 `readOnly: false` 설정. 조회 시 원본값 보관, 셀 수정 시 체크박스 자동 선택(`CheckRow`), 상단 헤더 저장(`ItsButton.EventSave`) 시 원본 대비 변경된 행 일괄 자동 선택 후 `SAVE_ITEM` 호출 및 재조회.
-  - 3) 프로시저(MES_SNS2_MST3001_R03.sql):
+  - 1) 메인 그리드 및 저장(MST3001_R03.js): grid1 생성을 `isCheckBoxGrid: true`로 변경하여 체크박스 그리드 활성화. 안전재고(SAFEQTY), 현재고(LOTQTY), 로케이션(LOCANM) 3개 컬럼에 `readOnly: false` 설정. 조회 시 원본값 보관, 셀 수정 시 체크박스 자동 선택(`CheckRow`), 상단 헤더 저장(`ItsButton.EventSave`) 시 원본 대비 변경된 행 일괄 자동 선택 후 `SAVE_ITEM` 호출 및 재조회.
+  - 1) 프로시저(MES_SNS2_MST3001_R03.sql):
     - IN 파라미터에 `$ITEMID_LIST`, `$SAFEQTY_LIST`, `$LOTQTY_LIST`, `$OLD_LOCACD_LIST` 추가 (총 13개 파라미터).
     - `SAVE_LOCA` 분기: `GETKEY('LOCACD')` 자동 채번 로직을 제거하고, 사용자가 입력한 `$LOCACD`에 대해 빈 값 검증 후 직접 INSERT/UPDATE 처리. 기존 행의 코드 변경 시 `OLD_LOCACD_LIST` 기반으로 `MSTLOCA_EQMPARTS`의 PK 코드를 정상 UPDATE하고, `MSTITEM_EQMPARTS`에 지정된 재고 로케이션코드도 연쇄 업데이트 처리.
     - `SAVE_ITEM` 분기: `MSTITEM_EQMPARTS`에 안전재고/현재고/로케이션코드 저장(존재 시 UPDATE, 미존재 시 INSERT).
     - 들여쓰기 서식 규칙(WHEN 빈 줄 1행, 4/6/8/10스페이스 계층, SELECT 11칸 열 정렬) 완벽 준수.
-  - 4) 파라미터 등록(MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql): 총 13건 파라미터 갱신 및 검증 스크립트 정비.
-  - 5) 마크업(MST3001_R03.aspx): btn_LOCA_MNG 버튼, pop_LOCA 팝업 및 상단 4버튼(조회·저장·행추가·삭제)과 grid_LOCA 배치, 800x480 황금비율 최적화 유지. 순수 태그 보존.
+  - 1) 파라미터 등록(MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql): 총 13건 파라미터 갱신 및 검증 스크립트 정비.
+  - 1) 마크업(MST3001_R03.aspx): btn_LOCA_MNG 버튼, pop_LOCA 팝업 및 상단 4버튼(조회·저장·행추가·삭제)과 grid_LOCA 배치, 800x480 황금비율 최적화 유지. 순수 태그 보존.
 - **검증 결과**: node -c JS 구문검사 통과. IIS Express HTTP 200 OK 렌더링 검증 완료. 전 파일 UTF-8 with BOM 및 CRLF 개행 무결성 확인 완료.
 
-
 ### 2. MTR0001_R04 실제 발주 구조 적용 및 품목유형 오류 수정
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_MTR0001_R04.sql, 05.Procedure/MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql, 01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx, 01.Office/PAGEMTR/MTR0001/MTR0001_R04.js
 - **배경 및 원인**: 다른 프로젝트 기반 화면에서 MSTITEM.ITEMTP 없는 컬럼 오류 발생. 사용자가 실제 테이블 확인 및 현재 프로젝트 기준 업데이트 요청. 입고처는 발주 전체 MTRODR.INCUSTCD 선택, 공통 ERP 트리거는 별도 처리 선택
 - **작업 상세 내용**:
   - 실제 10개 테이블 373컬럼·18인덱스·공통코드·담당자 연결·ERP 트리거 확인. 품목유형 필터/컬럼 및 고정 0 수량·미사용 입력 제거. 실제 품목ID·발주키/순번 기준 조회·삭제, MTRIN.INQTY 집계, ERP 담당자ID 표시. ERP IF_KEY로 원본 헤더/상세의 공장·단가·금액·소수수량 및 입고누계 수신, 수신자는 등록정보에 기록. 발주 전체 INCUSTCD 저장과 동일 발주 화면행 동기화. 파라미터27→13 및 등록SQL 갱신. C#·공통컴포넌트·script버전·테이블 구조 변경 없음
 - **검증 결과**: 선 검증 후 반영. 실제 DB SELECT 3조회: 설비자재181건/고유발주상세181건, ERP0건, MES181건. 실제 스키마 격리 MariaDB10.2.44에서 원래ITEMTP 오류 재현·필터·ERP원본수신·부분/전체수신·트리거로그 모의·0값갱신·입고처·삭제보호·실패롤백·메타등록19건, 실제JS VM10건 합계29건 통과. BOM/CRLF·node문법·원본해시 확인. 실제 ERP 로그테이블은 IF_MES_SNS에만 있고 FAC2 트리거의 무스키마 참조가 잘못됨; 사용자가 별도 처리 선택. 실제 수신/실브라우저/서버DDL-DML·배포 미수행
 
-
 ### 1. MTR0001_R04 프로시저(MES_SNS2_MTR0001_R04.sql) 프로젝트 표준 선언 서식 통일
+
 - **수정/대상 파일**: [MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql)
-- **배경 및 원인**: 
+- **배경 및 원인**:
   - `MES_SNS2_MTR0001_R04.sql` 파일에 포함되어 있던 스크립트 실행용 `DELIMITER $$` / `DROP PROCEDURE IF EXISTS` 및 종료부 `$$` 구문이 프로젝트 내 타 프로시저(`EQM1001_R04`, `MST3001_R03` 등 DBeaver 루틴 편집기 표준)와 상이하여 표준 형식으로 통일 요청.
 - **작업 상세 내용**:
   - 최상단 `DELIMITER $$` 및 `DROP PROCEDURE IF EXISTS ...` 구문 제거하고 `CREATE DEFINER=...`로 통일.
@@ -1999,8 +2119,9 @@
 ## 🕒 2026-10-12 (월) 작업 내역
 
 ### 1. MTR0001_R04 설비부품 발주조회 화면 및 프로시저(MES_SNS2_MTR0001_R04.sql) 현재 프로젝트(MES_SNS2) 구축 및 표준화
+
 - **수정/대상 파일**: [MTR0001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx), [MTR0001_R04.aspx.cs](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.aspx.cs), [MTR0001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMTR/MTR0001/MTR0001_R04.js), [MES_SNS2_MTR0001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04.sql), [MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MTR0001_R04_SYSTEM_PARAMETERS.sql)
-- **배경 및 원인**: 
+- **배경 및 원인**:
   - 타 프로젝트(`MES_SEA_DEV.MTR0001_R01`)에서 반입된 설비부품 발주조회 화면과 프로시저를 현재 프로젝트(`MES_SNS2`, SNSINC 2공장)의 데이터 모델(`MTRODR`, `MTRODRD`, `MSTITEM` (`ITEMID`), `MTRINLOT`, `IF_MES_SNS_FAC2.FAC2_ERP_IF_MTRODR`/`FAC2_ERP_IF_MTRODRD`) 및 프로그램 명명 규격(`MTR0001_R04`)에 맞추어 전면 개편 요청.
   - 사용자 요구사항: 기존 탭 구조(1.발주조회 / 2.ERP데이터수신)를 그대로 유지하되, 현재 DB 구조 및 표준 개발 규칙에 부합하도록 정비.
 - **작업 상세 내용**:
@@ -2032,8 +2153,9 @@
   - MariaDB live 인스턴스에서 `LIST_MTRODR` 핵심 쿼리 실행 검증 완료 (설비자재 `DM100700` 발주 데이터 181건 정상 조회, 컬럼 매핑 일치 확인).
 
 ### 2. MST3001_R03 설비부품정보 프로시저(MES_SNS2_MST3001_R03.sql) 신규 구성 및 화면 연동 최적화
+
 - **수정/대상 파일**: [MST3001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.aspx), [MST3001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEMST/MST3001/MST3001_R03.js), [MES_SNS2_MST3001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03.sql), [MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql)
-- **배경 및 원인**: 
+- **배경 및 원인**:
   - 화면 접속 시 `콤보박스 로드 에러:You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'ITEMUNIT' at line 1` 오류 발생.
   - 설비부품정보 프로시저(`MES_SNS2_MST3001_R03.sql`) 신규 생성에 따른 코드 검토 및 표준화 요구.
 - **작업 상세 내용**:
@@ -2053,109 +2175,108 @@
   - UTF-8 with BOM(`\xef\xbb\xbf`) 및 CRLF 개행 무결성 확인 완료.
   - IIS Express 웹서버 렌더링 검증 완료 (`data-gpcd="DM150"` 바인딩 확인).
 
-
-
-
 ### 2. EQM1001_R03 반려 코드 제거 및 대기·승인 통일
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql, 05.Procedure/EQM1001_REV_SETUP/99_VERIFY.sql
 - **배경 및 원인**: 반려 기능이 없는 R03에서 반려 분기와 사유가 잔존하여 제거 요청
 - **작업 상세 내용**:
   - 그룹·설비 목록, REV 목록, 출력 이력의 반려 표시 및 승인 반려 전용 검증 제거. REJREASON 조회·입력·저장 참조와 양탭 4개 반려사유 컬럼 제거. R03 파라미터 29→28 전환 SQL 및 확인 건수 갱신. REV 없음 공란, 존재시 대기·승인 유지. 기존 JOIN·CRUD·독립REV·승인 이력키·테이블 구조 유지
 - **검증 결과**: 격리 MariaDB10.2.44에서 SQL 컴파일 및 조회·출력 전후비교·양탭 개정저장·승인·중복승인 차단·CRUD·독립REV·주기저장·파라미터등록19건, 실제 R03 JS 모의실행6건 합계25건 통과. BOM/CRLF 및 원본 변경없음 확인 후 반영. 실DB 변경·서버 배포·실브라우저 실행 없음
 
-
 ### 2. EQM1001_R03 및 R04 프로시저 들여쓰기·가독성 표준화 및 규칙 등록
+
 - **수정/대상 파일**: [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql), [procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md)
 - **배경 및 원인**: SQL 프로시저 가독성 및 유지보수성을 극대화하기 위해 R04의 표준 들여쓰기/열 정렬(SELECT 컬럼 7칸 정렬, 2스페이스 계층 구조)을 규칙으로 공식 등록하고 R03과 R04 전체 쿼리에 일괄 적용
 - **작업 상세 내용**:
   - 1. procedure.md 및 sql_structure.md에 2스페이스 계층 들여쓰기, SELECT 연속 컬럼 열 정렬(7공백 오프셋), 주요 절(FROM, JOIN, WHERE) 정렬 표준 지침 및 R04 템플릿 명시 2. MES_SNS2_EQM1001_R04.sql 전체 분기 들여쓰기/열 정렬 적용 및 1일 1행 수정이력 반영 3. MES_SNS2_EQM1001_R03.sql 전체 1,032행(17개 분기, 반복 루프, 조건문, SELECT 열)에 동일 표준 일괄 적용 및 1일 1행 수정이력 반영
 - **검증 결과**: BOM(UTF-8 with BOM) 보존, CRLF 줄바꿈 통일(단독 LF 0건, \r\r\n 0건), 문법 무결성 검증 완료
 
-
 ### 2. EQM1001_R04 전체 SQL 들여쓰기 및 프로시저 가독성 규칙 표준화
+
 - **수정/대상 파일**: [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql), [procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [sql_structure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/sql_structure.md)
 - **배경 및 원인**: EQM1001_R04 프로시저의 L174-L201(LIST_PLAN_EQM02 분기) 스타일을 기준으로 파일 전체의 들여쓰기, SELECT 컬럼 열 정렬, 제어문 계층 구조를 전면 통일하고, 규칙 문서(.agents/rules)에 영구 표준으로 반영
 - **작업 상세 내용**:
   - 1) EQM1001_R04 전체 분기(공통 검증, LIST_CYCLE_EQMCD, LIST_PLAN_EQM02, ADD_CHKRSTEQM, SEARCH_CHKRSTEQM, SAVE_CHKRSTEQM, DELETE_CHKRSTEQM) 들여쓰기 및 SELECT 컬럼 열 정렬 표준화 2) .agents/rules/procedure.md 3절에 SELECT 컬럼 정렬, SQL 절 키워드 정렬, 제어문 계층적 들여쓰기 및 EQM1001_R04 모범 예시 명시 3) sql_structure.md에 procedure.md 서식 표준 참조 연결 4) UTF-8 with BOM 및 CRLF 인코딩 무결성 검증
 - **검증 결과**: BOM(0xEF 0xBB 0xBF) 및 CRLF 개행 무결성 확인 완료, 프로시저 구문 및 규칙 문서 정상 반영 확인
 
-
 ### 2. EQM1001_R04 미사용 반환 컬럼 제거
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R04.sql
 - **배경 및 원인**: 사용자가 불필요·미사용 부분 삭제 요청, 개선 작업은 보류
 - **작업 상세 내용**:
   - R04 SQL의 전체 화면·보고서 호출과 공통 SetStore 바인딩 확인 후 미사용 반환 값만 제거. 등록 항목의 EQMCD·PLANTPNM, 수정 실적 헤더의 CHKTP·RTIME·REVCD·GRPREVCD, 수정 항목의 CHKRSTKEY·PLANTPNM 반환 제거. 실제 DB 컬럼과 저장 REV 키는 유지. 사용 중인 지역변수·6개 호출 분기·15개 파라미터·JOIN·조건·검증·CRUD 쓰기 문장은 유지. 당일 SQL 이력 한 행 통합
 - **검증 결과**: 격리 MariaDB 10.2.44 네트워크 none에서 원본·변경본 컴파일 및 사용 컬럼 비교, 월별 조회·등록·수정·삭제·중복 오류 롤백 검증. 실제 R04 JS를 새 반환 데이터에 연결해 등록 팝업의 설비·점검자·두 REV 키 및 수정·삭제 요청의 실적키 모의 검증. 총 14건 통과, 쓰기 SQL·검증 블록·15개 입력 정의 일치, BOM/CRLF·원본 대조·최종 바이트 확인. 실제 DB 조회/DDL/DML·배포·UI/C# 수정 없음
 
-
 ### 2. EQM1001_R04 정기점검 조회 구조 단순화
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R04.sql
 - **배경 및 원인**: 사용자가 첨부 규칙에 따라 복잡한 R04 SQL 재작성 요청, 직전 검토의 REV 키 누락·점검값 형식 검증 보완은 제외
 - **작업 상세 내용**:
   - 실제 DB SELECT로 컬럼 161개와 인덱스 9개, 월계획 PK EQMCD·CHKTP·YEAR 및 정기점검 월 배정 10개 모두 유효 사원코드 확인. YEAR_PLAN 윈도우 CTE와 타 점검구분 대체 제거 후 CHKTP=02 PK 직접 JOIN. 월 배정 ELT 조회를 조회·등록 공통으로 통합하고 사원명 역조회·동명이인 집계 제거. 월별 승인 항목 수 대신 존재 플래그 사용. 설비 잠금은 등록에만 적용. 15개 파라미터·반환 컬럼·UNION ALL·두 적용 REV 키·실적 중복/누락/오류 롤백·수정 중복 항목 임시 테이블 유지. 신규 검증 보완 미추가
 - **검증 결과**: 네트워크 none 격리 MariaDB 10.2.44에 실제 최신 컬럼/PK 구성 후 원본·변경본 비교 38건 통과. 월별 현황, 최신 승인본, 빈 최신 승인본, 그룹 없는 설비, 동 코드 G/E 실적, 조회 후 새 승인, 등록/수정/삭제, 오류/중복/누락 롤백, 의도한 호환 제거, 제외한 보완 로직 미추가 확인. EXPLAIN에서 YEAR_PLAN PK eq_ref 직접 조회 확인, 속도 개선율 미측정. BOM/CRLF·당일 이력 1행·원본 대조·반영 바이트 일치 확인. 실제 DB는 SELECT만 실행, 실제 서버 DDL/DML·프로시저 배포 및 UI/C# 수정 없음
 
-
 ### 1. EQM1001 테이블 연결도 및 역할 표 시각 자료 작성
-- **수정/대상 파일**: docs/EQM1001_테이블연결도_20261012.html, .svg, .png, _역할표.html, _역할표.png
+
+- **수정/대상 파일**: docs/EQM1001_테이블연결도_20261012.html, .svg, .png, _역할표.html,_역할표.png
 - **배경 및 원인**: 사용자가 Mermaid 연결도의 작은 글자와 복잡한 배치 대신 첨부한 밝은 테이블 양식의 연결도 및 나란히 비교하는 역할 표 요청
 - **작업 상세 내용**:
   - 현재 R03·R04·R05와 테이블 SQL을 대조하여 핵심 9개와 조회 보조 2개를 정리. 컬럼별 행·PK·키 연결·항목정보 복사를 구분하는 밝은 SVG 연결도, 11개 테이블의 분류·담당 내용·실제 역할·연결 기준 HTML 표 및 PNG 작성. CHKPLANEQM 미사용과 HEADER·DETAIL 대체, 두 적용 REV 키, 현재 승인 실행과 반려·처리이력 팝업 경로 미확인을 설명 문서에 명시
 - **검증 결과**: 격리 임시 프로필 headless Edge에서 렌더링 및 이미지 육안 확인. SVG 1개·표 11행·헤더 5개·가로 넘침 없음·브라우저 페이지 오류 0건·중국어 문자 없음·UTF-8 BOM/CRLF 확인. SQL·화면 업무 소스 및 실제 DB·서버 배포 변경 없음
----
 
+---
 
 ## 🕒 2026-10-08 (목) 작업 내역
 
 ### 2. EQM1001 빈 데이터 기준 테이블 변경 SQL 개별 분리
+
 - **수정/대상 파일**: 05.Procedure/EQM1001_REV_SETUP/00_CHECK.sql, 01_MSTEQMREV_DETAIL.sql, 02_CHKPLANEQM_APRV.sql, 03_CHKRSTEQM.sql, 04_CHKRSTEQMKND.sql, 99_VERIFY.sql; MES_SNS2_EQM1001_R02/R03/R05_SYSTEM_PARAMETERS.sql; docs/EQM1001_REV_독립관리_최종안_20261008.md; PLAN_REV_DEPLOY.sql 및 PLAN_REV_INDEPENDENT.sql 삭제
 - **배경 및 원인**: 사용자가 정기점검 데이터를 비웠으므로 데이터 이전 없이 테이블 변경을 하나씩 실행할 수 있도록 일괄 SQL 분리 요청
 - **작업 상세 내용**:
   - 변경 전후 SELECT와 네 테이블별 ALTER 한 문장을 각각 분리하고 R02 파라미터 파일 추가, R03/R05 파라미터 등록을 페이지별 삭제 후 재등록으로 통일. 데이터 이전·승인이력 복원·실적 출처 보정·발번·업무 데이터 삭제·백업 테이블 생성 제외. 실행 순서는 00 확인, DETAIL, APRV, 실적 HEADER, 실적 DETAIL, R02부터 R05까지 각 프로시저와 파라미터 등록, 99 검증. 업무 프로시저·화면 동작 변경 없음
 - **검증 결과**: 격리 MariaDB 10.2.44 네트워크 none에서 분리 실행 16건 통과. 순차 ALTER·반복 실행·APRV 중간 스키마 전환·프로시저 4개 컴파일·파라미터 정확한 순서와 개수 및 다른 페이지 보존·BOM/CRLF·원본 대조 후 반영 확인. 실제 DB 최신 구조 조회·DDL/DML·서버 배포 미수행
 
-
 ### 2. EQM1001 REV 항목 사용여부 제거 및 최종 적용 SQL 정리
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql,05.Procedure/MES_SNS2_EQM1001_R04.sql,05.Procedure/MES_SNS2_EQM1001_R05.sql,05.Procedure/MES_SNS2_EQM1001_PLAN_REV.sql,05.Procedure/MES_SNS2_EQM1001_PLAN_REV_INDEPENDENT.sql,05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql,01.Office/PAGEEQM/EQM1001/EQM1001_R03.js,05.Procedure/MES_SNS2_EQM1001_PLAN_REV_DEPLOY.sql,docs/EQM1001_REV_독립관리_최종안_20261008.md
 - **배경 및 원인**: 사용자가 REV DETAIL의 항목별 USEYN이 불필요하다고 정정하고 나머지 실적 구조는 유지하면서 최종안·실행 SQL·도입 결과 설명 요청
 - **작업 상세 내용**:
   - DETAIL에 항목 존재 시 포함하는 구조로 변경. 두 탭/그룹 복사 팝업의 사용여부 컬럼과 변환·전송 제거. R03 CRUD·복사·REV·출력, R04 승인본·실적, R05 건수의 DETAIL USEYN 참조 제거. R03 USEYN_LIST 제거로 파라미터 30→29. 설비/그룹/항목 기준정보 USEYN 유지. 초기화된 DETAIL에서 기존 USEYN 컬럼을 제거하도록 전환 SQL 변경. 실적의 REVCD/GRPREVCD·항목 PLANTP·복합 PK 유지. 기존 테이블 정리→프로시저 4개→파라미터 재등록을 포함한 일괄 DEPLOY SQL 및 상세 최종안 작성. 로컬 파일 9개 반영
 - **검증 결과**: 격리 network none MariaDB10.2.44에서 프로시저 4개 컴파일, DB 38건·JS 이벤트 17건 총55건 통과. 별도 빈 스키마 전환·반복 실행·데이터 있는 USEYN 삭제 차단 검증. REV3 삭제→REV4→REV5 재추가 및 다른 대상/이전 승인본 보존, 두 승인본 UNION ALL·같은 점검코드 실적 분리·롤백·초기화 후 실적 유지. 일괄 SQL 두 번 실행·메타데이터 R02=21/R03=29/R04=15/R05=10 순서/기존 실적 보존 확인. JS문법·BOM/CRLF·원본 동일성 검증. 실서버 DDL/DML·파일 배포·브라우저/PDF 테스트·이번 DB 최신 구조 재조회 미실시
 
-
 ### 2. EQM1001_R04 팝업 적용 REV 번호 표시 간소화
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R04.sql,01.Office/PAGEEQM/EQM1001/EQM1001_R04.js
 - **배경 및 원인**: R04 등록·수정 팝업에서 그룹/설비 구분 명칭 없이 REV 번호만 표시 요청
 - **작업 상세 내용**:
   - 등록 조회 두 UNION ALL 분기 및 실적 수정 조회 REVNM을 REV.n으로 통일. 등록·수정 그리드 적용 REV 너비를 90으로 조정. 내부 PLANTP 구분, 독립 REV 키, 중복 점검코드 행 및 CRUD 유지. REV 연결 없는 기존 실적은 공란 표시
 - **검증 결과**: 네트워크 none 격리 MariaDB10.2.44에서 R04 컴파일, 등록 REV.0/REV.2 및 동일 점검코드 2행 유지, 새 승인 후 기존 실적 적용 REV 보존, REV 연결 초기화 시 공란/실적 행 보존 검증. JS 문법, SQL 변경 범위, BOM/CRLF 검증 통과 후 로컬 소스 반영. 실제 DB/서버 적용 및 실제 브라우저 테스트 없음
 
-
 ### 2. EQM1001 정기점검 작업본 전환 및 그룹·설비 REV 독립 관리
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R02.sql,05.Procedure/MES_SNS2_EQM1001_R03.sql,05.Procedure/MES_SNS2_EQM1001_R04.sql,05.Procedure/MES_SNS2_EQM1001_R05.sql,05.Procedure/MES_SNS2_EQM1001_PLAN_REV.sql,05.Procedure/MES_SNS2_EQM1001_PLAN_REV_INDEPENDENT.sql,05.Procedure/MES_SNS2_EQM1001_PLAN_REV_RESET.sql,05.Procedure/MES_SNS2_EQM1001_R04_SYSTEM_PARAMETERS.sql,01.Office/PAGEEQM/EQM1001/EQM1001_R03.js,01.Office/PAGEEQM/EQM1001/EQM1001_R04.js,01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx
 - **배경 및 원인**: CHKPLANEQM은 보존하되 정기점검에서 사용 중지하고 그룹/설비의 항목·REV·승인을 독립 관리 요청. 마지막 설명에 따라 R04 팝업은 두 최신 승인본의 항목과 적용 REV를 함께 표시
 - **작업 상세 내용**:
   - R03 조회·복사·등록·저장·삭제·승인·출력을 HEADER/DETAIL로 전환하고 그룹/설비 공통 CRUD로 통합. 승인본 변경은 본인 다음 REV만 생성하며 비사용 항목 재추가·기존 승인본 보존·변경 없는 저장 시 REV 생성 방지. R02 참조검증/R05 목록도 DETAIL로 전환. R04는 그룹/설비 최신 승인본을 UNION ALL로 반환하고 설비그룹 REV.n/설비별 REV.n 표시. 실적 헤더 REVCD와 GRPREVCD에 적용키, 항목 PLANTP에 출처를 저장하여 동일 점검코드를 분리. 완료 실적은 현재 승인/REV 초기화와 무관하게 조회·수정·삭제 유지. 컬럼 전환: DETAIL.USEYN, CHKRSTEQM.GRPREVCD, CHKRSTEQMKND.PLANTP 및 PK(CHKRSTKEY,PLANTP,CHKKNDCD). R04 파라미터 17→15: 미사용 명칭·항목·방법·판정구분 목록 4개 제거, GRPREVCD/PLANTP_LIST 2개 추가. SQL/JS 11개 로컬 소스만 반영
 - **검증 결과**: 네트워크 none MariaDB 10.2.44에서 프로시저 4개 컴파일 및 DB 시나리오 39개, JS 이벤트 모의검증 16개 통과. 컬럼 전환 SQL 반복 실행, 새 컬럼 없는 스키마와 새 스키마의 초기화/실적 보존, 실제 등록 당시 REV 표시, 파라미터 15개 순서, JS 문법/BOM/CRLF 검증. 실서버 SELECT 확인: HEADER/DETAIL/APRV 각0, 실적15(REV 연결0), CHKPLANEQM67. 실서버 DDL/DML·브라우저 실제 CRUD·서버 파일 적용은 미실시
 
-
 ### 2. [EQM1001] 점검실적 보존 REV 초기화 SQL 작성
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_PLAN_REV_RESET.sql
 - **배경 및 원인**: 사용자가 기존 REV 데이터 초기화 SQL 작성 및 CHKPLANEQM 사용 종료/독립 REV 전환 순서 정리 요청. 실적 처리 질문에 실적은 유지하고 REV 연결만 초기화 선택
 - **작업 상세 내용**:
   - CHKRSTEQM의 비어 있지 않은 REVCD만 빈 값으로 초기화, CHKPLANEQM_APRV→MSTEQMREV_DETAIL→MSTEQMREV_HEADER 데이터 삭제. 한 트랜잭션과 오류 롤백, 실행 전후 건수 및 영향 건수 표시. 점검실적 상세·CHKPLANEQM·YEARPLAN·기준정보·발번값 유지. CHKPLANEQM 테이블/데이터 삭제 방식은 질문 미응답으로 미포함. 기존 초기이관 SQL 재실행 금지 설명
 - **검증 결과**: 실제 DB SELECT 확인: HEADER37/DETAIL86/APRV420, 실적15 중 REV참조7, CHKPLANEQM 정기점검69. 초기화 대상4개 InnoDB 확인. 격리 MariaDB10.2.44에서 컴파일·대상 삭제·실적 내용 보존·범위·반복·강제 오류 전체 롤백·BOM/CRLF 10건 검증 통과 후 로컬 SQL 작성. 실제 DB 및 서버 변경 없음
 
-
 ### 2. [EQM1001] CHKPLANEQM 사용 종료 전환 사전 검토
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, MES_SNS2_EQM1001_R04.sql (업무 소스 변경 없음)
 - **배경 및 원인**: 사용자가 최신 파일 재조회 후 CHKPLANEQM 본체를 삭제하지 않고 사용 종료하도록 전환 요청; 고려사항을 먼저 공유하고 방향 결정 요청
 - **작업 상세 내용**:
   - 최신 소스 R03 승인 전용 변경 및 LIST_PLAN_APRV 제거 등 수동 변경 확인. R03 25개 분기 중 17개가 CHKPLANEQM 본체 직접 참조, R04 6개 분기는 직접 참조 없음. DETAIL을 작업본 포함 REV별 저장소로 전환할 때 데이터 이관·USEYN 컬럼·승인 시 중복 INSERT 제거·승인본 불변·독립 G/E REV·실적 두 REV 및 중복코드 키·R02/R05 잔존 참조·YEARPLAN/APRV 별도 테이블 유지 고려사항 정리
 - **검증 결과**: 실제 DB SELECT 확인: CHKTP02 작업본 69행 전부 Y, 최신 미승인 HEADER 8개 모두 DETAIL 없음. 이 중 FM116I210N 그룹 REV1 작업본 5개, 나머지 7개 작업본 0개. DETAIL USEYN 없음, CHKRSTEQM REVCD 단일·GRPREVCD 없음, 실적 DETAIL 출처 REVCD 없음. 규칙 준수하여 분석만 수행, 프로시저/DB 수정·컴파일 테스트 없음
 
-
 ### 1. [MST1002_R06] 생산설비정보 그리드 설비그룹코드 표시·설비그룹코드명 hidden 및 프로시저 컬럼 반환 추가
+
 - **수정/대상 파일**: 01.Office/PAGEMST/MST1002/MST1002_R06.js, 05.Procedure/MES_SNS2_MST1002_R06.sql
 - **배경 및 원인**: 생산설비정보(MST1002_R06) 화면의 그리드에서 설비코드(FANO) 앞에 설비그룹코드(EQMGUBUN)와 설비그룹코드명(EQMGRPNM) 컬럼을 추가하되, 상단 검색 패널 필터는 추가하지 않고 설비그룹코드명은 hidden 처리하도록 요청. 백엔드 프로시저 MES_SNS2_MST1002_R06.sql의 SEL_EQM 분기에서도 설비그룹코드·명 함께 조회하도록 수정 요청.
 - **작업 상세 내용**:
@@ -2165,6 +2286,7 @@
 - **검증 결과**: Node.js 구문 검사(`node -c`) 통과, MSBuild C# 솔루션 컴파일 에러 0건 성공, 인코딩 검사 통과(전체 파일 UTF-8 with BOM, CRLF 개행 일치, `\r\r\n` 0건), 실제 서버 DB 직접 변경 없음
 
 ### 2. [EQM1001_R03] 설비별 점검계획 탭 설비그룹코드 표시·설비그룹명 hidden 및 설비그룹 필터링 추가
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql
 - **배경 및 원인**: "설비별 점검계획" 탭 좌측 그리드(grid1)에서 설비코드(FANO) 옆에 해당하는 설비의 설비그룹코드(EQMGUBUN) 표시 및 설비그룹명(EQMGRPNM) hidden 컬럼 선언, 상단 검색 영역(div_EQM)에 설비그룹 필터링(find_EQM_GRP) 추가 요청. 프로시저 MES_SNS2_EQM1001_R03.sql의 LIST_MSTEQM 분기에서도 설비그룹코드·명 반환 및 $EQMGRP 검색 조건 추가 요청.
 - **작업 상세 내용**:
@@ -2174,6 +2296,7 @@
 - **검증 결과**: Node.js 구문 검사(`node -c`) 통과, MSBuild C# 솔루션 컴파일 에러 0건 성공, 인코딩 검사 통과(전체 파일 UTF-8 with BOM, CRLF 개행 일치, `\r\r\n` 0건), 실제 서버 DB 직접 변경 없음
 
 ### 2. [EQM1001_R03] 개정 이력(REV) 반려 버튼 및 반려 로직/프로시저 삭제
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql
 - **배경 및 원인**: 개정이력(REV) 영역에서 반려 기능 삭제 요청 (설비별/설비그룹 반려 버튼 및 반려 팝업, 프로시저의 반려 처리 로직 일괄 삭제)
 - **작업 상세 내용**:
@@ -2183,6 +2306,7 @@
 - **검증 결과**: Node.js 구문 검사(`node -c`) 통과, MSBuild 컴파일 에러 0건, 인코딩 검사 통과(전체 파일 UTF-8 with BOM, CRLF 개행 일치, `\r\r\n` 0건), 실제 서버 DB 직접 변경 없음
 
 ### 2. [EQM1001_R03] 리비전 승인·반려 이력 버튼(APRVHISTORY) 및 관련 로직/프로시저 삭제
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 05.Procedure/MES_SNS2_EQM1001_R03.sql, docs/EQM1001_R03_R04_SQL_정리검토_20261008.md
 - **배경 및 원인**: 설비점검계획(EQM1001_R03) 개정 이력 그리드 내 승인/반려 이력 조회 버튼(APRVHISTORY) 제거 및 연관된 JS 함수·그리드·팝업 마크업, 프로시저 분기(LIST_PLAN_APRV) 일괄 삭제 요청
 - **작업 상세 내용**:
@@ -2193,483 +2317,487 @@
 - **검증 결과**: Node.js 구문 검사(`node -c`) 통과, MSBuild C# 솔루션 컴파일 오류 0건, 인코딩 검사 통과(전체 파일 UTF-8 with BOM, CRLF 개행 일치, `\r\r\n` 0건), 실제 서버 DB 직접 변경 없음
 
 ### 2. [EQM1001] 설비그룹·설비 REV 독립 관리 구조 분석
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, MES_SNS2_EQM1001_R04.sql 및 실제 DB 7개 테이블 (조회·분석만 수행)
 - **배경 및 원인**: 설비별 계획 수정 시 그룹 REV도 영향을 받는 구조를 개선하고 점검 시 그룹·설비 최신 승인 계획을 함께 적용하는 설계 요청
 - **작업 상세 내용**:
   - 원인: R03 CRUD 후 PLAN_KEY 양방향 연동, 그룹 CRUD의 소속 설비 CHKPLANEQM 일괄 변경·그룹 항목 합산, 그룹 재요청·승인/반려의 설비 REV 연동. 추천: 기존 HEADER의 PLANTP/PLANCD/REVNUM별 독립 REV, DETAIL을 각 REV의 대기·반려·승인 항목 저장소로 확장하여 정기점검 원본 통일; 승인본은 불변. 그룹·설비 승인도 각각 대상 REV만 처리. R04는 두 최신 승인 REV를 결정해 DETAIL 목록 합성. 실적에 두 적용 REV 및 항목 출처 기록. 기존 중복 항목의 소유권 분류 및 중복 코드 정책 확정 후 단계 전환 필요
 - **검증 결과**: 실제 DB SELECT로 140개 컬럼 및 고유키 확인: HEADER REVCD PK와 PLANTP/PLANCD/REVNUM UNIQUE, DETAIL REVCD/CHKKNDCD PK, 실적 HEADER REVCD 단일 컬럼, 실적 DETAIL CHKRSTKEY/CHKKNDCD PK. 현재 소스와 R02/R05 등 연관 참조 확인. 설계 분석만 수행, 구현·DB DDL/DML·서버 반영 없음
 
-
 ### 2. [EQM1001_R03] 승인·출력 중복 검증 제거
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql
 - **배경 및 원인**: 규칙 추가와 함께 SAVE_PLAN_STATUS의 PLANCD 중복 검사 및 CALL_PLAN_RPT 정규화 후 도달 불가능한 검사 실제 수정 요청
 - **작업 상세 내용**:
   - SAVE_PLAN_STATUS는 PLANCD 필수 검사를 유지하고 다음 IF에서 중복 PLANCD NULL·빈 값 조건만 제거. CALL_PLAN_RPT는 기존 G/E 정규화를 유지하고 정규화 결과에 대한 NOT IN 검사만 제거; PLANCD 필수 검사와 오류 메시지 유지. 당일 Modify 한 줄에 통합
 - **검증 결과**: 격리 MariaDB 10.2.44에서 수정 전후 전체 R03 컴파일 성공. 90개 NULL·빈 값·공백·잘못된 값·대소문자 입력 비교 및 설비그룹/설비별 승인·반려·출력 비교 포함 102건 통과. 저장 상태·승인본·이력·오류 메시지 동일. 파라미터 30개와 분기 유지, BOM·CRLF 및 당일 이력 한 줄 검증 후 로컬 반영. 실제 DB·서버 반영 없음
 
-
 ### 2. [규칙] 프로시저 중복 입력값 검증 방지 기준 추가
+
 - **수정/대상 파일**: .agents/rules/procedure.md
 - **배경 및 원인**: SAVE_PLAN_STATUS의 PLANCD 재검사와 CALL_PLAN_RPT 정규화 이후 도달 불가능한 조건이 반복되지 않도록 규칙 추가 요청
 - **작업 상세 내용**:
   - 조건 작성 전 공통 검증·값 변경·종료 흐름 확인, 동일 값·조건은 한 번만 검증, 정규화 후 항상 참·거짓인 조건 제거, NULL 처리 및 재검증 목적 구분, 두 실제 분기를 적용 예로 기재하고 관련 분기 최종 검토 의무 명시. 업무 SQL과 실제 DB는 변경하지 않음
 - **검증 결과**: 현재 R03 두 분기의 조건을 소스로 확인. 기존 procedure.md 내용은 보존하고 새 절만 추가했음을 비교 검증. UTF-8 BOM·CRLF 정상
 
-
 ### 2. [EQM1001_R03] 10월 8일 비사용 정기점검 재추가 작업 및 실제 DB 최신화 확인
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 05.Procedure/MES_SNS2_EQM1001_R04.sql (조회·비교만 수행)
 - **배경 및 원인**: 사용자가 2026-10-08 비사용 항목 재추가 지원 작업 내역 및 현재 프로시저 반영 상태 확인 요청
 - **작업 상세 내용**:
   - 설비그룹 LIST_GRP_EQM02_ADD/REG_GRP_EQM02 및 설비별 LIST_EQM02/REG_EQM02 작업 복원: 사용 중인 등록만 추가 목록에서 제외하고 비사용 등록은 재활성화, 누락 등록은 신규 추가; 기존 승인본 보존. 현재 로컬과 실제 DB 프로시저 본문 및 파라미터 등록 비교
 - **검증 결과**: 실제 DB SELECT 조회로 R03 전체 본문·26개 분기, R04 전체 본문·6개 분기 일치 확인(주석·공백 제외). 실제 파라미터 및 SYSTEM_PARAMETERS 등록 이름·순서 R03 30개/R04 17개 모두 일치. 재추가 4개 분기는 이전 검증본과 일치. 이전 67건 DB 테스트 통과 기록 확인, 이번 턴 재실행 아님. DB·서버 및 업무 소스 변경 없음
 
-
 ### 2. [EQM1001_R03·R04] 미사용 SQL 정리 및 JOIN 개선 후보 분리
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R04.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js, 05.Procedure/MES_SNS2_EQM1001_R04_SYSTEM_PARAMETERS.sql, docs/EQM1001_R03_R04_SQL_정리검토_20261008.md
 - **배경 및 원인**: 사용하지 않는 SQL은 즉시 제거하고 JOIN·의미없는 구문은 삭제하지 않고 개선 전후 두 표로 정리 요청
 - **작업 상세 내용**:
   - 페이지·보고서 및 저장소 호출 대조 결과 R03 26개·R04 6개 분기 모두 사용, S05A CALL_PLAN_RPT도 사용되어 분기 삭제 없음. R03 업무 소스 유지. R04 미사용 일괄처리 입력값 4개와 소비되지 않는 CHKCYCLE_LIST·지역변수·COMSPLIT·반환 컬럼·JS 전송 2곳·DEBUG 주석 제거. R04 인자 22→17 변경에 맞춘 전용 SYSTEM_PARAMETERS 갱신 SQL 추가. JOIN·중복 검증·조회 조건은 변경하지 않고 8개 후보의 현재 문제/개선 제안 표를 문서화
 - **검증 결과**: 현재 DB 컬럼·키·중복건수 SELECT 확인. 전체 호출 분기 리터럴 대조 및 지역변수/입력값 참조 확인. 격리 MariaDB 10.2.44에서 원본·정리본 R04 전체 컴파일과 19건 전후 비교 통과: 6개 기능·등록/수정/삭제 저장결과·조회순서·적용 REV·계획 점검자·필수값/중복/승인/미사용설비/미계획월 검증·과거실적 REV 보존·메타데이터 범위/재실행/호출순서. JS 구문 및 BOM/CRLF 검증. 실제 브라우저 E2E와 성능 벤치마크 미실행
 
-
 ### 2. [EQM1001_R03] 비사용 정기점검 항목 재추가 지원
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql
 - **배경 및 원인**: REV.3에서 사용한 항목을 REV.4에서 비사용·삭제한 뒤 REV.5에서 다시 추가할 수 있도록 요청. 기존 추가 목록과 등록 처리가 USEYN=N 행을 이미 등록된 것으로 취급하여 998 재추가 불가
 - **작업 상세 내용**:
   - 설비그룹 LIST_GRP_EQM02_ADD는 사용 중인 계획만 등록 수에 포함. 설비별 LIST_EQM02는 해당 설비의 정기점검·사용 Y 계획만 추가 제외. REG_GRP_EQM02·REG_EQM02에서 비사용 기존 행을 Y로 재활성화하고 입력 비고·수정자 정보를 저장; 기존 순서·주기·최초 등록 정보 유지. 이미 사용 Y인 행은 그대로 유지하고 물리 삭제·미등록 항목은 기존 INSERT 사용. 변경 건수를 기존 공통 REV 생성·재요청 흐름에 연결. 승인본·이력·승인 상태 분기와 JS/ASPX 변경 없음
 - **검증 결과**: 실제 DB 키 구조 SELECT 확인 후 네트워크 차단 MariaDB 10.2.44에서 변경 프로시저 전체 컴파일. 기존 승인·반려·CRUD 검증 46건과 재추가 전용 21건 총 67건 통과. 기존 코드 재현, 두 탭 REV.3 사용→REV.4 비사용 승인→REV.5 재추가 승인, 승인본·이력 불변, 활성 행 보존·반복 추가 무변경, 사용 설비 21대 재활성화, 부분 등록·NULL·빈 상태·마스터 제외·물리 삭제 재등록·중간 오류 롤백 확인. 원본 해시 확인 후 검증한 SQL만 로컬 반영, UTF-8 BOM/CRLF 유지
 
-
 ### 2. [EQM1001_R03] FM116I210N 점검코드 998 재추가 제외 원인 확인
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js (분석 대상, 소스 변경 없음)
 - **배경 및 원인**: 기존 998 항목을 삭제한 뒤 설비그룹 추가 목록에 나타나지 않는 원인 확인 요청
 - **작업 상세 내용**:
   - 실제 DB SELECT 결과 MSTCHKKND의 998은 정기점검 02·사용 Y로 정상. FM116I210N 사용 설비 21대 모두 CHKPLANEQM에 998이 USEYN=N으로 존재하며 RTIME 2026-10-08 10:15:35, MTIME 10:16:51. 실제 서버 LIST_GRP_EQM02_ADD는 계획 USEYN 조건 없이 등록 건수를 세므로 21<21 조건이 거짓이 되어 항목 제외. REG_GRP_EQM02 역시 N인 기존 행을 존재로 판단하므로 조회 조건만 변경해도 재활성화되지 않음. 설비별 LIST_EQM02와 REG_EQM02도 비사용 기존 행의 제외·재활성화 문제 존재. 현재 삭제 분기는 물리 DELETE이며 N 전환 경로는 데이터만으로 단정하지 않음
 - **검증 결과**: 실제 서버 SELECT 5건: 마스터·그룹 집계·21개 소속 설비 행·현재 프로시저 정의·팝업 제외 조건 재현. 팝업 조건 결과 GROUP_EQMCNT=21, COUNT_USED_BY_POPUP=21, POPUP_VISIBLE=N 확인. 실제 DB DML/DDL 및 업무 소스 수정 없음
 
-
 ### 2. [EQM1001_R03] 설비그룹·설비별 승인 로직 동일성 검증
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql (분석 대상, 업무 소스 변경 없음)
 - **배경 및 원인**: 설비그룹 점검계획과 설비별 점검계획 탭의 승인 관리가 동일한 규칙으로 동작하는지 확인 요청
 - **작업 상세 내용**:
   - 두 탭이 개정내용 저장·승인/반려·이력·출력 공통 함수와 SQL 분기를 사용함을 확인. 개정내용 미입력/미저장 및 반려사유 검증, 반려 후 보완·재요청, 기존 승인본 보존, 최신 승인 REV 수정 시 다음 대기 REV 생성, 과거 REV 조회 전용 규칙 동일. 그룹은 사용 중인 소속 설비의 최신 미승인 REV를 일괄 처리하며 설비별은 선택 설비만 처리하는 범위 차이만 존재. 실제 서버 ROUTINE_DEFINITION을 SELECT하여 핵심 8개 분기 일치 확인
 - **검증 결과**: 격리 MariaDB 10.2.44에서 현재 프로시저 컴파일 및 SQL 46건 통과. 현재 JS 함수 추출·UI/전송 모의 검증 21건 통과, 합계 67건. REV 컬럼 및 버튼 연결 동일성 확인. 실제 브라우저 E2E는 미실행. 실제 DB 변경·서버 파일 수정·배포 없음
 
-
 ### 2. [EQM1001_R03] 두 탭 계획서 출력 버튼 위치 통일
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx
 - **배경 및 원인**: 설비그룹에만 버튼을 이동했던 누락을 보완하여 설비별 탭에도 같은 검색행 우측 배치 적용 요청.
 - **작업 상세 내용**:
   - btn_EQM_PLAN_RPT를 개정이력 버튼 영역에서 div_EQM 설비 검색행으로 이동. 두 탭 모두 기존 find와 같은 부모 영역에서 Float=right, MarginRight=10, MarginTop=6 적용. 출력 버튼 ID 및 기존 G/E 출력 이벤트 유지. ASPX 위치 변경만 수행하여 보고서/프로그램 재빌드 불필요.
 - **검증 결과**: 적용 전 후보 검증: 두 탭 검색 find와 버튼의 같은 부모 패널, 버튼 ID 유일성, 우측 배치 속성 일치, 기존 위치 제거 및 변경점 원상복원 일치 확인. 적용 후 UTF-8 BOM/CRLF 및 파일 내용 일치 확인. 실제 서버 화면/배포 미실행.
 
-
 ### 2. [EQM1001_R03] 설비그룹 검색행 우측으로 계획서 출력 버튼 이동
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx
 - **배경 및 원인**: 계획서 출력 버튼을 설비그룹 find 검색 컴포넌트와 같은 줄 맨 오른쪽에 배치하도록 요청.
 - **작업 상세 내용**:
   - btn_GRP_PLAN_RPT를 개정이력 버튼 영역에서 div_GRP 검색행으로 이동. 기존 Its:button Float=right와 MarginRight=10, MarginTop=6 사용. 버튼 ID/색상/너비/출력 이벤트 및 설비별 탭 배치 유지. 공통 컴포넌트/JS/프로시저/리포트 수정 없음. ASPX 배치 변경으로 보고서 재빌드 불필요.
 - **검증 결과**: 선반영 전 후보 마크업에서 버튼 ID 유일성, find와 같은 부모 영역, 기존 위치 제거 및 두 줄 이동 외 원본 복원 일치 확인. Float 속성의 공통 컨트롤 정의·HTML 렌더링 확인. UTF-8 BOM/CRLF 및 적용 내용 일치 확인. 실제 웹 화면 미실행, 서버 배포 없음.
 
-
 ### 2. [EQM1001_R03] 주기 저장 승인계획 검증 제거 위치 재확인
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql (확인만), 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js (확인만)
 - **배경 및 원인**: 주기 저장의 승인된 정기점검계획 검증을 어느 위치에서 제거했는지 정확한 확인 요청.
 - **작업 상세 내용**:
   - 현재 SAVE_CYCLE_EQMCD 1163행과 사용 설비 검증 1181행 확인. 2026-10-06 수정 전 백업 R03-original.sql 828~845행의 GRP_REV/EQM_REV 승인 헤더 조인과 APRVSTT=A, 그룹 승인 존재 조건 및 승인된 정기점검 계획만 주기관리할 수 있습니다 오류를 사용 중인 설비 확인 블록으로 교체했음을 당시 stage.cjs와 원본 대조로 확인. 일반 저장 JS 857행 및 일괄 주기설정 JS 815행 모두 같은 저장 분기 호출. 삭제 분기도 같은 변경 적용, 실제 점검 R04 승인 검증과 완료실적 월 잠금 유지.
 - **검증 결과**: 현행 로컬 파일 및 수정 전 백업/적용 스크립트 대조 완료. 업무 소스 수정·DB 반영·재빌드·배포 없음.
 
-
 ### 2. [EQM1001_R03] 계획서 개정이력 최신 4건 제한 및 이월 출력 제거
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 04.Report/PAGEEQM/EQM1001/S05A.cs
 - **배경 및 원인**: CNC FM116I210N 등 개정이력 증가 시 다음 페이지로 이어지는 양식이 불편하여 최신 4건만 표시하도록 사용자 요청.
 - **작업 상세 내용**:
   - CALL_PLAN_RPT 개정이력 SELECT를 REVNUM 내림차순 LIMIT 4로 제한하여 그룹·설비 공통 적용. 승인·반려·대기 각 REV의 최종 상태와 기존 이력 필드를 유지. S05A의 개정이력 이월 SubBand/XRSubreport 및 전용 CreateHistoryReport 메서드 삭제. 하단 기존 4칸과 계획서 본문 양식 유지. 기존 코드의 REV 자동선택 및 명시 REV 출력 처리 유지. 주기관리 성능 개선과 다른 CRUD 분기 변경 없음. 실제 DB/서버 파일 반영 없음.
 - **검증 결과**: 네트워크 없는 MariaDB 10.2.44에서 원본·수정 전체 프로시저 컴파일 및 17건 통과: 그룹/설비 최신 4건·상태·순서, 과거 REV 선택에도 최신 이력 유지, REV 공란 자동선택, REV.0, 1~3건 경계값, 잘못된 계획 선택, 본문 결과 동일, 이월 코드 제거 확인. 스테이징 S05A를 프로젝트 MSBuild Release로 빌드 성공. 검증 후 로컬 소스 적용, BOM/CRLF/파일 바이트 일치 확인. 실제 웹 PDF 출력은 미실행.
 
-
 ### 2. [EQM1001_R03] 확인창·알림 토스트 및 화면 안내 문구 간소화
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx
 - **배경 및 원인**: 설비그룹/설비별 점검계획 및 주기관리 화면에서 과도하게 길거나 설명조로 작성된 확인 팝업, 알림 토스트, 화면 안내 라벨을 직관적이고 간결한 문구로 전면 간소화 요청
 - **작업 상세 내용**:
   - 1. JS 확인팝업 4건 간소화(복사/저장/삭제/설비별 재요청) 2. JS 토스트 알림 3건 간소화(개정내용 저장 안내/설비 미체크/개정입력 유도) 3. ASPX 안내 라벨 2건 간소화(설비별 탭 상단 안내 라벨, 일괄 주기설정 팝업 상단 안내)
 - **검증 결과**: UTF-8 with BOM 및 CRLF 개행 무결성 검증 통과(BOM: true, DoubleCR: false), git diff 확인 완료
 
-
 ### 1. [EQM1001_R03] 설비그룹 개정 저장 및 승인 재요청 확인 메시지 문구 간소화
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js
 - **배경 및 원인**: 설비그룹 점검계획 탭에서 개정 저장·재요청 시 호출되는 컨펌 메시지가 과도하게 길고 설명조여서 직관적이고 간결한 문구로 개선 요청
 - **작업 상세 내용**:
   - EQM1001_R03.js SavePlanRev 함수 내부 planTp == 'G' 분기의 컨펌 메시지를 '개정내용 저장 및 소속 설비 계획을 승인 재요청하시겠습니까?'로 압축 간소화
 - **검증 결과**: UTF-8 with BOM 및 CRLF 개행 무결성 검증 완료(BOM: true, DoubleCR: false)
----
 
+---
 
 ## 🕒 2026-10-07 (수) 작업 내역
 
 ### 2. [EQM1001_R03] 계획서 출력 최신 REV 자동 선택 및 모든 개정이력 상태 표시
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 04.Report/PAGEEQM/EQM1001/S05A.cs, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/Reports/EQM1001.exe
 - **배경 및 원인**: 좌측 그리드에서 설비그룹 또는 설비 선택 후 계획서 출력 시 'ERROR:출력할 REV를 선택해주세요.' 오류 발생. 화면(JS) 및 보고서 C#(S05A)는 PLANTP/PLANCD만 전송하는데 SQL CALL_PLAN_RPT에서 숫자 REVNUM을 필수로 검사하여 불일치 발생. 사용자 추가 요구: 계획서 출력 시 해당 대상에 속한 모든 개정이력의 상태(승인·반려·대기)가 계획서에 명확히 표기되어야 함.
 - **작업 상세 내용**:
   - 1. CALL_PLAN_RPT 분기 개선: REVNUM 미전달 시 대상 최신 REV 자동 선택 및 해당 REV 계획 본문 조회 (REVNUM 전달 시 호환 유지)
-  - 2. 개정이력 상태 반환: CALL_PLAN_RPT 이력 쿼리에 APRVSTTNM(승인·반려·대기) 및 APRVSTT 컬럼 추가, 전체 리비전 최종 상태를 최신순으로 반환
-  - 3. S05A 리포트 개정이력 상태 표기: 하단 4칸 박스에 [승인]·[반려]·[대기] 태그와 일자·개정내용을 함께 표시하고, 4건 초과 시 다음 페이지 서브리포트에 독립된 '상태' 컬럼을 추가하여 모든 개정이력 상태를 직관적으로 출력
-  - 4. R03.js PrintPlanRev 코드 미취득 시 안내 토스트 보강
-  - 5. S05A Report Release 빌드(오류 0건) 및 바이너리 동기화, UTF-8 BOM 및 CRLF 개행 무결성 준수
+  - 1. 개정이력 상태 반환: CALL_PLAN_RPT 이력 쿼리에 APRVSTTNM(승인·반려·대기) 및 APRVSTT 컬럼 추가, 전체 리비전 최종 상태를 최신순으로 반환
+  - 1. S05A 리포트 개정이력 상태 표기: 하단 4칸 박스에 [승인]·[반려]·[대기] 태그와 일자·개정내용을 함께 표시하고, 4건 초과 시 다음 페이지 서브리포트에 독립된 '상태' 컬럼을 추가하여 모든 개정이력 상태를 직관적으로 출력
+  - 1. R03.js PrintPlanRev 코드 미취득 시 안내 토스트 보강
+  - 1. S05A Report Release 빌드(오류 0건) 및 바이너리 동기화, UTF-8 BOM 및 CRLF 개행 무결성 준수
 - **검증 결과**: MSBuild 컴파일 오류 0건, 인코딩 BOM/CRLF 검증 통과, git diff 검증 완료
 
-
 ### 2. [EQM1001_R03] 정기점검 주기관리 조회 성능 개선 업무 소스 반영
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql
 - **배경 및 원인**: 사용 중인 전체 설비 조회에서 값이 없는 설비등급과 12개월 점검자까지 GPCD를 반복 실행하여 원본 SELECT 약 10.27초 소요. 사용자 지시로 검증한 개선안을 업무 소스에 반영.
 - **작업 상세 내용**:
   - LIST_CYCLE_EQMCD의 13개 코드명 변환 표현식에 LENGTH > 0 조건을 적용하여 NULL/빈 문자열은 함수 호출 생략. 공백만 저장된 기존 값은 길이로 구분하여 원본 표시 유지. 값이 있는 월의 불필요한 중첩 IFNULL 제거. 전체 사용 설비, 기존 JOIN/정렬/필터, 설비등급, M01~M12 표시명 및 M01CD~M12CD 저장코드 유지. SQL 헤더 Modify 이력 2026-10-07 한 행에 통합. 파라미터/저장·삭제/REV·승인 기능/JS/공통 함수 변경 없음. 실제 서버 DB 반영 없음.
 - **검증 결과**: 격리 MariaDB 10.2.44에서 원본·수정 프로시저 전체 컴파일 및 18건 검증 통과: 미등록 주기, NULL/빈 문자열/공백, 정상·미등록 코드, 기존 사원명, 설비코드·이름 검색, 연도·CHKTP 분리, 조회년도 검증, 승인 계획 없는 주기 저장, 12개월 사원코드 저장/이름 조회, 수정·삭제 및 실적 월 잠금. 최종 후보 실제 DB 읽기 전용 SELECT 222.12ms, 1143행 30컬럼 전체 JSON/순서 동일. 연결 개설/웹 렌더링 제외 측정. 스테이징 검증 후 적용 파일 바이트 일치, 다른 분기·입력 서명 불변, UTF-8 BOM/CRLF 정상.
 
-
 ### 2. [EQM1001_R03] 정기점검 주기관리 조회 지연 실측 및 개선안 검증
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql (분석만), 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js (분석만)
 - **배경 및 원인**: 주기관리 전체 조회 약 10초. 활성 설비 1143대에 설비등급과 12개월 점검자 명칭을 GPCD로 무조건 변환하여 총 14859회 함수 호출. MSTEMP EMPCD 단독 조회 실행계획 ALL, 사용 가능한 인덱스 없음.
 - **작업 상세 내용**:
   - 실제 배포 프로시저 정의를 SELECT로 읽고 LIST_CYCLE_EQMCD 조회문을 2026년/설비조건 공란으로 추출하여 읽기 전용 비교. 원본 10267.18ms, 코드명 함수 제외 진단용 70.12ms, 빈 값/NULL의 GPCD 호출만 생략한 후보 109.42ms. 후보의 예상 함수 호출 857회. YEARPLAN 조인은 PRIMARY eq_ref를 사용하므로 유지 권고. 모든 사용 중 설비, M01~M12 표시값과 M01CD~M12CD 저장값, 설비등급, 정렬 유지. 공통 ItsMaria 동기 요청은 응답 대기 중 UI 정지의 추가 요인. 업무 소스/실제 DB 데이터/구조/프로시저 변경 없음.
 - **검증 결과**: 원본/후보 모두 1143행 30컬럼. 전체 결과 JSON 및 행 순서 완전 동일, 셀 차이 0건, 설비코드 중복 0건. 측정은 연결 개설과 JSON 직렬화를 제외한 SQL 결과 수신/DataSet 구성 시간이며 실제 브라우저 전체 시간은 미측정. 진단 파일은 TEMP/codex-eqm1001-cycle-perf-20261007에 저장.
 
-
 ### 2. [EQM1001_R03] 반려 보완·재요청 및 그룹 최신 REV 일괄 승인 흐름 적용
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, docs/EQM1001_작업정리_20261006-20261007.md
 - **배경 및 원인**: 그룹 반려로 소속 설비가 반려된 뒤 그룹 재승인이 차단되는 문제와 그룹/설비별 R→A 전환 규칙 불일치 개선 요청
 - **작업 상세 내용**:
   - 두 탭 저장 버튼을 개정내용 저장·재요청으로 변경. 반려에서 직접 승인 차단, 항목 보완 중 반려 유지 및 요청정보 초기화, 실제 변경 성공 후 최신 작업본 처리 및 승인 후 다음 REV 생성. SAVE_PLAN_REV가 최신 미승인 REV를 같은 번호로 대기 재요청하고 그룹은 사용 설비의 최신 미승인 REV를 명시적 확인 후 일괄 재요청. 개별 설비 요청은 선택 설비만 처리. 승인 검사·승인본·승인이력·상태 변경을 최신 REV로 제한하여 과거 반려와 승인본 보존. 재요청 후 개별 반려/변경 시 그룹 승인 재차 차단. 그룹 승인 시 최신 미승인 설비 행 잠금. 동일/빈 원본 복사 사전 검증, 설비별 최신 REV 표시와 REV 없음 상태 공란 보완. 기존 SetRowData로 선택 행 유지. 새 테이블·컬럼·파라미터 및 공통 컴포넌트·스크립트 버전 변경 없음
 - **검증 결과**: 실제 DB 정보 스키마 컬럼·키 SELECT 107행 확인, 실제 서버 DDL/DML 없음. 임시 수정본을 먼저 네트워크 없는 MariaDB 10.2.44에서 컴파일·검증 후 소스 적용. DB 38건+확장 8건, 화면 회귀 27건+실제 공통 그리드 이벤트 29건+재요청 UI 10건 총 112건 통과. CNC 21대 일괄 재요청·승인, 이력 보존, 8개 CRUD, 오류 시 전체 롤백, 동시 개별 처리 잠금, R04 기존 승인본 조회 확인. 파라미터 동일·JS 구문·기존 날짜 주석 보존·UTF8 BOM/CRLF 및 원본 변경 없음·검증본과 적용본 바이트 일치 확인. 운영 브라우저 신규 동작 미실행
 
-
 ### 2. [EQM1001_R03] 반려 후 재승인 업무 흐름 검토
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js (읽기 전용 분석)
 - **배경 및 원인**: 반려 상태에서 대기를 거치지 않고 그룹 승인 시 차단되는 흐름의 실무 적절성 검토 요청
 - **작업 상세 내용**:
   - 현재 설비별 R→A는 상태 검증을 통과하지만 그룹은 소속 설비 반려 검사로 차단됨을 확인. 반려→보완 및 재요청→대기→승인을 기본 흐름으로 권고하고, 그룹에서 연동 반려한 동일 요청은 그룹 단위로 재요청 및 일괄 처리하도록 승인 단위 통일 권고. 반려 오처리의 직접 재승인은 권한·전환 사유·이력 기록을 갖춘 별도 예외로 구분. 최신 REV만 상태 변경, 기존 승인본 및 처리 이력 보존, 동시 변경·실패 시 일괄 롤백 검증 권고. 업무 소스 및 DB 변경 없음
 - **검증 결과**: R03 상태 저장·개정내용 저장·공통 CRUD SQL과 JS 호출 확인 및 Microsoft Business Central 공식 승인 워크플로 문서 비교. 설계 검토만 수행하여 런타임 테스트 및 DB 변경 없음
 
-
 ### 2. [EQM1001_R03] CNC FM116I210N 그룹 승인 차단 원인 확인
+
 - **수정/대상 파일**: WORK_HISTORY.md (실제 DB SELECT 및 로컬·서버 R03 프로시저 검토)
 - **배경 및 원인**: CNC FM116I210N 승인 시 I2C-003N 등 5대 외16대 반려 안내 발생 원인 문의
 - **작업 상세 내용**:
   - 실제 사용 설비21대·HEADER66행·배포 R03 정의 SELECT 대조. 그룹 최신REV2와 소속21대 최신REV2 모두 R, 과거 반려만으로 차단되는 건 아님. 2026-10-07 16:16:53 ADMIN의 R03 그룹 반려 로그1개 및 연결 설비 로그20개 확인; 해당21대 HEADER 처리시각 동일. 실제 서버 SAVE_PLAN_REV는 내용·요청정보만 갱신하고 상태초기화 없음. 그룹 반려는 소속설비로 연동되지만 그룹 승인 사전검증은 반려 소속설비 존재시 차단하여 재승인 흐름이 막히는 원인 설명. SQL의 과거REV 제한부재는 별도 구조문제로 구분
 - **검증 결과**: 실제 DB SELECT만 실행. 최신 반려 설비21·전체 반려 설비21·과거 반려0 및 5+16 안내와 일치. 배포 R03 검증/개정저장 본문 확인, 업무 소스·DB·서버 파일 변경 없음
 
-
 ### 2. [EQM1001] REV0 생성·개정저장·반려·승인 테이블별 변경 설명
+
 - **수정/대상 파일**: docs/EQM1001_작업정리_20261006-20261007.md
 - **배경 및 원인**: 사용자가 REV0 네 단계별 발생 데이터와 변경 테이블 정리 요청
 - **작업 상세 내용**:
   - 현재 R03 SQL 기준 단계 설명 추가. 최초 항목CRUD의 CHKPLANEQM 변경 및 HEADER REV0 생성, 개정내용 저장의 HEADER 요청/수정정보 갱신, 반려 HEADER R·APRV R 추가·DETAIL 미생성, 승인 HEADER A·APRV A 추가·DETAIL 승인본 생성 구분. 그룹1/설비4/항목3 예시의 HEADER5·계획12·승인DETAIL15 계산. HEADER 반려시 승인자빈값과 APRV 처리자기록 구분. 개정내용 저장 반려 유지와 그룹 재승인 차단의 현재 동작 명시. 주기·실적 테이블 변경 없음 설명
 - **검증 결과**: 현재 SQL의 생성범위·SAVE_PLAN_REV 필드7개와 상태초기화 부재·승인조건 DETAIL INSERT·APRVKEY·HEADER 반려 승인자 처리 대조. 원문 보존 및 후보 문서 선검증 후 반영, UTF8 BOM/CRLF 검증. 업무 소스·실제 DB 변경 및 새 DB 조회 없음
 
-
 ### 2. [EQM1001] 승인 DETAIL 반복 항목 생성 원인 실제 DB 확인
+
 - **수정/대상 파일**: WORK_HISTORY.md (MSTEQMREV_HEADER·MSTEQMREV_DETAIL·CHKPLANEQM_APRV SELECT 및 R03 SQL 검토)
 - **배경 및 원인**: 사용자가 REVCD별 동일 점검항목이 여러 행 조회되는 원인과 생성 동작 설명 요청
 - **작업 상세 내용**:
   - 실제 HEADER6건·승인로그10건 SELECT 대조. REVCD261007000028은 비전홀검사기 FM116I270N 그룹 REV1, 29~32는 I2H-001N/002N/004N/006N 각 설비 REV1. ADMIN의 2026-10-07 16:19:07 그룹 일괄 승인과 같은 DETAIL 생성시각 확인, 그룹1+설비4의 승인본 각3항목 총15행. 261007000001은 동일 그룹 REV0의 14:33:18 승인본으로 보존됨. 첫 컬럼은 설비코드가 아닌 REVCD이며 HEADER 연결로 관리대상 구분. R03 SAVE_PLAN_STATUS A 분기의 두 INSERT로 생성됨
 - **검증 결과**: 실제 DB는 SELECT만 사용. HEADER APRVTIME·DETAIL RTIME·APRV A 처리시각 일치 및 그룹·소속4설비 키 확인. 첫 연결은 샌드박스 네트워크 제한으로 실패 후 읽기전용 외부 연결로 확인. 업무 소스·실제 DB·서버 파일 변경 없음
 
-
 ### 2. [EQM1001] 10월 6~7일 기능·프로시저·테이블 설명 자료 작성
+
 - **수정/대상 파일**: docs/EQM1001_작업정리_20261006-20261007.md
 - **배경 및 원인**: 어제부터의 작업을 기능별로 묶고 각 SQL 호출 위치 및 관련 테이블 사용 범위를 설명할 수 있는 정리 요청
 - **작업 상세 내용**:
   - 현재 소스와 해당 날짜 WORK_HISTORY 대조. R03 계획·REV·승인·주기 26분기, R04 실점검6, R05 조회1, R01 수리7, S01 보고서2 총42분기와 15개 주요 테이블 설명. 전환·메타데이터·메뉴 SQL 및 동일기간 기타 작업 분리. R03 최신 REV/빈상태·반려 재요청·CRUD 후 최신 관리·연동 승인범위·LATEST·출력 인자/4건 제한·복사 사전검증의 현재 파일과 최종 이력 불일치 명시. 업무 소스 및 DB 미변경
 - **검증 결과**: 현재 SQL CASE42개 전부 문서 포함 확인, 테이블15개·실제 파일 링크·R03 불일치 조건 정적 대조, UTF-8 BOM/CRLF·적용 파일 일치 검증. 실제 DB 최신 반영 조회·실행 및 브라우저 확인 미수행
 
-
 ### 2. [EQM1001_R03] 조회 및 CRUD 후 그리드 상세 중복 호출 제거
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js
 - **배경 및 원인**: 공통 ItsGrid 바인딩 시 selectionChanged와 loadedRows 직접 onSelect가 중복 실행되어 REV 선택에 따른 동일 정기점검 조회가 두 번 발생; CRUD 후 REV 추가 시 자동 조회와 명시 조회도 중복 가능
 - **작업 상세 내용**:
   - 기존 프로젝트의 SetStore·onSelect 상세조회 구조 유지. R03 전용 LoadPlanGrid에서 바인딩 동안 선택 콜백 차단 후 필요 시 한 번 호출; 설비그룹·설비별 메인 및 REV 조회에 적용. CRUD 후 REV 행 갱신은 자동 상세조회 없이 기존 명시 조회 한 번 실행. try/finally로 이벤트 복원. CRUD 쓰기 로직·SQL·공통 컴포넌트·스크립트 버전 변경 없음
 - **검증 결과**: 선 검증 후 반영. 실제 공통 SetStore·AddRow·SetRowData 및 선택 이벤트 코드를 포함한 이벤트 재현 29건, 승인본·신규 REV·기존 선택 및 편집 회귀 27건 통과(합계 56건). 기존 4회 호출 재현 및 수정 후 3회 확인. 빈 조회·실패 후 재시도·바인딩 예외 복원 검증. JS 문법 및 UTF-8 BOM·CRLF 검증 완료. 실제 서버·DB 변경과 실브라우저 확인은 수행하지 않음
 
-
 ### 2. EQM1001_R03 최신 승인 REV에서 다음 개정 시작
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js
 - **배경 및 원인**: 최신 승인 REV도 조회 전용으로 고정되고 DB CRUD가 차단되어 다음 리비전 작업을 시작할 수 없음
 - **작업 상세 내용**:
   - 양 탭 최신 승인 REV의 승인본 조회와 신규 개정용 복사·추가·저장·삭제 버튼 허용. 승인 HEADER·DETAIL·APRV 이력은 보존하고 실제 항목 변경 성공 후 연동 대상의 다음 대기 REV 생성; 기존 대기·반려는 같은 최신 번호 재사용. 개정내용은 승인 REV 직접 수정 금지. LATEST 단건 조회와 공통 AddRow/SetRowData로 새 REV 추가·선택 유지. 승인/반려는 각 대상의 최신 REV만 처리하여 과거 반려 이력 보존. 복사 변경 건수 집계 및 빈 원본/자기 자신 복사 차단
 - **검증 결과**: 실제 DB 4개 테이블 컬럼65건 및 COMCALLC 트랜잭션 정의 SELECT 확인. 격리 MariaDB R03/R04 컴파일 및 DB35건, 공통 SetRowData/AddRow 실제 함수 포함 JS 모의27건 통과. 신규 대기 중 R04 직전 승인본 사용·신규 승인 후 전환 확인. JS 문법·30개 파라미터·UTF8 BOM/CRLF·스크립트 버전 유지 확인. 실제 서버 반영·실제 브라우저 테스트 미실시
 
-
 ### 2. EQM1001_R03 반려사유 기본 글자색 적용
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js
 - **배경 및 원인**: 초기 REV 조회와 단건 갱신에서 반려사유 빨간색을 명시적으로 지정함
 - **작업 상세 내용**:
   - 설비그룹·설비별 공통 REV 조회의 빨간색 루프 및 단건 갱신의 색상 지정 제거. 기존 SetRowData 갱신·반려사유 조회/저장 유지
 - **검증 결과**: 후보 JS 문법·불필요 색상 호출 제거·반려사유 저장/갱신 유지 확인 후 반영. UTF-8 BOM/CRLF 검증. 실제 브라우저 화면 테스트 미실시
 
-
 ### 2. [EQM1001_R03] 개정내용 저장 반려 해제 및 공통 현재 행 갱신
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js
 - **배경 및 원인**: SAVE_PLAN_REV가 반려 상태를 유지하고 CRUD·승인·반려 후 전체 목록 재조회와 선택 행 탐색으로 화면이 이동함
 - **작업 상세 내용**:
   - 최신 미승인 REV의 개정내용 저장 시 동일 REV를 대기로 재요청하고 현재 반려·처리 정보를 초기화하며 누적 이력 보존. 프로젝트 PRD7001 페이지의 공통 SetRowData 패턴과 GetStore·Focus 사용으로 현재 목록 행/REV만 갱신하고 CRUD 항목만 재조회. REV 정렬 시 최신 원본 기준 유지, 조회 버튼 첫 행 선택 유지. 승인 REV 수정 차단 유지. 별도로 반려된 소속 설비의 상태는 변경하지 않음
 - **검증 결과**: 실제 DB 컬럼 52건·HEADER 인덱스 7건 SELECT 확인. 격리 MariaDB 10.2 SQL 컴파일 및 DB 45건, 공통 SetRowData 실제 함수 포함 JS 모의 검증 21건 통과. JS 문법·30개 파라미터·BOM/CRLF 검증 완료. 실제 서버 DB 변경·배포 및 실제 브라우저 화면 테스트 미실시
 
-
 ### 2. EQM1001_R03 승인 계획 CRUD 차단 및 자동 다음 REV 생성 제거
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, WORK_HISTORY.md
 - **배경 및 원인**: 사용자 업무규칙 변경: 승인된 항목은 수정 자체가 불가하므로 수정 후 다음 REV를 대기로 자동 생성하는 동작 제거 요청
 - **작업 상세 내용**:
   - 양 탭 최신 승인 REV도 승인본 조회 전용으로 전환하고 추가/저장/삭제/복사 및 개정내용 저장 버튼 숨김. 프로시저는8개 CRUD의 대상·연동 대상 최신 REV 승인 여부를 모든 데이터 변경 전에 검사해 차단. 승인된 소속 설비 포함 그룹 CRUD 및 승인그룹 소속 설비 CRUD도 차단. 승인 이후 새 번호 자동생성 제거, REV 없는 최초 대상만 REV0 생성. 최신 대기/반려 REV만 같은번호 재요청하여 과거 REV 보존. 승인 복사 원본은 읽기만 허용. 주기저장 승인제한 제거와 출력 흐름 유지, 잘못된 새REV생성 안내문구 수정
 - **검증 결과**: 선 검증 후 반영. 실제 서버 프로시저 정의 SELECT로 구 동작 확인, 실제 DDL/DML 없음. 격리 MariaDB 전체 컴파일29건: 승인 대상/연동대상4경우×CRUD4차단 및 HEADER/DETAIL/APRV/CHKPLANEQM 불변16, 초기/대기 CRUD8, 승인·과거반려 이력보존2, 승인 개정내용 저장차단2, 승인된설비 주기저장1. 모의 JS11: 양탭 최신A 읽기전용/버튼숨김·대기/반려편집·최초등록·과거승인읽기·BOM CRLF srcVersion 유지. 합계40건, 기타 SQL 분기/30파라미터 및2개 JS함수 외 코드불변 확인. 저장파일 일치. 실브라우저 미실행
 
-
 ### 2. EQM1001_R03 변수 선언 및 CRUD 공통 리비전 처리 역할 설명
+
 - **수정/대상 파일**: WORK_HISTORY.md (R03.sql 소스 검토, 업무 소스 변경 없음)
 - **배경 및 원인**: 사용자가 PROC 앞 DECLARE 및 CASE 이전 공통 승인요청 블록 선언 이유 설명 요청
 - **작업 상세 내용**:
   - DECLARE는 프로시저 내부 임시변수32개로 모두 실제 참조됨. 공통 블록은 정기점검 CRUD8분기에만 대상/복사검증과 연결 대상 REV 재대기/신규번호 생성 수행하며 승인된 계획을 필수로 검사하는 로직 아님. 주기 저장/조회는 대상아님. 현재 UPDATE 조건은 최신 REV 제한없이 대상 계획의 모든 미승인 REV를 갱신하는 점 확인
 - **검증 결과**: 전체 DECLARE 사용처 확인32개·미사용0. 공통 호출코드8개 및 UPDATE/INSERT 범위 소스 검토. 실제 DB 조회·실행·업무 소스 변경 없음
 
-
 ### 2. EQM1001_R03 주기 저장 승인계획 검증 제거 상태 확인
+
 - **수정/대상 파일**: WORK_HISTORY.md (R03.js·로컬 R03.sql·실제 서버 프로시저 검토, 업무 소스 변경 없음)
 - **배경 및 원인**: 사용자가 주기 저장에서 승인된 정기점검계획 확인 검증이 제거되었는지 확인 요청
 - **작업 상세 내용**:
   - 일반 저장 및 일괄 주기설정은 SAVE_CYCLE_EQMCD 공통 분기를 사용하며 JS에도 승인 제한 없음. 로컬 및 실제 서버 해당 분기가 동일하고 승인상태·HEADER·DETAIL·APRV 참조/검증 없음. 주기 저장은 사용중 설비 확인과 점검실적이 있는 월의 점검자 변경/삭제 차단만 유지. 실제 YEARPLAN 트리거0 확인
 - **검증 결과**: 실제 서버 정의·트리거는 SELECT만 확인. 격리 MariaDB 전체컴파일 및 계획/REV/승인본 모두없는 상태 저장·대기/반려/승인 상태 저장·비사용/미지정설비 차단·실적월 변경 차단·일반/일괄 JS경로·트리거 없음10건 통과. 로컬/서버 주기저장 분기 정규화 비교일치. 실제 서버 저장/DML 및 업무 소스 변경 없음
 
-
 ### 2. EQM1001_R03 개정이력 REV별 최종 상태 한 건 출력
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, WORK_HISTORY.md
 - **배경 및 원인**: 사용자 최종 기준: 대기·반려도 포함하되 동일 REV의 여러 승인/대기/반려 처리 로그를 나열하지 않고 마지막 상태의 개정내역 한 건만 표시
 - **작업 상세 내용**:
   - CALL_PLAN_RPT 개정이력은 HEADER의 고유 PLANTP/PLANCD/REVNUM 행을 직접 조회하며 승인 필터 제거. APRV 로그는 JOIN하지 않으므로 동일 REV 다중 처리에도 한 건. 승인·반려는 최종 처리일, 대기는 요청일 표시, 승인자 칸은 승인 상태일 때만 표시. 과거 REV 선택 무관 전체 REV·최신 계획·4건 초과 다음 페이지 유지. 변경은 출력 이력 SELECT와 Modify 주석뿐
 - **검증 결과**: 선 검증 후 반영: 격리 MariaDB 전체 프로시저 컴파일·양탭 혼재60개 REV 한 번씩·과거/미선택/최신 선택·같은 REV의 반려→대기→승인 변경 후1건·다중 APRV 로그 중복 없음·대기만 있어도 표시·상태별 날짜·승인자18건 통과. 최신 계획 및 CRUD 분기·파라미터30 동일, BOM CRLF·저장파일 일치 확인. 실제 DB/서버·JS·보고서 바이너리 변경 없음, PDF 재실행 없음
 
-
 ### 2. EQM1001_R03 계획서 개정이력 승인 REV만 한 건씩 표시
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, WORK_HISTORY.md
 - **배경 및 원인**: 사용자 정정: PDF 개정이력에는 승인·대기·반려 전체가 아니라 승인된 REV만 번호당 한 건 표시
 - **작업 상세 내용**:
   - CALL_PLAN_RPT 마지막 이력 SELECT에 HEADER.APRVSTT=A 조건 추가. 승인일자·승인자 CASE를 직접 조회로 단순화. 승인 로그 테이블이 아닌 HEADER의 고유 리비전에서 조회하여 여러 승인/반려 로그가 있어도 중복 없음. 양 탭 동일 적용. 과거 REV 선택 무관 전체 승인 이력·최신 계획·4건 초과 이어서 출력 유지. JS·보고서·바이너리 변경 불필요
 - **검증 결과**: 선 검증 후 로컬 SQL 반영. 격리 MariaDB 전체 컴파일, 양 탭 혼재60중 승인20만 조회·과거/미선택/최신 REV 무관·REV 고유·승인일자·중복 로그·전체 승인60·승인 없음 등14건 통과. 변경은 이력 SELECT와 Modify 주석뿐, 기존 최신 계획·CRUD·파라미터30 보존, UTF8 BOM CRLF 및 적용파일 일치 확인. 실제 DB 반영 및 브라우저/PDF 재실행 없음
 
-
 ### 2. EQM1001_R03 선택 설비그룹·설비 최신 계획 및 전체 개정이력 출력
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql, 04.Report/PAGEEQM/EQM1001/S05A.cs, 01.Office/Reports/EQM1001.exe·pdb, 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe·pdb, WORK_HISTORY.md
 - **배경 및 원인**: 선택 REV 전달 및 CALL_PLAN_RPT의 해당 REV 이하·승인본 필터·LIMIT4, 보고서4행 제한으로 과거 REV 클릭 시 이후 이력 누락
 - **작업 상세 내용**:
   - 두 탭 출력은 좌측 EQMGUBUN/FANO와 PLANTP만 전달. SQL은 대상 최신 REV 기준 계획 내용, 승인·대기·반려 모든 개정이력 전체 조회. 하단 기존4칸 양식 유지하며 초과 이력은 SubBand·서브리포트로 다음 페이지에 이어서 각 이력을 한 번씩 표시. 신규 JOIN/테이블 없음. 로컬 보고서 EXE/PDB 재빌드·동기화, srcVersion·공통 컴포넌트·CRUD·승인별 행 선택 유지
 - **검증 결과**: 선 검증 후 반영: 실제 ItsRpt 직렬화·두 탭 과거/최신/미선택 REV·좌측선택 변경·미선택10, 격리 MariaDB 전체 컴파일·REV1/0/99/공란/잘못된값 무관 최신 계획·승인본·전체60이력·검증16, 테스트 DB만 대체한 실제 S05A PDF3/4/5/60건 양탭8개 전부 각 이력1회·페이지1/1/2/3 확인 및 PNG 시각 검증. 실제 DB SELECT 양탭 각REV0~3 전체4건 반환2, 합계36건. MSBuild 오류0, 최신 바이너리 IL의 REVNUM 입력 제거 및 전체 이력메서드 확인, BOM CRLF·적용파일/바이너리 해시 확인. 실제 DB DDL/DML·서버 반영·실브라우저 미실행
 
-
 ### 2. EQM1001_R03 양 탭 REV 미등록 승인상태 공란 및 최신 REV 기준 통일
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, WORK_HISTORY.md
 - **배경 및 원인**: 설비별 LIST_MSTEQM에 REV 없는 경우 공란 분기가 누락되고 REV 표시는 직전 승인본·상태는 최신본으로 달라 공란 REV에 대기가 표시됨. 실제 서버 정의 SELECT에서도 확인, 그룹 분기는 공란 조건 정상
 - **작업 상세 내용**:
   - 설비별 REVNM을 최신 PLAN_REV.REVNUM으로 변경, REVCD 미등록이면 APRVSTTNM 공란 처리. 불필요한 승인 REV 집계 제거. 설비그룹 동일 기준 검증. 실제 CRUD와 JS·srcVersion·공통 컴포넌트 변경 없음. 동일 날짜 Modify 한 줄 통합
 - **검증 결과**: 선 검증 후 반영: 격리 MariaDB 전체 컴파일 및 두 탭 REV 없음·REV0 대기·NULL 상태·승인·반려·승인 후 신규 대기/반려·최신 승인 등 포함22건 통과. 실제 SELECT 설비1143/그룹14 유지, 설비996/그룹7 미등록 상태 공란, 기존 식별키·이름·상태코드·반려사유·정렬 동일, 최신 REV 표시29개 정상화. 변경 범위 LIST_MSTEQM만·파라미터30·BOM CRLF 확인. 실제 DB 반영·브라우저 실화면 테스트 미실행
 
-
 ### 2. EQM1001_R03 표시 체크박스 잔여 코드·JOIN 제거 및 중복 등록 보완
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql, WORK_HISTORY.md
 - **배경 및 원인**: 사용자가 설비별 정기점검 표시 체크박스 삭제 후 불필요한 부분 제거 및 CRUD 검증까지 요청
 - **작업 상세 내용**:
   - JS의 주석 처리된 EQM02 컬럼·autoSizeColumns 코드, YnToBool(EQM02) 변환, 추가 완료 후 빈 탭 분기 제거. LIST_MSTEQM의 EQM02 반환값과 전용 CHKPLANEQM DISTINCT 파생 JOIN 제거. 격리 CRUD 검증 중 발견한 기존 REG_EQM02 재등록 중복키 오류는 ON DUPLICATE KEY UPDATE CHKKNDCD=VALUES(CHKKNDCD)로 기존 값을 바꾸지 않고 처리. 다른 SQL 분기·파라미터30·FANO 선택 복원·점검항목 선택 체크박스·srcVersion 유지
 - **검증 결과**: 검증 후 반영: 실제 DB SELECT 전후1143개 고유 설비의 나머지 모든 필드·정렬 동일. JS 모의 UI56, 격리 MariaDB10.2 프로시저 컴파일·조회·CRUD·그룹CRUD·실행계획17, 중복 요청·기존 데이터 불변2 합계75건 통과. EXPLAIN에서 표시용 CHKPLANEQM 접근 제거 확인. 실제 CHKPLANEQM 트리거0 SELECT 확인. 수정 전후 파라미터 동일, SQL 변경은 LIST_MSTEQM/REG_EQM02 두 분기뿐. BOM CRLF·저장파일 해시 확인. 실제 DB DDL/DML 및 서버 파일 반영 없음, 실브라우저 동작 미실행
 
-
 ### 2. EQM1001_R03 설비별 정기점검 표시 체크박스 제거 영향 검증
+
 - **수정/대상 파일**: WORK_HISTORY.md (R03.js·aspx·sql 검토, 업무 소스 변경 없음)
 - **배경 및 원인**: 사용자가 설비별 목록 grid1의 읽기 전용 EQM02 정기점검 체크박스를 삭제할 때 관련 기능에 문제가 있는지 확인 요청
 - **작업 상세 내용**:
   - 현재 컬럼 선언이 이미 주석 처리되어 grid1에 EQM02가 생성되지 않음을 확인. 설비 선택·리비전·승인/반려·출력·등록/저장/삭제/복사는 FANO를 사용하며, CRUD 항목 선택은 grid3/grid10 체크박스 사용. 고정 컬럼 번호나 EQM02 셀 참조 없음. 잔여 JS YnToBool(EQM02) 및 LIST_MSTEQM의 EQM02 표시값/CHKPLANEQM 파생 JOIN은 표시 전용으로 확인하여 후속 정리 후보로 기록
 - **검증 결과**: 현재 파일 그대로 JS 모의 동작 검증54건 통과(기존44+체크박스 없는 설비 선택·추가·등록·저장·삭제·복사·미선택10). 공통 Store 변환 및 ItsGrid 바인딩 소스 확인, LIST_MSTEQM 참조자는 R03.js뿐임. 실제 DB 호출·브라우저 실화면 테스트·업무 소스 변경 없음
 
-
 ### 2. SQL 규칙의 보존 조건 제외 및 JOIN 가독성 기준 강화
+
 - **수정/대상 파일**: .agents/rules/sql_structure.md, .agents/rules/procedure.md, .agents/rules/validation.md, WORK_HISTORY.md
 - **배경 및 원인**: 사용자가 직전 추가 규칙의 승인본·이력·조회 조건 보존 항목을 제외하고 누구나 이해할 수 있는 간단한 JOIN 구조를 요구
 - **작업 상세 내용**:
   - 규칙 소개·procedure 연결 문구의 보존 조건 및 승인본 유지 전용 항목 제거. 특정 승인 업무 예시는 일반 원본 테이블·기능 검증으로 변경. 기준 테이블에서 식별키로 직접 연결, 중복·우회 JOIN 및 중첩 조회 지양, 짧고 역할이 분명한 별칭, 일관된 조건 배치와 설명보다 구조 단순화 기준 추가. 기존 업무 소스와 테이블은 변경하지 않음
 - **검증 결과**: 선 검증 후 규칙 반영. 보존 항목 제거 여부, 규칙 frontmatter·문서 링크·50줄 이내·BOM CRLF 검증, 실제 저장 파일 해시 일치 확인
 
-
 ### 1. 불필요한 JOIN·중복 컬럼 방지 SQL 구조 규칙 추가
+
 - **수정/대상 파일**: .agents/rules/sql_structure.md, .agents/rules/procedure.md, .agents/rules/validation.md, WORK_HISTORY.md
 - **배경 및 원인**: 불필요한 JOIN과 테이블 참조로 프로시저가 길어지는 문제를 반복하지 않도록 사용자 요청으로 프로젝트 규칙 강화
 - **작업 상세 내용**:
   - 기존 .agents 형식(always_on)으로 SQL 구조 규칙 신설. 실제 컬럼·키·행 단위 확인, JOIN 목적과 행 필터·중복 검토, 중복 참조 제거, 확정 그룹코드 직접 필터, 필요한 COMTYPE 조회 보존, 상관 쿼리·DISTINCT 우회 금지, HEADER 식별정보 중복 방지, 승인본 DETAIL 보존, 상태 원본 분리, 불필요한 객체 생성 억제, NULL 처리 간소화, 실행계획·결과 검증 및 전환 SQL 반영 구분 명시. procedure 및 validation에 필수 참조 연결
 - **검증 결과**: 임시 규칙 작성 후 기존 문서 비교 및 충돌 검토 완료. 새 규칙 50줄 이내, frontmatter·상대 링크·UTF8 BOM·CRLF 검증. 저장 후 3개 파일 해시 일치 확인. 문서 변경만 수행, 업무 소스·DB 미변경
----
 
+---
 
 ## 🕒 2026-10-06 (화) 작업 내역
 
 ### 2. EQM1001_R03 계획서 출력의 구 리포트 실행 파일 교체
+
 - **수정/대상 파일**: 01.Office/Reports/EQM1001.exe·pdb, 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe·pdb, WORK_HISTORY.md
 - **배경 및 원인**: 계획서 출력에서 설비그룹 선택 안내 발생. R03 화면은 PLANCD·REVNUM을 정상 전송하지만 로컬 실행 EXE가 EQMGRP·FANO를 요구하고 R05 CALL_PLAN_RPT를 호출하는 구버전인 것을 IL 메타데이터로 확인
 - **작업 상세 내용**:
   - 최신 S05A·Program 소스로 Report 프로젝트 Release 재빌드. PLANCD·REVNUM 및 R03 CALL_PLAN_RPT 소비를 새 EXE 메타데이터에서 확인 후 로컬 Office Reports 및 Release 실행 파일·심볼 동기화. 기존 EXE·PDB 임시 감사 경로 백업. JS·ASPX·공통 컴포넌트·프로시저·srcVersion 변경 불필요
 - **검증 결과**: MSBuild 오류0. 실제 ItsRpt.js 직렬화 및 R03 PrintPlanRev 사용한 전달·미선택 검증8건 통과. DB 연결만 테스트 대체한 임시 S05A로 그룹·설비 REV0/REV3 PDF4건 생성 및 R03/PLANCD/REVNUM 전달 확인. 최종 EXE 해시 일치. 실제 DB·실제 서버 파일 미변경, 실서버 PDF 출력 미실행
 
-
 ### 2. EQM1001 계획·리비전·승인이력 4개 테이블 실제 DB 구조 검증
+
 - **수정/대상 파일**: WORK_HISTORY.md (실제 DB SELECT 검증, 업무 소스 변경 없음)
 - **배경 및 원인**: 사용자가 HEADER·DETAIL·APRV·CHKPLANEQM의 최신 컬럼 적용 상태 확인 요청
 - **작업 상세 내용**:
   - 실제 information_schema 87행 및 데이터 정합성 25항목, DETAIL 참조 루틴 2개 조회. HEADER 19컬럼/REVCD PK/계획별 REV UNIQUE 정상. DETAIL 19컬럼으로 PLANTP·PLANCD·REVNUM·EQMCD 삭제 미반영, 최신 R03 INSERT 후 66행의 구 중복 컬럼이 기본값임. APRV 18컬럼/APRVKEY PK/REVCD 인덱스 및 GETKEY 등록 정상, RTIME·REMP·RPRG의 기존 기본값은 큰따옴표로 로컬 빈 문자열과 다름. CHKPLANEQM 13컬럼/설비·항목 PK 정상, 현재 MSTEQM에 없는 6설비코드의 계획 31건 확인. 최신 R03/R04 실제 본문과 로컬 SQL 동일. CREATE TABLE IF NOT EXISTS는 기존 DETAIL 구조를 변경하지 않으므로 PLAN_REV_NORMALIZE 별도 실행 필요
 - **검증 결과**: SELECT만 사용. HEADER 199/DETAIL 607/APRV 196/계획 643행. DETAIL의 HEADER 미연결 0, APRV 빈키·키형식·상태·HEADER 연결·계획 식별 불일치 각 0. DETAIL 중복 컬럼 불일치 66건 전부 빈값·0 기본값, 승인 스냅샷과 HEADER 연결 유지. 계획 CHKTP01 17/02 626, 설비 미연결31/점검항목 미연결0. 실제 DB DDL/DML·공통 함수 실행 없음
 
-
 ### 2. EQM1001_R03 빈 개정내용 승인·반려 차단 및 저장 버튼 색상 구분
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 05.Procedure/MES_SNS2_EQM1001_R03.sql
 - **배경 및 원인**: 대기 REV의 개정내용이 없는데 반려가 가능했고 개정내용 저장과 승인 버튼 색상이 동일했음
 - **작업 상세 내용**:
   - 공통 승인·반려 버튼 처리에서 공백·미입력 차단 안내 추가, SAVE_PLAN_STATUS의 승인 전용 빈 개정내용 검증을 승인·반려 공통으로 확대, 설비그룹·설비별 개정내용 저장 버튼을 CustomButton2 파란색으로 변경, 미저장 내용·구버전 REV 검증 및 srcVersion 유지
 - **검증 결과**: 선 검증 후 반영: JS 모의 UI 44건 및 격리 MariaDB 10.2 승인·반려 회귀 검증 47건 합계 91건 통과. JS 문법·ASPX 버튼 속성·파라미터 유지·BOM CRLF 확인. 실제 서버 DB와 배포 파일 미변경
 
-
 ### 2. EQM1001 REV DETAIL 정규화 및 승인이력 APRVKEY 전환
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 05.Procedure/MES_SNS2_EQM1001_R04.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_REV.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_REV_INIT.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_REV_REVCD.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_APRV_HISTORY.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_REV_NORMALIZE.sql
 - **배경 및 원인**: DETAIL의 PLANTP·PLANCD·REVNUM 등 HEADER 중복 정보 제거 및 CHKPLANEQM_APRV PK를 GETKEY(APRVKEY)로 생성하도록 요청
 - **작업 상세 내용**:
   - 실제 DETAIL541건 SELECT 점검에서 HEADER 고아·중복값 불일치·EQMCD 파생값 불일치 모두0건. DETAIL PLANTP·PLANCD·REVNUM·EQMCD 제거 및 REVCD·CHKKNDCD PK 유지. R03 승인본 INSERT와 최초 이관/신규 생성 SQL 수정. R04 설비코드는 이미 HEADER로 검증한 조회 대상 EQMCD 반환하여 추가 JOIN 없이 기존 그리드 반환 형식 유지. APRVKEY VARCHAR20 PK와 GETKEY(APRVKEY) 발번 적용, 이력은 APRVTIME·APRVKEY 최신순 및 REV 조회 인덱스 정리. 구 계획별 PK·중간 APRVID·신규 구조 모두 지원하는 전환 SQL 및 HEADER 없는 DETAIL 사전 차단 추가. 구 REVCD 이관 파일은 역사적 구 구조 참조를 유지하고 최신 정규화 적용 순서 명시. 상태/요청 이력 데이터와 승인 스냅샷 보존. JS·ASPX·리포트 및 입력 파라미터 변경 없음. 공통 GETKEY 수정 없음
 - **검증 결과**: 격리 MariaDB10.2 및 실제 GETKEY 정의 복제로 승인/이력/출력31건, 테이블 전환·재실행·기존 키/기록 보존·고아 차단13건, R04 승인본/점검 등록/중복 방지10건, 신규 스키마/최초 이관3건, 주기관리·완료월 잠금26건 총83건 통과. R03·R04 입력 파라미터 동일 및 수정 분기3개 한정 확인. 7개 SQL UTF8 BOM/CRLF 검증. 실제 DB는 SELECT만 사용하고 GETKEY 직접 호출이나 DDL/DML 없음
 
-
 ### 2. EQM1001_R03 리비전 승인·반려·계획서 출력 이관 및 처리 이력 팝업
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.js, 05.Procedure/MES_SNS2_EQM1001_R03.sql, 05.Procedure/MES_SNS2_EQM1001_R05.sql, 05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql, 05.Procedure/MES_SNS2_EQM1001_PLAN_APRV_HISTORY.sql, 04.Report/PAGEEQM/EQM1001/S05A.cs
 - **배경 및 원인**: R05 승인·반려·출력을 R03 개정 이력 영역으로 옮기고 선택 REV의 CHKPLANEQM_APRV 이력을 공통 팝업으로 조회 요청. 기존 승인 테이블은 PLANTP·PLANCD PK와 REVCD 부재로 누적 이력 저장 불가
 - **작업 상세 내용**:
   - 두 탭 개정내용 저장 옆 승인·반려·출력 배치, REV 그리드 이력 버튼 및 Its:pop/ItsPop 기반 조회·반려사유 팝업 추가. R03 SAVE_PLAN_STATUS/CALL_PLAN_RPT/LIST_PLAN_APRV 이관, 선택 최신 REV 및 저장된 개정내용 확인, 승인본 스냅샷과 그룹·소속 설비 처리별 누적 기록. CHKPLANEQM_APRV APRVID·REVCD 추가 및 PK 전환/REV 인덱스/기존 기록 보존 SQL 작성. 상태는 REV_HEADER 유지, 이력은 APRV 누적. 과거 이력은 상태·처리시간이 정확히 일치하는 REV만 연결하며 불명확한 처리자는 임의 표시하지 않음. R05는 조회만 유지하고 기존 동작 제거. S05A는 명칭/양식 유지하고 R03 선택 REV 데이터 사용. R03 파라미터30개 메타데이터 갱신. 기존 R03 주기관리 모든 분기와 R04 승인 실행 제한 유지
 - **검증 결과**: 선검증 후 반영. 격리 MariaDB10.2 승인·반려·선택 REV 출력28건, 주기관리/완료월 잠금26건, 이력 전환/재실행/기존 데이터 보존8건, JS 이벤트/클릭 행/선택 복원/에러/버전/컨트롤23건 총85건 통과. 실제 스키마와 현행 R03은 SELECT로만 확인. 스테이징·최종 MSBuild 빌드 오류0. 기존 R03 분기 동일 및 UTF8 BOM/CRLF 검증. 실제 배포 화면·PDF 실행은 서버 반영 후 확인 필요
 
-
 ### 2. EQM1001_R03 주기관리 승인 제한 제거
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql
 - **배경 및 원인**: 주기 조회는 사용 중인 모든 설비를 대상으로 하고 주기 저장에서 승인계획 검증을 제거하도록 요청
 - **작업 상세 내용**:
   - LIST_CYCLE_EQMCD 승인 REV 관련 JOIN 4개 및 그룹 승인 조건 제거, USEYN=Y와 연도별 정기점검 주기 LEFT JOIN만 유지. SAVE_CYCLE_EQMCD 및 DELETE_CYCLE_EQMCD는 사용 중인 설비 여부만 검증하며 완료실적 월 잠금 유지. R04 실제 점검의 승인 검증과 페이지 ASPX/JS 및 파라미터는 변경 없음
 - **검증 결과**: 격리 MariaDB 10.2에서 프로시저 컴파일 및 26개 조회·저장·삭제·완료월 잠금·R04 승인 회귀검증 통과. 실제 DB SELECT로 활성 설비 1143개와 조회 1143행, 키 중복 없음 및 30개 컬럼 확인. 선검증 후 반영, UTF-8 BOM/CRLF 및 파라미터 동일 검증
 
-
 ### 2. EQM1001 설비그룹 최신 REV 표시 및 승인 구조 단순화
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql;05.Procedure/MES_SNS2_EQM1001_R05.sql;05.Procedure/MES_SNS2_EQM1001_PLAN_REV.sql;05.Procedure/MES_SNS2_EQM1001_PLAN_REV_INIT.sql;01.Office/PAGEEQM/EQM1001/EQM1001_R03.js;05.Procedure/MES_SNS2_EQM1001_PLAN_APRV.sql 삭제
 - **배경 및 원인**: 별도 승인 테이블과 REV 헤더의 중복 관리 및 다중 조인, 설비그룹 체크박스 제거·최신 REV 표시 요청
 - **작업 상세 내용**:
   - 승인 상태와 요청·처리정보를 REV 헤더로 통합하고 중복 승인 저장·삭제 제거; 설비그룹 정기점검 체크박스·변환 제거 및 그룹코드 포커스 복원; 최신 REV와 상태 조회, REV 없으면 상태 공란; 그룹조회 JOIN 6→3, 전체 R03 51→42·R05 24→21; 그룹 대상 상수·복사 원본·등록 항목/순서 조회 중복 조인 축소; 정기점검 주기 조회 CHKTP=02 제한으로 불필요 외부 GROUP BY 제거; 구 승인 테이블 생성 스크립트 삭제·기존 이관 스크립트 일회성 용도 명시; 창작업본 CHKPLANEQM 및 승인 보존본 REV_DETAIL 유지
 - **검증 결과**: 격리 MariaDB 10.2 DB 테스트 94건 및 JS 모의 테스트 20건 통과; 실제 DB SELECT로 그룹 14건 최신 REV·상태 대조 및 기존 설비·승인관리 조회 결과 검증; 가상 REV 10만 건에서 느린 윈도 함수·행별 lookup 제외하고 집계/유일키 조인 유지; 파라미터 수·순서 유지, BOM·CRLF·node 문법검사 통과; 실제 서버 DDL/DML 없음
 
-
 ### 2. [EQM1001_R03/R04/R05] 최신 서버 반영 확인 및 프로시저 조회 최적화
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql
 - **배경 및 원인**: 사용자가 최신 이관 버전 반영 후 정확한 적용 확인과 3개 프로시저 성능·가독성 개선 요청. 작업 시작 시 서버 세 프로시저 본문이 로컬과 일치, SYSTEM_PARAMETERS와 정보 스키마 입력값이 R03 28개·R04 22개·R05 10개로 일치, 다른 페이지 호출 0건 확인
 - **작업 상세 내용**:
   - R03 REV 상세는 REVCD·CHKKNDCD PK로 항목이 유일하므로 MIN/MAX/GROUP BY 중복 집계 제거. R03 주기관리 2곳 및 R04 점검 CRUD 4곳의 승인 검증을 COUNT 전체 계산에서 단독 IF NOT EXISTS로 변경(SELECT WHERE 상관 서브쿼리 사용 없음). R04 최신 승인 REVCD·REVNUM 조회를 2회에서 1회로 통합, 미사용 지역변수 제거. R05 그룹·설비 항목 수를 선집계하고 승인정보 JOIN 뒤 넓은 GROUP BY 제거, 설비 항목 수는 PK 유일성을 활용한 COUNT(*) 사용. 입력 파라미터 및 반환 컬럼·오류 문구·기존 승인/REV/점검 보호 흐름 유지. 날짜별 이력 1행 통합
 - **검증 결과**: 실제 DB SELECT/EXPLAIN으로 최신 배포 정의·메타데이터·키 확인. 변경 전후 그룹 목록 13건·설비 목록 126건·REV 상세 4건 동일. 격리 MariaDB 10.2에서 최적화 3개+기존 비교용 3개 전체 컴파일. 기존 CRUD/승인 34개+추가 R04/주기관리/결과 비교 35개=69개 통과. 실제 조회 소규모 측정(한 연결, 쿼리별 워밍업 1회 제외 6회) 중앙값 그룹24.92→18.04ms, 설비29.83→20.77ms(왕복·전송 포함 참고값, 운영 성능 보장 아님). BOM/CRLF 검증. 실제 서버 DB 데이터·정의·인덱스 변경 없음, 브라우저 CRUD 미실행
 
-
 ### 2. [EQM1001_R03/R04/R05] 페이지·프로시저 호출 일치 점검
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.js, 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, WORK_HISTORY.md
 - **배경 및 원인**: 다른 페이지 프로시저 참조가 남아 있는지 확인 및 페이지명과 프로시저명을 일치시키라는 요청
 - **작업 상세 내용**:
   - 현재 로컬 호출 33개 전수 확인(R03 25개·23분기, R04 6개·6분기, R05 2개·2분기): 모두 자기 페이지 프로시저 호출, 각 분기 존재. SQL 선언명·내부 호출·코드비하인드 클래스·스크립트 연결 일치. R05 계획서 S05A도 R05 CALL_PLAN_RPT 사용. COMERR·COMSPLIT 공통 호출 유지. 앞선 이관이 로컬에 완료되어 추가 기능 소스 변경 없음. 실제 DB에는 R03→R05 호출 8개 및 R05의 REQUEST_PLAN/REV 3개 분기가 이전 상태로 남아 있음
 - **검증 결과**: JS 3개 구문 검사 및 로컬 호출·분기·페이지 이름 검사 통과. 실제 서버는 루틴/메타데이터 SELECT만 실행. 서버 R03에서 로컬 REV 3분기 누락 및 등록 파라미터 24개(최신 28개 필요) 확인. R04 22개·R05 10개 파라미터는 로컬과 일치. 실제 서버 수정 없음
 
-
 ### 2. [EQM1001_R03/R05] 최신 REV 요청일시 표시 및 페이지별 프로시저 분리
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql, 05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV_SYSTEM_PARAMETERS.sql
 - **배경 및 원인**: R05 요청일시는 계획 수정 때 삭제되는 CHKPLANEQM_APRV에서 조회하여 공란. R03 REV 저장·조회 및 CRUD 승인 요청 생성까지 R05에 있어 페이지와 프로시저 책임 불일치. 실제 DB FM116I2E0N REV.1에는 2026-10-06 13:32:48 기록됨
 - **작업 상세 내용**:
   - R03에 LIST_PLAN_REV·LIST_PLAN_REV_ITEM·SAVE_PLAN_REV 이동, JS 세 호출을 R03으로 변경. CRUD 8개 분기의 승인 요청 생성·초기화를 R03 공통 영역으로 이동하여 R05 의존 제거. R03 PLANTP·PLANCD·REVNUM·REMARK 입력 추가(24→28), 전용 파라미터 백업·재등록 SQL 추가. R05 LIST_PLAN 두 탭은 최신 REV 헤더 요청일시를 우선 조회하고 기존 승인테이블 시간은 이전 데이터 보완용. 승인·반려 및 그룹 일괄 처리 시 원래 요청자·요청일시·요청프로그램 유지, 처리일시는 별도 저장. R05 승인·반려·출력 유지
 - **검증 결과**: 실제 서버는 SELECT만 실행: 테이블 컬럼·키·루틴·파라미터 확인, 수정 SELECT 그룹 1건(대기 REV.1 요청일시 정상), 설비 126건 정상. 격리 MariaDB 10.2에서 전체 R03/R05 컴파일과 원래 파라미터 백업·재등록 검증. DB 회귀 34개+JS 호출 10개=44개 통과. CRUD 8개 분기·그룹 일괄 승인/반려·승인본 보존·재승인 요청정보·오류 입력·이전 데이터 보완 확인. JS 구문 및 BOM/CRLF 검증. 실제 서버 프로시저/메타데이터 미반영, 실제 브라우저 저장 미검증
 
-
 ### 2. [EQM1001_R03] 개정내용 저장 시 작성자·수정일시 자동 기록
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql
 - **배경 및 원인**: R03 REV 그리드는 REQEMP·REQTIME을 표시하지만 SAVE_PLAN_REV는 MEMP·MTIME만 갱신하여 기존 이력의 작성자와 수정일시가 빈 값으로 남음. 실제 DB에서도 해당 빈 값과 수정 감사 필드만 기록된 행 확인
 - **작업 상세 내용**:
   - 개정내용 저장 시 REQEMP=CALLEMP(), REQTIME=CALLTIME(), REQPRG=CALLPRG() 갱신. 기존 MEMP·MTIME·MPRG 기록 유지. UPDATE에도 승인본 제외 조건 추가. 두 탭의 공통 프로시저·기존 조회 바인딩 활용, JS·테이블·프로시저 인자 변경 없음
 - **검증 결과**: 실제 DB 스키마·데이터·배포 프로시저를 SELECT로 확인. 격리 MariaDB 10.2에서 전체 프로시저 컴파일 및 14개 검증 통과(그룹·설비별 저장, 재저장 사용자·시간, 반려상태 유지, 승인본 보호, 입력 오류). LIST_PLAN_REV 작성자명·시간 반환 확인. BOM·CRLF 검증. 실제 서버 DB 변경 및 브라우저 저장 테스트 없음
 
-
 ### 2. EQM1001_R01 화면 및 프로시저 수리유형 명칭 원복
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql
 - **배경 및 원인**: 설비이력관리(EQM1001_R01) 화면의 콤보 라벨 및 메인 그리드 컬럼명이 '고장원인구분'으로 변경되었던 부분을 기존 명칭인 '수리유형'으로 원복 요청
 - **작업 상세 내용**:
   - 1. EQM1001_R01.aspx 팝업 콤보(pop1_com_ISSUE) 라벨을 '수리유형'으로 원복. 2. EQM1001_R01.js 메인 그리드(grid1) 컬럼명을 '수리유형'으로 원복 및 주석 갱신. 3. MES_SNS2_EQM1001_R01.sql 검증 오류 메시지를 '수리유형을 선택하세요.'로 원복 및 최상단 1일 1행 Modify 주석 갱신. 4. 전 파일 UTF-8 with BOM 및 CRLF 개행 유지
 - **검증 결과**: IIS Express 200 OK 확인, 렌더링된 HTML 내 '수리유형' 포함 및 '고장원인구분' 미포함 검증 완료, 전 파일 UTF-8 with BOM 무결성 확인
 
-
 ### 2. EQM1001_R04 프로시저 월별 점검상태 REV 버전 표기 포맷 간결화 (REV.0, REV.1 등)
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql
 - **배경 및 원인**: 정기점검 등록/조회(R04) 화면 메인 그리드 월별 점검상태의 REV 버전을 두 자리 패딩(REV.00) 대신 REV.0, REV.1과 같이 자연스러운 REVNUM 원본 형식으로 표시 요청
 - **작업 상세 내용**:
   - 프로시저(MES_SNS2_EQM1001_R04.sql) LIST_CYCLE_EQMCD 분기에서 LPAD 서식을 제거하여 '점검완료 (REV.X)', '점검필요 (REV.X)' 형식으로 반환하도록 수정하고 최상단 Modify 이력 1일 1행 갱신
 - **검증 결과**: SQL 소스 파일 UTF-8 with BOM 및 CRLF 무결성 확인, IIS Express 200 OK 정상 서빙 확인
 
-
 ### 2. MST3001_R03 및 TOL0003_R05 타 프로젝트 복사 파일 아키텍처 및 코딩 컨벤션 표준화
+
 - **수정/대상 파일**: 01.Office/PAGEMST/MST3001/MST3001_R03 (aspx, aspx.cs, js), 01.Office/PAGETOL/TOL0003/TOL0003_R05 (aspx, aspx.cs, js)
 - **배경 및 원인**: 타 프로젝트에서 신규 도입한 설비부품 관리(MST3001_R03) 및 금형점검·등급관리(TOL0003_R05) 화면 세트를 현재 MES 솔루션 표준 구조, 네이밍/주석 규칙, 인코딩에 맞추어 전환 요청
 - **작업 상세 내용**:
   - 1. MST3001_R03: .aspx 인위적 주석 제거 및 마크업 정리, .js grid1 오타 수정, 외부 IP 하드코딩 제거, iframe 팝업 스타일 오타 수정, 표준 날짜 주석 작성. 2. TOL0003_R05: .aspx 인위적 주석 제거, 표준 섹션 주석(PAGE, POP) 적용, InputWidth 공백 정규화, .js 과도한 배너 구분선 제거, enumColumnTypes.date 오타 수정, 필수값 알림 오타 및 설비->금형 명칭 정정, 암묵적 전역함수 표준화, parent.wait 안전 방어 처리, ToYn 통일, 2026-10-06 날짜 주석 적용. 3. 전 파일 UTF-8 with BOM 및 Windows CRLF 개행 통일
-- **검증 결과**: IIS Express(http://localhost:55085/) 호출 검증 결과 MST3001_R03.aspx 및 TOL0003_R05.aspx 모두 200 OK 정상 서빙 확인, 전 파일 UTF-8 with BOM 및 CRLF 무결성 검증 완료
-
+- **검증 결과**: IIS Express(<http://localhost:55085/>) 호출 검증 결과 MST3001_R03.aspx 및 TOL0003_R05.aspx 모두 200 OK 정상 서빙 확인, 전 파일 UTF-8 with BOM 및 CRLF 무결성 검증 완료
 
 ### 2. EQM1001_R04 메인 그리드 월별 점검상태(점검필요·점검완료)에 두 자리 REV 버전 표기 및 컬럼 너비 확장
+
 - **수정/대상 파일**: [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql)
 - **배경 및 원인**: 정기점검 등록/조회 화면(R04)의 메인 그리드(1~12월) 점검상태(점검필요, 점검완료) 표시 시 각 점검건에 적용된 REV 버전을 식별할 수 있도록 요청
 - **작업 상세 내용**:
   - 프로시저(MES_SNS2_EQM1001_R04.sql)의 LIST_CYCLE_EQMCD 분기에서 월별 실적의 REV 버전 및 최신 승인 REV 번호를 2자리로 포맷팅하여 '점검완료 (REV.XX)' 및 '점검필요 (REV.XX)'로 반환하도록 개선하고, 클라이언트 스크립트(EQM1001_R04.js)에서 1~12월 컬럼 너비를 105px로 확장하며 상태값 포함 여부(indexOf)로 색상 및 더블클릭 팝업 분기를 정상 처리하도록 수정
 - **검증 결과**: IIS Express 200 OK 확인, 브라우저 렌더링 검증 결과 점검완료(초록)/점검필요(파랑) 색상 적용 및 pop1/pop2 더블클릭 오픈 정상 동작 확인 완료
 
-
 ### 2. EQM1001_R03 우측 그리드 헤더 버튼-컬럼 간 과도한 여백 제거 및 BOM 정규화
+
 - **수정/대상 파일**: [EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx)
 - **배경 및 원인**: 우측 그리드(개정 이력, 정기점검)의 버튼 영역과 하단 컬럼 헤더 간 50px 이상의 불필요한 흰색 공백 발생 및 ASP.NET 파서 오류로 인한 미반영 문제
 - **작업 상세 내용**:
   - 설비그룹 및 설비별 탭의 개정 이력(Line 30, 80) 및 정기점검(Line 45, 95) 버튼 패널의 TopHeightPc(17%, 12%) 속성 제거, UTF-8 with BOM 인코딩 정규화
 - **검증 결과**: IIS Express 200 OK 확인, 브라우저 렌더링 측정 결과 버튼-헤더 간 간격이 4.67px로 밀착되고 패널 높이가 24px로 최적화됨을 실측 확인
 
-
 ### 2. EQM1001_R01·S01 실제 DB 구조 확인 및 화면·프로시저 보완
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, EQM1001_R01.js, EQM1001_S01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql, MES_SNS2_EQM1001_S01.sql, 04.Report/PAGEEQM/EQM1001/S01A.cs
 - **배경 및 원인**: 개발 중 변경된 DB 컬럼·공통코드·실제 데이터를 SELECT로 확인 요청. 실제 MariaDB 10.2.15에서 6개 테이블 199개 컬럼, 설비 1345건·수리이력 4건·작업자 연결 5건 확인. INNER JOIN으로 설비마스터 없는 BENDING_01 이력 1건 누락, 작업자 검색은 등록자 기준, 구입금액 BUYFAMT NULL 시 BUYAMT 미반영 발견
 - **작업 상세 내용**:
   - R01 작업자 연결 테이블 기준 검색·LEFT JOIN 이력 보존·19자리 일시 HH:mm 분리·등록자 보존·부품 미사용 코드 제거·작업자 신규 행 저장/미저장 행 삭제·월 경계 소요일 계산 수정. DB에서 날짜·작업자·고장원인구분·100자 입력 검증 및 소요일 재계산. ISSUE 화면 명칭을 고장원인구분으로 정정. S01 구입금액 국내/외화 매핑·작업자 집계/코드 대체·빈 처리내용 대체·보전구분 내부코드 미표시·순번 정렬·이전 PDF 초기화. S01A 프로젝트 DB 설정 및 빈 PDF 대신 오류 안내. 두 aspx.cs와 S01.aspx는 변경 필요 없음. 프로시저 입력 시그니처 R01 40개/S01 3개 유지
 - **검증 결과**: 실서버 수정 조회문 SELECT 4종 실행: 전체 이력 4건, TEST_EMP01 참여 이력 2건, A-001 구입금액 6,000,000(KRW) 및 작업자 2명 반환. 격리된 로컬 MariaDB 10.2.44에서 46개 DB 시나리오 통과, Node 화면 이벤트 23개 통과, JavaScript 문법 정상. MSBuild 15 Release 빌드 성공. BOM·CRLF 정상. 실제 서버 DDL/DML·리포트 배포 및 실제 브라우저 CRUD는 수행하지 않음
 
-
 ### 3. MTR0001_R01 기존 메뉴 데이터 삭제 SQL 작성
+
 - **수정/대상 파일**: [MES_SNS2_MTR0001_R01_MENU_CLEANUP.sql](D:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_MTR0001_R01_MENU_CLEANUP.sql)
 - **배경 및 원인**: 마이그레이션 더미 데이터로 MTR0001_R01 메뉴 추가가 불가능하다는 사용자 보고; 실DB 데이터와 ADD_MENU 본문 미확인
 - **작업 상세 내용**:
   - 메뉴관리 SYS1003_R01의 ADD_MENU 호출과 기존 메뉴 등록 SQL의 SYSMENU.PRGCD 매핑 확인; 대상 사전 조회 및 완전 일치 조건 삭제, 삭제 건수와 잔여 건수 조회 작성; SYSPRG 및 권한 유지
 - **검증 결과**: 정적 검증: 삭제 테이블 1개 및 PRGCD 완전 일치, SQL BOM/CRLF 정상; 실제 DB 미실행, 재등록 결과는 사용자 실행 후 확인 필요
 
-
 ### 2. EQM1001_R03 우측 헤더 버튼-그리드 간 불필요 여백 제거
+
 - **수정/대상 파일**: [EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx)
 - **배경 및 원인**: 우측 개정 이력 및 정기점검 헤더 패널의 과도한 높이 할당(TopHeightPc: 17%, 12%)으로 인해 상단 버튼과 하단 그리드 컬럼 헤더 사이에 30~50px 이상의 흰색 공백 여백 발생
 - **작업 상세 내용**:
   - 설비그룹(탭1) 및 설비별(탭2) 점검계획 우측 상단(개정 이력)과 하단(정기점검)의 버튼 패널 4곳에서 TopHeightPc 속성을 제거하여 표준 화면과 동일하게 컨텐츠 높이에 맞춰 그리드가 밀착되도록 수정
 - **검증 결과**: UTF-8 with BOM 및 CRLF 개행 무결성 확인, git diff 검증 완료
 
-
 ### 1. EQM1001_R03·R04·R05 REV 컬럼 너비 100 통일 및 R03 autoSizeColumns 해제
+
 - **수정/대상 파일**: [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [EQM1001_R05.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R05.js)
 - **배경 및 원인**: R03 조회 후 autoSizeColumns로 인한 REV 컬럼 축소 방지 및 R03·R04·R05 화면 전반의 REV 버전 컬럼 너비 100 일관성 유지
 - **작업 상세 내용**:
   - EQM1001_R03 조회 시 autoSizeColumns 호출 주석 처리 및 4개 그리드 REV 너비 100 유지, EQM1001_R04 등록·수정 팝업(grid2, grid3) 적용 REV 너비 100 조정, EQM1001_R05 계획 승인(grid_GRP_PLAN, grid_EQM_PLAN) REV 너비 100 통일
 - **검증 결과**: 3개 파일 UTF-8 with BOM 및 CRLF 개행 무결성 확인, git diff 정상 반영 완료
----
 
+---
 
 ## 🕒 2026-10-02 (금) 작업 내역
 
 ### 1. Antigravity 커밋 메시지 자동 생성 한국어 적용
+
 - **수정/대상 파일**: AGENTS.md
 - **배경 및 원인**: 사용자 제보: Antigravity IDE 커밋 메시지 자동 생성 결과가 계속 영어. 원인 확인: 생성 기능(antigravity.generateCommitMessage, 모델 gemini-3.5-flash-lite)의 기본 지시문에 영어 예시가 고정되어 있고, 사용자 지침은 '일부만 관련될 수 있음'으로 덧붙여짐. .vscode/settings.json의 github.copilot.chat.commitMessageGeneration.instructions는 GitHub Copilot 전용 설정이라 Antigravity에 적용되지 않음. Antigravity 내장 문서상 항상 적용되는 디렉터리 규칙은 GEMINI.md·AGENTS.md이며 저장소에 없었음
 - **작업 상세 내용**:
@@ -2677,18 +2805,20 @@
 - **검증 결과**: AGENTS.md BOM·CRLF·중복 CR 0건, git 무시 대상 아님. 실제 생성 결과는 Antigravity에서 창 다시 불러오기 후 사용자 확인 필요
 
 ### 2. Antigravity IDE 소스 제어 AI 커밋 메시지 자동 한글 번역 패치
+
 - **수정/대상 파일**: `C:\Users\DK\AppData\Local\Programs\Antigravity IDE\resources\app\extensions\antigravity\dist\extension.js`
 - **배경 및 원인**:
   - 소스 제어 창에서 AI 커밋 메시지 생성 버튼(✨) 클릭 시, Antigravity IDE 내부 언어 서버(Language Server)가 워크스페이스 규칙 파일을 참조하지 않고 하드코딩된 영문 프롬프트를 사용하여 항상 영문(`feat: add TML1010 module for material inventory and production result management`)으로 출력되는 문제 발생.
 - **작업 상세 내용**:
   - `extension.js` 원본 백업(`extension.js.bak`) 생성.
-  - `doGenerateCommitMessage` 핸들러 내에서 언어 서버의 생성 결과(`t.commitMessage?.commitMessageSummary`) 수신 후, 커밋 입력창(`V.inputBox.value`)에 주입하기 직전에 Conventional Commits 접두사(`feat: `, `fix: `, `refactor: ` 등)를 유지하면서 설명문을 자연스러운 한국어로 자동 변환/번역하여 채워넣도록 패치.
+  - `doGenerateCommitMessage` 핸들러 내에서 언어 서버의 생성 결과(`t.commitMessage?.commitMessageSummary`) 수신 후, 커밋 입력창(`V.inputBox.value`)에 주입하기 직전에 Conventional Commits 접두사(`feat:`, `fix:`, `refactor:` 등)를 유지하면서 설명문을 자연스러운 한국어로 자동 변환/번역하여 채워넣도록 패치.
   - 이미 한글이거나 번역 실패 시 원본을 유지하는 안전한 Fallback 처리.
 - **검증 결과**:
   - `node -c extension.js` 구문 검사 무결성 통과.
   - `feat: add TML1010 module for material inventory and production result management` ➔ `feat: 자재 재고 및 생산 결과 관리를 위한 TML1010 모듈 추가` 변환 검증 완료.
 
 ### 3. AI Git 커밋 메시지 한글 생성 규칙 제정 및 환경 설정
+
 - **수정/대상 파일**: .agents/rules/commit_message.md, C:\Users\DK\.gemini\config\rules\commit_message.md, .vscode/settings.json, C:\Users\DK\AppData\Roaming\Antigravity IDE\User\settings.json
 - **배경 및 원인**: 사용자 요청: IDE 소스 제어 창의 AI 커밋 메시지 생성 기능 사용 시 항상 영어로 출력되던 문제를 해결하고, `feat: REV 버전관리 기능 추가`와 같이 Conventional Commits 형식의 한글 커밋 메시지가 자동 생성되도록 설정.
 - **작업 상세 내용**:
@@ -2697,16 +2827,16 @@
   - Antigravity 사용자 설정 및 워크스페이스 설정(`settings.json`)에 AI 커밋 메시지 생성 가이드라인 옵션 추가.
 - **검증 결과**: 전 파일 UTF-8 with BOM 및 Windows CRLF 개행 무결성 확인 완료 (중복 CR 0건).
 
-
 ### 2. 규칙 문서 날짜 주석 적용 대상에 주요 기능 C# 소스 추가
+
 - **수정/대상 파일**: .agents/rules/Optimization.md, .agents/rules/aspx_cs_comment.md
 - **배경 및 원인**: 사용자 결정: S05A.cs처럼 주요 기능을 구현하는 C# 소스도 .js와 같이 날짜 주석을 남김. 규칙 문서는 '날짜 주석은 .js에만'으로 되어 있어 문구 수정 요청
 - **작업 상세 내용**:
   - Optimization.md 2절: 제목·필수 작성 대상·기존 주석 삭제 금지·요약에 주요 기능 C# 소스(.cs, 리포트 등, .aspx.cs 제외) 추가. aspx_cs_comment.md: 제목, 2절(적용 대상과 .aspx.cs 제외 명시, .cs도 기존 날짜 주석 보존), 3절 요약표에 주요 기능 .cs 행 추가. .aspx·.aspx.cs 주석 금지와 .sql 1일 1행 규칙은 그대로. 인코딩 규칙에 맞춰 두 파일 LF→CRLF
 - **검증 결과**: 두 파일 BOM·CRLF·중복 CR 0건, 줄바꿈 제외 변경 11줄 추가·8줄 삭제
 
-
 ### 1. EQM1001_R04.js SVN 버전 충돌 해결 및 최신본 통합
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js
 - **배경 및 원인**: SVN 업데이트 과정에서 이전 리비전(r124/r133)과 로컬 최신 수정본(.mine) 간 충돌 마커(`<<<<<<< .mine`, `>>>>>>> .r133`) 발생.
 - **작업 상세 내용**:
@@ -2714,8 +2844,8 @@
   - 충돌로 생성된 SVN 임시 파일(`.mine`, `.r124`, `.r133`) 정리.
 - **검증 결과**: 충돌 마커 0건 확인, Node.js 구문 검사(`node -c`) 정상 통과, UTF-8 with BOM 및 Windows CRLF 개행 무결성 확인 완료 (중복 CR 0건).
 
-
 ### 2. ASP.NET (.aspx, .aspx.cs) 주석 작성 금지 및 .js 한정 주석 규칙화
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.aspx, .agents/rules/aspx_cs_comment.md, .agents/rules/Optimization.md
 - **배경 및 원인**: 사용자 요청: `.aspx`, `.aspx.cs` 파일에 날짜별 주석이 누적되면서 마크업 구조가 복잡해지므로 주석 추가를 일체 금지하고, 기존 날짜 주석 규칙은 `.js` 파일에만 적용하도록 규칙 제정 및 기존 화면 주석 정리.
 - **작업 상세 내용**:
@@ -2724,8 +2854,8 @@
   - `.agents/rules/Optimization.md` 섹션 2 개정: 날짜 주석을 `.js` 한정으로 변경하고 `.aspx`, `.aspx.cs` 주석 금지 규칙 명시.
 - **검증 결과**: 대상 화면 파일 내 날짜 주석 0건 확인 완료. 전 파일 UTF-8 with BOM 및 Windows CRLF 개행 무결성 확인 완료 (중복 CR 0건).
 
-
 ### 2. 프로시저 최상단 Modify 이력 1일 1행 통합 및 규칙화
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, .agents/rules/procedure_history.md, .agents/rules/procedure.md
 - **배경 및 원인**: 프로시저 최상단 Modify 이력이 동일 일자에 여러 줄로 나열되어 가독성을 저해하던 문제를 해결하기 위해 하루당 1행으로 간결히 통합하고, 이를 프로젝트 규칙으로 공식화.
 - **작업 상세 내용**:
@@ -2734,222 +2864,224 @@
   - `.agents/rules/procedure.md` 섹션 2에 1일 1행 원칙 연계 보완.
 - **검증 결과**: 전 파일 UTF-8 with BOM 및 Windows CRLF 개행 무결성 확인 완료. 중복 CR(`\r\r\n`) 0건.
 
-
 ### 2. EQM1001_R04 수정 완료 알림 확인 후 팝업 닫기
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js
 - **배경 및 원인**: 사용자 요청: '수정되었습니다.' 알림이 뜨는 동시에 뒤의 수정 팝업이 닫힘. 알림에서 확인을 누를 때 닫히도록
 - **작업 상세 내용**:
   - pop2 저장 성공 시 ItsMsg.Alert의 확인 콜백(공통 Alert 두 번째 인자, $.msgbox submit)에서 ItsPop.Close('pop2')와 메인 목록 재조회 실행
 - **검증 결과**: 오프라인 화면(실제 공통 스크립트): 저장 직후 알림 표시·수정 팝업 유지, 알림 확인 클릭 후 수정 팝업 닫힘·목록 재조회 호출 확인. JS 문법·BOM·CRLF 정상
 
-
 ### 2. EQM1001_R04 정기점검 수정 완료 후 팝업 자동 닫기
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js
 - **배경 및 원인**: 사용자 요청: 정기점검 수정 저장 후 '수정되었습니다.' 메시지만 뜨고 수정 팝업이 열린 채로 남음
 - **작업 상세 내용**:
   - pop2 저장 성공 시 기존 '수정되었습니다.' 알림 뒤 ItsPop.Close('pop2')와 메인 목록 재조회(ItsButton.EventSearch) 추가. 등록 팝업 저장 후 동작과 동일. 오류 시에는 팝업 유지
 - **검증 결과**: JS 문법·BOM·CRLF 정상
 
-
 ### 2. EQM1001 등록·저장 버튼 값 검증을 프로시저로 이동
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.js, 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql
 - **배경 및 원인**: 사용자 요청: 점검값 입력 칸 검증은 원래 있던 방식(2026-09-16, OK/NG·숫자 아니면 지움)을 따르고, 등록·저장 버튼의 검증은 프로시저에서 처리. 범위는 값·조건 검증만(체크 행 없음 확인은 화면 유지, 사용자 선택)
 - **작업 상세 내용**:
   - R04.js: 직전에 추가한 점검값 입력 안내·문자 항목 허용·CheckChkValue 제거(입력 칸 검증은 원래 코드 그대로), 등록 팝업의 항목 0건 확인 제거. R04 ADD_CHKRSTEQM·SAVE_CHKRSTEQM: 항목 목록이 비면 차단, 점검값이 빈 항목이 있으면 'N번째 항목(점검명)의 점검값을 입력해주세요.' 차단(저장 전 확인, 변수 _$NAME_LIST·_$VALUE_LIST·_$ROWNO 추가). R03.js: 설비그룹 복사·저장·삭제·추가의 설비그룹 지정 확인, 설비별 복사 원본 확인, 개정내용 저장 진행 중 REV 확인 제거. R03 COPY_EQM02: 대상·원본 설비 지정 확인 추가(그룹 쪽은 기존 프로시저 확인 사용). R05.js: 승인·반려 대상·반려사유·개정내용 확인 제거. R05 SAVE_PLAN_STATUS: 대상 미선택 안내 추가, SAVE_PLAN_REV: 진행 중 REV 없음 안내 문구 통일. 화면 유지: 체크 행 없음, 팝업 여는 버튼의 선택 확인, 일괄 주기설정 점검자·대상 월(화면에서 월 칸을 채우는 단계라 프로시저가 알 수 없음)
 - **검증 결과**: 로컬 MariaDB 10.6: 등록 항목 없음·빈 점검값(2번째·공백) 차단 및 등록 전 실적 0건 유지, 0 포함 정상 등록, 수정 빈 값 차단·정상 수정, R03 복사 대상·원본 없음, 그룹 복사·저장 그룹 없음, R05 승인 대상 없음·반려사유 없음·진행 중 REV 없음 안내 정상. JS 문법·BOM·CRLF 정상
 
-
 ### 2. EQM1001_R04 점검값 입력 초기화 원인 안내 및 필수 입력 검증
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js
 - **배경 및 원인**: 사용자 제보: 정기점검 등록 시 점검값을 입력해도 칸이 초기화되어 입력 불가, 값이 모두 있을 때만 저장되어야 함. 원인: 점검값 입력 이벤트가 점검값구분 03(OK/NG)은 OK·NG만, 그 외(01 숫자·02 문자)는 숫자만 허용하고 맞지 않으면 안내 없이 빈 값으로 지움. 저장 전 빈 점검값 확인 없음
 - **작업 상세 내용**:
   - grid2·grid3 onChanged: 형식이 맞지 않아 지울 때 토스트 안내(OK/NG 항목은 OK 또는 NG만, 숫자 항목은 숫자만), 02(문자) 항목은 입력값 그대로 허용, 빈 값 입력은 검사 생략, 숫자 앞뒤 공백 허용. CheckChkValue(gridId) 추가: 점검값이 빈 첫 항목으로 이동하고 'N번째 항목(점검명)의 점검값을 입력해주세요.' 안내, 등록(pop1)·수정(pop2) 저장 전에 확인. 프로시저 변경 없음
 - **검증 결과**: node 스텁 테스트: OK/NG에 'ok ' → OK, '양호' → 빈 값+안내, 숫자에 ' 12.5' → 12.5, 'abc' → 빈 값+안내, 문자 항목 '누유 없음' 유지, 빈 점검값 있으면 등록 호출 안 함·해당 항목 포커스, 0 포함 모두 채우면 등록 호출. JS 문법·BOM·CRLF 정상
 
-
 ### 2. EQM1001_R05 계획서 승인상태 무관 출력 및 개정 이력·설비별 출력 미표시 원인 확인
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.js
 - **배경 및 원인**: 사용자 제보: REV.3 계획서에 개정 이력이 하나도 안 나옴, 설비별 탭 계획서 출력 시 '설비그룹을 선택해주세요' 메시지. 원인: 서버가 실행하는 01.Office/Reports/EQM1001.exe가 2026-09-23 빌드(PLANTP·개정 이력 처리 없음)로, 수정한 S05A.cs가 빌드·배포되지 않음. 추가 요청: 승인상태와 상관없이 계획서 출력
 - **작업 상세 내용**:
   - R05 CALL_PLAN_RPT: 승인 확인·그룹 미승인 설비 확인 제거. 최신 리비전이 승인이면 승인본, 대기·반려 또는 리비전 없음이면 현재 계획(CHKPLANEQM 사용 항목, 설비그룹은 점검항목 단위로 합침) 출력. 개정 이력은 승인 리비전과 출력 리비전(대기·반려는 요청일자, 승인자 빈칸) 최근 4건. 미사용 변수 _$UNAPPROVED_CNT 제거. R05.js: 두 탭 계획서 출력의 승인상태 확인 제거. S05A.cs 변경 없음(직전 수정본을 Visual Studio에서 빌드해 Reports 폴더에 배포 필요, licenses.licx 때문에 Mac mono 빌드는 배포용 불가)
 - **검증 결과**: 로컬 MariaDB 10.6: 대기 그룹(현재 계획+이력 3건), 승인 설비(승인본), 반려 설비·반려 그룹(현재 계획), 리비전 없는 설비(이력 없음) 출력 데이터 정상, 사용 항목 없는 설비는 상단 결과 없음으로 출력 불가 안내. R05.js 문법·BOM·CRLF 정상
 
-
 ### 2. EQM1001_R05 승인상태 필터 및 설비별 점검계획서 출력
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R05.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R05.js, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql, 04.Report/PAGEEQM/EQM1001/S05A.cs
 - **배경 및 원인**: 사용자 요청: R05 두 탭 필터 영역에 승인상태 필터 추가, 설비별 점검계획 탭에서도 계획서 출력, DB 구조 기준으로 PDF 항목 값 정리. 기존 계획서는 작업본(CHKPLANEQM) 기준, 점검항목 칸에 설비명, 설비번호는 첫 설비만, 적용LINE은 작업장 코드, 하단 개정 이력은 비어 있었음
 - **작업 상세 내용**:
   - 화면: 두 탭에 승인상태 콤보(전체·대기·승인·반려, ItsCombo.SetListByArr, 값 ''·W·A·R), 설비별 탭에 계획서 출력 버튼(PLANTP E·FANO 전달). R05 LIST_PLAN: $APRVSTT로 승인상태 필터(W는 승인·반려가 아닌 계획). R05 CALL_PLAN_RPT: PLANTP(E 설비·그 외 설비그룹, 비어 있으면 설비그룹) 기준으로 승인 확인, 최신 승인 리비전 승인본(MSTEQMREV_DETAIL)으로 항목 출력, 점검항목=점검항목 코드명(CHKLOC), 점검내용=점검명, 점검기기=점검방법명, 점검판정=점검값구분명, 상단 설비명(설비그룹명/설비명)·설비번호(소속 설비 전체)·설비규격(설비상세명)·적용LINE(MSTLINE 작업장명, 없으면 코드)·적용공정(FM100), 개정 이력 4건. S05A.cs: PLANTP·FANO 파라미터 지원, 상단 컬럼 EQMNM·LINENM 사용, 하단 개정 이력 칸에 REV 번호·승인일자+개정내용·작성자·승인자 채움(머리글 위부터 오래된 순). 파라미터 신규 없음. S05A.cs는 규칙에 맞춰 LF→CRLF
 - **검증 결과**: 로컬 MariaDB 10.6: 승인상태 필터 4종×두 탭 정상, 설비그룹·설비 계획서 데이터 정상, 반려 계획 출력 차단. S05A는 mono 6.12로 전체 프로젝트 컴파일 성공, 샘플 데이터로 PDF 생성해 칸 배치 확인(컨테이너에 한글 글꼴이 없어 한글은 ?로 표시). R05.js 문법·BOM·CRLF 정상
 
-
 ### 2. EQM1001 정기점검 흐름 점검 및 등록·주기관리 보완
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js
 - **배경 및 원인**: 사용자 요청: 계획→승인→주기관리→정기점검 등록 흐름에서 문제 상황 점검. 로컬 재현: 같은 달 정기점검 중복 등록 가능, 팝업을 연 뒤 계획이 빠진 달에도 등록되어 화면에서 안 보이는 실적 발생, R03 주기관리(작업 중 점검항목 기준)와 R04(최신 승인 리비전 승인본 기준) 대상 설비 불일치, R04 점검항목 조회 오류에도 등록 팝업이 열림. 미래 날짜 등록은 사용자 선택으로 현행 허용
 - **작업 상세 내용**:
   - R04 ADD_CHKRSTEQM: 해당 월 주기관리 점검자 없으면 차단, 같은 설비·같은 달 정기점검 실적이 있으면 차단. R03 LIST_CYCLE_EQMCD: 대상 설비를 R04와 같게 설비의 최신 승인 리비전에 점검항목이 있는 설비로 변경(CHKPLANEQM 조인 제거). R04.js: LIST_CHKPLANEQM_EQM02가 성공 여부를 반환하고 성공 시에만 등록 팝업 열기
 - **검증 결과**: 로컬 MariaDB 10.6: 중복 등록 차단, 계획 없는 달 등록 차단, 사용 항목 없이 승인된 설비는 R03 주기관리에서도 제외, 점검항목 전부 삭제 후 개정 대기 중인 설비는 R03·R04 모두 유지, 실적 월 잠금 10개 경우 그대로 통과, 54개 시나리오 차이는 새 규칙에 따른 차단만. R04.js 문법·BOM·CRLF 정상
 
-
 ### 2. EQM1001_R03 주기관리 정기점검 실적 있는 월 잠금
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql
 - **배경 및 원인**: 사용자 제보: 주기관리에서 삭제 후 다른 점검자로 다시 넣으면 R04에 이전 점검 실적이 점검완료로 다시 보임. 원인: 주기관리 삭제는 CHKPLANEQM_YEARPLAN만 지우고 CHKRSTEQM 실적은 남으며, R04는 계획 월 + 해당 월 정기점검 실적 존재만으로 점검완료 판단. 사용자 선택: 실적 있는 월 잠금
 - **작업 상세 내용**:
   - SAVE_CYCLE_EQMCD: 기존 점검자가 있던 월을 다른 점검자로 바꾸거나 비울 때 그 월에 정기점검 실적(CHKTP 02)이 있으면 COMERR로 차단하고 해당 월 안내. 점검자가 없던 월에 새로 지정하는 것은 허용(계획이 없으면 R04에서 실적을 열어 삭제할 수 없으므로). DELETE_CYCLE_EQMCD: 점검자가 지정된 월 중 실적이 있는 월이 있으면 차단. 안내: 설비 정기점검 등록에서 해당 월 점검 실적을 먼저 삭제. 화면 변경 없음, 파라미터 변경 없음
 - **검증 결과**: 로컬 MariaDB 10.6 10개 경우 확인: 실적 월 삭제·변경·비움 차단, 실적 없는 월 변경·삭제 허용, 예전 사원명 저장 월 변경 허용, 일상점검 실적은 영향 없음, 계획 없던 실적 월에 새로 지정 허용 후 삭제 차단. BOM·CRLF 정상
 
-
 ### 2. EQM1001_R03·R04 프로시저 성능 개선 범위 축소
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql
 - **배경 및 원인**: 사용자 요청: 직전 성능 개선 중 효과가 작은 변경은 되돌리고 꼭 필요한 5개만 유지 (기존 쿼리 형태 보존)
 - **작업 상세 내용**:
   - 유지: R04 LIST_CYCLE_EQMCD 월별 실적 1회 집계, R04 SEARCH_CHKRSTEQM 정기점검 실적만 조회, R03 LIST_CYCLE_EQMCD 정기점검 설비 사전집계 조인, R03 LIST_GRP_EQM02_ADD 교차조인 제거, R03 COPY_EQM02 일괄 등록. 원복: R03 REG_GRP_EQM02·LIST_MSTEQM·SAVE_CYCLE_EQMCD, R04 LIST_CHKPLANEQM_EQM02·미사용 변수 선언, R05 전체(변경 없음). Modify 이력 문구도 유지 항목 기준으로 수정
 - **검증 결과**: 로컬 MariaDB 10.6 수정 전·후 54개 시나리오 결과 동일(의도한 SEARCH_CHKRSTEQM 일상점검 제외만 차이). 설비 2,000·실적 100,000건 기준 R04 주기 조회 297.7초→0.27초, R03 주기 조회 5.26초→0.30초, 미등록 항목 1,010ms→10ms. BOM·CRLF 정상
 
-
 ### 2. EQM1001_R03·R04·R05 프로시저 조회 성능 개선
+
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql
 - **배경 및 원인**: 사용자 요청: 세 프로시저의 불필요한 쿼리·조인·탐색 정리로 SQL 성능 향상
 - **작업 상세 내용**:
   - R04 LIST_CYCLE_EQMCD: 월별 점검실적 확인 상관 서브쿼리 24개(설비마다 CHKRSTEQM 반복 탐색)를 조회년도 정기점검 실적 1회 집계(GROUP_CONCAT 월 목록 + FIND_IN_SET)로 변경. R04 LIST_CHKPLANEQM_EQM02: 적용 리비전 MAX 조회 후 REVCD 재조회 2회를 1회로. R04 SEARCH_CHKRSTEQM: 실적 키 조회를 정기점검(CHKTP '02')으로 한정(일상점검 실적이 먼저 잡히던 문제 수정). R04 미사용 변수 3개 제거. R03 LIST_GRP_EQM02_ADD: 점검항목×설비 교차조인·COUNT DISTINCT를 그룹 설비 수·항목별 등록 설비 수 사전집계 비교로. R03 LIST_MSTEQM·LIST_CYCLE_EQMCD: 설비×점검항목 조인 후 그룹화를 정기점검 설비 사전집계 조인으로. R03 REG_GRP_EQM02: 정렬순서 최대값 집계를 해당 설비그룹 설비로 한정. R03 COPY_EQM02: 항목마다 SELECT 5회+INSERT 반복을 INSERT SELECT 1회로(미사용 변수 2개 제거, GROUP_CONCAT 길이 제한 문제도 해소). R03 SAVE_CYCLE_EQMCD: 저장 후 빈 값 재조회·삭제 대신 입력값이 모두 비면 바로 삭제. R05 LIST_PLAN: 항목 수를 설비그룹·설비 단위로 먼저 집계해 9개 컬럼 GROUP BY 제거. R05 CALL_PLAN_RPT 항목·LIST_PLAN_REV_ITEM: 이미 1행 단위라 불필요한 GROUP BY 제거. R03 LIST_MSTEQM_GRP는 변경 시 오히려 느려져 원래대로 유지. 파라미터 변경 없음
 - **검증 결과**: 로컬 MariaDB 10.6에 수정 전·후 프로시저를 같은 데이터로 54개 조회·저장 시나리오 실행: 결과 동일(의도한 SEARCH_CHKRSTEQM 일상점검 제외만 차이). 설비 2,000·계획 60,000·실적 100,000건 기준 R04 주기 조회 297.7초→0.24초, R03 주기 조회 5.26초→0.27초, 미등록 항목 1,010ms→8.5ms, 설비 목록 137→18ms, R05 그룹 목록 101→13ms·설비 목록 67→19ms. BOM·CRLF·SQL 내부 날짜 0건 확인
 
-
 ### 2. EQM1001_R03·R04·R05 .agents 규칙 점검 및 정비
+
 - **수정/대상 파일**: [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [EQM1001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [EQM1001_R05.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R05.aspx), [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql), [MES_SNS2_EQM1001_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R05.sql)
 - **배경 및 원인**: 사용자 요청: R03·R04·R05 화면·프로시저가 .agents 규칙(coding_convention·Optimization·procedure·encoding·common_component)을 지키는지 전수 점검 후 수정
 - **작업 상세 내용**:
   - 화면: REV 작업 중 삭제한 2026-09-30 날짜 주석 3건 복원(R04.aspx 2, R04.js 1)과 변경 내역 날짜 주석 추가, 날짜 주석 없던 변경 12곳에 날짜 주석 추가, 기존 주석에 끼워 넣은 날짜 분리, R05.aspx LF→CRLF. 프로시저: R04 비표준 구분선 2곳 표준화, 단건 조회 LIMIT 1(R03 6곳·R04 2곳), R05 머리말 Modify 표기, 세 프로시저 파라미터·변수 선언 정렬, 현재 동작과 맞지 않던 주석 정리, Modify 이력 추가. 파라미터 이름·순서 변경 없음
 - **검증 결과**: 점검: ES6 문법·번호 주석·배너·srcVersion 변경·SQL 내부 날짜·WHERE 절 상관 서브쿼리 0건. 파라미터 R03 24·R04 22·R05 10 동일. 로컬 MariaDB 10.6(실제 GETKEY) 3개 프로시저 컴파일 및 복사·승인·주기 저장·점검자 지정·점검 등록·수정 조회 정상. R03·R04·R05 오프라인 렌더 200, JS 문법 정상, 전 파일 BOM·CRLF·중복 CR 0
 
-
 ### 2. EQM1001_R03 주기관리 월별 점검자를 사원코드로 저장 (동명이인 구분)
+
 - **수정/대상 파일**: [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R03.sql), [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
 - **배경 및 원인**: R04 점검필요 팝업 점검자 미지정 원인 확인: 실서버 응답 PLANEMPCD 빈 값·PLANEMPNM '함태훈', 사원 마스터에 함태훈 2명(20001010, 202507065). 주기관리가 점검자를 사원명만 저장해 R04에서 사원 특정 불가
 - **작업 상세 내용**:
   - R03 LIST_CYCLE_EQMCD: 월 칸은 GPCD('EMPCD', 저장값)로 사원명 표시(기존 사원명 저장값은 그대로), M01CD~M12CD로 저장값 반환. 화면: grid9 숨김칸 MxxCD 추가, GetCycleEmp·SetCycleEmp로 월 칸에 사원명·사원코드 함께 설정, Enter/더블클릭 토글은 사원코드 비교, Delete·일괄설정도 코드 설정, 저장 2곳은 MxxCD 전달. 저장 프로시저·R04 변경 없음(R04는 사원코드 우선 조회)
 - **검증 결과**: 로컬 MariaDB 10.6: 사원코드 저장(E01·20001010·202507065), 조회 시 사원명 표시·코드 반환, 예전 이름 저장값 표시 유지, R04 팝업 2월 20001010·3월 202507065 정확히 지정. 오프라인 렌더 + 실제 공통 스크립트: 점검자 지정·동명이인 교체(토글 아님)·같은 사람 토글 삭제·Delete 삭제, 저장/일괄저장 요청에 사원코드 전달, 콘솔 오류 0건
 
-
 ### 2. EQM1001_R03 설비별 탭 저장·추가 후 재조회 시 선택 설비 유지
+
 - **수정/대상 파일**: [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
 - **배경 및 원인**: 설비별 탭에서 정기점검 추가 후 목록이 갱신되면 작업한 설비가 아닌 첫 행이 선택됨(설비그룹 탭은 정상). 원인: Setkey로 지정한 선택 키가 다음 SetStore 1회에 소모되는데, 조회 시 ItsGrid.Clear('grid1')가 먼저 빈 목록에 키를 소모함(첫 커밋부터 존재)
 - **작업 상세 내용**:
   - ItsButton.EventSearch 설비별 탭 분기에서 grid1 사전 Clear 제거(조회 결과로 교체). REV·항목 그리드 Clear는 유지
 - **검증 결과**: 오프라인 렌더 + 실제 공통 스크립트: 수정 전 A-003 추가 후 A-001 선택(재현), 수정 후 추가 A-003·저장 A-005 유지, REV·항목 재조회 정상, 일반 조회는 첫 행, 콘솔 오류 0건
 
-
 ### 2. EQM1001_R04 등록 팝업 점검자 미표시 재점검
+
 - **수정/대상 파일**: [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql)
 - **배경 및 원인**: 사용자 보고: 월별로 다른 점검자를 지정했는데 R04 점검필요 팝업에서 점검자가 선택되지 않음
 - **작업 상세 내용**:
   - 코드 수정 없음. 공통 팝업 open 처리(입력값 초기화 없음)와 ItsFind 이름 조회(_$searchName: 목록에 없으면 코드로 재조회 후 change에서 이름 채움) 확인. 실서버 원인 판별용 F12 요청·응답 확인 방법과 월별 점검자 매칭 SQL 제공
 - **검증 결과**: 오프라인 렌더 + 실제 공통 스크립트 + 실제 찾기 응답 형식: 1·2·3월 서로 다른 점검자 코드·이름 자동 지정, 첫 100건 밖 점검자도 코드 재조회로 지정, 팝업 재오픈 시 월별 값 정상. 매칭 SQL 로컬 검증
 
-
 ### 1. EQM1001_R04 등록·수정 팝업 적용 REV를 그리드 칸으로 이동
+
 - **수정/대상 파일**: [EQM1001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql)
 - **배경 및 원인**: 적용할·적용된 REV가 팝업 상단 라벨로 따로 있어 UI/UX가 어색하다는 요청
 - **작업 상세 내용**:
   - pop1_lbl_REVNM·pop2_lbl_REVNM 라벨 제거, grid2·grid3 맨 앞에 '적용 REV'(REVNM) 칸 추가. SEARCH_CHKRSTEQM 항목 결과에 실적의 REVNM 반환(CHKRSTEQM·헤더 조인). 승인 대기 안내(빨간 문구)와 저장용 REVCD 숨김칸은 유지. 입력값 변경 없음
 - **검증 결과**: 로컬 MariaDB 10.6: 수정 조회 항목별 REV.1 반환, REV 적용 전 실적은 빈 값. 오프라인 렌더 + 실제 공통 스크립트: 등록 팝업 '적용 REV' 칸 REV.1·REVCD 보관·대기 안내 유지, 수정 팝업 '적용 REV' 칸 REV.0, 라벨 제거, 콘솔 오류 0건
----
 
+---
 
 ## 🕒 2026-10-01 (목) 작업 내역
 
 ### 2. EQM1001_R04 등록 팝업 점검자 조회를 목록과 같은 주기관리 행 기준으로 수정
+
 - **수정/대상 파일**: [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql)
 - **배경 및 원인**: 사용자 보고: 점검필요 클릭 시 점검자가 여전히 안 보임. 점검자 조회만 CHKPLANEQM_YEARPLAN.CHKTP='02' 행을 요구해, 목록(구분 무관)과 읽는 행이 다를 수 있었음
 - **작업 상세 내용**:
   - LIST_CHKPLANEQM_EQM02 점검자 조회에서 CHKTP='02' 필터 제거, '02' 행 우선(ORDER BY) 후 1건. 실서버 반영·화면 캐시·동명이인 여부는 사용자 확인 필요
 - **검증 결과**: 로컬 MariaDB 10.6: 구분 빈 값 행만 있는 설비 E01 지정, 빈 값·'02' 행 공존 시 '02' 행(E02) 지정
 
-
 ### 2. EQM1001_R04 정기점검 등록 팝업에 주기관리 지정 점검자 기본 표시
+
 - **수정/대상 파일**: [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js)
 - **배경 및 원인**: R03 주기관리에서 월별 점검자를 지정했는데 R04 '점검필요' 클릭 시 등록 팝업 점검자 칸이 비어 있음. 주기관리는 월 칸에 점검자명을 저장하고 R04 점검자 찾기는 사원코드 필요
 - **작업 상세 내용**:
   - LIST_CHKPLANEQM_EQM02에서 해당 년월($YYYYMM)의 CHKPLANEQM_YEARPLAN 월 칸 값을 읽어 사원코드 일치 → 이름 1명 일치 순으로 사원코드를 찾아 PLANEMPCD·PLANEMPNM 반환(동명이인·미등록 이름은 코드 비움). 화면은 계획 년월 전달, PLANEMPCD가 있으면 점검자 기본값 지정, 이름만 있으면 직접 선택 안내. 입력값 목록 변경 없음(SYSTEM_PARAMETERS 재등록 불필요)
 - **검증 결과**: 로컬 MariaDB 10.6: 이름 1명·사원코드 저장·동명이인·없는 이름·미지정·앞뒤 공백·10/12월·계획 없는 년도 8가지 통과. 오프라인 렌더 + 실제 공통 스크립트: 년월 전달, 점검자 E01 자동 지정, 동명이인 안내, 미지정 시 이전 값 남지 않음, 저장 요청에 EMPCD·REVCD 포함, 콘솔 오류 0건
 
-
 ### 2. 설비그룹이 없는 설비도 정기점검 주기관리·정기점검 등록 대상에 포함
+
 - **수정/대상 파일**: [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql)
 - **배경 및 원인**: A-002(EQMGUBUN 빈 값)을 정기점검 추가·설비 승인했는데 주기관리 탭에 안 보임. 주기관리·R04가 설비그룹 승인 REV를 INNER JOIN으로 요구해 그룹 없는 설비는 항상 제외됨. 사용자 기준: 승인된 그룹의 설비와 그룹 없는 설비 모두 주기관리 대상
 - **작업 상세 내용**:
   - R03 LIST/SAVE/DELETE_CYCLE_EQMCD, R04 LIST_CYCLE_EQMCD·LIST_CHKPLANEQM_EQM02·ADD·SEARCH·SAVE·DELETE_CHKRSTEQM 9곳의 설비그룹 승인 조인을 LEFT JOIN으로 바꾸고 (IFNULL(EQMGUBUN,'')='' OR 그룹 승인 REV 있음) 조건 추가. 설비 자체 승인 조건은 유지, 입력값 변경 없음
 - **검증 결과**: 로컬 MariaDB 10.6(실제 GETKEY, 새 REVCD 구조): 주기관리 목록에 그룹승인 설비·그룹 빈값·그룹 NULL 설비 표시, 그룹 미승인·설비 미승인·항목 없는 설비 제외, 그룹 없는 설비 주기 저장·R04 목록(점검필요)·등록 팝업·등록·수정 조회·수정·삭제 정상, 그룹 미승인 설비 저장·팝업·등록 차단, 그룹 승인 후 표시
 
-
 ### 2. 리비전 키(REVCD) 전환 실제 GETKEY 함수로 재검증
+
 - **수정/대상 파일**: [MES_SNS2_EQM1001_PLAN_REV_REVCD.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV_REVCD.sql)
 - **배경 및 원인**: 사용자가 실DB GETKEY 정의(SHOW CREATE FUNCTION) 제공. COMKEY에 키종류·일자별 행을 자동 생성하고 YYMMDD+순번6자리(12자)를 반환하므로 'REVCD' 사전 등록 불필요
 - **작업 상세 내용**:
   - 변환 스크립트 전제 문구를 '별도 등록 불필요, 키 형식 12자'로 수정. 그 외 SQL·프로시저 변경 없음(REVCD varchar(20)에 수용)
 - **검증 결과**: 실제 GETKEY 정의 + COMKEY로 로컬 MariaDB 10.6 재검증: 운영 데이터 변환(8건 발번, 중복 0), 그룹 수정 시 소속 설비 3대 한 문장 발번 중복 없음, 그룹 승인 승인본, R04 팝업·등록·조회(REVCD 기록), 키 종류별 순번 분리(CHKRSTKEY 4·REVCD 11), 신규 설치 PLAN_REV→INIT 및 재실행 무변화(불필요 발번 없음)
 
-
 ### 2. 설비점검계획 리비전 키(REVCD) 전환 — 헤더·디테일 PK 변경, 점검실적 REVCD 조인
+
 - **수정/대상 파일**: [MES_SNS2_EQM1001_PLAN_REV_REVCD.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV_REVCD.sql)(신규), [MES_SNS2_EQM1001_PLAN_REV.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV.sql), [MES_SNS2_EQM1001_PLAN_REV_INIT.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV_INIT.sql), [MES_SNS2_EQM1001_PLAN_REV_SYSTEM_PARAMETERS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_PLAN_REV_SYSTEM_PARAMETERS.sql), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql), [MES_SNS2_EQM1001_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R05.sql), [EQM1001_R04.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js)
 - **배경 및 원인**: 사용자 요청: MSTEQMREV_HEADER에 REVCD(GETKEY('REVCD')) 단일 PK, MSTEQMREV_DETAIL은 REVCD·CHKKNDCD PK, CHKRSTEQM은 REVNUM 대신 REVCD로 조인
 - **작업 상세 내용**:
   - HEADER PK=REVCD, (PLANTP,PLANCD,REVNUM) UNIQUE 유지 / DETAIL PK=(REVCD,CHKKNDCD), 설비그룹 승인본은 점검항목 단위 저장(EQMCD 빈 값) / CHKRSTEQM.REVNUM→REVCD. R05: REQUEST_PLAN 발번, 승인본 REVCD 저장, LIST_PLAN_REV_ITEM 헤더 조인(입력값 유지). R04: 입력값 $REVNUM→$REVCD, 목록·팝업·등록·수정조회를 REVCD 기준으로 변경(파라미터 재등록 필요). 운영 DB 전환 스크립트 신규(백업→발번→PK 변경→그룹 승인본 합침→실적 전환→확인, 되돌리기 포함), 신규 설치 DDL·INIT 갱신. R03·R05 화면 변경 없음
 - **검증 결과**: 로컬 MariaDB 10.6 3단계 검증: ①구 구조+운영 데이터 전환(헤더 7/7 발번, 승인본 13→11 그룹 합침·고아 정리, 실적 3/3 연결, REVNUM 삭제, 확인 SELECT 0건) ②새 프로시저 흐름(R04 목록·팝업·등록·수정조회, 잘못된 키 4종 차단, R03 수정→발번→승인→승인본, 이력 항목 조회) ③신규 설치 PLAN_REV→INIT 및 INIT 재실행 무변화. R04.aspx 오프라인 렌더 200
 
-
 ### 1. EQM1001_R05 설비그룹 승인 시 반려된 소속 설비 차단 및 안내
+
 - **수정/대상 파일**: [MES_SNS2_EQM1001_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R05.sql)
 - **배경 및 원인**: 설비가 반려된 상태에서 설비그룹을 승인하면 반려된 설비 REV까지 함께 승인되어 반려가 덮어써지는 문제(설비 반려·그룹 승인 엇갈림). 추천 규칙 3번(반려된 설비가 있으면 그룹 승인 불가) 적용 요청
 - **작업 상세 내용**:
   - SAVE_PLAN_STATUS 분기에 설비그룹 승인 시 소속 사용 설비 중 반려(R) REV가 있으면 COMERR로 승인 차단, 반려 설비코드를 최대 5개 + '외 N대'로 안내. 그룹 반려·설비별 승인/반려 동작은 변경 없음, 입력값 변경 없음(SYSTEM_PARAMETERS 재등록 불필요), 화면 수정 없음(ShowErrMsg로 문구 표시)
 - **검증 결과**: 로컬 MariaDB 10.6(실제 테이블 DDL)에서 시나리오 통과: 설비 반려 후 그룹 승인 차단 및 데이터 무변경, 반려 설비 수정(대기) 후 그룹 승인 성공, 7대 반려 시 5대+외 2대 표시, 반려 설비 있어도 그룹 반려 가능, 반려 설비를 설비별 승인 후 그룹 승인 성공, 미사용 설비 반려는 무시
----
 
+---
 
 ## 🕒 2026-09-30 (수) 작업 내역
 
 ### 2. EQM1001_R03 접속 속도 개선 방식 변경 (지연 생성 원복, 프로시저 코드명 반환)
+
 - **수정/대상 파일**: [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R05.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R05.sql)
 - **배경 및 원인**: 직전 지연 생성(LazyGridCreator·EnsureGrid)은 프로젝트에 없는 방식(전 화면 그리드는 ItsPage.Load에서 생성)이라 원복. R03의 콤보 칸 16개는 모두 읽기 전용 표시용이며 스크립트에서 코드값을 쓰지 않음
 - **작업 상세 내용**:
   - 그리드는 기존대로 Load에서 모두 생성하고, 콤보 칸을 프로시저가 반환하는 코드명 일반 칸(CHKLOCNM·CHKMTHNM·CHKVALTPNM·EQMGRADENM)으로 변경. 코드명은 기존 R05 방식 COALESCE(NULLIF(GPCD(그룹, 코드), ''), 코드) 사용. R03 LIST_GRP_EQM02·LIST_GRP_EQM02_ADD·LIST_COPY_GRP_EQM02_DTL·LIST_MSTEQM_EQM02·LIST_EQM02·LIST_COPY_EQM02·LIST_CYCLE_EQMCD, R05 LIST_PLAN_REV_ITEM에 코드명 컬럼 추가(기존 컬럼·입력값 변경 없음)
 - **검증 결과**: 로컬 MariaDB 10.6에서 두 프로시저 컴파일 및 8개 조회 코드명 반환 확인(코드명 없는 코드는 코드 그대로), 오프라인 렌더 + 실제 공통 스크립트 테스트: 접속 시 요청 8회→2회, 그리드 12개 Load 생성 유지, 전 그리드·팝업·이전 REV 조회에서 코드명 표시, 사용여부·정렬순서 편집 유지, 콘솔 오류 0건
 
-
 ### 2. EQM1001_R03 화면 접속 속도 개선 (팝업·주기관리 탭 그리드 지연 생성)
+
 - **수정/대상 파일**: [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
 - **배경 및 원인**: R03 접속 시 그리드 6개가 각자 콤보 목록을 동기 조회하여 처음 열 때 DB 요청이 8회(S04·R04는 4회)였고, 이 중 4개는 팝업·주기관리 탭 전용이라 접속 시점에는 불필요
 - **작업 상세 내용**:
   - grid_GRP_COPY2·grid8·grid10(팝업)과 grid9(주기관리 탭) 생성 코드를 LazyGridCreator로 옮기고 EnsureGrid로 처음 쓸 때 1회만 생성: 각 팝업 열기 직전, 주기관리 탭 전환(onTabChanged) 및 탭 조회 시. 그리드 정의·이벤트·다른 그리드는 변경 없음, 공통 컴포넌트 수정 없음
 - **검증 결과**: 오프라인 XSP 렌더 + 실제 공통 스크립트 테스트: 접속 시 요청 8회→4회, 그룹 복사/설비 복사/항목 추가 팝업 및 주기관리 탭에서 생성·콤보 표시·조회·저장 호출 정상, 재오픈 시 재생성·추가 요청 없음, 수정 전 코드와 동일 결과, 콘솔 오류 0건
 
-
 ### 2. EQM1001_R03·R04 점검자 찾기 화면별 건수 초기화 함수 원복
+
 - **수정/대상 파일**: [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js)
 - **배경 및 원인**: 공통 find(ItsFind.ascx data-limit=100, ItsFind.js GetList LIMIT 전달)가 이미 처음 100건 조회를 기본으로 처리하며, 첫 커밋 이후 변경 없음. 고른 건수가 화면에서 유지되는 것도 전 화면 공통 동작이고 어떤 화면도 건수를 따로 제어하지 않음. 화면별 함수 추가는 불필요했고 다른 화면과 동작이 달라짐
 - **작업 상세 내용**:
   - 직전 작업(2번 항목)에서 추가한 ResetFindLimit·BindFindLimitReset 및 호출부를 R03.js·R04.js에서 제거하여 커밋본(f4c4bd8 이후) 상태로 원복
 - **검증 결과**: 원복 후 두 파일 git 변경 없음 확인, 전체 화면에 data-limit·ItsFind_limit 직접 제어 코드 없음 확인
 
-
 ### 2. EQM1001_R03·R04 점검자 찾기 조회 건수 기본 100건 유지
+
 - **수정/대상 파일**: [EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js)
 - **배경 및 원인**: 공통 find는 처음 100건(LIMIT=100)으로 조회하지만, 한 번 500건·1000건·전체를 고르면 팝업을 닫았다 다시 열어도 그 건수가 유지되어 전 사원을 불러옴. R05에는 점검자 find가 없음. 공통 컴포넌트(ItsFind·DC_FIND)는 수정하지 않음
 - **작업 상세 내용**:
   - 화면 전용 함수 ResetFindLimit·BindFindLimitReset 추가: 목록이 닫힌 상태에서 입력칸·이름칸·돋보기를 누르면 100건으로 되돌린 뒤 조회, R04 등록/수정 팝업은 열 때마다 100건으로 초기화 (R03 find_EMP, R04 pop1_find_EMPCD·pop2_find_EMPCD)
 - **검증 결과**: 오프라인 XSP 렌더 + 실제 공통 스크립트 브라우저 테스트: 첫 조회 LIMIT=100·100건, 전체 선택 시 전체, 닫고 다시 열면 LIMIT=100·100건 복귀, 열린 상태 클릭 시 선택 건수 유지, 사원 선택 정상, 설비·설비그룹 find 영향 없음
 
-
 ### 2. EQM1001_R04 정기점검 목록 조회 조건 보정 (승인 REV 항목 설비만 표시, 점검자명 월 셀 인식)
+
 - **수정/대상 파일**: [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql)
 - **배경 및 원인**: R04 목록에 정기점검 항목이 없는 설비가 빈 행으로 나오고, 주기관리 탭(9/29 변경)이 월 셀에 '●' 대신 점검자명을 저장해 R04에서 월 셀이 비어 클릭이 되지 않음
 - **작업 상세 내용**:
   - LIST_CYCLE_EQMCD 분기만 수정: 설비의 최신 승인 REV 스냅샷(MSTEQMREV_DETAIL)에 항목이 있는 설비만 표시, MONTH_xx = '●' 조건 24곳을 MONTH_xx <> '' 로 변경(점검자명·기존 ●·빈값 모두 처리)
 - **검증 결과**: 로컬 임시 MariaDB 10.6에서 8개 설비 시나리오 및 월 셀 값(점검자명/●/빈값/NULL) 시나리오 통과, 실서버 R04 프로시저 교체 필요(SYSTEM_PARAMETERS 재등록 불필요)
 
-
 ### 1. 세션 연계 대화 기록 및 작업 이력 추적 체계 구축
+
 - **적용 규칙 파일**: [.agents/rules/history_tracking.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/history_tracking.md)
 - **작업 대장 관리**: [WORK_HISTORY.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/WORK_HISTORY.md)
 - **배경 및 목적**:
@@ -2969,6 +3101,7 @@
 ## 🕒 2026-09-18 (금) 작업 내역
 
 ### 1. EQM1001_R03 설비그룹 점검계획 탭 추가에 따른 컨트롤 ID 및 스크립트 분리 표준화
+
 - **대상 화면**: 웹 MES 설비점검계획 관리 ([EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx))
 - **수정 파일**:
   - [EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx)
@@ -2999,6 +3132,7 @@
   - Chrome DevTools MCP를 통한 브라우저 렌더링 검증 완료: 3개 탭 순차 전환 및 그리드/버튼 표시 정상 확인 (콘솔 에러 0건).
 
 ### 2. EQM1001_R03 일상점검(EQM01/grid2) 영역 및 관련 코드 주석 처리
+
 - **대상 화면**: 웹 MES 설비점검계획 관리 ([EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx))
 - **수정 파일**:
   - [EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx)
@@ -3019,6 +3153,7 @@
      - 로컬 IIS 웹 서버(`http://localhost:55085/PAGEEQM/EQM1001/EQM1001_R03.aspx`) HTTP 200 정상 렌더링 확인.
 
 ### 3. TML5001 초중종 검사 팝업 판정 로직 및 주석 표준화
+
 - **대상 화면**: PDA/WPF 현장 단말 검사 관리 (`TML5001`)
 - **수정/분석 파일**: [R01_POP1.xaml.cs](file:///d:/ITS_MES_KJ_VA.1.0/02.Site/TMLPJT/TML5001/R01_POP1.xaml.cs)
 - **작업 상세 내용**:
@@ -3029,6 +3164,7 @@
      - 규격 벗어남(`chkResult == "N"`) 시 `isNG = true` 플래그 설정.
      - 정상 규격 내(`chkResult == "Y"`) 시 유효 측정 개수(`filledCount++`) 가산.
   2. **삼항 연산자를 활용한 직관적 행 판정(`OKNG`) 갱신**:
+
      ```csharp
      // 2026-09-18 행 합부판정(OKNG) 갱신 (변경된 경우에만 SetValue 호출)
      string newOkNg = isNG ? "N" : (filledCount == chkcnt ? "Y" : "");
@@ -3037,6 +3173,7 @@
          MODEL_G2.SetValue(rowIndex, "OKNG", newOkNg);
      }
      ```
+
      - `isNG == true` 이면 즉시 `"N"`(불합격) 판정.
      - 불합격이 없고 모든 시료가 정상 입력 완료(`filledCount == chkcnt`)되었을 때만 `"Y"`(합격) 판정.
      - 일부만 입력되었거나 미입력인 경우 빈 문자열(`""`)로 대기 상태 유지.
@@ -3052,6 +3189,7 @@
 ---
 
 ### 4. TML5001 [SetPopInfo GPCD is empty] 런타임 오류 해결 및 하드코딩 완전 제거
+
 - **대상 화면**: PDA/WPF 현장 작업 관리 (`TML5001`)
 - **수정 파일**:
   - [R01.xaml](file:///d:/ITS_MES_KJ_VA.1.0/02.Site/TMLPJT/TML5001/R01.xaml)
@@ -3072,6 +3210,7 @@
 ## 🕒 2026-09-17 (목) 작업 내역
 
 ### 1. 설비이력카드 프로시저 최적화 및 표준 양식 맞춤 데이터 컬럼 확장
+
 - **대상 프로시저**: [MES_SNS2_EQM1001_S01.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_S01.sql)
 - **작업 상세 내용**:
   1. **설비이력카드(QSP-4111-03) 표준 양식 맞춤 확장**:
@@ -3088,6 +3227,7 @@
 ---
 
 ## 🕒 2026-09-15 ~ 2026-09-16 작업 내역 요약
+
 - **EQM1001 (설비관리/보전) 마이그레이션 및 리팩터링**:
   - `EQM1001_R01`, `EQM1001_R02`, `EQM1001_R03`, `EQM1001_R04` 화면 연동 스크립트 및 프로시저 정리.
   - 공통 모듈 보호 규칙 준수: `DC_FIND`, `DC_COMBO`, `GPCD` 등 공통 DB 객체 및 공통 JS 라이브러리 수정 없이 화면 및 전용 프로시저 레벨에서 독립 처리.
@@ -3184,7 +3324,7 @@
 | **완료** | [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R04.sql), [procedure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/procedure.md), [sql_structure.md](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/.agents/rules/sql_structure.md) | EQM1001_R04 들여쓰기 서식 적용 및 procedure.md 가독성 규칙 표준화 완료 | BOM(0xEF 0xBB 0xBF) 및 CRLF 개행 무결성 확인 완료, 프로시저 구문 및 규칙 문서 정상 반영 확인 |
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R04.sql | 미사용 반환 컬럼 제거 완료, 개선 사항은 보류 유지. 실제 DB 프로시저 반영은 사용자가 전체 소스 저장으로 진행 | 격리 MariaDB 10.2.44 네트워크 none에서 원본·변경본 컴파일 및 사용 컬럼 비교, 월별 조회·등록·수정·삭제·중복 오류 롤백 검증. 실제 R04 JS를 새 반환 데이터에 연결해 등록 팝업의 설비·점검자·두 REV 키 및 수정·삭제 요청의 실적키 모의 검증. 총 14건 통과, 쓰기 SQL·검증 블록·15개 입력 정의 일치, BOM/CRLF·원본 대조·최종 바이트 확인. 실제 DB 조회/DDL/DML·배포·UI/C# 수정 없음 |
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R04.sql | R04 SQL 소스 재작성 완료, 사용자가 프로시저 소스 편집기에서 전체 저장하여 적용 필요; 호출 파라미터는 변경 없어 재등록 불필요 | 네트워크 none 격리 MariaDB 10.2.44에 실제 최신 컬럼/PK 구성 후 원본·변경본 비교 38건 통과. 월별 현황, 최신 승인본, 빈 최신 승인본, 그룹 없는 설비, 동 코드 G/E 실적, 조회 후 새 승인, 등록/수정/삭제, 오류/중복/누락 롤백, 의도한 호환 제거, 제외한 보완 로직 미추가 확인. EXPLAIN에서 YEAR_PLAN PK eq_ref 직접 조회 확인, 속도 개선율 미측정. BOM/CRLF·당일 이력 1행·원본 대조·반영 바이트 일치 확인. 실제 DB는 SELECT만 실행, 실제 서버 DDL/DML·프로시저 배포 및 UI/C# 수정 없음 |
-| **완료** | docs/EQM1001_테이블연결도_20261012.html, .svg, .png, _역할표.html, _역할표.png | 현재 소스 기준 연결도·역할 표 작성 완료, 실제 DB 반영 상태는 별도 확인 필요 | 격리 임시 프로필 headless Edge에서 렌더링 및 이미지 육안 확인. SVG 1개·표 11행·헤더 5개·가로 넘침 없음·브라우저 페이지 오류 0건·중국어 문자 없음·UTF-8 BOM/CRLF 확인. SQL·화면 업무 소스 및 실제 DB·서버 배포 변경 없음 |
+| **완료** | docs/EQM1001_테이블연결도_20261012.html, .svg, .png, _역할표.html,_역할표.png | 현재 소스 기준 연결도·역할 표 작성 완료, 실제 DB 반영 상태는 별도 확인 필요 | 격리 임시 프로필 headless Edge에서 렌더링 및 이미지 육안 확인. SVG 1개·표 11행·헤더 5개·가로 넘침 없음·브라우저 페이지 오류 0건·중국어 문자 없음·UTF-8 BOM/CRLF 확인. SQL·화면 업무 소스 및 실제 DB·서버 배포 변경 없음 |
 | **완료** | 05.Procedure/EQM1001_REV_SETUP/00_CHECK.sql, 01_MSTEQMREV_DETAIL.sql, 02_CHKPLANEQM_APRV.sql, 03_CHKRSTEQM.sql, 04_CHKRSTEQMKND.sql, 99_VERIFY.sql; MES_SNS2_EQM1001_R02/R03/R05_SYSTEM_PARAMETERS.sql; docs/EQM1001_REV_독립관리_최종안_20261008.md; PLAN_REV_DEPLOY.sql 및 PLAN_REV_INDEPENDENT.sql 삭제 | SQL 소스 분리 완료, 사용자가 00_CHECK로 실제 구조와 초기화 상태 확인 후 안내 순서로 개별 적용 필요 | 격리 MariaDB 10.2.44 네트워크 none에서 분리 실행 16건 통과. 순차 ALTER·반복 실행·APRV 중간 스키마 전환·프로시저 4개 컴파일·파라미터 정확한 순서와 개수 및 다른 페이지 보존·BOM/CRLF·원본 대조 후 반영 확인. 실제 DB 최신 구조 조회·DDL/DML·서버 배포 미수행 |
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql,05.Procedure/MES_SNS2_EQM1001_R04.sql,05.Procedure/MES_SNS2_EQM1001_R05.sql,05.Procedure/MES_SNS2_EQM1001_PLAN_REV.sql,05.Procedure/MES_SNS2_EQM1001_PLAN_REV_INDEPENDENT.sql,05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql,01.Office/PAGEEQM/EQM1001/EQM1001_R03.js,05.Procedure/MES_SNS2_EQM1001_PLAN_REV_DEPLOY.sql,docs/EQM1001_REV_독립관리_최종안_20261008.md | 사용자가 초기화된 기존 DB에 최신 PLAN_REV_DEPLOY.sql 전체 실행 후 최신 R03.js 배포. 이전 독립 REV 화면 미반영 시 최신 R04.aspx/R04.js도 함께 적용. PLAN_REV_INIT 실행 금지. 기존 개별 전환·프로시저·파라미터 SQL은 일괄 실행 후 중복 적용 불필요 | 격리 network none MariaDB10.2.44에서 프로시저 4개 컴파일, DB 38건·JS 이벤트 17건 총55건 통과. 별도 빈 스키마 전환·반복 실행·데이터 있는 USEYN 삭제 차단 검증. REV3 삭제→REV4→REV5 재추가 및 다른 대상/이전 승인본 보존, 두 승인본 UNION ALL·같은 점검코드 실적 분리·롤백·초기화 후 실적 유지. 일괄 SQL 두 번 실행·메타데이터 R02=21/R03=29/R04=15/R05=10 순서/기존 실적 보존 확인. JS문법·BOM/CRLF·원본 동일성 검증. 실서버 DDL/DML·파일 배포·브라우저/PDF 테스트·이번 DB 최신 구조 재조회 미실시 |
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R04.sql,01.Office/PAGEEQM/EQM1001/EQM1001_R04.js | 기존 독립 REV 전환 배포 순서 유지. 최신 R04 프로시저/JS 수동 반영 필요, 이번 표시 변경의 파라미터·스키마 추가 변경 없음 | 네트워크 none 격리 MariaDB10.2.44에서 R04 컴파일, 등록 REV.0/REV.2 및 동일 점검코드 2행 유지, 새 승인 후 기존 실적 적용 REV 보존, REV 연결 초기화 시 공란/실적 행 보존 검증. JS 문법, SQL 변경 범위, BOM/CRLF 검증 통과 후 로컬 소스 반영. 실제 DB/서버 적용 및 실제 브라우저 테스트 없음 |
@@ -3199,6 +3339,8 @@
 | **완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql | 로컬 R03 중복 검증 제거 완료; 실제 DB 반영은 사용자 진행 | 격리 MariaDB 10.2.44에서 수정 전후 전체 R03 컴파일 성공. 90개 NULL·빈 값·공백·잘못된 값·대소문자 입력 비교 및 설비그룹/설비별 승인·반려·출력 비교 포함 102건 통과. 저장 상태·승인본·이력·오류 메시지 동일. 파라미터 30개와 분기 유지, BOM·CRLF 및 당일 이력 한 줄 검증 후 로컬 반영. 실제 DB·서버 반영 없음 |
 | **완료** | .agents/rules/procedure.md | 프로시저 중복 검증 방지 규칙 추가 완료 | 현재 R03 두 분기의 조건을 소스로 확인. 기존 procedure.md 내용은 보존하고 새 절만 추가했음을 비교 검증. UTF-8 BOM·CRLF 정상 |
 | **확인 완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql, 05.Procedure/MES_SNS2_EQM1001_R04.sql (조회·비교만 수행) | 실제 DB 최신 반영 확인 완료; 추가 반영 불필요 | 실제 DB SELECT 조회로 R03 전체 본문·26개 분기, R04 전체 본문·6개 분기 일치 확인(주석·공백 제외). 실제 파라미터 및 SYSTEM_PARAMETERS 등록 이름·순서 R03 30개/R04 17개 모두 일치. 재추가 4개 분기는 이전 검증본과 일치. 이전 67건 DB 테스트 통과 기록 확인, 이번 턴 재실행 아님. DB·서버 및 업무 소스 변경 없음 |
+| **로컬 반영 완료** | 05.Procedure/MES_SNS2_EQM1001_R04.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js, 05.Procedure/MES_SNS2_EQM1001_R04_SYSTEM_PARAMETERS.sql, docs/EQM1001_R03_R04_SQL_정리검토_20261008.md | 실제 DB 및 서버 파일 미변경. 사용자가 R04 프로시저→R04_SYSTEM_PARAMETERS.sql→R04.js 순서로 반영 필요. JOIN 개선 후보는 미반영 상태 | 현재 DB 컬럼·키·중복건수 SELECT 확인. 전체 호출 분기 리터럴 대조 및 지역변수/입력값 참조 확인. 격리 MariaDB 10.2.44에서 원본·정리본 R04 전체 컴파일과 19건 전후 비교 통과: 6개 기능·등록/수정/삭제 저장결과·조회순서·적용 REV·계획 점검자·필수값/중복/승인/미
+... [truncated for diff preview]
 | **로컬 반영 완료** | 05.Procedure/MES_SNS2_EQM1001_R04.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js, 05.Procedure/MES_SNS2_EQM1001_R04_SYSTEM_PARAMETERS.sql, docs/EQM1001_R03_R04_SQL_정리검토_20261008.md | 실제 DB 및 서버 파일 미변경. 사용자가 R04 프로시저→R04_SYSTEM_PARAMETERS.sql→R04.js 순서로 반영 필요. JOIN 개선 후보는 미반영 상태 | 현재 DB 컬럼·키·중복건수 SELECT 확인. 전체 호출 분기 리터럴 대조 및 지역변수/입력값 참조 확인. 격리 MariaDB 10.2.44에서 원본·정리본 R04 전체 컴파일과 19건 전후 비교 통과: 6개 기능·등록/수정/삭제 저장결과·조회순서·적용 REV·계획 점검자·필수값/중복/승인/미사용설비/미계획월 검증·과거실적 REV 보존·메타데이터 범위/재실행/호출순서. JS 구문 및 BOM/CRLF 검증. 실제 브라우저 E2E와 성능 벤치마크 미실행 |
 | **소스 반영 완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql | 실제 DB 프로시저 반영은 사용자 진행; 실제 DB DML/DDL·서버 파일 수정 없음. SQL 전용 변경이므로 프로그램 재빌드 불필요 | 실제 DB 키 구조 SELECT 확인 후 네트워크 차단 MariaDB 10.2.44에서 변경 프로시저 전체 컴파일. 기존 승인·반려·CRUD 검증 46건과 재추가 전용 21건 총 67건 통과. 기존 코드 재현, 두 탭 REV.3 사용→REV.4 비사용 승인→REV.5 재추가 승인, 승인본·이력 불변, 활성 행 보존·반복 추가 무변경, 사용 설비 21대 재활성화, 부분 등록·NULL·빈 상태·마스터 제외·물리 삭제 재등록·중간 오류 롤백 확인. 원본 해시 확인 후 검증한 SQL만 로컬 반영, UTF-8 BOM/CRLF 유지 |
 | **원인 확인 완료** | 05.Procedure/MES_SNS2_EQM1001_R03.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js (분석 대상, 소스 변경 없음) | 비사용 항목의 재추가 정책과 등록 처리 개선 필요; 이번 요청은 원인 설명만 진행 | 실제 서버 SELECT 5건: 마스터·그룹 집계·21개 소속 설비 행·현재 프로시저 정의·팝업 제외 조건 재현. 팝업 조건 결과 GROUP_EQMCNT=21, COUNT_USED_BY_POPUP=21, POPUP_VISIBLE=N 확인. 실제 DB DML/DDL 및 업무 소스 수정 없음 |
@@ -3247,7 +3389,7 @@
 | **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql | 사용자가 EQM1001_R05 프로시저 수정본 반영 후 기존 빈 이력은 개정내용 재저장 필요 | 실제 DB 스키마·데이터·배포 프로시저를 SELECT로 확인. 격리 MariaDB 10.2에서 전체 프로시저 컴파일 및 14개 검증 통과(그룹·설비별 저장, 재저장 사용자·시간, 반려상태 유지, 승인본 보호, 입력 오류). LIST_PLAN_REV 작성자명·시간 반환 확인. BOM·CRLF 검증. 실제 서버 DB 변경 및 브라우저 저장 테스트 없음 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql | EQM1001_R01 수리유형 명칭 원복 완료, 렌더링 200 OK 검증 완료 | IIS Express 200 OK 확인, 렌더링된 HTML 내 '수리유형' 포함 및 '고장원인구분' 미포함 검증 완료, 전 파일 UTF-8 with BOM 무결성 확인 |
 | **완료** | 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql | EQM1001_R04 프로시저 REV 표기 간결화 완료 (서버 DB 직접 반영 금지 원칙 준수) | SQL 소스 파일 UTF-8 with BOM 및 CRLF 무결성 확인, IIS Express 200 OK 정상 서빙 확인 |
-| **완료** | 01.Office/PAGEMST/MST3001/MST3001_R03 (aspx, aspx.cs, js), 01.Office/PAGETOL/TOL0003/TOL0003_R05 (aspx, aspx.cs, js) | MST3001_R03 및 TOL0003_R05 표준화 완료, IIS Express 200 OK 서빙 확인 | IIS Express(http://localhost:55085/) 호출 검증 결과 MST3001_R03.aspx 및 TOL0003_R05.aspx 모두 200 OK 정상 서빙 확인, 전 파일 UTF-8 with BOM 및 CRLF 무결성 검증 완료 |
+| **완료** | 01.Office/PAGEMST/MST3001/MST3001_R03 (aspx, aspx.cs, js), 01.Office/PAGETOL/TOL0003/TOL0003_R05 (aspx, aspx.cs, js) | MST3001_R03 및 TOL0003_R05 표준화 완료, IIS Express 200 OK 서빙 확인 | IIS Express(<http://localhost:55085/>) 호출 검증 결과 MST3001_R03.aspx 및 TOL0003_R05.aspx 모두 200 OK 정상 서빙 확인, 전 파일 UTF-8 with BOM 및 CRLF 무결성 검증 완료 |
 | **완료** | [EQM1001_R04.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [MES_SNS2_EQM1001_R04.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.PROCEDURE/MES_SNS2_EQM1001_R04.sql) | EQM1001_R04 월별 점검상태 REV 버전 표기 및 컬럼 확장 완료 | IIS Express 200 OK 확인, 브라우저 렌더링 검증 결과 점검완료(초록)/점검필요(파랑) 색상 적용 및 pop1/pop2 더블클릭 오픈 정상 동작 확인 완료 |
 | **완료** | [EQM1001_R03.aspx](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx) | EQM1001_R03 우측 그리드 헤더 영역 공백 여백 제거 및 UTF-8 BOM 정상화 완료 | IIS Express 200 OK 확인, 브라우저 렌더링 측정 결과 버튼-헤더 간 간격이 4.67px로 밀착되고 패널 높이가 24px로 최적화됨을 실측 확인 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, EQM1001_R01.js, EQM1001_S01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql, MES_SNS2_EQM1001_S01.sql, 04.Report/PAGEEQM/EQM1001/S01A.cs | 로컬 소스 수정 및 검증 완료. 실서버에 R01·S01 프로시저 교체와 빌드된 EQM1001.exe 배포 필요. 설비마스터 없는 기존 이력 1건과 완료시간 역전 기존 이력 1건은 SELECT 확인만 진행하여 원본 데이터 보존 | 실서버 수정 조회문 SELECT 4종 실행: 전체 이력 4건, TEST_EMP01 참여 이력 2건, A-001 구입금액 6,000,000(KRW) 및 작업자 2명 반환. 격리된 로컬 MariaDB 10.2.44에서 46개 DB 시나리오 통과, Node 화면 이벤트 23개 통과, JavaScript 문법 정상. MSBuild 15 Release 빌드 성공. BOM·CRLF 정상. 실제 서버 DDL/DML·리포트 배포 및 실제 브라우저 CRUD는 수행하지 않음 |
@@ -3332,10 +3474,12 @@
 | **완료** | [05.Procedure/MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql) | EQM1001_R03 설비 목록 조회(LIST_MSTEQM) 잉여 컬럼(EQMGRPNM) 및 COMTYPE 조인 제거 | 잉여 EQMGRPNM 컬럼 및 COMTYPE 조인 전면 삭제, WHERE 절 단순화, 단일 BOM/CRLF 검증 완료 |
 | **완료** | [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe) | EQM1001 R03 레포트 점검내용 및 특이사항 컬럼 폭 미세 조정 | 점검내용 210.0px(+16.5px), 특이사항 200.0px(-16.5px), 가중치 합 1.000000D 유지, MSBuild Rebuild 통과 및 배포 완료 |
 | **완료** | [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql) | EQM1001_R03 주기관리 점검자명 조회 최적화 (대안 A: MSTEMP 12회 일괄 LEFT JOIN) | 12회 서브쿼리 제거 및 LEFT JOIN MSTEMP 12회 일괄 조인 전환, UTF-8 without BOM/CRLF 검증 완료 |
+| **완료** | [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [04.Report/PAGEEQM/EQM1001/R03.cs](04.Report/PAGEEQM/EQM1001/R03.cs), [04.Report/PAGEEQM/EQM1001/R03.resx](04.Report/PAGEEQM/EQM1001/R03.resx), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe) | EQM1001 R03 레포트 Visual Studio 디자이너 호환성 오류 해결 및 CodeDOM 구조 정규화 | VS 디자이너 오픈 시 '디자인할 수 있는 클래스가 없음' 오류 원인 4가지(components 컨테이너 누락, WidthF 누락, R03A 기본 생성자 누락, Debug 빌드 어셈블리 부재) 완벽 해결, Debug/Release 빌드 및 배포 완료 |
+| **대기** | [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs) | EQM1001_S04 점검시트 출력(S04A) 프로시저 서버 반영 및 출력 확인 | 빌드·배포·점검키 미전달 안내 확인 완료. 남은 확인: CALL_CHKRST_RPT 서버 반영 후 실데이터 PDF, VS 디자이너 열기, 화면 버튼 위치 |
+| **완료** | [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql) | EQM1001_R03 설비그룹 및 설비별 점검계획 탭 정기점검 영역 특이사항(REMARK) 제외 및 기준정보 연동 보존 | 설비그룹 점검계획(grid_GRP2, grid_GRP_COPY2) 및 설비별 점검계획(grid3, grid8, grid10) 정기점검 특이사항 컬럼 제거, 저장(SAVE) 시 기존 특이사항 보존 및 기준정보(MSTCHKKND) 특이사항 연동, 레포트(R03) 출력 보존. UTF-8 BOM/CRLF 검증 완료 |
+| **완료** | [04.Report/PAGEEQM/EQM1001/R03.cs](04.Report/PAGEEQM/EQM1001/R03.cs), [04.Report/PAGEEQM/EQM1001/EQM1001.csproj](04.Report/PAGEEQM/EQM1001/EQM1001.csproj), [.agents/rules/report_devexpress.md](.agents/rules/report_devexpress.md), [.agents/rules/report_file_structure.md](.agents/rules/report_file_structure.md) | EQM1001 R03A 파일 완전 삭제 및 1파일 1레포트 컴포넌트 원칙 규칙 제정 | R03A.cs 삭제, EQM1001.csproj 정리, VS 디자이너 파서 혼선 방지를 위한 단일 클래스 선언 원칙 규칙화 완료 |
+| **완료** | [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [04.Report/PAGEEQM/EQM1001/R03.cs](04.Report/PAGEEQM/EQM1001/R03.cs), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe) | EQM1001 R03 개정이력 동적 높이(XRTable) 전환 및 하단 확인란 세로 앵커 정렬 | 20개 개별 XRLabel을 xrTableRevHistory(XRTable/Row/Cell)로 전환하여 개정이력 줄바꿈 시 전 셀 높이 동기화 및 하위 행 자동 밀림 구현, 좌측 확인란 AnchorVertical.Both 적용으로 하단 테두리 완벽 일치 정렬, Debug/Release 빌드 및 배포/출력 검증 완료 |
 | **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | - |
 
 ---
-*위 기록은 사용자 요청에 따라 지속적으로 업데이트됩니다.*
-
-
-
+_위 기록은 사용자 요청에 따라 지속적으로 업데이트됩니다._

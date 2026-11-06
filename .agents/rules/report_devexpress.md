@@ -1,4 +1,4 @@
-﻿---
+---
 trigger: always_on
 ---
 
@@ -60,7 +60,20 @@ Visual Studio에서 리포트를 열 때 발생하는 디자이너 크래시 및
   - 예: `xrLabelHeaderBox` (0, 0, 731×56) → `xrPictureBoxLogo` (12, 6) → `xrLabelTitle` (165, 8) 순서로 `PageHeader.Controls.AddRange`
 - **빌드 성공 ≠ 디자이너 호환**: MSBuild 성공과 exe 출력 정상은 디자이너에서 열린다는 보장이 아닙니다. 레포트를 만들거나 구조를 바꾼 뒤에는 VS에서 `{리포트ID}.cs`를 디자이너로 열어 확인합니다.
 
-#### 2-5. 디자이너 오류 진단 절차 (추측 수정 금지)
+#### 2-5. 1개 파일 1개 레포트 클래스 원칙 (다중 컴포넌트 선언 및 임의의 하위 파생 클래스 선언 절대 금지)
+- **오류 배경**:
+  - `{리포트ID}.cs` 파일 내부에 기본 레포트 클래스 외에 `public class {리포트ID}A : {리포트ID}`와 같은 파생 클래스나 보조 클래스를 함께 선언하면, Visual Studio의 `CodeDomDesignerLoader.EnsureDocument`가 디자이너 호스트에 바인딩할 주(Primary) 컴포넌트를 특정하지 못하거나 보조 클래스의 디자이너 부재로 인해 다음과 같은 오류를 발생시키며 로딩을 중단합니다.
+  - **오류 메시지**: `이 파일에 디자인할 수 있는 클래스가 없으므로 디자이너에서 이 파일을 표시할 수 없습니다.`
+  - **호출 스택**:
+    - `System.ComponentModel.Design.Serialization.CodeDomDesignerLoader.EnsureDocument`
+    - `Microsoft.VisualStudio.Design.Serialization.CodeDom.VSCodeDomDesignerLoader.PerformLoad`
+    - `Microsoft.VisualStudio.Design.Serialization.CodeDom.VSCodeDomDesignerLoader.DeferredLoadHandler.OnLoadCompleted`
+- **원칙**:
+  - `{리포트ID}.cs` 파일 내부에는 오직 파일명과 1:1로 일치하는 단 하나의 레포트 클래스 `public partial class {리포트ID} : DevExpress.XtraReports.UI.XtraReport`만 존재해야 합니다.
+  - 하위 호환 명목으로 임의의 파생 클래스(`R03A` 등)를 동일 파일에 추가하거나 불필요한 별도 파일을 임의 생성하지 않습니다.
+  - 호출부(JavaScript `new ItsXtraRpt('{화면ID}_{리포트ID}')`)와 리포트 파일/클래스명을 1:1로 정확하게 일치시켜 호출합니다.
+
+#### 2-6. 디자이너 오류 진단 절차 (추측 수정 금지)
 VS 디자이너에서 오류 페이지("디자이너를 로드하기 전에 ... 오류를 해결해야 합니다")가 나오면 **아래 순서를 건너뛰지 않고** 진행합니다.
 S01A 사례에서 호출 스택을 보지 않고 `RowSpan`을 원인으로 추측해 수정·규칙화했다가 오류가 그대로 남은 실패가 있었습니다. 같은 실수를 반복하지 않습니다.
 
@@ -86,10 +99,11 @@ S01A 사례에서 호출 스택을 보지 않고 `RowSpan`을 원인으로 추�
 
 **알려진 원인 (VS 2017 + DevExpress 16.1 환경에서 실사례로 확인된 것만)**
 
-버전이 다른 환경에서도 우선 이 표로 의심하되, 2-5 절차(호출 스택·소거법)로 같은 원인인지 확인한 뒤 적용합니다. 새 원인을 확인하면 확인한 환경(VS·DevExpress 버전)과 함께 이 표에 추가합니다.
+버전이 다른 환경에서도 우선 이 표로 의심하되, 2-6 절차(호출 스택·소거법)로 같은 원인인지 확인한 뒤 적용합니다. 새 원인을 확인하면 확인한 환경(VS·DevExpress 버전)과 함께 이 표에 추가합니다.
 
 | 오류 메시지 / 증상 | 원인 | 해결 |
 |---|---|---|
+| `이 파일에 디자인할 수 있는 클래스가 없으므로 디자이너에서 이 파일을 표시할 수 없습니다` (스택: `CodeDomDesignerLoader.EnsureDocument` → `VSCodeDomDesignerLoader.PerformLoad`) | `.cs` 파일 내에 파생 클래스(`R03A`) 등 다중 클래스 선언 | 2-5: 파일당 1개 레포트 클래스만 유지하고 추가 클래스 전면 제거 |
 | `값은 null일 수 없습니다. 매개 변수 이름: component` (스택: `XRControlDesigner.OnLoadComplete` → `VSLockService`) | 자식 컨트롤을 담는 `XRPanel` | 2-4: 빈 테두리 `XRLabel` + 밴드 직접 배치 |
 | `'XtraReport.CreateCatCell' 메서드를 찾을 수 없습니다` | `InitializeComponent()` 안의 사용자 헬퍼 호출 | 2-3: 순수 대입문으로 전개 |
 | `TargetException: 개체가 대상 형식과 일치하지 않습니다` | `XRTableRow`를 `BeginInit/EndInit`에 포함 | 2-3: `XRTable`·`this`만 포함 |
@@ -131,8 +145,8 @@ S01A 사례에서 호출 스택을 보지 않고 `RowSpan`을 원인으로 추�
   - 리포트 메인 데이터는 `this.DataSource = ds.Tables[1];`과 같이 바인딩하고, 셀 데이터 바인딩은 `XRTableCell.DataBindings.AddRange(...)`을 통해 매핑합니다.
 - **`MODEL_S1` 내부 모델 클래스 선언**:
   - 리포트 클래스 하단에 `public class MODEL_S1 { ... }` (또는 `MODEL_R1`)을 정의하여 DevExpress Report Designer의 필드 바인딩 목록(`ObjectDataSource`)과 동기화할 수 있도록 표준을 유지합니다.
-- **호환 파생 클래스 선언**:
-  - 이전 버전 화면이나 공통 컨트롤러에서 `R03A` 등 끝에 영문자가 붙은 클래스명으로 호출하던 하위 호환성을 위해 필요 시 `public class R03A : R03 { public R03A(Dictionary<string, string> param) : base(param) { } }`를 함께 배치합니다.
+- **임의의 파생/호환 클래스 선언 금지**:
+  - 과거 관례였던 `public class R03A : R03` 형태의 파생 클래스 선언은 VS 디자이너에서 `이 파일에 디자인할 수 있는 클래스가 없습니다` 크래시를 유발하므로 **절대 선언하지 않습니다.**
 
 ---
 

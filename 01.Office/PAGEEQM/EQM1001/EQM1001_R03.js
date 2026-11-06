@@ -1,4 +1,4 @@
-﻿/// <reference path="../../Script/reference.js" />
+/// <reference path="../../Script/reference.js" />
 
 // 페이지 로드
 ItsPage.Load = function () {
@@ -25,7 +25,6 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
-    // 2026-11-06 [정기점검] 특이사항(REMARK) 입력 및 관리 컬럼 추가
     // 설비그룹 점검계획 탭: 정기점검 목록 초기화
     ItsGrid.Create('grid_GRP2', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
@@ -33,7 +32,6 @@ ItsPage.Load = function () {
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
-        column.create('특이사항', 'REMARK', { width: 200, readOnly: false }),
         column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
         column.split()
     ]);
@@ -53,7 +51,6 @@ ItsPage.Load = function () {
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
-        column.create('특이사항', 'REMARK', { width: 150 }),
         column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.split()
     ]);
@@ -81,7 +78,6 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
-    // 2026-11-06 [정기점검] 특이사항(REMARK) 입력 및 관리 컬럼 추가
     // 설비별 점검계획 탭: 정기점검 목록 초기화
     ItsGrid.Create('grid3', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
@@ -89,7 +85,6 @@ ItsPage.Load = function () {
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
-        column.create('특이사항', 'REMARK', { width: 200, readOnly: false }),
         column.create('정렬순서', 'SORTNO', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
         column.split()
     ]);
@@ -108,7 +103,6 @@ ItsPage.Load = function () {
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
-        column.create('특이사항', 'REMARK', { width: 150 }),
         column.split()
     ]);
 
@@ -145,7 +139,6 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
-    // 2026-11-06 [정기점검] 추가 팝업 특이사항(REMARK) 입력 컬럼 추가
     // 공통 정기점검 추가 팝업: 점검항목 목록 초기화
     ItsGrid.Create('grid10', { isCheckBoxGrid: true, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 70, align: 'center' }),
@@ -153,7 +146,6 @@ ItsPage.Load = function () {
         column.create('점검항목', 'CHKLOCNM', { width: 130, align: 'center' }),
         column.create('점검방법', 'CHKMTHNM', { width: 100, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 90, align: 'center' }),
-        column.create('특이사항', 'REMARK', { width: 150, readOnly: false }),
         column.split()
     ]);
 

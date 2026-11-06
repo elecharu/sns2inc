@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Collections;
 using System.ComponentModel;
@@ -72,10 +72,10 @@ namespace XtraRpt
         // 2026-10-16 [설비점검계획서] 하단 개정이력 바인딩 (최신 4건)
         private void BindRevHistory(DataTable revHistory)
         {
-            XRLabel[] arrRevNo = new XRLabel[] { cell_Rev_No0, cell_Rev_No1, cell_Rev_No2, cell_Rev_No3 };
-            XRLabel[] arrRevText = new XRLabel[] { cell_Rev_Text0, cell_Rev_Text1, cell_Rev_Text2, cell_Rev_Text3 };
-            XRLabel[] arrRevWriter = new XRLabel[] { cell_Rev_Writer0, cell_Rev_Writer1, cell_Rev_Writer2, cell_Rev_Writer3 };
-            XRLabel[] arrRevApprover = new XRLabel[] { cell_Rev_Approver0, cell_Rev_Approver1, cell_Rev_Approver2, cell_Rev_Approver3 };
+            XRTableCell[] arrRevNo = new XRTableCell[] { cell_Rev_No0, cell_Rev_No1, cell_Rev_No2, cell_Rev_No3 };
+            XRTableCell[] arrRevText = new XRTableCell[] { cell_Rev_Text0, cell_Rev_Text1, cell_Rev_Text2, cell_Rev_Text3 };
+            XRTableCell[] arrRevWriter = new XRTableCell[] { cell_Rev_Writer0, cell_Rev_Writer1, cell_Rev_Writer2, cell_Rev_Writer3 };
+            XRTableCell[] arrRevApprover = new XRTableCell[] { cell_Rev_Approver0, cell_Rev_Approver1, cell_Rev_Approver2, cell_Rev_Approver3 };
 
             int historyCnt = revHistory == null ? 0 : Math.Min(revHistory.Rows.Count, 4);
             for (int rowIndex = 0; rowIndex < 4; rowIndex++)
@@ -117,11 +117,5 @@ namespace XtraRpt
         public class MODEL_S1
         {
         }
-    }
-
-    // R03A 호출 호환용 파생 클래스
-    public class R03A : R03
-    {
-        public R03A(Dictionary<string, string> param) : base(param) { }
     }
 }

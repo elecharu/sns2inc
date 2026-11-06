@@ -1,4 +1,4 @@
-﻿---
+---
 trigger: always_on
 ---
 
@@ -122,12 +122,6 @@ namespace XtraRpt
         {
         }
     }
-
-    // R03A 호출 호환용 파생 클래스
-    public class R03A : R03
-    {
-        public R03A(Dictionary<string, string> param) : base(param) { }
-    }
 }
 ```
 
@@ -135,7 +129,7 @@ namespace XtraRpt
 | 항목 | 규칙 |
 |---|---|
 | namespace | 항상 `XtraRpt` |
-| 클래스 선언 | `public partial class {리포트ID} : DevExpress.XtraReports.UI.XtraReport` |
+| 클래스 선언 | `public partial class {리포트ID} : DevExpress.XtraReports.UI.XtraReport` (파일당 1개 클래스 단일 선언) |
 | 기본 생성자 | 매개변수 없는 `public {리포트ID}() { InitializeComponent(); }` **필수** (디자이너 로딩용) |
 | 파라미터 생성자 | `public {리포트ID}(Dictionary<string, string> param) : this()` — `InitializeComponent()`를 다시 호출하지 않음 |
 | 파라미터 수신 | `param.ContainsKey("KEY") ? param["KEY"] : ""` 형태로 방어, 필수값 누락 시 `InvalidOperationException` |
@@ -147,7 +141,7 @@ namespace XtraRpt
 | 바인딩 분리 | 생성자 본문은 조회·검증까지만, 컨트롤 대입은 `BindReportData(...)` 등 `private` 메서드로 분리 |
 | 헬퍼 | `Value`(DBNull 방어), `AddBlankRows`(고정 행수) 등 양식 고유 기능만 `private static`으로 최소 정의 |
 | `MODEL_S1` | 클래스 하단에 `public class MODEL_S1 { }` 유지 |
-| 호환 클래스 | 기존 화면이 `{리포트ID}A`로 호출하는 경우 파생 클래스를 같은 파일 하단에 배치 |
+| 다중 클래스 금지 | 파일 내에 `{리포트ID}` 외의 파생 클래스(`R03A` 등)나 추가 클래스 선언 **절대 금지** (VS 디자이너 로딩 차단 및 크래시 원인) |
 | 주석 | 생성자·메서드 위 `// YYYY-MM-DD [리포트명] 설명` 날짜 주석 ([aspx_cs_comment.md](aspx_cs_comment.md) 2항) |
 | 금지 | `BuildReport` 동적 생성, 컨트롤 `new` 생성, 레이아웃 좌표/크기 변경을 `.cs`에서 하는 행위 |
 

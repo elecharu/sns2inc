@@ -24,6 +24,8 @@ ItsPage.Load = function () {
         column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', align: 'center' }),
         column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', align: 'center' }),
         column.create('점검값', 'CHKVALUE', { width: 90, align: 'center' }),
+        // 2026-11-06 점검항목별 특이사항 표시
+        column.create('특이사항', 'REMARK', { width: 300, readOnly: true }),
 
         column.split()
     ]);
@@ -63,3 +65,16 @@ ItsGrid.Event('grid1').onSelect = function () {
 
     ItsGrid.SetStore('grid2', maria.store);
 }
+
+// 2026-11-06 선택한 점검이력(grid1) 점검 시트 출력 (점검이력 미선택 안내는 레포트에서 처리)
+ItsButton.Event('btn_PRINT').onClick = function () {
+    var chkRstKey = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'CHKRSTKEY') || '';
+
+    var rpt = new ItsXtraRpt('EQM1001_S04A');
+    rpt.AddParam('CHKRSTKEY', chkRstKey);
+    rpt.CallPop();
+
+    if (rpt.isError) {
+        ItsMsg.Alert(rpt.errMessage);
+    }
+};
