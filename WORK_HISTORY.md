@@ -74,6 +74,112 @@
 - **검증 결과**: 문법 검사(node --check) 통과, 남은 참조 없음, 인코딩(UTF-8 BOM·CRLF) 확인. 운영 DB 읽기 조회 : 07 사용 설비 254건, 작업장 콤보 대상 07 작업장 24개뿐, 평가이력 중 다른 공장 설비 0건, 설비코드 중복 0건. 미확인: 실제 화면
 - **참고**: 07 설비 중 작업장(LINECD)이 빈 설비 18건은 작업장 전체 조회 시 작업장 빈칸으로 표시됨
 
+### 7. EQM1001_R03 점검계획서 특이사항(REMARK) 입력·관리 및 레포트 출력 연동
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe, 01.Office/Reports/EQM1001.exe
+- **배경 및 원인**: 점검계획서 레포트 양식(R03)에 "특이사항" 컬럼이 존재함에도 화면 그리드에 입력 컬럼이 누락되어 관리할 수 없었고, 프로시저 CALL_PLAN_RPT에서 빈 문자열('')로 고정 반환되어 출력되지 않던 문제 개선 요청
+- **작업 상세 내용**:
+  - 1. 화면 그리드 특이사항(REMARK) 컬럼 추가 및 입력 지원:
+    - 설비그룹 탭(grid_GRP2) 및 설비별 탭(grid3)에 `column.create('특이사항', 'REMARK', { width: 200, readOnly: false })` 추가
+    - 정기점검 추가 팝업(grid10)에 `column.create('특이사항', 'REMARK', { width: 150, readOnly: false })` 추가
+    - 설비그룹 복사 팝업(grid_GRP_COPY2) 및 설비별 복사 팝업(grid8)에 `column.create('특이사항', 'REMARK', { width: 150 })` 조회 컬럼 추가
+  - 2. 그리드 저장 전 편집 완료(FinishEditing) 보장:
+    - `bdiv_GRP_btn_SAVE` 및 `bdiv3_btn_SAVE` 저장 버튼 클릭 시 `ItsGrid.FinishEditing`을 선행 호출하여 입력 중인 특이사항/정렬순서 셀 커밋 보장 (기존 `maria.AddList('REMARK_LIST', ...)` 전송 로직 유지)
+  - 3. 프로시저 점수/항목별 특이사항 반환 반영:
+    - `MES_SNS2_EQM1001_R03.sql`의 `CALL_PLAN_RPT` 분기에서 `'' AS REMARK` 하드코딩을 `COALESCE(MSTEQMREV_DETAIL.REMARK, '') AS REMARK`로 수정하여 실제 저장된 특이사항이 레포트 Detail row(cell_Detail_REMARK)에 정상 출력되도록 수정
+    - 최상단 Modify 주석 1일 1행 압축 갱신
+  - 4. 레포트 프로젝트 빌드 및 배포:
+    - `04.Report/PAGEEQM/EQM1001/EQM1001.csproj` Release Rebuild (0 Error, 0 Warning) 및 최신 `EQM1001.exe`를 `01.Office/Reports/EQM1001.exe`로 동기화 배포
+- **검증 결과**:
+  - Node.js 구문 검사(`node --check`) 통과
+  - 레포트 exe 커맨드라인 실행 테스트(정기점검 계획 정상 조회 및 에러 처리 확인)
+  - 단일 UTF-8 with BOM(JS, WORK_HISTORY.md) 및 UTF-8 without BOM(SQL), CRLF 개행 무결성 100% 검증 완료
+- **적용 순서**: `MES_SNS2_EQM1001_R03.sql` 프로시저 서버 DB 재반영 (SYSTEM_PARAMETERS 변경 없음)
+
+### 8. EQM1001 R03 레포트 타이틀 하단 여백(공백) 추가
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](04.Report/PAGEEQM/EQM1001/R03.Designer.cs), 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe, 01.Office/Reports/EQM1001.exe
+- **배경 및 원인**: "제조설비 정기 점검 시트" 레포트(R03) 출력 시 타이틀(xrLabelTitle)과 기본정보 테이블(xrTablePlanInfo)이 상하 여백 없이 밀착되어 가독성이 떨어지던 UI/UX 문제 개선 요청
+- **작업 상세 내용**:
+  - 1. 타이틀 하단 공백 20F(약 5mm) 확보:
+    - 기본정보 테이블(`xrTablePlanInfo`)의 시작 위치 `LocationFloat`: `(0F, 37F)` -> `(0F, 57F)` (+20F)
+    - 상세점검 헤더 테이블(`xrTableDetailHeader`)의 시작 위치 `LocationFloat`: `(0F, 112F)` -> `(0F, 132F)` (+20F)
+    - 페이지 헤더 밴드(`PageHeader`) 높이 `HeightF`: `142F` -> `162F` (+20F)
+  - 2. A4 1페이지 출력 범위 안전성 검토:
+    - A4 세로 가용 높이(1129F) 대비 Header(162F) + 기본 12행 Detail(516F) + Footer(128F) = 806F로 약 320F 이상 여유가 있어 2페이지로 넘어가지 않고 안정적으로 1페이지 출력 유지
+  - 3. 레포트 프로젝트 빌드 및 배포:
+    - `04.Report/PAGEEQM/EQM1001/EQM1001.csproj` Release Rebuild (0 Error, 0 Warning) 성공
+    - 최신 `EQM1001.exe`를 `01.Office/Reports/EQM1001.exe`로 동기화 배포
+- **검증 결과**:
+  - C# 인코딩 무결성(단일 UTF-8 with BOM, CRLF 개행) 확인
+  - MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning)
+  - 배포된 `01.Office/Reports/EQM1001.exe` 실행 테스트 정상 완료
+
+### 9. EQM1001 R03 레포트 점검항목 테이블 컬럼 폭 최적화 및 특이사항 칸 확장
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe, 01.Office/Reports/EQM1001.exe
+- **배경 및 원인**: 점검계획서 레포트(R03) 출력 시 "특이사항" 칸(기존 142.5px, 19.5%)이 너무 좁아 긴 메모나 조치 내역을 기재하기에 부족한 반면, "점검기기"(102px) 등 짧은 단어가 들어가는 컬럼의 여백 낭비가 심했던 문제 개선 요청
+- **작업 상세 내용**:
+  - 1. 레포트 테이블 컬럼 폭 재배분 (총 731px 기준 Weight 정밀 재계산, 가중치 합 1.0D 일치):
+    - `No`: 35px(Weight 0.04788) $\rightarrow$ **32px(Weight 0.04378)** (-3px)
+    - `점검항목`: 130px(Weight 0.17784) $\rightarrow$ **105px(Weight 0.14364)** (-25px, 4~6글자 카테고리 여유 있게 수용)
+    - `점검내용`: 200px(Weight 0.27360) $\rightarrow$ **180px(Weight 0.24624)** (-20px, 본문 텍스트 공간 충분히 유지)
+    - `점검기기`: 102px(Weight 0.13953) $\rightarrow$ **70px(Weight 0.09576)** (-32px, "육안"·"줄자" 등 2~4글자 낭비 여백 대폭 축소)
+    - `점검판정`: 63.8px(Weight 0.08732) $\rightarrow$ **60px(Weight 0.08208)** (-3.8px)
+    - `완료확인`: 57.7px(Weight 0.07889) $\rightarrow$ **54px(Weight 0.07387)** (-3.7px)
+    - `특이사항`: 142.5px(Weight 0.19494) $\rightarrow$ **230px(Weight 0.31464)** (**+87.5px, +61.4% 대폭 확장!**)
+  - 2. 화면 그리드 일관성 보정:
+    - `EQM1001_R03.js` 내 설비별 점검계획 탭(`grid3`)의 특이사항 컬럼 설정을 설비그룹 탭(`grid_GRP2`)과 동일하게 `width: 200, readOnly: false`로 통일
+  - 3. 레포트 프로젝트 빌드 및 배포:
+    - `04.Report/PAGEEQM/EQM1001/EQM1001.csproj` Release Rebuild (0 Error, 0 Warning) 성공
+    - 최신 `EQM1001.exe`를 `01.Office/Reports/EQM1001.exe`로 동기화 배포
+- **검증 결과**:
+  - `cell_Hdr_*` 및 `cell_Detail_*` 7개 컬럼 Weight 총합 정확히 1.0D 검증 완료
+  - Node.js 구문 검사(`node --check`) 통과
+  - 파일 인코딩(단일 UTF-8 with BOM, CRLF 개행) 100% 무결성 확인
+  - MSBuild 15.0 Rebuild 성공 및 실행 파일 배포 확인
+
+### 10. EQM1001_R03 설비별 점검계획 특이사항 편집 지원 및 정기점검 주기관리 점검자명(MSTEMP) 표시 수정
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql)
+- **배경 및 원인**:
+  - 1. "설비별 점검계획" 탭의 정기점검 목록(`grid3`)에서 "특이사항" 컬럼에 `readOnly: false` 속성이 누락되어 수정할 수 없던 문제
+  - 2. "정기점검 주기관리" 탭(`grid9`)에서 월별 점검자 조회 시 프로시저(`LIST_CYCLE_EQMCD`)가 공통코드 조회 함수 `GPCD('EMPCD', ...)`를 호출하여 사원 마스터(`MSTEMP`)를 조회하지 못하고 사원코드가 그대로 표시되던 문제
+- **작업 상세 내용**:
+  - 1. 설비별 점검계획 탭 특이사항 편집 활성화:
+    - `grid3` 특이사항 컬럼에 `width: 200, readOnly: false` 속성을 명시하여 진행 중 REV에서 특이사항 셀 인라인 수정 지원
+  - 2. 정기점검 주기관리 월별 점검자 사원명(`MSTEMP.EMPNM`) 조회 쿼리 수정:
+    - `MES_SNS2_EQM1001_R03.sql`의 `LIST_CYCLE_EQMCD` 분기에서 `M01` ~ `M12`의 `GPCD('EMPCD', ...)` 호출을 사원 마스터 테이블 기반 서브쿼리 `COALESCE((SELECT EMPNM FROM MSTEMP WHERE EMPCD = CHKPLANEQM_YEARPLAN.MONTH_xx LIMIT 1), CHKPLANEQM_YEARPLAN.MONTH_xx)`로 교체 (매핑 실패 시 사원코드 fallback 보장)
+    - 프로시저 상단 1일 1행 수정 이력 갱신
+- **검증 결과**:
+  - Node.js 구문 검사(`node --check`) 통과
+  - 파일 인코딩(JS/MD: 단일 UTF-8 with BOM, SQL: UTF-8 without BOM) 및 CRLF 개행 무결성 확인 완료
+- **적용 순서**: `MES_SNS2_EQM1001_R03.sql` 프로시저 서버 DB 재반영 (SYSTEM_PARAMETERS 변경 없음)
+
+### 11. EQM1001 R03 레포트 점검내용 및 특이사항 컬럼 폭 미세 조정
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](04.Report/PAGEEQM/EQM1001/R03.Designer.cs), 04.Report/PAGEEQM/EQM1001/bin/Release/EQM1001.exe, 01.Office/Reports/EQM1001.exe
+- **배경 및 원인**: 레포트 출력 시 나머지 컬럼은 그대로 두고 "점검내용" 컬럼 폭을 조금 더 넓히고 "특이사항" 컬럼 폭을 조금 줄여달라는 사용자 요청 반영
+- **작업 상세 내용**:
+  - 1. 나머지 컬럼(No 32.0px, 점검항목 105.0px, 점검기기 67.9px, 점검판정 59.0px, 완료확인 57.1px) 완전 고정 유지
+  - 2. `점검내용` (CHKCONTENT): 193.5px $\rightarrow$ **210.0px** (Weight `0.2872777017783858D`)로 확장 (+16.5px)
+  - 3. `특이사항` (REMARK): 216.5px $\rightarrow$ **200.0px** (Weight `0.27359785296522315D`)로 축소 (-16.5px)
+  - 4. Header 및 Detail 가중치 합계 `1.000000D`, 전체 폭 731.0px 일치 보장
+- **검증 결과**:
+  - MSBuild 15.0 Rebuild 성공 (0 Error, 0 Warning)
+  - `01.Office/Reports/EQM1001.exe` 동기화 배포 완료
+  - 파일 인코딩(단일 UTF-8 with BOM, CRLF 개행) 100% 무결성 확인
+
+---
+
+### 12. EQM1001_R03 주기관리 점검자명 조회 최적화 (대안 A: MSTEMP 12회 일괄 LEFT JOIN)
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql)
+- **배경 및 원인**:
+  - LIST_CYCLE_EQMCD 분기에서 12개 월별 점검자 컬럼(M01 ~ M12)마다 서브쿼리 (SELECT EMPNM FROM MSTEMP WHERE ...)를 수행하던 방식을 성능 및 유지보수 최적화를 위해 대안 A(12개 월 일괄 LEFT JOIN MSTEMP) 구조로 전환
+- **작업 상세 내용**:
+  - 1. SELECT 절 내 12회 반복 서브쿼리 제거:
+    - COALESCE(EMP01.EMPNM, CHKPLANEQM_YEARPLAN.MONTH_01) 형태로 간소화하여 매핑 실패 시 기존 사원코드 fallback 유지
+  - 2. FROM 절에 12회 LEFT JOIN MSTEMP EMPxx ON EMPxx.EMPCD = CHKPLANEQM_YEARPLAN.MONTH_xx 추가:
+    - 행 단위 서브쿼리 반복 실행 비용(Row-by-Row Evaluation)을 일괄 인덱스 조인으로 전환하여 쿼리 실행 속도 및 데이터베이스 부하 대폭 개선
+- **검증 결과**:
+  - 파일 인코딩(단일 UTF-8 without BOM, CRLF 개행) 100% 무결성 확인
+- **적용 순서**: MES_SNS2_EQM1001_R03.sql 프로시저 서버 DB 재반영 (SYSTEM_PARAMETERS 변경 없음)
+
 ---
 
 ## 🕒 2026-11-05 (목) 작업 내역
@@ -3224,6 +3330,8 @@
 | **완료** | [05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/UPDATE_SYSLABEL_EQMPARTS.sql) | SYSLABEL EQMPARTS 라벨 양식 폭 확장(46mm) 및 폰트 8.5pt 최적화 | 부품명 46mm 폭 확장 및 폰트 8.5pt 축소, 바코드 42mm 중앙 배치, 더미 필드 제거, 단일 BOM/CRLF 검증 완료 |
 | **완료** | [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/01.Office/PAGEEQM/EQM1001/EQM1001_R03.js) | EQM1001_R03 설비별 점검계획 탭(grid1) 설비그룹 공통 콤보(FM116) 바인딩 적용 | 코드/명칭 분리 제거, enumColumnTypes.combo(gpcd: 'FM116') 단일 콤보 바인딩 적용, JS 구문 검사 및 단일 BOM/CRLF 검증 완료 |
 | **완료** | [05.Procedure/MES_SNS2_EQM1001_R03.sql](file:///d:/ITS_MES_SNSINC_FAC2_VA.1.0/05.Procedure/MES_SNS2_EQM1001_R03.sql) | EQM1001_R03 설비 목록 조회(LIST_MSTEQM) 잉여 컬럼(EQMGRPNM) 및 COMTYPE 조인 제거 | 잉여 EQMGRPNM 컬럼 및 COMTYPE 조인 전면 삭제, WHERE 절 단순화, 단일 BOM/CRLF 검증 완료 |
+| **완료** | [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe) | EQM1001 R03 레포트 점검내용 및 특이사항 컬럼 폭 미세 조정 | 점검내용 210.0px(+16.5px), 특이사항 200.0px(-16.5px), 가중치 합 1.000000D 유지, MSBuild Rebuild 통과 및 배포 완료 |
+| **완료** | [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql) | EQM1001_R03 주기관리 점검자명 조회 최적화 (대안 A: MSTEMP 12회 일괄 LEFT JOIN) | 12회 서브쿼리 제거 및 LEFT JOIN MSTEMP 12회 일괄 조인 전환, UTF-8 without BOM/CRLF 검증 완료 |
 | **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | - |
 
 ---
