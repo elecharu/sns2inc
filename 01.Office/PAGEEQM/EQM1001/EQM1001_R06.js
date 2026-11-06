@@ -213,6 +213,28 @@ function TOPISSUE_DETAIL(r, i) {
         + '</div></div>';
 }
 
+/* 툴바 [인쇄] → 보고 있는 화면대로 출력 (그래프 = 고장율 현황 1장, TOP ISSUE = 그 달 표 + 세부내용) */
+ItsButton.EventPrint = function () {
+    var rpt;
+    if ($('#div_TOPISSUE').is(':visible')) {
+        if (topIssueData == undefined || topIssueData.length == 0) {
+            ItsMsg.Alert(topMonth + '월 설비 수리 이력이 없습니다.');
+            return;
+        }
+        rpt = new ItsXtraRpt('EQM1001_R0602');
+        rpt.AddParam('SYEAR', ItsCombo.GetValue('cmb_SYEAR'));
+        rpt.AddParam('SMONTH', String(topMonth));
+    }
+    else {
+        rpt = new ItsXtraRpt('EQM1001_R0601');
+        rpt.AddParam('SYEAR', ItsCombo.GetValue('cmb_SYEAR'));
+    }
+    rpt.CallPop();
+    if (rpt.isError) {
+        ItsMsg.Alert(rpt.errMessage);
+    }
+};
+
 /* TOP ISSUE → 그래프로 돌아가기 */
 ItsButton.Event('btn_BACK').onClick = function () {
     $('#div_TOPISSUE').hide();

@@ -1177,7 +1177,46 @@ namespace TML2010
 
                 // 라인 정보가 지워졌으므로 다시 조회 (투입로트·생산품·작업자 비워짐)
                 EventCommand("LIST_INPUT");
+
+                PrintMove(ItsData.GetText(ds.Tables[0], 0, "LOTKEY"));
                 ShowMessageBox("", "생산실적이 등록되었습니다.\n실적로트: " + ItsData.GetText(ds.Tables[0], 0, "LOTKEY"));
+            }
+        }
+
+        // 공정이동표 출력 (A4, 확인창 없이 POP 에서 고른 프린터로 바로 인쇄). 양품로트 1장 + 불량이 있으면 불량로트 1장
+        // 양식은 COMPJT\TMLPRINT 의 PRD_1 (AAALIB\TMLPRINT.exe)
+        private void PrintMove(string lotKey)
+        {
+            ItsMaria.Set("TML2010_R01", "PRINT_MOVE");
+            ItsMaria.AddOne("LOTKEY", lotKey);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            if (ds.Tables[0].Rows.Count == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                if (ItsData.GetDecimal(ds.Tables[0], 0, "GOODQTY") > 0)
+                {
+                    TMLPRINT.PRD_1 rpt = new TMLPRINT.PRD_1(ds, false);
+                    rpt.PrintDirect(ItsPrinter.BarcodePrintName);
+                }
+                if (ItsData.GetDecimal(ds.Tables[0], 0, "BADQTY") > 0)
+                {
+                    TMLPRINT.PRD_1 rptBad = new TMLPRINT.PRD_1(ds, true);
+                    rptBad.PrintDirect(ItsPrinter.BarcodePrintName);
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowMessageBox("", "공정이동표 출력에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
             }
         }
         /***************************************************************************************************************************************************************/

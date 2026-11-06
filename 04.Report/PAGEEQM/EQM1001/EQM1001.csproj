@@ -214,6 +214,18 @@
     <Compile Include="R03.Designer.cs">
       <DependentUpon>R03.cs</DependentUpon>
     </Compile>
+    <Compile Include="R0601.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="R0601.Designer.cs">
+      <DependentUpon>R0601.cs</DependentUpon>
+    </Compile>
+    <Compile Include="R0602.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="R0602.Designer.cs">
+      <DependentUpon>R0602.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

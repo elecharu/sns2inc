@@ -5,6 +5,9 @@ var tabState = 0;
 ItsPage.Load = function () {
     ItsGrid.Create('grid1', { isCheckBoxGrid: true }, [
         column.create('설비수리번호', 'EQMREPNO', { width: 150, align: 'center', hidden: true }),
+        column.create('작업장', 'LINENM', { width: 80, align: 'center' }),
+        column.create('설비구분', 'EQMTPNM', { width: 80, align: 'center' }),
+        column.create('설비대분류', 'EQMGROUP1NM', { width: 80, align: 'center' }),
         column.create('설비중분류', 'EQMGROUP2', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM114' }),
         column.create('상세설비', 'FANO', { width: 100, align: 'center', hidden: true }),
         column.create('상세설비명', 'EQMNM', { width: 100, align: 'center' }),

@@ -5,6 +5,7 @@ PROCEDURE MES_SNS2.IO_PRDRST(
 --          ) 투입로트별 사용량으로 PRDINS, PRDWORK, PRDWORK_EMP, PRDRST, PRDRSTUSE, PRDRSTBAD,
 --            COMOUT, COMOUTLOT(현재고 차감), PRDRSTLOT, COMIN, COMINLOT, COMLOT 생성
 --          ) 생산수량 = 사용량 합계, 불량수량 = 라인 불량(PRDLINEBAD) 합계, 양품수량 = 생산 - 불량 (실적로트는 양품수량)
+--          ) 불량이 있으면 같은 로트번호로 불량창고(제품 04S230_N, 반제품 04S130_N)에 입고 (INTP 05)
 --          ) 진행 중 비가동이 있으면 막고, 라인 비가동(PRDRSTNON)에 작업키 연결
 --          ) 끝나면 라인 정보(PRDLINESCAN, PRDLINEITEM, PRDLINEEMP, PRDLINEBAD) 삭제
 --          ) 결과: 실적로트번호(LOTKEY), 양품수량(GOODQTY)
@@ -12,6 +13,7 @@ PROCEDURE MES_SNS2.IO_PRDRST(
 -- Modify: 2026-10-29 라인 불량을 실적 불량수량·PRDRSTBAD 로 반영
 --         2026-10-30 진행 중 비가동 확인, 비가동 작업키 연결
 --         2026-11-05 작업지시 주야구분(PRDINS.DNTP) 저장 (DAY/NIGHT)
+--         2026-11-06 실적로트 불량수량(PRDRSTLOT.BADQTY), 불량재고 입고(COMIN·COMINLOT·COMLOT)
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),      -- 공정
@@ -41,6 +43,7 @@ PROC: BEGIN
   DECLARE _$STIME VARCHAR(19);
   DECLARE _$ETIME VARCHAR(19);
   DECLARE _$INWARECD VARCHAR(100);
+  DECLARE _$BADWARECD VARCHAR(100);
   DECLARE _$PRDINSKEY VARCHAR(100);
   DECLARE _$PRDWORKKEY VARCHAR(100);
   DECLARE _$PRDRSTKEY VARCHAR(100);
@@ -107,6 +110,11 @@ PROC: BEGIN
                );
     LEAVE PROC;
   END IF;
+
+  -- 불량로트 입고창고: 제품(DM100100)이면 제품불량창고, 아니면 재공불량창고
+  SET _$BADWARECD = (SELECT IF(MSTITEM.ITEMCG = 'DM100100', '04S230_N', '04S130_N')
+                       FROM MSTITEM
+                       WHERE MSTITEM.ITEMID = $ITEMID);
 
   SET _$WARECD = '04S111_N'; -- 자재투입창고
 
@@ -467,18 +475,20 @@ PROC: BEGIN
     END IF;
   END WHILE;
 
-  -- 6. 실적로트
+  -- 6. 실적로트 (양품수량, 불량수량)
   INSERT INTO PRDRSTLOT (
       PRDRSTKEY
     , LOTKEY
     , LOTTIME
     , LOTQTY
+    , BADQTY
     , RTIME, REMP, RPRG)
   VALUES (
       _$PRDRSTKEY
     , _$RSTLOTKEY
     , CALLTIME()
     , _$GOODQTY
+    , _$BADQTY
     , CALLTIME(), CALLEMP(), CALLPRG()
   );
 
@@ -560,6 +570,87 @@ PROC: BEGIN
     , _$PRDRSTKEY
     , CALLTIME(), CALLEMP(), CALLPRG()
   );
+
+  -- 7-1. 불량로트 입고 + 현재고 생성 (불량이 있을 때, 로트번호는 양품로트와 같음, 입고유형 05 생산불량등록)
+  IF _$BADQTY > 0 THEN
+    SET _$INKEY = GETKEY('INKEY');
+
+    INSERT INTO COMIN (
+        INKEY
+      , WARECD
+      , INTP
+      , INDATE
+      , INQTY
+      , ITEMID
+      , PRCCD
+      , EMPCD
+      , PRDRSTKEY
+      , RTIME, REMP, RPRG)
+    VALUES (
+        _$INKEY
+      , _$BADWARECD
+      , '05'
+      , $WORKSDAY
+      , _$BADQTY
+      , $ITEMID
+      , $PRCCD
+      , CALLEMP()
+      , _$PRDRSTKEY
+      , CALLTIME(), CALLEMP(), CALLPRG()
+    );
+
+    INSERT INTO COMINLOT (
+        INKEY
+      , LOTKEY
+      , WARECD
+      , INTP
+      , INDATE
+      , INQTY
+      , PRCCD
+      , ITEMID
+      , OLDQTY
+      , RTIME, REMP, RPRG)
+    VALUES (
+        _$INKEY
+      , _$RSTLOTKEY
+      , _$BADWARECD
+      , '05'
+      , $WORKSDAY
+      , _$BADQTY
+      , $PRCCD
+      , $ITEMID
+      , 0
+      , CALLTIME(), CALLEMP(), CALLPRG()
+    );
+
+    INSERT INTO COMLOT (
+        LOTKEY
+      , WARECD
+      , LABELCD
+      , LOTQTY
+      , ITEMID
+      , PRCCD
+      , EQMCD
+      , CRTTIME
+      , CRTQTY
+      , PRDDATE
+      , PRDRSTKEY
+      , RTIME, REMP, RPRG)
+    VALUES (
+        _$RSTLOTKEY
+      , _$BADWARECD
+      , 'PRD01'
+      , _$BADQTY
+      , $ITEMID
+      , $PRCCD
+      , $EQMCD
+      , CALLTIME()
+      , _$BADQTY
+      , $WORKSDAY
+      , _$PRDRSTKEY
+      , CALLTIME(), CALLEMP(), CALLPRG()
+    );
+  END IF;
 
   -- 8. 라인 정보 정리 (투입로트, 생산품, 작업자, 불량)
   DELETE

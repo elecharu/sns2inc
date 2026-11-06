@@ -83,6 +83,12 @@
     <Compile Include="OSC_1.Designer.cs">
       <DependentUpon>OSC_1.cs</DependentUpon>
     </Compile>
+    <Compile Include="PRD_1.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PRD_1.Designer.cs">
+      <DependentUpon>PRD_1.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
