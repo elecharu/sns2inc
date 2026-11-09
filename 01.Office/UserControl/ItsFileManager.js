@@ -100,7 +100,7 @@ var ItsFileManager = {
                 ItsImage.Clear(_$imageId);
             }
             ItsFileManager.Event(id).onClear(id);
-        }        
+        }
     }
 };
 ItsFileManager.Upload = function (id) {
@@ -108,11 +108,10 @@ ItsFileManager.Upload = function (id) {
 };
 ItsFileManager.$upload = function (id, WAITSTT, CALLBACK) {
     if ($('#' + id).attr('data-disabled') == 'true') return false;
-    // [TEMP 2026-11-09 로컬 테스트용 임시 해제 - 테스트 후 주석 해제(원복) 필요] localhost 업로드·삭제 차단
-    //if (location.href.indexOf('localhost') > -1) {
-    //    alert('localhost에서는 데이터 왜곡 방지를 위해 파일업로드 기능을 제한하였습니다.');
-    //    return;
-    //}
+    if (location.href.indexOf('localhost') > -1) {
+        alert('localhost에서는 데이터 왜곡 방지를 위해 파일업로드 기능을 제한하였습니다.');
+        return;
+    }
     if (document.getElementById(id + "ex_filename").files.length < 1) {
         ItsMsg.Alert('파일을 선택하세요');
         return;
@@ -193,11 +192,10 @@ ItsFileManager.$upload = function (id, WAITSTT, CALLBACK) {
 
 ItsFileManager.UploadNM = function (id, WAITSTT, CALLBACK, NAME) {
     if ($('#' + id).attr('data-disabled') == 'true') return false;
-    // [TEMP 2026-11-09 로컬 테스트용 임시 해제 - 테스트 후 주석 해제(원복) 필요] localhost 업로드·삭제 차단
-    //if (location.href.indexOf('localhost') > -1) {
-    //    alert('localhost에서는 데이터 왜곡 방지를 위해 파일업로드 기능을 제한하였습니다.');
-    //    return;
-    //}
+    if (location.href.indexOf('localhost') > -1) {
+        alert('localhost에서는 데이터 왜곡 방지를 위해 파일업로드 기능을 제한하였습니다.');
+        return;
+    }
     if (document.getElementById(id + "ex_filename").files.length < 1) {
         ItsMsg.Alert('파일을 선택하세요');
         return;
@@ -262,11 +260,10 @@ ItsFileManager.Delete = function (id, filekey) {
 };
 ItsFileManager.$delete = function (id, filekey, CALLBACK) {
     if ($('#' + id).attr('data-disabled') == 'true') return false;
-    // [TEMP 2026-11-09 로컬 테스트용 임시 해제 - 테스트 후 주석 해제(원복) 필요] localhost 업로드·삭제 차단
-    //if (location.href.indexOf('localhost') > -1) {
-    //    alert('localhost에서는 데이터 왜곡 방지를 위해 파일업로드 기능을 제한하였습니다.');
-    //    return;
-    //}
+    if (location.href.indexOf('localhost') > -1) {
+        alert('localhost에서는 데이터 왜곡 방지를 위해 파일업로드 기능을 제한하였습니다.');
+        return;
+    }
     var _$keyValue = ItsFileManager.GetFileKey(id);
     if (_$keyValue == '' || _$keyValue == undefined) {
         if (filekey != undefined && filekey != '' && filekey != null) {
