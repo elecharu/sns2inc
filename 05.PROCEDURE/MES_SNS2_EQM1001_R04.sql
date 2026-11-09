@@ -111,7 +111,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     WHERE REVCD IN (_$GRPREVCD, _$EQMREVCD);
 
     IF _$ITEMCNT = 0 THEN
-      CALL COMERR('승인된 정기점검 계획이 없습니다. 설비그룹·설비별 점검계획을 승인한 후 등록해주세요.');
+      CALL COMERR('승인된 정기점검 계획이 없습니다. 점검계획을 승인한 후 등록해주세요.');
       LEAVE PROC;
     END IF;
 

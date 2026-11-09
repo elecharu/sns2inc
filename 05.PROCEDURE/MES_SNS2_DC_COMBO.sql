@@ -4,10 +4,6 @@ PROCEDURE MES_SNS2.DC_COMBO(
 -- Comment: COMBOBOX
 -- Create: 2016-11-10 14:45: 
 -- Modify: 2016-11-10 14:45: 
---         2026-10-23 12:06:      LINECD: REF02 가 빈 값이면 사내 작업장(MSTLINE.OSCCUSTCD = '')만 조회
---         2026-10-28 김영철:     OSCCONSUM_PRCCD/EQMCD/ITEMID_PRD/PRCDETAIL 추가 (MST3001_R05 외주처 소모품 그리드 행별 필터용)
---         2026-11-04 김영철:     OSCCONSUM_TML_ITEMID_PRD/PRCDETAIL/TURRET 추가 (TML1030_R02 외주처 소모품 불출 팝업 필터, REF01 = 라인)
---         2026-11-04 김영철:     OSCCONSUM_* 7개 분기의 빈 값 첫 행(SELECT '' ... UNION ALL) 제거
 -- *****************************************************************************
   IN $GPCD VARCHAR(20000),
   IN $REF01 VARCHAR(20),
@@ -214,6 +210,7 @@ PROC: BEGIN
       SELECT MSTPRC.PRCNM AS Label, MSTPRC.PRCCD AS Value
         FROM MSTPRC
         WHERE MSTPRC.USEYN = 'Y'
+          AND MSTPRC.FACTORYCD = '07'
           AND IF((SELECT OSCCUSTCD FROM MSTLINE WHERE LINECD = $REF01) = '', MSTPRC.GUBUN_BC = 'PP412001', MSTPRC.GUBUN_BC = 'PP412002')
         ORDER BY MSTPRC.PRCCD
         LIMIT 100;
@@ -313,6 +310,7 @@ PROC: BEGIN
         AND BAD_YN = 'N'
         AND CUSTCD = ''
       ORDER BY MSTWARE.WARECD;
+
 -- *****************************************************************************  
   ELSEIF $GPCD = 'WARECD_BAD' THEN
     
@@ -324,6 +322,7 @@ PROC: BEGIN
               ELSE MSTWARE.FACTORYCD LIKE CONCAT('%', $REF01, '%')
             END
         AND ($REF02 = '' OR MSTWARE.SUBYN = $REF02)
+        AND ($REF03 = '' OR MSTWARE.PRCYN = $REF03)
         AND BAD_YN = 'Y'
         AND CUSTCD = ''
       ORDER BY MSTWARE.WARECD;
@@ -575,7 +574,11 @@ PROC: BEGIN
 
       SELECT MSTLINE_EQM.EQMNM AS Label, MSTLINE_EQM.EQMCD AS Value
         FROM MSTLINE_EQM
-        WHERE MSTLINE_EQM.LINECD LIKE CONCAT('%', $REF01, '%')
+        INNER JOIN MSTLINE
+          ON MSTLINE.LINECD = MSTLINE_EQM.LINECD
+        WHERE MSTLINE_EQM.USEYN = 'Y'
+          AND MSTLINE.FACTORYCD = '07'
+          AND MSTLINE_EQM.LINECD LIKE CONCAT('%', $REF01, '%')
           AND MSTLINE_EQM.PRCCD LIKE CONCAT('%', $REF02, '%')
         ORDER BY MSTLINE_EQM.EQMCD;
 

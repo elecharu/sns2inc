@@ -40,11 +40,22 @@ ItsPage.Load = function () {
     // 그리드 Row 높이 자동설정
     ItsGrid.Get('grid1').autoRowHeights = true;
     ItsDateRange.SetInitValueFrom('date_SEARCH', ItsHelper.AddDay(-7, ItsHelper.GetYearMonthDay()));
+
+    // 2026-11-09 [수리 사진] 썸네일 클릭 시 미리보기 변경, [✕] 클릭 시 사진 삭제
+    $('#div_REPIMG_LIST').on('click', '.repimg-thumb', function () {
+        REPIMG_SELECT(parseInt($(this).attr('data-index'), 10));
+    });
+    $('#div_REPIMG_LIST').on('click', '.repimg-del', function (e) {
+        e.stopPropagation();
+        REPIMG_DELETE($(this).attr('data-filekey'));
+    });
+    REPIMG_LIST('');
 };
 
 /* 조회 */
 ItsButton.EventSearch = function () {
     ItsGrid.Clear('grid2');
+    REPIMG_LIST('');
     var maria = new ItsMaria('EQM1001_R01', 'LIST_EQMREP');
     maria.AddPanel('sdiv1');
     maria.CallProc();
@@ -59,9 +70,11 @@ ItsButton.EventSearch = function () {
 };
 
 // 2026-10-06 수리이력 선택이 없으면 작업자 목록 초기화
+// 2026-11-09 선택한 수리이력의 사진 목록도 함께 조회
 ItsGrid.Event('grid1').onSelect = function () {
     var eqmRepKey = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMREPKEY');
     ItsGrid.Clear('grid2');
+    REPIMG_LIST(eqmRepKey);
     if (!eqmRepKey) {
         return;
     }
@@ -304,11 +317,13 @@ ItsButton.EventDelete = function () {
     }
     ItsMsg.Confirm("선택한 항목을 삭제하시겠습니까?", function () {
 
+        // 2026-11-09 삭제할 수리이력의 사진 파일키를 먼저 모아 두고, 이력 삭제 후 파일도 삭제
+        var arrFileKey = [];
         var maria = new ItsMaria('EQM1001_R01', 'DELETE_EQMREP');
         for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
             if (ItsGrid.IsChecked('grid1', i)) {
                 maria.AddList('EQMREPKEY_LIST', ItsGrid.GetValue('grid1', i, 'EQMREPKEY'));
-
+                arrFileKey = arrFileKey.concat(GetRepImgList(ItsGrid.GetValue('grid1', i, 'EQMREPKEY')).map(function (img) { return img.FILEKEY; }));
             }
         }
         maria.CallProc();
@@ -316,6 +331,10 @@ ItsButton.EventDelete = function () {
             maria.ShowErrMsg();
             return;
         }
+        ItsFileManager.Clear('file_REPIMG');
+        arrFileKey.forEach(function (fileKey) {
+            ItsFileManager.Delete('file_REPIMG', fileKey);
+        });
 
         ItsMsg.Toast(ItsMsg.CommonMsg.DeleteComplete());
         ItsButton.EventSearch();
@@ -418,3 +437,122 @@ ItsButton.Event('bdiv2_btn_DEL').onClick = function () {
     )
 };
 
+// 2026-11-09 [수리 사진] 사진 목록·선택 상태, 업로드 대상 수리이력 키 (업로드 중 다른 이력을 선택해도 처음 이력에 등록)
+var repImgList = [];
+var repImgUploadKey = '';
+
+// 2026-11-09 [수리 사진] 수리이력의 등록 사진 조회
+function GetRepImgList(eqmRepKey) {
+    if (!eqmRepKey) {
+        return [];
+    }
+    var maria = new ItsMaria('EQM1001_R01', 'LIST_EQMREP_IMG');
+    maria.AddParam('EQMREPKEY', eqmRepKey);
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        return [];
+    }
+    return maria.store.data;
+}
+
+// 2026-11-09 [수리 사진] 썸네일 목록 표시 후 지정 사진(없으면 첫 사진) 미리보기
+function REPIMG_LIST(eqmRepKey, selectFileKey) {
+    repImgList = GetRepImgList(eqmRepKey);
+    var selectIndex = 0;
+    var html = '';
+    repImgList.forEach(function (img, i) {
+        if (img.FILEKEY == selectFileKey) {
+            selectIndex = i;
+        }
+        html += '<div class="repimg-thumb" data-index="' + i + '"><img src="' + img.FILEURL + '" />'
+              + '<span class="repimg-del" data-filekey="' + img.FILEKEY + '" title="사진 삭제">✕</span></div>';
+    });
+    $('#div_REPIMG_LIST').html(html);
+    $('#spn_REPIMG_EMPTY').text(eqmRepKey ? '등록된 사진이 없습니다. [사진 등록]으로 추가하세요.' : '수리이력을 선택하면 사진이 표시됩니다.');
+    ItsLabel.SetText('lbl_REPIMG', '■ 수리 사진 (' + repImgList.length + ')');
+    REPIMG_SELECT(repImgList.length > 0 ? selectIndex : -1);
+}
+
+// 2026-11-09 [수리 사진] 선택 사진 미리보기·썸네일 강조·순번 표시 (사진이 없으면 기본 이미지 대신 안내 문구)
+function REPIMG_SELECT(index) {
+    $('#div_REPIMG_LIST .repimg-thumb').removeClass('on');
+    if (index < 0 || index >= repImgList.length) {
+        ItsImage.Clear('img_REPIMG');
+        $('#spn_REPIMG_PAGE').hide();
+        $('#spn_REPIMG_EMPTY').parent().addClass('empty');
+        return;
+    }
+    $('#spn_REPIMG_EMPTY').parent().removeClass('empty');
+    $('#div_REPIMG_LIST .repimg-thumb[data-index="' + index + '"]').addClass('on');
+    ItsImage.SetImage('img_REPIMG', repImgList[index].FILEURL, repImgList[index].FILEKEY);
+    $('#spn_REPIMG_PAGE').text((index + 1) + ' / ' + repImgList.length).show();
+}
+
+// 2026-11-09 [수리 사진] 사진 등록 → 공통 파일선택(이미지) 열기
+ItsButton.Event('btn_REPIMG_ADD').onClick = function () {
+    repImgUploadKey = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMREPKEY');
+    if (!repImgUploadKey) {
+        ItsMsg.Toast('수리이력을 선택해주세요.');
+        return;
+    }
+    ItsFileManager.Clear('file_REPIMG');
+    document.getElementById('file_REPIMGex_filename').click();
+};
+
+// 2026-11-09 [수리 사진] 사진 선택 즉시 업로드
+ItsFileManager.Event('file_REPIMG').onFileChange = function (id) {
+    if (document.getElementById(id + 'ex_filename').files.length < 1) {
+        return;
+    }
+    ItsFileManager.Upload(id);
+};
+
+// 2026-11-09 [수리 사진] 업로드한 파일키를 수리이력에 등록, 등록 실패 시 업로드 파일 삭제
+ItsFileManager.Event('file_REPIMG').onUpload = function (id, fileKey) {
+    ItsFileManager.Clear(id);
+    var maria = new ItsMaria('EQM1001_R01', 'ADD_EQMREP_IMG');
+    maria.AddParam('EQMREPKEY', repImgUploadKey);
+    maria.AddParam('FILEKEY', fileKey);
+    maria.CallProc();
+    if (maria.isError) {
+        maria.ShowErrMsg();
+        ItsFileManager.Delete(id, fileKey);
+        return;
+    }
+    ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
+    if (repImgUploadKey == ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMREPKEY')) {
+        REPIMG_LIST(repImgUploadKey, fileKey);
+    }
+};
+
+// 2026-11-09 [수리 사진] 사진 삭제 (등록 삭제 후 파일 삭제)
+function REPIMG_DELETE(fileKey) {
+    var eqmRepKey = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMREPKEY');
+    if (!eqmRepKey || !fileKey) {
+        return;
+    }
+    ItsMsg.Confirm('사진을 삭제하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_R01', 'DELETE_EQMREP_IMG');
+        maria.AddParam('EQMREPKEY', eqmRepKey);
+        maria.AddParam('FILEKEY', fileKey);
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsFileManager.Clear('file_REPIMG');
+        ItsFileManager.Delete('file_REPIMG', fileKey);
+        ItsMsg.Toast(ItsMsg.CommonMsg.DeleteComplete());
+        REPIMG_LIST(eqmRepKey);
+    });
+}
+
+// 2026-11-09 [수리 사진] 미리보기 클릭 → 크게 보기 팝업
+ItsImage.Event('img_REPIMG').onClick = function (url, key) {
+    if (!key) {
+        return;
+    }
+    ItsImage.SetImage('big_img_REPIMG', url, key);
+    ItsPop.Open('pop_REPIMG');
+};

@@ -27,9 +27,11 @@ namespace TML1010
     {
         ItsModelPanel MODEL_S1 = new ItsModelPanel();
         ItsModelPanel MODEL_A1 = new ItsModelPanel();
+        ItsModelPanel MODEL_A3 = new ItsModelPanel(); // 2026-11-09 정보입력 팝업
 
         ItsModelGrid MODEL_G1 = new ItsModelGrid();
         ItsModelGrid MODEL_G2 = new ItsModelGrid();
+        ItsModelGrid MODEL_G3 = new ItsModelGrid(); // 2026-11-09 BOX 단위 수량 x BOX 수량
 
 
         // 생성자
@@ -45,75 +47,38 @@ namespace TML1010
             MODEL_A1.Binding(PANEL_A1);
             MODEL_A1.InitData();
 
+            MODEL_A3.Binding(PANEL_A3);
+            MODEL_A3.InitData();
+
             MODEL_G1.Binding(GRID_G1);
-            MODEL_G1.EventValueChanged += MODEL_G1_EventValueChanged;
 
             MODEL_G2.Binding(GRID_G2);
+
+            MODEL_G3.Binding(GRID_G3);
+            MODEL_G3.EventValueChanged += MODEL_G3_EventValueChanged;
         }
 
-        private void MODEL_G1_EventValueChanged(int rowIndex, string fieldName)
+        // BOX 단위 수량·BOX 수량을 바꾸면 행 합계와 납품량(전체 합계)을 다시 계산
+        private void MODEL_G3_EventValueChanged(int rowIndex, string fieldName)
         {
-            if (fieldName == "LOTQTY")
+            if (fieldName == "BOXQTY" || fieldName == "BOXCNT")
             {
-                decimal lotQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "LOTQTY"));
-                decimal okQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "OKQTY"));
-                decimal carInQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "CARINQTY"));
-
-                if (okQty < lotQty)
-                {
-                    ShowMessageBox("", "출하수량이 출하가능량을 초과하였습니다.");
-                    MODEL_G1.SetValue(rowIndex, "LOTQTY", 0);
-                    return;
-                }
-
-                if (lotQty < carInQty)
-                {
-                    ShowMessageBox("", "적입량이 출하수량을 초과하였습니다.");
-                    MODEL_G1.SetValue(rowIndex, "CARINQTY", 0);
-                    return;
-                }
-
-                CALCUL_LOTUNIT(rowIndex);
-            }
-            else if (fieldName == "CARINQTY")
-            {
-                decimal lotQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "LOTQTY"));
-                decimal carInQty = Convert.ToDecimal(MODEL_G1.GetValue(rowIndex, "CARINQTY"));
-
-                if (lotQty < carInQty)
-                {
-                    ShowMessageBox("", "적입량이 출하수량을 초과하였습니다.");
-                    MODEL_G1.SetValue(rowIndex, "CARINQTY", 0);
-                    return;
-                }
-
-                CALCUL_LOTUNIT(rowIndex);
-            }
-            else if (fieldName == "ISCHECKED")
-            {
-                CALCUL_LOTUNIT(rowIndex);
+                CALCUL_TOTQTY();
             }
         }
 
-        // LOT 개수 계산
-        public void CALCUL_LOTUNIT(int rowIndex)
+        // 납품량 = Σ (BOX 단위 수량 x BOX 수량)
+        private decimal CALCUL_TOTQTY()
         {
-            decimal CARINQTY = MODEL_G1.GetDecimal(rowIndex, "CARINQTY");
-            decimal LOTQTY = MODEL_G1.GetDecimal(rowIndex, "LOTQTY");
-            decimal LOTUNIT = 0;
-            if (CARINQTY != 0)
+            decimal totQty = 0;
+            for (int i = 0; i < MODEL_G3.Rows.Count; i++)
             {
-                LOTUNIT = LOTQTY / CARINQTY;
+                decimal boxSum = MODEL_G3.GetDecimal(i, "BOXQTY") * MODEL_G3.GetDecimal(i, "BOXCNT");
+                MODEL_G3.SetValue(i, "BOXSUM", boxSum);
+                totQty += boxSum;
             }
-
-            if (CARINQTY != 0 && LOTQTY != 0)
-            {
-                MODEL_G1.SetValue(rowIndex, "LOTUNIT", LOTUNIT);
-            }
-            else
-            {
-                MODEL_G1.SetValue(rowIndex, "LOTUNIT", 0);
-            }
+            MODEL_A3.SetValue("TOTQTY", totQty);
+            return totQty;
         }
 
         public override void EventPageLoaded()
@@ -127,8 +92,10 @@ namespace TML1010
 
             MODEL_S1.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));
             MODEL_S1.SetValue("EDATE", DateTime.Now.AddMonths(1).AddDays(-DateTime.Now.Day).ToString("yyyy-MM-dd"));
+            MODEL_S1.SetValue("PRDDATE", DateTime.Now.ToString("yyyy-MM-dd"));
 
             PANEL_A1.Close();
+            PANEL_A3.Close();
         }
 
         public override void EventCommand(string commandName)
@@ -153,9 +120,90 @@ namespace TML1010
                 MODEL_G1.SetData(ds.Tables[0]);
                // (GRID_G1.View as TableView).BestFitColumns();
             }
-            // 납품 등록
-            else if (commandName == "ADD_MTRCUSTLOT") {
-                ShowMessageBox(commandName, MODEL_S1.GetValue("PRDDATE") + "일자로 납품등록을 진행 하시겠습니까??");
+            // 정보입력 팝업 열기 (발주 행의 [입력] 버튼)
+            else if (commandName == "POP_INPUT")
+            {
+                int rowIndex = MODEL_G1.CurrentIndex;
+                if (rowIndex < 0) return;
+
+                if (MODEL_S1.GetText("PRDDATE") == "")
+                {
+                    ShowMessageBox("", "출하일자를 입력하세요.");
+                    return;
+                }
+
+                MODEL_A3.InitData();
+                MODEL_A3.SetValue("MTRODRKEY", MODEL_G1.GetText(rowIndex, "MTRODRKEY"));
+                MODEL_A3.SetValue("MTRODRSEQ", MODEL_G1.GetText(rowIndex, "MTRODRSEQ"));
+                MODEL_A3.SetValue("ITEMNM", MODEL_G1.GetText(rowIndex, "ITEMNM"));
+                MODEL_A3.SetValue("ITEMSPEC", MODEL_G1.GetText(rowIndex, "ITEMSPEC"));
+                MODEL_A3.SetValue("ITEMCD", MODEL_G1.GetText(rowIndex, "ITEMCD"));
+                MODEL_A3.SetValue("CUSTNM", MODEL_G1.GetText(rowIndex, "CUSTNM"));
+                MODEL_A3.SetValue("OKQTY", MODEL_G1.GetDecimal(rowIndex, "OKQTY"));
+                MODEL_A3.SetValue("HEATNO", "");
+                MODEL_A3.SetValue("TOTQTY", 0);
+
+                MODEL_G3.InitData();
+                MODEL_G3.AddRow();
+
+                PANEL_A3.Show();
+            }
+            // BOX 행 추가
+            else if (commandName == "ADD_BOX")
+            {
+                MODEL_G3.AddRow();
+            }
+            // BOX 행 삭제
+            else if (commandName == "DEL_BOX")
+            {
+                MODEL_G3.DeleteCurrentModel();
+                CALCUL_TOTQTY();
+            }
+            // 정보입력 팝업 닫기
+            else if (commandName == "CLOSE_INPUT")
+            {
+                PANEL_A3.Close();
+            }
+            // 납품 등록 (정보입력 팝업 [확인])
+            else if (commandName == "ADD_MTRCUSTLOT")
+            {
+                int boxCount = 0;
+                for (int i = 0; i < MODEL_G3.Rows.Count; i++)
+                {
+                    decimal boxQty = MODEL_G3.GetDecimal(i, "BOXQTY");
+                    decimal boxCnt = MODEL_G3.GetDecimal(i, "BOXCNT");
+
+                    if (boxQty == 0 && boxCnt == 0) continue; // 빈 행은 건너뜀
+
+                    if (boxQty <= 0)
+                    {
+                        ShowMessageBox("", "BOX 단위 수량을 입력하세요. (행 : " + (i + 1) + ")");
+                        return;
+                    }
+                    if (boxCnt <= 0 || boxCnt != Math.Floor(boxCnt))
+                    {
+                        ShowMessageBox("", "BOX 수량을 1 이상의 정수로 입력하세요. (행 : " + (i + 1) + ")");
+                        return;
+                    }
+                    boxCount += (int)boxCnt;
+                }
+
+                if (boxCount == 0)
+                {
+                    ShowMessageBox("", "BOX 단위 수량과 BOX 수량을 입력하세요.");
+                    return;
+                }
+
+                decimal totQty = CALCUL_TOTQTY();
+                decimal okQty = 0;
+                decimal.TryParse(MODEL_A3.GetText("OKQTY"), out okQty);
+                if (totQty > okQty)
+                {
+                    ShowMessageBox("", "납품량(" + totQty.ToString("#,0") + ")이 미납량(" + okQty.ToString("#,0") + ")을 초과하였습니다.");
+                    return;
+                }
+
+                ShowMessageBox(commandName, MODEL_S1.GetText("PRDDATE") + " 일자로 BOX " + boxCount + "개, 총 " + totQty.ToString("#,0") + "개를 납품등록 하시겠습니까?");
                 return;
             }
 
@@ -239,30 +287,16 @@ namespace TML1010
             {
                 ItsMaria.Set("TML1010_R01", "ADD_MTRCUSTLOT");
                 ItsMaria.AddOne("PRDDATE", MODEL_S1.GetValue("PRDDATE"));
+                ItsMaria.AddOne("MTRODRKEY", MODEL_A3.GetText("MTRODRKEY"));
+                ItsMaria.AddOne("MTRODRSEQ", MODEL_A3.GetText("MTRODRSEQ"));
+                ItsMaria.AddOne("HEATNO", MODEL_A3.GetText("HEATNO").Trim());
 
-                for (int i = 0; i < MODEL_G1.Rows.Count; i++)
+                for (int i = 0; i < MODEL_G3.Rows.Count; i++)
                 {
-                    if (MODEL_G1.IsChecked(i))
-                    {
-                        if (MODEL_G1.GetDecimal(i, "LOTQTY") == 0)
-                        {
-                            ShowMessageBox("", "출하수량을 입력하세요. (행 : " + (i + 1) + ")");
-                            return;
-                        }
+                    if (MODEL_G3.GetDecimal(i, "BOXQTY") == 0 && MODEL_G3.GetDecimal(i, "BOXCNT") == 0) continue; // 빈 행
 
-                        if (MODEL_G1.GetDecimal(i, "CARINQTY") == 0)
-                        {
-                            ShowMessageBox("", "적입량을 입력하세요. (행 : " + (i + 1) + ")");
-                            return;
-                        }
-
-                        ItsMaria.AddList("MTRODRKEY_LIST", MODEL_G1.GetText(i, "MTRODRKEY"));
-                        ItsMaria.AddList("MTRODRSEQ_LIST", MODEL_G1.GetText(i, "MTRODRSEQ"));
-                        ItsMaria.AddList("ITEMID_LIST", MODEL_G1.GetText(i, "ITEMID"));
-                        ItsMaria.AddList("LOTQTY_LIST", MODEL_G1.GetText(i, "LOTQTY"));
-                        ItsMaria.AddList("CARINQTY_LIST", MODEL_G1.GetText(i, "CARINQTY"));
-                        ItsMaria.AddList("LOTUNIT_LIST", MODEL_G1.GetText(i, "LOTUNIT"));
-                    }
+                    ItsMaria.AddList("BOXQTY_LIST", MODEL_G3.GetDecimal(i, "BOXQTY"));
+                    ItsMaria.AddList("BOXCNT_LIST", MODEL_G3.GetDecimal(i, "BOXCNT"));
                 }
 
                 DataSet ds = ItsMaria.Call();
@@ -272,6 +306,8 @@ namespace TML1010
                     ShowMessageBox("", ItsMaria.ErrMessage);
                     return;
                 }
+
+                PANEL_A3.Close();
 
                 MODEL_A1.SetValue("INVOICEKEY", ds.Tables[0].Rows[0]["INVOICEKEY"]);
                 MODEL_A1.SetValue("OUTDATE", ds.Tables[0].Rows[0]["PRDDATE"]);

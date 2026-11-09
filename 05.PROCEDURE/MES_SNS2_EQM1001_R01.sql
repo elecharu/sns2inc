@@ -1,10 +1,11 @@
-﻿CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R01`(
+CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R01`(
 -- *****************************************************************************
 -- Comment: 설비이력관리 
 -- Create: 	2025-06-24  	생성 			이대규
 -- Modify: 	2026-09-16 		마이그레이션	한성수
 -- 			2026-09-16 					한성수	MSTEQM.FANO(설비코드) 컬럼 바인딩 변경 및 구분선/코드 정렬
 -- 			2026-10-06 					한성수	작업자 검색·이력 누락 보완, 수리유형 등 입력값 검증 및 부품 미사용 정리
+-- 			2026-11-09 					한성수	수리이력 사진(EQMREP_IMG) 조회·등록·삭제 추가, 수리이력 삭제 시 사진 등록 함께 삭제
 -- *****************************************************************************
   IN $SDATE            VARCHAR(10),     -- 조회 시작일자
   IN $EDATE            VARCHAR(10),     -- 조회 종료일자
@@ -26,6 +27,7 @@
   IN $MALFUNCTION      VARCHAR(1000),   -- 고장내용
   IN $HANDLE           VARCHAR(1000),   -- 조치내용
   IN $REMARK           VARCHAR(100),    -- 비고
+  IN $FILEKEY          VARCHAR(100),    -- 사진 파일키
 
   IN $EMPCD_LIST       MEDIUMTEXT,
   IN $EQMREPKEY_LIST   MEDIUMTEXT,
@@ -370,6 +372,7 @@ WHEN 'DELETE_EQMREP' THEN  -- 설비이력 삭제
   WHILE LENGTH($EQMREPKEY_LIST) > 0 DO
     CALL COMSPLIT($EQMREPKEY_LIST, _$EQMREPKEY);
     DELETE FROM EQMREP_EMP WHERE EQMREPKEY = _$EQMREPKEY;
+    DELETE FROM EQMREP_IMG WHERE EQMREPKEY = _$EQMREPKEY;
     DELETE FROM EQMREP     WHERE EQMREPKEY = _$EQMREPKEY;
   END WHILE;
 
@@ -408,6 +411,43 @@ WHEN 'DELETE_EMPCD' THEN  -- 작업자 사원 행삭제
 
     DELETE FROM EQMREP_EMP WHERE EQMREPKEY = $EQMREPKEY AND EMPCD = _$EMPCD;
   END WHILE;
+
+-- *****************************************************************************
+WHEN 'LIST_EQMREP_IMG' THEN  -- 수리이력 사진 조회
+  SELECT
+    EQMREP_IMG.FILEKEY,
+    FILEURL(EQMREP_IMG.FILEKEY) AS FILEURL
+  FROM EQMREP_IMG
+  WHERE EQMREP_IMG.EQMREPKEY = $EQMREPKEY
+  ORDER BY EQMREP_IMG.RTIME, EQMREP_IMG.FILEKEY;
+
+-- *****************************************************************************
+WHEN 'ADD_EQMREP_IMG' THEN  -- 수리이력 사진 등록 (업로드한 파일키 연결)
+  IF NOT EXISTS (SELECT 1 FROM EQMREP WHERE EQMREPKEY = $EQMREPKEY AND EQMREPTP = 'EQM01' LIMIT 1) THEN
+    CALL COMERR('수리이력을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+  IF TRIM(IFNULL($FILEKEY, '')) = '' THEN
+    CALL COMERR('사진을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  INSERT INTO EQMREP_IMG (
+    EQMREPKEY, FILEKEY,
+    RTIME, REMP, RPRG
+  ) VALUES (
+    $EQMREPKEY, $FILEKEY,
+    CALLTIME(), CALLEMP(), CALLPRG()
+  );
+
+-- *****************************************************************************
+WHEN 'DELETE_EQMREP_IMG' THEN  -- 수리이력 사진 삭제 (파일은 화면에서 삭제)
+  IF NOT EXISTS (SELECT 1 FROM EQMREP_IMG WHERE EQMREPKEY = $EQMREPKEY AND FILEKEY = $FILEKEY LIMIT 1) THEN
+    CALL COMERR('사진을 다시 조회한 후 삭제하세요.');
+    LEAVE PROC;
+  END IF;
+
+  DELETE FROM EQMREP_IMG WHERE EQMREPKEY = $EQMREPKEY AND FILEKEY = $FILEKEY;
 
 -- *****************************************************************************
 END CASE; 

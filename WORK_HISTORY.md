@@ -139,6 +139,71 @@
 - **검증 결과**: 인코딩(BOM 없음+CRLF) 확인. 미확인: 프로시저 서버 반영 후 실데이터
 - **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
 
+### 10. EQM1001_R03 점검계획 REV 처리를 정기점검(CHKTP '02')으로 한정
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql)
+- **배경 및 원인**: MSTEQMREV_HEADER에는 일상점검(CHKTP '01', TAL0001_R05에서 조회) REV도 같은 PLANTP·PLANCD로 저장될 수 있는데, R03은 REV를 찾을 때 점검구분 조건이 없어 일상점검 REV를 정기점검 REV로 잡을 수 있음. 정기점검 화면 전체 점검 결과 중 사용자가 지정한 항목만 수정 (목록·항목 조회 LIST_MSTEQM_GRP·LIST_GRP_EQM02·LIST_MSTEQM·LIST_EQM02·복사 목록, CALL_PLAN_RPT, R05 LIST_PLAN은 이번에 수정하지 않음)
+- **작업 상세 내용**:
+  - 1. 공통 검증 수정 대상 REV: `CHKTP = '02'` 최신 REV
+  - 2. 복사 원본 REV(_$COPYREVCD): `CHKTP = '02'` 최신 REV
+  - 3. LIST_PLAN_REV(REV 이력): `CHKTP = '02'`만 조회
+  - 4. SAVE_PLAN_REV(개정내용 저장)·SAVE_PLAN_STATUS(승인): 존재 확인과 대상 최신 REV 모두 `CHKTP = '02'`
+  - 5. 새 REV 번호: 고유키 UX_MSTEQMREV_HEADER_REV(PLANTP, PLANCD, REVNUM)에 CHKTP가 없어 일상점검과 번호를 함께 쓰므로, 정기점검 최신 REV + 1 대신 점검구분 무관 최대 REVNUM + 1(_$NEXTREVNUM). 일상점검 REV가 사이에 있으면 정기점검 번호가 건너뛸 수 있음
+  - 6. 화면 연동 확인: 저장·승인에 넘기는 REVNUM은 REV 이력 그리드(LIST_PLAN_REV) 최신 행 값이라 수정 후에도 같은 기준. LIST_PLAN_REV_ITEM은 REVNUM이 대상별 고유라 그대로 동작
+- **검증 결과**: IF/END IF 41/41 짝, 인코딩(BOM 없음+CRLF) 확인. 이 저장소에는 CHKTP '01' REV를 만드는 화면이 없어 실데이터 존재 여부 미확인. 미확인: 프로시저 서버 반영·화면 동작
+- **남은 항목**: 목록 조회(설비그룹·설비 최신 REV 표시, 항목·미등록 항목·복사 목록), 계획서 출력(CALL_PLAN_RPT), R05 승인관리 LIST_PLAN은 아직 점검구분 조건 없음. 고유키에 CHKTP를 넣으면(B안) 점검구분별 번호 분리 가능
+- **적용 순서**: MES_SNS2_EQM1001_R03.sql 서버 저장 (파라미터 변경 없음)
+
+### 11. EQM1001_R03 정기점검 주기관리 월별 점검계획 레포트(R03B) 출력 추가
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [04.Report/PAGEEQM/EQM1001/R03B.cs](04.Report/PAGEEQM/EQM1001/R03B.cs), [04.Report/PAGEEQM/EQM1001/R03B.Designer.cs](04.Report/PAGEEQM/EQM1001/R03B.Designer.cs), [04.Report/PAGEEQM/EQM1001/R03B.resx](04.Report/PAGEEQM/EQM1001/R03B.resx), [04.Report/PAGEEQM/EQM1001/EQM1001.csproj](04.Report/PAGEEQM/EQM1001/EQM1001.csproj), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
+- **배경 및 원인**: 정기점검 주기관리 탭 저장·삭제 버튼 줄 맨 오른쪽에 "월별점검계획 레포트 출력" 버튼을 두고, 사용자가 첨부한 엑셀 "월별 점검 계획" 양식으로 출력 요청. 점검자가 배정된 월만 표시
+- **작업 상세 내용**:
+  - 1. 화면: div_CYCLE_EQM에 btn_CYCLE_RPT(폭 170, Float right, MarginRight 10) 추가, 클릭 시 조회년도(cmb_SYEAR)·설비 검색값(find1)을 `ItsXtraRpt('EQM1001_R03B')`로 전달 (조회 그리드와 같은 조건)
+  - 2. 프로시저 CALL_CYCLE_RPT 분기 추가 (입력 파라미터 추가 없음 → SYSTEM_PARAMETERS 변경 없음)
+    - CHKPLANEQM_YEARPLAN(정기점검 '02', 조회년도)의 MONTH_01~12를 1~12월 행으로 펼쳐 점검자 지정 월만 출력, 사용 설비(USEYN 'Y')만
+    - 컬럼: 구분(순번)·라인명(MSTLINE)·공정구분(FM100)·대분류(FM113)·중분류(FM114)·소분류(FM115)·설비명·모델명/규격(EQMNM_DETAIL)·점검예정일(YY.MM)·점검실시일(해당 월 정기점검 실적 첫 점검일 YY.MM.DD)·점검자(MSTEMP 사원명, 없으면 사원코드)
+    - 정렬: 월 → 라인 → 공정구분 → 대·중·소분류 → 설비코드
+  - 3. 레포트 R03B (A4 세로, 여백 30, 폭 767): 제목 "월별 점검 계획"(연보라 배경)과 컬럼 헤더를 PageHeader에 두어 페이지마다 반복, Detail 1행 25px, 점검예정 월별 행 배경색 12색(첨부 양식 색상 기준)
+- **검증 결과**: MSBuild 15.0 Release 빌드 성공(0 Error, 기존 R0602 경고 1건), exe 01.Office/Reports·04.Report/bin 배포(MD5 일치). 기본 생성자 + 샘플 60행으로 PNG 출력해 제목·헤더·월별 배경색·컬럼 배치 확인(2페이지). IF 42/42 짝, 인코딩(sql BOM 없음+CRLF, cs·resx·aspx BOM+CRLF, js 기존 BOM 없음+CRLF 유지) 확인. 미확인: 프로시저 서버 반영 후 실데이터·화면 버튼 동작, VS 디자이너 열기
+- **적용 순서**: MES_SNS2_EQM1001_R03.sql 서버 저장 (파라미터 변경 없음)
+
+### 12. EQM1001_R03 월별 점검계획 레포트(R03B) 행 한 줄 고정 표시
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03B.Designer.cs](04.Report/PAGEEQM/EQM1001/R03B.Designer.cs), [04.Report/PAGEEQM/EQM1001/R03B.cs](04.Report/PAGEEQM/EQM1001/R03B.cs), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
+- **배경 및 원인**: 첨부 엑셀처럼 한 행씩 한 줄로 끊어서 표시 요청. 기존 셀은 줄바꿈(WordWrap)·자동 높이(CanGrow)라 긴 설비명·모델명은 행이 여러 줄로 늘어남
+- **작업 상세 내용**:
+  - 1. Detail 셀 11개 CanGrow false·WordWrap false → 모든 행 높이 25 고정, 한 줄 표시
+  - 2. Detail_BeforePrint에서 칸 폭보다 긴 글자는 글자 크기를 0.5pt 단위로 줄여 한 줄에 맞춤(기본 8.5pt, 최소 6pt). 6pt로도 넘치면 칸 끝에서 잘림
+- **검증 결과**: MSBuild 15.0 Release 빌드 성공(0 Error, 기존 경고 1건), exe 01.Office/Reports·04.Report/bin 배포(MD5 일치). 긴 설비명·모델명 샘플 60행 PNG 출력에서 모든 행 한 줄·같은 높이, 긴 글자 축소 표시 확인. 미확인: 실데이터·VS 디자이너 열기
+- **적용 순서**: 프로시저 변경 없음 (11번의 R03.sql 서버 저장만 필요)
+
+### 13. EQM1001_R01 설비수리이력 사진 미리보기·등록 영역 추가
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js), [05.Procedure/MES_SNS2_EQM1001_R01.sql](05.Procedure/MES_SNS2_EQM1001_R01.sql), [05.Procedure/MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql), [06.Table/MES_SNS2_EQMREP_IMG.sql](06.Table/MES_SNS2_EQMREP_IMG.sql)
+- **배경 및 원인**: 오른쪽 작업자 그리드는 그대로 두고 아래에 이미지 미리보기·파일등록 영역 추가 요청. 공통 컴포넌트(ItsFileManager 업로드·삭제, ItsImage 미리보기)를 쓰고, 수리 1건에 여러 장(EQM1001_R06 방식: 선택 즉시 업로드 → 파일키 등록, ✕ 삭제)으로 구성. 크게 보기 팝업은 MST0001_R04 pop2 방식
+- **작업 상세 내용**:
+  - 1. 테이블 EQMREP_IMG 신규(EQMREPKEY·FILEKEY PK, 등록 감사 컬럼). 파일 실체·경로는 공통 COMFILE, URL은 공통 함수 FILEURL()
+  - 2. 프로시저 EQM1001_R01
+    - IN `$FILEKEY VARCHAR(100)` 추가(21번, 전체 41개) → SYSTEM_PARAMETERS 재등록 스크립트 추가
+    - LIST_EQMREP_IMG(FILEKEY·FILEURL, 등록순), ADD_EQMREP_IMG(수리이력 존재·파일키 확인 후 등록), DELETE_EQMREP_IMG(등록 확인 후 삭제)
+    - DELETE_EQMREP: 수리이력 삭제 시 EQMREP_IMG도 삭제
+    - BOM 제거, LF → CRLF (encoding.md: 수정 시점에 BOM 제거)
+  - 3. 화면 배치: 좌우 비율 80:20 → 70:30, 오른쪽을 위(35%: 기존 행추가·행삭제 버튼 + 작업자 그리드) / 아래(■ 수리 사진 (개수) + 사진 등록 버튼, 큰 미리보기 + 순번 표시, 썸네일 줄)로 분할. 공통 ItsFileManager(이미지 전용)는 숨기고 "사진 등록" 버튼이 파일 선택창을 염
+  - 4. 동작: 수리이력 선택 시 작업자와 사진 함께 조회, 첫 사진 미리보기 / 썸네일 클릭 시 미리보기 변경 / 사진 선택 즉시 업로드 → 등록(등록 실패 시 업로드 파일 삭제) / ✕ → 확인 후 등록 삭제 → 파일 삭제 / 미리보기 클릭 → 크게 보기 팝업(pop_REPIMG) / 수리이력 삭제 시 사진 파일도 삭제
+- **검증 결과**: JS 구문 검사 통과, IF 38/38·WHILE 5/5 짝, 파라미터 41개(FILEKEY 21번), 인코딩(aspx·js BOM+CRLF, 프로시저 BOM 없음+CRLF, 테이블 BOM+CRLF) 확인. 실제 페이지 CSS로 만든 정적 모형에서 사진 3장·0장 화면 배치 확인. 미확인: 테이블 생성·프로시저 서버 반영 후 실제 업로드·삭제(공통 업로드는 localhost에서 막혀 있어 서버 주소로 확인 필요), 분할 영역 실제 높이
+- **적용 순서**: MES_SNS2_EQMREP_IMG.sql 테이블 생성 → MES_SNS2_EQM1001_R01.sql 프로시저 저장 → MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql 실행(41건)
+
+### 14. EQM1001_R01 사진 영역 공통 파일선택 숨김·빈 미리보기 안내, 공통 업로드 localhost 차단 임시 해제
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js), [01.Office/UserControl/ItsFileManager.js](01.Office/UserControl/ItsFileManager.js) (**공통, 임시**)
+- **배경 및 원인**: 
+  - 사진 영역 가운데에 공통 ItsFileManager의 "선택"(파일 선택)·"삭제"(선택 비우기, 등록 사진 삭제 아님) 버튼이 보임. 공통 컨트롤 ascx에서 StyleType simple일 때 style 속성 따옴표가 `text-align:center;"`에서 먼저 닫혀 뒤의 Hidden(display:none)이 style 밖으로 나가 숨김이 적용되지 않음
+  - 사진이 없을 때 공통 기본 이미지(UploadFiles/404IMAGE.jpg)가 로컬에 없어 깨진 이미지 아이콘 표시
+  - 로컬 미리보기 테스트를 위해 공통 업로드 localhost 차단 임시 해제 요청 (사용자 지시)
+- **작업 상세 내용**:
+  - 1. R01: fileManager Hidden 속성 제거, 페이지 CSS `#file_REPIMG { display:none !important; }`로 숨김 (공통 ascx 수정 없음). "사진 등록" 버튼이 숨긴 파일선택을 여는 동작은 그대로
+  - 2. R01: 사진이 없으면 미리보기 칸에 기본 이미지 대신 안내 문구(수리이력 미선택: "수리이력을 선택하면 사진이 표시됩니다." / 사진 없음: "등록된 사진이 없습니다. [사진 등록]으로 추가하세요."), 썸네일 줄 하단 안내 문구 제거
+  - 3. ItsFileManager.js: $upload·UploadNM·$delete 3곳의 localhost 차단 if 블록을 `[TEMP 2026-11-09 ...]` 표시와 함께 주석 처리
+- **검증 결과**: JS 구문 검사(R01·ItsFileManager) 통과, 인코딩(BOM+CRLF) 유지. 미확인: 로컬 실제 업로드·미리보기
+- **주의**: 로컬 업로드 파일은 로컬 01.Office/UploadFiles에 저장되지만 COMFILE·EQMREP_IMG 기록은 연결된 DB에 남음(다른 PC·서버에서는 파일 없음). 테스트 후 등록 사진 삭제
+- **현재 상태**: 사용자가 원복한 뒤 로컬 테스트를 위해 다시 주석 처리(3곳). 테스트 후 원복 필요 (`git checkout -- 01.Office/UserControl/ItsFileManager.js` 또는 TEMP 표시 3곳 주석 해제)
+
 ---
 
 ## 🕒 2026-11-06 (금) 작업 내역

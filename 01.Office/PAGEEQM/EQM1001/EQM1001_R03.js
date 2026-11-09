@@ -1294,6 +1294,22 @@ ItsButton.Event('btn_GRP_PLAN_RPT').onClick = function () { PrintPlanRev('G'); }
 ItsButton.Event('btn_EQM_APPROVE').onClick = function () { SavePlanStatus('E'); };
 ItsButton.Event('btn_EQM_PLAN_RPT').onClick = function () { PrintPlanRev('E'); };
 
+// 2026-11-09 정기점검 주기관리 탭: 조회년도·설비 조건의 월별 점검계획 출력 (점검자가 배정된 월만)
+ItsButton.Event('btn_CYCLE_RPT').onClick = function () {
+    var year = ItsCombo.GetValue('cmb_SYEAR');
+    if (!year) {
+        ItsMsg.Toast('조회년도를 지정해주세요.');
+        return;
+    }
+    var rpt = new ItsXtraRpt('EQM1001_R03B');
+    rpt.AddParam('SYEAR', year);
+    rpt.AddParam('FANO', (ItsFind.GetValue('find1') || '').trim());
+    rpt.CallPop();
+    if (rpt.isError) {
+        ItsMsg.Alert(rpt.errMessage);
+    }
+};
+
 // 2026-10-08 정기점검 변경 대상의 최신 REV 전달 [동시성 문제 해결]
 // 다른 사용자가 수정·저장 중에 최신 REV가 변경되었을 경우를 방지, 실행 직전에 다시 조회하여 해결
 function SetPlanRevParam(maria, planTp) {

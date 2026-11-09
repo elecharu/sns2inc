@@ -4,6 +4,22 @@
 <%-- HEAD --%>
 <asp:Content ContentPlaceHolderID="CPH_HEAD" runat="Server">
     <script type="text/javascript" src="EQM1001_R01.js?ver=<%= BasePage.srcVersion %>"></script>
+    <style>
+        .repimg-box { display: flex; flex-direction: column; height: 100%; padding: 6px 8px 0 8px; box-sizing: border-box; white-space: normal; }
+        .repimg-view { position: relative; flex: 1; min-height: 0; border: 1px dashed #bbb; border-radius: 4px; background: #fafafa; }
+        .repimg-view > div { width: 100% !important; height: 100% !important; line-height: normal !important; display: flex; align-items: center; justify-content: center; }
+        .repimg-view img { cursor: zoom-in; }
+        .repimg-page { display: none; position: absolute; top: 6px; left: 8px; z-index: 1; padding: 1px 6px; border-radius: 3px; background: #e6f1fb; color: #0c447c; font-size: 11px; }
+        .repimg-list { display: flex; gap: 12px; flex: 0 0 auto; height: 66px; padding: 4px 4px 0 2px; overflow-x: auto; overflow-y: hidden; box-sizing: border-box; }
+        .repimg-thumb { position: relative; flex: 0 0 auto; width: 46px; height: 46px; margin-top: 6px; border: 1px solid #bbb; border-radius: 3px; background: #fff; cursor: pointer; box-sizing: border-box; }
+        .repimg-thumb img { width: 100%; height: 100%; object-fit: cover; border-radius: 2px; }
+        .repimg-thumb.on { border: 2px solid #378add; }
+        .repimg-del { position: absolute; top: -7px; right: -7px; width: 16px; height: 16px; line-height: 14px; border: 1px solid #bbb; border-radius: 50%; background: #fff; color: #d32f2f; font-size: 11px; text-align: center; cursor: pointer; }
+        .repimg-empty { display: none; position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); color: #999; font-size: 13px; text-align: center; }
+        .repimg-view.empty > div { display: none !important; }
+        .repimg-view.empty .repimg-empty { display: block; }
+        #file_REPIMG { display: none !important; }
+    </style>
 </asp:Content>
 
 <%-- SEARCH PANEL --%>
@@ -17,16 +33,47 @@
 
 <%-- BODY --%>
 <asp:Content ContentPlaceHolderID="CPH_BODY" runat="Server">
-     <Its:div runat="server" Type="SplitLeft" ID="bdiv1" LeftWidthPc ="80">
+     <Its:div runat="server" Type="SplitLeft" ID="bdiv1" LeftWidthPc ="70">
         <Its:grid runat="server" ID="grid1"/>
     </Its:div>
     <Its:split runat="server" Type="Vertical" />
-    <Its:div runat="server" Type="SplitRight" ID="bdiv2"  >       
-            <Its:button runat="server" Label="행추가" ID="bdiv2_btn_ADD" MarginLeft="50" BackColor="CustomButton2" />
-            <Its:button runat="server" Label="행삭제" ID="bdiv2_btn_DEL" MarginLeft="10" BackColor="CustomButton3" />
-            <Its:text runat="server" Label="설비수리키" ID="bdiv2_txt_EQMREPKEY" Field="EQMREPKEY" Hidden="true" />
-            <Its:newline runat="server" />
-        <Its:grid runat="server" ID="grid2"/>
+    <Its:div runat="server" Type="SplitRight" ID="bdiv2"  >
+        <Its:div runat="server" Type="SplitTop" TopHeightPc="35">
+            <Its:div runat="server" Type="SplitTop">
+                <Its:button runat="server" Label="행추가" ID="bdiv2_btn_ADD" MarginLeft="50" BackColor="CustomButton2" />
+                <Its:button runat="server" Label="행삭제" ID="bdiv2_btn_DEL" MarginLeft="10" BackColor="CustomButton3" />
+                <Its:text runat="server" Label="설비수리키" ID="bdiv2_txt_EQMREPKEY" Field="EQMREPKEY" Hidden="true" />
+            </Its:div>
+
+            <Its:split runat="server" Type="Horizon" Resizeable="false" />
+
+            <Its:div runat="server" Type="SplitDown">
+                <Its:grid runat="server" ID="grid2"/>
+            </Its:div>
+        </Its:div>
+
+        <Its:split runat="server" Type="Horizon" />
+
+        <Its:div runat="server" Type="SplitDown">
+            <Its:div runat="server" Type="SplitTop">
+                <Its:label runat="server" Text="■ 수리 사진 (0)" Bold="true" MarginLeft="10" ID="lbl_REPIMG" />
+                <Its:button runat="server" Label="사진 등록" ID="btn_REPIMG_ADD" Float="right" MarginRight="10" BackColor="CustomButton2" />
+                <Its:fileManager runat="server" StyleType="simple" FileType="image" ID="file_REPIMG" />
+            </Its:div>
+
+            <Its:split runat="server" Type="Horizon" Resizeable="false" />
+
+            <Its:div runat="server" Type="SplitDown">
+                <div class="repimg-box">
+                    <div class="repimg-view empty">
+                        <span id="spn_REPIMG_PAGE" class="repimg-page"></span>
+                        <span id="spn_REPIMG_EMPTY" class="repimg-empty"></span>
+                        <Its:img runat="server" ID="img_REPIMG" Width="300" Height="200" />
+                    </div>
+                    <div id="div_REPIMG_LIST" class="repimg-list"></div>
+                </div>
+            </Its:div>
+        </Its:div>
     </Its:div>
 
 
@@ -71,5 +118,11 @@
             <Its:grid runat="server" ID="grid3"/>
         </Its:div>
 
+    </Its:pop>
+
+    <Its:pop runat="server" ID="pop_REPIMG" Title="수리 사진 크게 보기" Width="650">
+        <Its:div runat="server" Type="BorderBlock">
+            <Its:img runat="server" ID="big_img_REPIMG" Height="600" Width="600" />
+        </Its:div>
     </Its:pop>
 </asp:Content>

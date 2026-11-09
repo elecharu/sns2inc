@@ -124,6 +124,7 @@
                 <Its:button runat="server" Label="일괄 주기설정" ID="btn_OPEN_CYCLE_BATCH" Width="100" MarginLeft="25" MarginTop="6" BackColor="CustomButton2" />
                 <Its:button runat="server" Label="저장" ID="div_SAVE_CYCLE_EQM" MarginLeft="25" MarginTop="6" BackColor="CustomButton" />
                 <Its:button runat="server" Label="삭제" ID="div_DEL_CYCLE_EQM" MarginLeft="10" MarginTop="6" BackColor="CustomButton3" />
+                <Its:button runat="server" Label="레포트 출력" ID="btn_CYCLE_RPT" Width="170" Float="right" MarginRight="10" MarginTop="6" BackColor="CustomButton2" />
             </Its:div>
             
             <Its:split runat="server" Type="Horizon" Resizeable="false"/>                

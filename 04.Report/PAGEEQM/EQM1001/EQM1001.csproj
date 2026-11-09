@@ -214,6 +214,12 @@
     <Compile Include="R03.Designer.cs">
       <DependentUpon>R03.cs</DependentUpon>
     </Compile>
+    <Compile Include="R03B.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="R03B.Designer.cs">
+      <DependentUpon>R03B.cs</DependentUpon>
+    </Compile>
     <Compile Include="R0601.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -258,6 +264,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="R03.resx">
       <DependentUpon>R03.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="R03B.resx">
+      <DependentUpon>R03B.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="S04A.resx">
       <DependentUpon>S04A.cs</DependentUpon>
