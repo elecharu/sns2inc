@@ -51,11 +51,13 @@ ItsPage.Load = function () {
         column.create('적용 REV', 'REVNM', { width: 90, align: 'center', readOnly: true }),
         column.create('계획구분키', 'PLANTP', { hidden: true }),
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
-        column.create('점검명', 'CHKKNDNM', { width: 290, readOnly: true }),
+        column.create('점검명', 'CHKKNDNM', { width: 250, readOnly: true }),
         column.create('점검항목', 'CHKLOC', { width: 110, columnType: enumColumnTypes.combo, gpcd: "CHKLOC", readOnly: true }),
         column.create('점검방법', 'CHKMTH', { width: 80, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', readOnly: true }),
         column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', readOnly: true }),
         column.create('점검값', 'CHKVALUE', { width: 80, readOnly: false }),
+        // 2026-11-09 [정기점검 등록·수정 팝업] 점검항목별 특이사항 입력
+        column.create('특이사항', 'REMARK', { width: 230, readOnly: false }),
         column.split()
     ]);
 
@@ -64,11 +66,13 @@ ItsPage.Load = function () {
         column.create('적용 REV', 'REVNM', { width: 90, align: 'center', readOnly: true }),
         column.create('계획구분키', 'PLANTP', { hidden: true }),
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
-        column.create('점검명', 'CHKKNDNM', { width: 290, readOnly: true }),
+        column.create('점검명', 'CHKKNDNM', { width: 250, readOnly: true }),
         column.create('점검항목', 'CHKLOC', { width: 110, columnType: enumColumnTypes.combo, gpcd: "CHKLOC", readOnly: true }),
         column.create('점검방법', 'CHKMTH', { width: 80, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', readOnly: true }),
         column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', readOnly: true }),
         column.create('점검값', 'CHKVALUE', { width: 80, readOnly: false }),
+        // 2026-11-09 [정기점검 등록·수정 팝업] 점검항목별 특이사항 입력
+        column.create('특이사항', 'REMARK', { width: 230, readOnly: false }),
         column.split()
     ]);
 
@@ -209,6 +213,7 @@ ItsPop.Event('pop1').onAddBtnClick = function () {
         maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid2', i, 'CHKKNDCD'));
         maria.AddList('PLANTP_LIST', ItsGrid.GetValue('grid2', i, 'PLANTP'));
         maria.AddList('CHKVALUE_LIST', ItsGrid.GetValue('grid2', i, 'CHKVALUE'));
+        maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid2', i, 'REMARK'));
     }
 
     maria.CallProc();
@@ -242,6 +247,7 @@ ItsPop.Event('pop2').onAddBtnClick = function () {
         maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid3', i, 'CHKKNDCD'));
         maria.AddList('PLANTP_LIST', ItsGrid.GetValue('grid3', i, 'PLANTP'));
         maria.AddList('CHKVALUE_LIST', ItsGrid.GetValue('grid3', i, 'CHKVALUE'));
+        maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid3', i, 'REMARK'));
     }
 
     maria.CallProc();

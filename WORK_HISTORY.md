@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-11-06
+> **최종 갱신일**: 2026-11-09
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -13,6 +13,131 @@
 2. **주석 및 네이밍 표준**: 소스코드에는 `// YYYY-MM-DD 기능설명` 표준을 준수하며, 본 문서에는 원인 분석, 설계 의도, 수정 파일 링크를 명시합니다.
 3. **컴파일 및 빌드 검증**: 소스 수정 후에는 반드시 컴파일 빌드 무결성(MSBuild 등)을 확인하고 그 결과를 기재합니다.
 4. **대화 기록 및 불러오기 연계**: 모든 사용자 요청 및 작업 결과는 본 문서에 실시간 동기화되어, 새 세션이나 나중에 작업 재개 시 "불러오기"를 통해 이전 맥락을 100% 이어받습니다.
+
+---
+
+## 🕒 2026-11-09 (월) 작업 내역
+
+### 1. EQM1001_R04 정기점검 등록·수정 팝업 특이사항 입력 및 상단 입력칸 정렬
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_R04.js](01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [05.Procedure/MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql), [05.Procedure/MES_SNS2_EQM1001_R04_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_R04_SYSTEM_PARAMETERS.sql)
+- **배경 및 원인**: 등록(pop1)·수정(pop2) 팝업 점검값 옆에 특이사항 입력·수정 요청. 상단 입력칸은 라벨 90·입력폭 제각각(1행 끝 852px, 2행 끝 878px, 가운데 칸 시작도 어긋남)이라 정렬 요청
+- **작업 상세 내용**:
+  - 1. grid2·grid3: 점검값 다음에 특이사항(REMARK, 폭 230, 입력 가능) 추가, 점검명 폭 290 → 250 (컬럼 합계 1010 + 행번호·끝 칸 약 59 = 팝업 내용폭 1080 이내)
+  - 2. 저장: 등록(ADD_CHKRSTEQM)·수정(SAVE_CHKRSTEQM) 모두 `REMARK_LIST` 전달
+  - 3. 프로시저 EQM1001_R04
+    - IN `$REMARK_LIST MEDIUMTEXT` 추가(14번), 변수 `_$REMARK VARCHAR(1000)` (CHKRSTEQMKND.REMARK 컬럼 길이)
+    - LIST_PLAN_EQM02: 신규 등록 특이사항 기본값 = 계획 항목 특이사항(PLAN_ITEM.REMARK), 수정 가능 (3번 작업에서 변경, 최초 빈 값)
+    - ADD_CHKRSTEQM: CHKRSTEQMKND INSERT에 REMARK 저장
+    - SEARCH_CHKRSTEQM: 항목 조회에 RST_ITEM.REMARK 추가
+    - SAVE_CHKRSTEQM: UPDATE에 REMARK 반영
+    - 등록·수정 모두 항목 수와 특이사항 목록 수가 다르면 기존 안내로 저장 취소
+    - BOM 제거(UTF-8 without BOM)
+  - 4. 팝업 배치 (pop1·pop2 동일)
+    - 팝업 Width 900 → 1100, Height 350 → 420 (문제점·조치사항 줄 분리로 상단 약 60px 증가)
+    - 모든 라벨 폭 70 → 입력 시작선 74px 통일
+    - 1행 설비코드·점검일자·점검자 3칸 각 358px 간격, 입력 영역 폭 284 (설비코드·점검자 찾기: 코드 90 + 이름 175, 점검일자 InputWidth 284)
+    - 문제점·조치사항: 한 줄씩 전체폭 1000 → 입력 끝선 1074px 통일
+    - pop2 점검삭제 버튼 MarginRight 6 → 오른쪽 끝 1074px
+  - 5. SYSTEM_PARAMETERS 재등록 스크립트 추가 (정상 16건)
+- **검증 결과**: 실제 bootstrap·ItsFind·ItsDate·ItsTextArea·ItsButton CSS로 만든 모형에서 기존 배치가 캡처와 일치(설비코드 입력 시작 94px, 점검자 끝 852px)하는 것을 확인한 뒤 새 배치 측정: 모든 입력 시작 74px·끝 1074px, 1행 3칸 시작 74/432/790px, 점검삭제 오른쪽 1074px, 가로 스크롤 없음. JS 구문 검사, IF 24/24·WHILE 2/2 짝, 인코딩(aspx·js BOM+CRLF, sql BOM 없음+CRLF) 확인. 미확인: 프로시저 서버 반영·실제 화면 저장·그리드 가로 스크롤
+- **적용 순서**: MES_SNS2_EQM1001_R04.sql 프로시저 서버 저장 → MES_SNS2_EQM1001_R04_SYSTEM_PARAMETERS.sql 실행
+- **연동**: 저장한 특이사항은 EQM1001_S04 설비점검항목 그리드와 점검시트 출력(S04A) 특이사항에 표시
+
+### 2. EQM1001_R04 정기점검 현황에 승인 계획 없는 주기관리 설비 표시
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql)
+- **배경 및 원인**: R03 정기점검 주기관리에서 A-001·A-002 등에 점검자를 지정했는데 R04 현황에 나오지 않음. R03 주기관리(LIST_CYCLE_EQMCD)는 사용 중인 전체 설비를 보여주지만, R04 현황은 승인된 최신 REV에 항목이 있는 설비(또는 실적 있는 설비)만 표시하고 '점검필요'도 승인 계획이 있을 때만 표시함. 사용자 확인: 승인 리비전만 보이는 것은 의도된 설계가 아님. 승인본 CTE가 점검구분(CHKTP)을 구분하지 않아 일상점검('01') REV가 최신이면 정기점검 승인본이 가려질 수 있는 문제도 함께 발견
+- **작업 상세 내용**:
+  - 1. LIST_CYCLE_EQMCD 조회 대상: 사용 설비 중 승인 계획 있음 OR 해당 연도 실적 있음 OR **주기관리 점검자가 1개월 이상 지정된 설비**
+  - 2. 월 상태: 실적 있으면 '점검완료', 주기관리 점검자 지정 월이면 승인 여부와 무관하게 '점검필요'
+  - 3. APPROVED_PLAN: 승인(APRVSTT 'A') 정기점검(CHKTP '02') REV만 대상
+  - 4. 승인 계획 없는 설비의 '점검필요' 클릭 → LIST_PLAN_EQM02에서 "승인된 정기점검 계획이 없습니다. 설비그룹·설비별 점검계획을 승인한 후 등록해주세요." 안내, 등록 팝업 열지 않음 (JS 기존 흐름 그대로)
+- **검증 결과**: 12개월 조건 치환 12건 확인, IF 24/24 짝, 인코딩(BOM 없음+CRLF) 확인. DB 읽기 조회는 접속정보 복호화가 필요해 진행하지 못함(A-001·A-002 계획 상태 미확인). 미확인: 프로시저 서버 반영·실제 화면
+- **적용 순서**: 1번과 같은 MES_SNS2_EQM1001_R04.sql 저장 → SYSTEM_PARAMETERS 재등록
+
+### 3. EQM1001_S04 설비점검항목·점검시트 특이사항에 계획 특이사항 표시
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [05.Procedure/MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql)
+- **배경 및 원인**: S04 설비점검항목 그리드에서 특이사항이 있는데도 보이지 않음. 기존 조회는 점검실적 특이사항(CHKRSTEQMKND.REMARK)만 읽는데, R04 정기점검 등록은 지금까지 실적에 특이사항을 저장하지 않아 비어 있음. R03 점검계획에서 입력한 특이사항은 계획 항목(MSTEQMREV_DETAIL.REMARK)에 있음
+- **작업 상세 내용**:
+  - 1. LIST_CHKRSTEQMKND·CALL_CHKRST_RPT: 특이사항 = 실적 특이사항, 비어 있으면 점검 당시 적용 계획 항목 특이사항
+    - 계획 항목 연결: CHKRSTEQMKND.PLANTP 'G' → CHKRSTEQM.GRPREVCD, 'E' → CHKRSTEQM.REVCD, + CHKKNDCD (MSTEQMREV_DETAIL PK)
+    - PLANTP 빈 값(기존 실적)은 계획 연결 없음
+  - 2. R04 LIST_PLAN_EQM02: 신규 등록 특이사항 기본값을 계획 항목 특이사항으로 채움 (점검자가 수정 가능, 저장 시 실적 특이사항으로 보관)
+  - 3. 화면(JS) 변경 없음
+- **검증 결과**: 인코딩(BOM 없음+CRLF) 확인, PK(REVCD, CHKKNDCD) 기준 조인이라 행 중복 없음. 미확인: 프로시저 서버 반영·실데이터 표시
+- **참고**: 수정 팝업에서 실적 특이사항을 지우면 S04에는 계획 특이사항이 대신 표시됨
+
+### 4. EQM1001_S04 점검시트(S04A) ReportFooter 복원
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/S04A.Designer.cs](04.Report/PAGEEQM/EQM1001/S04A.Designer.cs), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
+- **배경 및 원인**: 2026-11-06 13번 작업에서 R03 기반으로 만들며 제외한 하단 ReportFooter(확인·점검자·담당 서명란, 개정이력)를 다시 넣어 달라는 요청
+- **작업 상세 내용**:
+  - 1. S04A.Designer.cs: VS 디자이너에서 저장된 현재 내용(제목 "설비 정기 점검 시트", 셀 Weight 등)은 그대로 두고, 현재 R03의 ReportFooter 밴드·컨트롤(서명란 라벨 6개, 개정이력 테이블 xrTableRevHistory 5행)을 생성·속성·필드 선언·Bands·BeginInit/EndInit에 추가. `components` 초기화 첫 줄 복원(report_devexpress 2-2)
+  - 2. S04A.cs: CALL_CHKRST_RPT Tables[2]를 개정이력으로 받아 R03과 같은 BindRevHistory(최신 4건)로 바인딩
+  - 3. 프로시저 CALL_CHKRST_RPT 3번째 결과셋(개정이력) 추가
+    - 대상 계획: 점검실적의 설비별 적용 REV(CHKRSTEQM.REVCD), 없으면 설비그룹 적용 REV(GRPREVCD)
+    - 해당 계획(PLANTP·PLANCD)의 REV 중 적용 REV 번호 이하만, 최신순
+    - 컬럼은 R03 CALL_PLAN_RPT 개정이력과 동일: REVNUM, REVDATE, REMARK, REQEMPNM, APRVEMPNM
+- **검증 결과**: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 R0602 경고 1건), exe 01.Office/Reports·04.Report/bin 배포(MD5 일치), 점검키 미전달 안내 정상. 기본 생성자 + 샘플 12행으로 PNG 출력해 밴드 5개·하단 확인/점검자/담당/개정이력 영역 표시 확인. 미확인: 프로시저 서버 반영 후 실데이터 개정이력, VS 디자이너 열기
+- **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
+
+### 5. EQM1001_S04 점검시트 점검자·승인자 표시 및 설비 전체 개정이력 조회
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), [04.Report/PAGEEQM/EQM1001/S04A.Designer.cs](04.Report/PAGEEQM/EQM1001/S04A.Designer.cs), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
+- **배경 및 원인**: 하단 서명란에 점검자·승인자 표시, 개정이력은 해당 설비 관련 REV 전체 조회 요청. 사용자 선택: 표시는 최신 4건 유지, 설비별 + 설비그룹 계획 모두, 담당 칸에 승인자(칸 제목 유지)
+- **작업 상세 내용**:
+  - 1. CALL_CHKRST_RPT 상단 결과에 추가
+    - CHKEMPNM: 점검자 (CHKRSTEQM.EMPCD → MSTEMP.EMPNM, 없으면 사원코드)
+    - APRVEMPNM: 점검 당시 적용 계획의 승인자. 설비그룹 REV(GRPREVCD) → 설비별 REV(REVCD) 순, 같은 사람이면 한 번만 (점검실적 자체에는 승인 절차가 없음)
+  - 2. 개정이력(3번째 결과셋) 대상 변경: 적용 REV 이하 → 전체 REV
+    - 설비별 계획(PLANTP 'E', PLANCD = 설비코드) + 설비그룹 계획(PLANTP 'G', 적용 그룹 REV의 그룹, 없으면 현재 MSTEQM.EQMGUBUN)
+    - 점검구분: 실적 CHKTP와 같은 REV, 정기점검('02')은 CHKTP 빈 값(구분 저장 전 REV)도 포함
+    - 개정 내용 앞에 [그룹]/[설비] 표시, 승인·요청 시간 최신순 (리포트는 최신 4건 표시)
+  - 3. S04A: 점검자 칸 = CHKEMPNM, 담당 칸 = APRVEMPNM 바인딩, 두 서명 칸 맑은 고딕 9pt·가운데 정렬
+- **검증 결과**: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 R0602 경고 1건), exe 01.Office/Reports·04.Report/bin 배포(MD5 일치). 샘플 데이터로 BindReportData 호출 후 PNG 출력: 점검자 "김진욱", 담당 "이성남, 신재민", 개정이력 5건 중 최신 4건이 [설비]/[그룹] 구분과 함께 표시됨 확인. 괄호 짝 64/64, 인코딩 확인. 미확인: 프로시저 서버 반영 후 실데이터, VS 디자이너 열기
+- **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
+- **변경**: 담당 칸의 적용 계획 승인자는 6번 작업에서 설비마스터 점검담당자로 교체
+
+### 6. EQM1001_S04 점검시트 담당 칸을 설비마스터 점검담당사번 기준으로 변경
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
+- **배경 및 원인**: 담당 칸에 계획 승인자 대신 담당자 성격의 데이터 사용 요청. 조사 결과 MSTEQM.EMPCD(점검담당사번, ERP 인터페이스 MES_IF_MSTEQM의 CHK_EMP)와 MSTEQM.DEPTCD(관리부서코드)가 있음. 점검시트의 점검자(CHKRSTEQM.EMPCD, 점검 1건의 실제 점검자)와는 별개 값이며 MSTEQM.EMPCD를 읽는 프로시저는 없었음
+- **사용자 실DB 확인 결과**: 사용 설비 1143개 중 점검담당사번 입력 224개, MSTEMP.EMPCD와 일치 2개, MSTEMP.OLDEMPCD·EMPID 일치 0개, 관리부서코드 입력 1005개 → 사용자 결정: 점검담당사번 기준
+- **작업 상세 내용**:
+  - 1. CALL_CHKRST_RPT 상단 결과: APRVEMPNM(적용 계획 승인자)과 관련 조인 4개 제거, MNGEMPNM 추가 = MSTEMP 사원명, 없으면 MSTEQM.EMPCD 사번 그대로, 비어 있으면 빈 값
+  - 2. S04A 담당 칸(xrLabelManagerSign) 바인딩 APRVEMPNM → MNGEMPNM
+  - 3. 개정이력 표의 승인자(APRVEMPNM) 컬럼은 그대로 유지
+- **검증 결과**: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 경고 1건), exe 배포(MD5 일치), 샘플 PNG 출력에서 점검자 "김진욱"·담당 "FA-0123"(사원명 미매칭 사번) 표시 확인, 인코딩 확인. 미확인: 프로시저 서버 반영 후 실데이터
+- **참고**: 현재 데이터 기준으로 담당 칸은 대부분 빈칸(919개 설비)이거나 사번 표시(222개), 사원명은 2개 설비만 표시됨. ERP 점검담당사번과 MES 사원코드 체계를 맞추면 사원명으로 표시됨
+- **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
+- **관리 위치 조사**: MSTEQM.EMPCD·DEPTCD는 ERP 인터페이스(MES_IF_MSTEQM, IFSTD 'FAC2_MES_EQM', 1분 주기, ERP CHK_EMP·CHK_DEPT)로만 입력됨. MES에서 수정하는 화면·프로시저 없음(MSTEQM UPDATE는 MST1005_R01 설비등급만). 조회·사용처: MST1002_R06 설비정보관리(담당부서·담당사원 컬럼, 조회 전용, 담당부서 컬럼 바인딩명 DEPTP ≠ 프로시저 DEPTCD라 빈 값 표시), MST1005_R01 설비등급 평가표(관리부서 → 결재 "부서명+장"), EQM1001_S04 점검시트(담당 칸)
+
+### 7. EQM1001_S04 점검시트 하단(ReportFooter) 디자인 정리
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/S04A.Designer.cs](04.Report/PAGEEQM/EQM1001/S04A.Designer.cs), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
+- **배경 및 원인**: 개정이력 영역이 보기 좋지 않다는 요청. 원인: ① 서명칸 XRLabel이 각자 4면 테두리를 그려 경계선이 2줄(두꺼운 선)로 겹침 ② 개정이력 칸에 일자·[구분]·내용이 한 칸에 몰려 줄바꿈 ③ 셀 CanGrow로 내용 길이에 따라 행 높이가 제각각, 헤더가 표 아래에 위치
+- **작업 상세 내용**:
+  - 1. 경계선 1줄: 왼쪽 컨트롤만 오른쪽 선을 그리고 다음 컨트롤은 Left 제외(점검자·담당 헤더 Top|Right|Bottom, 서명칸 Right|Bottom, 개정이력 라벨·표 Top|Right|Bottom)
+  - 2. 헤더 통일: 확인·점검자·담당·개정이력 라벨·개정이력 표 헤더를 상단 한 줄(높이 22) 회색(Gainsboro) 배경으로, 표 헤더를 아래 → 위로 이동
+  - 3. 개정이력 표: "개정이력" 세로 라벨 폭 90 → 24, 표 폭 383 → 449, 컬럼 No 24·일자 64·구분 32·개정 내용 229·작성 50·승인 50 (일자·구분 칸 분리)
+  - 4. 행 높이 30 고정(CanGrow false), 데이터 8pt·개정 내용 7.5pt로 2줄까지 줄바꿈, 3줄 이상은 잘림. 최신순 위에서 아래로 4건
+  - 5. Footer 높이 128 → 146 (표 142 = 헤더 22 + 4행 × 30)
+  - 6. 프로시저 개정이력 결과: [그룹]/[설비] 접두어 제거, PLANTPNM(그룹/설비) 컬럼 분리
+- **검증 결과**: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 경고 1건), exe 배포(MD5 일치), 생성 컨트롤 82개·필드 선언 82개 1:1 확인, 긴 개정 내용 샘플로 150dpi PNG 출력해 단일 경계선·고정 행 높이·2줄 줄바꿈 확인, 인코딩 확인. 미확인: 프로시저 서버 반영 후 실데이터, VS 디자이너 열기
+- **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
+- **변경**: 8번 작업에서 기존 형식으로 롤백 (이 디자인은 적용되지 않음)
+
+### 8. EQM1001_S04 점검시트 하단 기존 형식 롤백, 개정 이력 날짜 제거
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/S04A.Designer.cs](04.Report/PAGEEQM/EQM1001/S04A.Designer.cs), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
+- **배경 및 원인**: 7번 디자인 대신 기존 형식으로 롤백하고, 개정 이력 칸은 날짜 없이 [그룹]/[설비] 구분만 앞에 표시하도록 요청
+- **작업 상세 내용**:
+  - 1. S04A.Designer.cs: 4번 작업과 같은 방식으로 재구성(커밋된 S04A + 현재 R03 ReportFooter, components 초기화, 점검자·담당 서명칸 9pt·가운데 정렬). 하단 배치·크기·테두리·헤더 위치(아래)는 R03과 동일, 개정 이력 행은 내용 길이만큼 늘어남
+  - 2. S04A.cs BindRevHistory: R03과 같은 배치(최신 4건, 아래쪽부터 채움)로 복원, 개정 이력 칸 = "[" + PLANTPNM + "] " + 개정내용 (날짜 제외)
+  - 3. 프로시저 개정이력 결과에서 REVDATE 컬럼 제거 (정렬은 승인·요청 시간 그대로)
+- **검증 결과**: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 경고 1건), exe 배포(MD5 일치), Designer 957줄·생성/필드 1:1 확인, 샘플 PNG 출력에서 기존 형식과 "[설비] 내용"·"[그룹] 내용"(날짜 없음) 표시 확인, 인코딩 확인. 미확인: 프로시저 서버 반영 후 실데이터, VS 디자이너 열기
+- **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
+
+### 9. EQM1001_S04 점검시트 개정이력 No 1부터 표시
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql)
+- **배경 및 원인**: 개정이력 No가 REV 번호(제정 0) 그대로라 0부터 표시됨, 1부터 시작하도록 요청
+- **작업 상세 내용**: CALL_CHKRST_RPT 개정이력 결과의 REVNUM을 `PLAN_REV.REVNUM + 1`로 반환 (제정 0 → 1). 정렬은 원래 REV 번호 기준 그대로, 레포트·exe 변경 없음
+- **검증 결과**: 인코딩(BOM 없음+CRLF) 확인. 미확인: 프로시저 서버 반영 후 실데이터
+- **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
 
 ---
 
@@ -3479,6 +3604,7 @@
 | **완료** | [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql) | EQM1001_R03 설비그룹 및 설비별 점검계획 탭 정기점검 영역 특이사항(REMARK) 제외 및 기준정보 연동 보존 | 설비그룹 점검계획(grid_GRP2, grid_GRP_COPY2) 및 설비별 점검계획(grid3, grid8, grid10) 정기점검 특이사항 컬럼 제거, 저장(SAVE) 시 기존 특이사항 보존 및 기준정보(MSTCHKKND) 특이사항 연동, 레포트(R03) 출력 보존. UTF-8 BOM/CRLF 검증 완료 |
 | **완료** | [04.Report/PAGEEQM/EQM1001/R03.cs](04.Report/PAGEEQM/EQM1001/R03.cs), [04.Report/PAGEEQM/EQM1001/EQM1001.csproj](04.Report/PAGEEQM/EQM1001/EQM1001.csproj), [.agents/rules/report_devexpress.md](.agents/rules/report_devexpress.md), [.agents/rules/report_file_structure.md](.agents/rules/report_file_structure.md) | EQM1001 R03A 파일 완전 삭제 및 1파일 1레포트 컴포넌트 원칙 규칙 제정 | R03A.cs 삭제, EQM1001.csproj 정리, VS 디자이너 파서 혼선 방지를 위한 단일 클래스 선언 원칙 규칙화 완료 |
 | **완료** | [04.Report/PAGEEQM/EQM1001/R03.Designer.cs](04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [04.Report/PAGEEQM/EQM1001/R03.cs](04.Report/PAGEEQM/EQM1001/R03.cs), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe) | EQM1001 R03 개정이력 동적 높이(XRTable) 전환 및 하단 확인란 세로 앵커 정렬 | 20개 개별 XRLabel을 xrTableRevHistory(XRTable/Row/Cell)로 전환하여 개정이력 줄바꿈 시 전 셀 높이 동기화 및 하위 행 자동 밀림 구현, 좌측 확인란 AnchorVertical.Both 적용으로 하단 테두리 완벽 일치 정렬, Debug/Release 빌드 및 배포/출력 검증 완료 |
+| **대기** | [05.Procedure/MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql), [01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx) | EQM1001_R04 정기점검 팝업 특이사항 입력·상단 정렬 서버 반영 및 화면 확인 | 프로시저 저장 후 SYSTEM_PARAMETERS 재등록 필요. 모형 측정으로 정렬 확인, 실제 화면·저장 미확인 |
 | **대기** | MTR0001_R04 프로시저 실서버 반영 및 리포트 출력 최종 확인 | CALL_RPT 분기 포함된 MTR0001_R04.sql 실서버 DBeaver 컴파일 후 발주서 출력 버튼 최종 검증 | - |
 
 ---

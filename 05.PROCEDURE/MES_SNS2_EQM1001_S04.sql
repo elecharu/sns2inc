@@ -4,8 +4,9 @@ PROCEDURE `MES_SNS2`.`EQM1001_S04`(
 -- Comment: 설비점검조회
 -- Create: 	2025-06-27  	생성 			이대규
 -- Modify: 	2026-09-15 		마이그레이션	한성수
--- 			2026-09-16 					한성수	설비점검실적(CHKRSTEQM, CHKRSTEQMKND) 조회 마이그레이션
--- 			2026-11-06 					한성수	점검 시트 출력 데이터 조회(CALL_CHKRST_RPT) 추가, 점검항목 조회 특이사항(REMARK) 추가
+-- 			2026-09-16 					한성수	설비점검실적 조회 마이그레이션
+-- 			2026-11-06 					한성수	점검시트 출력(CALL_CHKRST_RPT) 및 특이사항 조회 추가
+-- 			2026-11-09 					한성수	점검항목·시트 계획 특이사항 연동 및 개정이력·담당자 조회 추가
 -- *****************************************************************************
   IN $SDATE     VARCHAR(20),
   IN $EDATE     VARCHAR(20),
@@ -42,10 +43,11 @@ WHEN 'LIST_CHKRSTEQM' THEN
   ORDER BY CHKRSTEQM.BASEDATE, CHKRSTEQM.CHKTP, CHKRSTEQM.EQMCD
   ;
 
--- ****************************************************************************
+-- *****************************************************************                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     **********
 WHEN 'LIST_CHKRSTEQMKND' THEN
   
-  SELECT 
+  -- 특이사항: 점검실적 특이사항, 없으면 점검 당시 적용 계획(REV) 항목 특이사항
+  SELECT
     CHKRSTEQMKND.CHKRSTKEY,
     CHKRSTEQMKND.CHKKNDCD,
     CHKRSTEQMKND.CHKKNDNM,
@@ -53,8 +55,13 @@ WHEN 'LIST_CHKRSTEQMKND' THEN
     CHKRSTEQMKND.CHKMTH,
     CHKRSTEQMKND.CHKVALTP,
     CHKRSTEQMKND.CHKVALUE,
-    CHKRSTEQMKND.REMARK
+    COALESCE(NULLIF(CHKRSTEQMKND.REMARK, ''), PLAN_ITEM.REMARK, '') AS REMARK
   FROM CHKRSTEQMKND
+  INNER JOIN CHKRSTEQM
+    ON CHKRSTEQM.CHKRSTKEY = CHKRSTEQMKND.CHKRSTKEY
+  LEFT JOIN MSTEQMREV_DETAIL PLAN_ITEM
+    ON PLAN_ITEM.REVCD = CASE CHKRSTEQMKND.PLANTP WHEN 'G' THEN CHKRSTEQM.GRPREVCD WHEN 'E' THEN CHKRSTEQM.REVCD END
+   AND PLAN_ITEM.CHKKNDCD = CHKRSTEQMKND.CHKKNDCD
 
   WHERE CHKRSTEQMKND.CHKRSTKEY = $CHKRSTKEY
 
@@ -69,17 +76,23 @@ WHEN 'CALL_CHKRST_RPT' THEN -- 점검 시트 출력 데이터 조회
     LEAVE PROC;
   END IF;
 
-  -- 점검 시트 상단: 설비 정보·점검일자
+  -- 점검 시트 상단: 설비 정보·점검일자, 하단 서명란: 점검자(점검실적)·담당(설비마스터 점검담당사번, 사원명 없으면 사번)
   SELECT COALESCE(MSTEQM.EQMNM, GPCD('EQMCD', CHKRSTEQM.EQMCD)) AS EQMNM,
          COALESCE(MSTEQM.EQMNM_DETAIL, '') AS EQMSPEC,
          CHKRSTEQM.EQMCD, CHKRSTEQM.BASEDATE AS CHKDATE,
          COALESCE(NULLIF(MSTLINE.LINENM, ''), MSTEQM.LINECD, '') AS LINENM,
-         COALESCE(NULLIF(GPCD('FM100', MSTEQM.EQMTP), ''), MSTEQM.EQMTP, '') AS PROCESSNM
+         COALESCE(NULLIF(GPCD('FM100', MSTEQM.EQMTP), ''), MSTEQM.EQMTP, '') AS PROCESSNM,
+         COALESCE(CHK_EMP.EMPNM, CHKRSTEQM.EMPCD) AS CHKEMPNM,
+         COALESCE(MNG_EMP.EMPNM, MSTEQM.EMPCD, '') AS MNGEMPNM
   FROM CHKRSTEQM
   LEFT JOIN MSTEQM
     ON MSTEQM.FANO = CHKRSTEQM.EQMCD
   LEFT JOIN MSTLINE
     ON MSTLINE.LINECD = MSTEQM.LINECD
+  LEFT JOIN MSTEMP CHK_EMP
+    ON CHK_EMP.EMPCD = CHKRSTEQM.EMPCD
+  LEFT JOIN MSTEMP MNG_EMP
+    ON MNG_EMP.EMPCD = NULLIF(MSTEQM.EMPCD, '')
   WHERE CHKRSTEQM.CHKRSTKEY = $CHKRSTKEY
   LIMIT 1;
 
@@ -90,10 +103,39 @@ WHEN 'CALL_CHKRST_RPT' THEN -- 점검 시트 출력 데이터 조회
          COALESCE(NULLIF(GPCD('CHKMTH', CHKRSTEQMKND.CHKMTH), ''), CHKRSTEQMKND.CHKMTH) AS CHKDEVICE,
          CHKRSTEQMKND.CHKVALUE AS CHKRESULT,
          '' AS CONFIRM,
-         CHKRSTEQMKND.REMARK
+         COALESCE(NULLIF(CHKRSTEQMKND.REMARK, ''), PLAN_ITEM.REMARK, '') AS REMARK
   FROM CHKRSTEQMKND
+  INNER JOIN CHKRSTEQM
+    ON CHKRSTEQM.CHKRSTKEY = CHKRSTEQMKND.CHKRSTKEY
+  LEFT JOIN MSTEQMREV_DETAIL PLAN_ITEM
+    ON PLAN_ITEM.REVCD = CASE CHKRSTEQMKND.PLANTP WHEN 'G' THEN CHKRSTEQM.GRPREVCD WHEN 'E' THEN CHKRSTEQM.REVCD END
+   AND PLAN_ITEM.CHKKNDCD = CHKRSTEQMKND.CHKKNDCD
   WHERE CHKRSTEQMKND.CHKRSTKEY = $CHKRSTKEY
   ORDER BY (CHKRSTEQMKND.PLANTP = 'G') DESC, CHKRSTEQMKND.SORTNO, CHKRSTEQMKND.CHKKNDCD;
+
+  -- 점검 시트 하단 개정 이력: 해당 설비의 설비별 계획 + 설비그룹 계획 전체 REV (점검구분 일치, 기존 정기점검 REV는 점검구분 빈 값 포함, 최신순)
+  SELECT PLAN_REV.REVNUM + 1 AS REVNUM,
+         CASE PLAN_REV.PLANTP WHEN 'G' THEN '그룹' ELSE '설비' END AS PLANTPNM,
+         PLAN_REV.REMARK,
+         COALESCE(REQ_EMP.EMPNM, PLAN_REV.REQEMP) AS REQEMPNM,
+         CASE WHEN PLAN_REV.APRVSTT = 'A' THEN COALESCE(APRV_EMP.EMPNM, PLAN_REV.APRVEMP) ELSE '' END AS APRVEMPNM
+  FROM CHKRSTEQM
+  LEFT JOIN MSTEQM
+    ON MSTEQM.FANO = CHKRSTEQM.EQMCD
+  LEFT JOIN MSTEQMREV_HEADER GRP_REV
+    ON GRP_REV.REVCD = NULLIF(CHKRSTEQM.GRPREVCD, '')
+  INNER JOIN MSTEQMREV_HEADER PLAN_REV
+    ON (   (PLAN_REV.PLANTP = 'E' AND PLAN_REV.PLANCD = CHKRSTEQM.EQMCD)
+        OR (PLAN_REV.PLANTP = 'G' AND PLAN_REV.PLANCD = COALESCE(GRP_REV.PLANCD, MSTEQM.EQMGUBUN))
+       )
+   AND (PLAN_REV.CHKTP = CHKRSTEQM.CHKTP OR (CHKRSTEQM.CHKTP = '02' AND PLAN_REV.CHKTP = ''))
+  LEFT JOIN MSTEMP REQ_EMP
+    ON REQ_EMP.EMPCD = PLAN_REV.REQEMP
+  LEFT JOIN MSTEMP APRV_EMP
+    ON APRV_EMP.EMPCD = PLAN_REV.APRVEMP
+  WHERE CHKRSTEQM.CHKRSTKEY = $CHKRSTKEY
+  ORDER BY CASE WHEN PLAN_REV.APRVSTT = 'A' THEN PLAN_REV.APRVTIME ELSE PLAN_REV.REQTIME END DESC,
+           PLAN_REV.PLANTP, PLAN_REV.REVNUM DESC;
 
 -- ****************************************************************************
 END CASE; END
