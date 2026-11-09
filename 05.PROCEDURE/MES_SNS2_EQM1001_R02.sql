@@ -1,4 +1,4 @@
-﻿CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R02`(
+CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R02`(
 -- *****************************************************************************
 -- Comment: 설비점검항목 
 -- Create: 	2025-06-27  	생성 			이대규
@@ -7,6 +7,7 @@
 -- 			2026-09-23 					한성수	사용 중인 정기점검 계획의 점검항목만 조회
 -- 			2026-09-23 					한성수	정기점검 항목 전체 조회 및 CRUD 유형 고정
 -- 			2026-10-08 					한성수	점검항목 참조 검증을 REV DETAIL로 전환
+-- 			2026-11-09 					한성수	정기점검(CHKTP '02') 항목만 수정·삭제 (다른 점검구분 코드는 안내 후 중단), 조회 정렬순서 지정
 -- *****************************************************************************
   IN $CHKTP     VARCHAR(20),
   IN $CHKKNDCD  VARCHAR(100),
@@ -59,6 +60,7 @@ WHEN 'LIST_MSTCHKKND' THEN
   WHERE MSTCHKKND.CHKTP = '02'
     AND (MSTCHKKND.CHKKNDCD LIKE CONCAT('%', $KEYWORD, '%')
       OR MSTCHKKND.CHKKNDNM LIKE CONCAT('%', $KEYWORD, '%'))
+  ORDER BY MSTCHKKND.SORTNO, MSTCHKKND.CHKKNDCD
   ;
 
 -- ****************************************************************************
@@ -76,7 +78,7 @@ WHEN 'ADD_MSTCHKKND' THEN
   
   -- 이미 투입된 점검항목 경우 수정이 불가능
   IF EXISTS (SELECT 1 FROM MSTCHKKND WHERE CHKKNDCD = $CHKKNDCD ) THEN 
-      CALL COMERR('이미 등록되는 점검코드 입니다.');
+      CALL COMERR('이미 등록된 점검코드 입니다.');
       LEAVE PROC;
   END IF;
   
@@ -126,7 +128,13 @@ WHEN 'SAVE_MSTCHKKND' THEN
     CALL COMSPLIT($CHKVALTP_LIST, _$CHKVALTP);
     CALL COMSPLIT($USEYN_LIST, _$USEYN);
     CALL COMSPLIT($REMARK_LIST, _$REMARK);
-    
+
+    -- 정기점검 항목만 수정
+    IF NOT EXISTS (SELECT 1 FROM MSTCHKKND WHERE CHKKNDCD = _$CHKKNDCD AND CHKTP = '02' LIMIT 1) THEN
+      CALL COMERR(CONCAT('정기점검 항목이 아닙니다. (점검코드 ', _$CHKKNDCD, ') 다시 조회해주세요.'));
+      LEAVE PROC;
+    END IF;
+
     IF EXISTS (SELECT 1 FROM MSTEQMREV_DETAIL WHERE CHKKNDCD = _$CHKKNDCD) THEN
       CALL COMERR('설비점검계획에 등록된 항목은 수정이 불가능 합니다.');
       LEAVE PROC;
@@ -152,7 +160,13 @@ WHEN 'DELETE_MSTCHKKND' THEN
   WHILE LENGTH($CHKKNDCD_LIST) > 0 DO
     
     CALL COMSPLIT($CHKKNDCD_LIST, _$CHKKNDCD);
-    
+
+    -- 정기점검 항목만 삭제
+    IF NOT EXISTS (SELECT 1 FROM MSTCHKKND WHERE CHKKNDCD = _$CHKKNDCD AND CHKTP = '02' LIMIT 1) THEN
+      CALL COMERR(CONCAT('정기점검 항목이 아닙니다. (점검코드 ', _$CHKKNDCD, ') 다시 조회해주세요.'));
+      LEAVE PROC;
+    END IF;
+
     IF EXISTS (SELECT 1 FROM MSTEQMREV_DETAIL WHERE CHKKNDCD = _$CHKKNDCD) THEN
       CALL COMERR('설비점검계획에 등록된 항목은 삭제 할 수 없습니다.');
       LEAVE PROC;
