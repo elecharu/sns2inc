@@ -303,6 +303,8 @@
 - **적용 순서**: 공통코드 SQL 먼저 실행(REF01이 비어 있으면 REF01="OUT" 콤보 목록이 빈 상태가 됨) → TML1010 빌드·배포 → 태블릿 새로고침
 - **검증 결과**: TML1010 MSBuild 15.0 Release 빌드 성공(스크래치 폴더 출력, AAABIN 배포 안 함). 빌드 후 이벤트(COPY → 프로젝트 폴더 TML1010.exe)로 프로젝트 폴더 exe가 덮어써져 AAABIN/TML1010.exe(동일 크기·시각이던 원본)로 복원(MD5 일치). JS 구문 검사 통과, 인코딩 확인. 미확인: 공통코드 SQL 실행 결과(실제 REF01 현재 값), 실제 화면
 - **배포**: 사용자 요청으로 TML1010 Release 재빌드 후 배포 (실행 중인 TML1010 없음 확인). bin/Release EXE·PDB → 02.Site/AAABIN 복사, 프로젝트 루트 TML1010.exe는 빌드 후 이벤트로 갱신. EXE SHA256 68c477e3…ecb85 (Release·AAABIN·프로젝트 루트 3경로 일치), PDB SHA256 d212f887…51dc (Release·AAABIN 일치). 컴파일된 R05.baml에 cmb_OUTTP REF01="OUT" 포함 확인
+- **재배포(소스 충돌 후 최신 코드 기준)**: 형상관리 업데이트로 R01·R03(xaml·cs)·TML1010.csproj(TMLPRINT·DevExpress Printing/XtraPrinting/XtraReports 참조 추가)가 갱신되고 TML1010.exe/pdb에 충돌 파일(.r488·.r519) 생김. 소스에 충돌 표시 없음, R05 REF01="OUT" 유지 확인. 실행 중인 TML1010 없음 확인 후 Release 재빌드 성공 → bin/Release EXE·PDB를 02.Site/AAABIN에 복사, 프로젝트 루트 EXE는 빌드 후 이벤트로 갱신. EXE SHA256 95c5fb52…770d (Release·AAABIN·프로젝트 루트 일치), PDB SHA256 4a947e3e…84fc (Release·AAABIN 일치). 새 참조 TMLPRINT.exe·DevExpress 3개 dll은 AAABIN에 이미 있음. 충돌 파일(.r488·.r519)과 형상관리 충돌 해결 표시는 그대로 둠(사용자 처리)
+- **재배포(충돌 정리 후)**: 사용자가 충돌 정리하며 AAABIN·프로젝트 루트 TML1010.exe가 다른 빌드(104,448바이트, 16:28)로 바뀜 → 충돌 파일 없음·소스 변경 없음(16:25 기준)·R05 REF01="OUT" 유지·실행 중 프로세스 없음 확인 후 Release 재빌드·배포. EXE SHA256 ac7d9a36…41ce (Release·AAABIN·프로젝트 루트 일치), PDB SHA256 8240c318…6fb7 (Release·AAABIN 일치), 컴파일된 R05에 REF01="OUT" 포함
 
 ---
 

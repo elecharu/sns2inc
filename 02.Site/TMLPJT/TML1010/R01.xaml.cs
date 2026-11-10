@@ -32,6 +32,7 @@ namespace TML1010
         ItsModelGrid MODEL_G1 = new ItsModelGrid();
         ItsModelGrid MODEL_G2 = new ItsModelGrid();
         ItsModelGrid MODEL_G3 = new ItsModelGrid(); // 2026-11-09 BOX 단위 수량 x BOX 수량
+        ItsModelGrid MODEL_G4 = new ItsModelGrid(); // 2026-11-10 납품등록 BOX 현황 ([등록] 전까지 화면에만)
 
 
         // 생성자
@@ -56,6 +57,36 @@ namespace TML1010
 
             MODEL_G3.Binding(GRID_G3);
             MODEL_G3.EventValueChanged += MODEL_G3_EventValueChanged;
+
+            // 2026-11-10 BOX 그리드는 정렬 끔: ITSLIB 그리드가 셀 값이 바뀌면 화면 순서(RowHandle)로 데이터 행을 찾아 편집을 확정해서
+            //            정렬하면 고친 행이 확정되지 않아 수량 합계·납품량이 계산되지 않음
+            (GRID_G3.View as TableView).AllowSorting = false;
+
+            MODEL_G4.Binding(GRID_G4);
+        }
+
+        // 결과 팝업에서 고른 줄의 거래명세서 (등록 한 번에 발주별로 여러 장이 만들어질 수 있음)
+        private void SetSelectedInvoice()
+        {
+            int row = MODEL_G2.CurrentIndex;
+            if (row >= 0 && MODEL_G2.Columns.Contains("INVOICEKEY") && MODEL_G2.GetText(row, "INVOICEKEY") != "")
+            {
+                MODEL_A1.SetValue("INVOICEKEY", MODEL_G2.GetText(row, "INVOICEKEY"));
+            }
+        }
+
+        // BOX 현황에 이미 쌓아 둔 이 발주의 수량 합계
+        private decimal StagedQty(string mtrodrKey, string mtrodrSeq)
+        {
+            decimal sum = 0;
+            for (int i = 0; i < MODEL_G4.Rows.Count; i++)
+            {
+                if (MODEL_G4.GetText(i, "MTRODRKEY") == mtrodrKey && MODEL_G4.GetText(i, "MTRODRSEQ") == mtrodrSeq)
+                {
+                    sum += MODEL_G4.GetDecimal(i, "BOXSUM");
+                }
+            }
+            return sum;
         }
 
         // BOX 단위 수량·BOX 수량을 바꾸면 행 합계와 납품량(전체 합계)을 다시 계산
@@ -64,6 +95,9 @@ namespace TML1010
             if (fieldName == "BOXQTY" || fieldName == "BOXCNT")
             {
                 CALCUL_TOTQTY();
+
+                // 2026-11-10 입력 중인 셀 편집이 끝난 뒤 그리드를 다시 그려 수량 합계가 바로 보이게
+                Dispatcher.BeginInvoke(new Action(() => GRID_G3.RefreshData()));
             }
         }
 
@@ -164,8 +198,8 @@ namespace TML1010
             {
                 PANEL_A3.Close();
             }
-            // 납품 등록 (정보입력 팝업 [확인])
-            else if (commandName == "ADD_MTRCUSTLOT")
+            // 정보입력 팝업 [확인] : 저장하지 않고 오른쪽 BOX 현황에 쌓음
+            else if (commandName == "ADD_STAGE")
             {
                 int boxCount = 0;
                 for (int i = 0; i < MODEL_G3.Rows.Count; i++)
@@ -197,13 +231,69 @@ namespace TML1010
                 decimal totQty = CALCUL_TOTQTY();
                 decimal okQty = 0;
                 decimal.TryParse(MODEL_A3.GetText("OKQTY"), out okQty);
-                if (totQty > okQty)
+                decimal stagedQty = StagedQty(MODEL_A3.GetText("MTRODRKEY"), MODEL_A3.GetText("MTRODRSEQ"));
+                if (totQty + stagedQty > okQty)
                 {
-                    ShowMessageBox("", "납품량(" + totQty.ToString("#,0") + ")이 미납량(" + okQty.ToString("#,0") + ")을 초과하였습니다.");
+                    ShowMessageBox("", "납품량(" + totQty.ToString("#,0") + (stagedQty > 0 ? " + 현황에 담긴 " + stagedQty.ToString("#,0") : "") + ")이 미납량(" + okQty.ToString("#,0") + ")을 초과하였습니다.");
                     return;
                 }
 
-                ShowMessageBox(commandName, MODEL_S1.GetText("PRDDATE") + " 일자로 BOX " + boxCount + "개, 총 " + totQty.ToString("#,0") + "개를 납품등록 하시겠습니까?");
+                // BOX 행마다 현황에 한 줄씩
+                DataTable dt = new DataTable();
+                foreach (string col in new string[] { "MTRODRKEY", "MTRODRSEQ", "ITEMCD", "ITEMNM", "HEATNO" }) dt.Columns.Add(col, typeof(string));
+                foreach (string col in new string[] { "BOXQTY", "BOXCNT", "BOXSUM" }) dt.Columns.Add(col, typeof(decimal));
+                for (int i = 0; i < MODEL_G3.Rows.Count; i++)
+                {
+                    decimal boxQty = MODEL_G3.GetDecimal(i, "BOXQTY");
+                    decimal boxCnt = MODEL_G3.GetDecimal(i, "BOXCNT");
+                    if (boxQty == 0 && boxCnt == 0) continue;
+
+                    dt.Rows.Add(MODEL_A3.GetText("MTRODRKEY"), MODEL_A3.GetText("MTRODRSEQ"), MODEL_A3.GetText("ITEMCD"), MODEL_A3.GetText("ITEMNM"),
+                                MODEL_A3.GetText("HEATNO").Trim(), boxQty, boxCnt, boxQty * boxCnt);
+                }
+
+                if (MODEL_G4.Rows.Count == 0) MODEL_G4.SetData(dt);
+                else MODEL_G4.AddRow(dt);
+
+                PANEL_A3.Close();
+            }
+            // BOX 현황에서 한 줄 빼기
+            else if (commandName == "DEL_STAGE")
+            {
+                MODEL_G4.DeleteCurrentModel();
+            }
+            // BOX 현황 비우기
+            else if (commandName == "CLEAR_STAGE")
+            {
+                if (MODEL_G4.Rows.Count == 0) return;
+                ShowMessageBox(commandName, "납품등록 BOX 현황을 모두 지우시겠습니까?");
+            }
+            // 납품 등록 : BOX 현황 전체를 저장 (발주별 거래명세서 1장)
+            else if (commandName == "ADD_MTRCUSTLOT")
+            {
+                if (MODEL_G4.Rows.Count == 0)
+                {
+                    ShowMessageBox("", "납품등록할 BOX 가 없습니다. 발주의 [입력] 에서 BOX 를 추가하세요.");
+                    return;
+                }
+                if (MODEL_S1.GetText("PRDDATE") == "")
+                {
+                    ShowMessageBox("", "출하일자를 입력하세요.");
+                    return;
+                }
+
+                List<string> orders = new List<string>();
+                int boxCount = 0;
+                decimal totQty = 0;
+                for (int i = 0; i < MODEL_G4.Rows.Count; i++)
+                {
+                    string order = MODEL_G4.GetText(i, "MTRODRKEY") + "-" + MODEL_G4.GetText(i, "MTRODRSEQ");
+                    if (!orders.Contains(order)) orders.Add(order);
+                    boxCount += (int)MODEL_G4.GetDecimal(i, "BOXCNT");
+                    totQty += MODEL_G4.GetDecimal(i, "BOXSUM");
+                }
+
+                ShowMessageBox(commandName, MODEL_S1.GetText("PRDDATE") + " 일자로 발주 " + orders.Count + "건 (BOX " + boxCount + "개, 총 " + totQty.ToString("#,0") + "개)을 납품등록 하시겠습니까?\n거래명세서는 발주별로 1장씩 만들어집니다.");
                 return;
             }
 
@@ -231,8 +321,21 @@ namespace TML1010
             // 납품 취소
             else if (commandName == "MTRCUST_INVOICE_CANCEL")
             {
-                ShowMessageBox(commandName, "납품 취소 하시겠습니까??");
+                SetSelectedInvoice();
+                ShowMessageBox(commandName, "거래명세서 [" + MODEL_A1.GetText("INVOICEKEY") + "] 를 납품 취소 하시겠습니까??");
                 return;
+            }
+            // 거래명세표 출력 (재출력: 거래명세서 + 공정이동표(재고))
+            else if (commandName == "MTRCUST_INVOICE_PRINT")
+            {
+                SetSelectedInvoice();
+                if (MODEL_A1.GetText("INVOICEKEY") == "")
+                {
+                    ShowMessageBox("", "출력할 거래명세서가 없습니다.");
+                    return;
+                }
+
+                PrintInvoice(MODEL_A1.GetText("INVOICEKEY"));
             }
             else if (commandName == "POP_MTRCUSTLOT")
             {
@@ -282,21 +385,24 @@ namespace TML1010
 
                 EventCommand("LIST_MTRODR");
             }
-            // 납품 등록
+            // BOX 현황 비우기
+            else if (commandName == "CLEAR_STAGE")
+            {
+                MODEL_G4.Clear();
+            }
+            // 납품 등록 : BOX 현황 전체 (행마다 발주·HEAT NO·BOX 단위 수량·BOX 수량), 발주별 거래명세서 1장
             else if (commandName == "ADD_MTRCUSTLOT")
             {
                 ItsMaria.Set("TML1010_R01", "ADD_MTRCUSTLOT");
                 ItsMaria.AddOne("PRDDATE", MODEL_S1.GetValue("PRDDATE"));
-                ItsMaria.AddOne("MTRODRKEY", MODEL_A3.GetText("MTRODRKEY"));
-                ItsMaria.AddOne("MTRODRSEQ", MODEL_A3.GetText("MTRODRSEQ"));
-                ItsMaria.AddOne("HEATNO", MODEL_A3.GetText("HEATNO").Trim());
 
-                for (int i = 0; i < MODEL_G3.Rows.Count; i++)
+                for (int i = 0; i < MODEL_G4.Rows.Count; i++)
                 {
-                    if (MODEL_G3.GetDecimal(i, "BOXQTY") == 0 && MODEL_G3.GetDecimal(i, "BOXCNT") == 0) continue; // 빈 행
-
-                    ItsMaria.AddList("BOXQTY_LIST", MODEL_G3.GetDecimal(i, "BOXQTY"));
-                    ItsMaria.AddList("BOXCNT_LIST", MODEL_G3.GetDecimal(i, "BOXCNT"));
+                    ItsMaria.AddList("MTRODRKEY_LIST", MODEL_G4.GetText(i, "MTRODRKEY"));
+                    ItsMaria.AddList("MTRODRSEQ_LIST", MODEL_G4.GetText(i, "MTRODRSEQ"));
+                    ItsMaria.AddList("HEATNO_LIST", MODEL_G4.GetText(i, "HEATNO"));
+                    ItsMaria.AddList("BOXQTY_LIST", MODEL_G4.GetDecimal(i, "BOXQTY"));
+                    ItsMaria.AddList("BOXCNT_LIST", MODEL_G4.GetDecimal(i, "BOXCNT"));
                 }
 
                 DataSet ds = ItsMaria.Call();
@@ -307,8 +413,9 @@ namespace TML1010
                     return;
                 }
 
-                PANEL_A3.Close();
+                MODEL_G4.Clear();
 
+                // 결과 팝업 : 이번에 만든 거래명세서들의 LOT (재출력·납품 취소는 고른 줄의 거래명세서)
                 MODEL_A1.SetValue("INVOICEKEY", ds.Tables[0].Rows[0]["INVOICEKEY"]);
                 MODEL_A1.SetValue("OUTDATE", ds.Tables[0].Rows[0]["PRDDATE"]);
                 MODEL_A1.SetValue("OUTCUSTCD", ds.Tables[0].Rows[0]["OUTCUSTCD"]);
@@ -316,6 +423,45 @@ namespace TML1010
                 MODEL_G2.SetData(ds.Tables[0]);
 
                 PANEL_A1.Show();
+
+                // 등록 직후 거래명세서마다 거래명세서 + 공정이동표(재고) 자동 출력
+                List<string> invoiceKeys = new List<string>();
+                foreach (DataRow row in ds.Tables[0].Rows)
+                {
+                    string key = row["INVOICEKEY"].ToString();
+                    if (!invoiceKeys.Contains(key)) invoiceKeys.Add(key);
+                }
+                foreach (string key in invoiceKeys)
+                {
+                    PrintInvoice(key);
+                }
+            }
+        }
+
+        // 2026-11-09 거래명세서(A4 1장: 공급받는자 보관용) + 공정이동표(재고)(LOT 1개당 1장, A4 한 장에 2개)
+        // 확인창 없이 POP 에서 고른 프린터로 바로 인쇄. 양식은 COMPJT\TMLPRINT 의 MTR_1 / MTR_2 (AAALIB\TMLPRINT.exe)
+        private void PrintInvoice(string invoiceKey)
+        {
+            ItsMaria.Set("TML1010_R01", "PRINT_INVOICE");
+            ItsMaria.AddOne("INVOICEKEY", invoiceKey);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            try
+            {
+                TMLPRINT.MTR_1 rptInvoice = new TMLPRINT.MTR_1(ds);
+                rptInvoice.PrintDirect(ItsPrinter.BarcodePrintName);
+
+                TMLPRINT.MTR_2 rptMove = new TMLPRINT.MTR_2(ds.Tables[4]);
+                rptMove.PrintDirect(ItsPrinter.BarcodePrintName);
+            }
+            catch (Exception ex)
+            {
+                ShowMessageBox("", "거래명세서 출력에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
             }
         }
 

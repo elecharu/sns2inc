@@ -64,6 +64,10 @@
     </Reference>
     <Reference Include="DevExpress.XtraPrinting.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
     <Reference Include="DevExpress.XtraReports.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="TMLPRINT, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\AAALIB\TMLPRINT.exe</HintPath>
+    </Reference>
     <Reference Include="MySql.Data, Version = 6.9.9.0, Culture = neutral, PublicKeyToken = c5687fc88969c44d, processorArchitecture = MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\AAALIB\MySql.Data.dll</HintPath>
@@ -110,6 +114,9 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="R01.xaml.cs">
+      <DependentUpon>R01.xaml</DependentUpon>
+    </Compile>
     <Compile Include="R02.xaml.cs">
       <DependentUpon>R02.xaml</DependentUpon>
     </Compile>
@@ -142,6 +149,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="R01.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="R02.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

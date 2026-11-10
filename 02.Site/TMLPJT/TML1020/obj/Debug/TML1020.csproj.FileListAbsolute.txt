@@ -34,5 +34,7 @@ D:\ITS_MES_SNSINC_FAC2_VA.1.0\02.Site\TMLPJT\TML1020\obj\Debug\TML1020.g.resourc
 D:\ITS_MES_SNSINC_FAC2_VA.1.0\02.Site\TMLPJT\TML1020\obj\Debug\TML1020.Properties.Resources.resources
 D:\ITS_MES_SNSINC_FAC2_VA.1.0\02.Site\TMLPJT\TML1020\obj\Debug\TML1020.csproj.GenerateResource.cache
 D:\ITS_MES_SNSINC_FAC2_VA.1.0\02.Site\TMLPJT\TML1020\obj\Debug\TML1020.csproj.CoreCompileInputs.cache
-D:\ITS_MES_SNSINC_FAC2_VA.1.0\02.Site\TMLPJT\TML1020\obj\Debug\TML1020.csproj.AssemblyReference.cache
-D:\ITS_MES_SNSINC_FAC2_VA.1.0\02.Site\TMLPJT\TML1020\obj\Debug\TML1020.csproj.Up2Date
+D:\ITS_MES_SNSINC_FAC2_VA.1.0\02.Site\TMLPJT\TML1020\obj\Debug\R02.g.cs
+D:\ITS_MES_SNSINC_FAC2_VA.1.0\02.Site\TMLPJT\TML1020\obj\Debug\R02.baml
+D:\ITS_MES_SNSINC_FAC2_VA.1.0\02.Site\TMLPJT\TML1020\obj\Debug\TML1020.csprojAssemblyReference.cache
+D:\ITS_MES_SNSINC_FAC2_VA.1.0\02.Site\TMLPJT\TML1020\obj\Debug\TML1020.csproj.CopyComplete

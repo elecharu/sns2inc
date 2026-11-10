@@ -38,6 +38,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DevExpress.Data.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Printing.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraPrinting.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraReports.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
     <Reference Include="DevExpress.Mvvm.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL">
       <Private>False</Private>
     </Reference>
@@ -76,6 +79,10 @@
     <Reference Include="ITSLIB, Version = 1.0.0.0, Culture = neutral, processorArchitecture = MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\AAALIB\ITSLIB.exe</HintPath>
+    </Reference>
+    <Reference Include="TMLPRINT, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\AAALIB\TMLPRINT.exe</HintPath>
     </Reference>
     <Reference Include="TMLMAIN, Version = 1.0.0.0, Culture = neutral, processorArchitecture = MSIL">
       <SpecificVersion>False</SpecificVersion>

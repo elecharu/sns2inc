@@ -89,6 +89,30 @@
     <Compile Include="PRD_1.Designer.cs">
       <DependentUpon>PRD_1.cs</DependentUpon>
     </Compile>
+    <Compile Include="MTR_1.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MTR_1.Designer.cs">
+      <DependentUpon>MTR_1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MTR_1_DOC.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MTR_1_DOC.Designer.cs">
+      <DependentUpon>MTR_1_DOC.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MTR_1_SUB.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MTR_1_SUB.Designer.cs">
+      <DependentUpon>MTR_1_SUB.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MTR_2.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SAL_1.cs">
+      <SubType>Component</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -106,6 +130,15 @@
     </Compile>
     <EmbeddedResource Include="OSC_1.resx">
       <DependentUpon>OSC_1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MTR_1.resx">
+      <DependentUpon>MTR_1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MTR_1_DOC.resx">
+      <DependentUpon>MTR_1_DOC.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MTR_1_SUB.resx">
+      <DependentUpon>MTR_1_SUB.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Licenses.licx" />
     <EmbeddedResource Include="Properties\Resources.resx">
