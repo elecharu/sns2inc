@@ -97,9 +97,8 @@
     text-align: center;
 }
 
-/* 문제점/조치사항·특이사항 입력 글씨 크게 */
-#pop_PROB_SOL textarea,
-#pop_ITEM_REMARK textarea {
+/* 문제점/조치사항 입력 글씨 크게 */
+#pop_PROB_SOL textarea {
     font-size: 30px !important;
     line-height: 1.4 !important;
     padding-top: 8px !important;

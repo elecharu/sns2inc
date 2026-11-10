@@ -34,7 +34,7 @@
         </Its:div>
         <Its:split runat="server" Type="Horizon" Resizeable="false" />
         <Its:div runat="server" Type="SplitDown">
-            <Its:div runat="server" Type="SplitLeft" LeftWidthPc="30">
+            <Its:div runat="server" Type="SplitLeft" LeftWidthPc="50">
                 <Its:grid runat="server" ID="grid1" />
             </Its:div>
             <Its:split runat="server" Type="Vertical" />
@@ -50,11 +50,11 @@
 
 <%-- POP --%>
 <asp:Content ContentPlaceHolderID="CPH_POP" runat="server">
-    <Its:pop runat="server" ID="pop1" Title="정기점검 등록" Type="add" Width="1200" Height="500">
+    <Its:pop runat="server" ID="pop1" Title="정기점검 등록" Type="add" Width="1150" Height="500">
         <Its:div runat="server" Type="SplitTop" ID="pdiv1">
-            <Its:find runat="server" Label="설비" ID="pop1_find_EQMCD" Field="EQMCD" GPCD="EQMCD" InputWidth="120" NameWidth="180" ReadOnly="true" MarginTop="10" MarginBottom="10" />
-            <Its:date runat="server" Label="점검일자" ID="pop1_date_BASEDATE" Field="BASEDATE" InputWidth="130" MarginTop="10" MarginBottom="10" />
-            <Its:find runat="server" Label="점검자" ID="pop1_find_EMPCD" Field="EMPCD" GPCD="EMPCD" InputWidth="110" NameWidth="140" MarginTop="10" MarginBottom="10" />
+            <Its:find runat="server" Label="설비" ID="pop1_find_EQMCD" Field="EQMCD" GPCD="EQMCD" LabelWidth="50" InputWidth="120" NameWidth="165" ReadOnly="true" MarginTop="10" MarginBottom="10" />
+            <Its:date runat="server" Label="점검일자" ID="pop1_date_BASEDATE" Field="BASEDATE" LabelWidth="80" InputWidth="120" MarginTop="10" MarginBottom="10" />
+            <Its:find runat="server" Label="점검자" ID="pop1_find_EMPCD" Field="EMPCD" GPCD="EMPCD" LabelWidth="60" InputWidth="120" NameWidth="140" MarginTop="10" MarginBottom="10" />
             <Its:text runat="server" Label="년월" ID="pop1_txt_YYYYMM" Field="YYYYMM" Hidden="true" />
             <Its:text runat="server" Label="설비 REV" ID="pop1_txt_REVCD" Field="REVCD" Hidden="true" />
             <Its:text runat="server" Label="그룹 REV" ID="pop1_txt_GRPREVCD" Field="GRPREVCD" Hidden="true" />
@@ -69,11 +69,11 @@
         </Its:div>
     </Its:pop>
 
-    <Its:pop runat="server" ID="pop2" Title="정기점검 수정" Type="add" Width="1200" Height="500">
+    <Its:pop runat="server" ID="pop2" Title="정기점검 수정" Type="add" Width="1150" Height="500">
         <Its:div runat="server" Type="SplitTop" ID="pdiv2">
-            <Its:find runat="server" Label="설비" ID="pop2_find_EQMCD" Field="EQMCD" GPCD="EQMCD" InputWidth="120" NameWidth="180" ReadOnly="true" MarginTop="10" MarginBottom="10" />
-            <Its:date runat="server" Label="점검일자" ID="pop2_date_BASEDATE" Field="BASEDATE" InputWidth="130" MarginTop="10" MarginBottom="10" />
-            <Its:find runat="server" Label="점검자" ID="pop2_find_EMPCD" Field="EMPCD" GPCD="EMPCD" InputWidth="110" NameWidth="140" MarginTop="10" MarginBottom="10" />
+            <Its:find runat="server" Label="설비" ID="pop2_find_EQMCD" Field="EQMCD" GPCD="EQMCD" LabelWidth="50" InputWidth="120" NameWidth="165" ReadOnly="true" MarginTop="10" MarginBottom="10" />
+            <Its:date runat="server" Label="점검일자" ID="pop2_date_BASEDATE" Field="BASEDATE" LabelWidth="80" InputWidth="120" MarginTop="10" MarginBottom="10" />
+            <Its:find runat="server" Label="점검자" ID="pop2_find_EMPCD" Field="EMPCD" GPCD="EMPCD" LabelWidth="60" InputWidth="120" NameWidth="140" MarginTop="10" MarginBottom="10" />
             <Its:text runat="server" Label="년월" ID="pop2_txt_YYYYMM" Field="YYYYMM" Hidden="true" />
             <Its:text runat="server" Label="점검키" ID="pop2_txt_CHKRSTKEY" Field="CHKRSTKEY" Hidden="true" />
             <Its:text runat="server" Label="문제점" ID="pop2_txt_PROBLEM" Field="PROBLEM" Hidden="true" />
@@ -123,12 +123,7 @@
         <Its:button runat="server" Label="NG" Width="141" Height="95" ID="btn_NG_TAL0001_R08" BackColor="CustomButton3" />
     </Its:pop>
 
-    <Its:pop runat="server" ID="pop_ITEM_REMARK" Type="add" Title="특이사항" Width="900">
-        <Its:textarea runat="server" Label="특이사항" ID="txtArea_ITEM_REMARK" InputWidth="760" InputHeight="200" />
-    </Its:pop>
-
-    <Its:pop runat="server" ID="pop_PROB_SOL" Type="add" Title="문제점/조치사항" Width="1250">
-        <Its:textarea runat="server" Label="문제점" ID="txtArea_PROBLEM" InputWidth="500" InputHeight="180" />
-        <Its:textarea runat="server" Label="조치사항" ID="txtArea_SOLUTION" InputWidth="500" InputHeight="180" />
+    <Its:pop runat="server" ID="pop_PROB_SOL" Type="add" Title="문제점/조치사항" Width="1150">
+        <Its:textarea runat="server" Label="문제점" ID="txtArea_PROBLEM" LabelWidth="90" InputWidth="440" InputHeight="180" /><Its:textarea runat="server" Label="조치사항" ID="txtArea_SOLUTION" LabelWidth="90" InputWidth="440" InputHeight="180" />
     </Its:pop>
 </asp:Content>

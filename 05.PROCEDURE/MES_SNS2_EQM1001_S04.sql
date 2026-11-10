@@ -6,7 +6,8 @@ PROCEDURE `MES_SNS2`.`EQM1001_S04`(
 -- Modify: 	2026-09-15 		마이그레이션	한성수
 -- 			2026-09-16 					한성수	설비점검실적 조회 마이그레이션
 -- 			2026-11-06 					한성수	점검시트 출력(CALL_CHKRST_RPT) 및 특이사항 조회 추가
--- 			2026-11-09 					한성수	점검항목·시트 계획 특이사항 연동 및 개정이력·담당자 조회 추가
+-- 			2026-11-09 					한성수	점검시트 개정이력 및 점검담당자 조회 연동
+-- 			2026-11-10 					한성수	점검실적 입력 특이사항 단독 표기 (계획 특이사항 대체 제거)
 -- *****************************************************************************
   IN $SDATE     VARCHAR(20),
   IN $EDATE     VARCHAR(20),
@@ -46,7 +47,7 @@ WHEN 'LIST_CHKRSTEQM' THEN
 -- *****************************************************************                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     **********
 WHEN 'LIST_CHKRSTEQMKND' THEN
   
-  -- 특이사항: 점검실적 특이사항, 없으면 점검 당시 적용 계획(REV) 항목 특이사항
+  -- 특이사항: 점검자가 점검 등록·수정 때 입력한 점검실적 특이사항
   SELECT
     CHKRSTEQMKND.CHKRSTKEY,
     CHKRSTEQMKND.CHKKNDCD,
@@ -55,13 +56,8 @@ WHEN 'LIST_CHKRSTEQMKND' THEN
     CHKRSTEQMKND.CHKMTH,
     CHKRSTEQMKND.CHKVALTP,
     CHKRSTEQMKND.CHKVALUE,
-    COALESCE(NULLIF(CHKRSTEQMKND.REMARK, ''), PLAN_ITEM.REMARK, '') AS REMARK
+    COALESCE(CHKRSTEQMKND.REMARK, '') AS REMARK
   FROM CHKRSTEQMKND
-  INNER JOIN CHKRSTEQM
-    ON CHKRSTEQM.CHKRSTKEY = CHKRSTEQMKND.CHKRSTKEY
-  LEFT JOIN MSTEQMREV_DETAIL PLAN_ITEM
-    ON PLAN_ITEM.REVCD = CASE CHKRSTEQMKND.PLANTP WHEN 'G' THEN CHKRSTEQM.GRPREVCD WHEN 'E' THEN CHKRSTEQM.REVCD END
-   AND PLAN_ITEM.CHKKNDCD = CHKRSTEQMKND.CHKKNDCD
 
   WHERE CHKRSTEQMKND.CHKRSTKEY = $CHKRSTKEY
 
@@ -96,20 +92,15 @@ WHEN 'CALL_CHKRST_RPT' THEN -- 점검 시트 출력 데이터 조회
   WHERE CHKRSTEQM.CHKRSTKEY = $CHKRSTKEY
   LIMIT 1;
 
-  -- 점검 시트 항목: 점검실적 항목별 점검값
+  -- 점검 시트 항목: 점검실적 항목별 점검값, 특이사항은 점검자가 입력한 점검실적 특이사항
   SELECT ROW_NUMBER() OVER (ORDER BY (CHKRSTEQMKND.PLANTP = 'G') DESC, CHKRSTEQMKND.SORTNO, CHKRSTEQMKND.CHKKNDCD) AS NO,
          COALESCE(NULLIF(GPCD('CHKLOC', CHKRSTEQMKND.CHKLOC), ''), CHKRSTEQMKND.CHKLOC) AS CHKITEM,
          CHKRSTEQMKND.CHKKNDNM AS CHKCONTENT,
          COALESCE(NULLIF(GPCD('CHKMTH', CHKRSTEQMKND.CHKMTH), ''), CHKRSTEQMKND.CHKMTH) AS CHKDEVICE,
          CHKRSTEQMKND.CHKVALUE AS CHKRESULT,
          '' AS CONFIRM,
-         COALESCE(NULLIF(CHKRSTEQMKND.REMARK, ''), PLAN_ITEM.REMARK, '') AS REMARK
+         COALESCE(CHKRSTEQMKND.REMARK, '') AS REMARK
   FROM CHKRSTEQMKND
-  INNER JOIN CHKRSTEQM
-    ON CHKRSTEQM.CHKRSTKEY = CHKRSTEQMKND.CHKRSTKEY
-  LEFT JOIN MSTEQMREV_DETAIL PLAN_ITEM
-    ON PLAN_ITEM.REVCD = CASE CHKRSTEQMKND.PLANTP WHEN 'G' THEN CHKRSTEQM.GRPREVCD WHEN 'E' THEN CHKRSTEQM.REVCD END
-   AND PLAN_ITEM.CHKKNDCD = CHKRSTEQMKND.CHKKNDCD
   WHERE CHKRSTEQMKND.CHKRSTKEY = $CHKRSTKEY
   ORDER BY (CHKRSTEQMKND.PLANTP = 'G') DESC, CHKRSTEQMKND.SORTNO, CHKRSTEQMKND.CHKKNDCD;
 

@@ -4,16 +4,17 @@ PROCEDURE `MES_SNS2`.`EQM1001_R04`(
 -- Comment: 설비 정기점검 등록 
 -- Create: 	2025-06-27  	생성 			이대규
 -- Modify: 	2026-09-15 		마이그레이션	한성수
--- 			2026-09-16 					한성수	MSTEQM.FANO(설비코드) 컬럼 바인딩 변경
--- 			2026-09-22 					한성수	승인된 설비그룹·설비별 정기점검 계획만 실행
--- 			2026-09-30 					한성수	설비 승인 리비전(REV) 승인본 기준 점검 및 점검실적 적용 리비전 기록
--- 			2026-10-01 					한성수	REVCD 기준 승인본/실적 처리, 설비그룹 없는 설비 지원 및 해당 월 점검자 반환
--- 			2026-10-02 					한성수	수정 조회 적용 리비전 반환, 중복·미계획 등록 차단, 항목·점검값 검증 및 성능 개선
--- 			2026-10-06 					한성수	승인 REV 조회 통합, 계획조회 REV 표시 및 DETAIL 설비코드 중복 제거
--- 			2026-10-08 					한성수	미사용 입력값 제거, 그룹·설비 승인본 독립 적용·실적 출처 저장·REV 번호 표시 및 DETAIL 사용여부 조건 제거
--- 			2026-10-12 					한성수	정기점검 월계획 직접 조회·중복 조회 정리
--- 			2026-10-23 					한성수	등록·수정 항목 조회 및 승인본 검증을 정기점검(CHKTP '02') REV로 제한
--- 			2026-11-09 					한성수	점검항목별 특이사항(REMARK) 조회·등록·수정(등록 기본값 계획 특이사항) 추가, 현황에 주기관리 점검자 지정 설비 포함(미승인 클릭 시 안내)·승인본 CHKTP '02' 한정
+-- 			2026-09-16 					한성수	설비코드(FANO) 바인딩 변경
+-- 			2026-09-22 					한성수	승인 리비전 기준 정기점검 계획 실행
+-- 			2026-09-30 					한성수	실적 적용 리비전(REV) 기록 및 승인본 기준 검증
+-- 			2026-10-01 					한성수	그룹 미지정 설비 점검 지원 및 월별 점검자 반환
+-- 			2026-10-02 					한성수	중복·미계획 등록 차단 및 점검값 유효성 검증
+-- 			2026-10-06 					한성수	승인 리비전 조회 통합 및 중복 컬럼 정리
+-- 			2026-10-08 					한성수	그룹·설비 리비전 독립 적용 및 실적 출처 저장
+-- 			2026-10-12 					한성수	월별 점검계획 직접 조회 및 중복 쿼리 정리
+-- 			2026-10-23 					한성수	등록·수정 항목 조회 및 검증을 정기점검('02')으로 제한
+-- 			2026-11-09 					한성수	점검항목 특이사항(REMARK) CRUD 추가 및 월별 점검자 배정 설비 연동
+-- 			2026-11-10 					한성수	신규 점검 시 특이사항 기본값 초기화 (계획 특이사항 대체 제거)
 -- *****************************************************************************
   IN $SYEAR           VARCHAR(50),
   IN $YYYYMM          VARCHAR(50),
@@ -217,7 +218,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     SELECT 'G' AS PLANTP,
            CONCAT('REV.', PLAN_REV.REVNUM) AS REVNM,
            COALESCE(_$EQMREVCD, '') AS EQMREVCD, COALESCE(_$GRPREVCD, '') AS GRPREVCD,
-           PLAN_ITEM.CHKKNDCD, PLAN_ITEM.CHKKNDNM, PLAN_ITEM.CHKLOC, PLAN_ITEM.CHKMTH, PLAN_ITEM.CHKVALTP, PLAN_ITEM.SORTNO, '' AS CHKVALUE, PLAN_ITEM.REMARK,
+           PLAN_ITEM.CHKKNDCD, PLAN_ITEM.CHKKNDNM, PLAN_ITEM.CHKLOC, PLAN_ITEM.CHKMTH, PLAN_ITEM.CHKVALTP, PLAN_ITEM.SORTNO, '' AS CHKVALUE, '' AS REMARK,
            COALESCE(_$PLANEMPCD, '') AS PLANEMPCD, _$PLANEMP AS PLANEMPNM
     FROM MSTEQMREV_DETAIL PLAN_ITEM
     INNER JOIN MSTEQMREV_HEADER PLAN_REV ON PLAN_REV.REVCD = PLAN_ITEM.REVCD
@@ -228,7 +229,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     SELECT 'E' AS PLANTP,
            CONCAT('REV.', PLAN_REV.REVNUM) AS REVNM,
            COALESCE(_$EQMREVCD, '') AS EQMREVCD, COALESCE(_$GRPREVCD, '') AS GRPREVCD,
-           PLAN_ITEM.CHKKNDCD, PLAN_ITEM.CHKKNDNM, PLAN_ITEM.CHKLOC, PLAN_ITEM.CHKMTH, PLAN_ITEM.CHKVALTP, PLAN_ITEM.SORTNO, '' AS CHKVALUE, PLAN_ITEM.REMARK,
+           PLAN_ITEM.CHKKNDCD, PLAN_ITEM.CHKKNDNM, PLAN_ITEM.CHKLOC, PLAN_ITEM.CHKMTH, PLAN_ITEM.CHKVALTP, PLAN_ITEM.SORTNO, '' AS CHKVALUE, '' AS REMARK,
            COALESCE(_$PLANEMPCD, '') AS PLANEMPCD, _$PLANEMP AS PLANEMPNM
     FROM MSTEQMREV_DETAIL PLAN_ITEM
     INNER JOIN MSTEQMREV_HEADER PLAN_REV ON PLAN_REV.REVCD = PLAN_ITEM.REVCD
