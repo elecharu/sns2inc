@@ -1,1 +1,12 @@
 ﻿/* TAL0001_R09: 설비부품 출고등록 (태블릿) */
+
+/* 출고 등록 창 입력칸 끝을 품목코드 칸에 맞춤 (태블릿 공통 날짜칸 폭 130 고정 대신) */
+#pdiv_OUT div.ItsDate_box > input {
+    width: 381px !important;
+}
+
+/* 출고수량 라벨 여백을 다른 입력칸(좌우 20px)과 같게 */
+#pdiv_OUT div.ItsNum_table > span {
+    margin-left: 20px;
+    margin-right: 20px;
+}

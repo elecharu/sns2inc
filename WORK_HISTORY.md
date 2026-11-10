@@ -251,6 +251,59 @@
   - 1. `TAL0001_R08.js` 전면 정비: 전체 날짜 주석(`2026-11-09`, `2026-11-10` 등) 및 두 줄 이상 장황하게 서술된 주석(L403-404, L420-421, L501-505 등) 제거, 160자 초과 구분선 배너 제거, 모든 주석을 깔끔한 단일 행 요약 설명으로 전환
 - **검증 결과**: Node.js 자바스크립트 구문 검사(`node -c`) 통과(오류 0건), 단일 UTF-8 with BOM 및 CRLF 검증 완료
 
+### 24. 태블릿 TAL0001_R09 설비부품 출고등록 구현 (TML1010_R05 출고만)
+- **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx), [01.Office/PAGETAL/TAL0001/TAL0001_R09.js](01.Office/PAGETAL/TAL0001/TAL0001_R09.js), [05.Procedure/MES_SNS2_TAL0001_R09.sql](05.Procedure/MES_SNS2_TAL0001_R09.sql)(신규), [05.Procedure/MES_SNS2_TAL0001_R09_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_TAL0001_R09_SYSTEM_PARAMETERS.sql)(신규)
+- **배경 및 원인**: 현장터미널(WPF) 설비부품 입출고 화면 TML1010_R05(02.Site/TMLPJT/TML1010/R05.xaml)의 UI/UX를 태블릿 웹으로 옮기되, 입고 관련 기능은 빼고 출고 등록만
+- **제외**: 입고(발주 조회·선택·입고 등록·라벨 출력), 입출고 이력 팝업, 라벨 재출력
+- **작업 내용**
+  - 1. 조회
+    - 1) 설비부품 재고 조회 : MSTITEM, MSTITEM_EQMPARTS(FACTORYCD = '07'), MSTLOCA_EQMPARTS (COMPANYCD = '60', ITEMCG = 'DM100700', ENDYN = 'N', 설비부품 재고 등록 품목만)
+    - 2) 재고그리드 : 설비부품코드, 설비부품명, 중요도등급, 로케이션(로케이션명, 없으면 코드), 안전재고, 현재고, 단위(DM150), 출고 버튼 / 현재고 < 안전재고 행 분홍색
+    - 3) 화면 열 때·[설비부품 재고조회] 버튼 조회
+    - 4) 프로시저 : TAL0001_R09 / LIST_EQMPARTS
+  - 2. 출고 등록
+    - 1) 재고그리드 [출고] 버튼 → 출고 등록 창 (출고일자 오늘, 품목코드·품명 표시, 출고구분 부품교체(OUT_01), 출고수량, 출고자 로그인 사원)
+    - 2) 출고구분 : 공통코드 INOUTTP_EQMPARTS 중 출고 코드(OUT_)만 표시 (25번에서 JS 목록 제거 → 공통코드 REF01="OUT" 조건으로 변경)
+    - 3) 출고 저장 : INOUT_EQMPARTS 등록 (INOROUT = 'OUT', OLDQTY = 출고 전 현재고, INOUTKEY = GETKEY('INOUTKEY')), MSTITEM_EQMPARTS 현재고 차감 (FACTORYCD = '07')
+    - 4) 저장 전 확인(프로시저) : 부품·출고일자·출고구분·출고자 미선택, 출고수량 0 이하, 현재고 초과 출고 불가
+    - 5) 확인창 후 저장, 저장 후 재고그리드 재조회
+    - 6) 프로시저 : TAL0001_R09 / OUT_EQMPARTS (TML1010_R05 OUT_EQMPARTS와 같은 테이블·값)
+- **참고 화면**: TML1010_R05(R05.xaml·R05.xaml.cs·MES_SNS2_TML1010_R05.sql) 출고 흐름, TAL0001_R07(태블릿 그리드 버튼·팝업), MST3001_R03(설비부품 재고 컬럼)
+- **적용 순서**: MES_SNS2_TAL0001_R09.sql 프로시저 저장 → MES_SNS2_TAL0001_R09_SYSTEM_PARAMETERS.sql 실행(정상 7건)
+- **검증 결과**: JS 구문 검사 통과, 프로시저 IF/END IF 6쌍·파라미터 7건 확인, 인코딩(aspx·js BOM+CRLF, sql BOM 없음+CRLF), JS 주석은 개정 규칙(날짜 없는 1줄)대로. 미확인: MariaDB 컴파일, 실제 화면·출고 저장(브라우저 로그인 세션 만료)
+- **후속(출고 등록 창 정렬)**: 출고수량만 시작점이 30px 왼쪽(태블릿 공통 Kiosk.css가 숫자칸 라벨만 왼쪽 여백 0·오른쪽 10, 다른 칸은 좌우 20), 출고자가 길고 줄마다 끝이 달라 정렬 요청
+  - TAL0001_R09.css(공통 CSS 미수정): 출고수량 라벨 좌우 여백 20, 출고일자 입력칸 폭 381(Kiosk.css가 날짜칸 130 고정 !important)
+  - TAL0001_R09.aspx 폭: 출고구분 InputWidth 200 → 361, 출고수량 200 → 420, 출고자 NameWidth 266 → 234, 출고일자 InputWidth 제거(CSS로 지정)
+  - 브라우저 실측(팝업 내용 기준): 6줄 모두 입력칸 시작 133px·끝 553px으로 일치
+- **후속(누락 기능 추가)**: 입고만 제외해야 하는데 입출고 이력·라벨출력까지 빠짐 → 입출고 이력은 출고 이력으로, 라벨출력은 그대로 추가
+  - 3. 출고 이력
+    - 1) 재고그리드 [출고 이력] 버튼 → 출고 이력 창 (조회일자 오늘~오늘, 선택 부품)
+    - 2) 출고 이력 조회 : INOUT_EQMPARTS (INOROUT = 'OUT', 조회일자 기간)
+    - 3) 이력그리드 : 발생일자, 출고유형(INOUTTP_EQMPARTS), 출고량, 처리자(EMPCD) (TML 입출고 이력의 입/출·입고량 칸 제외)
+    - 4) [출고 이력조회] 버튼 재조회
+    - 5) 프로시저 : TAL0001_R09 / LIST_OUT_EQMPARTS
+  - 4. 라벨출력
+    - 1) 재고그리드 [라벨출력] 버튼 → 선택 부품 라벨 출력 (공통 ItsTmlLabel → CONTROLLER/TmlLabel.aspx PDF 인쇄, 태블릿 TAL1001_R04 라벨출력과 같은 방식)
+    - 2) 라벨 양식 : EQMPARTS (TML1010_R05와 같음), 라벨 데이터 : MSTITEM (품명, 품목코드, 품목ID)
+    - 3) 프로시저 : TAL0001_R09 / GET_LABELCD, LABEL_REPRINT
+  - 프로시저 파라미터 SDATE·EDATE 추가(7 → 9건, SYSTEM_PARAMETERS 스크립트 정상 건수 갱신), Create 줄 문구 갱신
+  - 검증: JS 구문 검사 통과, IF/END IF 6쌍·WHEN 5개·파라미터 9건, 인코딩 확인. 미확인: 로컬 웹 서버 응답 없음으로 화면·이력 팝업·라벨 인쇄 미확인, MariaDB 컴파일
+- **후속(페이지 접속 시 서버 StackOverflowException)**: 출고 이력 창 조회일자(Its:dateRange)에 MarginBottom="10" 지정 → 공통 ItsDateRange.ascx.cs의 MarginBottom setter가 자기 자신에 대입(`MarginBottom = value;`)해 무한 재귀, IIS Express 프로세스 종료
+  - TAL0001_R09.aspx 조회일자에서 MarginBottom 제거 (공통 컴포넌트는 수정하지 않음)
+  - 같은 setter 오류가 있는 공통 컨트롤: ItsCheck, ItsDateRange, ItsDisplay, ItsFileManager, ItsLabel, ItsMonth, ItsNum, ItsOnoff, ItsRadio, ItsTextArea → 화면에서 이 컨트롤들에 MarginBottom 쓰지 않기 (ItsText·ItsDate·ItsCombo·ItsFind·ItsButton은 정상)
+
+### 25. 설비부품 출고구분 콤보에 출고 코드만 표시 (TML1010_R05·TAL0001_R09, 공통코드 REF01)
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_COMTYPE_INOUTTP_EQMPARTS_REF01.sql](05.Procedure/MES_SNS2_COMTYPE_INOUTTP_EQMPARTS_REF01.sql)(신규), [02.Site/TMLPJT/TML1010/R05.xaml](02.Site/TMLPJT/TML1010/R05.xaml), [01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx), [01.Office/PAGETAL/TAL0001/TAL0001_R09.js](01.Office/PAGETAL/TAL0001/TAL0001_R09.js)
+- **배경 및 원인**: TML1010_R05 출고 팝업 출고구분에 구매입고(IN_01)·부품교체(OUT_01)가 함께 보임(예전 C# DataView 필터는 framework_convention.md 5조 위반으로 삭제됨). TAL0001_R09는 JS로 IN_ 목록을 지워 1개만 보였으나 같은 종류의 우회 코드. 공통코드 INOUTTP_EQMPARTS를 그대로 쓰면서 출고 관련 코드만 보이도록 요청
+- **참고**: TML1030_R01 출고구분 `GPCD="INOUTTP_PRDCONSUM" REF01="OUT"` (공통코드 REF01로 입·출 구분, 공통 콤보 DC_COMBO `REF01 LIKE CONCAT('%', $REF01, '%')`)
+- **작업 내용**
+  - 1. 공통코드 : COMTYPE (GPCD = 'INOUTTP_EQMPARTS') REF01 = 'IN'(TPCD IN_%), 'OUT'(TPCD OUT_%) 등록 SQL (사용자 실행)
+  - 2. TML1010_R05 출고 팝업 출고구분(cmb_OUTTP) : REF01="OUT" 추가 → 부품교체만 표시 (숨은 입고구분 cmb_INTP는 변경 없음)
+  - 3. TAL0001_R09 출고 등록 창 출고구분(pop_cmb_OUTTP) : REF01="OUT" 추가, JS의 IN_ 목록 제거 코드 삭제
+- **적용 순서**: 공통코드 SQL 먼저 실행(REF01이 비어 있으면 REF01="OUT" 콤보 목록이 빈 상태가 됨) → TML1010 빌드·배포 → 태블릿 새로고침
+- **검증 결과**: TML1010 MSBuild 15.0 Release 빌드 성공(스크래치 폴더 출력, AAABIN 배포 안 함). 빌드 후 이벤트(COPY → 프로젝트 폴더 TML1010.exe)로 프로젝트 폴더 exe가 덮어써져 AAABIN/TML1010.exe(동일 크기·시각이던 원본)로 복원(MD5 일치). JS 구문 검사 통과, 인코딩 확인. 미확인: 공통코드 SQL 실행 결과(실제 REF01 현재 값), 실제 화면
+- **배포**: 사용자 요청으로 TML1010 Release 재빌드 후 배포 (실행 중인 TML1010 없음 확인). bin/Release EXE·PDB → 02.Site/AAABIN 복사, 프로젝트 루트 TML1010.exe는 빌드 후 이벤트로 갱신. EXE SHA256 68c477e3…ecb85 (Release·AAABIN·프로젝트 루트 3경로 일치), PDB SHA256 d212f887…51dc (Release·AAABIN 일치). 컴파일된 R05.baml에 cmb_OUTTP REF01="OUT" 포함 확인
+
 ---
 
 ## 🕒 2026-11-09 (월) 작업 내역

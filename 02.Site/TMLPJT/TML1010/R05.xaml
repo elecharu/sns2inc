@@ -130,7 +130,7 @@
                     <its:Date Grid.Row="0" Label="출고일자" LabelWidth="75" Width="240" HorizontalAlignment="Left" Value="{Binding OUTDATE}" />
                     <its:Text Grid.Row="1" Label="품목코드" LabelWidth="75" Width="404" Value="{Binding ITEMCD}" ReadOnly="True" />
                     <its:Text Grid.Row="2" Label="품명" LabelWidth="75" Width="404" Value="{Binding ITEMNM}" ReadOnly="True" />
-                    <its:Combo Grid.Row="3" Label="출고구분" LabelWidth="75" Width="280" HorizontalAlignment="Left" Value="{Binding OUTTP}" GPCD="INOUTTP_EQMPARTS" x:Name="cmb_OUTTP" />
+                    <its:Combo Grid.Row="3" Label="출고구분" LabelWidth="75" Width="280" HorizontalAlignment="Left" Value="{Binding OUTTP}" GPCD="INOUTTP_EQMPARTS" x:Name="cmb_OUTTP" REF01="OUT" />
                     <its:Number Grid.Row="4" Label="출고수량" LabelWidth="75" Width="280" HorizontalAlignment="Left" Value="{Binding OUTQTY}" ShowKeyPad="True" DecimalPoint="0" />
                     <its:Pop Grid.Row="5" x:Name="pop_OUT_EMP" Label="출고자" LabelWidth="75" Width="404" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True" />
                     <its:Button Grid.Row="7" Width="230" Height="50" HorizontalAlignment="Center" Label="출고 등록" CommandName="OUT_EQMPARTS" BackColor="Orange" SetFontSize="18" />

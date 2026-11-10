@@ -1,0 +1,22 @@
+-- *****************************************************************************
+-- Comment: TAL0001_R09 (설비부품 출고등록, 태블릿) 프로시저 호출 파라미터 등록
+-- Create:  2026-11-10  한성수
+-- *****************************************************************************
+-- TAL0001_R09 프로시저 저장 후 아래 트랜잭션을 실행
+START TRANSACTION;
+DELETE FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'TAL0001_R09';
+
+INSERT INTO MES_SNS2.SYSTEM_PARAMETERS
+SELECT * FROM information_schema.PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'TAL0001_R09';
+COMMIT;
+
+-- 정상 9건: SDATE 1번 ~ EMPCD 7번, CALLTYPE 8번, KEYWORD 9번
+SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
+FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'TAL0001_R09'
+ORDER BY ORDINAL_POSITION;
