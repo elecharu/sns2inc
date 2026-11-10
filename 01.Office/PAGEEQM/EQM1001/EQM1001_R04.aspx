@@ -25,7 +25,6 @@
 
 <%-- POP --%>
 <asp:Content ContentPlaceHolderID="CPH_POP" runat="server">
-    <%-- 2026-11-09 입력칸 시작·끝 정렬: 라벨 70, 1행 3칸 입력폭 284, 문제점·조치사항 전체폭 1000 (시작 74px·끝 1074px), 특이사항 컬럼 추가로 팝업 확대 --%>
     <Its:pop runat="server" ID="pop1" Title="정기점검 등록" Type="add" Width="1100" Height="420">
         <Its:div runat="server" Type="SplitTop" ID="pdiv1">
             <Its:find runat="server" Label="설비코드" ID="pop1_find_EQMCD" Field="EQMCD" GPCD="EQMCD" LabelWidth="70" InputWidth="90" NameWidth="175" ReadOnly="true" />
@@ -34,9 +33,8 @@
             <Its:text runat="server" Label="REV키" ID="pop1_txt_REVCD" Field="REVCD" Hidden="true"/>
             <Its:text runat="server" Label="그룹계획키" ID="pop1_txt_GRPREVCD" Field="GRPREVCD" Hidden="true"/>
             <Its:newline runat="server" />
-            <Its:textarea runat="server" Label="문제점" ID="pop1_txtarea_PROBLEM" Field="PROBLEM" LabelWidth="70" InputWidth="1000" />
-            <Its:newline runat="server" />
-            <Its:textarea runat="server" Label="조치사항" ID="pop1_txtarea_SOLUTION" Field="SOLUTION" LabelWidth="70" InputWidth="1000" />
+            <Its:textarea runat="server" Label="문제점" ID="pop1_txtarea_PROBLEM" Field="PROBLEM" LabelWidth="70" InputWidth="463" InputHeight="90" />
+            <Its:textarea runat="server" Label="조치사항" ID="pop1_txtarea_SOLUTION" Field="SOLUTION" LabelWidth="70" InputWidth="463" InputHeight="90" />
             <Its:text runat="server" Label="년월" ID="txt_YYYYMM" Field="YYYYMM" Hidden="true"/>
         </Its:div>
 
@@ -47,16 +45,14 @@
         </Its:div> 
     </Its:pop>
 
-    <%-- 2026-11-09 등록 팝업과 같은 정렬, 점검삭제 버튼 오른쪽 끝을 입력칸 끝(1074px)에 맞춤 --%>
     <Its:pop runat="server" ID="pop2" Title="정기점검 수정" Type="add" Width="1100" Height="420">
         <Its:div runat="server" Type="SplitTop" ID="pdiv3">
             <Its:find runat="server" Label="설비코드" ID="pop2_find_EQMCD" Field="EQMCD" GPCD="EQMCD" LabelWidth="70" InputWidth="90" NameWidth="175" ReadOnly="true" />
             <Its:date runat="server" Label="점검일자" ID="pop2_date_BASEDATE" Field="BASEDATE" LabelWidth="70" InputWidth="284" />
             <Its:find runat="server" Label="점검자" ID="pop2_find_EMPCD" Field="EMPCD" GPCD="EMPCD" LabelWidth="70" InputWidth="90" NameWidth="175" />
             <Its:newline runat="server" />
-            <Its:textarea runat="server" Label="문제점" ID="pop2_txtarea_PROBLEM" Field="PROBLEM" LabelWidth="70" InputWidth="1000" />
-            <Its:newline runat="server" />
-            <Its:textarea runat="server" Label="조치사항" ID="pop2_txtarea_SOLUTION" Field="SOLUTION" LabelWidth="70" InputWidth="1000" />
+            <Its:textarea runat="server" Label="문제점" ID="pop2_txtarea_PROBLEM" Field="PROBLEM" LabelWidth="70" InputWidth="463" InputHeight="90" />
+            <Its:textarea runat="server" Label="조치사항" ID="pop2_txtarea_SOLUTION" Field="SOLUTION" LabelWidth="70" InputWidth="463" InputHeight="90" />
             <Its:newline runat="server" />
             <Its:button runat="server" Label="점검삭제" ID="pop2_btn_DELETE_CHKRSTEQM" BackColor="CustomButton3" Float="right" MarginRight="6"/>
             <Its:newline runat="server" />
