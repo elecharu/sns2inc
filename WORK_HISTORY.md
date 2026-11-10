@@ -1,4 +1,4 @@
-﻿# MES 프로젝트 작업 이력 및 변경 관리 대장 (Work History)
+# MES 프로젝트 작업 이력 및 변경 관리 대장 (Work History)
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
@@ -19,15 +19,17 @@
 ## 🕒 2026-11-10 (화) 작업 내역
 
 ### 1. TAL0001_R08 등록·수정 팝업 상단 한 줄 배치, 특이사항을 R05처럼 그리드 칸에 바로 입력
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx), [TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js), [TAL0001_R08.css](01.Office/PAGETAL/TAL0001/TAL0001_R08.css)
 - **배경 및 원인**: 등록·수정 팝업 상단 설비·점검일자·점검자가 두 줄로 꺾임. 특이사항·OK/NG 입력이 원래 페이지(TAL0001_R05) UI인지 확인 요청
 - **R05 비교 결과**: OK/NG 선택 팝업(pop_OK, 폭 180, OK·NG 버튼 141×95, CustomButton·CustomButton3)은 R05와 동일. 특이사항 입력 팝업(pop_ITEM_REMARK)은 R05에 없던 것으로, R05는 등록·수정 그리드의 비고(REMARK) 칸에 바로 입력(readOnly false)
 - **작업 상세 내용**:
   - 1. 팝업 상단 한 줄: 설비 코드 120→100·이름 180→140, 점검일자 130→120(R05와 같음), 점검자 이름 140→110 (등록·수정 팝업 동일)
-  - 2. 특이사항: 큰 입력 팝업 제거, 등록(grid3)·수정(grid4) 그리드 특이사항 칸을 입력 가능하게(메인 grid2는 조회 전용), 점검값 두 번 누르기 입력은 특이사항 칸에서 열리지 않게, 저장 전 그리드 입력 확정(finishEditing)
+  - 1. 특이사항: 큰 입력 팝업 제거, 등록(grid3)·수정(grid4) 그리드 특이사항 칸을 입력 가능하게(메인 grid2는 조회 전용), 점검값 두 번 누르기 입력은 특이사항 칸에서 열리지 않게, 저장 전 그리드 입력 확정(finishEditing)
 - **검증 결과**: JS 구문 검사 통과, JS 사용 컨트롤 ID 전부 aspx 존재, 인코딩(BOM+CRLF). 미확인: 실제 태블릿에서 한 줄 배치·칸 입력
 
 ### 2. TAL0001_R08 등록·수정 팝업 상단 설비·점검자 칸 넓히기, 문제점/조치사항 R05 비교
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx)
 - **배경 및 원인**: 1번에서 한 줄로 맞추며 폭을 줄여 설비 코드·설비명(I2C-003N, CNC선반(M2라…)) 등이 잘림
 - **작업 상세 내용**: 한 줄을 유지하도록 라벨 폭을 줄이고(기본 90 → 설비 50·점검일자 80·점검자 60) 팝업 폭 1200 → 1250(문제점/조치사항 팝업과 같음), 설비 코드 100→120·설비명 140→190, 점검자 코드 110→120·점검자명 110→150 (등록·수정 동일)
@@ -35,165 +37,183 @@
 - **검증 결과**: 인코딩(BOM+CRLF). 미확인: 실제 태블릿에서 한 줄 배치
 
 ### 3. TAL0001_R08 왼쪽 점검 정보 그리드 컬럼 변경, 팝업 점검값 칸 흰 배경
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js), [TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx)
 - **배경 및 원인**: 왼쪽 그리드를 점검월·상태·점검일자·점검자 대신 점검일자·점검유형·점검자·점검상태·문제점·조치사항으로 요청. 등록·수정 팝업의 점검값·특이사항은 입력 칸이므로 흰 배경 요청
 - **작업 상세 내용**:
   - 1. 왼쪽 그리드(grid1): 점검일자(110)·점검유형(CHKTP '02', 공통코드 CHKTP 콤보 표시 = EQM1001_S04와 같은 방식)·점검자(사원명)·점검상태(점검필요/점검완료)·문제점(200)·조치사항(200). 점검월·점검자코드·점검키는 숨김 유지. 컬럼이 늘어 왼쪽 영역 30% → 50%
-  - 2. 등록·수정 팝업 그리드: 점검값 칸은 숫자패드·OK/NG로 입력해 그리드 직접 편집은 막혀 있어 공통 그리드가 회색(#F7F7F7)으로 칠하므로 흰색(#FFFFFF) 지정. 특이사항 칸은 직접 입력 칸이라 원래 흰색. 메인 오른쪽 점검 항목 그리드는 조회 전용이라 기존 색 유지
+  - 1. 등록·수정 팝업 그리드: 점검값 칸은 숫자패드·OK/NG로 입력해 그리드 직접 편집은 막혀 있어 공통 그리드가 회색(#F7F7F7)으로 칠하므로 흰색(#FFFFFF) 지정. 특이사항 칸은 직접 입력 칸이라 원래 흰색. 메인 오른쪽 점검 항목 그리드는 조회 전용이라 기존 색 유지
 - **검증 결과**: JS 구문 검사 통과, 인코딩(BOM+CRLF). 미확인: 실제 태블릿 화면(점검유형 콤보 표시명)
 
 ### 4. EQM1001_R04 정기점검 등록·수정 팝업 문제점·조치사항 한 줄 좌우 배치
+
 - **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx)
 - **배경 및 원인**: 등록(pop1)·수정(pop2) 팝업의 문제점·조치사항이 위아래 두 줄(각 입력폭 1000)이라 보기 불편하다는 요청
 - **작업 상세 내용**: 두 입력칸 사이 줄바꿈 제거, 한 줄 좌우 배치. 라벨 70 그대로, 입력폭 각 463(시작 74px·끝 1074px 유지 = 74 + 463 + 칸 간격 4 + 라벨 70 + 463), 높이 90. 팝업 크기 그대로(두 줄이 한 줄로 줄어 그리드 영역이 넓어짐), 주석의 정렬 설명 갱신
 - **검증 결과**: 인코딩(BOM+CRLF). 끝선 계산은 11-09 1번에서 측정한 칸 간격(4px) 기준. 미확인: 실제 화면
 
 ### 5. TAL0001_R08 설비 선택 시 바로 조회
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: 설비를 선택해도 [조회]를 눌러야 반영됨
 - **작업 상세 내용**:
   - 1. 설비 찾기(find_EQMCD) 값이 바뀌면(입력 후 이동·찾기 팝업 선택·지우기) 바로 그 설비 조건으로 다시 조회
-  - 2. 같이 했던 조회년도 범위 확대(REF01="-5" REF02="3")·기본값 연도 값 지정은 사용자 요청으로 롤백: 원래대로 REF01="-4" REF02="0"(올해-4 ~ 올해), 기본값 SetValueByIndex 4(올해)
+  - 1. 같이 했던 조회년도 범위 확대(REF01="-5" REF02="3")·기본값 연도 값 지정은 사용자 요청으로 롤백: 원래대로 REF01="-4" REF02="0"(올해-4 ~ 올해), 기본값 SetValueByIndex 4(올해)
 - **검증 결과**: JS 구문 검사 통과, 인코딩(BOM+CRLF). 미확인: 실제 태블릿 동작
 
 ### 6. TAL0001_R08 점검값 칸 한 번 누르기로 입력창 열기
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: 태블릿 해상도에서 등록·수정 팝업의 점검값 칸을 두 번 눌러도 숫자패드·OK/NG 창이 안 뜸. 더블클릭은 Kiosk.js가 모든 그리드에 dblclick으로 연결하는데, Kiosk.master에 viewport 설정이 없어 터치 브라우저(개발자도구 태블릿 모드 포함)가 두 번 누르기를 화면 확대로 처리해 dblclick이 오지 않음. TAL0001_R05도 같은 방식이라 같은 증상 예상
 - **작업 상세 내용**:
   - 1. BIND_ITEM_INPUT_CLICK: grid3·grid4 생성 직후 그리드 click 이벤트를 페이지에서 연결, hitTest로 누른 칸의 행·필드를 구해 OPEN_ITEM_INPUT 호출 (기존 onDoubleClick 연결 제거)
-  - 2. OPEN_ITEM_INPUT: 점검값(CHKVALUE) 칸일 때만 열림(한 번 누르기라 다른 칸을 눌러 행을 고를 때 열리지 않게), 특이사항은 그대로 칸에 바로 입력
-  - 3. 공통 Kiosk.js·Kiosk.master는 수정하지 않음 (viewport 추가 시 다른 태블릿 화면 크기 전체가 바뀔 수 있음)
+  - 1. OPEN_ITEM_INPUT: 점검값(CHKVALUE) 칸일 때만 열림(한 번 누르기라 다른 칸을 눌러 행을 고를 때 열리지 않게), 특이사항은 그대로 칸에 바로 입력
+  - 1. 공통 Kiosk.js·Kiosk.master는 수정하지 않음 (viewport 추가 시 다른 태블릿 화면 크기 전체가 바뀔 수 있음)
 - **검증 결과**: JS 구문 검사 통과, 인코딩(BOM+CRLF). 미확인: 로컬 브라우저 로그인 세션 만료로 화면 동작 및 실제 태블릿 미확인
 
 ### 7. 정기점검 주기관리·실적 초기화 SQL 작성
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_CYCLE_RESET.sql](05.Procedure/MES_SNS2_EQM1001_CYCLE_RESET.sql) (신규, DB 실행은 사용자)
 - **배경 및 원인**: EQM1001_R03 주기관리 탭·EQM1001_R04 조회 데이터에 예전 데이터가 섞여 오류가 나는 것으로 보여, 정기점검 데이터를 비우고 초기 상태로 되돌리기를 요청
 - **작업 상세 내용**:
   - 1. 대상(프로시저 확인): CHKPLANEQM_YEARPLAN(주기관리 월별 점검자), CHKRSTEQM·CHKRSTEQMKND(정기점검 실적 헤더·항목), 모두 CHKTP '02' 기준. 일상점검('01')·점검계획 REV(MSTEQMREV_HEADER/DETAIL)는 제외
-  - 2. 순서: 현황 확인(점검구분·연도별 건수, 삭제 대상 건수, 헤더 없는 항목 수) → 삭제 대상만 BAK_20261110_* 테이블로 백업(트랜잭션 전, CREATE TABLE 자동 커밋) → 트랜잭션에서 항목·헤더·주기관리 순서로 삭제 → 결과 확인 후 COMMIT/ROLLBACK, 복구·백업 정리 구문 주석 포함
+  - 1. 순서: 현황 확인(점검구분·연도별 건수, 삭제 대상 건수, 헤더 없는 항목 수) → 삭제 대상만 BAK_20261110_* 테이블로 백업(트랜잭션 전, CREATE TABLE 자동 커밋) → 트랜잭션에서 항목·헤더·주기관리 순서로 삭제 → 결과 확인 후 COMMIT/ROLLBACK, 복구·백업 정리 구문 주석 포함
 - **검증 결과**: 인코딩(UTF-8 BOM 없음+CRLF). DB 실행 안 함
 
 ### 8. TAL0001_R08 1200x800 태블릿 화면 대응 (문제점/조치사항 잘림 등)
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx), [TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: 1200x800(메뉴 제외 화면 약 1195x730)에서 문제점/조치사항 창에 문제점만 보임. 팝업 폭 1250 > 화면 → 공통 ItsPop이 열 때 폭을 화면에 맞추면서 조치사항이 다음 줄로 넘어가는데, 높이는 한 줄 기준(229)으로 이미 정해져 있고 overflow hidden이라 잘림(브라우저에서 재현)
 - **작업 상세 내용**:
   - 1. 문제점/조치사항 창: 폭 1150, 두 입력칸 라벨 90·입력 440(높이 180)으로 한 줄 좌우 배치. 열릴 때(onPopOpened) 높이를 내용 + 저장·취소 버튼 줄(45)로 다시 맞춰, 더 좁은 화면에서 두 줄이 되어도 잘리지 않음. 화면 키보드가 아래를 가리지 않게 창을 화면 위쪽(10px)에 붙임
-  - 2. 정기점검 등록·수정 창: 폭 1250 → 1150 (화면보다 넓어 좌우 끝에 붙던 문제, 머리 입력칸·항목 그리드 칸 합계 1000은 그대로 들어감)
-  - 3. 메인 왼쪽 grid1(폭 약 580): 고정 칸 105·85·85·85로 줄이고 문제점·조치사항은 남은 폭('*') → 가로 스크롤 없이 표시
-  - 4. 메인 오른쪽 grid2(폭 약 580): 칸을 줄여(70·140·85·80·85·70) 점검값까지 가로 스크롤 없이 보이게 하고 특이사항은 남은 폭('*'). 등록·수정 팝업 grid3·grid4는 기존 폭 유지
+  - 1. 정기점검 등록·수정 창: 폭 1250 → 1150 (화면보다 넓어 좌우 끝에 붙던 문제, 머리 입력칸·항목 그리드 칸 합계 1000은 그대로 들어감)
+  - 1. 메인 왼쪽 grid1(폭 약 580): 고정 칸 105·85·85·85로 줄이고 문제점·조치사항은 남은 폭('*') → 가로 스크롤 없이 표시
+  - 1. 메인 오른쪽 grid2(폭 약 580): 칸을 줄여(70·140·85·80·85·70) 점검값까지 가로 스크롤 없이 보이게 하고 특이사항은 남은 폭('*'). 등록·수정 팝업 grid3·grid4는 기존 폭 유지
 - **검증 결과**: JS 구문 검사 통과, 인코딩(BOM+CRLF). 브라우저(1195x730·1000x730)에서 문제점/조치사항 창: 한 줄 배치·두 줄 넘김 모두 입력칸과 저장·취소 버튼 전체 표시 확인. 미확인: 로그인 세션 만료로 등록·수정 창과 메인 그리드 실제 표시, 실제 태블릿 화면 키보드 동작
 
 ### 9. TAL0001_R08 문제점/조치사항 창 가운데 배치, 그리드 우클릭 메뉴 끔
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: 8번에서 화면 키보드 대응으로 창을 화면 위쪽에 붙였더니 너무 위로 올라가 어색함. 그리드 칸(특이사항)을 두 번 누르면 공통 그리드 우클릭 메뉴(전체선택·영역선택·엑셀내보내기 등)가 뜸 - ItsGrid 기본값 contextMenu true, 태블릿에서 길게·두 번 누르기가 contextmenu 이벤트로 처리됨
 - **작업 상세 내용**:
   - 1. 문제점/조치사항 창: 위쪽 고정 제거, 높이를 내용에 맞춘 뒤 jQuery UI dialog position(center/center/window)으로 다시 가운데 배치
-  - 2. grid1~grid4 생성 옵션에 contextMenu: false (TAL0001_R07과 같은 방식, 공통 컴포넌트 수정 없음)
+  - 1. grid1~grid4 생성 옵션에 contextMenu: false (TAL0001_R07과 같은 방식, 공통 컴포넌트 수정 없음)
 - **검증 결과**: JS 구문 검사 통과, 인코딩(BOM+CRLF). 브라우저 1195x730에서 창 위·아래 여백 216/215로 가운데 배치 확인. 미확인: 실제 태블릿에서 메뉴 안 뜨는지(로그인 세션 만료로 그리드 생성 불가)
 
 ### 10. TAL0001_R08 등록·수정 창 설비·점검일자·점검자 한 줄 배치
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx)
 - **배경 및 원인**: 8번에서 창 폭을 1150으로 줄인 뒤 점검자가 다음 줄로 넘어감. 브라우저 측정: 설비 439 + 점검일자 291 + 점검자 409 = 1139px > 입력 영역 1130px
 - **작업 상세 내용**: pop1·pop2 설비명 칸 190 → 165, 점검자명 칸 150 → 140 (합계 1104px). 점검일자 라벨은 70으로 줄이면 "점검일자"가 두 줄로 꺾여 80 유지
 - **검증 결과**: 인코딩(BOM+CRLF). 브라우저 1195x730에서 pop1·pop2 모두 세 항목이 같은 줄(끝 1137px, 영역 끝 1163px) 확인. 미확인: 실제 태블릿 글꼴 크기에서의 표시
 
 ### 11. TAL0001_R08 메인 오른쪽 항목 그리드 글자 잘림 대응
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: 메인 grid2 폭이 화면 절반(약 595, 행번호 제외 약 550)이라 8번에서 줄인 폭(70·140·85·80·85·70)으로 7칸을 넣으니 "적용 REV"·"점검값구분" 제목이 잘리고 특이사항(남은 폭)은 거의 0
 - **작업 상세 내용**: 메인(isEdit false)만 점검값구분 숨김(점검값이 OK/NG·숫자로 바로 구분, 입력은 팝업에서), REV 제목 "적용 REV" → "REV", 폭 REV 70·점검명 135·점검항목 90·점검방법 90·점검값 80, 특이사항 남은 폭(약 85). 등록·수정 팝업 grid3·grid4는 그대로(점검값구분 표시, 기존 폭)
 - **검증 결과**: JS 구문 검사 통과, 인코딩(BOM+CRLF). 미확인: 로그인 세션 만료로 실제 그리드 표시(폭은 태블릿 글꼴 기준 추정)
 
 ### 12. TAL0001_R08 하단 그리드 좌우 스크롤 방식으로 변경 (8·11번 칸 줄이기 되돌림)
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: 사용자 요청 - 칸을 줄이거나 숨기지 말고, 특이사항 등이 잘리면 하단 그리드를 좌우로 스크롤해서 볼 수 있게
 - **작업 상세 내용**:
   - 1. 왼쪽 grid1: 남은 폭('*') 대신 고정 폭(점검일자 110·점검유형 90·점검자 100·점검상태 90·문제점 250·조치사항 250, 합계 890) → 화면 절반을 넘는 부분은 좌우 스크롤
-  - 2. 오른쪽 grid2: 11번의 점검값구분 숨김·"REV" 제목·줄인 폭 되돌리고 팝업과 같은 칸·폭(적용 REV 90·점검명 230·점검항목 120·점검방법 100·점검값구분 100·점검값 100·특이사항 300, 합계 1040) → 좌우 스크롤로 특이사항까지 확인
-  - 3. 등록·수정 팝업 grid3·grid4: 특이사항 260 → 300 (합계 1040 + 행번호, 팝업 입력 영역 1130 안)
+  - 1. 오른쪽 grid2: 11번의 점검값구분 숨김·"REV" 제목·줄인 폭 되돌리고 팝업과 같은 칸·폭(적용 REV 90·점검명 230·점검항목 120·점검방법 100·점검값구분 100·점검값 100·특이사항 300, 합계 1040) → 좌우 스크롤로 특이사항까지 확인
+  - 1. 등록·수정 팝업 grid3·grid4: 특이사항 260 → 300 (합계 1040 + 행번호, 팝업 입력 영역 1130 안)
 - **검증 결과**: JS 구문 검사 통과, 인코딩(BOM+CRLF). 미확인: 로그인 세션 만료로 실제 스크롤 표시
 
 ### 13. TAL0001_R08 그리드 칸 폭 자동 맞춤(autoSizeColumns)
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: 12번 고정 폭(특이사항 300·문제점/조치사항 250 등)이 너무 넓다는 의견, 내용에 맞춰 동적으로 정해지길 요청
 - **작업 상세 내용**:
   - 1. AUTO_SIZE_GRID(gridId): Wijmo FlexGrid autoSizeColumns()(공통 그리드 우클릭 '컬럼너비맞춤', EQM1001_S03·LOT1002 등에서 쓰는 방식)로 제목·내용 길이에 맞춘 뒤, 한 칸 최대 300, 등록·수정 팝업 특이사항은 바로 입력하므로 최소 250
-  - 2. 호출: 메인 grid1·grid2는 LOAD_DETAIL에서 데이터를 넣은 직후, 팝업 grid3·grid4는 창을 연 직후(보이는 상태여야 글자 폭 측정 가능)
-  - 3. 기본 폭(자동 맞춤 전) 축소: grid1 문제점·조치사항 150, 항목 그리드 점검명 180·점검항목 100·점검값 90·특이사항 200
-  - 4. 합계가 그리드보다 넓으면 좌우 스크롤 유지
+  - 1. 호출: 메인 grid1·grid2는 LOAD_DETAIL에서 데이터를 넣은 직후, 팝업 grid3·grid4는 창을 연 직후(보이는 상태여야 글자 폭 측정 가능)
+  - 1. 기본 폭(자동 맞춤 전) 축소: grid1 문제점·조치사항 150, 항목 그리드 점검명 180·점검항목 100·점검값 90·특이사항 200
+  - 1. 합계가 그리드보다 넓으면 좌우 스크롤 유지
 - **검증 결과**: JS 구문 검사 통과, 인코딩(BOM+CRLF). 미확인: 로그인 세션 만료로 실제 자동 폭 결과(태블릿 글꼴 기준)
 
 ### 14. TAL0001_R08 프로시저 검토 개선 6건 반영
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql), [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: 프로시저 검토 결과(행 중복·무리한 JOIN 없음) 동작 위험 2건·정리 4건 반영 요청
 - **작업 상세 내용**:
   - 1. SEARCH_CHKRSTEQM 실적 항목: REV 헤더 INNER JOIN → LEFT JOIN, REVNM은 못 찾으면 빈 값 (REV 못 찾는 항목이 빠져 수정 저장 시 항목 수 불일치로 저장 불가되던 위험)
-  - 2. 신규 분기 SEARCH_PLAN_EMP: 주기관리 그 달 배정 점검자(PLANEMPCD·PLANEMPNM·PLANEMPNAME) 조회. 화면 LOAD_DETAIL에서 LIST_PLAN_EQM02가 실패(승인 계획 없음)하면 이 분기로 점검자만 가져와 표시(실패 시 무표시). 파라미터 추가 없음(SYSTEM_PARAMETERS 그대로 16건)
-  - 3. LIST_CYCLE_EQMCD APPROVED_PLAN: MSTEQMREV_DETAIL INNER JOIN + GROUP BY → EXISTS (항목 존재만 확인)
-  - 4. LIST_PLAN_EQM02 사원 조회: MSTEMP 두 번(SET 서브쿼리 2개) → SELECT MAX(EMPCD), MAX(EMPNM) INTO 한 번 (집계라 사원 없어도 1행)
-  - 5. LIST_PLAN_EQM02 항목: 그룹·설비 UNION ALL 두 조회 → REVCD IN (그룹, 설비) 단일 조회, 계획구분은 REV 헤더 PLANTP
-  - 6. 월 조건 LEFT(BASEDATE, 7) = $YYYYMM → BASEDATE LIKE CONCAT($YYYYMM, '-%') (수정 대상 확인·등록 중복 확인·실적 조회 3곳, 인덱스 사용 가능 형태)
+  - 1. 신규 분기 SEARCH_PLAN_EMP: 주기관리 그 달 배정 점검자(PLANEMPCD·PLANEMPNM·PLANEMPNAME) 조회. 화면 LOAD_DETAIL에서 LIST_PLAN_EQM02가 실패(승인 계획 없음)하면 이 분기로 점검자만 가져와 표시(실패 시 무표시). 파라미터 추가 없음(SYSTEM_PARAMETERS 그대로 16건)
+  - 1. LIST_CYCLE_EQMCD APPROVED_PLAN: MSTEQMREV_DETAIL INNER JOIN + GROUP BY → EXISTS (항목 존재만 확인)
+  - 1. LIST_PLAN_EQM02 사원 조회: MSTEMP 두 번(SET 서브쿼리 2개) → SELECT MAX(EMPCD), MAX(EMPNM) INTO 한 번 (집계라 사원 없어도 1행)
+  - 1. LIST_PLAN_EQM02 항목: 그룹·설비 UNION ALL 두 조회 → REVCD IN (그룹, 설비) 단일 조회, 계획구분은 REV 헤더 PLANTP
+  - 1. 월 조건 LEFT(BASEDATE, 7) = $YYYYMM → BASEDATE LIKE CONCAT($YYYYMM, '-%') (수정 대상 확인·등록 중복 확인·실적 조회 3곳, 인덱스 사용 가능 형태)
 - **검증 결과**: 변경 부분 문법 수동 확인(격리 MariaDB 없음, 컴파일 미실행), JS 구문 검사 통과, 인코딩(SQL UTF-8 BOM 없음+CRLF, JS BOM+CRLF). 미확인: 서버 프로시저 반영 및 실제 화면 동작. 참고: CHKRSTEQM (EQMCD, CHKTP, BASEDATE) 인덱스 추가 권장(DDL은 사용자 판단)
 - **후속(사용자 정리본 기준)**: 사용자 최신 프로시저에는 1·6번만 남고 3·4·5번은 원래대로, SEARCH_PLAN_EMP 분기는 빠져 있었음 → 화면은 SEARCH_PLAN_EMP를 호출하므로 실패 후 점검자 빈칸. 3·4·5번은 그대로 두고 SEARCH_PLAN_EMP 분기만 다시 추가(사원 조회는 파일의 기존 SET 두 번 형식), 헤더 Modify 2026-11-10 줄 추가 → 15번에서 현황 조회 방식으로 대체
 
 ### 15. TAL0001_R08 미리보기 점검자: 추가 호출 대신 월별 현황 조회에 포함
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql), [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: 승인 계획이 없을 때 점검자를 SEARCH_PLAN_EMP로 한 번 더 호출하는 방식 대신 다른 방법 요청 → 월별 현황 조회에 포함하는 방식 선택
 - **작업 상세 내용**:
   - 1. LIST_CYCLE_EQMCD: 이미 붙어 있는 CHKPLANEQM_YEARPLAN에서 1~12월 배정 점검자 코드(MxxEMPCD), MSTEMP 월별 LEFT JOIN(EMP01~EMP12, EQM1001_R03 LIST_CYCLE_EQMCD와 같은 방식)으로 이름(MxxEMPNM) 추가. 사원은 기본키 조회라 행이 늘지 않음
-  - 2. SEARCH_PLAN_EMP 분기 삭제, 헤더 Modify 2026-11-10 문구 갱신
-  - 3. JS: GET_PLAN_EMP(eqmCd)로 CYCLE_DATA의 선택 월 점검자 코드·이름을 꺼내 점검필요 미리보기 점검자로 표시(이름 없으면 코드), 추가 호출(empMaria) 제거. 항목 조회(LIST_PLAN_EQM02) 실패해도 점검자는 표시, 오른쪽 항목 그리드만 빈칸
+  - 1. SEARCH_PLAN_EMP 분기 삭제, 헤더 Modify 2026-11-10 문구 갱신
+  - 1. JS: GET_PLAN_EMP(eqmCd)로 CYCLE_DATA의 선택 월 점검자 코드·이름을 꺼내 점검필요 미리보기 점검자로 표시(이름 없으면 코드), 추가 호출(empMaria) 제거. 항목 조회(LIST_PLAN_EQM02) 실패해도 점검자는 표시, 오른쪽 항목 그리드만 빈칸
 - **검증 결과**: 문법 수동 확인(컴파일 미실행), JS 구문 검사 통과, 인코딩(SQL UTF-8 BOM 없음+CRLF, JS BOM+CRLF). 미확인: 서버 반영 후 실제 화면
 
 ### 16. TAL0001_R08 JS 불필요·보수적 코드 정리
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: AUTO_SIZE_GRID는 autoSizeColumns만으로 충분(최대 300·최소 250 보정 제거) → 같은 기준으로 동작은 그대로 두고 불필요·보수적 코드 정리 요청
 - **작업 상세 내용**:
   - 1. 그리드 컬럼 width 기본값 제거(조회 후 autoSizeColumns로 맞추므로), 점검값 흰 배경은 `backColor: isEdit ? '#FFFFFF' : 'white'`로 한 줄 처리
-  - 2. SET_BUTTONS 삭제(버튼을 끄는 곳이 없어 항상 사용 가능), LOADED_YEAR·Load의 중복 조회 방지 if 삭제(SetValueByIndex가 onChanged를 불러 바로 조회)
-  - 3. GET_STATUS·GET_PLAN_EMP → GET_CYCLE_ROW 하나로 합침(선택 설비 카드는 현황에 있는 설비만 만들어지므로 '못 찾음' 처리 제거)
-  - 4. CHECK_ACTION: 점검대상 아님 안내·CHKRSTKEY 확인 삭제(선택 가능한 설비는 항상 점검필요/점검완료)
-  - 5. OPEN_ITEM_INPUT을 BIND_ITEM_INPUT_CLICK에 합침, hitTest 행·열 음수 확인 삭제
-  - 6. 프로시저가 COALESCE로 빈 값을 주거나 공통 GetValue가 항상 문자열을 주는 곳의 `|| ''`·`|| {}` 삭제, InitData 직후 문제점·조치사항 빈 값 설정 삭제, 숫자 반영 후 입력칸 비우기 삭제(열 때 비움)
-  - 7. 등록 팝업 주기관리 점검자를 사원 목록에서 못 찾았을 때의 토스트, 점검자 이름이 없을 때 코드 표시 대체 삭제
-  - 8. 유지: 설비명 `|| ''`(MSTEQM.EQMNM이 NULL 허용), SET_FIND_NAME(공장 07 사원찾기 목록에 없는 사원), 문제점/조치사항 창 높이·가운데 보정
+  - 1. SET_BUTTONS 삭제(버튼을 끄는 곳이 없어 항상 사용 가능), LOADED_YEAR·Load의 중복 조회 방지 if 삭제(SetValueByIndex가 onChanged를 불러 바로 조회)
+  - 1. GET_STATUS·GET_PLAN_EMP → GET_CYCLE_ROW 하나로 합침(선택 설비 카드는 현황에 있는 설비만 만들어지므로 '못 찾음' 처리 제거)
+  - 1. CHECK_ACTION: 점검대상 아님 안내·CHKRSTKEY 확인 삭제(선택 가능한 설비는 항상 점검필요/점검완료)
+  - 1. OPEN_ITEM_INPUT을 BIND_ITEM_INPUT_CLICK에 합침, hitTest 행·열 음수 확인 삭제
+  - 1. 프로시저가 COALESCE로 빈 값을 주거나 공통 GetValue가 항상 문자열을 주는 곳의 `|| ''`·`|| {}` 삭제, InitData 직후 문제점·조치사항 빈 값 설정 삭제, 숫자 반영 후 입력칸 비우기 삭제(열 때 비움)
+  - 1. 등록 팝업 주기관리 점검자를 사원 목록에서 못 찾았을 때의 토스트, 점검자 이름이 없을 때 코드 표시 대체 삭제
+  - 1. 유지: 설비명 `|| ''`(MSTEQM.EQMNM이 NULL 허용), SET_FIND_NAME(공장 07 사원찾기 목록에 없는 사원), 문제점/조치사항 창 높이·가운데 보정
 - **검증 결과**: JS 구문 검사 통과, 인코딩 BOM 1개+CRLF(583줄 → 511줄). 미확인: 실제 화면
 - **후속**: 사용자가 이전 소스로 되돌림, 17번에서 다시 최적화(이후 17번도 되돌리고 18번으로 대체)
 
 ### 17. TAL0001_R08 JS 최적화 (꼭 필요한 선언만 남김)
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: 불필요한 코드를 모두 지우고 로직상 꼭 필요한 선언만 남기도록 요청
 - **작업 상세 내용** (16번 정리 내용 전부 + 아래):
   - 1. 숨김 컬럼 삭제(grid1 YYYYMM·EMPCD·CHKRSTKEY, 항목 PLANTP·CHKKNDCD): ItsGrid.GetValue는 컬럼이 없어도 행 데이터(_data)에서 읽음. 그리드 옵션은 기본값과 같은 isCheckBoxGrid·isSubTotalGrid 빼고 contextMenu:false만
-  - 2. 선택 설비를 SEL_EQMCD 대신 현황 행(SEL_ROW)으로 기억 → GET_STATUS·GET_PLAN_EMP 삭제, 카드는 data-index로 행 찾기
-  - 3. 월 탭(RENDER_MONTH)은 데이터와 무관하므로 Load에서 한 번만 그림, SEL_MONTH는 선언할 때 이번 달로 초기화
-  - 4. SAVE_ITEMS(maria, gridId, popId): 등록·수정·문제점/조치사항 저장에서 반복되던 항목 목록 추가·저장·닫기·다시 조회를 하나로
-  - 5. LOAD_DETAIL은 프로시저 호출 한 곳으로 합치고, 점검완료는 조회 결과 행에 CHKTP·STATUS만 더해 그대로 grid1에 넣음, autoSizeColumns 직접 호출(AUTO_SIZE_GRID 삭제)
-  - 6. 숫자패드 0~9·OK/NG·팝업 취소 이벤트를 반복문으로, 조회년도·설비·조회버튼 이벤트는 SEARCH_CYCLE 직접 연결
-  - 7. 등록·수정 팝업 InitData 삭제: 등록은 모든 칸을 직접 넣고, 수정은 ItsPage.SetStore가 모든 칸을 덮어씀(ItsFind는 못 찾으면 이름 비움)
-  - 8. CHECK_ACTION(isReg) 불리언으로 단순화
+  - 1. 선택 설비를 SEL_EQMCD 대신 현황 행(SEL_ROW)으로 기억 → GET_STATUS·GET_PLAN_EMP 삭제, 카드는 data-index로 행 찾기
+  - 1. 월 탭(RENDER_MONTH)은 데이터와 무관하므로 Load에서 한 번만 그림, SEL_MONTH는 선언할 때 이번 달로 초기화
+  - 1. SAVE_ITEMS(maria, gridId, popId): 등록·수정·문제점/조치사항 저장에서 반복되던 항목 목록 추가·저장·닫기·다시 조회를 하나로
+  - 1. LOAD_DETAIL은 프로시저 호출 한 곳으로 합치고, 점검완료는 조회 결과 행에 CHKTP·STATUS만 더해 그대로 grid1에 넣음, autoSizeColumns 직접 호출(AUTO_SIZE_GRID 삭제)
+  - 1. 숫자패드 0~9·OK/NG·팝업 취소 이벤트를 반복문으로, 조회년도·설비·조회버튼 이벤트는 SEARCH_CYCLE 직접 연결
+  - 1. 등록·수정 팝업 InitData 삭제: 등록은 모든 칸을 직접 넣고, 수정은 ItsPage.SetStore가 모든 칸을 덮어씀(ItsFind는 못 찾으면 이름 비움)
+  - 1. CHECK_ACTION(isReg) 불리언으로 단순화
 - **검증 결과**: JS 구문 검사 통과, 인코딩 BOM 1개+CRLF(559줄 → 385줄). 미확인: 실제 화면
 - **후속**: 기존 날짜 주석 삭제·이벤트 등록/함수 구조·숨김 컬럼 등 프로젝트 형식을 바꿔 규칙(Optimization.md 2·4항) 위반 → 사용자가 583줄 원본으로 되돌림, 18번에서 형식 유지하며 다시 정리
 
 ### 18. TAL0001_R08 JS 불필요 코드 삭제·로직 단순화 (기존 형식 유지)
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: 프로젝트 형식(함수·이벤트 구조, 날짜 주석, 컬럼 선언)은 그대로 두고 불필요한 코드와 복잡한 로직만 단순화 요청
 - **작업 상세 내용**:
   - 1. 삭제: SET_BUTTONS(버튼을 끄는 곳이 없음)와 호출부, LOADED_YEAR와 Load의 중복 조회 방지 if(SetValueByIndex가 onChanged로 조회), AUTO_SIZE_GRID 안 주석 처리된 옛 코드와 더 이상 맞지 않는 설명 한 줄
-  - 2. CHECK_ACTION: 도달할 수 없는 '점검 대상 월 아님' 분기와 CHKRSTKEY 중복 확인 삭제(선택 가능한 설비는 항상 점검필요/점검완료)
-  - 3. LOAD_DETAIL: GET_STATUS가 빈 설비코드면 빈 값을 주므로 삼항 제거, 점검필요 미리보기의 빈 값 필드 제거, 오류 시 return·중복 AUTO_SIZE_GRID 호출을 `if (!maria.isError)` 하나와 마지막 칸 폭 맞춤 두 줄로 정리
-  - 4. 불필요한 `|| ''`·`|| {}` 삭제(프로시저 COALESCE·공통 GetValue가 항상 값을 주는 곳), 등록 팝업 InitData 직후 문제점·조치사항 빈 값 재설정 삭제, 숫자 반영 후 입력칸 비우기 삭제(열 때 비움)
-  - 5. 점검값 클릭: CellType.Cell이면 행·열이 항상 0 이상이므로 음수 확인 삭제, 문제점/조치사항 저장의 임시 변수 제거
-  - 6. 유지: 날짜 주석 전부, 그리드 옵션·컬럼 폭·숨김 컬럼, 각 버튼·팝업 이벤트 개별 선언, 점검자 이름 없을 때 코드 표시·사원 못 찾음 안내, 설비명 `|| ''`
+  - 1. CHECK_ACTION: 도달할 수 없는 '점검 대상 월 아님' 분기와 CHKRSTKEY 중복 확인 삭제(선택 가능한 설비는 항상 점검필요/점검완료)
+  - 1. LOAD_DETAIL: GET_STATUS가 빈 설비코드면 빈 값을 주므로 삼항 제거, 점검필요 미리보기의 빈 값 필드 제거, 오류 시 return·중복 AUTO_SIZE_GRID 호출을 `if (!maria.isError)` 하나와 마지막 칸 폭 맞춤 두 줄로 정리
+  - 1. 불필요한 `|| ''`·`|| {}` 삭제(프로시저 COALESCE·공통 GetValue가 항상 값을 주는 곳), 등록 팝업 InitData 직후 문제점·조치사항 빈 값 재설정 삭제, 숫자 반영 후 입력칸 비우기 삭제(열 때 비움)
+  - 1. 점검값 클릭: CellType.Cell이면 행·열이 항상 0 이상이므로 음수 확인 삭제, 문제점/조치사항 저장의 임시 변수 제거
+  - 1. 유지: 날짜 주석 전부, 그리드 옵션·컬럼 폭·숨김 컬럼, 각 버튼·팝업 이벤트 개별 선언, 점검자 이름 없을 때 코드 표시·사원 못 찾음 안내, 설비명 `|| ''`
 - **검증 결과**: JS 구문 검사 통과, 인코딩 BOM 1개+CRLF(583줄 → 542줄). 미확인: 실제 화면
 - **후속**: 태블릿 점검필요 미리보기 점검자 빈칸 → 콘솔 확인 결과 CYCLE_DATA에 M05EMPCD·M05EMPNM 컬럼 자체가 없음(새 JS는 로드됨). 서버 DB의 TAL0001_R08 프로시저가 월별 점검자 추가(15번) 전 버전이라 프로시저 재저장 필요
 
 ### 19. TAL0001_R08 수정 저장(SAVE_CHKRSTEQM) 단순화
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql)
 - **배경 및 원인**: 같은 항목 중복 전달을 막으려고 임시테이블(TMP_RST_ITEM)을 DROP·CREATE하고 항목 수를 세던 방어 로직이 과함. 화면은 조회한 실적 항목을 그리드 그대로 보내므로 중복·누락이 생기지 않음
 - **작업 상세 내용**: 임시테이블 생성·삭제, 항목별 존재 확인, 항목 수(_$ITEMCNT·_$ROWCNT)·남은 목록 길이 검사 삭제 → 기존 일상점검 수정(TAL0001_R05)처럼 점검값 빈 값 확인 후 UPDATE만. 헤더 Modify 2026-11-10 줄에 문구 추가. _$ITEMCNT·_$ROWCNT는 등록(ADD_CHKRSTEQM)에서 계속 사용
 - **검증 결과**: 문법 수동 확인(컴파일 미실행), 인코딩 UTF-8 BOM 없음+CRLF. 파라미터 변경 없음. 미확인: 서버 반영 후 실제 수정 저장
 
 ### 20. TAL0001_R08 프로시저 방어 코드 정리
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql)
 - **배경 및 원인**: 화면 흐름상 생기지 않는 경우를 막는 방어 코드 정리 요청
 - **작업 상세 내용**:
@@ -206,6 +226,7 @@
 - **검증 결과**: 문법 수동 확인(컴파일 미실행), 인코딩 UTF-8 BOM 없음+CRLF(387줄 → 340줄), 파라미터 변경 없음. 미확인: 서버 반영 후 등록·수정·삭제
 
 ### 21. 정기점검 실적 삭제 후 특이사항이 남아 보이는 문제 (TAL0001_R08·EQM1001_R04)
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql), [05.Procedure/MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql)
 - **배경 및 원인**: 삭제(DELETE_CHKRSTEQM)는 실적 항목(CHKRSTEQMKND)·실적(CHKRSTEQM)을 모두 지워 DB에는 남지 않음. 삭제 후 해당 월이 점검필요로 돌아가면 등록용 항목 조회(LIST_PLAN_EQM02)가 점검값은 `''`로, 특이사항은 계획 항목 특이사항(MSTEQMREV_DETAIL.REMARK, 2026-11-09 3번에서 넣은 기본값)으로 채워 보내므로 특이사항만 남아 보임 (R08 메인 미리보기·등록 팝업, R04 등록 팝업)
 - **작업 상세 내용**: 두 프로시저 LIST_PLAN_EQM02의 G·E 두 SELECT에서 `PLAN_ITEM.REMARK` → `'' AS REMARK` (신규 등록 특이사항은 점검값처럼 빈 칸에서 시작). 헤더 Modify 2026-11-10 기록. JS 변경 없음
@@ -214,23 +235,34 @@
 - **사용자 확인**: 특이사항은 점검 등록 때 점검자가 입력하는 값으로 바뀌었으므로 계획 특이사항을 기본값으로 보이지 않는 것이 맞음 → 빈 값 유지. 점검 등록 시 저장 테이블: 실적 헤더 CHKRSTEQM, 실적 항목 CHKRSTEQMKND(점검값·특이사항), 삭제 시 두 테이블 모두 삭제
 
 ### 22. EQM1001_S04 설비점검항목·점검시트 특이사항을 점검자 입력값만 표시
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql)
 - **배경 및 원인**: 2026-11-09 3번에서 실적 특이사항이 비면 점검 당시 계획 항목 특이사항(MSTEQMREV_DETAIL.REMARK)을 대신 표시하게 함 → 점검자가 비워 두고 등록해도 계획 특이사항이 찍힘. 특이사항은 점검자가 입력한 값만 보여야 함
 - **작업 상세 내용**: LIST_CHKRSTEQMKND(설비점검항목 그리드)·CALL_CHKRST_RPT 항목(점검시트 출력) 특이사항 = `COALESCE(CHKRSTEQMKND.REMARK, '')`. 계획 특이사항 조회에만 쓰던 CHKRSTEQM·MSTEQMREV_DETAIL 조인 제거, 주석·헤더 Modify 2026-11-10 기록. 반환 컬럼 동일(화면·레포트 변경 없음)
 - **확인**: 프로시저 전체에서 계획 특이사항으로 대체 표시하는 곳은 더 없음(EQM1001_R03 점검계획 관리 화면만 계획 특이사항 사용)
 - **검증 결과**: 문법 수동 확인(컴파일 미실행), 인코딩 UTF-8 BOM 없음+CRLF, 파라미터 변경 없음. 미확인: 서버 반영 후 S04 그리드·점검시트 출력
 
+### 23. 소스코드 주석 작성 표준(날짜 제거 및 단일 행 간소화) 규칙 제정 및 TAL0001_R08.js 전면 정비
+
+- **수정/대상 파일**: [.agents/rules/aspx_cs_comment.md](.agents/rules/aspx_cs_comment.md), [.agents/rules/coding_convention.md](.agents/rules/coding_convention.md), [.agents/rules/Optimization.md](.agents/rules/Optimization.md), [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
+- **배경 및 원인**: 소스코드 내 날짜별로 두 줄 이상 누적된 장황한 주석(`// 2026-11-09 ...`, `// 2026-11-10 ...`)이 가독성을 저해하므로 날짜를 포기하고 "해당 코드가 무엇을 하는지"만 간략하게 1줄 주석으로 작성하라는 사용자 지침 반영
+- **작업 상세 내용**:
+  - 1. 규칙 문서 개정: `aspx_cs_comment.md`, `coding_convention.md`, `Optimization.md`에 소스코드(`.js`, `.cs`) 날짜 주석 작성 금지, 두 줄 이상 다중 행 설명 주석 절대 금지, 오직 "무엇을 하는지"에 대한 직관적인 단일 행(1줄) 기능 설명 원칙 제정
+  - 1. `TAL0001_R08.js` 전면 정비: 전체 날짜 주석(`2026-11-09`, `2026-11-10` 등) 및 두 줄 이상 장황하게 서술된 주석(L403-404, L420-421, L501-505 등) 제거, 160자 초과 구분선 배너 제거, 모든 주석을 깔끔한 단일 행 요약 설명으로 전환
+- **검증 결과**: Node.js 자바스크립트 구문 검사(`node -c`) 통과(오류 0건), 단일 UTF-8 with BOM 및 CRLF 검증 완료
+
 ---
 
 ## 🕒 2026-11-09 (월) 작업 내역
 
 ### 1. EQM1001_R04 정기점검 등록·수정 팝업 특이사항 입력 및 상단 입력칸 정렬
+
 - **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_R04.js](01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [05.Procedure/MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql), [05.Procedure/MES_SNS2_EQM1001_R04_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_R04_SYSTEM_PARAMETERS.sql)
 - **배경 및 원인**: 등록(pop1)·수정(pop2) 팝업 점검값 옆에 특이사항 입력·수정 요청. 상단 입력칸은 라벨 90·입력폭 제각각(1행 끝 852px, 2행 끝 878px, 가운데 칸 시작도 어긋남)이라 정렬 요청
 - **작업 상세 내용**:
   - 1. grid2·grid3: 점검값 다음에 특이사항(REMARK, 폭 230, 입력 가능) 추가, 점검명 폭 290 → 250 (컬럼 합계 1010 + 행번호·끝 칸 약 59 = 팝업 내용폭 1080 이내)
-  - 2. 저장: 등록(ADD_CHKRSTEQM)·수정(SAVE_CHKRSTEQM) 모두 `REMARK_LIST` 전달
-  - 3. 프로시저 EQM1001_R04
+  - 1. 저장: 등록(ADD_CHKRSTEQM)·수정(SAVE_CHKRSTEQM) 모두 `REMARK_LIST` 전달
+  - 1. 프로시저 EQM1001_R04
     - IN `$REMARK_LIST MEDIUMTEXT` 추가(14번), 변수 `_$REMARK VARCHAR(1000)` (CHKRSTEQMKND.REMARK 컬럼 길이)
     - LIST_PLAN_EQM02: 신규 등록 특이사항 기본값 = 계획 항목 특이사항(PLAN_ITEM.REMARK), 수정 가능 (3번 작업에서 변경, 최초 빈 값)
     - ADD_CHKRSTEQM: CHKRSTEQMKND INSERT에 REMARK 저장
@@ -238,47 +270,50 @@
     - SAVE_CHKRSTEQM: UPDATE에 REMARK 반영
     - 등록·수정 모두 항목 수와 특이사항 목록 수가 다르면 기존 안내로 저장 취소
     - BOM 제거(UTF-8 without BOM)
-  - 4. 팝업 배치 (pop1·pop2 동일)
+  - 1. 팝업 배치 (pop1·pop2 동일)
     - 팝업 Width 900 → 1100, Height 350 → 420 (문제점·조치사항 줄 분리로 상단 약 60px 증가)
     - 모든 라벨 폭 70 → 입력 시작선 74px 통일
     - 1행 설비코드·점검일자·점검자 3칸 각 358px 간격, 입력 영역 폭 284 (설비코드·점검자 찾기: 코드 90 + 이름 175, 점검일자 InputWidth 284)
     - 문제점·조치사항: 한 줄씩 전체폭 1000 → 입력 끝선 1074px 통일
     - pop2 점검삭제 버튼 MarginRight 6 → 오른쪽 끝 1074px
-  - 5. SYSTEM_PARAMETERS 재등록 스크립트 추가 (정상 16건)
+  - 1. SYSTEM_PARAMETERS 재등록 스크립트 추가 (정상 16건)
 - **검증 결과**: 실제 bootstrap·ItsFind·ItsDate·ItsTextArea·ItsButton CSS로 만든 모형에서 기존 배치가 캡처와 일치(설비코드 입력 시작 94px, 점검자 끝 852px)하는 것을 확인한 뒤 새 배치 측정: 모든 입력 시작 74px·끝 1074px, 1행 3칸 시작 74/432/790px, 점검삭제 오른쪽 1074px, 가로 스크롤 없음. JS 구문 검사, IF 24/24·WHILE 2/2 짝, 인코딩(aspx·js BOM+CRLF, sql BOM 없음+CRLF) 확인. 미확인: 프로시저 서버 반영·실제 화면 저장·그리드 가로 스크롤
 - **적용 순서**: MES_SNS2_EQM1001_R04.sql 프로시저 서버 저장 → MES_SNS2_EQM1001_R04_SYSTEM_PARAMETERS.sql 실행
 - **연동**: 저장한 특이사항은 EQM1001_S04 설비점검항목 그리드와 점검시트 출력(S04A) 특이사항에 표시
 
 ### 2. EQM1001_R04 정기점검 현황에 승인 계획 없는 주기관리 설비 표시
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql)
 - **배경 및 원인**: R03 정기점검 주기관리에서 A-001·A-002 등에 점검자를 지정했는데 R04 현황에 나오지 않음. R03 주기관리(LIST_CYCLE_EQMCD)는 사용 중인 전체 설비를 보여주지만, R04 현황은 승인된 최신 REV에 항목이 있는 설비(또는 실적 있는 설비)만 표시하고 '점검필요'도 승인 계획이 있을 때만 표시함. 사용자 확인: 승인 리비전만 보이는 것은 의도된 설계가 아님. 승인본 CTE가 점검구분(CHKTP)을 구분하지 않아 일상점검('01') REV가 최신이면 정기점검 승인본이 가려질 수 있는 문제도 함께 발견
 - **작업 상세 내용**:
   - 1. LIST_CYCLE_EQMCD 조회 대상: 사용 설비 중 승인 계획 있음 OR 해당 연도 실적 있음 OR **주기관리 점검자가 1개월 이상 지정된 설비**
-  - 2. 월 상태: 실적 있으면 '점검완료', 주기관리 점검자 지정 월이면 승인 여부와 무관하게 '점검필요'
-  - 3. APPROVED_PLAN: 승인(APRVSTT 'A') 정기점검(CHKTP '02') REV만 대상
-  - 4. 승인 계획 없는 설비의 '점검필요' 클릭 → LIST_PLAN_EQM02에서 "승인된 정기점검 계획이 없습니다. 설비그룹·설비별 점검계획을 승인한 후 등록해주세요." 안내, 등록 팝업 열지 않음 (JS 기존 흐름 그대로)
+  - 1. 월 상태: 실적 있으면 '점검완료', 주기관리 점검자 지정 월이면 승인 여부와 무관하게 '점검필요'
+  - 1. APPROVED_PLAN: 승인(APRVSTT 'A') 정기점검(CHKTP '02') REV만 대상
+  - 1. 승인 계획 없는 설비의 '점검필요' 클릭 → LIST_PLAN_EQM02에서 "승인된 정기점검 계획이 없습니다. 설비그룹·설비별 점검계획을 승인한 후 등록해주세요." 안내, 등록 팝업 열지 않음 (JS 기존 흐름 그대로)
 - **검증 결과**: 12개월 조건 치환 12건 확인, IF 24/24 짝, 인코딩(BOM 없음+CRLF) 확인. DB 읽기 조회는 접속정보 복호화가 필요해 진행하지 못함(A-001·A-002 계획 상태 미확인). 미확인: 프로시저 서버 반영·실제 화면
 - **적용 순서**: 1번과 같은 MES_SNS2_EQM1001_R04.sql 저장 → SYSTEM_PARAMETERS 재등록
 
 ### 3. EQM1001_S04 설비점검항목·점검시트 특이사항에 계획 특이사항 표시
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [05.Procedure/MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql)
 - **배경 및 원인**: S04 설비점검항목 그리드에서 특이사항이 있는데도 보이지 않음. 기존 조회는 점검실적 특이사항(CHKRSTEQMKND.REMARK)만 읽는데, R04 정기점검 등록은 지금까지 실적에 특이사항을 저장하지 않아 비어 있음. R03 점검계획에서 입력한 특이사항은 계획 항목(MSTEQMREV_DETAIL.REMARK)에 있음
 - **작업 상세 내용**:
   - 1. LIST_CHKRSTEQMKND·CALL_CHKRST_RPT: 특이사항 = 실적 특이사항, 비어 있으면 점검 당시 적용 계획 항목 특이사항
     - 계획 항목 연결: CHKRSTEQMKND.PLANTP 'G' → CHKRSTEQM.GRPREVCD, 'E' → CHKRSTEQM.REVCD, + CHKKNDCD (MSTEQMREV_DETAIL PK)
     - PLANTP 빈 값(기존 실적)은 계획 연결 없음
-  - 2. R04 LIST_PLAN_EQM02: 신규 등록 특이사항 기본값을 계획 항목 특이사항으로 채움 (점검자가 수정 가능, 저장 시 실적 특이사항으로 보관)
-  - 3. 화면(JS) 변경 없음
+  - 1. R04 LIST_PLAN_EQM02: 신규 등록 특이사항 기본값을 계획 항목 특이사항으로 채움 (점검자가 수정 가능, 저장 시 실적 특이사항으로 보관)
+  - 1. 화면(JS) 변경 없음
 - **검증 결과**: 인코딩(BOM 없음+CRLF) 확인, PK(REVCD, CHKKNDCD) 기준 조인이라 행 중복 없음. 미확인: 프로시저 서버 반영·실데이터 표시
 - **참고**: 수정 팝업에서 실적 특이사항을 지우면 S04에는 계획 특이사항이 대신 표시됨
 
 ### 4. EQM1001_S04 점검시트(S04A) ReportFooter 복원
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/S04A.Designer.cs](04.Report/PAGEEQM/EQM1001/S04A.Designer.cs), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
 - **배경 및 원인**: 2026-11-06 13번 작업에서 R03 기반으로 만들며 제외한 하단 ReportFooter(확인·점검자·담당 서명란, 개정이력)를 다시 넣어 달라는 요청
 - **작업 상세 내용**:
   - 1. S04A.Designer.cs: VS 디자이너에서 저장된 현재 내용(제목 "설비 정기 점검 시트", 셀 Weight 등)은 그대로 두고, 현재 R03의 ReportFooter 밴드·컨트롤(서명란 라벨 6개, 개정이력 테이블 xrTableRevHistory 5행)을 생성·속성·필드 선언·Bands·BeginInit/EndInit에 추가. `components` 초기화 첫 줄 복원(report_devexpress 2-2)
-  - 2. S04A.cs: CALL_CHKRST_RPT Tables[2]를 개정이력으로 받아 R03과 같은 BindRevHistory(최신 4건)로 바인딩
-  - 3. 프로시저 CALL_CHKRST_RPT 3번째 결과셋(개정이력) 추가
+  - 1. S04A.cs: CALL_CHKRST_RPT Tables[2]를 개정이력으로 받아 R03과 같은 BindRevHistory(최신 4건)로 바인딩
+  - 1. 프로시저 CALL_CHKRST_RPT 3번째 결과셋(개정이력) 추가
     - 대상 계획: 점검실적의 설비별 적용 REV(CHKRSTEQM.REVCD), 없으면 설비그룹 적용 REV(GRPREVCD)
     - 해당 계획(PLANTP·PLANCD)의 REV 중 적용 REV 번호 이하만, 최신순
     - 컬럼은 R03 CALL_PLAN_RPT 개정이력과 동일: REVNUM, REVDATE, REMARK, REQEMPNM, APRVEMPNM
@@ -286,59 +321,64 @@
 - **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
 
 ### 5. EQM1001_S04 점검시트 점검자·승인자 표시 및 설비 전체 개정이력 조회
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), [04.Report/PAGEEQM/EQM1001/S04A.Designer.cs](04.Report/PAGEEQM/EQM1001/S04A.Designer.cs), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
 - **배경 및 원인**: 하단 서명란에 점검자·승인자 표시, 개정이력은 해당 설비 관련 REV 전체 조회 요청. 사용자 선택: 표시는 최신 4건 유지, 설비별 + 설비그룹 계획 모두, 담당 칸에 승인자(칸 제목 유지)
 - **작업 상세 내용**:
   - 1. CALL_CHKRST_RPT 상단 결과에 추가
     - CHKEMPNM: 점검자 (CHKRSTEQM.EMPCD → MSTEMP.EMPNM, 없으면 사원코드)
     - APRVEMPNM: 점검 당시 적용 계획의 승인자. 설비그룹 REV(GRPREVCD) → 설비별 REV(REVCD) 순, 같은 사람이면 한 번만 (점검실적 자체에는 승인 절차가 없음)
-  - 2. 개정이력(3번째 결과셋) 대상 변경: 적용 REV 이하 → 전체 REV
+  - 1. 개정이력(3번째 결과셋) 대상 변경: 적용 REV 이하 → 전체 REV
     - 설비별 계획(PLANTP 'E', PLANCD = 설비코드) + 설비그룹 계획(PLANTP 'G', 적용 그룹 REV의 그룹, 없으면 현재 MSTEQM.EQMGUBUN)
     - 점검구분: 실적 CHKTP와 같은 REV, 정기점검('02')은 CHKTP 빈 값(구분 저장 전 REV)도 포함
     - 개정 내용 앞에 [그룹]/[설비] 표시, 승인·요청 시간 최신순 (리포트는 최신 4건 표시)
-  - 3. S04A: 점검자 칸 = CHKEMPNM, 담당 칸 = APRVEMPNM 바인딩, 두 서명 칸 맑은 고딕 9pt·가운데 정렬
+  - 1. S04A: 점검자 칸 = CHKEMPNM, 담당 칸 = APRVEMPNM 바인딩, 두 서명 칸 맑은 고딕 9pt·가운데 정렬
 - **검증 결과**: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 R0602 경고 1건), exe 01.Office/Reports·04.Report/bin 배포(MD5 일치). 샘플 데이터로 BindReportData 호출 후 PNG 출력: 점검자 "김진욱", 담당 "이성남, 신재민", 개정이력 5건 중 최신 4건이 [설비]/[그룹] 구분과 함께 표시됨 확인. 괄호 짝 64/64, 인코딩 확인. 미확인: 프로시저 서버 반영 후 실데이터, VS 디자이너 열기
 - **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
 - **변경**: 담당 칸의 적용 계획 승인자는 6번 작업에서 설비마스터 점검담당자로 교체
 
 ### 6. EQM1001_S04 점검시트 담당 칸을 설비마스터 점검담당사번 기준으로 변경
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
 - **배경 및 원인**: 담당 칸에 계획 승인자 대신 담당자 성격의 데이터 사용 요청. 조사 결과 MSTEQM.EMPCD(점검담당사번, ERP 인터페이스 MES_IF_MSTEQM의 CHK_EMP)와 MSTEQM.DEPTCD(관리부서코드)가 있음. 점검시트의 점검자(CHKRSTEQM.EMPCD, 점검 1건의 실제 점검자)와는 별개 값이며 MSTEQM.EMPCD를 읽는 프로시저는 없었음
 - **사용자 실DB 확인 결과**: 사용 설비 1143개 중 점검담당사번 입력 224개, MSTEMP.EMPCD와 일치 2개, MSTEMP.OLDEMPCD·EMPID 일치 0개, 관리부서코드 입력 1005개 → 사용자 결정: 점검담당사번 기준
 - **작업 상세 내용**:
   - 1. CALL_CHKRST_RPT 상단 결과: APRVEMPNM(적용 계획 승인자)과 관련 조인 4개 제거, MNGEMPNM 추가 = MSTEMP 사원명, 없으면 MSTEQM.EMPCD 사번 그대로, 비어 있으면 빈 값
-  - 2. S04A 담당 칸(xrLabelManagerSign) 바인딩 APRVEMPNM → MNGEMPNM
-  - 3. 개정이력 표의 승인자(APRVEMPNM) 컬럼은 그대로 유지
+  - 1. S04A 담당 칸(xrLabelManagerSign) 바인딩 APRVEMPNM → MNGEMPNM
+  - 1. 개정이력 표의 승인자(APRVEMPNM) 컬럼은 그대로 유지
 - **검증 결과**: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 경고 1건), exe 배포(MD5 일치), 샘플 PNG 출력에서 점검자 "김진욱"·담당 "FA-0123"(사원명 미매칭 사번) 표시 확인, 인코딩 확인. 미확인: 프로시저 서버 반영 후 실데이터
 - **참고**: 현재 데이터 기준으로 담당 칸은 대부분 빈칸(919개 설비)이거나 사번 표시(222개), 사원명은 2개 설비만 표시됨. ERP 점검담당사번과 MES 사원코드 체계를 맞추면 사원명으로 표시됨
 - **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
 - **관리 위치 조사**: MSTEQM.EMPCD·DEPTCD는 ERP 인터페이스(MES_IF_MSTEQM, IFSTD 'FAC2_MES_EQM', 1분 주기, ERP CHK_EMP·CHK_DEPT)로만 입력됨. MES에서 수정하는 화면·프로시저 없음(MSTEQM UPDATE는 MST1005_R01 설비등급만). 조회·사용처: MST1002_R06 설비정보관리(담당부서·담당사원 컬럼, 조회 전용, 담당부서 컬럼 바인딩명 DEPTP ≠ 프로시저 DEPTCD라 빈 값 표시), MST1005_R01 설비등급 평가표(관리부서 → 결재 "부서명+장"), EQM1001_S04 점검시트(담당 칸)
 
 ### 7. EQM1001_S04 점검시트 하단(ReportFooter) 디자인 정리
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/S04A.Designer.cs](04.Report/PAGEEQM/EQM1001/S04A.Designer.cs), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
 - **배경 및 원인**: 개정이력 영역이 보기 좋지 않다는 요청. 원인: ① 서명칸 XRLabel이 각자 4면 테두리를 그려 경계선이 2줄(두꺼운 선)로 겹침 ② 개정이력 칸에 일자·[구분]·내용이 한 칸에 몰려 줄바꿈 ③ 셀 CanGrow로 내용 길이에 따라 행 높이가 제각각, 헤더가 표 아래에 위치
 - **작업 상세 내용**:
   - 1. 경계선 1줄: 왼쪽 컨트롤만 오른쪽 선을 그리고 다음 컨트롤은 Left 제외(점검자·담당 헤더 Top|Right|Bottom, 서명칸 Right|Bottom, 개정이력 라벨·표 Top|Right|Bottom)
-  - 2. 헤더 통일: 확인·점검자·담당·개정이력 라벨·개정이력 표 헤더를 상단 한 줄(높이 22) 회색(Gainsboro) 배경으로, 표 헤더를 아래 → 위로 이동
-  - 3. 개정이력 표: "개정이력" 세로 라벨 폭 90 → 24, 표 폭 383 → 449, 컬럼 No 24·일자 64·구분 32·개정 내용 229·작성 50·승인 50 (일자·구분 칸 분리)
-  - 4. 행 높이 30 고정(CanGrow false), 데이터 8pt·개정 내용 7.5pt로 2줄까지 줄바꿈, 3줄 이상은 잘림. 최신순 위에서 아래로 4건
-  - 5. Footer 높이 128 → 146 (표 142 = 헤더 22 + 4행 × 30)
-  - 6. 프로시저 개정이력 결과: [그룹]/[설비] 접두어 제거, PLANTPNM(그룹/설비) 컬럼 분리
+  - 1. 헤더 통일: 확인·점검자·담당·개정이력 라벨·개정이력 표 헤더를 상단 한 줄(높이 22) 회색(Gainsboro) 배경으로, 표 헤더를 아래 → 위로 이동
+  - 1. 개정이력 표: "개정이력" 세로 라벨 폭 90 → 24, 표 폭 383 → 449, 컬럼 No 24·일자 64·구분 32·개정 내용 229·작성 50·승인 50 (일자·구분 칸 분리)
+  - 1. 행 높이 30 고정(CanGrow false), 데이터 8pt·개정 내용 7.5pt로 2줄까지 줄바꿈, 3줄 이상은 잘림. 최신순 위에서 아래로 4건
+  - 1. Footer 높이 128 → 146 (표 142 = 헤더 22 + 4행 × 30)
+  - 1. 프로시저 개정이력 결과: [그룹]/[설비] 접두어 제거, PLANTPNM(그룹/설비) 컬럼 분리
 - **검증 결과**: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 경고 1건), exe 배포(MD5 일치), 생성 컨트롤 82개·필드 선언 82개 1:1 확인, 긴 개정 내용 샘플로 150dpi PNG 출력해 단일 경계선·고정 행 높이·2줄 줄바꿈 확인, 인코딩 확인. 미확인: 프로시저 서버 반영 후 실데이터, VS 디자이너 열기
 - **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
 - **변경**: 8번 작업에서 기존 형식으로 롤백 (이 디자인은 적용되지 않음)
 
 ### 8. EQM1001_S04 점검시트 하단 기존 형식 롤백, 개정 이력 날짜 제거
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/S04A.Designer.cs](04.Report/PAGEEQM/EQM1001/S04A.Designer.cs), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
 - **배경 및 원인**: 7번 디자인 대신 기존 형식으로 롤백하고, 개정 이력 칸은 날짜 없이 [그룹]/[설비] 구분만 앞에 표시하도록 요청
 - **작업 상세 내용**:
   - 1. S04A.Designer.cs: 4번 작업과 같은 방식으로 재구성(커밋된 S04A + 현재 R03 ReportFooter, components 초기화, 점검자·담당 서명칸 9pt·가운데 정렬). 하단 배치·크기·테두리·헤더 위치(아래)는 R03과 동일, 개정 이력 행은 내용 길이만큼 늘어남
-  - 2. S04A.cs BindRevHistory: R03과 같은 배치(최신 4건, 아래쪽부터 채움)로 복원, 개정 이력 칸 = "[" + PLANTPNM + "] " + 개정내용 (날짜 제외)
-  - 3. 프로시저 개정이력 결과에서 REVDATE 컬럼 제거 (정렬은 승인·요청 시간 그대로)
+  - 1. S04A.cs BindRevHistory: R03과 같은 배치(최신 4건, 아래쪽부터 채움)로 복원, 개정 이력 칸 = "[" + PLANTPNM + "] " + 개정내용 (날짜 제외)
+  - 1. 프로시저 개정이력 결과에서 REVDATE 컬럼 제거 (정렬은 승인·요청 시간 그대로)
 - **검증 결과**: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 경고 1건), exe 배포(MD5 일치), Designer 957줄·생성/필드 1:1 확인, 샘플 PNG 출력에서 기존 형식과 "[설비] 내용"·"[그룹] 내용"(날짜 없음) 표시 확인, 인코딩 확인. 미확인: 프로시저 서버 반영 후 실데이터, VS 디자이너 열기
 - **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
 
 ### 9. EQM1001_S04 점검시트 개정이력 No 1부터 표시
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql)
 - **배경 및 원인**: 개정이력 No가 REV 번호(제정 0) 그대로라 0부터 표시됨, 1부터 시작하도록 요청
 - **작업 상세 내용**: CALL_CHKRST_RPT 개정이력 결과의 REVNUM을 `PLAN_REV.REVNUM + 1`로 반환 (제정 0 → 1). 정렬은 원래 REV 번호 기준 그대로, 레포트·exe 변경 없음
@@ -346,71 +386,77 @@
 - **적용 순서**: MES_SNS2_EQM1001_S04.sql 서버 저장 (파라미터 변경 없음)
 
 ### 10. EQM1001_R03 점검계획 REV 처리를 정기점검(CHKTP '02')으로 한정
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql)
 - **배경 및 원인**: MSTEQMREV_HEADER에는 일상점검(CHKTP '01', TAL0001_R05에서 조회) REV도 같은 PLANTP·PLANCD로 저장될 수 있는데, R03은 REV를 찾을 때 점검구분 조건이 없어 일상점검 REV를 정기점검 REV로 잡을 수 있음. 정기점검 화면 전체 점검 결과 중 사용자가 지정한 항목만 수정 (목록·항목 조회 LIST_MSTEQM_GRP·LIST_GRP_EQM02·LIST_MSTEQM·LIST_EQM02·복사 목록, CALL_PLAN_RPT, R05 LIST_PLAN은 이번에 수정하지 않음)
 - **작업 상세 내용**:
   - 1. 공통 검증 수정 대상 REV: `CHKTP = '02'` 최신 REV
-  - 2. 복사 원본 REV(_$COPYREVCD): `CHKTP = '02'` 최신 REV
-  - 3. LIST_PLAN_REV(REV 이력): `CHKTP = '02'`만 조회
-  - 4. SAVE_PLAN_REV(개정내용 저장)·SAVE_PLAN_STATUS(승인): 존재 확인과 대상 최신 REV 모두 `CHKTP = '02'`
-  - 5. 새 REV 번호: 고유키 UX_MSTEQMREV_HEADER_REV(PLANTP, PLANCD, REVNUM)에 CHKTP가 없어 일상점검과 번호를 함께 쓰므로, 정기점검 최신 REV + 1 대신 점검구분 무관 최대 REVNUM + 1(_$NEXTREVNUM). 일상점검 REV가 사이에 있으면 정기점검 번호가 건너뛸 수 있음
-  - 6. 화면 연동 확인: 저장·승인에 넘기는 REVNUM은 REV 이력 그리드(LIST_PLAN_REV) 최신 행 값이라 수정 후에도 같은 기준. LIST_PLAN_REV_ITEM은 REVNUM이 대상별 고유라 그대로 동작
+  - 1. 복사 원본 REV(_$COPYREVCD): `CHKTP = '02'` 최신 REV
+  - 1. LIST_PLAN_REV(REV 이력): `CHKTP = '02'`만 조회
+  - 1. SAVE_PLAN_REV(개정내용 저장)·SAVE_PLAN_STATUS(승인): 존재 확인과 대상 최신 REV 모두 `CHKTP = '02'`
+  - 1. 새 REV 번호: 고유키 UX_MSTEQMREV_HEADER_REV(PLANTP, PLANCD, REVNUM)에 CHKTP가 없어 일상점검과 번호를 함께 쓰므로, 정기점검 최신 REV + 1 대신 점검구분 무관 최대 REVNUM + 1(_$NEXTREVNUM). 일상점검 REV가 사이에 있으면 정기점검 번호가 건너뛸 수 있음
+  - 1. 화면 연동 확인: 저장·승인에 넘기는 REVNUM은 REV 이력 그리드(LIST_PLAN_REV) 최신 행 값이라 수정 후에도 같은 기준. LIST_PLAN_REV_ITEM은 REVNUM이 대상별 고유라 그대로 동작
 - **검증 결과**: IF/END IF 41/41 짝, 인코딩(BOM 없음+CRLF) 확인. 이 저장소에는 CHKTP '01' REV를 만드는 화면이 없어 실데이터 존재 여부 미확인. 미확인: 프로시저 서버 반영·화면 동작
 - **남은 항목**: 목록 조회(설비그룹·설비 최신 REV 표시, 항목·미등록 항목·복사 목록), 계획서 출력(CALL_PLAN_RPT), R05 승인관리 LIST_PLAN은 아직 점검구분 조건 없음. 고유키에 CHKTP를 넣으면(B안) 점검구분별 번호 분리 가능
 - **적용 순서**: MES_SNS2_EQM1001_R03.sql 서버 저장 (파라미터 변경 없음)
 
 ### 11. EQM1001_R03 정기점검 주기관리 월별 점검계획 레포트(R03B) 출력 추가
+
 - **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [04.Report/PAGEEQM/EQM1001/R03B.cs](04.Report/PAGEEQM/EQM1001/R03B.cs), [04.Report/PAGEEQM/EQM1001/R03B.Designer.cs](04.Report/PAGEEQM/EQM1001/R03B.Designer.cs), [04.Report/PAGEEQM/EQM1001/R03B.resx](04.Report/PAGEEQM/EQM1001/R03B.resx), [04.Report/PAGEEQM/EQM1001/EQM1001.csproj](04.Report/PAGEEQM/EQM1001/EQM1001.csproj), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
 - **배경 및 원인**: 정기점검 주기관리 탭 저장·삭제 버튼 줄 맨 오른쪽에 "월별점검계획 레포트 출력" 버튼을 두고, 사용자가 첨부한 엑셀 "월별 점검 계획" 양식으로 출력 요청. 점검자가 배정된 월만 표시
 - **작업 상세 내용**:
   - 1. 화면: div_CYCLE_EQM에 btn_CYCLE_RPT(폭 170, Float right, MarginRight 10) 추가, 클릭 시 조회년도(cmb_SYEAR)·설비 검색값(find1)을 `ItsXtraRpt('EQM1001_R03B')`로 전달 (조회 그리드와 같은 조건)
-  - 2. 프로시저 CALL_CYCLE_RPT 분기 추가 (입력 파라미터 추가 없음 → SYSTEM_PARAMETERS 변경 없음)
+  - 1. 프로시저 CALL_CYCLE_RPT 분기 추가 (입력 파라미터 추가 없음 → SYSTEM_PARAMETERS 변경 없음)
     - CHKPLANEQM_YEARPLAN(정기점검 '02', 조회년도)의 MONTH_01~12를 1~12월 행으로 펼쳐 점검자 지정 월만 출력, 사용 설비(USEYN 'Y')만
     - 컬럼: 구분(순번)·라인명(MSTLINE)·공정구분(FM100)·대분류(FM113)·중분류(FM114)·소분류(FM115)·설비명·모델명/규격(EQMNM_DETAIL)·점검예정일(YY.MM)·점검실시일(해당 월 정기점검 실적 첫 점검일 YY.MM.DD)·점검자(MSTEMP 사원명, 없으면 사원코드)
     - 정렬: 월 → 라인 → 공정구분 → 대·중·소분류 → 설비코드
-  - 3. 레포트 R03B (A4 세로, 여백 30, 폭 767): 제목 "월별 점검 계획"(연보라 배경)과 컬럼 헤더를 PageHeader에 두어 페이지마다 반복, Detail 1행 25px, 점검예정 월별 행 배경색 12색(첨부 양식 색상 기준)
+  - 1. 레포트 R03B (A4 세로, 여백 30, 폭 767): 제목 "월별 점검 계획"(연보라 배경)과 컬럼 헤더를 PageHeader에 두어 페이지마다 반복, Detail 1행 25px, 점검예정 월별 행 배경색 12색(첨부 양식 색상 기준)
 - **검증 결과**: MSBuild 15.0 Release 빌드 성공(0 Error, 기존 R0602 경고 1건), exe 01.Office/Reports·04.Report/bin 배포(MD5 일치). 기본 생성자 + 샘플 60행으로 PNG 출력해 제목·헤더·월별 배경색·컬럼 배치 확인(2페이지). IF 42/42 짝, 인코딩(sql BOM 없음+CRLF, cs·resx·aspx BOM+CRLF, js 기존 BOM 없음+CRLF 유지) 확인. 미확인: 프로시저 서버 반영 후 실데이터·화면 버튼 동작, VS 디자이너 열기
 - **적용 순서**: MES_SNS2_EQM1001_R03.sql 서버 저장 (파라미터 변경 없음)
 
 ### 12. EQM1001_R03 월별 점검계획 레포트(R03B) 행 한 줄 고정 표시
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R03B.Designer.cs](04.Report/PAGEEQM/EQM1001/R03B.Designer.cs), [04.Report/PAGEEQM/EQM1001/R03B.cs](04.Report/PAGEEQM/EQM1001/R03B.cs), [01.Office/Reports/EQM1001.exe](01.Office/Reports/EQM1001.exe)
 - **배경 및 원인**: 첨부 엑셀처럼 한 행씩 한 줄로 끊어서 표시 요청. 기존 셀은 줄바꿈(WordWrap)·자동 높이(CanGrow)라 긴 설비명·모델명은 행이 여러 줄로 늘어남
 - **작업 상세 내용**:
   - 1. Detail 셀 11개 CanGrow false·WordWrap false → 모든 행 높이 25 고정, 한 줄 표시
-  - 2. Detail_BeforePrint에서 칸 폭보다 긴 글자는 글자 크기를 0.5pt 단위로 줄여 한 줄에 맞춤(기본 8.5pt, 최소 6pt). 6pt로도 넘치면 칸 끝에서 잘림
+  - 1. Detail_BeforePrint에서 칸 폭보다 긴 글자는 글자 크기를 0.5pt 단위로 줄여 한 줄에 맞춤(기본 8.5pt, 최소 6pt). 6pt로도 넘치면 칸 끝에서 잘림
 - **검증 결과**: MSBuild 15.0 Release 빌드 성공(0 Error, 기존 경고 1건), exe 01.Office/Reports·04.Report/bin 배포(MD5 일치). 긴 설비명·모델명 샘플 60행 PNG 출력에서 모든 행 한 줄·같은 높이, 긴 글자 축소 표시 확인. 미확인: 실데이터·VS 디자이너 열기
 - **적용 순서**: 프로시저 변경 없음 (11번의 R03.sql 서버 저장만 필요)
 
 ### 13. EQM1001_R01 설비수리이력 사진 미리보기·등록 영역 추가
+
 - **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js), [05.Procedure/MES_SNS2_EQM1001_R01.sql](05.Procedure/MES_SNS2_EQM1001_R01.sql), [05.Procedure/MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql), [06.Table/MES_SNS2_EQMREP_IMG.sql](06.Table/MES_SNS2_EQMREP_IMG.sql)
 - **배경 및 원인**: 오른쪽 작업자 그리드는 그대로 두고 아래에 이미지 미리보기·파일등록 영역 추가 요청. 공통 컴포넌트(ItsFileManager 업로드·삭제, ItsImage 미리보기)를 쓰고, 수리 1건에 여러 장(EQM1001_R06 방식: 선택 즉시 업로드 → 파일키 등록, ✕ 삭제)으로 구성. 크게 보기 팝업은 MST0001_R04 pop2 방식
 - **작업 상세 내용**:
   - 1. 테이블 EQMREP_IMG 신규(EQMREPKEY·FILEKEY PK, 등록 감사 컬럼). 파일 실체·경로는 공통 COMFILE, URL은 공통 함수 FILEURL()
-  - 2. 프로시저 EQM1001_R01
+  - 1. 프로시저 EQM1001_R01
     - IN `$FILEKEY VARCHAR(100)` 추가(21번, 전체 41개) → SYSTEM_PARAMETERS 재등록 스크립트 추가
     - LIST_EQMREP_IMG(FILEKEY·FILEURL, 등록순), ADD_EQMREP_IMG(수리이력 존재·파일키 확인 후 등록), DELETE_EQMREP_IMG(등록 확인 후 삭제)
     - DELETE_EQMREP: 수리이력 삭제 시 EQMREP_IMG도 삭제
     - BOM 제거, LF → CRLF (encoding.md: 수정 시점에 BOM 제거)
-  - 3. 화면 배치: 좌우 비율 80:20 → 70:30, 오른쪽을 위(35%: 기존 행추가·행삭제 버튼 + 작업자 그리드) / 아래(■ 수리 사진 (개수) + 사진 등록 버튼, 큰 미리보기 + 순번 표시, 썸네일 줄)로 분할. 공통 ItsFileManager(이미지 전용)는 숨기고 "사진 등록" 버튼이 파일 선택창을 염
-  - 4. 동작: 수리이력 선택 시 작업자와 사진 함께 조회, 첫 사진 미리보기 / 썸네일 클릭 시 미리보기 변경 / 사진 선택 즉시 업로드 → 등록(등록 실패 시 업로드 파일 삭제) / ✕ → 확인 후 등록 삭제 → 파일 삭제 / 미리보기 클릭 → 크게 보기 팝업(pop_REPIMG) / 수리이력 삭제 시 사진 파일도 삭제
+  - 1. 화면 배치: 좌우 비율 80:20 → 70:30, 오른쪽을 위(35%: 기존 행추가·행삭제 버튼 + 작업자 그리드) / 아래(■ 수리 사진 (개수) + 사진 등록 버튼, 큰 미리보기 + 순번 표시, 썸네일 줄)로 분할. 공통 ItsFileManager(이미지 전용)는 숨기고 "사진 등록" 버튼이 파일 선택창을 염
+  - 1. 동작: 수리이력 선택 시 작업자와 사진 함께 조회, 첫 사진 미리보기 / 썸네일 클릭 시 미리보기 변경 / 사진 선택 즉시 업로드 → 등록(등록 실패 시 업로드 파일 삭제) / ✕ → 확인 후 등록 삭제 → 파일 삭제 / 미리보기 클릭 → 크게 보기 팝업(pop_REPIMG) / 수리이력 삭제 시 사진 파일도 삭제
 - **검증 결과**: JS 구문 검사 통과, IF 38/38·WHILE 5/5 짝, 파라미터 41개(FILEKEY 21번), 인코딩(aspx·js BOM+CRLF, 프로시저 BOM 없음+CRLF, 테이블 BOM+CRLF) 확인. 실제 페이지 CSS로 만든 정적 모형에서 사진 3장·0장 화면 배치 확인. 미확인: 테이블 생성·프로시저 서버 반영 후 실제 업로드·삭제(공통 업로드는 localhost에서 막혀 있어 서버 주소로 확인 필요), 분할 영역 실제 높이
 - **적용 순서**: MES_SNS2_EQMREP_IMG.sql 테이블 생성 → MES_SNS2_EQM1001_R01.sql 프로시저 저장 → MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql 실행(41건)
 
 ### 14. EQM1001_R01 사진 영역 공통 파일선택 숨김·빈 미리보기 안내, 공통 업로드 localhost 차단 임시 해제
+
 - **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js), [01.Office/UserControl/ItsFileManager.js](01.Office/UserControl/ItsFileManager.js) (**공통, 임시**)
-- **배경 및 원인**: 
+- **배경 및 원인**:
   - 사진 영역 가운데에 공통 ItsFileManager의 "선택"(파일 선택)·"삭제"(선택 비우기, 등록 사진 삭제 아님) 버튼이 보임. 공통 컨트롤 ascx에서 StyleType simple일 때 style 속성 따옴표가 `text-align:center;"`에서 먼저 닫혀 뒤의 Hidden(display:none)이 style 밖으로 나가 숨김이 적용되지 않음
   - 사진이 없을 때 공통 기본 이미지(UploadFiles/404IMAGE.jpg)가 로컬에 없어 깨진 이미지 아이콘 표시
   - 로컬 미리보기 테스트를 위해 공통 업로드 localhost 차단 임시 해제 요청 (사용자 지시)
 - **작업 상세 내용**:
   - 1. R01: fileManager Hidden 속성 제거, 페이지 CSS `#file_REPIMG { display:none !important; }`로 숨김 (공통 ascx 수정 없음). "사진 등록" 버튼이 숨긴 파일선택을 여는 동작은 그대로
-  - 2. R01: 사진이 없으면 미리보기 칸에 기본 이미지 대신 안내 문구(수리이력 미선택: "수리이력을 선택하면 사진이 표시됩니다." / 사진 없음: "등록된 사진이 없습니다. [사진 등록]으로 추가하세요."), 썸네일 줄 하단 안내 문구 제거
-  - 3. ItsFileManager.js: $upload·UploadNM·$delete 3곳의 localhost 차단 if 블록을 `[TEMP 2026-11-09 ...]` 표시와 함께 주석 처리
+  - 1. R01: 사진이 없으면 미리보기 칸에 기본 이미지 대신 안내 문구(수리이력 미선택: "수리이력을 선택하면 사진이 표시됩니다." / 사진 없음: "등록된 사진이 없습니다. [사진 등록]으로 추가하세요."), 썸네일 줄 하단 안내 문구 제거
+  - 1. ItsFileManager.js: $upload·UploadNM·$delete 3곳의 localhost 차단 if 블록을 `[TEMP 2026-11-09 ...]` 표시와 함께 주석 처리
 - **검증 결과**: JS 구문 검사(R01·ItsFileManager) 통과, 인코딩(BOM+CRLF) 유지. 미확인: 로컬 실제 업로드·미리보기
 - **주의**: 로컬 업로드 파일은 로컬 01.Office/UploadFiles에 저장되지만 COMFILE·EQMREP_IMG 기록은 연결된 DB에 남음(다른 PC·서버에서는 파일 없음). 테스트 후 등록 사진 삭제
 - **현재 상태**: 사용자가 원복한 뒤 로컬 테스트를 위해 다시 주석 처리(3곳). 테스트 후 원복 필요 (`git checkout -- 01.Office/UserControl/ItsFileManager.js` 또는 TEMP 표시 3곳 주석 해제)
 
 ### 15. 태블릿 TAL0001_R08(설비 정기점검 등록)·TAL0001_R09(설비부품 출고등록) 파일 세팅
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx) (.aspx.cs, .js, .css), [01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx) (.aspx.cs, .js, .css)
 - **배경 및 원인**: 태블릿 화면 2개 신규 요청. PAGETAL 폴더 역할 정리(TAL0001 자재·물류·설비, TAL1001 생산 실적, TAL1002 초중종검사, TAL2001 자주검사) 후, 설비 일상점검(R05)·비가동(R06)이 있는 TAL0001에 이어 번호 부여. R03은 이 프로젝트·ALPHA 모두 비어 있어 메뉴 충돌 가능성 때문에 제외
 - **작업 상세 내용**: TAL0001_R05와 같은 구성(Kiosk.master, CPH_HEAD js·css, CPH_SEARCH·CPH_BODY·CPH_POP 빈 영역, BasePage 코드비하인드, ItsPage.Load 빈 함수)으로 4개 파일씩 생성. 화면 기능·프로시저는 아직 없음
@@ -418,6 +464,7 @@
 - **남은 작업**: 화면 구현, 프로시저 MES_SNS2_TAL0001_R08.sql·R09.sql 작성 및 SYSTEM_PARAMETERS 등록, DB 메뉴 등록.
 
 ### 16. SYS0001_R03 프로그램코드 변경 후 화면이 사라지는 문제, 관련 테이블 코드 맞추기 SQL
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_SYS0001_R03_PRGCD_RENAME.sql](05.Procedure/MES_SNS2_SYS0001_R03_PRGCD_RENAME.sql) (신규, 데이터 정리 스크립트)
 - **배경 및 원인**: 메뉴관리(SYS0001_R03)에서 이름을 바꾼 뒤 화면이 보이지 않음. SYS0001_R03 프로시저는 저장소에 없어 ALPHA DB 백업(08. DB Backup/20260619.sql)과 이 저장소의 WEBSYSMAIN으로 확인
   - SYS0001_R03 목록(LIST_WEBPKG): SYSMENU LEFT JOIN SYSPRG 후 `P.PRGSTT LIKE`·`P.DEV LIKE`·PRGSTT <> '50' 조건 → SYSPRG에 같은 PRGCD가 없으면 목록에서 빠짐
@@ -427,63 +474,69 @@
 - **검증 결과(16번)**: 인코딩(BOM 없음+CRLF). DB 직접 실행하지 않음(규칙).
 
 ### 17. 태블릿 TAL0001_R08 설비 정기점검 등록 구현 (EQM1001_R04 로직, 태블릿 UI)
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx), [TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js), [TAL0001_R08.css](01.Office/PAGETAL/TAL0001/TAL0001_R08.css), [05.Procedure/MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql) (신규), [05.Procedure/MES_SNS2_TAL0001_R08_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_TAL0001_R08_SYSTEM_PARAMETERS.sql) (신규)
 - **배경 및 원인**: PC 정기점검 등록(EQM1001_R04)과 같은 로직을 태블릿 UI(TAL0001_R05 참고)로 구현 요청. 사용자 지시로 프로시저는 EQM1001_R04를 공유하지 않고 TAL0001_R08로 별도 생성
 - **작업 상세 내용**:
   - 1. 프로시저 TAL0001_R08: EQM1001_R04 본문 그대로 복사(파라미터 16개·분기 LIST_CYCLE_EQMCD·LIST_PLAN_EQM02·ADD/SEARCH/SAVE/DELETE_CHKRSTEQM 동일, 헤더만 신규). 본문 동일 여부 diff로 확인. 이후 R04 로직을 고치면 R08도 같이 고쳐야 함
-  - 2. 화면 위: 조회년도(기본 올해)·설비 검색, 선택 월 요약(대상·완료·미점검), 1~12월 탭(완료/대상 건수, 기본 이번 달), 선택 월 점검 대상 설비 카드(R05 설비 버튼 모양 + 점검필요 주황·점검완료 초록 상태 표시)
-  - 3. 가운데 버튼(R05와 동일 크기·글씨): 조회 / 점검(점검필요일 때) / 수정·삭제·문제점/조치사항(점검완료일 때)
-  - 4. 아래 그리드: 왼쪽 점검 정보(점검월·상태·점검일자·점검자), 오른쪽 점검 항목(점검완료: 저장된 실적 항목 / 점검필요: 승인 계획 항목 미리보기, 승인 계획 없으면 R04와 같은 안내 후 점검 버튼 비활성)
-  - 5. 등록 팝업: 설비·점검일자(이번 달이면 오늘, 아니면 그 달 1일)·점검자(주기관리 점검자 기본)·문제점/조치사항 버튼, 항목 그리드 더블탭 → 점검값구분 03은 OK/NG 버튼, 그 외 숫자패드(R05 패드), 특이사항 칸은 큰 입력창. 문제점/조치사항은 숨은 칸에 담아 등록 시 함께 저장(R04와 같은 ADD_CHKRSTEQM 입력)
-  - 6. 수정 팝업: 같은 구성에 기존 값 표시, SAVE_CHKRSTEQM. 메인 [삭제]는 DELETE_CHKRSTEQM, 메인 [문제점/조치사항]은 기존 점검값·특이사항 그대로 두고 문제점/조치사항만 바꿔 SAVE_CHKRSTEQM
+  - 1. 화면 위: 조회년도(기본 올해)·설비 검색, 선택 월 요약(대상·완료·미점검), 1~12월 탭(완료/대상 건수, 기본 이번 달), 선택 월 점검 대상 설비 카드(R05 설비 버튼 모양 + 점검필요 주황·점검완료 초록 상태 표시)
+  - 1. 가운데 버튼(R05와 동일 크기·글씨): 조회 / 점검(점검필요일 때) / 수정·삭제·문제점/조치사항(점검완료일 때)
+  - 1. 아래 그리드: 왼쪽 점검 정보(점검월·상태·점검일자·점검자), 오른쪽 점검 항목(점검완료: 저장된 실적 항목 / 점검필요: 승인 계획 항목 미리보기, 승인 계획 없으면 R04와 같은 안내 후 점검 버튼 비활성)
+  - 1. 등록 팝업: 설비·점검일자(이번 달이면 오늘, 아니면 그 달 1일)·점검자(주기관리 점검자 기본)·문제점/조치사항 버튼, 항목 그리드 더블탭 → 점검값구분 03은 OK/NG 버튼, 그 외 숫자패드(R05 패드), 특이사항 칸은 큰 입력창. 문제점/조치사항은 숨은 칸에 담아 등록 시 함께 저장(R04와 같은 ADD_CHKRSTEQM 입력)
+  - 1. 수정 팝업: 같은 구성에 기존 값 표시, SAVE_CHKRSTEQM. 메인 [삭제]는 DELETE_CHKRSTEQM, 메인 [문제점/조치사항]은 기존 점검값·특이사항 그대로 두고 문제점/조치사항만 바꿔 SAVE_CHKRSTEQM
 - **검증 결과**: JS 구문 검사 통과, JS에서 쓰는 컨트롤 ID 전부 aspx에 존재, 중복 ID 없음, 인코딩(aspx·js·css BOM+CRLF, sql BOM 없음+CRLF). 페이지 CSS와 실제 RENDER_MONTH·RENDER_EQM 함수로 만든 모형(1280px)에서 월 탭 12개 한 줄·카드 한 줄 4개·가로 스크롤 없음·요약 건수 확인. 미확인: 프로시저 서버 반영·메뉴 등록 후 실제 태블릿 동작(등록·수정·삭제·숫자패드)
 - **적용 순서**: MES_SNS2_TAL0001_R08.sql 프로시저 저장 → MES_SNS2_TAL0001_R08_SYSTEM_PARAMETERS.sql 실행(16건) → SYS0001_R03에서 TAL0001_R08 메뉴 등록(패키지 TAL)
 
 ### 18. TAL0001_R08 월 건수·요약 제거, 설비 카드 좌우 스크롤·상태별 배경색
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx), [TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js), [TAL0001_R08.css](01.Office/PAGETAL/TAL0001/TAL0001_R08.css)
 - **배경 및 원인**: 사용자 요청 - 월 탭 아래 건수와 우측 상단 요약 건수 삭제, 설비 카드 목록을 위아래가 아닌 좌우 스크롤로, 점검필요·점검완료는 카드 오른쪽 아래 표시 대신 카드 전체 배경색으로
 - **작업 상세 내용**:
   - 1. 월 탭은 "N월"만 표시(높이 56 → 50, 글씨 18 → 20), 우측 상단 요약(spn_SUMMARY) 제거
-  - 2. 설비 카드 목록(EQM_LIST): 한 줄 배치(white-space nowrap) + 좌우 스크롤(overflow-x auto, overflow-y hidden), 높이 170 → 150, 카드 크기는 R05와 같은 250×100
-  - 3. 카드 배경색: 점검필요 주황(#fdebd0, 테두리 #f0b27a), 점검완료 초록(#d5f5e3, 테두리 #7dcea0). 선택 카드는 배경색(상태)을 유지하고 파란 두꺼운 테두리로 표시
+  - 1. 설비 카드 목록(EQM_LIST): 한 줄 배치(white-space nowrap) + 좌우 스크롤(overflow-x auto, overflow-y hidden), 높이 170 → 150, 카드 크기는 R05와 같은 250×100
+  - 1. 카드 배경색: 점검필요 주황(#fdebd0, 테두리 #f0b27a), 점검완료 초록(#d5f5e3, 테두리 #7dcea0). 선택 카드는 배경색(상태)을 유지하고 파란 두꺼운 테두리로 표시
 - **검증 결과**: JS 구문 검사 통과, 인코딩 유지. 실제 RENDER 함수·CSS 모형(1280px, 설비 10개)에서 카드 1줄·목록 가로 스크롤(내용폭 2720 > 1280)·세로 넘침 없음·페이지 가로 스크롤 없음·상태별 배경색·건수/요약 미표시 확인. 미확인: 실제 태블릿 터치 스크롤
 
 ### 19. TAL0001_R08 등록·수정 팝업 점검자 이름 표시, 문제점/조치사항 배치 개선
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx), [TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js), [05.Procedure/MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql)
 - **배경 및 원인**:
   - 수정 팝업 점검자(20150801) 옆 이름칸이 빈 값. 공통 찾기 컨트롤은 코드 입력 시 DC_FIND 'EMPCD_LIST'로 이름을 찾는데 이 목록은 `MSTEMP.FACTORYCD = '07'`만 대상이라, 다른 공장 소속(또는 MSTEMP에 없는) 사원은 이름이 표시되지 않음. 주기관리 점검자 매칭(LIST_PLAN_EQM02)과 등록 검증은 공장 조건이 없어 이런 점검자가 저장될 수 있음
   - 문제점/조치사항 버튼이 입력칸 아래 왼쪽에 따로 떠 있고, 입력했는지 팝업에서 보이지 않음
 - **작업 상세 내용**:
   - 1. 프로시저 TAL0001_R08(표시용 컬럼만 추가, 처리 로직 동일): LIST_PLAN_EQM02에 PLANEMPNAME(계획 점검자 사원명), SEARCH_CHKRSTEQM 첫 결과에 EMPNM(LEFT JOIN MSTEMP, 공장 조건 없음)
-  - 2. 화면: 찾기 컨트롤 이름칸이 비면 프로시저가 준 사원명으로 채움(SET_FIND_NAME, 공통 컨트롤 수정 없음), 메인 왼쪽 그리드 점검자도 사원명(EMPNM) 표시
-  - 3. 팝업 상단 2줄 정렬: 1줄 설비(라벨 80)·점검일자(라벨 90)·점검자(라벨 80), 2줄 문제점(라벨 80, 400)·조치사항(라벨 90, 400)·[입력] 버튼. 문제점·조치사항은 읽기전용 칸에 입력 내용을 바로 보여주고, 칸이나 [입력]을 누르면 큰 입력창(pop_PROB_SOL). 기존 숨김 칸 2개는 이 칸으로 대체(Field 동일, 저장 입력값 변화 없음)
+  - 1. 화면: 찾기 컨트롤 이름칸이 비면 프로시저가 준 사원명으로 채움(SET_FIND_NAME, 공통 컨트롤 수정 없음), 메인 왼쪽 그리드 점검자도 사원명(EMPNM) 표시
+  - 1. 팝업 상단 2줄 정렬: 1줄 설비(라벨 80)·점검일자(라벨 90)·점검자(라벨 80), 2줄 문제점(라벨 80, 400)·조치사항(라벨 90, 400)·[입력] 버튼. 문제점·조치사항은 읽기전용 칸에 입력 내용을 바로 보여주고, 칸이나 [입력]을 누르면 큰 입력창(pop_PROB_SOL). 기존 숨김 칸 2개는 이 칸으로 대체(Field 동일, 저장 입력값 변화 없음)
 - **검증 결과**: JS 구문 검사 통과, JS 사용 컨트롤 ID 전부 aspx 존재, 프로시저 IF 24/24·파라미터 16개 그대로·BOM 없음+CRLF, aspx·js BOM+CRLF. 미확인: 실제 팝업 너비(1200)에서 2줄 끝선 정렬, 20150801 사원의 MSTEMP 존재 여부(없으면 이름 대신 빈칸 유지)
 - **적용 순서**: MES_SNS2_TAL0001_R08.sql 프로시저 다시 저장 (파라미터 변경 없음)
 - **변경**: 문제점/조치사항 배치(3번)는 20번 작업으로 교체
 
 ### 20. TAL0001_R08 등록·수정 팝업 문제점/조치사항을 팝업 안 큰 입력칸으로 변경
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx), [TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js), [TAL0001_R08.css](01.Office/PAGETAL/TAL0001/TAL0001_R08.css)
 - **배경 및 원인**: 19번의 읽기전용 칸 + [입력] 버튼 → 팝업 위에 다시 팝업이 뜨는 구조라 태블릿에서 쓰기 불편하다는 의견
 - **작업 상세 내용**:
   - 1. 등록(pop1)·수정(pop2) 팝업 2줄을 문제점·조치사항 입력칸(textarea, 각 폭 440·높이 96, 좌우 배치)으로 교체 → 팝업 안에서 바로 입력, 팝업 [저장]으로 점검값과 함께 저장(Field PROBLEM·SOLUTION 그대로라 저장 입력값 동일)
-  - 2. [입력] 버튼·읽기전용 칸·입력 대상 분기(PROB_TARGET) 제거, 큰 입력창(pop_PROB_SOL)은 메인 화면 [문제점/조치사항](점검완료 실적만 수정) 전용
-  - 3. 입력칸 글씨 20px·안내 문구(없으면 비워 두기), 입력칸이 늘어난 만큼 팝업 높이 560 → 660
+  - 1. [입력] 버튼·읽기전용 칸·입력 대상 분기(PROB_TARGET) 제거, 큰 입력창(pop_PROB_SOL)은 메인 화면 [문제점/조치사항](점검완료 실적만 수정) 전용
+  - 1. 입력칸 글씨 20px·안내 문구(없으면 비워 두기), 입력칸이 늘어난 만큼 팝업 높이 560 → 660
 - **검증 결과**: JS 구문 검사 통과, JS 사용 컨트롤 ID 전부 aspx 존재, 인코딩(BOM+CRLF) 유지, 공통 패널 저장(AddPanel)·채우기(SetStore)·초기화(InitData)가 textarea를 처리하는 것 확인. 미확인: 실제 태블릿에서 팝업 높이·화면 키보드가 올라왔을 때 입력칸 가림 여부
 - **변경**: 17~20번의 TAL0001_R08 화면·프로시저는 21번 작업으로 전부 교체
 
 ### 21. TAL0001_R08을 TAL0001_R05(설비 일상점검 등록)와 같은 화면·로직으로 다시 구성 (점검구분만 정기점검)
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx), [TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js), [TAL0001_R08.css](01.Office/PAGETAL/TAL0001/TAL0001_R08.css), [05.Procedure/MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql), [05.Procedure/MES_SNS2_TAL0001_R08_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_TAL0001_R08_SYSTEM_PARAMETERS.sql)
 - **배경 및 원인**: 사용자 지시 - 정기점검 태블릿 화면은 일상점검(TAL0001_R05)과 UI/UX가 완전히 같아야 하고 차이는 정기점검/일상점검뿐. 17~20번은 PC 정기점검(EQM1001_R04) 흐름(월 탭·설비 카드·월별 현황)을 따라 별도 화면으로 만들어 요구와 다름
 - **작업 상세 내용**:
   - 1. 화면 aspx·css·js: TAL0001_R05를 그대로 복사, `TAL0001_R05` → `TAL0001_R08`, '일상점검' → '정기점검'(팝업 제목·주석)만 변경. 작업장·공정·라인 → 설비 버튼 → 조회일자·작업자 → 조회·점검·수정·삭제·문제점/조치사항 → 점검이력·점검항목 그리드, 등록·수정 팝업(점검일자·등록일자·등록시간·점검자), 숫자패드·OK/NG·문제점/조치사항 팝업 모두 R05와 동일
-  - 2. 프로시저 TAL0001_R08: TAL0001_R05 본문 복사, 점검구분 CHKTP '01' → '02'(11곳: 실적 조회·등록·수정·삭제·문제점 조회/저장, 승인 REV 조회 G·E) 및 메시지·주석 '일상점검' → '정기점검'만 변경. 파라미터 21개(R05와 동일)
-  - 3. SYSTEM_PARAMETERS 재등록 스크립트: 정상 21건으로 수정
+  - 1. 프로시저 TAL0001_R08: TAL0001_R05 본문 복사, 점검구분 CHKTP '01' → '02'(11곳: 실적 조회·등록·수정·삭제·문제점 조회/저장, 승인 REV 조회 G·E) 및 메시지·주석 '일상점검' → '정기점검'만 변경. 파라미터 21개(R05와 동일)
+  - 1. SYSTEM_PARAMETERS 재등록 스크립트: 정상 21건으로 수정
 - **검증 결과**: R05와 R08 aspx·css·js를 이름·문구 치환 후 비교해 완전히 동일, 프로시저 diff는 CHKTP·문구·헤더만 다름 확인. JS 구문 검사 통과, 인코딩(화면 BOM+CRLF, 프로시저 BOM 없음+CRLF). 미확인: 프로시저 서버 반영 후 실제 태블릿 동작
 - **참고(R05와 같아서 생기는 정기점검 동작)**: PC 정기점검(EQM1001_R04)에 있던 월 1회 중복 등록 차단·주기관리 점검자 기본값·계획 특이사항 기본값은 R05에 없으므로 R08에도 없음. 같은 달 여러 건 등록 시 PC 현황은 첫 실적을 기준으로 표시
 - **적용 순서**: MES_SNS2_TAL0001_R08.sql 프로시저 저장(기존 R08 프로시저를 덮어씀, 파라미터 구성 변경) → MES_SNS2_TAL0001_R08_SYSTEM_PARAMETERS.sql 실행(21건)
 - **변경**: 프로시저 로직은 22번에서 웹 정기점검 규칙으로 교체 (화면은 그대로)
 
 ### 22. TAL0001_R08 프로시저에 웹 정기점검(EQM1001_R04) 규칙 적용, 버튼 미동작 원인 정리
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql), [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: 사용자 확인 - 화면은 R05와 같게, 기능은 웹(EQM1001_R04) 그대로. 21번은 R05 로직에 점검구분만 바꿔 웹 정기점검 규칙이 빠져 있었음. 버튼(조회·점검·수정·삭제·문제점/조치사항) 미동작: R05와 같은 구성이라 설비 버튼을 선택해야 버튼이 켜지고, 설비 버튼 목록은 TAL0001_R08 프로시저 LIST_EQMCD로 조회 → 서버 프로시저가 이전 버전(EQM1001_R04 복사본, LIST_EQMCD 없음)이거나 파라미터 미재등록이면 목록 조회 오류로 설비 버튼이 안 나와 버튼이 계속 꺼진 상태 (로컬 페이지는 브라우저 세션 만료로 직접 확인 못 함)
 - **작업 상세 내용**:
@@ -492,35 +545,38 @@
     - ADD_CHKRSTEQM: 점검일자 형식 확인, 승인 REV 변경 확인, 주기관리 점검자 지정 월만 등록, 설비·월당 1건(중복 시 "N월 정기점검이 이미 등록되어 있습니다"), 모든 항목 점검값 필수, 항목 특이사항 저장
     - SAVE_CHKRSTEQM: 점검월 변경 불가(같은 달 안에서만 점검일자 변경), 실적 항목과 일치·중복 전달 차단·모든 항목 점검값 필수(웹과 같은 임시테이블 확인), 항목 저장 후 헤더(점검자·점검일자·등록일시) 저장
     - 조회·삭제·문제점/조치사항: R05와 같은 분기, 정기점검(CHKTP '02')
-  - 2. 화면 js: 점검 버튼에서 오늘 날짜를 넘겨 주기관리 점검자를 기본 점검자로 채움(사원찾기 목록에 없으면 이름칸에 사원명), 이번 달 점검자 미지정이면 안내. aspx·css는 R05와 동일 유지(비교 확인)
+  - 1. 화면 js: 점검 버튼에서 오늘 날짜를 넘겨 주기관리 점검자를 기본 점검자로 채움(사원찾기 목록에 없으면 이름칸에 사원명), 이번 달 점검자 미지정이면 안내. aspx·css는 R05와 동일 유지(비교 확인)
 - **검증 결과**: 프로시저 IF 24/24·WHILE 2/2·파라미터 21개·BOM 없음+CRLF, JS 구문 검사 통과, aspx는 이름·문구 외 R05와 동일. 미확인: 서버 반영 후 실제 동작
 - **적용 순서**: MES_SNS2_TAL0001_R08.sql 프로시저 저장 → MES_SNS2_TAL0001_R08_SYSTEM_PARAMETERS.sql 실행(21건) → 화면 새로고침(Ctrl+F5) 후 작업장 선택 → 설비 버튼 선택 → 버튼 사용
 - **변경**: 23번에서 EQM1001_R04 형태로 전부 다시 구성 (21·22번 화면·프로시저 미사용)
 
 ### 23. TAL0001_R08을 EQM1001_R04(PC 정기점검 등록)와 같은 형태로 다시 구성
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx), [TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js), [TAL0001_R08.css](01.Office/PAGETAL/TAL0001/TAL0001_R08.css), [05.Procedure/MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql), [05.Procedure/MES_SNS2_TAL0001_R08_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_TAL0001_R08_SYSTEM_PARAMETERS.sql)
 - **배경 및 원인**: 사용자 요청 - 21·22번(R05 형태 + 규칙 혼합)이 꼬였으니 기존 EQM1001_R04 페이지와 비슷한 형태로 진행
 - **작업 상세 내용**:
   - 1. 프로시저 TAL0001_R08: EQM1001_R04 본문 그대로 복사(파라미터 16개·LIST_CYCLE_EQMCD·LIST_PLAN_EQM02·ADD/SEARCH/SAVE/DELETE_CHKRSTEQM), 표시용 사원명만 추가(LIST_PLAN_EQM02 PLANEMPNAME, SEARCH_CHKRSTEQM EMPNM). R04 본문과 diff로 차이가 사원명 3곳뿐인 것 확인. SYSTEM_PARAMETERS 정상 16건으로 수정
-  - 2. 화면 흐름은 R04와 동일: 위 조회년도(기본 올해, 변경 시 조회)·설비·[조회](R05 크기 큰 버튼) → 설비별 1~12월 점검상태 그리드(점검필요 파란색·점검완료 초록색 굵은 링크) → 점검필요 누르면 등록 팝업, 점검완료 누르면 수정 팝업(점검삭제 버튼)
-  - 3. 등록·수정 팝업은 R04와 같은 칸(설비코드·점검일자·점검자, 문제점·조치사항, 점검항목 그리드). 등록 시 점검일자 기본값(이번 달이면 오늘, 아니면 그 달 1일)·주기관리 점검자 기본 지정(사원찾기 목록에 없으면 이름칸에 사원명)
-  - 4. 태블릿 입력: 점검값 칸 두 번 누르면 점검값구분 03(OK/NG)은 OK·NG 버튼, 그 외는 숫자패드(R05 패드), 특이사항은 칸에 바로 입력, 문제점·조치사항 글씨 18px
+  - 1. 화면 흐름은 R04와 동일: 위 조회년도(기본 올해, 변경 시 조회)·설비·[조회](R05 크기 큰 버튼) → 설비별 1~12월 점검상태 그리드(점검필요 파란색·점검완료 초록색 굵은 링크) → 점검필요 누르면 등록 팝업, 점검완료 누르면 수정 팝업(점검삭제 버튼)
+  - 1. 등록·수정 팝업은 R04와 같은 칸(설비코드·점검일자·점검자, 문제점·조치사항, 점검항목 그리드). 등록 시 점검일자 기본값(이번 달이면 오늘, 아니면 그 달 1일)·주기관리 점검자 기본 지정(사원찾기 목록에 없으면 이름칸에 사원명)
+  - 1. 태블릿 입력: 점검값 칸 두 번 누르면 점검값구분 03(OK/NG)은 OK·NG 버튼, 그 외는 숫자패드(R05 패드), 특이사항은 칸에 바로 입력, 문제점·조치사항 글씨 18px
 - **검증 결과**: JS 구문 검사 통과, JS 사용 컨트롤 ID 전부 aspx 존재·중복 ID 없음, 프로시저 IF 24/24·파라미터 16개·BOM 없음+CRLF, 화면 파일 BOM+CRLF. 미확인: 서버 반영 후 실제 태블릿 동작(로컬 페이지는 로그인 세션 만료로 직접 확인 못 함)
 - **적용 순서**: MES_SNS2_TAL0001_R08.sql 프로시저 저장 → MES_SNS2_TAL0001_R08_SYSTEM_PARAMETERS.sql 실행(16건) → 화면 강력 새로고침(Ctrl+F5)
 - **변경**: 화면은 24번으로 교체 (프로시저는 23번 그대로 사용)
 
 ### 24. TAL0001_R08 화면을 18번(R05 기반 태블릿 UI) 구성으로 복원, 문제점/조치사항은 R05 방식
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R08.aspx), [TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js), [TAL0001_R08.css](01.Office/PAGETAL/TAL0001/TAL0001_R08.css)
 - **배경 및 원인**: 사용자 정리 - 전체 UI는 TAL0001_R05 기반 태블릿 화면(웹 화면을 그대로 옮기면 안 됨), 기능은 웹 정기점검, 문제점/조치사항은 R05처럼 처리. 23번(R04 화면 그대로)은 팝업 라벨 줄바꿈 등 태블릿에 맞지 않음. 요구에 맞는 것은 사용자가 승인한 18번 구성
 - **작업 상세 내용**:
   - 1. 17번 원본 + 18번(월 탭 건수·요약 제거, 설비 카드 한 줄 좌우 스크롤·상태별 배경색) + 19번 점검자 사원명 표시를 다시 적용: 조회년도·설비 → 1~12월 탭 → 선택 월 점검대상 설비 카드 → 조회·점검·수정·삭제·문제점/조치사항 큰 버튼 → 점검 정보·점검 항목 그리드
-  - 2. 등록·수정 팝업: 설비·점검일자·점검자 한 줄(위아래 여백 10) + 점검 항목 그리드, 점검값 숫자패드·OK/NG, 특이사항 큰 입력창. 팝업 안 문제점/조치사항 버튼 제거, 팝업 높이 560 → 500
-  - 3. 문제점/조치사항: R05와 같이 점검완료 실적을 선택한 뒤 메인 [문제점/조치사항] 버튼 → 큰 입력창 → 저장(점검값·특이사항은 그대로, SAVE_CHKRSTEQM). 등록은 빈 값으로 저장, 수정 팝업은 숨은 칸으로 기존 문제점/조치사항을 그대로 넘겨 지워지지 않게 함
-  - 4. 프로시저는 23번(EQM1001_R04 로직 + 사원명) 그대로, 화면 호출 분기 6개 모두 프로시저에 존재 확인
+  - 1. 등록·수정 팝업: 설비·점검일자·점검자 한 줄(위아래 여백 10) + 점검 항목 그리드, 점검값 숫자패드·OK/NG, 특이사항 큰 입력창. 팝업 안 문제점/조치사항 버튼 제거, 팝업 높이 560 → 500
+  - 1. 문제점/조치사항: R05와 같이 점검완료 실적을 선택한 뒤 메인 [문제점/조치사항] 버튼 → 큰 입력창 → 저장(점검값·특이사항은 그대로, SAVE_CHKRSTEQM). 등록은 빈 값으로 저장, 수정 팝업은 숨은 칸으로 기존 문제점/조치사항을 그대로 넘겨 지워지지 않게 함
+  - 1. 프로시저는 23번(EQM1001_R04 로직 + 사원명) 그대로, 화면 호출 분기 6개 모두 프로시저에 존재 확인
 - **검증 결과**: JS 구문 검사 통과, JS 사용 컨트롤 ID 전부 aspx 존재·중복 없음, 인코딩(BOM+CRLF). 18번 모형 검증(1280px 월 탭·카드 배치) 이후 메인 영역 변경 없음. 미확인: 서버 반영 후 실제 태블릿 동작
 - **적용 순서**: 프로시저·파라미터는 23번과 같음(MES_SNS2_TAL0001_R08.sql 저장, SYSTEM_PARAMETERS 16건) → 화면 강력 새로고침(Ctrl+F5)
 
 ### 25. EQM1001_R03 설비그룹 점검계획 개정이력 미표시 수정
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql)
 - **배경 및 원인**: 설비그룹 점검계획 탭 오른쪽 개정이력(REV)이 하나도 안 나오고 설비별은 정상. 화면은 그룹·설비가 같은 함수(SearchPlanRev → LIST_PLAN_REV)를 쓰므로 데이터 차이. 10번 작업에서 REV 조회를 `CHKTP = '02'`로 한정했는데, REV 헤더에 점검구분 '02'를 저장하기 시작한 것은 2026-10-23부터라 그 이전에 만든 REV(설비그룹 대부분)는 CHKTP가 빈 값이어서 빠짐
 - **작업 상세 내용**: 10번에서 한정한 7곳(공통 검증 수정 대상 REV, 복사 원본 REV, LIST_PLAN_REV, SAVE_PLAN_REV 존재 확인·대상, SAVE_PLAN_STATUS 존재 확인·대상)을 `CHKTP IN ('02', '')`로 변경 → 정기점검 REV와 10-23 이전 빈 값 REV는 포함, 일상점검('01')은 계속 제외. 새 REV는 지금처럼 '02'로 저장
@@ -529,6 +585,7 @@
 - **적용 순서**: MES_SNS2_EQM1001_R03.sql 프로시저 저장 (파라미터 변경 없음) 테이블 목록은 ALPHA 백업 기준이라 이 DB에 없는 테이블은 3번 단계에서 오류로 확인 후 제외 필요. 미확인: 실제 바꾼 코드(예시 값 TAL1001_R05 → TAL0001_R08은 대화 내용 기준 추정) R08은 R05 화면 구성 + EQM1001_R04 정기점검 로직(CHKTP '02', 주기관리 월별 대상, 승인 계획, 특이사항) 기반. R09는 설비부품 마스터·재고 테이블과 출고 연결 대상(설비·수리이력) 결정 필요(참고: TAL0001_R07 부자재 사용등록)
 
 ### 26. EQM1001_R03 일상점검 REV만 있는 설비그룹(FM116I220N·FM116I270N)이 일상점검 내용으로 보이는 문제
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql)
 - **배경 및 원인**: FM116I220N(BROACH)·FM116I270N(비전홀검사기)은 왼쪽 목록에 REV.0이 보이지만 오른쪽 개정이력은 비어 있고, 하단 정기점검에 "TEST 일상점검1~3" 등 일상점검 항목이 표시됨. 두 그룹의 REV.0은 일상점검(CHKTP '01') REV. 10·25번에서 개정이력·수정 대상은 정기점검 REV로 한정했지만, 왼쪽 목록 REV·상태(LIST_MSTEQM_GRP)·하단 최신 항목(LIST_GRP_EQM02) 등 목록 조회는 점검구분 조건 없이 최신 REV를 보여 줘서 서로 다른 REV를 표시
 - **작업 상세 내용**: 10번에서 남겨 둔 목록·항목 조회에도 `CHKTP IN ('02', '')` 적용
@@ -542,28 +599,31 @@
 - **적용 순서**: MES_SNS2_EQM1001_R03.sql 프로시저 저장 (파라미터 변경 없음)
 
 ### 27. EQM1001_R03 정기점검 항목 삭제가 되지 않고 개정이력도 생기지 않는 문제
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
 - **배경 및 원인**: FM116I270N 설비그룹 화면 하단에 001~018 항목이 보이고, 삭제해도 지워지지 않으며 개정이력도 생기지 않음. 하단 항목은 일상점검 REV.0('01')의 항목(사용자 실DB 확인)인데, 서버 프로시저가 26번 이전이라 하단 목록(LIST_GRP_EQM02)은 점검구분 없이 최신 REV(일상점검)를 보여 줌. 반면 삭제(DEL_GRP_EQM02)는 10번 수정으로 정기점검 REV를 대상으로 하므로 → 정기점검 REV 없음 → 빈 새 REV 생성 → 일상점검 항목 코드를 새 REV에서 삭제(0건) → 변경 없음 → 새 REV 다시 삭제. 화면은 "삭제되었습니다"만 표시
 - **작업 상세 내용**:
   - 1. 근본 해결은 26번 프로시저 반영: 하단·왼쪽 목록이 정기점검 REV만 보여 FM116I270N은 정기점검 항목 없음(빈 화면)으로 표시되고, 일상점검 항목은 R03에서 다루지 않음
-  - 2. 프로시저: 정기점검 항목 삭제(DEL_GRP_EQM02·DEL_EQM02)에서 실제 삭제된 항목이 없으면 새로 만든 REV를 지우고 "삭제할 정기점검 항목이 없습니다. 화면을 다시 조회해주세요." 안내 (삭제 완료로 끝나지 않게)
-  - 3. 화면: 저장·삭제·추가·복사 후 정기점검 REV가 없어 REV 갱신이 안 되면 선택 대상의 REV·항목 전체 다시 조회(RefreshPlan)
+  - 1. 프로시저: 정기점검 항목 삭제(DEL_GRP_EQM02·DEL_EQM02)에서 실제 삭제된 항목이 없으면 새로 만든 REV를 지우고 "삭제할 정기점검 항목이 없습니다. 화면을 다시 조회해주세요." 안내 (삭제 완료로 끝나지 않게)
+  - 1. 화면: 저장·삭제·추가·복사 후 정기점검 REV가 없어 REV 갱신이 안 되면 선택 대상의 REV·항목 전체 다시 조회(RefreshPlan)
 - **정상 동작(참고)**: 정기점검 REV가 승인 상태에서 항목을 삭제하면 다음 번호 REV가 새로 생기고(개정이력 추가) 삭제한 항목을 뺀 나머지가 복사됨, 대기 상태면 그 REV에서 바로 삭제
 - **검증 결과**: 프로시저 IF 44/44·BOM 없음+CRLF, JS 구문 검사 통과. 미확인: 서버 반영 후 화면
 - **적용 순서**: MES_SNS2_EQM1001_R03.sql 프로시저 저장(25·26·27번 모두 포함, 파라미터 변경 없음) → 화면 새로고침
 
 ### 28. EQM1001_R03 정기점검 조건 CHKTP = '02' 고정, EQM1001_R02 정기점검 항목만 수정·삭제
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [05.Procedure/MES_SNS2_EQM1001_R02.sql](05.Procedure/MES_SNS2_EQM1001_R02.sql)
 - **배경 및 원인**: 사용자 지시 - R03의 `CHKTP IN ('02', '')`를 모두 `CHKTP = '02'`로 고정. EQM1001_R02(정기점검 항목 관리)도 정기점검만 다루므로 점검
 - **작업 상세 내용**:
   - 1. R03: 25·26번에서 넣은 `CHKTP IN ('02', '')` 21곳을 `CHKTP = '02'`로 변경, 빈 값 포함 이력 1행·주석 정리. 점검구분이 빈 값인 REV(2026-10-23 이전 생성분이 남아 있다면)는 R03에 표시되지 않음
-  - 2. R02 점검: 조회(LIST_MSTCHKKND)·등록(ADD_MSTCHKKND)은 이미 CHKTP '02' 고정. 저장(SAVE_MSTCHKKND)·삭제(DELETE_MSTCHKKND)는 UPDATE·DELETE에 CHKTP '02' 조건만 있어 다른 점검구분 코드가 넘어오면 아무것도 바꾸지 않고 성공으로 끝남
-  - 3. R02 수정: 저장·삭제 시 정기점검 항목이 아니면 "정기점검 항목이 아닙니다. (점검코드 …) 다시 조회해주세요." 안내 후 중단, 조회에 정렬순서(SORTNO·점검코드) 지정, 중복 코드 안내 문구 오타 수정(등록되는 → 등록된). 화면(aspx·js) 변경 없음
-  - 4. R02 프로시저 BOM 제거(encoding.md 수정 시점 BOM 제거), CRLF 유지
+  - 1. R02 점검: 조회(LIST_MSTCHKKND)·등록(ADD_MSTCHKKND)은 이미 CHKTP '02' 고정. 저장(SAVE_MSTCHKKND)·삭제(DELETE_MSTCHKKND)는 UPDATE·DELETE에 CHKTP '02' 조건만 있어 다른 점검구분 코드가 넘어오면 아무것도 바꾸지 않고 성공으로 끝남
+  - 1. R02 수정: 저장·삭제 시 정기점검 항목이 아니면 "정기점검 항목이 아닙니다. (점검코드 …) 다시 조회해주세요." 안내 후 중단, 조회에 정렬순서(SORTNO·점검코드) 지정, 중복 코드 안내 문구 오타 수정(등록되는 → 등록된). 화면(aspx·js) 변경 없음
+  - 1. R02 프로시저 BOM 제거(encoding.md 수정 시점 BOM 제거), CRLF 유지
 - **검증 결과**: R03 `IN ('02', '')` 0건·REV 조회 `CHKTP = '02'` 확인, R02 IF 12/12, 두 파일 BOM 없음+CRLF. 미확인: 서버 반영 후 화면
 - **적용 순서**: MES_SNS2_EQM1001_R03.sql·MES_SNS2_EQM1001_R02.sql 프로시저 저장 (파라미터 변경 없음)
 
 ### 29. 점검계획 REV 점검구분 빈 값 → 정기점검('02') 데이터 정리 SQL
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_MSTEQMREV_HEADER_CHKTP_FIX.sql](05.Procedure/MES_SNS2_MSTEQMREV_HEADER_CHKTP_FIX.sql) (신규, 데이터 정리 스크립트)
 - **배경 및 원인**: 사용자 실DB 조회 결과 점검구분 빈 값 REV 6건 - G FM116I210N REV.0~3, E I2C-003N REV.0, E A-003 REV.0 (모두 승인). 2026-10-23 점검구분 저장 이전에 R03(정기점검 계획)에서 만든 정기점검 REV. 28번에서 R03을 `CHKTP = '02'`로 고정했고 R04·TAL0001_R08도 '02'만 보므로, 이 6건(예: FM116I210N CNC 개정이력)이 모든 정기점검 화면에서 빠짐
 - **작업 상세 내용**: 1. 대상 확인 → 2. 같은 대상·번호의 '02' REV 중복 확인(0건이어야 함, 고유키 충돌 방지) → 3. 트랜잭션으로 빈 값·NULL → '02' 변경 → 4. 대상 6건 '02'·빈 값 0건 확인 후 COMMIT/ROLLBACK 수동
@@ -571,12 +631,14 @@
 - **적용 순서**: R03 프로시저(28번) 저장과 함께 이 스크립트 실행
 
 ### 30. EQM1001_R03 설비그룹·설비별 탭 검색 조건 입력칸 폭 확대
+
 - **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx)
 - **배경 및 원인**: 설비그룹 코드(FM116I250N 등 10자리)가 코드칸(80)에 꽉 차고 이름칸도 좁다는 요청
 - **작업 상세 내용**: 설비그룹 탭 설비그룹(find_GRP), 설비별 탭 설비(find_EQMCD)·설비그룹(find_EQM_GRP) 찾기 칸 코드 폭 80 → 110, 이름 폭 120 → 170 (라벨·여백 그대로)
 - **검증 결과**: 인코딩(BOM+CRLF) 유지. 미확인: 실제 화면 표시
 
 ### 31. TAL0001_R08 점검·수정·삭제·문제점/조치사항 버튼이 반응 없는 문제
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: A-05(2월 점검필요) 선택 후 점검·수정·삭제·문제점/조치사항을 눌러도 반응 없음. 화면이 상태에 따라 버튼을 비활성(ItsButton.Disable)으로 바꾸는데, 공통 버튼은 비활성일 때 클릭을 조용히 무시함(ItsButton.js 13행 data-disabled 확인). 점검필요 월은 수정·삭제·문제점이 비활성, 승인 계획 조회 실패(A-05: 승인된 정기점검 계획 없음으로 추정) 시 점검까지 비활성. 비활성 표시가 눈에 잘 띄지 않아 "반응 없음"으로 보임
 - **작업 상세 내용**: 버튼을 항상 사용 가능하게 두고, 누를 때 CHECK_ACTION으로 상태 안내(알림창)
@@ -587,6 +649,7 @@
 - **검증 결과**: JS 구문 검사 통과, 비활성 처리 0건, 인코딩(BOM+CRLF). 미확인: 실제 태블릿 동작, A-05 승인 계획 여부
 
 ### 32. TAL0001_R08 조회할 때마다 "승인된 정기점검 계획이 없습니다" 알림이 뜨는 문제
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R08.js](01.Office/PAGETAL/TAL0001/TAL0001_R08.js)
 - **배경 및 원인**: A-05(2월 점검필요, 승인된 정기점검 계획 없음) 선택 상태에서 [조회]·설비 선택마다 같은 알림창이 뜸. 조회 후 선택 설비의 점검 항목 미리보기(LOAD_DETAIL → LIST_PLAN_EQM02)가 실패할 때마다 오류 알림을 띄웠기 때문. [점검]을 누를 때 같은 안내가 나오는 것은 정상(승인 계획 없음)
 - **작업 상세 내용**: 미리보기 실패 시 알림창을 띄우지 않고 아무 표시 없이 넘어감(사용자 요청으로 상태 칸 표시도 하지 않음, 상태 칸 폭 90 그대로). 안내 알림은 [점검]을 누를 때만 표시
@@ -3519,6 +3582,7 @@
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R03.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql, 05.PROCEDURE/MES_SNS2_EQM1001_R05.sql
 - **배경 및 원인**: 사용자 요청: 세 프로시저의 불필요한 쿼리·조인·탐색 정리로 SQL 성능 향상
 - **작업 상세 내용**:
+  - R04 LIST_CYCLE_EQMCD: 월별 점검실적 확인 상관 서브쿼리 24개(설비마다 CHKRSTEQM 반복 탐색)를 조회년도 정기점검 실적 1회 집계(GROUP_CONCAT 월 목록 + FIND_IN_SET)로 변경. R04 LIST_CHKPLANEQM_EQM02: 적용 리비전 MAX 조회 후 REVCD 재조회 2회
   - R04 LIST_CYCLE_EQMCD: 월별 점검실적 확인 상관 서브쿼리 24개(설비마다 CHKRSTEQM 반복 탐색)를 조회년도 정기점검 실적 1회 집계(GROUP_CONCAT 월 목록 + FIND_IN_SET)로 변경. R04 LIST_CHKPLANEQM_EQM02: 적용 리비전 MAX 조회 후 REVCD 재조회 2회를 1회로. R04 SEARCH_CHKRSTEQM: 실적 키 조회를 정기점검(CHKTP '02')으로 한정(일상점검 실적이 먼저 잡히던 문제 수정). R04 미사용 변수 3개 제거. R03 LIST_GRP_EQM02_ADD: 점검항목×설비 교차조인·COUNT DISTINCT를 그룹 설비 수·항목별 등록 설비 수 사전집계 비교로. R03 LIST_MSTEQM·LIST_CYCLE_EQMCD: 설비×점검항목 조인 후 그룹화를 정기점검 설비 사전집계 조인으로. R03 REG_GRP_EQM02: 정렬순서 최대값 집계를 해당 설비그룹 설비로 한정. R03 COPY_EQM02: 항목마다 SELECT 5회+INSERT 반복을 INSERT SELECT 1회로(미사용 변수 2개 제거, GROUP_CONCAT 길이 제한 문제도 해소). R03 SAVE_CYCLE_EQMCD: 저장 후 빈 값 재조회·삭제 대신 입력값이 모두 비면 바로 삭제. R05 LIST_PLAN: 항목 수를 설비그룹·설비 단위로 먼저 집계해 9개 컬럼 GROUP BY 제거. R05 CALL_PLAN_RPT 항목·LIST_PLAN_REV_ITEM: 이미 1행 단위라 불필요한 GROUP BY 제거. R03 LIST_MSTEQM_GRP는 변경 시 오히려 느려져 원래대로 유지. 파라미터 변경 없음
 - **검증 결과**: 로컬 MariaDB 10.6에 수정 전·후 프로시저를 같은 데이터로 54개 조회·저장 시나리오 실행: 결과 동일(의도한 SEARCH_CHKRSTEQM 일상점검 제외만 차이). 설비 2,000·계획 60,000·실적 100,000건 기준 R04 주기 조회 297.7초→0.24초, R03 주기 조회 5.26초→0.27초, 미등록 항목 1,010ms→8.5ms, 설비 목록 137→18ms, R05 그룹 목록 101→13ms·설비 목록 67→19ms. BOM·CRLF·SQL 내부 날짜 0건 확인
 

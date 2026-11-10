@@ -1,19 +1,17 @@
-﻿/// <reference path="../../Script/reference.js" />
+/// <reference path="../../Script/reference.js" />
 
-// 2026-11-09 [설비 정기점검 등록] 월별 현황 조회 결과, 선택 월(01~12)·선택 설비
+// 월별 현황 조회 데이터 및 선택 상태
 var CYCLE_DATA = [];
 var SEL_MONTH = '';
 var SEL_EQMCD = '';
 
-// 2026-11-09 점검값·특이사항 입력 팝업을 등록(grid3)·수정(grid4)이 같이 쓰므로 값을 넣을 그리드·행을 기억
+// 점검값 입력 팝업 대상 그리드 및 행 인덱스
 var KEYPAD_GRID = 'grid3';
 var KEYPAD_ROW = -1;
 
-/* 페이지 접근 시 수행 */
-// 2026-11-09 그리드 생성, 이번 달·올해 기본 선택 후 월별 현황 조회
+/* 페이지 로드 시 수행 */
 ItsPage.Load = function () {
-    // 2026-11-10 하단 그리드 칸 폭은 조회할 때마다 내용·제목 길이에 맞춰 자동 계산(AUTO_SIZE_GRID), 화면보다 넓으면 좌우 스크롤 (아래 폭은 기본값)
-    // 2026-11-10 태블릿에서 길게 누르기·두 번 누르기가 우클릭으로 처리되어 그리드 메뉴(전체선택·엑셀내보내기 등)가 뜨므로 끔 (TAL0001_R07과 동일)
+    // 점검이력 그리드 생성 (우클릭 메뉴 비활성화)
     ItsGrid.Create('grid1', { isCheckBoxGrid: false, isSubTotalGrid: false, contextMenu: false }, [
         column.create('점검일자', 'BASEDATE', { width: 110, align: 'center' }),
         column.create('점검유형', 'CHKTP', { width: 90, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKTP' }),
@@ -34,13 +32,11 @@ ItsPage.Load = function () {
 
     SEL_MONTH = ('0' + (new Date().getMonth() + 1)).slice(-2);
 
-    // 2026-11-10 조회년도 선택 시 onChanged에서 월별 현황 조회
+    // 조회년도 기본값 선택
     ItsCombo.SetValueByIndex('cmb_SYEAR', 4);
 };
 
-// 2026-11-09 점검 항목 그리드 컬럼 (메인 grid2, 등록 grid3, 수정 grid4 공용)
-// 점검값은 칸을 한 번 눌러 숫자패드·OK/NG로 입력, 특이사항은 TAL0001_R05 비고처럼 등록·수정 팝업 그리드 칸에 바로 입력(isEdit)
-// 2026-11-10 칸 폭은 데이터를 넣은 뒤 AUTO_SIZE_GRID로 내용에 맞춤 (아래 폭은 기본값), 메인 grid2는 화면 절반을 넘는 부분을 좌우 스크롤로 확인
+// 점검항목 그리드 컬럼 생성
 function CREATE_ITEM_COLUMNS(isEdit) {
     return [
         column.create('적용 REV', 'REVNM', { width: 90, align: 'center' }),
@@ -55,13 +51,13 @@ function CREATE_ITEM_COLUMNS(isEdit) {
     ];
 }
 
-// 2026-11-10 칸 폭을 제목·내용 길이에 맞춤 (공통 그리드 우클릭 메뉴 '컬럼너비맞춤'과 같은 autoSizeColumns)
+// 그리드 컬럼 너비 자동 맞춤
 function AUTO_SIZE_GRID(gridId) {
     var grid = ItsGrid.Get(gridId);
     grid.autoSizeColumns();
 }
 
-// 2026-11-09 버튼 사용 가능 여부 확인 후 안내 (REG: 점검필요 월만 / EDIT·DELETE·REMARK: 점검완료 월만)
+// 버튼 동작 가능 여부 확인
 function CHECK_ACTION(action) {
     if (!SEL_EQMCD) {
         ItsMsg.Alert('설비를 먼저 선택하세요.');
@@ -86,19 +82,19 @@ function CHECK_ACTION(action) {
     return true;
 }
 
-// 2026-11-09 사원찾기 목록(공장 07)에 없는 점검자는 이름칸이 비므로 프로시저가 준 사원명으로 표시
+// 사원명 표시 처리
 function SET_FIND_NAME(findId, name) {
     if (name && !ItsFind.GetNameValue(findId)) {
         $('input#' + findId).siblings('.ItsFind_name').val(name);
     }
 }
 
-// 2026-11-09 선택 년월 (YYYY-MM)
+// 선택 년월 반환 (YYYY-MM)
 function GET_YYYYMM() {
     return ItsCombo.GetValue('cmb_SYEAR') + '-' + SEL_MONTH;
 }
 
-// 2026-11-09 선택 설비의 선택 월 상태 (점검필요 / 점검완료 / 빈 값)
+// 선택 설비의 선택 월 점검상태 반환
 function GET_STATUS(eqmCd) {
     for (var i = 0; i < CYCLE_DATA.length; i++) {
         if (CYCLE_DATA[i].EQMCD == eqmCd) {
@@ -108,7 +104,7 @@ function GET_STATUS(eqmCd) {
     return '';
 }
 
-// 2026-11-10 선택 월의 주기관리 배정 점검자 (월별 현황 조회의 MxxEMPCD·MxxEMPNM)
+// 선택 설비의 선택 월 배정 점검자 반환
 function GET_PLAN_EMP(eqmCd) {
     for (var i = 0; i < CYCLE_DATA.length; i++) {
         if (CYCLE_DATA[i].EQMCD == eqmCd) {
@@ -120,10 +116,9 @@ function GET_PLAN_EMP(eqmCd) {
     }
     return { EMPCD: '', EMPNM: '' };
 }
-/**********************************************************************************************************************************************************************/
-// 월별 현황·설비 카드
 
-// 2026-11-09 조회년도·설비 조건으로 월별 정기점검 현황 조회 후 월 탭·설비 카드 표시
+/* 월별 현황 및 설비 카드 */
+// 월별 정기점검 현황 조회
 function SEARCH_CYCLE() {
     var maria = new ItsMaria('TAL0001_R08', 'LIST_CYCLE_EQMCD');
     maria.AddParam('SYEAR', ItsCombo.GetValue('cmb_SYEAR'));
@@ -139,7 +134,7 @@ function SEARCH_CYCLE() {
     RENDER_EQM();
 }
 
-// 2026-11-09 월 탭 (1~12월)
+// 1~12월 탭 렌더링
 function RENDER_MONTH() {
     var html = '';
     for (var m = 1; m <= 12; m++) {
@@ -149,7 +144,7 @@ function RENDER_MONTH() {
     $('#MONTH_LIST').html(html);
 }
 
-// 2026-11-09 설비 카드: 선택 월에 점검 대상인 설비만, 카드 배경색으로 상태 구분(점검필요 need·점검완료 done), 선택 설비가 남아 있으면 상세 다시 조회
+// 선택 월 점검 대상 설비 카드 렌더링
 function RENDER_EQM() {
     var html = '';
     var hasSelected = false;
@@ -180,17 +175,17 @@ function RENDER_EQM() {
     LOAD_DETAIL();
 }
 
-// 2026-11-09 조회년도 변경 시 다시 조회
+// 조회년도 변경 이벤트
 ItsCombo.Event('cmb_SYEAR').onChanged = function (value, oldValue) {
     SEARCH_CYCLE();
 };
 
-// 2026-11-10 설비 선택(입력·찾기 팝업 선택·지우기) 시 바로 그 설비 조건으로 다시 조회
+// 설비 선택 변경 이벤트
 ItsFind.Event('find_EQMCD').onChanged = function (value, oldValue) {
     SEARCH_CYCLE();
 };
 
-// 2026-11-09 월 탭 선택
+// 월 탭 클릭 이벤트
 $(document).on('click', '#MONTH_LIST .month-btn', function () {
     SEL_MONTH = $(this).attr('data-month');
     $('#MONTH_LIST .month-btn').removeClass('active');
@@ -198,7 +193,7 @@ $(document).on('click', '#MONTH_LIST .month-btn', function () {
     RENDER_EQM();
 });
 
-// 2026-11-09 설비 카드 선택 시 선택 월 점검 정보·항목 조회
+// 설비 카드 클릭 이벤트
 $(document).on('click', '#EQM_LIST .eqm-btn', function () {
     SEL_EQMCD = $(this).attr('data-eqmcd');
     $('#EQM_LIST .eqm-btn').removeClass('active');
@@ -206,14 +201,13 @@ $(document).on('click', '#EQM_LIST .eqm-btn', function () {
     LOAD_DETAIL();
 });
 
-// 2026-11-09 조회 버튼
+// 조회 버튼 클릭 이벤트
 ItsButton.Event('btn_SEARCH').onClick = function () {
     SEARCH_CYCLE();
 };
-/**********************************************************************************************************************************************************************/
-// 선택 설비 상세 (왼쪽 점검 정보, 오른쪽 점검 항목)
 
-// 2026-11-09 점검완료: 저장된 실적·항목 / 점검필요: 승인 계획 항목과 주기관리 점검자 (미리보기)
+/* 선택 설비 상세 정보 조회 */
+// 선택 설비의 점검 실적 또는 계획 상세 조회
 function LOAD_DETAIL() {
     ItsGrid.Clear('grid1');
     ItsGrid.Clear('grid2');
@@ -247,8 +241,7 @@ function LOAD_DETAIL() {
         maria.AddParam('EQMCD', SEL_EQMCD);
         maria.AddParam('YYYYMM', yyyymm);
         maria.CallProc();
-        // 2026-11-09 미리보기는 조회·설비 선택마다 실행되므로 실패(승인 계획 없음 등)해도 아무 표시 없이 넘어가고, 안내는 [점검]을 누를 때만 표시
-        // 2026-11-10 점검자는 월별 현황(CYCLE_DATA)의 선택 월 배정 점검자로 표시 → 승인 계획이 없어 항목 조회가 실패해도 표시됨
+        // 배정 점검자 정보 바인딩
         var planEmp = GET_PLAN_EMP(SEL_EQMCD);
         ItsGrid.SetStore('grid1', {
             data: [{
@@ -263,10 +256,9 @@ function LOAD_DETAIL() {
     AUTO_SIZE_GRID('grid1');
     AUTO_SIZE_GRID('grid2');
 }
-/**********************************************************************************************************************************************************************/
-// 점검 등록
 
-// 2026-11-09 점검 버튼: 최신 승인 계획 항목으로 등록 팝업 열기 (점검일자 기본값: 이번 달이면 오늘, 아니면 그 달 1일 / 점검자 기본값: 주기관리 점검자)
+/* 점검 등록 */
+// 점검 등록 팝업 오픈
 ItsButton.Event('btn_REG').onClick = function () {
     if (!CHECK_ACTION('REG')) {
         return;
@@ -302,7 +294,7 @@ ItsButton.Event('btn_REG').onClick = function () {
     AUTO_SIZE_GRID('grid3');
 };
 
-// 2026-11-09 등록 팝업 저장 (점검값·특이사항 저장, 문제점/조치사항은 등록 후 메인 버튼으로 입력, 필수 확인은 프로시저에서 처리)
+// 점검 등록 저장
 ItsPop.Event('pop1').onAddBtnClick = function () {
     ItsGrid.Get('grid3').finishEditing();
     var maria = new ItsMaria('TAL0001_R08', 'ADD_CHKRSTEQM');
@@ -327,10 +319,9 @@ ItsPop.Event('pop1').onAddBtnClick = function () {
 ItsPop.Event('pop1').onCancelBtnClick = function () {
     ItsPop.Close('pop1');
 };
-/**********************************************************************************************************************************************************************/
-// 점검 수정·삭제
 
-// 2026-11-09 수정 버튼: 선택 월 실적으로 수정 팝업 열기
+/* 점검 수정 및 삭제 */
+// 점검 수정 팝업 오픈
 ItsButton.Event('btn_EDIT').onClick = function () {
     if (!CHECK_ACTION('EDIT')) {
         return;
@@ -352,7 +343,7 @@ ItsButton.Event('btn_EDIT').onClick = function () {
     AUTO_SIZE_GRID('grid4');
 };
 
-// 2026-11-09 수정 팝업 저장
+// 점검 수정 저장
 ItsPop.Event('pop2').onAddBtnClick = function () {
     ItsGrid.Get('grid4').finishEditing();
     var maria = new ItsMaria('TAL0001_R08', 'SAVE_CHKRSTEQM');
@@ -378,7 +369,7 @@ ItsPop.Event('pop2').onCancelBtnClick = function () {
     ItsPop.Close('pop2');
 };
 
-// 2026-11-09 삭제 버튼: 선택 월 실적 삭제
+// 점검 실적 삭제
 ItsButton.Event('btn_DELETE').onClick = function () {
     if (!CHECK_ACTION('DELETE')) {
         return;
@@ -398,11 +389,9 @@ ItsButton.Event('btn_DELETE').onClick = function () {
         SEARCH_CYCLE();
     });
 };
-/**********************************************************************************************************************************************************************/
-// 점검값·특이사항 입력 (등록 grid3·수정 grid4)
 
-// 2026-11-09 점검값 입력: 점검값구분 03(OK/NG)은 OK·NG 버튼, 그 외는 숫자패드 (특이사항 칸은 칸에 바로 입력하므로 제외)
-// 2026-11-10 점검값 칸에서만 열림 (한 번 누르기로 바꾸면서 다른 칸을 눌러도 열리지 않게 함)
+/* 점검값 입력 */
+// 점검값 입력 팝업 오픈 (OK/NG 및 숫자패드 분기)
 function OPEN_ITEM_INPUT(gridId, rowIndex, field) {
     if (field != 'CHKVALUE') {
         return;
@@ -418,8 +407,7 @@ function OPEN_ITEM_INPUT(gridId, rowIndex, field) {
     }
 }
 
-// 2026-11-10 점검값 칸 한 번 누르기로 입력창 열기
-// 태블릿(Kiosk.master는 viewport 설정 없음)에서는 두 번 누르기가 브라우저 화면 확대로 처리되어 더블클릭 이벤트가 오지 않음
+// 점검값 셀 클릭 이벤트 바인딩
 function BIND_ITEM_INPUT_CLICK(gridId) {
     var grid = ItsGrid.Get(gridId);
     grid.hostElement.addEventListener('click', function (e) {
@@ -431,7 +419,7 @@ function BIND_ITEM_INPUT_CLICK(gridId) {
     });
 }
 
-// 2026-11-09 숫자패드
+// 숫자패드 입력 처리
 function KEYPAD_APPEND(ch) {
     var value = ItsText.GetValue('txt_VALUE_TAL0001_R08');
     if (ch == '.') {
@@ -468,14 +456,14 @@ ItsButton.Event('btn_CLEAR_TAL0001_R08').onClick = function () {
     ItsText.SetValue('txt_VALUE_TAL0001_R08', '');
 };
 
-// 2026-11-09 숫자 점검값 반영 (끝의 소수점은 제외)
+// 숫자 점검값 적용
 ItsButton.Event('btn_ADDVAL_TAL0001_R08').onClick = function () {
     var value = ItsText.GetValue('txt_VALUE_TAL0001_R08').replace(/\.$/, '');
     ItsGrid.SetValue(KEYPAD_GRID, KEYPAD_ROW, 'CHKVALUE', value == '' ? '' : Number(value));
     ItsPop.Close('pop_NUM');
 };
 
-// 2026-11-09 OK/NG 점검값 반영
+// 판정(OK/NG) 점검값 적용
 ItsButton.Event('btn_OK_TAL0001_R08').onClick = function () {
     ItsGrid.SetValue(KEYPAD_GRID, KEYPAD_ROW, 'CHKVALUE', 'OK');
     ItsPop.Close('pop_OK');
@@ -486,10 +474,8 @@ ItsButton.Event('btn_NG_TAL0001_R08').onClick = function () {
     ItsPop.Close('pop_OK');
 };
 
-/**********************************************************************************************************************************************************************/
-// 문제점/조치사항
-
-// 2026-11-09 문제점/조치사항 (TAL0001_R05와 같은 방식): 점검완료 실적을 선택한 뒤 메인 [문제점/조치사항] 버튼으로 입력
+/* 문제점 및 조치사항 */
+// 문제점 및 조치사항 팝업 오픈
 ItsButton.Event('btn_REMARK').onClick = function () {
     if (!CHECK_ACTION('REMARK')) {
         return;
@@ -499,17 +485,14 @@ ItsButton.Event('btn_REMARK').onClick = function () {
     ItsPop.Open('pop_PROB_SOL');
 };
 
-// 2026-11-09 선택 월 실적의 점검값·특이사항은 그대로 두고 문제점/조치사항만 바꿔 저장
-// 2026-11-10 문제점/조치사항 창
-// - 화면이 팝업보다 좁으면 공통 팝업이 폭을 화면에 맞추며 조치사항이 다음 줄로 넘어가는데 높이는 한 줄 기준이라 잘림
-//   → 높이를 입력칸 내용에 맞추고, 아래에 겹쳐 놓이는 저장·취소 버튼 줄(45) 만큼 더함 (공통 팝업 add 형식과 같은 값)
-// - 높이가 바뀌었으므로 다른 팝업처럼 화면 가운데로 다시 맞춤
+// 문제점 및 조치사항 팝업 위치 및 높이 보정
 ItsPop.Event('pop_PROB_SOL').onPopOpened = function () {
     $('#pop_PROB_SOL').css('height', 'auto');
     $('#pop_PROB_SOL').height($('#pop_PROB_SOL').height() + 45);
     $('#pop_PROB_SOL').dialog('option', 'position', { my: 'center', at: 'center', of: window });
 };
 
+// 문제점 및 조치사항 저장
 ItsPop.Event('pop_PROB_SOL').onAddBtnClick = function () {
     var maria = new ItsMaria('TAL0001_R08', 'SAVE_CHKRSTEQM');
     maria.AddParam('EQMCD', SEL_EQMCD);
@@ -539,4 +522,3 @@ ItsPop.Event('pop_PROB_SOL').onAddBtnClick = function () {
 ItsPop.Event('pop_PROB_SOL').onCancelBtnClick = function () {
     ItsPop.Close('pop_PROB_SOL');
 };
-/**********************************************************************************************************************************************************************/
