@@ -9,8 +9,8 @@
 <%-- SEARCH PANEL --%>
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
-        <Its:combo runat="server" Label="법인" ID="sdiv1_combo_COMPANYCD" Field="COMPANYCD" GPCD="*COMPANYCD" InputWidth="148"/> 
-        <Its:combo runat="server" Label="공장" ID="sdiv1_combo_FACTORYCD" Field="FACTORYCD" GPCD="*FACTORYCD" InputWidth="120"/>
+        <Its:combo runat="server" Label="법인" ID="sdiv1_combo_COMPANYCD" Field="COMPANYCD" GPCD="*COMPANYCD" InputWidth="148" ReadOnly="true"/> 
+        <Its:combo runat="server" Label="공장" ID="sdiv1_combo_FACTORYCD" Field="FACTORYCD" GPCD="*FACTORYCD" InputWidth="120" ReadOnly="true"/>
         <Its:text runat="server" Label="LOT번호(*)" Field="LOTKEY" ID="txt_LOTKEY"/>
         <Its:text runat="server" Label="관리번호(*)" Field="KEYWORD" ID="sdiv1_text_KEYWORD"/>
         <Its:newline runat="server" />

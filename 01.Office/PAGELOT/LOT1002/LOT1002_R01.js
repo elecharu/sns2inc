@@ -8,14 +8,15 @@ ItsPage.Load = function () {
         column.create("품목유형", "ITEMCG", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center' }),
         column.create("공급구분", "ITEMSRC", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'DM160', align: 'center', hidden: true }),
         column.create('품목코드', 'ITEMCD', { width: 120, align: 'center' }),
-        column.create('품번', 'EONO', { width: 120, align: 'center' }),
         column.create('품명', 'ITEMNM', { width: 300 }),
         column.create('규격', 'ITEMSPEC', { width: 120 }),
+        column.create('현재고', 'SUMQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.split()
     ]);
 
     ItsGrid.Create('grid1_LOTLIST', { isCheckBoxGrid: false, isSubTotalGrid: true }, [
-        column.create('로트번호', 'LOTKEY', { width: 120 }),
+        column.create('창고', 'WARENM', { width: 120 }),
+        column.create('로트번호', 'LOTKEY', { width: 120 }),        
         column.create('로트수량', 'LOTQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, groupType: enumGrouping.sum }),
         column.create("단위", "ITEMUNIT", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'DM150', align: 'center' }),
         column.create('입고일자', 'PRDDATE', { width: 120 }),
@@ -96,12 +97,18 @@ ItsPop.Event('pop1').onCancelBtnClick = function () {
 }
 /***********************************************************************************************************************************/
 ItsButton.Event('btn_IN_ETC').onClick = function () {
+    if (ItsFind.GetValue('find_WARECD') == '') {
+        ItsMsg.Alert('입고창고를 선택하세요.');
+        return;
+    }
+
     ItsMsg.Confirm("기타입고처리 하시겠습니까?",
         function () {
             var cnt = 0;
             var maria = new ItsMaria('LOT1002_R01', 'ETC_IN');
 
             maria.AddParam('INDATE', ItsDate.GetValue('date_INDATE'));
+            maria.AddParam('WARECD', ItsFind.GetValue('find_WARECD'));
             maria.AddParam('INTP', ItsCombo.GetValue('cmb_INTP'));
             maria.AddParam('EMPCD', ItsFind.GetValue('find_EMPCD'));
             maria.AddParam('REMARK', ItsText.GetValue('txt_REMARK'));

@@ -4,12 +4,12 @@
 ItsPage.Load = function () {
 
     ItsGrid.Create('grid1', { isSubTotalGrid: true, allowMerging: 'Cells' }, [
-        column.create('창고', 'WARECD', { width: 100, align: 'center' }),
+        column.create('창고', 'WARECD', { width: 100, align: 'center', hidden: true }),
+        column.create('창고', 'WARENM', { width: 100, align: 'center' }),
         column.create('품목유형', 'ITEMCG', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center' }),
-        column.create('관리번호', 'EONO', { width: 200, align: 'center' }),
+        column.create('품목코드', 'ITEMCD', { width: 200 }),
         column.create('품명', 'ITEMNM', { width: 250 }),
-        column.create('규격', 'ITEMSPEC', { width: 250 }),
-        column.create('강종', 'SPEC6', { width: 250 }),
+        column.create('규격', 'ITEMSPEC', { width: 250 }),        
         column.create('로트번호', 'LOTKEY', { width: 200, align: 'center' }),
         column.create('재고수량', 'LOTQTY', { width: 90, columnType: enumColumnTypes.number, groupType: enumGrouping.sum, decimalPrecision: 0 }),
         column.create('단위', 'ITEMUNIT', { width: 50, columnType: enumColumnTypes.combo, gpcd: 'DM150', align: 'center' }),
@@ -31,7 +31,7 @@ ItsButton.EventSearch = function () {
         return;
     }
     ItsGrid.SetStore('grid1', maria.store);
-    //ItsGrid.Get('grid1').autoSizeColumns();
+    ItsGrid.Get('grid1').autoSizeColumns();
     ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
 
 };

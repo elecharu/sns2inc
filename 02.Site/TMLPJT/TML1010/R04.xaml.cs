@@ -143,6 +143,17 @@ namespace TML1010
                 ShowMessageBox(commandName, "이동 취소 하시겠습니까??");
                 return;
             }
+            // 거래명세표 출력 (재출력)
+            else if (commandName == "MTRCUST_INVOICE_PRINT")
+            {
+                if (MODEL_A1.GetText("INVOICEKEY") == "")
+                {
+                    ShowMessageBox("", "출력할 거래명세서가 없습니다.");
+                    return;
+                }
+
+                PrintMoveInvoice(MODEL_A1.GetText("INVOICEKEY"));
+            }
         }
 
         public override void EventMessageResult(string commandName)
@@ -202,6 +213,33 @@ namespace TML1010
                 MODEL_G2.SetData(ds.Tables[0]);
 
                 PANEL_A1.Show();
+
+                // 이동 등록 직후 거래명세서 출력 (공급자 = 이동 보내는 외주처, 공급받는자 = 이동 받는 외주처)
+                PrintMoveInvoice(ItsData.GetText(ds.Tables[0], 0, "INVOICEKEY"));
+            }
+        }
+
+        // 2026-11-10 외주간 이동 거래명세서(A4 1장: 공급받는자 보관용, 품목별 수량 소계) 출력. 확인창 없이 POP 에서 고른 프린터로 바로 인쇄
+        // 양식은 COMPJT\TMLPRINT 의 MTR_1 (AAALIB\TMLPRINT.exe), 데이터는 납품등록과 같은 프로시저 TML1010_R01 PRINT_INVOICE (수신처가 외주처면 그 외주처가 공급받는자)
+        private void PrintMoveInvoice(string invoiceKey)
+        {
+            ItsMaria.Set("TML1010_R01", "PRINT_INVOICE");
+            ItsMaria.AddOne("INVOICEKEY", invoiceKey);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            try
+            {
+                TMLPRINT.MTR_1 rpt = new TMLPRINT.MTR_1(ds);
+                rpt.PrintDirect(ItsPrinter.BarcodePrintName);
+            }
+            catch (Exception ex)
+            {
+                ShowMessageBox("", "이동은 등록되었으나 거래명세서 출력에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
             }
         }
 

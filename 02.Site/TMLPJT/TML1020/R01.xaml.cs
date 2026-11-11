@@ -89,7 +89,8 @@ namespace TML1020
             {
                 ItsMaria.Set("TML1020_R01", "ADD_MTRIN");
                 ItsMaria.AddOne("MTRINDATE", MODEL_S1.GetText("MTRINDATE"));
-                foreach (string invoiceKey in GetInvoiceKeys())
+                List<string> invoiceKeys = GetInvoiceKeys();   // 입고한 거래명세서 (등록 후 목록을 비우기 전에 담아 둠)
+                foreach (string invoiceKey in invoiceKeys)
                 {
                     ItsMaria.AddList("INVOICEKEY_LIST", invoiceKey);
                 }
@@ -104,9 +105,25 @@ namespace TML1020
                 MODEL_G1.Clear();
                 MODEL_S1.SetValue("BARCODE", "");
 
-                // 입고된 LOT 마다 공정이동표(재고) 출력 (A4 가로 1장씩, 확인창 없이 POP 에서 고른 프린터로). 양식은 COMPJT\TMLPRINT 의 MTR_2
+                // 입고한 거래명세서마다 거래명세서(공급받는자 보관용 1장) 출력 + 입고된 LOT 마다 공정이동표(재고) 출력
+                // (확인창 없이 POP 에서 고른 프린터로). 양식은 COMPJT\TMLPRINT 의 MTR_1 (거래명세서, 납품등록과 같은 양식) / MTR_2 (공정이동표)
                 try
                 {
+                    foreach (string invoiceKey in invoiceKeys)
+                    {
+                        ItsMaria.Set("TML1010_R01", "PRINT_INVOICE");   // 납품등록이 쓰는 거래명세서 출력 데이터
+                        ItsMaria.AddOne("INVOICEKEY", invoiceKey);
+                        DataSet dsInvoice = ItsMaria.Call();
+                        if (ItsMaria.IsError)
+                        {
+                            ShowMessageBox("", ItsMaria.ErrMessage);
+                            continue;
+                        }
+
+                        TMLPRINT.MTR_1 rptInvoice = new TMLPRINT.MTR_1(dsInvoice);
+                        rptInvoice.PrintDirect(ItsPrinter.BarcodePrintName);
+                    }
+
                     if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
                     {
                         TMLPRINT.MTR_2 rptMove = new TMLPRINT.MTR_2(ds.Tables[0]);
@@ -116,7 +133,7 @@ namespace TML1020
                 }
                 catch (Exception ex)
                 {
-                    ShowMessageBox("", "입고는 되었으나 공정이동표 출력에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
+                    ShowMessageBox("", "입고는 되었으나 출력(거래명세서·공정이동표)에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
                 }
                 txt_BARCODE.Focus();
             }

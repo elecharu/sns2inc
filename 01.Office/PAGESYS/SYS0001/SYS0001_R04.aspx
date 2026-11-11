@@ -24,15 +24,15 @@
     <Its:pop runat="server" ID="pop1" Type="add" Title="사용자 등록" Width="470">
         <Its:div runat="server" Type="SplitSingle" ID="pdiv1">
             <Its:text runat="server" Label="사용자ID" Field="USERID" />
-            <Its:find runat="server" Label="사원" Field="EMPCD"  GPCD="EMPCD" />
+            <Its:find runat="server" Label="사원" Field="EMPCD"  GPCD="EMPCD" InputWidth="115" NameWidth="150"/>
             <Its:newline runat="server" />
-            <Its:find runat="server" Label="거래처" Field="CUSTCD"  GPCD="CUSTCD" />
+            <Its:find runat="server" Label="거래처" Field="CUSTCD"  GPCD="CUSTCD_COMPANY" REF01="60" InputWidth="115" NameWidth="150"/>
             <Its:newline runat="server" />
             <Its:combo runat="server" Label="최초권한" Field="AUTCD" GPCD="AUTCD" />
             <Its:check runat="server" Label="잠금여부" Field="LOCKYN" MarginLeft="93" Value="F" />
             <Its:newline runat="server" />
             <Its:text runat="server" Label="비밀번호" Field="PASSWORD" Type="password" />
-            <Its:text runat="server" Label="비밀번호확인" Field="CHPASSWORD" Type="password" />
+            <Its:text runat="server" Label="비밀번호확인" Field="CHPASSWORD" Type="password" LabelWidth ="96"/>
             <Its:newline runat="server" />
             <Its:text runat="server" Label="비고" Field="REMARK" InputWidth="320" />
         </Its:div>

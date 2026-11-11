@@ -24,7 +24,7 @@
     <Its:div runat="server" Type="SplitDown">
         <Its:div runat="server" Type="SplitTop" BackColor="AddPanel">
             <Its:date runat="server" Label="출고일자" ID="date_OUTDATE" Required="true"/>
-            <Its:combo runat="server" Label="출고구분" ID="cmb_OUTTP" Field="OUTTP" GPCD="OUTTP" USEYN="Y" Required="true" />
+            <Its:combo runat="server" Label="출고구분" ID="cmb_OUTTP" Field="OUTTP" GPCD="OUTTP" REF01="Y" Required="true" />
             <Its:find runat="server" Label="반출처" Field="CUSTCD" GPCD="CUSTCDRETURN" ID="find_CUSTCD_RETURN" Required="true" Hidden="true" />
             <Its:find runat="server" Label="사원" Field="EMPCD" GPCD="EMPCD" ID="find_EMPCD" Required="true"/>
             <Its:text runat="server" Label="사유" ID="txt_REMARK" InputWidth="300" Required="true"/>

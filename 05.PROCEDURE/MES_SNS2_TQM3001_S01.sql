@@ -1,0 +1,108 @@
+﻿CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.TQM3001_S01(
+-- *****************************************************************************
+-- Comment: 협력사 불량조회 (품질팀) - "협력업체 불량 현황" 양식
+--          ) LIST: 조회월의 부적합 판정(TQMJUDGE) 중 판정유형 불량(BAD), 불량구분 1공장(FAC1)·외주(OSC) 인 것을
+--                  협력업체 + 품목(ITEMID) + 판정일자로 집계해 일자(1~31일)별 수량을 가로로 펼친다
+--          ) 협력업체 = 판정한 로트를 만든 외주실적(OSCRSTLOT → OSCRST.CUSTCD)의 거래처, 외주 로트가 아니면 불량구분 이름(1공장 등)
+--          ) 목표(PPM)·주요 ISSUE 및 대책은 칸만 두고 빈 값 (2026-11-10 사용자 지시)
+-- Create: 2026-11-10
+-- Modify:
+-- *****************************************************************************
+  IN $SMONTH VARCHAR(10),       -- 조회월 (YYYY-MM)
+-- *****************************************************************************
+  IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
+PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+-- *****************************************************************************
+  DECLARE _$MSDATE VARCHAR(10);   -- 조회월 1일
+  DECLARE _$MEDATE VARCHAR(10);   -- 조회월 말일
+-- *****************************************************************************
+CASE $CALLTYPE
+-- ****************************************************************************
+WHEN 'LIST' THEN  -- 협력업체·품목별 일자 불량수량
+
+  IF $SMONTH = '' THEN
+    CALL COMERR('조회월을 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  SET _$MSDATE = CONCAT(LEFT($SMONTH, 7), '-01');
+  SET _$MEDATE = DATE_FORMAT(LAST_DAY(_$MSDATE), '%Y-%m-%d');
+
+  SELECT
+      JUDGE_BAD.CUSTNM
+    , CAST(JUDGE_BAD.ITEMID AS CHAR) AS ITEMID
+    , IFNULL(MSTITEM.ITEMCD, '') AS ITEMCD
+    , IFNULL(MSTITEM.ITEMNM, '') AS ITEMNM
+    , NULL AS TARGETPPM  -- 목표(PPM): 칸만, 값 없음
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 1, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D01
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 2, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D02
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 3, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D03
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 4, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D04
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 5, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D05
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 6, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D06
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 7, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D07
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 8, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D08
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 9, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D09
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 10, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D10
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 11, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D11
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 12, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D12
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 13, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D13
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 14, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D14
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 15, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D15
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 16, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D16
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 17, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D17
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 18, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D18
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 19, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D19
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 20, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D20
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 21, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D21
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 22, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D22
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 23, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D23
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 24, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D24
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 25, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D25
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 26, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D26
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 27, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D27
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 28, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D28
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 29, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D29
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 30, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D30
+    , NULLIF(SUM(IF(DAY(JUDGE_BAD.JUDGEDATE) = 31, JUDGE_BAD.JUDGEQTY, 0)), 0) AS D31
+    , SUM(JUDGE_BAD.JUDGEQTY) AS TOTQTY
+    , '' AS ISSUE        -- 주요 ISSUE 및 대책: 칸만, 빈 값
+  FROM (
+         -- 조회월 불량 판정 (1공장·외주) + 협력업체
+         SELECT
+             TQMJUDGE.JUDGEDATE
+           , TQMJUDGE.ITEMID
+           , TQMJUDGE.JUDGEQTY
+           , TQMJUDGE.JUDGEBADTP
+           , IF(IFNULL(LOT_OSC.CUSTCD, '') <> ''
+              , IFNULL(MSTCUST.CUSTNM, LOT_OSC.CUSTCD)
+              , IFNULL(GPCD('JUDGEBADTP', TQMJUDGE.JUDGEBADTP), TQMJUDGE.JUDGEBADTP)) AS CUSTNM
+         FROM TQMJUDGE
+         LEFT JOIN (
+                     -- 로트를 만든 외주실적의 거래처 (로트당 하나)
+                     SELECT
+                         OSCRSTLOT.LOTKEY
+                       , MAX(OSCRST.CUSTCD) AS CUSTCD
+                     FROM OSCRSTLOT
+                     INNER JOIN OSCRST
+                       ON OSCRST.OSCRSTKEY = OSCRSTLOT.OSCRSTKEY
+                     GROUP BY OSCRSTLOT.LOTKEY
+                   ) AS LOT_OSC
+           ON LOT_OSC.LOTKEY = TQMJUDGE.LOTKEY
+         LEFT JOIN MSTCUST
+           ON MSTCUST.CUSTCD = LOT_OSC.CUSTCD
+         WHERE TQMJUDGE.JUDGEDATE BETWEEN _$MSDATE AND _$MEDATE
+           AND TQMJUDGE.JUDGETP = 'BAD'
+           AND TQMJUDGE.JUDGEBADTP IN ('FAC1', 'OSC')
+       ) AS JUDGE_BAD
+  LEFT JOIN MSTITEM
+    ON MSTITEM.ITEMID = JUDGE_BAD.ITEMID
+  GROUP BY JUDGE_BAD.CUSTNM, JUDGE_BAD.ITEMID, MSTITEM.ITEMCD, MSTITEM.ITEMNM
+  ORDER BY MIN(IF(JUDGE_BAD.JUDGEBADTP = 'FAC1', 0, 1)), JUDGE_BAD.CUSTNM, MSTITEM.ITEMCD
+  ;
+
+-- ****************************************************************************
+END CASE;
+-- *****************************************************************************
+END

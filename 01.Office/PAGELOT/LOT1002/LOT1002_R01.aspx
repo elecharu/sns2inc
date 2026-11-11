@@ -30,7 +30,8 @@
     <Its:div runat="server" Type="SplitDown">
         <Its:div runat="server" Type="SplitTop" BackColor="AddPanel" ID="pdiv2">
             <Its:date runat="server" Label="입고일자" ID="date_INDATE" Required="true"/>
-            <Its:combo runat="server" Label="입고구분" ID="cmb_INTP" Field="INTP" GPCD="INTP" USEYN="Y" Required="true" />
+            <Its:find runat="server" Label="입고창고" ID="find_WARECD" Field="WARECD" GPCD="WARECD" Required="true"/>
+            <Its:combo runat="server" Label="입고구분" ID="cmb_INTP" Field="INTP" GPCD="INTP" REF01="Y" Required="true"/>
             <Its:find runat="server" Label="사원" Field="EMPCD" GPCD="EMPCD" ID="find_EMPCD" Required="true"/>
             <Its:text runat="server" Label="사유" ID="txt_REMARK" InputWidth="300" Required="true"/>
             <Its:button runat="server" Label="기타입고 등록" ID="btn_IN_ETC" Width="100" Margin_Left="120px" BackColor="CustomButton2" />    

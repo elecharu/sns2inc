@@ -5,7 +5,8 @@ ItsPage.Load = function () {
     
     /* 그리드 생성 */
     ItsGrid.Create('grid1', { isCheckBoxGrid: true }, [
-        column.create("법인", "COMPANYCD", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'COMPANYCD' }),
+        column.create("법인", "COMPANYCD", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'COMPANYCD', hidden: true }),
+        column.create("공장", "FACTORYCD", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD' }),
         column.create("품목유형", "ITEMCG", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM100' }),        
         column.create("대분류", "ITEM_LVL1", { width: 100, align: 'center'/*, columnType: enumColumnTypes.combo, gpcd: 'P100'*/ }),
         column.create("중분류", "ITEM_LVL2", { width: 100, align: 'center'/*, columnType: enumColumnTypes.combo, gpcd: 'P110'*/ }),
@@ -100,6 +101,7 @@ ItsPage.Load = function () {
     ]);
 
     ItsCombo.SetValueByIndex('cmb_COMPANYCD', 0);
+    ItsCombo.SetValue('cmb_FACTORYCD', '07');
 };
 /************************************************************************************************************************************************************/
 /* 조회 */

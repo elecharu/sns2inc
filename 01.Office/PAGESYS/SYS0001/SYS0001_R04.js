@@ -136,7 +136,7 @@ ItsGrid.Event('grid1').onDoubleClick = function (rowIndex, field) {
 ItsGrid.Event('grid1').onKeydownEnter = function (rowIndex, field) {
     
     if (field == 'CUSTCD') {
-        ItsPop.OpenFindCOM({ gpcd: 'CUSTCD', keyword: ItsGrid.GetValue('grid1', rowIndex, field) }, function (res) {
+        ItsPop.OpenFindCOM({ gpcd: 'CUSTCD_COMPANY', keyword: ItsGrid.GetValue('grid1', rowIndex, field), ref01: '60' }, function (res) {
             ItsGrid.SetValue('grid1', rowIndex, 'CUSTCD', res['CODE']);
             ItsGrid.SetValue('grid1', rowIndex, 'CUSTNM', res['NAME']);
             ItsGrid.CheckRow('grid1', rowIndex);

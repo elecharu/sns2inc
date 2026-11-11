@@ -222,7 +222,24 @@ PROC: BEGIN
           AND MSTPRC.PRCCD IN (SELECT PRCCD FROM MSTLINE_EQM WHERE LINECD = $REF01 GROUP BY PRCCD)
         ORDER BY MSTPRC.PRCCD
         LIMIT 100;
--- *****************************************************************************  
+-- *****************************************************************************
+  ELSEIF $GPCD = 'WARECD_PROD' THEN -- 출하 출고창고 (2공장 제품창고 여부 Y, 사용, 불량창고 제외) - TML5000_R01 출하등록 2026-11-10
+      SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
+        FROM MSTWARE
+        WHERE MSTWARE.FACTORYCD = '07'
+          AND MSTWARE.PRODYN = 'Y'
+          AND MSTWARE.USEYN = 'Y'
+          AND IFNULL(MSTWARE.BAD_YN, 'N') <> 'Y'
+        ORDER BY MSTWARE.WARECD;
+-- *****************************************************************************
+  ELSEIF $GPCD = 'PRCCD_LINEPRC' THEN -- 작업장별 공정코드 (작업장 공정설정 MSTLINE_PRC 기준, 설비 없는 외주처 작업장용 - TML1010_R03) 2026-11-09
+      SELECT MSTPRC.PRCNM AS Label, MSTPRC.PRCCD AS Value
+        FROM MSTPRC
+        WHERE MSTPRC.USEYN = 'Y'
+          AND MSTPRC.PRCCD IN (SELECT MSTLINE_PRC.PRCCD FROM MSTLINE_PRC WHERE MSTLINE_PRC.LINECD = $REF01 GROUP BY MSTLINE_PRC.PRCCD)
+        ORDER BY MSTPRC.PRCCD
+        LIMIT 100;
+-- *****************************************************************************
   ELSEIF $GPCD = 'PRCCD_TML' THEN -- 단말기에 설정된 공정리스트 조회 
       SELECT MSTPRC.PRCNM AS Label, MSTPRC.PRCCD AS Value
         FROM MSTPRC
