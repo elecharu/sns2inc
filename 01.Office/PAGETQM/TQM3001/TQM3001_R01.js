@@ -8,26 +8,28 @@
 ItsPage.Load = function () {
 
     ItsGrid.Create('grid1', { isCheckBoxGrid: false }, [
-        column.create('협력사', 'CUSTNM', { width: 120 }),
+        column.create('협력사', 'CUSTNM', { width: 100, align: 'center' }),
         column.create('불량수량', 'BADQTY', { width: 70, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.create('등록', 'SAVEYN', { width: 45, columnType: enumColumnTypes.check }),
         column.create('문서번호', 'CLAIMKEY', { width: 110, align: 'center' }),  // 클레임키 = 문서번호
-        column.create('작성일', 'DOCDATE', { width: 85, align: 'center' }),
+        column.create('예정일자', 'PLANDATE', { width: 85, align: 'center' }),
         column.create('손실비용', 'TOTAMT', { width: 90, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.create('발생월', 'CLAIMMONTH', { width: 70, hidden: true }),
         column.create('귀책처코드', 'CUSTCD', { width: 80, hidden: true }),
         column.split()
     ]);
 
-    ItsGrid.Create('grid2', { isCheckBoxGrid: true }, [
+    ItsGrid.Create('grid2', { isCheckBoxGrid: false }, [
         column.create('품목ID', 'ITEMID', { width: 70, align: 'center', hidden: true }),
-        column.create('발생품번', 'ITEMCD', { width: 110 }),
-        column.create('발생품명', 'ITEMNM', { width: 150 }),
+        column.create('발생품번', 'ITEMCD', { width: 120 }),
+        column.create('발생품명', 'ITEMNM', { width: 200 }),
         column.create('발생내용', 'BADCONT', { width: 180, readOnly: false }),
-        column.create('판정수량', 'JUDGEQTY', { width: 65, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
-        column.create('수량(EA)', 'CLAIMQTY', { width: 65, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
-        column.create('단가구분', 'PRICETP', { width: 75, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CLAIMPRICETP', readOnly: false }),
-        column.create('단가', 'UNITPRICE', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 2, readOnly: false }),
+        // 청구수량 = 판정수량 (처음 조회할 때 발생월 판정수량 합으로 채워지고, 저장한 뒤엔 저장한 값). 고칠 수 없음
+        column.create('수량(EA)', 'CLAIMQTY', { width: 65, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+        // 단가는 입고·제조·판매 중 하나만 입력한다 (합계금액에 그 단가를 쓴다)
+        column.create('입고단가', 'INPRICE', { width: 75, columnType: enumColumnTypes.number, decimalPrecision: 2, readOnly: false }),
+        column.create('제조단가', 'MFGPRICE', { width: 75, columnType: enumColumnTypes.number, decimalPrecision: 2, readOnly: false }),
+        column.create('판매단가', 'SALEPRICE', { width: 75, columnType: enumColumnTypes.number, decimalPrecision: 2, readOnly: false }),
         column.create('제반비용', 'ETCAMT', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
         column.create('합계금액', 'CLAIMAMT', { width: 95, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.create('비고', 'REMARK', { width: 150, readOnly: false }),
@@ -47,6 +49,7 @@ ItsButton.EventSearch = function () {
         return;
     }
     ItsGrid.SetStore('grid1', maria.store.YnToBool('SAVEYN'));
+    ItsGrid.Get('grid1').autoSizeColumns();
     ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
 };
 
@@ -65,9 +68,10 @@ ItsGrid.Event('grid1').onSelect = function (rowIndex, field) {
     }
     var HEAD = maria.store;
     ItsText.SetValue('txt_CLAIMKEY', HEAD.GetValue(0, 'CLAIMKEY'));
-    ItsDate.SetValue('date_DOCDATE', HEAD.GetValue(0, 'DOCDATE'));
-    ItsDate.SetValue('date_OBJDATE', HEAD.GetValue(0, 'OBJDATE'));
-    ItsFind.SetValue('find_EMPCD', HEAD.GetValue(0, 'EMPCD'));
+    ItsDate.SetValue('date_PLANDATE', HEAD.GetValue(0, 'PLANDATE'));
+    ItsDate.SetValue('date_CONFDATE', HEAD.GetValue(0, 'CONFDATE'));
+    // 담당: 등록 전이면 로그인한 사원 (TQM2001_R01 판정자 기본값과 같은 방식)
+    ItsFind.SetValue('find_EMPCD', HEAD.GetValue(0, 'CLAIMKEY') == '' ? ItsPage.EMPCD : HEAD.GetValue(0, 'EMPCD'));
     ItsText.SetValue('txt_RECVNM', HEAD.GetValue(0, 'RECVNM'));
     ItsText.SetValue('txt_REFNM', HEAD.GetValue(0, 'REFNM'));
     ItsText.SetValue('txt_TITLE', HEAD.GetValue(0, 'TITLE'));
@@ -84,29 +88,17 @@ ItsGrid.Event('grid1').onSelect = function (rowIndex, field) {
     ItsGrid.SetStore('grid2', maria.store);
 };
 
-/* 수량·단가·제반비용을 고치면 합계금액 = 수량 × 단가 + 제반비용 */
+/* 단가·제반비용을 고치면 합계금액 = 수량 × 단가 + 제반비용 (단가는 입고·제조·판매 중 입력한 하나) */
 ItsGrid.Event('grid2').onChanged = function (rowIndex, field) {
-    if (field != 'CLAIMQTY' && field != 'UNITPRICE' && field != 'ETCAMT') {
+    if (['INPRICE', 'MFGPRICE', 'SALEPRICE', 'ETCAMT'].indexOf(field) < 0) {
         return;
     }
     var CLAIMQTY = Number(ItsGrid.GetValue('grid2', rowIndex, 'CLAIMQTY')) || 0;
-    var UNITPRICE = Number(ItsGrid.GetValue('grid2', rowIndex, 'UNITPRICE')) || 0;
+    var INPRICE = Number(ItsGrid.GetValue('grid2', rowIndex, 'INPRICE')) || 0;
+    var MFGPRICE = Number(ItsGrid.GetValue('grid2', rowIndex, 'MFGPRICE')) || 0;
+    var SALEPRICE = Number(ItsGrid.GetValue('grid2', rowIndex, 'SALEPRICE')) || 0;
     var ETCAMT = Number(ItsGrid.GetValue('grid2', rowIndex, 'ETCAMT')) || 0;
-    ItsGrid.SetValue('grid2', rowIndex, 'CLAIMAMT', CLAIMQTY * UNITPRICE + ETCAMT);
-};
-
-/* [행삭제] 체크한 품목을 클레임에서 뺀다 (저장해야 반영) */
-ItsButton.Event('btn_DEL_ITEM').onClick = function () {
-    var DELCNT = 0;
-    for (var i = ItsGrid.Length('grid2') - 1; i >= 0; i--) {
-        if (ItsGrid.IsChecked('grid2', i)) {
-            ItsGrid.RemoveRow('grid2', i);
-            DELCNT++;
-        }
-    }
-    if (DELCNT == 0) {
-        ItsMsg.Alert('뺄 품목을 체크하세요.');
-    }
+    ItsGrid.SetValue('grid2', rowIndex, 'CLAIMAMT', CLAIMQTY * (INPRICE + MFGPRICE + SALEPRICE) + ETCAMT);
 };
 
 /* 저장: 머리글 + 품목(그리드 전체, 화면 순서 = NO) */
@@ -136,8 +128,9 @@ ItsButton.EventSave = function () {
         maria.AddList('ITEMID_LIST', ITEMROW.ITEMID);
         maria.AddList('BADCONT_LIST', ITEMROW.BADCONT);
         maria.AddList('CLAIMQTY_LIST', ITEMROW.CLAIMQTY);
-        maria.AddList('PRICETP_LIST', ITEMROW.PRICETP);
-        maria.AddList('UNITPRICE_LIST', ITEMROW.UNITPRICE);
+        maria.AddList('INPRICE_LIST', ITEMROW.INPRICE);
+        maria.AddList('MFGPRICE_LIST', ITEMROW.MFGPRICE);
+        maria.AddList('SALEPRICE_LIST', ITEMROW.SALEPRICE);
         maria.AddList('ETCAMT_LIST', ITEMROW.ETCAMT);
         maria.AddList('ITEMREMARK_LIST', ITEMROW.REMARK);
     }
@@ -172,7 +165,7 @@ ItsButton.EventDelete = function () {
     maria.AddParam('SMONTH', ItsGrid.GetValue('grid1', CUSTROW, 'CLAIMMONTH'));
     maria.AddParam('CUSTCD', CUSTCD);
 
-    ItsMsg.Confirm('[' + ItsGrid.GetValue('grid1', CUSTROW, 'CUSTNM') + '] 클레임을 삭제하시겠습니까?', function () {
+    ItsMsg.Confirm('[' + ItsGrid.GetValue('grid1', CUSTROW, 'CUSTNM') + '] 저장된 클레임(' + ItsGrid.GetValue('grid1', CUSTROW, 'CLAIMKEY') + ')을 품목까지 모두 삭제하시겠습니까?', function () {
         maria.CallProc();
         if (maria.isError) {
             maria.ShowErrMsg();
@@ -209,8 +202,8 @@ ItsButton.Event('btn_PRINT_CLAIM').onClick = function () {
 /* 오른쪽(머리글·품목) 비우기 */
 function ClearClaim() {
     ItsText.SetValue('txt_CLAIMKEY', '');
-    ItsDate.SetValue('date_DOCDATE', '');
-    ItsDate.SetValue('date_OBJDATE', '');
+    ItsDate.SetValue('date_PLANDATE', '');
+    ItsDate.SetValue('date_CONFDATE', '');
     ItsFind.SetValue('find_EMPCD', '');
     ItsText.SetValue('txt_RECVNM', '');
     ItsText.SetValue('txt_REFNM', '');

@@ -5455,7 +5455,7 @@
             this.C_P2_1_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_1_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_1_BADCONT.Text = "";
-            this.C_P2_1_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_1_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_1_BADCONT.WordWrap = false;
             // 
             // C_P2_1_QTY
@@ -5693,7 +5693,7 @@
             this.C_P2_2_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_2_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_2_BADCONT.Text = "";
-            this.C_P2_2_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_2_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_2_BADCONT.WordWrap = false;
             // 
             // C_P2_2_QTY
@@ -5931,7 +5931,7 @@
             this.C_P2_3_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_3_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_3_BADCONT.Text = "";
-            this.C_P2_3_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_3_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_3_BADCONT.WordWrap = false;
             // 
             // C_P2_3_QTY
@@ -6169,7 +6169,7 @@
             this.C_P2_4_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_4_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_4_BADCONT.Text = "";
-            this.C_P2_4_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_4_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_4_BADCONT.WordWrap = false;
             // 
             // C_P2_4_QTY
@@ -6407,7 +6407,7 @@
             this.C_P2_5_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_5_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_5_BADCONT.Text = "";
-            this.C_P2_5_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_5_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_5_BADCONT.WordWrap = false;
             // 
             // C_P2_5_QTY
@@ -6645,7 +6645,7 @@
             this.C_P2_6_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_6_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_6_BADCONT.Text = "";
-            this.C_P2_6_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_6_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_6_BADCONT.WordWrap = false;
             // 
             // C_P2_6_QTY
@@ -6883,7 +6883,7 @@
             this.C_P2_7_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_7_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_7_BADCONT.Text = "";
-            this.C_P2_7_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_7_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_7_BADCONT.WordWrap = false;
             // 
             // C_P2_7_QTY
@@ -7121,7 +7121,7 @@
             this.C_P2_8_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_8_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_8_BADCONT.Text = "";
-            this.C_P2_8_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_8_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_8_BADCONT.WordWrap = false;
             // 
             // C_P2_8_QTY
@@ -7359,7 +7359,7 @@
             this.C_P2_9_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_9_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_9_BADCONT.Text = "";
-            this.C_P2_9_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_9_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_9_BADCONT.WordWrap = false;
             // 
             // C_P2_9_QTY
@@ -7597,7 +7597,7 @@
             this.C_P2_10_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_10_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_10_BADCONT.Text = "";
-            this.C_P2_10_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_10_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_10_BADCONT.WordWrap = false;
             // 
             // C_P2_10_QTY
@@ -7835,7 +7835,7 @@
             this.C_P2_11_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_11_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_11_BADCONT.Text = "";
-            this.C_P2_11_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_11_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_11_BADCONT.WordWrap = false;
             // 
             // C_P2_11_QTY
@@ -8073,7 +8073,7 @@
             this.C_P2_12_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_12_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_12_BADCONT.Text = "";
-            this.C_P2_12_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_12_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_12_BADCONT.WordWrap = false;
             // 
             // C_P2_12_QTY
@@ -8311,7 +8311,7 @@
             this.C_P2_13_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_13_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_13_BADCONT.Text = "";
-            this.C_P2_13_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_13_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_13_BADCONT.WordWrap = false;
             // 
             // C_P2_13_QTY
@@ -8549,7 +8549,7 @@
             this.C_P2_14_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_14_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_14_BADCONT.Text = "";
-            this.C_P2_14_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_14_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_14_BADCONT.WordWrap = false;
             // 
             // C_P2_14_QTY
@@ -8787,7 +8787,7 @@
             this.C_P2_15_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_15_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_15_BADCONT.Text = "";
-            this.C_P2_15_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_15_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_15_BADCONT.WordWrap = false;
             // 
             // C_P2_15_QTY
@@ -9025,7 +9025,7 @@
             this.C_P2_16_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_16_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_16_BADCONT.Text = "";
-            this.C_P2_16_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_16_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_16_BADCONT.WordWrap = false;
             // 
             // C_P2_16_QTY
@@ -9263,7 +9263,7 @@
             this.C_P2_17_BADCONT.Padding = new DevExpress.XtraPrinting.PaddingInfo(1, 1, 0, 0, 100F);
             this.C_P2_17_BADCONT.SizeF = new System.Drawing.SizeF(100F, 18F);
             this.C_P2_17_BADCONT.Text = "";
-            this.C_P2_17_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_P2_17_BADCONT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.C_P2_17_BADCONT.WordWrap = false;
             // 
             // C_P2_17_QTY

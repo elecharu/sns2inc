@@ -316,39 +316,44 @@ namespace TML5000
             // 거래명세서 발행
             else if (commandName == "REPRINT")
             {
-                ItsMaria.Set("TML5000_R02", "PRINT");
-                ItsMaria.AddOne("SALOUTKEY", MODEL_G3.GetText(MODEL_G3.CurrentIndex, "SALOUTKEY"));
-                ItsMaria.AddOne("OUTLIST", "NO");
-                DataSet ds = ItsMaria.Call();
-                if (ItsMaria.IsError)
+                if (MODEL_G3.CurrentIndex < 0)
                 {
-                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    ShowMessageBox("", "발행할 출하를 선택하세요.");
                     return;
                 }
-                
-                if (ds.Tables[0].Rows.Count > 0)
-                {
-                    for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
-                    {
-                        ItsMaria.Set("TML5000_R02", "PRINT");
-                        ItsMaria.AddOne("OUTLIST", ItsData.GetText(ds.Tables[0], i, "OUTLIST"));
-                        DataSet ds2 = ItsMaria.Call();
-                        if (ItsMaria.IsError)
-                        {
-                            ShowMessageBox("", ItsMaria.ErrMessage);
-                            return;
-                        }
-                        //R04B1 rpt = new R04B1(ds2);
-                        //rpt.ShowPrintMarginsWarning = false;
-                        //rpt.Print(ItsPrinter.BarcodePrintName);
-                    }
-                }
+
+                // 2026-11-11 거래명세서(출고부서용) 출력 (이력에서 고른 출하 1건)
+                PrintSalout(MODEL_G3.GetText(MODEL_G3.CurrentIndex, "SALOUTKEY"));
             }
 
             else if (commandName == "DEL_SALOUT")
             {
                 ShowMessageBox(commandName, "선택한 출하를 취소합니다.\n재고가 다시 복원됩니다.");
                 return;
+            }
+        }
+
+        // 거래명세서(출고부서용) 출력 (A4, 확인창 없이 POP 에서 고른 프린터로 바로 인쇄)
+        // 양식은 COMPJT\TMLPRINT 의 SAL_1 (AAALIB\TMLPRINT.exe, TML5000 R01 출하등록과 같은 양식), 출하 1건 = 1부
+        private void PrintSalout(string salOutKey)
+        {
+            ItsMaria.Set("TML5000_R02", "PRINT_SALOUT");
+            ItsMaria.AddOne("SALOUTKEY", salOutKey);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            try
+            {
+                TMLPRINT.SAL_1 rpt = new TMLPRINT.SAL_1(ds);
+                rpt.PrintDirect(ItsPrinter.BarcodePrintName);
+            }
+            catch (Exception ex)
+            {
+                ShowMessageBox("", "출고는 확정되었으나 거래명세서 출력에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
             }
         }
 
@@ -371,6 +376,9 @@ namespace TML5000
                 }
 
                 string saloutkey = ds.Tables[0].Rows[0]["SALOUTKEY"].ToString();
+
+                // 출고확정 직후 거래명세서(출고부서용) 출력
+                PrintSalout(saloutkey);
 
                 _salodrlist.Clear();
                 EventCommand("SEARCH");

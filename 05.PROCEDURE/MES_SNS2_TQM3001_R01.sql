@@ -7,11 +7,11 @@ PROCEDURE MES_SNS2.TQM3001_R01(
 --            외주 로트가 아니면 불량구분(JUDGEBADTP) 코드 (TQM3001_S01 협력사 불량조회와 같은 기준)
 --          ) 대상 판정: 판정유형 불량(BAD), 불량구분 1공장(FAC1)·외주(OSC)
 --          ) LIST     : 발생월의 귀책처 목록 (불량수량, 등록한 클레임)
---          ) INFO_HEAD: 클레임 머리글. 등록 전이면 기본값 (작성일 오늘, 이의제기 기한 +7일, 제목 자동)
+--          ) INFO_HEAD: 클레임 머리글. 등록 전이면 기본값 (예정일자 = 작성일 오늘, 확정일자 +7일, 제목 자동)
 --          ) LIST_ITEM: 품목별 손실비용. 수량 기본값 = 발생월 판정수량 합, 발생내용 기본값 = 판정 발생내용(BADCD) 이름
 --                       등록한 클레임에 없는 불량 품목은 뒤에 붙여 보여준다 (NEWYN = 'Y')
 --          ) SAVE     : 머리글 + 품목 저장. 처음 저장할 때 클레임키 = 문서번호 SSI-yy-mm-NNN 을 매긴다
---                       (SSI 고정, yy-mm = 작성일의 연·월, NNN = 그 연·월의 순번)
+--                       (SSI 고정, yy-mm = 예정일자(= 작성일)의 연·월, NNN = 그 연·월의 순번)
 --          ) DELETE   : 클레임 삭제
 --          ) PRINT    : CLAIM 통보서 (리포트 TQM3001.exe R01, 1장 공문서 + 2장 산출내역서). 결과셋 1 머리글, 2 품목
 --          ) 발생 손실 비용만 다룬다. 산출내역서의 제반비용 산출 표·이의제기·CLAIM 비용(예정/확정)은
@@ -21,8 +21,8 @@ PROCEDURE MES_SNS2.TQM3001_R01(
 -- *****************************************************************************
   IN $SMONTH VARCHAR(10),             -- 발생월 (YYYY-MM)
   IN $CUSTCD VARCHAR(100),            -- 귀책처
-  IN $DOCDATE VARCHAR(10),            -- 작성일
-  IN $OBJDATE VARCHAR(10),            -- 이의제기 기한
+  IN $PLANDATE VARCHAR(10),           -- 예정일자
+  IN $CONFDATE VARCHAR(10),           -- 확정일자
   IN $EMPCD VARCHAR(100),             -- 담당
   IN $RECVNM VARCHAR(200),            -- 수신
   IN $REFNM VARCHAR(200),             -- 참조
@@ -31,8 +31,9 @@ PROCEDURE MES_SNS2.TQM3001_R01(
   IN $ITEMID_LIST MEDIUMTEXT,         -- 품목ID 목록
   IN $BADCONT_LIST MEDIUMTEXT,        -- 발생내용 목록
   IN $CLAIMQTY_LIST MEDIUMTEXT,       -- 수량 목록
-  IN $PRICETP_LIST MEDIUMTEXT,        -- 단가구분 목록
-  IN $UNITPRICE_LIST MEDIUMTEXT,      -- 단가 목록
+  IN $INPRICE_LIST MEDIUMTEXT,        -- 입고단가 목록
+  IN $MFGPRICE_LIST MEDIUMTEXT,       -- 제조단가 목록
+  IN $SALEPRICE_LIST MEDIUMTEXT,      -- 판매단가 목록
   IN $ETCAMT_LIST MEDIUMTEXT,         -- 품목 제반비용 목록
   IN $ITEMREMARK_LIST MEDIUMTEXT,     -- 품목 비고 목록
 -- *****************************************************************************
@@ -49,19 +50,23 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$ITEMID_LIST MEDIUMTEXT;
   DECLARE _$BADCONT_LIST MEDIUMTEXT;
   DECLARE _$CLAIMQTY_LIST MEDIUMTEXT;
-  DECLARE _$PRICETP_LIST MEDIUMTEXT;
-  DECLARE _$UNITPRICE_LIST MEDIUMTEXT;
+  DECLARE _$INPRICE_LIST MEDIUMTEXT;
+  DECLARE _$MFGPRICE_LIST MEDIUMTEXT;
+  DECLARE _$SALEPRICE_LIST MEDIUMTEXT;
   DECLARE _$ETCAMT_LIST MEDIUMTEXT;
   DECLARE _$ITEMREMARK_LIST MEDIUMTEXT;
   DECLARE _$ITEMID VARCHAR(100);
   DECLARE _$BADCONT VARCHAR(1000);
   DECLARE _$CLAIMQTY_TXT VARCHAR(100);
-  DECLARE _$PRICETP VARCHAR(100);
-  DECLARE _$UNITPRICE_TXT VARCHAR(100);
+  DECLARE _$INPRICE_TXT VARCHAR(100);
+  DECLARE _$MFGPRICE_TXT VARCHAR(100);
+  DECLARE _$SALEPRICE_TXT VARCHAR(100);
   DECLARE _$ETCAMT_TXT VARCHAR(100);
   DECLARE _$ITEMREMARK VARCHAR(1000);
   DECLARE _$CLAIMQTY DECIMAL(20, 8);
-  DECLARE _$UNITPRICE DECIMAL(20, 8);
+  DECLARE _$INPRICE DECIMAL(20, 8);
+  DECLARE _$MFGPRICE DECIMAL(20, 8);
+  DECLARE _$SALEPRICE DECIMAL(20, 8);
   DECLARE _$ETCAMT DECIMAL(20, 8);
 -- *****************************************************************************
   IF $CALLTYPE IN ('LIST', 'INFO_HEAD', 'LIST_ITEM', 'SAVE', 'DELETE', 'PRINT') AND IFNULL($SMONTH, '') = '' THEN
@@ -149,7 +154,7 @@ WHEN 'LIST' THEN  -- 발생월 귀책처 목록 (grid1)
     , TEMP_CLAIM_CUST.BADQTY
     , IF(TQMCLAIM.CLAIMKEY IS NULL, 'N', 'Y') AS SAVEYN
     , IFNULL(TQMCLAIM.CLAIMKEY, '') AS CLAIMKEY
-    , IFNULL(TQMCLAIM.DOCDATE, '') AS DOCDATE
+    , IFNULL(TQMCLAIM.PLANDATE, '') AS PLANDATE
     , TQMCLAIM.TOTAMT
   FROM TEMP_CLAIM_CUST
   LEFT JOIN TQMCLAIM
@@ -165,8 +170,8 @@ WHEN 'INFO_HEAD' THEN  -- 클레임 머리글 (등록 전이면 기본값)
   IF _$CLAIMKEY <> '' THEN
     SELECT
         TQMCLAIM.CLAIMKEY
-      , TQMCLAIM.DOCDATE
-      , TQMCLAIM.OBJDATE
+      , TQMCLAIM.PLANDATE
+      , TQMCLAIM.CONFDATE
       , TQMCLAIM.EMPCD
       , TQMCLAIM.RECVNM
       , TQMCLAIM.REFNM
@@ -187,9 +192,9 @@ WHEN 'INFO_HEAD' THEN  -- 클레임 머리글 (등록 전이면 기본값)
 
     SELECT
         '' AS CLAIMKEY
-      , DATE_FORMAT(CALLTIME(), '%Y-%m-%d') AS DOCDATE
-      , DATE_FORMAT(DATE_ADD(CALLTIME(), INTERVAL 7 DAY), '%Y-%m-%d') AS OBJDATE
-      , CALLEMP() AS EMPCD
+      , DATE_FORMAT(CALLTIME(), '%Y-%m-%d') AS PLANDATE                              -- 예정일자: 당일
+      , DATE_FORMAT(DATE_ADD(CALLTIME(), INTERVAL 7 DAY), '%Y-%m-%d') AS CONFDATE   -- 확정일자: 당일 + 7일
+      , '' AS EMPCD          -- 담당 기본값(로그인 사원 ItsPage.EMPCD)은 화면에서 넣는다. CALLEMP() 는 사원코드가 아니라 로그인 ID
       , IFNULL((SELECT MSTCUST.CUSTNM FROM MSTCUST WHERE MSTCUST.CUSTCD = $CUSTCD)
              , IFNULL(NULLIF(GPCD('JUDGEBADTP', $CUSTCD), ''), $CUSTCD)) AS RECVNM
       , '품질부서장 / 영업부서장' AS REFNM
@@ -208,8 +213,9 @@ WHEN 'LIST_ITEM' THEN  -- 품목별 손실비용 (grid2)
     , BADCONT VARCHAR(1000) NOT NULL DEFAULT ''
     , JUDGEQTY DECIMAL(20, 8) NULL
     , CLAIMQTY DECIMAL(20, 8) NOT NULL DEFAULT 0
-    , PRICETP VARCHAR(100) NOT NULL DEFAULT ''
-    , UNITPRICE DECIMAL(20, 8) NOT NULL DEFAULT 0
+    , INPRICE DECIMAL(20, 8) NOT NULL DEFAULT 0
+    , MFGPRICE DECIMAL(20, 8) NOT NULL DEFAULT 0
+    , SALEPRICE DECIMAL(20, 8) NOT NULL DEFAULT 0
     , ETCAMT DECIMAL(20, 8) NOT NULL DEFAULT 0
     , CLAIMAMT DECIMAL(20, 8) NOT NULL DEFAULT 0
     , REMARK VARCHAR(1000) NOT NULL DEFAULT ''
@@ -217,7 +223,7 @@ WHEN 'LIST_ITEM' THEN  -- 품목별 손실비용 (grid2)
   );
 
   -- 1. 등록한 품목
-  INSERT INTO TEMP_CLAIM_ROW (SORTNO, CLAIMSEQ, ITEMID, BADCONT, JUDGEQTY, CLAIMQTY, PRICETP, UNITPRICE, ETCAMT, CLAIMAMT, REMARK, NEWYN)
+  INSERT INTO TEMP_CLAIM_ROW (SORTNO, CLAIMSEQ, ITEMID, BADCONT, JUDGEQTY, CLAIMQTY, INPRICE, MFGPRICE, SALEPRICE, ETCAMT, CLAIMAMT, REMARK, NEWYN)
     SELECT
         0
       , TQMCLAIMD.CLAIMSEQ
@@ -225,8 +231,9 @@ WHEN 'LIST_ITEM' THEN  -- 품목별 손실비용 (grid2)
       , TQMCLAIMD.BADCONT
       , TEMP_CLAIM_ITEM.JUDGEQTY
       , TQMCLAIMD.CLAIMQTY
-      , TQMCLAIMD.PRICETP
-      , TQMCLAIMD.UNITPRICE
+      , TQMCLAIMD.INPRICE
+      , TQMCLAIMD.MFGPRICE
+      , TQMCLAIMD.SALEPRICE
       , TQMCLAIMD.ETCAMT
       , TQMCLAIMD.CLAIMAMT
       , TQMCLAIMD.REMARK
@@ -237,7 +244,7 @@ WHEN 'LIST_ITEM' THEN  -- 품목별 손실비용 (grid2)
     WHERE TQMCLAIMD.CLAIMKEY = _$CLAIMKEY;
 
   -- 2. 판정은 있는데 클레임에 없는 품목 (등록 전이면 전부)
-  INSERT INTO TEMP_CLAIM_ROW (SORTNO, CLAIMSEQ, ITEMID, BADCONT, JUDGEQTY, CLAIMQTY, PRICETP, UNITPRICE, ETCAMT, CLAIMAMT, REMARK, NEWYN)
+  INSERT INTO TEMP_CLAIM_ROW (SORTNO, CLAIMSEQ, ITEMID, BADCONT, JUDGEQTY, CLAIMQTY, INPRICE, MFGPRICE, SALEPRICE, ETCAMT, CLAIMAMT, REMARK, NEWYN)
     SELECT
         1
       , 0
@@ -245,7 +252,8 @@ WHEN 'LIST_ITEM' THEN  -- 품목별 손실비용 (grid2)
       , TEMP_CLAIM_ITEM.BADCONT
       , TEMP_CLAIM_ITEM.JUDGEQTY
       , TEMP_CLAIM_ITEM.JUDGEQTY
-      , ''
+      , 0
+      , 0
       , 0
       , 0
       , 0
@@ -265,8 +273,9 @@ WHEN 'LIST_ITEM' THEN  -- 품목별 손실비용 (grid2)
     , TEMP_CLAIM_ROW.BADCONT
     , TEMP_CLAIM_ROW.JUDGEQTY
     , TEMP_CLAIM_ROW.CLAIMQTY
-    , TEMP_CLAIM_ROW.PRICETP
-    , TEMP_CLAIM_ROW.UNITPRICE
+    , TEMP_CLAIM_ROW.INPRICE
+    , TEMP_CLAIM_ROW.MFGPRICE
+    , TEMP_CLAIM_ROW.SALEPRICE
     , TEMP_CLAIM_ROW.ETCAMT
     , TEMP_CLAIM_ROW.CLAIMAMT
     , TEMP_CLAIM_ROW.REMARK
@@ -285,8 +294,8 @@ WHEN 'SAVE' THEN  -- 머리글 + 품목 저장
     LEAVE PROC;
   END IF;
 
-  IF IFNULL($DOCDATE, '') = '' THEN
-    CALL COMERR('작성일을 입력하세요.');
+  IF IFNULL($PLANDATE, '') = '' THEN
+    CALL COMERR('예정일자를 입력하세요.');
     LEAVE PROC;
   END IF;
 
@@ -298,18 +307,22 @@ WHEN 'SAVE' THEN  -- 머리글 + 품목 저장
   -- 1. 품목 확인 (쓰기 전에 전부 확인)
   SET _$ITEMID_LIST = $ITEMID_LIST;
   SET _$CLAIMQTY_LIST = $CLAIMQTY_LIST;
-  SET _$PRICETP_LIST = $PRICETP_LIST;
-  SET _$UNITPRICE_LIST = $UNITPRICE_LIST;
+  SET _$INPRICE_LIST = $INPRICE_LIST;
+  SET _$MFGPRICE_LIST = $MFGPRICE_LIST;
+  SET _$SALEPRICE_LIST = $SALEPRICE_LIST;
   SET _$ETCAMT_LIST = $ETCAMT_LIST;
 
   WHILE LENGTH(_$ITEMID_LIST) > 0 DO
     CALL COMSPLIT(_$ITEMID_LIST, _$ITEMID);
     CALL COMSPLIT(_$CLAIMQTY_LIST, _$CLAIMQTY_TXT);
-    CALL COMSPLIT(_$PRICETP_LIST, _$PRICETP);
-    CALL COMSPLIT(_$UNITPRICE_LIST, _$UNITPRICE_TXT);
+    CALL COMSPLIT(_$INPRICE_LIST, _$INPRICE_TXT);
+    CALL COMSPLIT(_$MFGPRICE_LIST, _$MFGPRICE_TXT);
+    CALL COMSPLIT(_$SALEPRICE_LIST, _$SALEPRICE_TXT);
     CALL COMSPLIT(_$ETCAMT_LIST, _$ETCAMT_TXT);
     SET _$CLAIMQTY = CAST(IF(IFNULL(_$CLAIMQTY_TXT, '') = '', '0', _$CLAIMQTY_TXT) AS DECIMAL(20, 8));
-    SET _$UNITPRICE = CAST(IF(IFNULL(_$UNITPRICE_TXT, '') = '', '0', _$UNITPRICE_TXT) AS DECIMAL(20, 8));
+    SET _$INPRICE = CAST(IF(IFNULL(_$INPRICE_TXT, '') = '', '0', _$INPRICE_TXT) AS DECIMAL(20, 8));
+    SET _$MFGPRICE = CAST(IF(IFNULL(_$MFGPRICE_TXT, '') = '', '0', _$MFGPRICE_TXT) AS DECIMAL(20, 8));
+    SET _$SALEPRICE = CAST(IF(IFNULL(_$SALEPRICE_TXT, '') = '', '0', _$SALEPRICE_TXT) AS DECIMAL(20, 8));
     SET _$ETCAMT = CAST(IF(IFNULL(_$ETCAMT_TXT, '') = '', '0', _$ETCAMT_TXT) AS DECIMAL(20, 8));
 
     IF IFNULL(_$ITEMID, '') = '' THEN
@@ -317,20 +330,21 @@ WHEN 'SAVE' THEN  -- 머리글 + 품목 저장
       LEAVE PROC;
     END IF;
 
-    IF _$CLAIMQTY < 0 OR _$UNITPRICE < 0 OR _$ETCAMT < 0 THEN
+    IF _$CLAIMQTY < 0 OR _$INPRICE < 0 OR _$MFGPRICE < 0 OR _$SALEPRICE < 0 OR _$ETCAMT < 0 THEN
       CALL COMERR(CONCAT('수량·단가·제반비용은 0 이상이어야 합니다.', '\n- 품목ID: ', _$ITEMID));
       LEAVE PROC;
     END IF;
 
-    IF _$UNITPRICE > 0 AND IFNULL(_$PRICETP, '') = '' THEN
-      CALL COMERR(CONCAT('단가구분(입고/제조/판매)을 선택하세요.', '\n- 품목ID: ', _$ITEMID));
+    -- 합계금액에 쓸 단가가 하나로 정해져야 한다
+    IF (_$INPRICE > 0) + (_$MFGPRICE > 0) + (_$SALEPRICE > 0) > 1 THEN
+      CALL COMERR(CONCAT('입고·제조·판매단가 중 하나만 입력하세요.', '\n- 품목ID: ', _$ITEMID));
       LEAVE PROC;
     END IF;
   END WHILE;
 
-  -- 2. 머리글 (처음 저장이면 클레임키 = 문서번호 SSI-yy-mm-NNN, 작성일 연·월의 다음 순번)
+  -- 2. 머리글 (처음 저장이면 클레임키 = 문서번호 SSI-yy-mm-NNN, 예정일자 연·월의 다음 순번)
   IF _$CLAIMKEY = '' THEN
-    SET _$DOCPREFIX = CONCAT('SSI-', DATE_FORMAT($DOCDATE, '%y-%m'), '-');
+    SET _$DOCPREFIX = CONCAT('SSI-', DATE_FORMAT($PLANDATE, '%y-%m'), '-');
     SET _$CLAIMKEY = CONCAT(_$DOCPREFIX
                           , LPAD(IFNULL((SELECT MAX(CAST(SUBSTRING(TQMCLAIM.CLAIMKEY, LENGTH(_$DOCPREFIX) + 1) AS UNSIGNED))
                                            FROM TQMCLAIM
@@ -340,8 +354,8 @@ WHEN 'SAVE' THEN  -- 머리글 + 품목 저장
         CLAIMKEY
       , CLAIMMONTH
       , CUSTCD
-      , DOCDATE
-      , OBJDATE
+      , PLANDATE
+      , CONFDATE
       , EMPCD
       , RECVNM
       , REFNM
@@ -352,8 +366,8 @@ WHEN 'SAVE' THEN  -- 머리글 + 품목 저장
         _$CLAIMKEY
       , LEFT($SMONTH, 7)
       , $CUSTCD
-      , $DOCDATE
-      , IFNULL($OBJDATE, '')
+      , $PLANDATE
+      , IFNULL($CONFDATE, '')
       , IFNULL($EMPCD, '')
       , IFNULL($RECVNM, '')
       , IFNULL($REFNM, '')
@@ -363,8 +377,8 @@ WHEN 'SAVE' THEN  -- 머리글 + 품목 저장
     );
   ELSE
     UPDATE TQMCLAIM
-      SET DOCDATE = $DOCDATE
-        , OBJDATE = IFNULL($OBJDATE, '')
+      SET PLANDATE = $PLANDATE
+        , CONFDATE = IFNULL($CONFDATE, '')
         , EMPCD = IFNULL($EMPCD, '')
         , RECVNM = IFNULL($RECVNM, '')
         , REFNM = IFNULL($REFNM, '')
@@ -382,8 +396,9 @@ WHEN 'SAVE' THEN  -- 머리글 + 품목 저장
   SET _$ITEMID_LIST = $ITEMID_LIST;
   SET _$BADCONT_LIST = $BADCONT_LIST;
   SET _$CLAIMQTY_LIST = $CLAIMQTY_LIST;
-  SET _$PRICETP_LIST = $PRICETP_LIST;
-  SET _$UNITPRICE_LIST = $UNITPRICE_LIST;
+  SET _$INPRICE_LIST = $INPRICE_LIST;
+  SET _$MFGPRICE_LIST = $MFGPRICE_LIST;
+  SET _$SALEPRICE_LIST = $SALEPRICE_LIST;
   SET _$ETCAMT_LIST = $ETCAMT_LIST;
   SET _$ITEMREMARK_LIST = $ITEMREMARK_LIST;
   SET _$SEQ = 0;
@@ -392,12 +407,15 @@ WHEN 'SAVE' THEN  -- 머리글 + 품목 저장
     CALL COMSPLIT(_$ITEMID_LIST, _$ITEMID);
     CALL COMSPLIT(_$BADCONT_LIST, _$BADCONT);
     CALL COMSPLIT(_$CLAIMQTY_LIST, _$CLAIMQTY_TXT);
-    CALL COMSPLIT(_$PRICETP_LIST, _$PRICETP);
-    CALL COMSPLIT(_$UNITPRICE_LIST, _$UNITPRICE_TXT);
+    CALL COMSPLIT(_$INPRICE_LIST, _$INPRICE_TXT);
+    CALL COMSPLIT(_$MFGPRICE_LIST, _$MFGPRICE_TXT);
+    CALL COMSPLIT(_$SALEPRICE_LIST, _$SALEPRICE_TXT);
     CALL COMSPLIT(_$ETCAMT_LIST, _$ETCAMT_TXT);
     CALL COMSPLIT(_$ITEMREMARK_LIST, _$ITEMREMARK);
     SET _$CLAIMQTY = CAST(IF(IFNULL(_$CLAIMQTY_TXT, '') = '', '0', _$CLAIMQTY_TXT) AS DECIMAL(20, 8));
-    SET _$UNITPRICE = CAST(IF(IFNULL(_$UNITPRICE_TXT, '') = '', '0', _$UNITPRICE_TXT) AS DECIMAL(20, 8));
+    SET _$INPRICE = CAST(IF(IFNULL(_$INPRICE_TXT, '') = '', '0', _$INPRICE_TXT) AS DECIMAL(20, 8));
+    SET _$MFGPRICE = CAST(IF(IFNULL(_$MFGPRICE_TXT, '') = '', '0', _$MFGPRICE_TXT) AS DECIMAL(20, 8));
+    SET _$SALEPRICE = CAST(IF(IFNULL(_$SALEPRICE_TXT, '') = '', '0', _$SALEPRICE_TXT) AS DECIMAL(20, 8));
     SET _$ETCAMT = CAST(IF(IFNULL(_$ETCAMT_TXT, '') = '', '0', _$ETCAMT_TXT) AS DECIMAL(20, 8));
     SET _$SEQ = _$SEQ + 1;
 
@@ -407,8 +425,9 @@ WHEN 'SAVE' THEN  -- 머리글 + 품목 저장
       , ITEMID
       , BADCONT
       , CLAIMQTY
-      , PRICETP
-      , UNITPRICE
+      , INPRICE
+      , MFGPRICE
+      , SALEPRICE
       , ETCAMT
       , CLAIMAMT
       , REMARK
@@ -419,10 +438,11 @@ WHEN 'SAVE' THEN  -- 머리글 + 품목 저장
       , _$ITEMID
       , IFNULL(_$BADCONT, '')
       , _$CLAIMQTY
-      , IFNULL(_$PRICETP, '')
-      , _$UNITPRICE
+      , _$INPRICE
+      , _$MFGPRICE
+      , _$SALEPRICE
       , _$ETCAMT
-      , _$CLAIMQTY * _$UNITPRICE + _$ETCAMT
+      , _$CLAIMQTY * (_$INPRICE + _$MFGPRICE + _$SALEPRICE) + _$ETCAMT  -- 단가는 하나만 입력되어 있다
       , IFNULL(_$ITEMREMARK, '')
       , CALLTIME(), CALLEMP(), CALLPRG()
     );
@@ -459,10 +479,10 @@ WHEN 'PRINT' THEN  -- CLAIM 통보서 출력 (리포트 TQM3001.exe R01)
   -- 결과셋 1: 머리글 (날짜는 양식 표기대로 문자열로 만든다)
   SELECT
       TQMCLAIM.CLAIMKEY AS DOCNO                                                  -- 문서번호 = 클레임키
-    , DATE_FORMAT(TQMCLAIM.DOCDATE, '%Y년%m월%d일') AS DOCDATE_TXT                -- 공문서 작성일
-    , DATE_FORMAT(TQMCLAIM.DOCDATE, '%Y년 %m월 %d일') AS PLANDATE_TXT             -- 산출내역서 예정일자
-    , IFNULL(DATE_FORMAT(NULLIF(TQMCLAIM.OBJDATE, ''), '%Y년 %m월 %d일'), '') AS CONFDATE_TXT  -- 산출내역서 확정일자 (= 이의제기 기한)
-    , IFNULL(DATE_FORMAT(NULLIF(TQMCLAIM.OBJDATE, ''), '%m/%d'), '') AS OBJDATE_MD   -- 공문서 "05/14 限"
+    , IFNULL(DATE_FORMAT(NULLIF(TQMCLAIM.PLANDATE, ''), '%Y년%m월%d일'), '') AS DOCDATE_TXT   -- 공문서 작성일 (= 예정일자)
+    , IFNULL(DATE_FORMAT(NULLIF(TQMCLAIM.PLANDATE, ''), '%Y년 %m월 %d일'), '') AS PLANDATE_TXT  -- 산출내역서 ■ 예정일자
+    , IFNULL(DATE_FORMAT(NULLIF(TQMCLAIM.CONFDATE, ''), '%Y년 %m월 %d일'), '') AS CONFDATE_TXT  -- 산출내역서 □ 확정일자
+    , IFNULL(DATE_FORMAT(NULLIF(TQMCLAIM.CONFDATE, ''), '%m/%d'), '') AS OBJDATE_MD   -- 공문서 "05/14 限 서면 제출" (확정일자)
     , IFNULL(MSTEMP.EMPNM, TQMCLAIM.EMPCD) AS EMPNM
     , TQMCLAIM.RECVNM
     , TQMCLAIM.REFNM
@@ -473,15 +493,16 @@ WHEN 'PRINT' THEN  -- CLAIM 통보서 출력 (리포트 TQM3001.exe R01)
     ON MSTEMP.EMPCD = TQMCLAIM.EMPCD
   WHERE TQMCLAIM.CLAIMKEY = _$CLAIMKEY;
 
-  -- 결과셋 2: 품목 (단가는 단가구분에 따라 입고/제조/판매 칸 중 하나에 찍는다)
+  -- 결과셋 2: 품목
   SELECT
       TQMCLAIMD.CLAIMSEQ
     , IFNULL(MSTITEM.ITEMCD, '') AS ITEMCD
     , IFNULL(MSTITEM.ITEMNM, '') AS ITEMNM
     , TQMCLAIMD.BADCONT
     , TQMCLAIMD.CLAIMQTY
-    , TQMCLAIMD.PRICETP
-    , TQMCLAIMD.UNITPRICE
+    , TQMCLAIMD.INPRICE
+    , TQMCLAIMD.MFGPRICE
+    , TQMCLAIMD.SALEPRICE
     , TQMCLAIMD.ETCAMT
     , TQMCLAIMD.CLAIMAMT
   FROM TQMCLAIMD

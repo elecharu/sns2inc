@@ -14,6 +14,7 @@ PROCEDURE MES_SNS2.IO_PRDRST(
 --         2026-10-30 진행 중 비가동 확인, 비가동 작업키 연결
 --         2026-11-05 작업지시 주야구분(PRDINS.DNTP) 저장 (DAY/NIGHT)
 --         2026-11-06 실적로트 불량수량(PRDRSTLOT.BADQTY), 불량재고 입고(COMIN·COMINLOT·COMLOT)
+--         2026-11-11 ERP 인터페이스(PRDINS, PRDRST) 송신 추가
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),      -- 공정
@@ -650,6 +651,19 @@ PROC: BEGIN
       , _$PRDRSTKEY
       , CALLTIME(), CALLEMP(), CALLPRG()
     );
+  END IF;
+
+  -- ERP 인터페이스 (작업지시 → 생산실적·실적LOT·소요자재·작업자·불량)
+  CALL IO_ERP_INTERFACE('PRDINS', _$PRDINSKEY, 'I');
+
+  IF IFNULL(@ERRMSG, '') <> '' THEN
+    LEAVE PROC;
+  END IF;
+
+  CALL IO_ERP_INTERFACE('PRDRST', _$PRDRSTKEY, 'I');
+
+  IF IFNULL(@ERRMSG, '') <> '' THEN
+    LEAVE PROC;
   END IF;
 
   -- 8. 라인 정보 정리 (투입로트, 생산품, 작업자, 불량)

@@ -4,6 +4,7 @@ PROCEDURE MES_SNS2.IO_ETC_IN(
 -- Comment: 기타 입고 프로시저
 -- Create: 2026-09-04: 김영철
 -- Modify: 2026-11-10: 입고창고($WARECD) 파라미터 추가 (지정 시 신규/기존 로트 모두 해당 창고로 입고)
+-- Modify: 2026-11-11: ERP 인터페이스(ETC_IN) 송신 추가
 -- *****************************************************************************
   IN $INDATE      VARCHAR(10),
   IN $INTP        VARCHAR(20),
@@ -227,6 +228,13 @@ IF IFNULL(@ERRMSG, '') = '' THEN
         _$ITEMID, GETTIME(), _$INQTY_N, $INDATE,
         $REMARK, CALLTIME(), CALLEMP(), CALLPRG()
       );
+    END IF;
+
+    -- ERP 인터페이스 (기타입고 : I, 품목별 입고번호 INKEY)
+    CALL IO_ERP_INTERFACE('ETC_IN', _$INKEY, 'I');
+
+    IF IFNULL(@ERRMSG, '') <> '' THEN
+      LEAVE PROC;
     END IF;
 
   END WHILE;

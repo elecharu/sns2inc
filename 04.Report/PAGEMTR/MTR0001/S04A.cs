@@ -44,7 +44,7 @@ namespace XtraRpt
         private static ItsMaria CreateMaria(string procedureName, string callType)
         {
             ItsMaria maria = new ItsMaria(procedureName, callType);
-            maria.DbServer = "211.43.15.98";
+            maria.DbServer = "localhost";
             maria.DbPort = "33061";
             maria.DbUser = "root";
             maria.DbPass = ItsSecurity.DecDES("f4jHrVI/NLGr48fLMegkWw==");

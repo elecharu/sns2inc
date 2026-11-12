@@ -22,7 +22,13 @@ namespace TMLPRINT
       
         }
         public int row = 0;
-        public MTR_1(DataSet ds)
+        // 공급받는자 보관용 1장만 출력 (외주이동·외주간 이동 등)
+        public MTR_1(DataSet ds) : this(ds, false)
+        {
+        }
+
+        // withSupplierCopy = true 면 공급자보관용 + 공급받는자 보관용 2장 (납품등록. 1공장과 같은 순서)
+        public MTR_1(DataSet ds, bool withSupplierCopy)
         {
             InitializeComponent();
 
@@ -30,12 +36,17 @@ namespace TMLPRINT
 
             DataTable dt = new DataTable();
             dt.Columns.Add(new DataColumn("TITLE", typeof(string)));
-            
 
-                // 2026-11-09 2공장은 공급받는자 보관용 1장만 출력 (1공장은 공급자보관용까지 2장)
-                DataRow row = dt.NewRow();
-                row["TITLE"] = "(공급받는자 보관용)";
-                dt.Rows.Add(row);
+            if (withSupplierCopy)
+            {
+                DataRow supplierRow = dt.NewRow();
+                supplierRow["TITLE"] = "(공급자보관용)";
+                dt.Rows.Add(supplierRow);
+            }
+
+            DataRow row = dt.NewRow();
+            row["TITLE"] = "(공급받는자 보관용)";
+            dt.Rows.Add(row);
 
             this.DataSource = dt;
 

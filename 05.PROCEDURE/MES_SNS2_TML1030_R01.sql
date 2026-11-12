@@ -3,9 +3,9 @@ PROCEDURE MES_SNS2.TML1030_R01(
 -- *****************************************************************************
 -- Comment: 현장터미널 생산팀 소모품 입출고등록 
 -- Create:  2026-10-27 17:36 : 김영철
--- Modify:
+-- Modify: 2026-11-11: 입고/출고 등록 시 ERP 인터페이스(USEINOUT) 송신 추가
 -- *****************************************************************************
-  IN $SDATE       VARCHAR(10),
+  IN $SDATE      VARCHAR(10),
   IN $EDATE       VARCHAR(10),
   IN $ITEMID      VARCHAR(100),
   IN $CUSTCD      VARCHAR(100),
@@ -26,6 +26,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$OLDQTY DECIMAL(20, 8);
   DECLARE _$REMAINQTY DECIMAL(20, 8);
   DECLARE _$INTP VARCHAR(10);
+  DECLARE _$INOUTKEY VARCHAR(100);
 
 -- *****************************************************************************
   CASE $CALLTYPE
@@ -162,16 +163,25 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
                              WHERE MSTITEM_PRDCONSUM.ITEMID = $ITEMID
                                  AND MSTITEM_PRDCONSUM.FACTORYCD = '07'), 0);
 
+    SET _$INOUTKEY = GETKEY('INOUTKEY');
+
     -- 입출고 이력 등록 (발주키 매칭)
     INSERT INTO INOUT_PRDCONSUM (
       INOUTKEY, INOROUT, INOUTDATE, INOUTTP_PRDCONSUM, INOUTQTY,
       OLDQTY, ITEMID, EMPCD, MTRODRKEY, MTRODRSEQ,
       REMARK, RTIME, REMP, RPRG
     ) VALUES (
-      GETKEY('INOUTKEY'), 'IN', $INDATE, _$INTP, $INQTY,
+      _$INOUTKEY, 'IN', $INDATE, _$INTP, $INQTY,
       _$OLDQTY, $ITEMID, $EMPCD, $MTRODRKEY, $MTRODRSEQ,
       '', CALLTIME(), CALLEMP(), CALLPRG()
     );
+
+    -- ERP 인터페이스 (소모자재 입출내역 : 입고)
+    CALL IO_ERP_INTERFACE('USEINOUT', _$INOUTKEY, 'I');
+
+    IF IFNULL(@ERRMSG, '') <> '' THEN
+      LEAVE PROC;
+    END IF;
 
     -- 소모품 재고 반영 (없으면 등록, 있으면 누적)
     IF EXISTS (SELECT 1
@@ -250,16 +260,25 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       LEAVE PROC;
     END IF;
 
+    SET _$INOUTKEY = GETKEY('INOUTKEY');
+
     -- 입출고 이력 등록
     INSERT INTO INOUT_PRDCONSUM (
       INOUTKEY, INOROUT, INOUTDATE, INOUTTP_PRDCONSUM, INOUTQTY,
       OLDQTY, ITEMID, EMPCD, REMARK,
       RTIME, REMP, RPRG
     ) VALUES (
-      GETKEY('INOUTKEY'), 'OUT', $OUTDATE, $OUTTP, $OUTQTY,
+      _$INOUTKEY, 'OUT', $OUTDATE, $OUTTP, $OUTQTY,
       _$OLDQTY, $ITEMID, $EMPCD, '',
       CALLTIME(), CALLEMP(), CALLPRG()
     );
+
+    -- ERP 인터페이스 (소모자재 입출내역 : 출고)
+    CALL IO_ERP_INTERFACE('USEINOUT', _$INOUTKEY, 'I');
+
+    IF IFNULL(@ERRMSG, '') <> '' THEN
+      LEAVE PROC;
+    END IF;
 
     -- 소모품 재고 차감
     UPDATE MSTITEM_PRDCONSUM

@@ -12982,4 +12982,443 @@ PROC: BEGIN
 
 END$$
 
+DROP PROCEDURE IF EXISTS `MES_IF_MTRREQ`$$
+CREATE PROCEDURE `MES_IF_MTRREQ`(
+  IN $IF_KEY_LIST   MEDIUMTEXT,   -- 인터페이스 KEY
+  IN $IF_TYPE_LIST  MEDIUMTEXT,   -- 인터페이스 구분(I/U/D)
+
+  IN $REQ_NO_LIST   MEDIUMTEXT,   -- 구매의뢰 번호 (PK)
+  IN $REQ_DT_LIST   MEDIUMTEXT,   -- 구매의뢰 일자
+  IN $REQ_BC_LIST   MEDIUMTEXT,   -- 구매의뢰구분 BC:MM030
+  IN $DEPT_CD_LIST  MEDIUMTEXT,   -- 구매의뢰부서
+  IN $REG_ID_LIST   MEDIUMTEXT,   -- 구매의뢰자 사번
+  IN $FAC_CD_LIST   MEDIUMTEXT,   -- 구매의뢰 공장
+  IN $IN_WH_LIST    MEDIUMTEXT,   -- 입고창고
+  IN $CID_LIST      MEDIUMTEXT,   -- 생성자
+  IN $CDT_LIST      MEDIUMTEXT,   -- 생성일
+  IN $MID_LIST      MEDIUMTEXT,   -- 수정자
+  IN $MDT_LIST      MEDIUMTEXT    -- 수정일
+)
+PROC: BEGIN
+-- *****************************************************************************
+-- Comment: 구매의뢰 수신 (ERP FAC2_MES_SOMO → MES_SNS2.MTRREQ)
+-- Create: 2026-11-11
+-- *****************************************************************************
+
+  -- COMSPLIT 수신은 전부 VARCHAR (빈값 '' 대입 오류 방지), 숫자형은 저장할 때 변환
+  DECLARE _$IFKEY     VARCHAR(50);
+  DECLARE _$FIRSTKEY  INT DEFAULT 0;
+  DECLARE _$IF_TYPE   VARCHAR(1);
+
+  DECLARE _$REQ_NO    VARCHAR(50);
+  DECLARE _$REQ_DT    VARCHAR(30);
+  DECLARE _$REQ_BC    VARCHAR(20);
+  DECLARE _$DEPT_CD   VARCHAR(20);
+  DECLARE _$REG_ID    VARCHAR(20);
+  DECLARE _$FAC_CD    VARCHAR(20);
+  DECLARE _$IN_WH     VARCHAR(20);
+  DECLARE _$CID       VARCHAR(20);
+  DECLARE _$CDT       VARCHAR(30);
+  DECLARE _$MID       VARCHAR(20);
+  DECLARE _$MDT       VARCHAR(30);
+
+  DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+  BEGIN
+    GET DIAGNOSTICS CONDITION 1
+      @sqlstate = RETURNED_SQLSTATE,
+      @errno    = MYSQL_ERRNO,
+      @text     = MESSAGE_TEXT;
+
+    INSERT INTO IF_ERR_LOG (IFKEY, IFGB, IFNAME, IF_TYPE, READTIME, ERRMSG)
+    VALUES (
+      CONVERT(_$IFKEY, SIGNED),
+      'ERP',
+      'MES_IF_MTRREQ',
+      _$IF_TYPE,
+      GETTIME(),
+      CONCAT('ERROR ', @errno, ' (', @sqlstate, '): ', @text)
+    );
+
+    COMMIT;
+  END;
+
+  WHILE LENGTH($REQ_NO_LIST) > 0 DO
+
+    CALL COMSPLIT($IF_KEY_LIST,  _$IFKEY);
+    CALL COMSPLIT($IF_TYPE_LIST, _$IF_TYPE);
+
+    CALL COMSPLIT($REQ_NO_LIST,  _$REQ_NO);
+    CALL COMSPLIT($REQ_DT_LIST,  _$REQ_DT);
+    CALL COMSPLIT($REQ_BC_LIST,  _$REQ_BC);
+    CALL COMSPLIT($DEPT_CD_LIST, _$DEPT_CD);
+    CALL COMSPLIT($REG_ID_LIST,  _$REG_ID);
+    CALL COMSPLIT($FAC_CD_LIST,  _$FAC_CD);
+    CALL COMSPLIT($IN_WH_LIST,   _$IN_WH);
+    CALL COMSPLIT($CID_LIST,     _$CID);
+    CALL COMSPLIT($CDT_LIST,     _$CDT);
+    CALL COMSPLIT($MID_LIST,     _$MID);
+    CALL COMSPLIT($MDT_LIST,     _$MDT);
+
+    IF _$FIRSTKEY = 0 THEN
+      SET _$FIRSTKEY = CONVERT(IFNULL(NULLIF(TRIM(_$IFKEY), ''), '0'), SIGNED);
+    END IF;
+
+    -- I : 신규등록 (이미 있으면 무시)
+    IF _$IF_TYPE = 'I' THEN
+
+      INSERT IGNORE INTO MES_SNS2.MTRREQ (
+        REQNO, REQDATE, REQBC, REQDEPT, REQEMPID, FACTORYCD, INWARECD,
+        CID, CDT, MID, MDT,
+        RTIME, REMP, RPRG
+      ) VALUES (
+        _$REQ_NO, LEFT(_$REQ_DT, 10), _$REQ_BC, _$DEPT_CD,
+        CONVERT(IFNULL(NULLIF(TRIM(_$REG_ID), ''), '0'), SIGNED), _$FAC_CD, _$IN_WH,
+        CONVERT(IFNULL(NULLIF(TRIM(_$CID), ''), '0'), SIGNED), LEFT(_$CDT, 19),
+        CONVERT(IFNULL(NULLIF(TRIM(_$MID), ''), '0'), SIGNED), LEFT(_$MDT, 19),
+        GETTIME(), 'ERP', 'IF'
+      );
+
+    -- U : 수정 (없으면 등록, 빈 값은 기존 값 유지)
+    ELSEIF _$IF_TYPE = 'U' THEN
+
+      INSERT INTO MES_SNS2.MTRREQ (
+        REQNO, REQDATE, REQBC, REQDEPT, REQEMPID, FACTORYCD, INWARECD,
+        CID, CDT, MID, MDT,
+        RTIME, REMP, RPRG
+      ) VALUES (
+        _$REQ_NO, LEFT(_$REQ_DT, 10), _$REQ_BC, _$DEPT_CD,
+        CONVERT(IFNULL(NULLIF(TRIM(_$REG_ID), ''), '0'), SIGNED), _$FAC_CD, _$IN_WH,
+        CONVERT(IFNULL(NULLIF(TRIM(_$CID), ''), '0'), SIGNED), LEFT(_$CDT, 19),
+        CONVERT(IFNULL(NULLIF(TRIM(_$MID), ''), '0'), SIGNED), LEFT(_$MDT, 19),
+        GETTIME(), 'ERP', 'IF'
+      )
+      ON DUPLICATE KEY UPDATE
+        REQDATE   = IF(_$REQ_DT   <> '', LEFT(_$REQ_DT, 10), REQDATE),
+        REQBC     = IF(_$REQ_BC   <> '', _$REQ_BC, REQBC),
+        REQDEPT   = IF(_$DEPT_CD  <> '', _$DEPT_CD, REQDEPT),
+        REQEMPID  = IF(_$REG_ID   <> '', CONVERT(_$REG_ID, SIGNED), REQEMPID),
+        FACTORYCD = IF(_$FAC_CD   <> '', _$FAC_CD, FACTORYCD),
+        INWARECD  = IF(_$IN_WH    <> '', _$IN_WH, INWARECD),
+        CID       = IF(_$CID      <> '', CONVERT(_$CID, SIGNED), CID),
+        CDT       = IF(_$CDT      <> '', LEFT(_$CDT, 19), CDT),
+        MID       = IF(_$MID      <> '', CONVERT(_$MID, SIGNED), MID),
+        MDT       = IF(_$MDT      <> '', LEFT(_$MDT, 19), MDT),
+        MTIME     = GETTIME(),
+        MEMP      = 'ERP',
+        MPRG      = 'IF';
+
+    -- D : 삭제 (상세 먼저)
+    ELSEIF _$IF_TYPE = 'D' THEN
+
+      DELETE FROM MES_SNS2.MTRREQD WHERE REQNO = _$REQ_NO;
+      DELETE FROM MES_SNS2.MTRREQ  WHERE REQNO = _$REQ_NO;
+
+    END IF;
+
+  END WHILE;
+
+  UPDATE IFSTD
+     SET LASTTIME = GETTIME()
+   WHERE PROCNAME = 'MES_IF_MTRREQ';
+
+  IF _$FIRSTKEY > 0 THEN
+    SELECT IFKEY
+      FROM IF_ERR_LOG
+     WHERE IFKEY >= _$FIRSTKEY
+       AND IFNAME = 'MES_IF_MTRREQ';
+  END IF;
+
+END$$
+
+DROP PROCEDURE IF EXISTS `MES_IF_MTRREQD`$$
+CREATE PROCEDURE `MES_IF_MTRREQD`(
+  IN $IF_KEY_LIST   MEDIUMTEXT,   -- 인터페이스 KEY
+  IN $IF_TYPE_LIST  MEDIUMTEXT,   -- 인터페이스 구분(I/U/D)
+
+  IN $REQ_NO_LIST   MEDIUMTEXT,   -- 구매의뢰 번호 (PK)
+  IN $REQ_SQ_LIST   MEDIUMTEXT,   -- 구매의뢰 순번 (PK)
+  IN $ITM_ID_LIST   MEDIUMTEXT,   -- 품목ID
+  IN $CUST_CD_LIST  MEDIUMTEXT,   -- 구매 거래처
+  IN $UM_BC_LIST    MEDIUMTEXT,   -- 품목단위 (KG DM150150 / EA DM150100)
+  IN $REQ_QTY_LIST  MEDIUMTEXT,   -- 구매의뢰 수량
+  IN $REQ_UP_LIST   MEDIUMTEXT,   -- 구매 개당 단가
+  IN $REQ_AMT_LIST  MEDIUMTEXT,   -- 구매 총 액
+  IN $CID_LIST      MEDIUMTEXT,   -- 생성자
+  IN $CDT_LIST      MEDIUMTEXT,   -- 생성일
+  IN $MID_LIST      MEDIUMTEXT,   -- 수정자
+  IN $MDT_LIST      MEDIUMTEXT    -- 수정일
+)
+PROC: BEGIN
+-- *****************************************************************************
+-- Comment: 구매의뢰 상세 수신 (ERP FAC2_MES_SOMO_DTL → MES_SNS2.MTRREQD)
+-- Create: 2026-11-11
+-- *****************************************************************************
+
+  DECLARE _$IFKEY     VARCHAR(50);
+  DECLARE _$FIRSTKEY  INT DEFAULT 0;
+  DECLARE _$IF_TYPE   VARCHAR(1);
+
+  DECLARE _$REQ_NO    VARCHAR(50);
+  DECLARE _$REQ_SQ    VARCHAR(20);
+  DECLARE _$ITM_ID    VARCHAR(20);
+  DECLARE _$CUST_CD   VARCHAR(20);
+  DECLARE _$UM_BC     VARCHAR(20);
+  DECLARE _$REQ_QTY   VARCHAR(50);
+  DECLARE _$REQ_UP    VARCHAR(50);
+  DECLARE _$REQ_AMT   VARCHAR(50);
+  DECLARE _$CID       VARCHAR(20);
+  DECLARE _$CDT       VARCHAR(30);
+  DECLARE _$MID       VARCHAR(20);
+  DECLARE _$MDT       VARCHAR(30);
+
+  DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+  BEGIN
+    GET DIAGNOSTICS CONDITION 1
+      @sqlstate = RETURNED_SQLSTATE,
+      @errno    = MYSQL_ERRNO,
+      @text     = MESSAGE_TEXT;
+
+    INSERT INTO IF_ERR_LOG (IFKEY, IFGB, IFNAME, IF_TYPE, READTIME, ERRMSG)
+    VALUES (
+      CONVERT(_$IFKEY, SIGNED),
+      'ERP',
+      'MES_IF_MTRREQD',
+      _$IF_TYPE,
+      GETTIME(),
+      CONCAT('ERROR ', @errno, ' (', @sqlstate, '): ', @text)
+    );
+
+    COMMIT;
+  END;
+
+  WHILE LENGTH($REQ_NO_LIST) > 0 DO
+
+    CALL COMSPLIT($IF_KEY_LIST,  _$IFKEY);
+    CALL COMSPLIT($IF_TYPE_LIST, _$IF_TYPE);
+
+    CALL COMSPLIT($REQ_NO_LIST,  _$REQ_NO);
+    CALL COMSPLIT($REQ_SQ_LIST,  _$REQ_SQ);
+    CALL COMSPLIT($ITM_ID_LIST,  _$ITM_ID);
+    CALL COMSPLIT($CUST_CD_LIST, _$CUST_CD);
+    CALL COMSPLIT($UM_BC_LIST,   _$UM_BC);
+    CALL COMSPLIT($REQ_QTY_LIST, _$REQ_QTY);
+    CALL COMSPLIT($REQ_UP_LIST,  _$REQ_UP);
+    CALL COMSPLIT($REQ_AMT_LIST, _$REQ_AMT);
+    CALL COMSPLIT($CID_LIST,     _$CID);
+    CALL COMSPLIT($CDT_LIST,     _$CDT);
+    CALL COMSPLIT($MID_LIST,     _$MID);
+    CALL COMSPLIT($MDT_LIST,     _$MDT);
+
+    IF _$FIRSTKEY = 0 THEN
+      SET _$FIRSTKEY = CONVERT(IFNULL(NULLIF(TRIM(_$IFKEY), ''), '0'), SIGNED);
+    END IF;
+
+    -- I : 신규등록 (이미 있으면 무시)
+    IF _$IF_TYPE = 'I' THEN
+
+      INSERT IGNORE INTO MES_SNS2.MTRREQD (
+        REQNO, REQSEQ, ITEMID, CUSTCD, UMCD,
+        REQQTY, REQUP, REQAMT,
+        CID, CDT, MID, MDT,
+        RTIME, REMP, RPRG
+      ) VALUES (
+        _$REQ_NO, CONVERT(IFNULL(NULLIF(TRIM(_$REQ_SQ), ''), '0'), SIGNED),
+        CONVERT(IFNULL(NULLIF(TRIM(_$ITM_ID), ''), '0'), SIGNED), _$CUST_CD, _$UM_BC,
+        CONVERT(IFNULL(NULLIF(TRIM(_$REQ_QTY), ''), '0'), DECIMAL(18,5)),
+        CONVERT(IFNULL(NULLIF(TRIM(_$REQ_UP), ''), '0'), DECIMAL(18,5)),
+        CONVERT(IFNULL(NULLIF(TRIM(_$REQ_AMT), ''), '0'), DECIMAL(18,5)),
+        CONVERT(IFNULL(NULLIF(TRIM(_$CID), ''), '0'), SIGNED), LEFT(_$CDT, 19),
+        CONVERT(IFNULL(NULLIF(TRIM(_$MID), ''), '0'), SIGNED), LEFT(_$MDT, 19),
+        GETTIME(), 'ERP', 'IF'
+      );
+
+    -- U : 수정 (없으면 등록, 빈 값은 기존 값 유지)
+    ELSEIF _$IF_TYPE = 'U' THEN
+
+      INSERT INTO MES_SNS2.MTRREQD (
+        REQNO, REQSEQ, ITEMID, CUSTCD, UMCD,
+        REQQTY, REQUP, REQAMT,
+        CID, CDT, MID, MDT,
+        RTIME, REMP, RPRG
+      ) VALUES (
+        _$REQ_NO, CONVERT(IFNULL(NULLIF(TRIM(_$REQ_SQ), ''), '0'), SIGNED),
+        CONVERT(IFNULL(NULLIF(TRIM(_$ITM_ID), ''), '0'), SIGNED), _$CUST_CD, _$UM_BC,
+        CONVERT(IFNULL(NULLIF(TRIM(_$REQ_QTY), ''), '0'), DECIMAL(18,5)),
+        CONVERT(IFNULL(NULLIF(TRIM(_$REQ_UP), ''), '0'), DECIMAL(18,5)),
+        CONVERT(IFNULL(NULLIF(TRIM(_$REQ_AMT), ''), '0'), DECIMAL(18,5)),
+        CONVERT(IFNULL(NULLIF(TRIM(_$CID), ''), '0'), SIGNED), LEFT(_$CDT, 19),
+        CONVERT(IFNULL(NULLIF(TRIM(_$MID), ''), '0'), SIGNED), LEFT(_$MDT, 19),
+        GETTIME(), 'ERP', 'IF'
+      )
+      ON DUPLICATE KEY UPDATE
+        ITEMID = IF(_$ITM_ID  <> '', CONVERT(_$ITM_ID, SIGNED), ITEMID),
+        CUSTCD = IF(_$CUST_CD <> '', _$CUST_CD, CUSTCD),
+        UMCD   = IF(_$UM_BC   <> '', _$UM_BC, UMCD),
+        REQQTY = IF(_$REQ_QTY <> '', CONVERT(_$REQ_QTY, DECIMAL(18,5)), REQQTY),
+        REQUP  = IF(_$REQ_UP  <> '', CONVERT(_$REQ_UP, DECIMAL(18,5)), REQUP),
+        REQAMT = IF(_$REQ_AMT <> '', CONVERT(_$REQ_AMT, DECIMAL(18,5)), REQAMT),
+        CID    = IF(_$CID     <> '', CONVERT(_$CID, SIGNED), CID),
+        CDT    = IF(_$CDT     <> '', LEFT(_$CDT, 19), CDT),
+        MID    = IF(_$MID     <> '', CONVERT(_$MID, SIGNED), MID),
+        MDT    = IF(_$MDT     <> '', LEFT(_$MDT, 19), MDT),
+        MTIME  = GETTIME(),
+        MEMP   = 'ERP',
+        MPRG   = 'IF';
+
+    -- D : 삭제
+    ELSEIF _$IF_TYPE = 'D' THEN
+
+      DELETE FROM MES_SNS2.MTRREQD
+       WHERE REQNO  = _$REQ_NO
+         AND REQSEQ = CONVERT(IFNULL(NULLIF(TRIM(_$REQ_SQ), ''), '0'), SIGNED);
+
+    END IF;
+
+  END WHILE;
+
+  UPDATE IFSTD
+     SET LASTTIME = GETTIME()
+   WHERE PROCNAME = 'MES_IF_MTRREQD';
+
+  IF _$FIRSTKEY > 0 THEN
+    SELECT IFKEY
+      FROM IF_ERR_LOG
+     WHERE IFKEY >= _$FIRSTKEY
+       AND IFNAME = 'MES_IF_MTRREQD';
+  END IF;
+
+END$$
+
+DROP PROCEDURE IF EXISTS `MES_IF_MSTITEM_GRP_DTL`$$
+CREATE PROCEDURE `MES_IF_MSTITEM_GRP_DTL`(
+  IN $IF_KEY_LIST   MEDIUMTEXT,   -- 인터페이스 KEY
+  IN $IF_TYPE_LIST  MEDIUMTEXT,   -- 인터페이스 구분(I/U/D)
+
+  IN $SUB_CD_LIST   MEDIUMTEXT,   -- 그룹 세부 코드 (PK)
+  IN $SUB_NM_LIST   MEDIUMTEXT,   -- 세부 명
+  IN $GRP_CD_LIST   MEDIUMTEXT,   -- 그룹코드
+  IN $SUB_NO_LIST   MEDIUMTEXT,   -- 서브코드
+  IN $ELE_CD_LIST   MEDIUMTEXT,   -- 코드구성
+  IN $FR_DT_LIST    MEDIUMTEXT,   -- 시작일
+  IN $TO_DT_LIST    MEDIUMTEXT,   -- 종료일
+  IN $RMKS_LIST     MEDIUMTEXT,   -- 비고
+  IN $FAC_CD_LIST   MEDIUMTEXT    -- 공장코드
+)
+PROC: BEGIN
+-- *****************************************************************************
+-- Comment: 품목그룹 세부 수신 (ERP FAC2_MES_ITEM_GRP_DTL → MES_SNS2.MSTITEM_GRP_DTL)
+-- Create: 2026-11-11
+-- *****************************************************************************
+
+  DECLARE _$IFKEY     VARCHAR(50);
+  DECLARE _$FIRSTKEY  INT DEFAULT 0;
+  DECLARE _$IF_TYPE   VARCHAR(1);
+
+  DECLARE _$SUB_CD    VARCHAR(20);
+  DECLARE _$SUB_NM    VARCHAR(50);
+  DECLARE _$GRP_CD    VARCHAR(10);
+  DECLARE _$SUB_NO    VARCHAR(20);
+  DECLARE _$ELE_CD    VARCHAR(10);
+  DECLARE _$FR_DT     VARCHAR(30);
+  DECLARE _$TO_DT     VARCHAR(30);
+  DECLARE _$RMKS      VARCHAR(50);
+  DECLARE _$FAC_CD    VARCHAR(10);
+
+  DECLARE CONTINUE HANDLER FOR SQLEXCEPTION
+  BEGIN
+    GET DIAGNOSTICS CONDITION 1
+      @sqlstate = RETURNED_SQLSTATE,
+      @errno    = MYSQL_ERRNO,
+      @text     = MESSAGE_TEXT;
+
+    INSERT INTO IF_ERR_LOG (IFKEY, IFGB, IFNAME, IF_TYPE, READTIME, ERRMSG)
+    VALUES (
+      CONVERT(_$IFKEY, SIGNED),
+      'ERP',
+      'MES_IF_MSTITEM_GRP_DTL',
+      _$IF_TYPE,
+      GETTIME(),
+      CONCAT('ERROR ', @errno, ' (', @sqlstate, '): ', @text)
+    );
+
+    COMMIT;
+  END;
+
+  WHILE LENGTH($SUB_CD_LIST) > 0 DO
+
+    CALL COMSPLIT($IF_KEY_LIST,  _$IFKEY);
+    CALL COMSPLIT($IF_TYPE_LIST, _$IF_TYPE);
+
+    CALL COMSPLIT($SUB_CD_LIST,  _$SUB_CD);
+    CALL COMSPLIT($SUB_NM_LIST,  _$SUB_NM);
+    CALL COMSPLIT($GRP_CD_LIST,  _$GRP_CD);
+    CALL COMSPLIT($SUB_NO_LIST,  _$SUB_NO);
+    CALL COMSPLIT($ELE_CD_LIST,  _$ELE_CD);
+    CALL COMSPLIT($FR_DT_LIST,   _$FR_DT);
+    CALL COMSPLIT($TO_DT_LIST,   _$TO_DT);
+    CALL COMSPLIT($RMKS_LIST,    _$RMKS);
+    CALL COMSPLIT($FAC_CD_LIST,  _$FAC_CD);
+
+    IF _$FIRSTKEY = 0 THEN
+      SET _$FIRSTKEY = CONVERT(IFNULL(NULLIF(TRIM(_$IFKEY), ''), '0'), SIGNED);
+    END IF;
+
+    -- I : 신규등록 (이미 있으면 무시)
+    IF _$IF_TYPE = 'I' THEN
+
+      INSERT IGNORE INTO MES_SNS2.MSTITEM_GRP_DTL (
+        SUBCD, SUBNM, GRPCD, SUBNO, ELECD, FRDT, TODT, RMKS, FACTORYCD,
+        RTIME, REMP, RPRG
+      ) VALUES (
+        _$SUB_CD, _$SUB_NM, _$GRP_CD, _$SUB_NO, _$ELE_CD,
+        LEFT(_$FR_DT, 10), LEFT(_$TO_DT, 10), _$RMKS, _$FAC_CD,
+        GETTIME(), 'ERP', 'IF'
+      );
+
+    -- U : 수정 (없으면 등록)
+    ELSEIF _$IF_TYPE = 'U' THEN
+
+      INSERT INTO MES_SNS2.MSTITEM_GRP_DTL (
+        SUBCD, SUBNM, GRPCD, SUBNO, ELECD, FRDT, TODT, RMKS, FACTORYCD,
+        RTIME, REMP, RPRG
+      ) VALUES (
+        _$SUB_CD, _$SUB_NM, _$GRP_CD, _$SUB_NO, _$ELE_CD,
+        LEFT(_$FR_DT, 10), LEFT(_$TO_DT, 10), _$RMKS, _$FAC_CD,
+        GETTIME(), 'ERP', 'IF'
+      )
+      ON DUPLICATE KEY UPDATE
+        SUBNM     = IF(_$SUB_NM <> '', _$SUB_NM, SUBNM),
+        GRPCD     = IF(_$GRP_CD <> '', _$GRP_CD, GRPCD),
+        SUBNO     = IF(_$SUB_NO <> '', _$SUB_NO, SUBNO),
+        ELECD     = IF(_$ELE_CD <> '', _$ELE_CD, ELECD),
+        FRDT      = IF(_$FR_DT  <> '', LEFT(_$FR_DT, 10), FRDT),
+        TODT      = LEFT(_$TO_DT, 10),
+        RMKS      = IF(_$RMKS   <> '', _$RMKS, RMKS),
+        FACTORYCD = IF(_$FAC_CD <> '', _$FAC_CD, FACTORYCD),
+        MTIME     = GETTIME(),
+        MEMP      = 'ERP',
+        MPRG      = 'IF';
+
+    -- D : 삭제
+    ELSEIF _$IF_TYPE = 'D' THEN
+
+      DELETE FROM MES_SNS2.MSTITEM_GRP_DTL WHERE SUBCD = _$SUB_CD;
+
+    END IF;
+
+  END WHILE;
+
+  UPDATE IFSTD
+     SET LASTTIME = GETTIME()
+   WHERE PROCNAME = 'MES_IF_MSTITEM_GRP_DTL';
+
+  IF _$FIRSTKEY > 0 THEN
+    SELECT IFKEY
+      FROM IF_ERR_LOG
+     WHERE IFKEY >= _$FIRSTKEY
+       AND IFNAME = 'MES_IF_MSTITEM_GRP_DTL';
+  END IF;
+
+END$$
+
 DELIMITER ;

@@ -3,7 +3,7 @@ PROCEDURE MES_SNS2.IO_ETC_OUT(
 -- *****************************************************************************
 -- Comment: 기타 출고 프로시저
 -- Create: 2026-09-04: 김영철
--- Modify:  
+-- Modify: 2026-11-11: ERP 인터페이스(ETC_OUT) 송신 추가
 -- ***************************************************************************** 
  IN $ITEMID         VARCHAR(50),
  IN $OUTDATE         VARCHAR(10),
@@ -123,6 +123,14 @@ IF IFNULL(@ERRMSG, '') = '' THEN
       WHERE LOTKEY = _$LOTKEY
         AND ITEMID = $ITEMID
         AND WARECD = _$WARECD;
+
+-- ----------------------------------------------------------------------------------------------------------------------------------------
+  -- 1_5. ERP 인터페이스 (기타출고 : I, LOT 별 출고번호 OUTKEY)
+      CALL IO_ERP_INTERFACE('ETC_OUT', _$OUTKEY, 'I');
+
+      IF IFNULL(@ERRMSG, '') <> '' THEN
+        LEAVE PROC;
+      END IF;
 
     END WHILE;
 

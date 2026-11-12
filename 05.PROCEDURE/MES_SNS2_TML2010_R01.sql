@@ -906,6 +906,13 @@ WHEN 'END_NON' THEN  -- 비가동 종료 (설비수리 EQMREP 연동은 하지 �
     , MPRG = CALLPRG()
   WHERE PRDRSTNON.PRDNONKEY = _$PRDNONKEY;
 
+  -- ERP 인터페이스 (비가동 종료 : I)
+  CALL IO_ERP_INTERFACE('PRDRSTNON', _$PRDNONKEY, 'I');
+
+  IF IFNULL(@ERRMSG, '') <> '' THEN
+    LEAVE PROC;
+  END IF;
+
 -- ****************************************************************************
 -- 설비 일상점검 (TAL0001_R05 참고, 설비는 선택한 라인에 매칭된 설비 MSTEQM_MATCH)
 -- ****************************************************************************

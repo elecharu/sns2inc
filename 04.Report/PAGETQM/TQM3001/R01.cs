@@ -14,14 +14,6 @@ namespace XtraRpt
     {
         private const int ItemRowCount = 17;   // 품목 줄 수 (양식 고정)
 
-        // 단가구분(공통코드 CLAIMPRICETP) → 산출내역서 단가 칸
-        private static readonly Dictionary<string, string> PriceColumns = new Dictionary<string, string>
-        {
-            { "IN", "INPRICE" },
-            { "MFG", "MFGPRICE" },
-            { "SALE", "SALEPRICE" }
-        };
-
         public R01(Dictionary<string, string> param)
         {
             InitializeComponent();
@@ -97,11 +89,9 @@ namespace XtraRpt
                 SetCell("C_P2_" + n + "_ITEMNM", Value(r, "ITEMNM"));
                 SetCell("C_P2_" + n + "_BADCONT", Value(r, "BADCONT"));
                 SetCell("C_P2_" + n + "_QTY", Num(qty));
-                string priceColumn;
-                if (PriceColumns.TryGetValue(Value(r, "PRICETP"), out priceColumn))
-                {
-                    SetCell("C_P2_" + n + "_" + priceColumn, NumBlank(Dec(r, "UNITPRICE")));
-                }
+                SetCell("C_P2_" + n + "_INPRICE", NumBlank(Dec(r, "INPRICE")));
+                SetCell("C_P2_" + n + "_MFGPRICE", NumBlank(Dec(r, "MFGPRICE")));
+                SetCell("C_P2_" + n + "_SALEPRICE", NumBlank(Dec(r, "SALEPRICE")));
                 SetCell("C_P2_" + n + "_ETCAMT", NumBlank(Dec(r, "ETCAMT")));
                 SetCell("C_P2_" + n + "_AMT", Num(amt));
             }

@@ -19,7 +19,7 @@
 <%-- BODY --%>
 <asp:Content ContentPlaceHolderID="CPH_BODY" runat="Server">
     <%-- 왼쪽: 발생월 협력사(귀책처) 목록 --%>
-    <Its:div runat="server" Type="SplitLeft" LeftWidthPc="28">
+    <Its:div runat="server" Type="SplitLeft" LeftWidthPc="30">
         <Its:grid runat="server" ID="grid1" />
     </Its:div>
 
@@ -32,25 +32,25 @@
             <Its:newline runat="server" />
             <%-- 문서번호 = 클레임키 (처음 저장할 때 SSI-yy-mm-NNN 으로 매김, 고칠 수 없음) --%>
             <Its:text runat="server" Label="문서번호" ID="txt_CLAIMKEY" InputWidth="130" ReadOnly="true" />
-            <Its:date runat="server" Label="작성일" ID="date_DOCDATE" Field="DOCDATE" />
-            <Its:date runat="server" Label="이의제기 기한" ID="date_OBJDATE" Field="OBJDATE" LabelWidth="90" />
+            <%-- 예정일자 = 작성일 (공문서 작성일로도 찍힘) --%>
+            <Its:date runat="server" Label="예정일자" ID="date_PLANDATE" Field="PLANDATE" LabelWidth="100"/>
+            <Its:date runat="server" Label="확정일자" ID="date_CONFDATE" Field="CONFDATE" />
             <Its:find runat="server" Label="담당" ID="find_EMPCD" Field="EMPCD" GPCD="EMPCD" InputWidth="80" NameWidth="100" />
             <Its:newline runat="server" />
             <Its:text runat="server" Label="수신" ID="txt_RECVNM" Field="RECVNM" InputWidth="200" />
-            <Its:text runat="server" Label="참조" ID="txt_REFNM" Field="REFNM" InputWidth="250" />
+            <Its:text runat="server" Label="참조" ID="txt_REFNM" Field="REFNM" InputWidth="252" />
             <Its:newline runat="server" />
-            <Its:text runat="server" Label="제목" ID="txt_TITLE" Field="TITLE" InputWidth="520" />
+            <%-- 제목·비고 오른쪽 끝을 참조 칸 끝에 맞춘 폭 --%>
+            <Its:text runat="server" Label="제목" ID="txt_TITLE" Field="TITLE" InputWidth="545" />
             <Its:newline runat="server" />
-            <Its:text runat="server" Label="비고" ID="txt_REMARK" Field="REMARK" InputWidth="520" />
+            <Its:text runat="server" Label="비고" ID="txt_REMARK" Field="REMARK" InputWidth="545" />
         </Its:div>
 
         <Its:split runat="server" Type="Horizon" Resizeable="false" />
 
         <Its:div runat="server" Type="SplitDown">
             <Its:div runat="server" Type="SplitTop">
-                <Its:label runat="server" Text="■ 발생 손실 비용 (노란 줄: 등록 뒤 새로 생긴 불량 품목)" Bold="true" Margin="3px 0px 0px 10px" />
-                <Its:button runat="server" Label="행삭제" ID="btn_DEL_ITEM" BackColor="CustomButton3" MarginTop="4" MarginLeft="20" />
-            </Its:div>
+                <Its:label runat="server" Text="■ 발생 손실 비용 (노란 줄: 등록 뒤 새로 생긴 불량 품목)" Bold="true" Margin="3px 0px 0px 10px" />            </Its:div>
             <Its:split runat="server" Type="Horizon" Resizeable="false" />
             <Its:div runat="server" Type="SplitDown">
                 <Its:grid runat="server" ID="grid2" />

@@ -293,7 +293,7 @@ namespace TML1010
                     totQty += MODEL_G4.GetDecimal(i, "BOXSUM");
                 }
 
-                ShowMessageBox(commandName, MODEL_S1.GetText("PRDDATE") + " 일자로 발주 " + orders.Count + "건 (BOX " + boxCount + "개, 총 " + totQty.ToString("#,0") + "개)을 납품등록 하시겠습니까?\n거래명세서는 발주별로 1장씩 만들어집니다.");
+                ShowMessageBox(commandName, MODEL_S1.GetText("PRDDATE") + " 일자로 납품등록 하시겠습니까?\n발주 " + orders.Count + "건 (BOX " + boxCount + "개, 총 " + totQty.ToString("#,0") + "개)");
                 return;
             }
 
@@ -438,7 +438,7 @@ namespace TML1010
             }
         }
 
-        // 2026-11-09 거래명세서(A4 1장: 공급받는자 보관용) + 공정이동표(재고)(LOT 1개당 1장, A4 한 장에 2개)
+        // 2026-11-11 거래명세서(공급자보관용 + 공급받는자 보관용) + 공정이동표(재고)(LOT 1개당 1장, A4 한 장에 2개)
         // 확인창 없이 POP 에서 고른 프린터로 바로 인쇄. 양식은 COMPJT\TMLPRINT 의 MTR_1 / MTR_2 (AAALIB\TMLPRINT.exe)
         private void PrintInvoice(string invoiceKey)
         {
@@ -453,7 +453,7 @@ namespace TML1010
 
             try
             {
-                TMLPRINT.MTR_1 rptInvoice = new TMLPRINT.MTR_1(ds);
+                TMLPRINT.MTR_1 rptInvoice = new TMLPRINT.MTR_1(ds, true);
                 rptInvoice.PrintDirect(ItsPrinter.BarcodePrintName);
 
                 TMLPRINT.MTR_2 rptMove = new TMLPRINT.MTR_2(ds.Tables[4]);

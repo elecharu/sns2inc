@@ -3,7 +3,7 @@ PROCEDURE MES_SNS2.TML2040_R01(
 -- *****************************************************************************
 -- Comment: 비가동 조회
 -- Create: 2026-10-12 13:21: 김영철
--- Modify: 
+-- Modify: 2026-11-11: 비가동 ERP 인터페이스(PRDRSTNON) 송신 추가 (등록·종료 I, 수정 U)
 -- *****************************************************************************
 
 	IN $PRDNONKEY VARCHAR(20),
@@ -227,6 +227,13 @@ WHEN 'ADD_PRDRSTNON' THEN
     CALLTIME(), CALLEMP(), CALLPRG()
   );
 
+  -- ERP 인터페이스 (비가동 등록 : I)
+  CALL IO_ERP_INTERFACE('PRDRSTNON', _$PRDNONKEY, 'I');
+
+  IF IFNULL(@ERRMSG, '') <> '' THEN
+    LEAVE PROC;
+  END IF;
+
 -- ****************************************************************************
 WHEN 'UP_PRDRSTNON' THEN
 
@@ -266,6 +273,13 @@ WHEN 'UP_PRDRSTNON' THEN
         MPRG     = CALLPRG()
     WHERE PRDNONKEY = $PRDNONKEY;
 
+  -- ERP 인터페이스 (비가동 수정 : U)
+  CALL IO_ERP_INTERFACE('PRDRSTNON', $PRDNONKEY, 'U');
+
+  IF IFNULL(@ERRMSG, '') <> '' THEN
+    LEAVE PROC;
+  END IF;
+
 -- ****************************************************************************
 -- 비가동 문제점/조치사항 조회
 WHEN 'SEL_PRDRSTNON_PROBLEM' THEN
@@ -289,6 +303,13 @@ WHEN 'UP_PRDRSTNON_PROBLEM' THEN
         MEMP     = CALLEMP(),
         MPRG     = CALLPRG()
     WHERE PRDNONKEY = $PRDNONKEY;
+
+  -- ERP 인터페이스 (비가동 문제점/수리내역 수정 : U, 종료된 비가동만 송신됨)
+  CALL IO_ERP_INTERFACE('PRDRSTNON', $PRDNONKEY, 'U');
+
+  IF IFNULL(@ERRMSG, '') <> '' THEN
+    LEAVE PROC;
+  END IF;
 
 -- ****************************************************************************
 WHEN 'DEL_PRDRSTNON' THEN
@@ -401,6 +422,13 @@ WHEN 'END_NON' THEN
       AND PRDWORKKEY = _$PRDWORKKEY
     ORDER BY NONSTIME DESC
     LIMIT 1;
+
+  -- ERP 인터페이스 (비가동 종료 : I)
+  CALL IO_ERP_INTERFACE('PRDRSTNON', _$PRDNONKEY, 'I');
+
+  IF IFNULL(@ERRMSG, '') <> '' THEN
+    LEAVE PROC;
+  END IF;
 
   -- 설비 고장 비가동이면 설비수리(EQMREP) 이력 생성
   IF _$NONTP = 'PP410I240N' THEN
