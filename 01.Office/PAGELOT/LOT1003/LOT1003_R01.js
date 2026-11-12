@@ -190,6 +190,11 @@ ItsGrid.Event('grid2').onSelect = function (rowIndex, field) {
 
 // 승인 버튼
 ItsButton.Event('btn_CONFIRM_COMCHK').onClick = function () {
+    if (!ItsGrid.HasChecked('grid2')) {
+        ItsMsg.Alert('승인할 품목을 선택하세요.');
+        return;
+    }
+
     ItsMsg.Confirm("※ 주의 ※\n- 실사재고가 전산에 반영됩니다.\n- 실사하지 않은 로트는 삭제됩니다.\n\n승인을 하시겠습니까?", function () {
         var maria = new ItsMaria('LOT1003_R01', 'COMCHK_CONFIRM');
 
@@ -216,6 +221,11 @@ ItsButton.Event('btn_CONFIRM_COMCHK').onClick = function () {
 
 // 승인취소 버튼
 ItsButton.Event('btn_CANCEL_COMCHK').onClick = function () {
+    if (!ItsGrid.HasChecked('grid2')) {
+        ItsMsg.Alert('취소할 품목을 선택하세요.');
+        return;
+    }
+
     ItsMsg.Confirm("※ 주의 ※\n- 실사승인 전으로 전산재고가 돌아갑니다.\n- 실사수량도 입력 전으로 초기화됩니다.\n\n취소를 하시겠습니까?", function () {
         var CHKGROUPKEY = ItsGrid.GetValue('grid1', ItsGrid.$GetRowIndex('grid1'), 'CHKGROUPKEY');
         var maria = new ItsMaria('LOT1003_R01', 'COMCHK_CANCEL');

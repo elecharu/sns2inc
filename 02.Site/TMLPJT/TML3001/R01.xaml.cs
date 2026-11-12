@@ -18,11 +18,14 @@ namespace TML3001
     /// LOT 바코드 스캔 (후처리 안 된 재작업 판정이 있는 재고만) → 이동량 = 재작업 판정수량 합 (고칠 수 없음) → [등록]
     /// 등록하면 재고이동(IO_MOVELOT_WARE, 입출고구분 02) 후 그 재작업 판정을 후처리 완료로 바꾼다 (프로시저 TML3001_R01)
     /// 재작업 이력은 남기지 않고 ERP 로도 보내지 않는다.
+    /// 2026-11-12 탭 추가: [등록] = 위 내용, [조회] = 양품전환 이력 조회 (이동일자 기간) · 체크한 LOT 행 삭제 (재고 원복 + 재작업 판정 후처리 취소)
     /// </summary>
     public partial class R01 : ITSLIB.ItsPageTml
     {
         ItsModelPanel MODEL_S1 = new ItsModelPanel();
         ItsModelGrid MODEL_G1 = new ItsModelGrid();
+        ItsModelPanel MODEL_S2 = new ItsModelPanel();   // [조회] 탭 조회조건
+        ItsModelGrid MODEL_G2 = new ItsModelGrid();     // [조회] 탭 양품전환 이력
 
         public R01()
         {
@@ -34,6 +37,12 @@ namespace TML3001
 
             MODEL_G1.Binding(GRID_G1);
             MODEL_G1.InitData();
+
+            MODEL_S2.Binding(PANEL_S2);
+            MODEL_S2.InitData();
+
+            MODEL_G2.Binding(GRID_G2);
+            MODEL_G2.InitData();
         }
 
         public override void EventPageLoaded()
@@ -43,7 +52,26 @@ namespace TML3001
             MODEL_S1.SetValue("MOVEDATE", DateTime.Now.ToString("yyyy-MM-dd"));
             MODEL_S1.SetValue("OUTWARE", "04S130_N");   // 기본 출고창고 : 재공불량창고
             MODEL_S1.SetValue("SCANLOT", "");
+
+            MODEL_S2.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+            MODEL_S2.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+
             txt_BARCODE.Focus();
+        }
+
+        // [조회] 탭 양품전환 이력 조회
+        private void SearchMove()
+        {
+            ItsMaria.Set("TML3001_R01", "LIST_MOVE");
+            ItsMaria.AddModel(MODEL_S2);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            MODEL_G2.SetData(ds.Tables[0]);
         }
 
         // 출고창고를 바꾸면 스캔한 LOT 는 다른 창고 것이므로 비움
@@ -104,6 +132,40 @@ namespace TML3001
 
                 ShowMessageBox(commandName, MODEL_S1.GetText("MOVEDATE") + " 일자로 LOT " + MODEL_G1.Rows.Count + "개, 총 " + totQty.ToString("#,0") + " 을(를) 양품전환 하시겠습니까?");
             }
+            // [조회] 탭 조회
+            else if (commandName == "SEARCH_MOVE")
+            {
+                if (MODEL_S2.GetText("SDATE") == "" || MODEL_S2.GetText("EDATE") == "")
+                {
+                    ShowMessageBox("", "이동일자를 선택하세요.");
+                    return;
+                }
+
+                SearchMove();
+            }
+            // [조회] 탭 삭제 (체크한 LOT 행)
+            else if (commandName == "DEL_MOVE")
+            {
+                int cnt = 0;
+                for (int i = 0; i < MODEL_G2.ModelCount; i++)
+                {
+                    if (!MODEL_G2.IsChecked(i)) continue;
+
+                    if (MODEL_G2.GetDecimal(i, "INLOTQTY") < MODEL_G2.GetDecimal(i, "MOVEQTY"))
+                    {
+                        ShowMessageBox("", "입고창고 재고가 이동량보다 적어 삭제할 수 없습니다. (이미 사용된 재고)\n- 로트번호: " + MODEL_G2.GetText(i, "LOTKEY"));
+                        return;
+                    }
+                    cnt++;
+                }
+                if (cnt == 0)
+                {
+                    ShowMessageBox("", "삭제할 이력을 체크하세요.");
+                    return;
+                }
+
+                ShowMessageBox(commandName, "양품전환 이력 " + cnt + "건을 삭제하시겠습니까?\n(양품창고 재고를 불량창고로 되돌리고, 재작업 판정을 후처리 전으로 바꿉니다)");
+            }
         }
 
         public override void EventMessageResult(string commandName)
@@ -130,6 +192,26 @@ namespace TML3001
                 MODEL_S1.SetValue("SCANLOT", "");
                 ShowMessageBox("", "양품전환 되었습니다. (LOT " + ItsData.GetText(ds.Tables[0], 0, "LOTCNT") + "개)");
                 txt_BARCODE.Focus();
+            }
+            else if (commandName == "DEL_MOVE")
+            {
+                ItsMaria.Set("TML3001_R01", "DEL_MOVE");
+                for (int i = 0; i < MODEL_G2.ModelCount; i++)
+                {
+                    if (!MODEL_G2.IsChecked(i)) continue;
+
+                    ItsMaria.AddList("GROUPKEY_LIST", MODEL_G2.GetText(i, "GROUPKEY"));
+                    ItsMaria.AddList("LOTKEY_LIST", MODEL_G2.GetText(i, "LOTKEY"));
+                }
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                ShowMessageBox("", "삭제되었습니다. (" + ItsData.GetText(ds.Tables[0], 0, "DELCNT") + "건)");
+                SearchMove();
             }
         }
 

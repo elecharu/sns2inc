@@ -1,0 +1,7 @@
+﻿/* TAL1600_R01: 재고실사 등록 (태블릿) */
+
+/* 실사 수량 라벨 여백을 다른 입력칸(좌우 20px)과 같게 (태블릿 공통 Kiosk.css는 숫자칸 라벨만 왼쪽 0·오른쪽 10) */
+#pdiv_SCAN div.ItsNum_table>span {
+    margin-left: 20px;
+    margin-right: 20px;
+}

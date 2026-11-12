@@ -12,7 +12,6 @@ ItsPage.Load = function () {
             column.create('창고명', 'WARENM', { width: 100, align: 'center' }),
             column.create('로트번호', 'LOTKEY', { width: 110, align: 'center' }),
             column.create('입출고수량', 'INOUTQTY', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
-            column.create('조정사유', 'ADJUSTWHY', { width: 150 }),
             column.create("관리자", "EMPCD", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'EMPCD', align: 'center' }),
         ]),
 

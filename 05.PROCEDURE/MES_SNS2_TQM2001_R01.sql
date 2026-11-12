@@ -20,9 +20,8 @@ PROCEDURE MES_SNS2.TQM2001_R01(
 --         2026-11-09 공정이동표 출력 PRINT_MOVE 추가, SAVE_JUDGE·SAVE_JUDGE_MULTI 가 저장한 판정키(JUDGEKEYS) 반환
 --         2026-11-10 발생내용(BADCD, MSTBAD 대분류 폐기 QM210I210N) 추가. 판정유형이 불량이면 필수
 --                    (협력사 클레임등록 TQM3001_R01 에서 씀, 파라미터 $BADCD·$BADCD_LIST 2개 추가)
+--         2026-11-12 조회조건 생산일자 삭제 (파라미터 $SDATE·$EDATE 삭제)
 -- *****************************************************************************
-  IN $SDATE VARCHAR(10),              -- 생산일자 시작
-  IN $EDATE VARCHAR(10),              -- 생산일자 종료
   IN $WARECD VARCHAR(100),            -- 불량창고
   IN $ITEMCG VARCHAR(100),            -- 품목유형 (공통코드 DM100)
   IN $ITEMID VARCHAR(100),            -- 품목ID
@@ -81,11 +80,6 @@ CASE $CALLTYPE
 -- ****************************************************************************
 WHEN 'LIST_LOT' THEN  -- 불량재고 목록 (grid1)
 
-  IF $SDATE = '' OR $EDATE = '' THEN
-    CALL COMERR('생산일자를 입력하세요.');
-    LEAVE PROC;
-  END IF;
-
   SELECT
       BAD_LOT.WARECD, BAD_LOT.WARENM, BAD_LOT.LOTKEY, BAD_LOT.ITEMCG, BAD_LOT.ITEMCD, BAD_LOT.ITEMNM
     , BAD_LOT.ITEMSPEC, BAD_LOT.PRCNM, BAD_LOT.PRDDATE
@@ -132,7 +126,6 @@ WHEN 'LIST_LOT' THEN  -- 불량재고 목록 (grid1)
            AND LOT_JUDGE.WARECD = COMLOT.WARECD
           WHERE COMLOT.WARECD IN ('04S130_N', '04S230_N') -- 재공 불량창고, 제품 불량창고
             AND COMLOT.LOTQTY > 0
-            AND COMLOT.PRDDATE BETWEEN $SDATE AND $EDATE
             AND ($WARECD = '' OR COMLOT.WARECD = $WARECD)
             AND ($ITEMCG = '' OR MSTITEM.ITEMCG = $ITEMCG)
             AND ($ITEMID = '' OR COMLOT.ITEMID = $ITEMID)

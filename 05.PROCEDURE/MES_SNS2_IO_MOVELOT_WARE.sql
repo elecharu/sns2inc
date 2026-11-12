@@ -1,4 +1,4 @@
-﻿CREATE DEFINER = 'root'@'%'
+CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.IO_MOVELOT_WARE(
 -- *****************************************************************************
 -- Comment: LOT 창고이동 (같은 LOT 번호로 창고별 재고 관리) - TML1020_R02 외주반출 등 창고이동 공통

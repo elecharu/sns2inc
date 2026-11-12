@@ -120,6 +120,18 @@
     <Compile Include="R02.xaml.cs">
       <DependentUpon>R02.xaml</DependentUpon>
     </Compile>
+    <Compile Include="R03.xaml.cs">
+      <DependentUpon>R03.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="R04.xaml.cs">
+      <DependentUpon>R04.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="R05.xaml.cs">
+      <DependentUpon>R05.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="R06.xaml.cs">
+      <DependentUpon>R06.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -154,6 +166,22 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="R02.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="R03.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="R04.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="R05.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="R06.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

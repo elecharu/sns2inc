@@ -8,11 +8,15 @@
       Width="1176" Height="576">
     <!-- 2026-11-11 불량 양품전환: 부적합 판정 재작업(REWORK) 불량재고를 사내 재작업 후 불량창고 → 양품창고 재고이동 (TML1020 R02 외주반출과 같은 UI)
          LOT 스캔 (후처리 안 된 재작업 판정이 있는 재고만) → 이동량 = 재작업 판정수량 합 (고칠 수 없음) → 등록 -->
+    <!-- 2026-11-12 탭 추가: [등록] = 기존 화면, [조회] = 양품전환 이력 조회·삭제 -->
+    <TabControl x:Name="TAB_MAIN" Width="1176" Height="576" Padding="0" BorderThickness="0" Background="Silver">
+    <TabItem Height="25">
+    <TabItem.Header><TextBlock Text="  등 록  " FontSize="14" FontWeight="Bold"/></TabItem.Header>
     <Canvas Background="Silver">
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
             <its:WrapContent x:Name="PANEL_S1" Width="1176" Height="58">
-                <its:Date Label="이동일자" LabelWidth="70" Width="230" Value="{Binding MOVEDATE}" Foreground="Green" FontWeight="Bold"/>
+                <its:Date Label="이동일자" LabelWidth="70" Width="230" Value="{Binding MOVEDATE}" FontWeight="Bold"/>
                 <UserControl Width="40"/>
                 <its:Combo Label="출고창고" LabelWidth="70" Width="330" GPCD="WARECD_REWORK_OUT" Value="{Binding OUTWARE}"/>
                 <UserControl Width="40"/>
@@ -23,7 +27,7 @@
         </UserControl>
 
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="58">
-            <its:Grid x:Name="GRID_G1" Width="1056" Height="518">
+            <its:Grid x:Name="GRID_G1" Width="1056" Height="478">
                 <its:Grid.Columns>
                     <its:Column Width="55" Header="삭제" CellType="Button" ButtonText="삭제" CommandName="DEL_ROW"/>
                     <its:Column Width="140" Header="품목코드" FieldName="ITEMCD"/>
@@ -41,12 +45,57 @@
         </UserControl>
 
         <!-- 오른쪽 버튼 영역 (TML1020 R02 와 같게) -->
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="58" Width="120" Height="518">
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="58" Width="120" Height="478">
             <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
-                <its:Button Label="등 록" Width="100" Height="55" FontWeight="Bold" CommandName="ADD_MOVE" BackColor="Green"/>
+                <its:Button Label="등 록" Width="100" Height="55" FontWeight="Bold" SetFontSize="15" CommandName="ADD_MOVE" BackColor="Green"/>
                 <UserControl Height="10"/>
-                <its:Button Label="취 소" Width="100" Height="55" FontWeight="Bold" CommandName="CLEAR_SCAN" BackColor="Gray"/>
+                        <its:Button Label="취 소" Width="100" Height="55" FontWeight="Bold"  SetFontSize="15" CommandName="CLEAR_SCAN" BackColor="Gray"/>
             </StackPanel>
         </UserControl>
     </Canvas>
+    </TabItem>
+
+    <!-- [조회] 양품전환 이력 (LOT 행 단위), 체크한 행 삭제 -->
+    <TabItem Height="25">
+    <TabItem.Header><TextBlock Text="  삭 제  " FontSize="14" FontWeight="Bold"/></TabItem.Header>
+    <Canvas Background="Silver">
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
+            <its:WrapContent x:Name="PANEL_S2" Width="1176" Height="58">
+                <its:Date Label="이동일자" LabelWidth="70" Width="230" Value="{Binding SDATE}"/>
+                <its:Date HidenLabel="Y" Width="160" Value="{Binding EDATE}"/>
+                <UserControl Width="20"/>
+                <its:Button Label="조 회" Width="120" Height="45" FontWeight="Bold" CommandName="SEARCH_MOVE" BackColor="SteelBlue"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="58">
+            <its:Grid x:Name="GRID_G2" Width="1056" Height="478">
+                <its:Grid.Columns>
+                    <its:Column Width="45" Header="선택" CellType="Check" FieldName="ISCHECKED" IsRowCheck="True"/>
+                    <its:Column Width="95" Header="이동일자" FieldName="MOVEDATE" ALGIN="Center"/>
+                    <its:Column Width="110" Header="LOT NO" FieldName="LOTKEY" ALGIN="Center"/>
+                    <its:Column Width="120" Header="품목코드" FieldName="ITEMCD"/>
+                    <its:Column Width="150" Header="품명" FieldName="ITEMNM"/>
+                    <its:Column Width="110" Header="규격" FieldName="ITEMSPEC"/>
+                    <its:Column Width="90" Header="출고창고" FieldName="OUTWARENM" ALGIN="Center"/>
+                    <its:Column Width="90" Header="입고창고" FieldName="INWARENM" ALGIN="Center"/>
+                    <its:Column Width="70" Header="이동량" FieldName="MOVEQTY" DecimalPoint="0"/>
+                    <!--<its:Column Width="80" Header="입고창고&#x0a;현재고" FieldName="INLOTQTY" DecimalPoint="0"/>-->
+                    <its:Column Width="70" Header="등록자" FieldName="EMPNM" ALGIN="Center"/>
+                    <its:Column Width="140" Header="등록시간" FieldName="RTIME" ALGIN="Center"/>
+                    <its:Column Width="80" Header="GROUPKEY" FieldName="GROUPKEY" Visible="False"/>
+                    <its:Column Width="80" Header="품목ID" FieldName="ITEMID" Visible="False"/>
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="58" Width="120" Height="478">
+            <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
+                <its:Button Label="삭 제" Width="100" Height="55" FontWeight="Bold" CommandName="DEL_MOVE" BackColor="IndianRed"/>
+            </StackPanel>
+        </UserControl>
+    </Canvas>
+    </TabItem>
+    </TabControl>
 </its:ItsPageTml>

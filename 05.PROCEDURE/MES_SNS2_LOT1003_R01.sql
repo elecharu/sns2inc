@@ -3,7 +3,7 @@ PROCEDURE `MES_SNS2`.`LOT1003_R01`(
 -- *****************************************************************************
 -- Comment: 재고실사관리
 -- Create: 	2024-10-31  	생성 			이대규
--- Modify: 	2026-11-11 					한성수	마이그레이션 (SEA 원본 동작 유지, 품목 ITEMID·품목유형 ITEMCG·창고명 MSTWARE로 변경, 승인취소 시 로트 실사수량 초기화)
+-- Modify: 	2026-11-11 					한성수	재고실사 관리 마이그레이션 및 승인·취소 검증 추가
 -- *****************************************************************************
   IN $SDATE           VARCHAR(10),
   IN $EDATE           VARCHAR(10),
@@ -25,6 +25,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$CHKKEY      VARCHAR(20);
   DECLARE _$CHKLOTKEY   VARCHAR(100);
   DECLARE _$LOTLIST     MEDIUMTEXT;
+  DECLARE _$KEYLIST     MEDIUMTEXT;
 
   CASE $CALLTYPE
   -- *****************************************************************************
@@ -40,7 +41,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
            SUM(IFNULL(COMCHKLOT.LOTOLDQTY, 0)) AS OLDSUMQTY,
            SUM(IFNULL(COMCHKLOT.LOTCHKQTY, 0)) AS LOTCHKQTY,
            SUM(IFNULL(COMCHKLOT.LOTOLDQTY, 0)) - SUM(IFNULL(COMCHKLOT.LOTCHKQTY, 0)) AS DIFFQTY,
-           IF(COMCHK_COUNT.COUNT_N = 0, 'Y', 'N') AS DONEYN
+           IF(EXISTS (SELECT CHKKEY FROM COMCHK WHERE CHKGROUPKEY = COMCHK_GROUP.CHKGROUPKEY AND CHKAPPYN <> 'Y'), 'N', 'Y') AS DONEYN
     FROM COMCHK_GROUP
     INNER JOIN COMCHK
       ON COMCHK.CHKGROUPKEY = COMCHK_GROUP.CHKGROUPKEY
@@ -50,10 +51,6 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       ON MSTITEM.ITEMID = COMCHK.CHKITEMCD
     LEFT JOIN MSTWARE
       ON MSTWARE.WARECD = COMCHK_GROUP.CHKWARECD
-    INNER JOIN (SELECT CHKGROUPKEY, SUM(IF(CHKAPPYN != 'Y', 1, 0)) AS COUNT_N
-                FROM COMCHK
-                GROUP BY CHKGROUPKEY) AS COMCHK_COUNT
-      ON COMCHK_COUNT.CHKGROUPKEY = COMCHK_GROUP.CHKGROUPKEY
     WHERE COMCHK_GROUP.CHKDATE BETWEEN $SDATE AND $EDATE
       AND COMCHK_GROUP.CHKWARECD = $WARECD
       AND MSTITEM.ITEMCG LIKE CONCAT($ITEMCG, '%')
@@ -74,7 +71,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     INNER JOIN MSTITEM
       ON MSTITEM.ITEMID = COMCHK.CHKITEMCD
     WHERE COMCHK.CHKGROUPKEY = $CHKGROUPKEY
-    GROUP BY COMCHK.CHKITEMCD
+    GROUP BY COMCHK.CHKKEY
     ORDER BY MSTITEM.ITEMCG, MSTITEM.ITEMCD;
 
   -- *****************************************************************************
@@ -90,12 +87,8 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 
     SELECT MSTITEM.ITEMID, MSTITEM.ITEMCD, MSTITEM.ITEMCG, MSTITEM.ITEMNM
     FROM MSTITEM
-    INNER JOIN COMLOT
-      ON COMLOT.ITEMID = MSTITEM.ITEMID
-     AND COMLOT.LOTQTY > 0
-    WHERE IF($ITEMCG = '', 1 = 1, MSTITEM.ITEMCG = $ITEMCG)
-      AND IF($WARECD = '', 1 = 1, COMLOT.WARECD = $WARECD)
-    GROUP BY MSTITEM.ITEMID
+    WHERE ($ITEMCG = '' OR MSTITEM.ITEMCG = $ITEMCG)
+      AND EXISTS (SELECT LOTKEY FROM COMLOT WHERE COMLOT.ITEMID = MSTITEM.ITEMID AND COMLOT.LOTQTY > 0 AND ($WARECD = '' OR COMLOT.WARECD = $WARECD))
     ORDER BY MSTITEM.ITEMCD, MSTITEM.ITEMCG, MSTITEM.ITEMNM;
 
   -- *****************************************************************************
@@ -109,7 +102,18 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     CALL IO_COMCHK_DEL($CHKGROUPKEY, $CHKKEYLIST);
 
   -- *****************************************************************************
-  WHEN 'COMCHK_CONFIRM' THEN -- 실사승인
+  WHEN 'COMCHK_CONFIRM' THEN -- 실사승인 (선택한 품목 중 이미 승인된 품목이 있으면 아무것도 승인하지 않음)
+
+    SET _$KEYLIST = $CHKKEYLIST;
+
+    WHILE LENGTH(_$KEYLIST) > 0 DO
+      CALL COMSPLIT(_$KEYLIST, _$CHKKEY);
+
+      IF (SELECT CHKAPPYN FROM COMCHK WHERE CHKKEY = _$CHKKEY) = 'Y' THEN
+        CALL COMERR('이미 승인된 품목이 선택되어 있습니다.\n승인된 품목을 선택 해제한 후 다시 승인해주세요.');
+        LEAVE PROC;
+      END IF;
+    END WHILE;
 
     WHILE LENGTH($CHKKEYLIST) > 0 DO
       CALL COMSPLIT($CHKKEYLIST, _$CHKKEY);
@@ -118,7 +122,18 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     END WHILE;
 
   -- *****************************************************************************
-  WHEN 'COMCHK_CANCEL' THEN -- 실사승인 취소 (전산재고 원복 후 로트 실사수량도 입력 전으로 초기화)
+  WHEN 'COMCHK_CANCEL' THEN -- 실사승인 취소 (선택한 품목 중 미승인 품목이 있으면 아무것도 취소하지 않음, 전산재고 원복 후 로트 실사수량도 입력 전으로 초기화)
+
+    SET _$KEYLIST = $CHKKEYLIST;
+
+    WHILE LENGTH(_$KEYLIST) > 0 DO
+      CALL COMSPLIT(_$KEYLIST, _$CHKKEY);
+
+      IF IFNULL((SELECT CHKAPPYN FROM COMCHK WHERE CHKKEY = _$CHKKEY), '') <> 'Y' THEN
+        CALL COMERR('승인되지 않은 품목이 선택되어 있습니다.\n승인되지 않은 품목을 선택 해제한 후 다시 취소해주세요.');
+        LEAVE PROC;
+      END IF;
+    END WHILE;
 
     CALL IO_COMCHK_CANCEL($CHKGROUPKEY, $CHKKEYLIST);
 

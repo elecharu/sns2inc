@@ -314,6 +314,55 @@ PROC: BEGIN
       ORDER BY MSTWARE.WARECD;
 
 -- *****************************************************************************  
+-- *****************************************************************************  
+  ELSEIF $GPCD = 'WARECD_HQ' THEN -- 2026-11-12 사내 수불 창고 (POP 창고이동 콤보: 공정+본사 창고, 본사+제품 창고)
+
+    SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
+      FROM MSTWARE
+      WHERE MSTWARE.USEYN = 'Y'
+        AND CASE 
+              WHEN $REF01 = '' THEN MSTWARE.FACTORYCD = '07' 
+              ELSE MSTWARE.FACTORYCD LIKE CONCAT('%', $REF01, '%')
+            END
+        AND ((MSTWARE.PRCYN = 'Y' AND MSTWARE.HEADYN = 'Y') OR (MSTWARE.HEADYN = 'Y' AND MSTWARE.PRODYN = 'Y'))
+      ORDER BY MSTWARE.WARECD;
+
+-- *****************************************************************************  
+  ELSEIF $GPCD = 'WARECD_FAC_OUT' THEN -- 2026-11-12 사업장 간 이동 출고창고 (2공장 : 공정+본사 창고 + 제품창고)
+
+    SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
+      FROM MSTWARE
+      WHERE MSTWARE.USEYN = 'Y'
+        AND MSTWARE.FACTORYCD = '07'
+        AND ((MSTWARE.PRCYN = 'Y' AND MSTWARE.HEADYN = 'Y') OR MSTWARE.WARECD = '04S200_N')
+      ORDER BY MSTWARE.WARECD;
+
+-- *****************************************************************************  
+  ELSEIF $GPCD = 'WARECD_FAC_IN' THEN -- 2026-11-12 사업장 간 이동 입고창고 (1공장 : 공정+본사 창고 + 제품창고)
+
+    SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
+      FROM MSTWARE
+      WHERE MSTWARE.USEYN = 'Y'
+        AND MSTWARE.FACTORYCD = '06'
+        AND ((MSTWARE.PRCYN = 'Y' AND MSTWARE.HEADYN = 'Y') OR MSTWARE.WARECD = '01S200_N')
+      ORDER BY MSTWARE.WARECD;
+-- *****************************************************************************  
+  ELSEIF $GPCD = 'WARECD_MM_OUT' THEN -- 2026-11-12 원자재 이동(TML1020_R06) 출고창고 : 자재창고(원자재), 재공품창고
+
+    SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
+      FROM MSTWARE
+      WHERE MSTWARE.USEYN = 'Y'
+        AND MSTWARE.WARECD IN ('04S100_N', '04S131_N')
+      ORDER BY MSTWARE.WARECD;
+
+-- *****************************************************************************  
+  ELSEIF $GPCD = 'WARECD_MM_IN' THEN -- 2026-11-12 원자재 이동(TML1020_R06) 입고창고 : 자재투입창고
+
+    SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
+      FROM MSTWARE
+      WHERE MSTWARE.USEYN = 'Y'
+        AND MSTWARE.WARECD = '04S111_N'
+      ORDER BY MSTWARE.WARECD;
   ELSEIF $GPCD = 'WARECD_GOOD' THEN
     
     SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
@@ -343,7 +392,18 @@ PROC: BEGIN
         AND BAD_YN = 'Y'
         AND CUSTCD = ''
       ORDER BY MSTWARE.WARECD;
-
+-- *****************************************************************************
+  ELSEIF $GPCD = 'WARECD_REWORK_OUT' THEN -- 2026-11-11 불량 양품전환(TML3001_R01) 출고창고 : 재공불량창고, 제품불량창고
+    SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
+      FROM MSTWARE
+      WHERE MSTWARE.WARECD IN ('04S130_N', '04S230_N')
+      ORDER BY MSTWARE.WARECD;
+-- *****************************************************************************
+  ELSEIF $GPCD = 'WARECD_REWORK_IN' THEN -- 2026-11-11 불량 양품전환(TML3001_R01) 입고창고 : 재공품창고, 제품창고
+    SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
+      FROM MSTWARE
+      WHERE MSTWARE.WARECD IN ('04S131_N', '04S200_N')
+      ORDER BY MSTWARE.WARECD;	      
 -- *****************************************************************************  
   ELSEIF $GPCD = 'MTRIN_WARECD' THEN    
     

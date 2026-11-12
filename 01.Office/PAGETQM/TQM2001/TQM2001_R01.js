@@ -38,9 +38,6 @@ ItsPage.Load = function () {
         column.create('후처리', 'PROCYN', { width: 55, columnType: enumColumnTypes.check }),
         column.split()
     ]);
-
-    ItsDateRange.SetValueFrom('dr_DATE', ItsHelper.AddDay(-30, ItsHelper.GetYearMonthDay()));
-    ItsDateRange.SetValueTo('dr_DATE', ItsHelper.GetYearMonthDay());
 };
 
 /* 조회 */
@@ -129,6 +126,17 @@ ItsGrid.Event('grid2').onKeydownEnter = function (rowIndex, field) {
             ItsGrid.SetValue('grid2', rowIndex, 'BADNM', res['NAME']);
             ItsGrid.CheckRow('grid2', rowIndex);
         });
+    }
+};
+
+/* 판정자코드·발생내용코드를 지우면 이름도 지움 */
+ItsGrid.Event('grid2').onChanged = function (rowIndex, field, newValue) {
+    if (newValue != undefined && newValue != '') return;
+
+    if (field == 'EMPCD') {
+        ItsGrid.SetValue('grid2', rowIndex, 'EMPNM', '');
+    } else if (field == 'BADCD') {
+        ItsGrid.SetValue('grid2', rowIndex, 'BADNM', '');
     }
 };
 

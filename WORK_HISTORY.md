@@ -1,8 +1,8 @@
-# MES 프로젝트 작업 이력 및 변경 관리 대장 (Work History)
+﻿# MES 프로젝트 작업 이력 및 변경 관리 대장 (Work History)
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-11-11
+> **최종 갱신일**: 2026-11-12
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -13,6 +13,47 @@
 2. **주석 및 네이밍 표준**: 소스코드에는 `// YYYY-MM-DD 기능설명` 표준을 준수하며, 본 문서에는 원인 분석, 설계 의도, 수정 파일 링크를 명시합니다.
 3. **컴파일 및 빌드 검증**: 소스 수정 후에는 반드시 컴파일 빌드 무결성(MSBuild 등)을 확인하고 그 결과를 기재합니다.
 4. **대화 기록 및 불러오기 연계**: 모든 사용자 요청 및 작업 결과는 본 문서에 실시간 동기화되어, 새 세션이나 나중에 작업 재개 시 "불러오기"를 통해 이전 맥락을 100% 이어받습니다.
+
+---
+
+## 🕒 2026-11-12 (목) 작업 내역
+
+### 2. 프로시저 5종 헤더 및 내부 주석 간소화
+- **수정/대상 파일**: 05.Procedure/MES_SNS2_LOT1003_R01.sql, 05.Procedure/MES_SNS2_LOT1003_S01.sql, 05.Procedure/MES_SNS2_IO_COMCHK_CONFIRM.sql, 05.Procedure/MES_SNS2_IO_COMCHK_CANCEL.sql, 05.Procedure/MES_SNS2_TAL1600_R01.sql
+- **배경 및 원인**: 프로시저 헤더 이력 및 내부 주석에 장황한 개발자 서술 및 괄호 설명 누적으로 가독성 저하
+- **작업 상세 내용**:
+  - 장황한 괄호 설명 및 다중 행 로직 주석을 배제하고 정확한 기능 명칭 위주 단일 행으로 정돈
+- **검증 결과**: UTF-8 without BOM, CRLF 줄바꿈 검증 완료
+
+
+### 1. 태블릿 TAL1600_R01 재고실사 등록 신규 (SEA PDA1600_R01 기반)
+- **수정/대상 파일**: [01.Office/PAGETAL/TAL1600/TAL1600_R01.aspx](01.Office/PAGETAL/TAL1600/TAL1600_R01.aspx)·[.aspx.cs](01.Office/PAGETAL/TAL1600/TAL1600_R01.aspx.cs)·[.js](01.Office/PAGETAL/TAL1600/TAL1600_R01.js)·[.css](01.Office/PAGETAL/TAL1600/TAL1600_R01.css)(신규), [05.Procedure/MES_SNS2_TAL1600_R01.sql](05.Procedure/MES_SNS2_TAL1600_R01.sql)(신규), [05.Procedure/MES_SNS2_TAL1600_R01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_TAL1600_R01_SYSTEM_PARAMETERS.sql)(신규)
+- **배경**: LOT1003_R01에서는 실사수량을 입력하지 않고 태블릿에서 등록하기로 함. SEA PDA 재고실사(PDA1600_R01) 흐름을 태블릿 UI로 구성. 시안 4개(3단 분할·목록+큰 팝업·스캔 중심·단계형) 중 사용자 선택: 목록 + 큰 팝업(기존 TAL 화면 방식)
+- **화면**
+  - 메인: 창고(필수) + [실사지시 조회], 실사지시 그리드(실사일자·창고·실사명·품목 수·등록 로트·전체 로트·[실사 등록] 버튼). [실사지시 조회]를 눌러야 조회 (후속: 처음에는 화면 열 때 조회해 창고 빈 값으로 '창고를 지정하세요.'가 바로 떠서 자동 조회 제거). 후속: [실사지시 조회] 버튼 높이를 창고 콤보와 맞춤(Height 50 → 40, MarginTop 10 → 9; 버튼 바깥 여백 1px 때문), 실측 콤보·버튼 모두 위 10px·아래 50px
+  - 후속(등록 창 상단 정보·정렬): 로트를 눌렀을 때 창고·품목코드를 정확히 보이도록 상단을 3줄·3칸으로 재배치
+    - 1줄 LOT 스캔 / 실사 수량 / [등록], 2줄 창고 / 품목코드 / 로트번호, 3줄 품명 / 재고수량 / 실사수량 (칸 폭 라벨 90 + 입력 380·220·160, [등록]은 3칸 라벨 시작~입력 끝 폭 273), TopHeightPc 24 → 29
+    - JS: 창고는 실사지시 창고명, 품목코드·품명은 선택 품목, 로트번호는 로트 그리드에서 선택한 행. 스캔·등록·삭제 후 로트 재조회 때 해당 로트를 다시 선택(_SELLOTKEY)
+    - 후속: 로트를 눌러도 재고수량·실사수량이 품목 합계로 고정 → 로트 선택 시 그 로트의 재고(LOTQTY)·실사(SCANQTY)를 천 단위 쉼표로 표시. 품목 합계는 로트 조회 전에 먼저 넣고 로트 선택 이벤트가 덮어쓰도록 순서 변경(브라우저에서 시험 행 선택 시 1,200 / 0 표시 확인)
+    - 후속: LOT 빈 값으로 [등록] 시 '존재하지 않는 로트번호입니다.' 표시(공통 IO_COMCHKLOT_ADD가 원본 순서대로 존재 확인을 빈 값 확인보다 먼저 함) → 화면 프로시저 COMCHKLOT_ADD 맨 앞에 빈 값 확인 'LOT를 입력해주세요.' 추가, COMCHKLOT_SCAN 빈 값 문구도 같게(공통 모듈 미수정). IF 11쌍·파라미터 7 확인, DB 재저장 필요
+    - 후속(점검 1~3번 수정)
+      - 1) 실사 수량 칸에 LOT 바코드 입력: 수량 칸 키 입력에 영문(A~Z)이 있으면 표시해 두고 [등록]·엔터 시 저장하지 않고 'LOT 바코드가 입력되었습니다' 안내 후 스캔한 로트의 전산재고로 되돌림. 함께 발견: 공통 ItsNum.Focus가 숨은 입력칸을 잡아 스캔 후 커서가 수량 칸으로 가지 않고 LOT 칸에 남아 다음 바코드가 뒤에 붙음 → 화면 함수 QTY_FOCUS(보이는 칸을 통해 이동, 값 전체 선택)로 변경(공통 미수정). 숫자로만 된 LOT 바코드는 감지 못 함
+      - 2) 음수 수량: 프로시저 COMCHKLOT_ADD에서 '실사 수량은 0 이상으로 입력해주세요.' (IF 12쌍)
+      - 3) 스캔 오류 후: 확인을 누르면 LOT·수량 칸을 비우고 LOT 칸으로 커서. 세션 만료·접속 오류는 기존 공통 처리(로그인 안내) 유지
+      - 브라우저 모의 검증(서버 응답 대체): 1) 프로시저 미호출·안내·수량 500 복원·수량 칸 커서와 값 선택, 3) LOT 칸 빈 값·LOT 칸 커서, 세션 만료 시 공통 로그인 안내. 미확인: 로그인 상태 실제 스캔·등록, 실제 스캐너
+    - 후속(스캔 후 커서 없음): 사용자 요청으로 스캔 후 실사 수량 칸에 커서를 두지 않고 아무것도 선택되지 않게(전산재고는 수량 칸에 미리 표시), 수량은 사용자가 직접 눌러 입력. [등록] 후·스캔 오류 확인 후·창 열 때는 LOT 칸 커서 유지. 사용자가 [등록]의 바코드 감지 확인을 지운 상태라 남은 감지 코드(_QTYBARCODE·onKeyDown)와 QTY_FOCUS·_SCANLOTQTY 제거. 커서가 없으므로 수량 입력 전 다음 바코드를 찍으면 입력이 버려짐(이전처럼 LOT 뒤에 붙지 않음). 브라우저 모의 검증: 스캔 후 포커스 BODY, 수량 500 표시
+    - 워크플로 점검 결과(1~3번은 위에서 수정, 4~8번 미수정): 스캔 후 커서가 실사 수량에 있을 때 다음 LOT 스캔 시 숫자만 남아 잘못된 수량으로 등록(ItsNum이 숫자·.·-만 남김), 음수 수량 저장 가능, 수량 빈칸 0 등록, LOT 스캔 칸과 선택 로트 불일치, 스캔 오류 후 칸에 값이 남아 다음 스캔이 뒤에 붙음, 미등록 로트 [삭제]가 아무 변화 없이 성공, 등록 완료 안내 없음, 실사지시에 없는 실물 로트 등록 불가
+    - 브라우저 실측(1280×800): 라벨 시작 60·573.3·926.7, 입력칸 173.3~553.3·686.7~906.7·1040~1200으로 3줄 일치, [등록] 926.7~1199.7
+  - 등록 창(1200×640): 상단 LOT 스캔·실사 수량·[등록], 선택 품목 품명·재고수량·실사수량 / 왼쪽 실사품목(품목코드·품명·재고·실사·등록 로트, 행 색 흰색 미실사·초록 일치·분홍 차이) / 오른쪽 선택 품목 로트(로트번호·재고·실사·스캔시간·[삭제])
+  - PDA 팝업 2개(재고실사 등록·재고실사 조회)를 등록 창 하나로 합침. 창 닫으면 실사지시 진행 재조회
+- **흐름(원본 PDA와 동일)**: LOT 스캔 엔터 → 확인 후 전산재고를 실사 수량에 표시·해당 품목 자동 선택 → 수량 엔터 또는 [등록] → IO_COMCHKLOT_ADD → 재조회·입력칸 초기화 / [삭제] → 확인창 → IO_COMCHKLOT_DEL(실사수량 0·스캔정보 초기화)
+- **프로시저 TAL1600_R01** (파라미터 7: WARECD, CHKGROUPKEY, CHKKEY, LOTKEY, CHKQTY, CALLTYPE, KEYWORD)
+  - LIST_COMCHK_GROUP(창고 미지정 '창고를 지정하세요.', 미승인 실사지시·미승인 품목), LIST_COMCHK, LIST_COMLOT(로트 + 품목 합계 2결과), COMCHKLOT_SCAN, COMCHKLOT_ADD, COMCHKLOT_DEL — 원본 PDA1600_R01과 같은 호출 구분
+  - 원본 IO_COMCHKLOT_SCAN 확인 내용(창고·존재 LOT·실사품목 LOT·재고 0·이미 등록)을 COMCHKLOT_SCAN에 포함(로트 입력만 모듈화 결정에 따라 SCAN 모듈 미생성). 원본 오류문의 미정의 $WARECD는 실사지시 창고로
+  - 추가 확인: 실사지시에 없는 LOT(실사지시 이후 생성·승인 후 정리된 로트)은 원본에서는 오류 없이 아무것도 저장되지 않아 등록된 것처럼 보였으므로 SCAN·ADD에서 '실사지시에 없는 LOT입니다.' 안내
+  - SNS2 대응: 품목 ITEMID(COMCHK.CHKITEMCD = MSTITEM.ITEMID), 창고명 MSTWARE, 품목 정렬 ITEMCG·ITEMCD(원본 ITEMNUM 없음)
+- **검증**: JS 구문, 프로시저 파라미터 7·CASE 1쌍·IF 10쌍·CASE WHEN 2쌍, 인코딩(aspx·cs·js·css BOM+CRLF, sql BOM 없음+CRLF). 로컬 IIS Express 화면 렌더링 확인(1280×800): 메인·등록 창 배치, 그리드 열이 좌우 폭 안에 들어가도록 열 폭 조정. 미확인: DB 연결 설정이 localhost:33061로 바뀌어 연결 불가(실DB 조회 검증 못 함), 로그인 세션 없어 실제 조회·스캔·등록 동작, MariaDB 컴파일
+- **적용 순서**: MES_SNS2_TAL1600_R01.sql 저장 → MES_SNS2_TAL1600_R01_SYSTEM_PARAMETERS.sql 실행(정상 7건) → 태블릿 메뉴(SYSMENU PKGTP 'TAL')에 TAL1600_R01 등록·권한 부여
 
 ---
 
@@ -108,6 +149,31 @@
 - **후속 수정 (2026-11-12, 재고조정 97 제외)**: 97은 기타입고·출고(IO_ETC_IN·OUT)를 거쳐 2공장 ERP로 송신되므로 이력조회는 실사 08만 고려하기로 함
   - LOT1003_S01: 입고 COMIN.INTP = '08' → 행위구분 '실사입고', 출고 COMOUT.OUTTP = '08' → '실사출고'(97 분기·조건 제거), 변동없음 그대로. 조정사유는 COMIN·COMOUT.REMARK 유지(실사 승인은 REMARK를 넣지 않아 빈칸)
   - 검증: 파라미터 7·CASE 1쌍, 실DB 읽기 전용 실행 오류 없음(현재 0건 — 승인된 실사 없음), BOM 없음·CRLF 유지. DB 반영 필요: LOT1003_S01 재저장(파라미터 변동 없음)
+- **후속 수정 (2026-11-12, 승인 시 이미 승인된 품목 섞임)**: 미승인·승인 품목을 함께 선택해 승인하면 미승인 품목은 승인되고 '이미 승인되었습니다.'가 표시됨. 원인: COMCHK_CONFIRM이 품목마다 IO_COMCHK_CONFIRM을 호출하는데, 승인된 품목의 오류는 그 품목만 건너뛰고(COMERR + LEAVE는 IO 프로시저만 빠져나옴) 루프가 계속 돌아 나머지 품목이 승인됨
+  - LOT1003_R01 COMCHK_CONFIRM: 승인 루프 전에 선택 목록 복사본(_$KEYLIST)을 먼저 돌며 CHKAPPYN = 'Y' 품목이 하나라도 있으면 '이미 승인된 품목이 선택되어 있습니다.' + 품목코드 표시 후 LEAVE PROC → 아무것도 승인하지 않음. 공통 IO_COMCHK_CONFIRM·JS는 변경 없음
+  - 검증: IF 2쌍·WHILE 4쌍, BOM 없음·CRLF 유지, 파라미터 변동 없음(12). 미확인: MariaDB 컴파일, 화면 동작(DB 접속 불가). DB 반영 필요: LOT1003_R01 재저장
+  - 승인취소도 같은 방식으로 수정: 승인·미승인 품목을 함께 취소하면 IO_COMCHK_CANCEL 루프에서 앞 품목은 취소되고 미승인 품목에서 '승인시간이 비었습니다.'로 멈춤(부분 취소). 이후 로트 초기화는 IO_COMCHKLOT_DEL이 @ERRMSG가 있으면 실행되지 않아 미승인 품목 실사 등록은 지워지지 않음
+  - LOT1003_R01 COMCHK_CANCEL: IO_COMCHK_CANCEL 전에 선택 목록 복사본을 돌며 CHKAPPYN <> 'Y' 품목이 있으면 '승인되지 않은 품목이 선택되어 있습니다.' + 품목코드 표시 후 LEAVE PROC → 아무것도 취소하지 않음. 승인 후 입출고 발생으로 인한 취소 불가는 기존대로 IO_COMCHK_CANCEL에서 확인
+  - 검증: IF 3쌍·WHILE 5쌍, BOM 없음·CRLF 유지(sed 수정 후 CRLF 복원), 파라미터 변동 없음(12). 미확인: MariaDB 컴파일, 화면 동작
+- **후속 수정 (2026-11-12, 이력조회 조정사유 제외)**: 현업에서 필요 없다고 하여 LOT1003_S01 조정사유 컬럼 삭제
+  - S01.js: 그리드 '조정사유'(ADJUSTWHY) 컬럼 삭제. S01 프로시저: UNION 3개 분기의 ADJUSTWHY(변동없음 '', COMIN·COMOUT.REMARK) 삭제, 헤더 문구 '조정사유 컬럼 제외'로 변경
+  - 검증: JS 구문, 잔여 ADJUSTWHY 없음, 인코딩(JS BOM+CRLF, sql BOM 없음+CRLF), 파라미터 변동 없음(7). 미확인: MariaDB 컴파일, 화면 동작. DB 반영 필요: LOT1003_S01 재저장
+- **최종 검토·최적화 (2026-11-12, INTP·OUTTP 08만 사용)**: 재고실사 프로시저 9개(LOT1003_R01·S01, IO_COMCHK_ADD·DEL·CONFIRM·CANCEL, IO_COMCHKLOT_ADD·DEL, TAL1600_R01) 검토
+  - 08 외 INTP·OUTTP 참조: 실행 코드에는 없음(IO_COMCHK_CONFIRM 08 고정). S01 헤더 주석의 97 문구만 삭제
+  - LOT1003_S01: UNION ALL 3개(COMCHKLOT 변동없음 + COMIN 08 + COMOUT 08) → 실사로트 기준 단일 조회 + CASE. 실사입고·출고는 승인 시 로트 차이(실사 - 전산)로 생성되고 COMIN·COMOUT에도 CHKKEY가 있으므로 같은 값: 발생일자 = 승인일자(LEFT(CHKAPPTIME,10), GETDATE와 같은 시점), 수량 = |차이|, 관리자 = 승인자(CHKAPPEMP = COMINLOT·COMOUTLOT.REMP). 승인 후 실사로트는 바뀌지 않음(태블릿·R01 모두 미승인만 수정, 취소 시 COMIN·COMOUT 삭제·CHKAPPYN N). 전체 입출고 테이블(COMIN·COMOUT) 조회 제거. 변동없음에도 품목 조건 적용(기존 누락)
+  - LOT1003_R01: 승인완료(DONEYN)를 전체 COMCHK 집계 파생테이블 → 해당 그룹 미승인 EXISTS로, LIST_COMCHK GROUP BY CHKITEMCD → CHKKEY(기본키), 재고품목 조회 JOIN COMLOT + GROUP BY + IF(…,1=1,…) → EXISTS + ( '' OR = ) 조건
+  - IO_COMCHK_CONFIRM: 임시테이블 TEMP_COMCHKLOT + 라벨 루프 2개(while_A·B, ITERATE) → 차이 있는 로트만 GROUP_CONCAT(ORDER BY CHKLOTKEY) 후 루프 1회(실사키별 로트는 COMLOT 창고·로트 기준 1건이라 합산 불필요). 다른 IO 프로시저처럼 @ERRMSG 확인 추가(앞 품목 오류 시 이후 품목 처리 안 함), 실사키 존재 확인 추가, GETKEY는 확인 통과 후 발급, 그룹 승인 판단 COUNT 2회 → NOT EXISTS, 미사용 변수(_$OLDQTYLIST·_$CHKQTYLIST·_$CHKQTY·_$COUNT_Y·_$COUNT_ALL) 삭제
+  - TAL1600_R01 COMCHKLOT_SCAN: 로트 존재 확인과 품목ID 조회를 1회로 합침
+  - 변경 없음: IO_COMCHK_ADD·DEL·CANCEL, IO_COMCHKLOT_ADD·DEL(공통 프로시저, 구조상 문제 없음)
+  - 검증: IF·WHILE·CASE 짝, 괄호 짝, 미사용 변수 없음, 파라미터 R01 12·S01 7·TAL1600 7·CONFIRM 1(변동 없음), BOM 없음·CRLF(sed 후 복원). 미확인: MariaDB 컴파일, 실데이터 결과 비교(DB localhost:33061 접속 불가). DB 반영 필요: LOT1003_R01·LOT1003_S01·IO_COMCHK_CONFIRM·TAL1600_R01 재저장
+- **후속 수정 (2026-11-12, 승인·취소 품목 미선택 안내)**: LOT1003_R01.js 승인·취소 버튼에서 확인창 전에 상단 오른쪽 실사품목 그리드(grid2) 체크 여부를 공통 ItsGrid.HasChecked로 확인, 없으면 '승인할 품목을 선택하세요.' / '취소할 품목을 선택하세요.' 안내 후 중단(기존에는 확인창 후 빈 목록으로 아무 처리 없이 재조회)
+  - 검증: JS 구문, BOM+CRLF 유지. 미확인: 화면 동작(Ctrl+F5 후 확인 필요)
+- **후속 수정 (2026-11-12, 이력조회 행위구분 재고정정)**: 사용자 요청으로 LOT1003_S01 행위구분을 모든 행 '재고정정' 상수로, 입출고구분을 변동없음·입고·출고로 변경(분기가 모두 같은 값이던 CASE를 상수로 정리, 정렬에서 ACTION 제외). 사용자가 정리한 헤더·주석은 그대로 둠
+  - 검토: 현재 조회는 COMIN·COMOUT 08을 읽지 않고 실사로트 차이로 계산. 06.Table DDL 기준 COMIN·COMOUT에 CHKKEY 인덱스는 없고 INTP·OUTTP 인덱스는 있음 → 08 기준으로 하려면 UNION 없이 COMIN·COMOUT(08)·LOT를 LEFT JOIN하는 단일 조회 가능(실사키별 08 입고·출고 최대 1건이라 행 중복 없음). 적용 여부 사용자 확인 대기
+- **후속 수정 (2026-11-12, 이력조회 원본 구조로 재정리)**: 사용자가 원본 SEA LOT1003_S01 소스를 주며 그 방식으로 다시 정리 요청 → 실사로트 기준 CASE 단일 조회를 되돌리고 원본처럼 UNION ALL 3개(실사로트 변동없음 + COMIN 08 입고 + COMOUT 08 출고)로 구성
+  - 원본 대비 SNS2 변경: 원본 실사입고 INTP '07'·재고조정 '97' → 실사 08만, ITEMCD·ITEMTP → ITEMID·ITEMCG, GPCD('WARECD') → MSTWARE, 조정사유(ADJUSTWHY) 제외, 행위구분 '재고정정'·입출고구분 변동없음·입고·출고(직전 사용자 결정 유지), 정렬에서 상수인 ACTION 제외
+  - 정리: 변동없음의 LEFT JOIN COMCHKLOT은 WHERE 조건 때문에 사실상 INNER라 INNER JOIN으로, 입고·출고 LOT도 로트 컬럼을 쓰므로 INNER JOIN. 원본에서 빠져 있던 변동없음의 품목 조건 추가. 헤더 문구를 원본 구조 유지로 수정
+  - 검증: 괄호 짝, SELECT 3·UNION ALL 2, 파라미터 7(변동 없음), BOM 없음·CRLF. 미확인: MariaDB 컴파일, 실데이터 결과(DB 접속 불가). DB 반영 필요: LOT1003_S01 재저장
 
 ### 9. COMCHK 테스트 데이터(260818…) 미조회 원인 확인 (읽기 전용)
 
@@ -4094,6 +4160,7 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **완료** | 05.Procedure/MES_SNS2_LOT1003_R01.sql, 05.Procedure/MES_SNS2_LOT1003_S01.sql, 05.Procedure/MES_SNS2_IO_COMCHK_CONFIRM.sql, 05.Procedure/MES_SNS2_IO_COMCHK_CANCEL.sql, 05.Procedure/MES_SNS2_TAL1600_R01.sql | - | UTF-8 without BOM, CRLF 줄바꿈 검증 완료 |
 | **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js) | MST1005_S01 계산구분 빈 항목 높이 수정 | 실제 wijmo 5.20203.748 테스트 페이지에서 항목 높이 빈 문자열 7px → 공백 문자 30px(다른 항목과 동일), 선택 값 빈 값, 그리드 표시·값 정상 확인, JS 구문 검사, 인코딩 확인. 미확인: 실제 화면 |
 | **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js) | MST1005_S01 계산구분 콤보 표시 오류 수정 | 실제 wijmo 5.20203.748로 만든 테스트 페이지에서 @ 방식 표시 오류 재현(목록 ["",null,null,null]) 및 수정 방식 확인(목록 ["",고장건수,수리시간,사용개월], 그리드 표시 고장건수·사용개월, 빈 항목 선택 시 값·표시 빈 값), JS 구문 검사, 인코딩 확인. 미확인: 실제 화면 |
 | **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js), [05.Procedure/MES_SNS2_MST1005_S01.sql](05.Procedure/MES_SNS2_MST1005_S01.sql) | MST1005_S01 계산구분 공백 항목의 최소·최대값 숨김 및 저장 시 비움 | Node 모의 테스트(계산구분 유무별 컬럼 숨김/표시, 선택 행 계산구분 변경 즉시 반영, 다른 행·다른 칸 변경 무시) 통과, 비움 대상·계산구분 조회 SQL 실DB 읽기 실행(현재 대상 0건, 경고 0건), IF 42/42 정적 점검, 인코딩 확인. 미확인: 프로시저 컴파일·실제 화면 |
