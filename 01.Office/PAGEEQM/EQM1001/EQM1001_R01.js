@@ -56,13 +56,6 @@ ItsPage.Load = function () {
     REPIMG_LIST('');
 };
 
-// 공장 변경 시 작업장·설비구분·설비대분류 콤보 갱신
-ItsCombo.Event('cmb_FACTORYCD').onChanged = function (value) {
-    ItsCombo.SetRef01('cmb_LINECD', value || '');
-    ItsCombo.SetRef10('cmb_EQMTP', value || '');
-    ItsCombo.SetRef10('cmb_EQMGROUP1', value || '');
-};
-
 /* 조회 */
 ItsButton.EventSearch = function () {
     ItsGrid.Clear('grid2');

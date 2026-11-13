@@ -18,7 +18,28 @@
 
 ## 🕒 2026-11-13 (금) 작업 내역
 
+### 2. [EQM1001_R01] LIST_EQMREP 공장 조건식 정리
+
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql
+- **배경 및 원인**: WHEN LIST_EQMREP THEN 상단에서 SET  = '07'로 고정함에 따라 WHERE절의 불필요한 공백 OR 분기 제거 필요
+- **배경 및 원인**: `WHEN 'LIST_EQMREP' THEN` 상단에서 `SET $FACTORYCD = '07';`로 고정함에 따라 `WHERE`절의 불필요한 공백 OR 분기 제거 필요
+- **작업 상세 내용**:
+  - WHERE절 조건을 AND MSTEQM.FACTORYCD =  정리
+  - `WHERE`절 조건을 `AND MSTEQM.FACTORYCD = $FACTORYCD`로 정리
+- **검증 결과**: SQL diff 및 UTF-8 무BOM+CRLF 검증 완료
+
+### 2. [EQM1001_R01] 공장 검색 콤보 제거 및 프로시저 2공장 기본값 적용
+
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql
+- **배경 및 원인**: 2공장 전용 화면에서 공장 선택 콤보박스 필터링을 제거하고 프로시저 측에 2공장(07) 기본값 적용 필요
+- **작업 상세 내용**:
+  - EQM1001_R01.aspx에서 cmb_FACTORYCD 컨트롤 제거(작업장·설비구분·설비대분류 REF01/REF10='07' 유지), EQM1001_R01.js에서 cmb_FACTORYCD.onChanged 이벤트 제거, MES_SNS2_EQM1001_R01.sql LIST_EQMREP 조건을 IF(IFNULL(\, '') = '', '07', \)로 변경
+- **검증 결과**: node --check 통과, 3개 파일 BOM/UTF-8/CRLF 검증 및 git diff 확인 완료
+  - `EQM1001_R01.aspx`에서 `cmb_FACTORYCD` 컨트롤 제거(작업장·설비구분·설비대분류 `REF01`/`REF10='07'` 유지), `EQM1001_R01.js`에서 `cmb_FACTORYCD.onChanged` 이벤트 제거, `MES_SNS2_EQM1001_R01.sql` `LIST_EQMREP` 조건을 2공장(`'07'`) 기준으로 변경
+- **검증 결과**: `node --check` 통과, 3개 파일 BOM/UTF-8/CRLF 검증 및 `git diff` 확인 완료
+
 ### 7. EQM1001_R01 설비 분류 필터 수정분 코드 스타일 검토·정리
+
 - **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js), [05.Procedure/MES_SNS2_EQM1001_R01.sql](05.Procedure/MES_SNS2_EQM1001_R01.sql)
 - **배경**: 사용자가 수정한 R01(검색 공장·작업장·설비구분·설비대분류, 그리드 열 4개, LIST_EQMREP 조건) 스타일 검토 요청. aspx 검색조건·그리드 콤보 열은 MST1002_R06과 같은 형식, 프로시저 Modify 1행·파라미터 주석·SYSTEM_PARAMETERS 등록(45건, 3~6번)은 관례대로 확인
 - **작업 상세 내용**
@@ -27,38 +48,39 @@
 - **검증**: node --check 통과, js BOM 1개·CRLF, sql BOM 없음·CRLF. js diff에는 기능 변경(열·콤보 연동)만 남음. 미확인: MariaDB 컴파일(Docker 꺼짐), 화면 동작·검색영역 폭
 
 ### 2. [EQM1001_R01] 인코딩(UTF-8 BOM) 복구 및 중복 이벤트 제거
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js
 - **배경 및 원인**: 01.Office/web.config에 globalization fileEncoding 설정이 없는 환경에서 .aspx/.js 파일의 UTF-8 BOM이 소실되어 CP949로 오인식되는 인코딩 오류 발생 및 cmb_FACTORYCD onChanged 이벤트 중복 잔여 코드 확인
 - **작업 상세 내용**:
   - EQM1001_R01.aspx와 EQM1001_R01.js에 단일 UTF-8 BOM(EF BB BF)과 CRLF 복원, EQM1001_R01.js의 중복 cmb_FACTORYCD.onChanged 블록 제거, SQL 2개 파일 UTF-8 무BOM+CRLF 검증
 - **검증 결과**: node --check 통과, 5개 대상 파일 BOM/UTF-8/CRLF 바이트 검증 통과, git diff 검증 완료
 
-
 ### 2. EQM1001_R01 조회 후 autoSizeColumns 적용 및 프로젝트 코드 스타일 통일
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js
 - **배경 및 원인**: 프로젝트 기존 화면과 동일한 이벤트 핸들러 작성 방식 적용 및 조회 완료 시 그리드 컬럼 폭 자동 맞춤 요청
 - **작업 상세 내용**:
   - ItsButton.EventSearch 내 grid1 autoSizeColumns() 호출 추가 및 ItsCombo.Event(cmb_FACTORYCD).onChanged 시그니처를 function (value) 형태로 정리
 - **검증 결과**: node --check 및 단일 UTF-8 BOM + CRLF 무결성 검증 완료
 
-
 ### 2. EQM1001_R01 상단 검색영역 설비 분류 필터 추가
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.Procedure/MES_SNS2_EQM1001_R01.sql, 05.Procedure/MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql
 - **배경 및 원인**: 그리드에 추가된 공장·작업장·설비구분·설비대분류 컬럼에 맞춰 상단 검색영역 필터링 기능 추가 요청
 - **작업 상세 내용**:
   - sdiv1 설비코드 앞에 FACTORYCD, LINECD, EQMTP, EQMGROUP1 콤보 추가 및 공장 변경 시 하위 콤보 연동, LIST_EQMREP 검색 조건 및 SYSTEM_PARAMETERS 스크립트 갱신
 - **검증 결과**: JS 구문검사(node --check) 및 전 파일 BOM/CRLF 무결성 검증 완료, DB 프로시저 및 SYSTEM_PARAMETERS 재등록 필요
 
-
 ### 2. EQM1001_R01 수리이력 그리드 설비 분류 컬럼 추가
+
 - **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.Procedure/MES_SNS2_EQM1001_R01.sql
 - **배경 및 원인**: 설비이력관리(EQM1001_R01) 메인 그리드에 설비코드·설비명 외 공장·작업장·설비구분·설비대분류 정보 표시 요청
 - **작업 상세 내용**:
   - grid1 설비코드 앞에 FACTORYCD(공장), LINECD(작업장), EQMTP(설비구분), EQMGROUP1(설비대분류) 콤보 컬럼 추가 및 LIST_EQMREP SELECT에 MSTEQM 컬럼 4종 반환 추가
 - **검증 결과**: JS 구문검사(node --check) 및 인코딩/CRLF 검증 완료, 실서버 프로시저 반영 필요
 
-
 ### 6. EQM1001_R06 TOP ISSUE 인쇄(R0602)에 그래프 페이지·확인란 추가
+
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R0602.cs](04.Report/PAGEEQM/EQM1001/R0602.cs), [04.Report/PAGEEQM/EQM1001/R0601.cs](04.Report/PAGEEQM/EQM1001/R0601.cs)
 - **배경**: TOP ISSUE 인쇄의 세부내용 뒤에 기존 그래프를 함께 출력하고, 그래프 우측 하단에 오늘 날짜·이름·사인 칸 요청. 시안 4종(가로 표형·한 줄 밑줄형·결재란형·세로 목록형) 중 사용자 선택: 결재란형. 성명은 빈칸(수기), 그래프 단독 인쇄(R0601)는 확인란 없이 그대로
 - **R0602**: 생성자에서 LIST_CHART(R0601과 같은 조회)도 호출, 세부내용 다음 페이지에 DRAW_GRAPH_PAGE: 제목 '■ {년}년 설비 고장율 현황' + 왼쪽 머리칸(설비 고장율/고장 건수) + 차트 2개(높이 350 → 315) + DRAW_SIGN(세로 '확인' 머리칸 26 + 일자 110(출력일 yyyy-MM-dd)·성명 90·서명 120, 머리 22·값 48, 기존 표와 같은 머리 색). Designer.cs 미변경(기존처럼 Detail에 코드로 배치)
@@ -67,6 +89,7 @@
 - **후속(고장 → 호출 문구)**: 아래 차트 왼쪽 머리칸 '고 장 건 수' → '호 출 건 수'(R0602.cs 그래프 페이지, R0601.Designer.cs lbl_SIDE2.Text 1행), 범례 '설비 고장횟수' → '설비 호출횟수'(R0601.cs 공용 차트). TOP ISSUE 표의 '고장 횟수' 열 등 표·세부내용 문구는 미변경. Rebuild 성공(0 Error, 기존 경고 1건), 실DB 출력 이미지(100dpi)로 머리칸·범례 확인, exe 2곳 배포(MD5 일치). 미확인: VS 디자이너 열기(Text 값만 변경)
 
 ### 5. 레포트 인쇄 'Unable to connect to any of the specified MySQL hosts' 오류
+
 - **수정/대상 파일**: [01.Office/Reports/ITS_CONFIG_MARIA.xml](01.Office/Reports/ITS_CONFIG_MARIA.xml), [04.Report/bin/ITS_CONFIG_MARIA.xml](04.Report/bin/ITS_CONFIG_MARIA.xml) (`--addr` 1행씩)
 - **원인**: 레포트 exe는 실행 폴더의 ITS_CONFIG_MARIA.xml로 DB에 접속. 2026-11-12 커밋 51fa63b(TQM3001 작업)에서 두 파일의 addr가 211.43.15.98 → localhost로 바뀌었고, 이 PC의 localhost:33061에는 DB가 없어 접속 실패. 웹 화면은 App_Code/ItsMaria.cs의 211.43.15.98(테스트서버)을 쓰므로 화면 조회는 정상이었음
 - **작업 상세 내용**: 두 파일의 addr만 웹과 같은 211.43.15.98로 되돌림(port·user·dbname·password 줄 미변경, BOM·줄바꿈 유지). 02.Site/AAABIN 설정(암호화)은 미변경
@@ -74,6 +97,7 @@
 - **함께 처리**: R0601.cs의 사용자 수정(차트 제목 고장건수 → 호출건수)이 4번 빌드 이후라 MSBuild 15.0 Release Rebuild 후 exe 재배포(04.Report/bin·01.Office/Reports, MD5 일치, 기존 R0602 경고 1건). 재출력에서 제목 '호출건수' 확인. 범례 계열명은 '설비 고장횟수' 그대로
 
 ### 4. EQM1001_R06 년 설비고장율 현황 차트 막대 연도별 색상
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R06.sql](05.Procedure/MES_SNS2_EQM1001_R06.sql) (`LIST_CHART`), [01.Office/PAGEEQM/EQM1001/EQM1001_R06.js](01.Office/PAGEEQM/EQM1001/EQM1001_R06.js)
 - **배경**: 연도 평균 6칸('21~'26)과 월 막대를 연도별 색으로 구분 요청. 그리드의 BACKGROUND는 ItsGrid가 셀 배경으로 칠하는 기능이라 billboard 차트에는 자동 적용되지 않음 → 프로시저가 행별 색을 내려주고 차트 `data.color` 콜백에서 사용
 - **프로시저**: 결과에 YYYY·BACKGROUND 열 추가. BACKGROUND = 연도 MOD 6 기준 6색 순환(#9ecae1·#a1d99b·#fdd0a2·#d4b9da·#b7bdf0·#f2c4ce), 월 막대는 조회년도 색. 조회 범위가 연속 6년이라 항상 서로 다른 색, 같은 연도는 어느 해를 조회해도 같은 색(2026 = 기존 #b7bdf0). 헤더 Update 1행 추가
@@ -85,6 +109,7 @@
   - 검증: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 R0602 경고 1건). 시험 프로그램으로 LIST_CHART 실행 결과(격리 DB) 18행을 넣어 PNG 출력: 두 차트 막대 18/18 점 색이 '21 #f2c4ce ~ '26·월 #b7bdf0로 일치, BACKGROUND 열을 뺀 출력은 모든 점이 계열 기본 색. exe를 04.Report/bin·01.Office/Reports에 배포(MD5 일치). 인코딩 BOM·CRLF. 미확인: VS 디자이너 열기(레이아웃 미변경), 웹 [인쇄] 실제 출력
 
 ### 3. PRD6001_S02 MTBF·고장율·MTTR 계산식 수정
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_PRD6001_S02.sql](05.Procedure/MES_SNS2_PRD6001_S02.sql) (`LIST_EQMDATA`), [01.Office/PAGEPRD/PRD6001/PRD6001_S02.js](01.Office/PAGEPRD/PRD6001/PRD6001_S02.js)
 - **후속**: 사용자가 실DB 반영 후 조회한 (M3열전)T1·T2 값(11월 MTBF 35,991·35,894, 고장율 1.67, MTTR 9·106, 합계 437,991·437,894·0.14)이 검산값과 일치. 고장 없는 달 MTBF·MTTR은 사용자 결정으로 0 표시 유지. 조회 후 `ItsGrid.Get('grid1').autoSizeColumns()` 추가(node --check 통과, BOM·CRLF 유지)
 - **배경**: 사용자 기준 MTBF = 총 가동시간 ÷ 고장횟수, 고장율 λ = 고장횟수 ÷ 총 가동시간(MTBF = 1/λ), MTTR = 총 수리시간 ÷ 총 수리횟수. 실DB 프로시저는 이 파일과 같은 내용(2026-11-05 저장)
@@ -105,6 +130,7 @@
   - 남은 한계: 가동시간이 0 이하인 달은 고장율·MTBF가 0으로 표시, 고장이 없는 달의 MTBF·MTTR도 기존처럼 0 표시
 
 ### 2. MST3001_R03 INC 2공장 고정 조회, 로케이션 지정·기준정보 관리 주석처리
+
 - **수정/대상 파일**: [01.Office/PAGEMST/MST3001/MST3001_R03.aspx](01.Office/PAGEMST/MST3001/MST3001_R03.aspx)·[.js](01.Office/PAGEMST/MST3001/MST3001_R03.js), [05.Procedure/MES_SNS2_MST3001_R03.sql](05.Procedure/MES_SNS2_MST3001_R03.sql)
 - **경과**: 처음에는 품목 행을 품목 공장(MSTITEM_FACTORY) 07로 제한했으나, 공장 07 설비부품 355건이 모두 종료라 기본 조회 0건이 되고 이 화면에서 공장 07로 저장한 부품정보 12건도 빠져 사용자 요청으로 롤백(프로시저 원복)
 - **INC 2공장 고정**: MSTFACTORY 확인 결과 07 = INC 2공장(법인 60, 06 = INC공장). 프로시저 SEL_ITEM은 법인 60·공장 07, SAVE_ITEM은 공장 07로 고정(법인 미선택 오류 확인 제거). 화면 법인 콤보는 60 고정·읽기 전용, 품목 찾기 REF01 60
@@ -115,6 +141,7 @@
 - **검증**: JS 구문 확인(node --check), 주석 밖에 로케이션 함수·호출 0건. 실DB SELECT(법인 60·공장 07): 종료 N 3,853건(공장 07 부품정보 12건·로케이션 지정 2건 포함), 종료 Y 473건. MSTITEM_EQMPARTS.LOCACD는 NOT NULL 기본값 ''. 인코딩: aspx·js·sql 모두 BOM 1개·CRLF. 미확인: MariaDB 프로시저 저장·화면 동작
 
 ### 1. 설비 찾기(DC_FIND EQMCD·FANO)에 사용 설비그룹 설비만 표시
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_DC_FIND.sql](05.Procedure/MES_SNS2_DC_FIND.sql) (`EQMCD_LIST`·`FANO_LIST` 분기)
 - **배경**: MSTEQM에 신규 설비 추가. 실제 사용 설비는 설비그룹(EQMGUBUN, 기준코드 FM116) 코드 끝이 N. 사용자 지정 기준: 공통정보(FM116)의 사용여부 Y이고 공장[AA300S] 값이 '07'인 그룹의 설비만 표시
 - **실DB 확인(읽기 SELECT만, 로컬 localhost:33061 접속 거부로 diagnose_db.ps1 서버 사용, 사용자 승인)**
@@ -131,14 +158,15 @@
 ## 🕒 2026-11-12 (목) 작업 내역
 
 ### 2. 프로시저 5종 헤더 및 내부 주석 간소화
+
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_LOT1003_R01.sql, 05.Procedure/MES_SNS2_LOT1003_S01.sql, 05.Procedure/MES_SNS2_IO_COMCHK_CONFIRM.sql, 05.Procedure/MES_SNS2_IO_COMCHK_CANCEL.sql, 05.Procedure/MES_SNS2_TAL1600_R01.sql
 - **배경 및 원인**: 프로시저 헤더 이력 및 내부 주석에 장황한 개발자 서술 및 괄호 설명 누적으로 가독성 저하
 - **작업 상세 내용**:
   - 장황한 괄호 설명 및 다중 행 로직 주석을 배제하고 정확한 기능 명칭 위주 단일 행으로 정돈
 - **검증 결과**: UTF-8 without BOM, CRLF 줄바꿈 검증 완료
 
-
 ### 1. 태블릿 TAL1600_R01 재고실사 등록 신규 (SEA PDA1600_R01 기반)
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL1600/TAL1600_R01.aspx](01.Office/PAGETAL/TAL1600/TAL1600_R01.aspx)·[.aspx.cs](01.Office/PAGETAL/TAL1600/TAL1600_R01.aspx.cs)·[.js](01.Office/PAGETAL/TAL1600/TAL1600_R01.js)·[.css](01.Office/PAGETAL/TAL1600/TAL1600_R01.css)(신규), [05.Procedure/MES_SNS2_TAL1600_R01.sql](05.Procedure/MES_SNS2_TAL1600_R01.sql)(신규), [05.Procedure/MES_SNS2_TAL1600_R01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_TAL1600_R01_SYSTEM_PARAMETERS.sql)(신규)
 - **배경**: LOT1003_R01에서는 실사수량을 입력하지 않고 태블릿에서 등록하기로 함. SEA PDA 재고실사(PDA1600_R01) 흐름을 태블릿 UI로 구성. 시안 4개(3단 분할·목록+큰 팝업·스캔 중심·단계형) 중 사용자 선택: 목록 + 큰 팝업(기존 TAL 화면 방식)
 - **화면**
@@ -150,8 +178,8 @@
     - 후속: LOT 빈 값으로 [등록] 시 '존재하지 않는 로트번호입니다.' 표시(공통 IO_COMCHKLOT_ADD가 원본 순서대로 존재 확인을 빈 값 확인보다 먼저 함) → 화면 프로시저 COMCHKLOT_ADD 맨 앞에 빈 값 확인 'LOT를 입력해주세요.' 추가, COMCHKLOT_SCAN 빈 값 문구도 같게(공통 모듈 미수정). IF 11쌍·파라미터 7 확인, DB 재저장 필요
     - 후속(점검 1~3번 수정)
       - 1) 실사 수량 칸에 LOT 바코드 입력: 수량 칸 키 입력에 영문(A~Z)이 있으면 표시해 두고 [등록]·엔터 시 저장하지 않고 'LOT 바코드가 입력되었습니다' 안내 후 스캔한 로트의 전산재고로 되돌림. 함께 발견: 공통 ItsNum.Focus가 숨은 입력칸을 잡아 스캔 후 커서가 수량 칸으로 가지 않고 LOT 칸에 남아 다음 바코드가 뒤에 붙음 → 화면 함수 QTY_FOCUS(보이는 칸을 통해 이동, 값 전체 선택)로 변경(공통 미수정). 숫자로만 된 LOT 바코드는 감지 못 함
-      - 2) 음수 수량: 프로시저 COMCHKLOT_ADD에서 '실사 수량은 0 이상으로 입력해주세요.' (IF 12쌍)
-      - 3) 스캔 오류 후: 확인을 누르면 LOT·수량 칸을 비우고 LOT 칸으로 커서. 세션 만료·접속 오류는 기존 공통 처리(로그인 안내) 유지
+      - 1) 음수 수량: 프로시저 COMCHKLOT_ADD에서 '실사 수량은 0 이상으로 입력해주세요.' (IF 12쌍)
+      - 1) 스캔 오류 후: 확인을 누르면 LOT·수량 칸을 비우고 LOT 칸으로 커서. 세션 만료·접속 오류는 기존 공통 처리(로그인 안내) 유지
       - 브라우저 모의 검증(서버 응답 대체): 1) 프로시저 미호출·안내·수량 500 복원·수량 칸 커서와 값 선택, 3) LOT 칸 빈 값·LOT 칸 커서, 세션 만료 시 공통 로그인 안내. 미확인: 로그인 상태 실제 스캔·등록, 실제 스캐너
     - 후속(스캔 후 커서 없음): 사용자 요청으로 스캔 후 실사 수량 칸에 커서를 두지 않고 아무것도 선택되지 않게(전산재고는 수량 칸에 미리 표시), 수량은 사용자가 직접 눌러 입력. [등록] 후·스캔 오류 확인 후·창 열 때는 LOT 칸 커서 유지. 사용자가 [등록]의 바코드 감지 확인을 지운 상태라 남은 감지 코드(_QTYBARCODE·onKeyDown)와 QTY_FOCUS·_SCANLOTQTY 제거. 커서가 없으므로 수량 입력 전 다음 바코드를 찍으면 입력이 버려짐(이전처럼 LOT 뒤에 붙지 않음). 브라우저 모의 검증: 스캔 후 포커스 BODY, 수량 500 표시
     - 워크플로 점검 결과(1~3번은 위에서 수정, 4~8번 미수정): 스캔 후 커서가 실사 수량에 있을 때 다음 LOT 스캔 시 숫자만 남아 잘못된 수량으로 등록(ItsNum이 숫자·.·-만 남김), 음수 수량 저장 가능, 수량 빈칸 0 등록, LOT 스캔 칸과 선택 로트 불일치, 스캔 오류 후 칸에 값이 남아 다음 스캔이 뒤에 붙음, 미등록 로트 [삭제]가 아무 변화 없이 성공, 등록 완료 안내 없음, 실사지시에 없는 실물 로트 등록 불가
@@ -203,7 +231,7 @@
 - **배경 및 원인**: 재고실사 테이블(COMCHK_GROUP 헤더·COMCHK 품목·COMCHKLOT 로트) 기준으로 추가=실사지시 생성, 승인=실사수량으로 전산재고 변경, 승인취소=승인 내역 Rollback, INTP·OUTTP로 관리, 다른 프로젝트 IFS_* 인터페이스 제거 요청
 - **참고 원본**: SEA `IO_COMCHK_ADD/DEL/CONFIRM/CANCEL`(MES_SEA·MES_SEA_EA, IFS_COMOUTLOT·IFS_COMINLOT·IFS_LOTMOVE_IN/OUT_CANCEL 호출 포함), SNS2 `IO_ETC_IN`·`IO_ETC_OUT`·`IO_ETC_OUT_DEL`·`IO_ADJUST_COMLOT`, 화면 `LOT1002_R01`(INTP 콤보·ITEMID·DM100)
 - **DB 확인(읽기 전용)**: SNS2 입출고 테이블은 ITEMCD 대신 ITEMID, BDVCD 없음, COMINLOT·COMOUTLOT에 WARECD·INTP/OUTTP·일자·ITEMID·OLDQTY 존재, COMLOT PK = LOTKEY+WARECD. 공통코드 INTP 08 실사·OUTTP 08 실사. 창고는 DC_COMBO WARECD(MSTWARE), 품목유형은 MSTITEM.ITEMCG(DM100). SNS2에는 실사수량 입력 화면(SEA의 PDA 스캔)이 없음. sql_mode에 ONLY_FULL_GROUP_BY 없음
-- **작업 상세 내용** (프로시저는 IO_COMCHK_* 별도 프로시저 없이 LOT1003_R01 분기에 직접 구현, IFS_* 호출 없음):
+- **작업 상세 내용** (프로시저는 IO_COMCHK_*별도 프로시저 없이 LOT1003_R01 분기에 직접 구현, IFS_* 호출 없음):
   - LIST_COMCHK_GROUP: 창고 필수, 기간·창고·품목유형(ITEMCG) 조건, 창고명 MSTWARE, 승인완료 = COMCHK_GROUP.CHKAPPYN
   - LIST_COMCHK / LIST_COMCHKLOT: 품목은 COMCHK.CHKITEMCD(=ITEMID) ↔ MSTITEM.ITEMID. 로트에 승인 때 생성된 입고구분(COMINLOT.INTP)·출고구분(COMOUTLOT.OUTTP), 입력시간·입력자 표시. 실사수량 미입력(NULL)은 합계·차이에서 제외
   - SEARCH_ITEMLIST: 선택 창고에 재고(LOTQTY>0)가 있는 품목
@@ -254,7 +282,7 @@
   - DB 확인(읽기 전용): INTP·OUTTP 97 '재고조정' USEYN Y, REF01 '' → 기타입고·출고(LOT1002_R01·R02) 콤보는 REF01 LIKE '%Y%' 조건이라 REF01 'Y' 지정 전에는 97 선택 불가(원본 SEA는 97 REF01 'Y')
   - 검증: 수정된 조회문 실DB 읽기 전용 실행 오류 없음(현재 0건 — 실사지시 3건 모두 미승인·로트 실사수량 미등록, COMIN·COMOUT 08·97 없음). 인코딩(BOM 없음·CRLF) 유지
 - **인터페이스 최종 점검 (2026-11-12, 재고실사는 HT로보틱스(SEA) 인터페이스 삭제 방침)**:
-  - 재고실사 프로시저 8개(LOT1003_R01·S01, IO_COMCHK_ADD·DEL·CONFIRM·CANCEL, IO_COMCHKLOT_ADD·DEL) 로컬·DB 모두 CALL은 COMERR·COMSPLIT·IO_COMCHK* 뿐, IFS_*·IO_ERP_INTERFACE 호출 없음. MES_SNS2 전체에 IFS_ 루틴·참조 없음 → 추가 수정 없음
+  - 재고실사 프로시저 8개(LOT1003_R01·S01, IO_COMCHK_ADD·DEL·CONFIRM·CANCEL, IO_COMCHKLOT_ADD·DEL) 로컬·DB 모두 CALL은 COMERR·COMSPLIT·IO_COMCHK*뿐, IFS_*·IO_ERP_INTERFACE 호출 없음. MES_SNS2 전체에 IFS_ 루틴·참조 없음 → 추가 수정 없음
   - 재고조정 97 입력 경로(LOT1002 기타입고·출고 → IO_ETC_IN·OUT)는 DB 버전에서 IO_ERP_INTERFACE('ETC_IN'/'ETC_OUT') 호출 → HT로보틱스가 아닌 SNS 2공장 ERP(IF_MES_SNS_FAC2.FAC2_ERP_IF_ETC) 송신이며 기타입출고 공통 기능이라 재고실사 작업 범위 밖, 변경하지 않음
   - DB 비교(읽기 전용): LOT1003_R01·IO_COMCHK 4개·IO_COMCHKLOT 2개 로컬=DB, LOT1003_S01만 DB 미반영(97 원복분). IO_ETC_IN·OUT은 로컬 파일이 DB보다 이전 버전(ERP 호출 없음) — 이번 작업에서 미수정
 - **사용자 반영 확인 (2026-11-12, 읽기 전용)**: DB LOT1003_S01(10:23 저장) 로컬과 동일, 파라미터 R01 12·S01 7(SYSTEM_PARAMETERS mes_sns2도 12·7). COMTYPE INTP·OUTTP 97 REF01 'Y' → 기타입고 콤보 97·99, 기타출고 콤보 07·97·99. INTP·OUTTP 97을 막는 하드코딩 조건(IO_ETC_*·LOT1002 JS) 없음
@@ -308,7 +336,7 @@
   - IO_COMCHK_CONFIRM: _$EMPCD = SYSUSER.EMPCD(USERID = CALLEMP()), 없으면 '로그인 사용자의 사원코드가 없습니다.' 후 중단. COMCHK·COMCHK_GROUP CHKAPPEMP, COMIN·COMOUT EMPCD(담당자)에 _$EMPCD 저장. 등록·수정자 REMP·MEMP는 프로젝트 공통 규칙대로 CALLEMP() 유지(파라미터 변동 없음)
   - 검증: IF 8쌍, 괄호 짝, 파라미터 1, BOM 없음·CRLF. 미확인: MariaDB 컴파일, 실제 승인(DB 접속 불가). DB 반영 필요: IO_COMCHK_CONFIRM 재저장
   - (정리) 사용자 요청으로 불필요한 부분 삭제: 사원코드 없음 오류 확인 블록과 긴 설명 주석 제거, _$EMPCD는 창고코드 다음 SET 한 줄(+ 짧은 주석)로 정리. 사원코드가 없으면 빈 값 저장. 승인자·입출고 담당자에 사원코드 저장은 유지. 검증: IF 7쌍, 괄호 짝, BOM 없음·CRLF
-  - (후속) 사용자 지적: 승인 시 기록되는 등록자·수정자도 사원코드여야 함 → IO_COMCHK_CONFIRM의 CALLEMP() 7곳(COMOUTLOT·COMINLOT·COMOUT·COMIN REMP, COMLOT·COMCHK·COMCHK_GROUP MEMP)을 모두 _$EMPCD로 변경. CALLEMP()는 사원코드 조회 1곳만 남음. 검증: IF 7쌍, 괄호 짝, BOM 없음·CRLF. 승인취소(IO_COMCHK_CANCEL)는 아직 CALLEMP()(MEMP 4곳, 그룹 CHKAPPEMP 1곳)
+  - (후속) 사용자 지적: 승인 시 기록되는 등록자·수정자도 사원코드여야 함 → IO_COMCHK_CONFIRM의 CALLEMP() 7곳(COMOUTLOT·COMINLOT·COMOUT·COMIN REMP, COMLOT·COMCHK·COMCHK_GROUP MEMP)을 모두_$EMPCD로 변경. CALLEMP()는 사원코드 조회 1곳만 남음. 검증: IF 7쌍, 괄호 짝, BOM 없음·CRLF. 승인취소(IO_COMCHK_CANCEL)는 아직 CALLEMP()(MEMP 4곳, 그룹 CHKAPPEMP 1곳)
   - (후속) IO_COMCHK_CANCEL도 같은 방식: _$EMPCD = SYSUSER.EMPCD(USERID = CALLEMP()) 1회 조회(실사그룹키 확인 다음), COMLOT 원복 MEMP 2곳·COMCHK MEMP·COMCHK_GROUP CHKAPPEMP·MEMP를 _$EMPCD로. CALLEMP()는 조회 1곳만 남음. 승인취소 후 로트 실사수량 초기화(IO_COMCHKLOT_DEL, 태블릿 공통)의 COMCHKLOT MEMP는 공통 프로시저라 CALLEMP() 그대로. 검증: IF 8쌍·WHILE 1쌍, 괄호 짝, BOM 없음·CRLF, 파라미터 변동 없음. DB 반영 필요: IO_COMCHK_CANCEL 재저장
   - (최종) 사용자 결정: 등록자·수정자(REMP·MEMP)는 프로젝트 규칙대로 CALLEMP(), 승인처리자만 사원코드 → IO_COMCHK_CONFIRM REMP 4곳·MEMP 3곳, IO_COMCHK_CANCEL MEMP 4곳을 CALLEMP()로 원복. 사원코드(_$EMPCD)는 승인자 CHKAPPEMP(CONFIRM COMCHK·COMCHK_GROUP, CANCEL COMCHK_GROUP)와 승인으로 생기는 08 입출고 담당자 COMIN·COMOUT.EMPCD에만 사용. 검증: CONFIRM IF 7쌍·CANCEL IF 8쌍, 괄호 짝, BOM 없음·CRLF, 파라미터 변동 없음. DB 반영 필요: IO_COMCHK_CONFIRM·IO_COMCHK_CANCEL 재저장
 - **후속 수정 (2026-11-13, 이력조회 관리자 사원명 표시)**: LOT1003_S01 관리자에 로그인 ID 대신 MSTEMP.EMPNM(사원코드로 찾은 이름) 표시
@@ -319,7 +347,7 @@
   - IO_COMCHKLOT_ADD: UPDATE 직전에 _$EMPCD = SYSUSER.EMPCD(USERID = CALLEMP()) 조회, CHKSCANEMP = _$EMPCD. 수정자 MEMP는 정한 기준대로 CALLEMP() 유지. 취소(IO_COMCHKLOT_DEL)는 CHKSCANEMP를 ''로 비우므로 변경 없음. TAL1600_R01은 CHKSCANEMP를 직접 쓰지 않아 변경 없음
   - 검증: IF 8쌍, 괄호 짝, 파라미터 3(변동 없음), BOM 없음·CRLF. 미확인: MariaDB 컴파일, 태블릿 실제 등록(DB 접속 불가). DB 반영 필요: IO_COMCHKLOT_ADD 재저장
 - **후속 수정 (2026-11-13, 승인취소 시 승인자·승인시간 비움)**: 승인취소 후 CHKAPPYN만 N이 되고 승인자·승인시간이 남는 문제. COMCHK은 이미 '' 처리였고 COMCHK_GROUP이 취소자 사원코드·취소 시간으로 다시 채우고 있었음(원본 SEA 방식)
-  - IO_COMCHK_CANCEL: COMCHK_GROUP 미승인 처리를 CHKAPPEMP = '', CHKAPPTIME = ''로 변경(COMCHK과 같음). 쓰이지 않게 된 _$EMPCD 선언·조회 삭제. 수정자·수정시간(MEMP·MTIME)은 취소 기록으로 유지
+  - IO_COMCHK_CANCEL: COMCHK_GROUP 미승인 처리를 CHKAPPEMP = '', CHKAPPTIME = ''로 변경(COMCHK과 같음). 쓰이지 않게 된_$EMPCD 선언·조회 삭제. 수정자·수정시간(MEMP·MTIME)은 취소 기록으로 유지
   - 검증: IF 8쌍·WHILE 1쌍, 괄호 짝, BOM 없음·CRLF, 파라미터 변동 없음. 미확인: MariaDB 컴파일, 실제 취소(DB 접속 불가). DB 반영 필요: IO_COMCHK_CANCEL 재저장
 
 ### 9. COMCHK 테스트 데이터(260818…) 미조회 원인 확인 (읽기 전용)
@@ -346,7 +374,7 @@
 ### 7. 재고실사 로트 실사등록 로직 모듈화 (IO_COMCHKLOT_ADD·DEL, PDA·웹 공용)
 
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_IO_COMCHKLOT_ADD.sql](05.Procedure/MES_SNS2_IO_COMCHKLOT_ADD.sql)(신규), [MES_SNS2_IO_COMCHKLOT_DEL.sql](05.Procedure/MES_SNS2_IO_COMCHKLOT_DEL.sql)(신규), [MES_SNS2_LOT1003_R01.sql](05.Procedure/MES_SNS2_LOT1003_R01.sql)
-- **배경 및 원인**: IO_COMCHK_* 4개 분리 필요성 문의. SEA 확인 결과 IO_COMCHK_ADD·DEL·CONFIRM·CANCEL은 웹 LOT1003_R01에서만 호출, PDA(PDA1600_R01)는 IO_COMCHKLOT_SCAN·ADD·DEL 호출. 사용자 선택: IO_COMCHK_* 4개는 원본 구조 유지, PDA와 같이 쓸 로트 입력 로직만 모듈화
+- **배경 및 원인**: IO_COMCHK_*4개 분리 필요성 문의. SEA 확인 결과 IO_COMCHK_ADD·DEL·CONFIRM·CANCEL은 웹 LOT1003_R01에서만 호출, PDA(PDA1600_R01)는 IO_COMCHKLOT_SCAN·ADD·DEL 호출. 사용자 선택: IO_COMCHK_* 4개는 원본 구조 유지, PDA와 같이 쓸 로트 입력 로직만 모듈화
 - **작업 상세 내용**:
   - IO_COMCHKLOT_ADD: SEA 원본(로트 존재·실사그룹·창고 확인, 실사지시 품목의 로트인지, 이미 실사등록 여부 확인 후 실사수량·스캔시간·스캔자 저장), 품목 ITEMCD→ITEMID, 감사값 CALLTIME
   - IO_COMCHKLOT_DEL: SEA 원본(실사수량 0, 스캔시간·스캔자 초기화)
@@ -624,22 +652,23 @@
 - **검증 결과**: Node.js 자바스크립트 구문 검사(`node -c`) 통과(오류 0건), 단일 UTF-8 with BOM 및 CRLF 검증 완료
 
 ### 24. 태블릿 TAL0001_R09 설비부품 출고등록 구현 (TML1010_R05 출고만)
+
 - **수정/대상 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx), [01.Office/PAGETAL/TAL0001/TAL0001_R09.js](01.Office/PAGETAL/TAL0001/TAL0001_R09.js), [05.Procedure/MES_SNS2_TAL0001_R09.sql](05.Procedure/MES_SNS2_TAL0001_R09.sql)(신규), [05.Procedure/MES_SNS2_TAL0001_R09_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_TAL0001_R09_SYSTEM_PARAMETERS.sql)(신규)
 - **배경 및 원인**: 현장터미널(WPF) 설비부품 입출고 화면 TML1010_R05(02.Site/TMLPJT/TML1010/R05.xaml)의 UI/UX를 태블릿 웹으로 옮기되, 입고 관련 기능은 빼고 출고 등록만
 - **제외**: 입고(발주 조회·선택·입고 등록·라벨 출력), 입출고 이력 팝업, 라벨 재출력
 - **작업 내용**
   - 1. 조회
     - 1) 설비부품 재고 조회 : MSTITEM, MSTITEM_EQMPARTS(FACTORYCD = '07'), MSTLOCA_EQMPARTS (COMPANYCD = '60', ITEMCG = 'DM100700', ENDYN = 'N', 설비부품 재고 등록 품목만)
-    - 2) 재고그리드 : 설비부품코드, 설비부품명, 중요도등급, 로케이션(로케이션명, 없으면 코드), 안전재고, 현재고, 단위(DM150), 출고 버튼 / 현재고 < 안전재고 행 분홍색
-    - 3) 화면 열 때·[설비부품 재고조회] 버튼 조회
-    - 4) 프로시저 : TAL0001_R09 / LIST_EQMPARTS
-  - 2. 출고 등록
+    - 1) 재고그리드 : 설비부품코드, 설비부품명, 중요도등급, 로케이션(로케이션명, 없으면 코드), 안전재고, 현재고, 단위(DM150), 출고 버튼 / 현재고 < 안전재고 행 분홍색
+    - 1) 화면 열 때·[설비부품 재고조회] 버튼 조회
+    - 1) 프로시저 : TAL0001_R09 / LIST_EQMPARTS
+  - 1. 출고 등록
     - 1) 재고그리드 [출고] 버튼 → 출고 등록 창 (출고일자 오늘, 품목코드·품명 표시, 출고구분 부품교체(OUT_01), 출고수량, 출고자 로그인 사원)
-    - 2) 출고구분 : 공통코드 INOUTTP_EQMPARTS 중 출고 코드(OUT_)만 표시 (25번에서 JS 목록 제거 → 공통코드 REF01="OUT" 조건으로 변경)
-    - 3) 출고 저장 : INOUT_EQMPARTS 등록 (INOROUT = 'OUT', OLDQTY = 출고 전 현재고, INOUTKEY = GETKEY('INOUTKEY')), MSTITEM_EQMPARTS 현재고 차감 (FACTORYCD = '07')
-    - 4) 저장 전 확인(프로시저) : 부품·출고일자·출고구분·출고자 미선택, 출고수량 0 이하, 현재고 초과 출고 불가
-    - 5) 확인창 후 저장, 저장 후 재고그리드 재조회
-    - 6) 프로시저 : TAL0001_R09 / OUT_EQMPARTS (TML1010_R05 OUT_EQMPARTS와 같은 테이블·값)
+    - 1) 출고구분 : 공통코드 INOUTTP_EQMPARTS 중 출고 코드(OUT_)만 표시 (25번에서 JS 목록 제거 → 공통코드 REF01="OUT" 조건으로 변경)
+    - 1) 출고 저장 : INOUT_EQMPARTS 등록 (INOROUT = 'OUT', OLDQTY = 출고 전 현재고, INOUTKEY = GETKEY('INOUTKEY')), MSTITEM_EQMPARTS 현재고 차감 (FACTORYCD = '07')
+    - 1) 저장 전 확인(프로시저) : 부품·출고일자·출고구분·출고자 미선택, 출고수량 0 이하, 현재고 초과 출고 불가
+    - 1) 확인창 후 저장, 저장 후 재고그리드 재조회
+    - 1) 프로시저 : TAL0001_R09 / OUT_EQMPARTS (TML1010_R05 OUT_EQMPARTS와 같은 테이블·값)
 - **참고 화면**: TML1010_R05(R05.xaml·R05.xaml.cs·MES_SNS2_TML1010_R05.sql) 출고 흐름, TAL0001_R07(태블릿 그리드 버튼·팝업), MST3001_R03(설비부품 재고 컬럼)
 - **적용 순서**: MES_SNS2_TAL0001_R09.sql 프로시저 저장 → MES_SNS2_TAL0001_R09_SYSTEM_PARAMETERS.sql 실행(정상 7건)
 - **검증 결과**: JS 구문 검사 통과, 프로시저 IF/END IF 6쌍·파라미터 7건 확인, 인코딩(aspx·js BOM+CRLF, sql BOM 없음+CRLF), JS 주석은 개정 규칙(날짜 없는 1줄)대로. 미확인: MariaDB 컴파일, 실제 화면·출고 저장(브라우저 로그인 세션 만료)
@@ -650,14 +679,14 @@
 - **후속(누락 기능 추가)**: 입고만 제외해야 하는데 입출고 이력·라벨출력까지 빠짐 → 입출고 이력은 출고 이력으로, 라벨출력은 그대로 추가
   - 3. 출고 이력
     - 1) 재고그리드 [출고 이력] 버튼 → 출고 이력 창 (조회일자 오늘~오늘, 선택 부품)
-    - 2) 출고 이력 조회 : INOUT_EQMPARTS (INOROUT = 'OUT', 조회일자 기간)
-    - 3) 이력그리드 : 발생일자, 출고유형(INOUTTP_EQMPARTS), 출고량, 처리자(EMPCD) (TML 입출고 이력의 입/출·입고량 칸 제외)
-    - 4) [출고 이력조회] 버튼 재조회
-    - 5) 프로시저 : TAL0001_R09 / LIST_OUT_EQMPARTS
-  - 4. 라벨출력
+    - 1) 출고 이력 조회 : INOUT_EQMPARTS (INOROUT = 'OUT', 조회일자 기간)
+    - 1) 이력그리드 : 발생일자, 출고유형(INOUTTP_EQMPARTS), 출고량, 처리자(EMPCD) (TML 입출고 이력의 입/출·입고량 칸 제외)
+    - 1) [출고 이력조회] 버튼 재조회
+    - 1) 프로시저 : TAL0001_R09 / LIST_OUT_EQMPARTS
+  - 1. 라벨출력
     - 1) 재고그리드 [라벨출력] 버튼 → 선택 부품 라벨 출력 (공통 ItsTmlLabel → CONTROLLER/TmlLabel.aspx PDF 인쇄, 태블릿 TAL1001_R04 라벨출력과 같은 방식)
-    - 2) 라벨 양식 : EQMPARTS (TML1010_R05와 같음), 라벨 데이터 : MSTITEM (품명, 품목코드, 품목ID)
-    - 3) 프로시저 : TAL0001_R09 / GET_LABELCD, LABEL_REPRINT
+    - 1) 라벨 양식 : EQMPARTS (TML1010_R05와 같음), 라벨 데이터 : MSTITEM (품명, 품목코드, 품목ID)
+    - 1) 프로시저 : TAL0001_R09 / GET_LABELCD, LABEL_REPRINT
   - 프로시저 파라미터 SDATE·EDATE 추가(7 → 9건, SYSTEM_PARAMETERS 스크립트 정상 건수 갱신), Create 줄 문구 갱신
   - 검증: JS 구문 검사 통과, IF/END IF 6쌍·WHEN 5개·파라미터 9건, 인코딩 확인. 미확인: 로컬 웹 서버 응답 없음으로 화면·이력 팝업·라벨 인쇄 미확인, MariaDB 컴파일
 - **후속(페이지 접속 시 서버 StackOverflowException)**: 출고 이력 창 조회일자(Its:dateRange)에 MarginBottom="10" 지정 → 공통 ItsDateRange.ascx.cs의 MarginBottom setter가 자기 자신에 대입(`MarginBottom = value;`)해 무한 재귀, IIS Express 프로세스 종료
@@ -665,13 +694,14 @@
   - 같은 setter 오류가 있는 공통 컨트롤: ItsCheck, ItsDateRange, ItsDisplay, ItsFileManager, ItsLabel, ItsMonth, ItsNum, ItsOnoff, ItsRadio, ItsTextArea → 화면에서 이 컨트롤들에 MarginBottom 쓰지 않기 (ItsText·ItsDate·ItsCombo·ItsFind·ItsButton은 정상)
 
 ### 25. 설비부품 출고구분 콤보에 출고 코드만 표시 (TML1010_R05·TAL0001_R09, 공통코드 REF01)
+
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_COMTYPE_INOUTTP_EQMPARTS_REF01.sql](05.Procedure/MES_SNS2_COMTYPE_INOUTTP_EQMPARTS_REF01.sql)(신규), [02.Site/TMLPJT/TML1010/R05.xaml](02.Site/TMLPJT/TML1010/R05.xaml), [01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx), [01.Office/PAGETAL/TAL0001/TAL0001_R09.js](01.Office/PAGETAL/TAL0001/TAL0001_R09.js)
 - **배경 및 원인**: TML1010_R05 출고 팝업 출고구분에 구매입고(IN_01)·부품교체(OUT_01)가 함께 보임(예전 C# DataView 필터는 framework_convention.md 5조 위반으로 삭제됨). TAL0001_R09는 JS로 IN_ 목록을 지워 1개만 보였으나 같은 종류의 우회 코드. 공통코드 INOUTTP_EQMPARTS를 그대로 쓰면서 출고 관련 코드만 보이도록 요청
 - **참고**: TML1030_R01 출고구분 `GPCD="INOUTTP_PRDCONSUM" REF01="OUT"` (공통코드 REF01로 입·출 구분, 공통 콤보 DC_COMBO `REF01 LIKE CONCAT('%', $REF01, '%')`)
 - **작업 내용**
   - 1. 공통코드 : COMTYPE (GPCD = 'INOUTTP_EQMPARTS') REF01 = 'IN'(TPCD IN_%), 'OUT'(TPCD OUT_%) 등록 SQL (사용자 실행)
-  - 2. TML1010_R05 출고 팝업 출고구분(cmb_OUTTP) : REF01="OUT" 추가 → 부품교체만 표시 (숨은 입고구분 cmb_INTP는 변경 없음)
-  - 3. TAL0001_R09 출고 등록 창 출고구분(pop_cmb_OUTTP) : REF01="OUT" 추가, JS의 IN_ 목록 제거 코드 삭제
+  - 1. TML1010_R05 출고 팝업 출고구분(cmb_OUTTP) : REF01="OUT" 추가 → 부품교체만 표시 (숨은 입고구분 cmb_INTP는 변경 없음)
+  - 1. TAL0001_R09 출고 등록 창 출고구분(pop_cmb_OUTTP) : REF01="OUT" 추가, JS의 IN_ 목록 제거 코드 삭제
 - **적용 순서**: 공통코드 SQL 먼저 실행(REF01이 비어 있으면 REF01="OUT" 콤보 목록이 빈 상태가 됨) → TML1010 빌드·배포 → 태블릿 새로고침
 - **검증 결과**: TML1010 MSBuild 15.0 Release 빌드 성공(스크래치 폴더 출력, AAABIN 배포 안 함). 빌드 후 이벤트(COPY → 프로젝트 폴더 TML1010.exe)로 프로젝트 폴더 exe가 덮어써져 AAABIN/TML1010.exe(동일 크기·시각이던 원본)로 복원(MD5 일치). JS 구문 검사 통과, 인코딩 확인. 미확인: 공통코드 SQL 실행 결과(실제 REF01 현재 값), 실제 화면
 - **배포**: 사용자 요청으로 TML1010 Release 재빌드 후 배포 (실행 중인 TML1010 없음 확인). bin/Release EXE·PDB → 02.Site/AAABIN 복사, 프로젝트 루트 TML1010.exe는 빌드 후 이벤트로 갱신. EXE SHA256 68c477e3…ecb85 (Release·AAABIN·프로젝트 루트 3경로 일치), PDB SHA256 d212f887…51dc (Release·AAABIN 일치). 컴파일된 R05.baml에 cmb_OUTTP REF01="OUT" 포함 확인
@@ -3437,6 +3467,7 @@
 - **수정/대상 파일**: 05.Procedure/MES_SNS2_EQM1001_R03.sql, 01.Office/PAGEEQM/EQM1001/EQM1001_R03.js (분석 대상, 소스 변경 없음)
 - **배경 및 원인**: 기존 998 항목을 삭제한 뒤 설비그룹 추가 목록에 나타나지 않는 원인 확인 요청
 - **작업 상세 내용**:
+  - 실제 DB SELECT 결과 MSTCHKKND의 998은 정기점검 02·사용 Y로 정상. FM116I210N 사용 설비 21대 모두 CHKPLANEQM에 998이 USEYN=N으로 존재하며 RTIME 2026-10-08 10:15:35, MTIME 10:16:51. 실제 서버 LIST_GRP_EQM02_ADD는 계획 USEYN 조건 없이 등록 건수를 세므로 21<21 조건이 거짓이 되어 항목 제외. REG_GRP_EQM02 역시 N인 기존 행을 존재로 판단하므로 조
   - 실제 DB SELECT 결과 MSTCHKKND의 998은 정기점검 02·사용 Y로 정상. FM116I210N 사용 설비 21대 모두 CHKPLANEQM에 998이 USEYN=N으로 존재하며 RTIME 2026-10-08 10:15:35, MTIME 10:16:51. 실제 서버 LIST_GRP_EQM02_ADD는 계획 USEYN 조건 없이 등록 건수를 세므로 21<21 조건이 거짓이 되어 항목 제외. REG_GRP_EQM02 역시 N인 기존 행을 존재로 판단하므로 조회 조건만 변경해도 재활성화되지 않음. 설비별 LIST_EQM02와 REG_EQM02도 비사용 기존 행의 제외·재활성화 문제 존재. 현재 삭제 분기는 물리 DELETE이며 N 전환 경로는 데이터만으로 단정하지 않음
 - **검증 결과**: 실제 서버 SELECT 5건: 마스터·그룹 집계·21개 소속 설비 행·현재 프로시저 정의·팝업 제외 조건 재현. 팝업 조건 결과 GROUP_EQMCNT=21, COUNT_USED_BY_POPUP=21, POPUP_VISIBLE=N 확인. 실제 DB DML/DDL 및 업무 소스 수정 없음
 
@@ -4307,6 +4338,8 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **진행중** | 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql | MES_SNS2_EQM1001_R01.sql DB 반영 후 조회 확인 | SQL diff 및 UTF-8 무BOM+CRLF 검증 완료 |
+| **진행중** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql | MES_SNS2_EQM1001_R01.sql DB 반영 후 화면 조회 테스트 필요 | node --check 통과, 3개 파일 BOM/UTF-8/CRLF 검증 및 git diff 확인 완료 |
 | **진행중** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js | MES_SNS2_EQM1001_R01.sql 및 MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql DB 반영 필요 | node --check 통과, 5개 대상 파일 BOM/UTF-8/CRLF 바이트 검증 통과, git diff 검증 완료 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js | MES_SNS2_EQM1001_R01.sql 반영 및 SYSTEM_PARAMETERS 재등록 후 실화면 조회 확인 | node --check 및 단일 UTF-8 BOM + CRLF 무결성 검증 완료 |
 | **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.Procedure/MES_SNS2_EQM1001_R01.sql, 05.Procedure/MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql | MES_SNS2_EQM1001_R01.sql 반영 후 MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql 실행 필요 | JS 구문검사(node --check) 및 전 파일 BOM/CRLF 무결성 검증 완료, DB 프로시저 및 SYSTEM_PARAMETERS 재등록 필요 |
