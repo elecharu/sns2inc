@@ -203,6 +203,12 @@
   - S01 프로시저: 변동없음은 COMCHKLOT.REMP(로그인 ID) → SYSUSER.EMPCD → MSTEMP.EMPNM(DC_FIND USERID_INFO와 같은 SYSUSER·MSTEMP 연결), 입고·출고는 승인 시 사원코드가 저장되는 COMIN·COMOUT.EMPCD → MSTEMP.EMPNM. 모두 LEFT JOIN(사원 정보가 없어도 행은 나옴, 이름만 빈칸). 반환 컬럼 EMPCD → EMPNM
   - S01.js 관리자 컬럼: EMPCD 콤보(gpcd EMPCD) → EMPNM 일반 텍스트
   - 검증: 괄호 짝, JS 구문, 인코딩(sql BOM 없음+CRLF, js BOM+CRLF), 파라미터 변동 없음(7). 미확인: MariaDB 컴파일, 실데이터(DB 접속 불가). 이번 변경 전에 승인된 실사는 COMIN·COMOUT.EMPCD에 로그인 ID가 있어 이름이 빈칸일 수 있음. DB 반영 필요: LOT1003_S01 재저장
+- **후속 수정 (2026-11-13, 태블릿 실사 등록자 CHKSCANEMP 사원코드)**: TAL1600_R01 실사 등록 시 COMCHKLOT.CHKSCANEMP에 로그인 ID가 들어가던 문제. 저장 위치는 TAL1600_R01이 호출하는 IO_COMCHKLOT_ADD(호출처 TAL1600_R01 1곳)
+  - IO_COMCHKLOT_ADD: UPDATE 직전에 _$EMPCD = SYSUSER.EMPCD(USERID = CALLEMP()) 조회, CHKSCANEMP = _$EMPCD. 수정자 MEMP는 정한 기준대로 CALLEMP() 유지. 취소(IO_COMCHKLOT_DEL)는 CHKSCANEMP를 ''로 비우므로 변경 없음. TAL1600_R01은 CHKSCANEMP를 직접 쓰지 않아 변경 없음
+  - 검증: IF 8쌍, 괄호 짝, 파라미터 3(변동 없음), BOM 없음·CRLF. 미확인: MariaDB 컴파일, 태블릿 실제 등록(DB 접속 불가). DB 반영 필요: IO_COMCHKLOT_ADD 재저장
+- **후속 수정 (2026-11-13, 승인취소 시 승인자·승인시간 비움)**: 승인취소 후 CHKAPPYN만 N이 되고 승인자·승인시간이 남는 문제. COMCHK은 이미 '' 처리였고 COMCHK_GROUP이 취소자 사원코드·취소 시간으로 다시 채우고 있었음(원본 SEA 방식)
+  - IO_COMCHK_CANCEL: COMCHK_GROUP 미승인 처리를 CHKAPPEMP = '', CHKAPPTIME = ''로 변경(COMCHK과 같음). 쓰이지 않게 된 _$EMPCD 선언·조회 삭제. 수정자·수정시간(MEMP·MTIME)은 취소 기록으로 유지
+  - 검증: IF 8쌍·WHILE 1쌍, 괄호 짝, BOM 없음·CRLF, 파라미터 변동 없음. 미확인: MariaDB 컴파일, 실제 취소(DB 접속 불가). DB 반영 필요: IO_COMCHK_CANCEL 재저장
 
 ### 9. COMCHK 테스트 데이터(260818…) 미조회 원인 확인 (읽기 전용)
 

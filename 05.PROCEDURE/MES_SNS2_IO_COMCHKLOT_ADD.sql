@@ -15,6 +15,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$WARECD    VARCHAR(100);
   DECLARE _$ITEMID    VARCHAR(100);
   DECLARE _$CHKKEY    VARCHAR(20);
+  DECLARE _$EMPCD     VARCHAR(100);
 -- *****************************************************************************
 IF IFNULL(@ERRMSG, '') = '' THEN
 -- *****************************************************************************
@@ -62,8 +63,10 @@ IF IFNULL(@ERRMSG, '') = '' THEN
   END IF;
 
   -- 1_2. COMCHKLOT 실사수량·스캔시간·스캔자 저장
+  SET _$EMPCD = IFNULL((SELECT EMPCD FROM SYSUSER WHERE USERID = CALLEMP()), '');
+
   UPDATE COMCHKLOT
-     SET LOTCHKQTY = $CHKQTY, CHKSCANTIME = CALLTIME(), CHKSCANEMP = CALLEMP(),
+     SET LOTCHKQTY = $CHKQTY, CHKSCANTIME = CALLTIME(), CHKSCANEMP = _$EMPCD,
          MTIME = CALLTIME(), MEMP = CALLEMP(), MPRG = CALLPRG()
    WHERE CHKKEY = _$CHKKEY
      AND CHKLOTKEY = $LOTKEY;
