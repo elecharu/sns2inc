@@ -61,11 +61,6 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       LEAVE PROC;
     END IF;
 
-    IF COALESCE($YYYYMM, '') NOT REGEXP '^[0-9]{4}-(0[1-9]|1[0-2])$' THEN
-      CALL COMERR('계획년월 정보가 올바르지 않습니다. 다시 조회해주세요.');
-      LEAVE PROC;
-    END IF;
-
     SET _$CHKYM = LEFT($BASEDATE, 7);
 
     IF COALESCE($EMPCD, '') = '' THEN

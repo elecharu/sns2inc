@@ -1,4 +1,4 @@
-﻿# MES 프로젝트 작업 이력 및 변경 관리 대장 (Work History)
+# MES 프로젝트 작업 이력 및 변경 관리 대장 (Work History)
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
@@ -17,6 +17,27 @@
 ---
 
 ## 🕒 2026-11-13 (금) 작업 내역
+
+### 8. PRD6001_S02 고장시간·고장건수 → 설비수리(EQMREP) 기준 변경분 검증 (소스 수정 없음)
+- **대상 파일**: [05.Procedure/MES_SNS2_PRD6001_S02.sql](05.Procedure/MES_SNS2_PRD6001_S02.sql) (사용자 수정분)
+- **연결 확인**: 수리이력 EQMREP(EQM01).EQMCD = MSTEQM.FANO(공장 07) → MSTEQM_MATCH.FANO → MSTEQM_MATCH.EQMCD = 화면 설비(MSTLINE_EQM 2공장 사용 설비). 한 FANO가 여러 라인 설비에 매칭되면 라인별로 각각, 종합은 EQMREPKEY 중복 제거. 고장시간 = 완료 건 (완료 − 발생) 분, 고장건수 = 수리이력 전체, 수리건수 = 완료 건 → MTBF = (부하 − 고장시간) ÷ 고장건수, MTTR = 고장시간 ÷ 수리건수. 코드상 연결·계산식은 맞음
+- **검증**: 실DB에서 SELECT로 가져온 PP161·MSTLINE·MSTLINE_EQM·PRDRSTNON·EQMREP·MSTEQM·MSTEQM_MATCH로 격리 MariaDB 10.2.44(network none)에서 컴파일·실행(271행). (M3열전)T1 11월 부하 36,000·수리 3건(I2B-002N, 모두 0분 완료) → MTBF 12,000·고장율 5.00·MTTR 0, 종합 11월 MTBF 528,000(1,584,000 ÷ 3), 손계산 일치
+- **데이터 확인(미수정)**: 2026년 공장 07 수리 18건 중 MSTEQM_MATCH에 매칭된 것은 I2B-002N 3건뿐. 나머지 15건(I2C-002N 5, I2G-001N 3, I2G-009N, I2ROT-003N, I2S-001N, I2W-001N, I2W-017N 등)은 매칭 행이 없어 계산에서 제외 → 라인별 설비매칭(MST1002_R05) 등록 필요. 수리시간은 달력 시간(10/23~11/02 14,877분 등)이고 발생월에 전부 반영되며, 부하시간은 근무시간 기준이라 긴 수리는 가동시간이 0으로 내려갈 수 있음(GREATEST 0 처리). MSTEQM.FACTORYCD = '07' JOIN은 매칭으로 범위가 이미 정해져 중복 조건(결과 영향 없음)
+
+### 3. [PRD6001_S02] 고장시간·고장건수 데이터를 설비수리(EQMREP) 기반으로 변경
+- **수정/대상 파일**: [05.PROCEDURE/MES_SNS2_PRD6001_S02.sql](05.PROCEDURE/MES_SNS2_PRD6001_S02.sql)
+- **배경 및 원인**: 기존 `PRD6001_S02`(`LIST_EQMDATA`)는 `PRDRSTNON` 비가동(`MSTNON.NONGROUPCD1 = 'PP409I210N'`) 기준으로 고장시간(분)·고장건수·MTBF·MTTR을 집계하여 설비보전 수리이력(`EQMREP`, `EQM1001_R06`) 수치와 불일치함
+- **작업 상세 내용**:
+  - **대상 설비·부하시간 유지**: `MSTLINE.FACTORYCD = '07'` 및 `MSTLINE_EQM.USEYN = 'Y'` 생산라인 설비 축과 `ITEM` 명칭(`고장시간(분)`, `고장건수`)은 유지하고, 불필요해진 `TMP_PRD6001_NONCD` 제거 후 `TMP_PRD6001_NON`에서 제외 비가동(`I2121N`, `I2122N`, `I2111N`, `I2113N`)만 읽어 `LOADMIN` 계산을 동일하게 유지
+  - **설비수리 집계 전환(`TMP_PRD6001_REP`)**: `EQMREP`(`EQMREPTP = 'EQM01'`) × `MSTEQM`(`FACTORYCD = '07'`) × `MSTEQM_MATCH`(`DISTINCT EQMCD, FANO`)를 발생시간(`REPSTIME`) 연도·월(`CONCAT(_$SYEAR, '-01-01')` ~ `< +1년`) 기준으로 집계. 전체 매칭 건을 `고장건수`(`FAILCNT`)로 집계하고, `REPETIME <> '' AND REPETIME >= REPSTIME`인 수리완료 건만 `TIMESTAMPDIFF(MINUTE, REPSTIME, REPETIME)`로 `고장시간(분)`(`FAILMIN`)과 `수리건수`(`FIXCNT`, MTTR 분모)에 합산
+  - **종합 행 중복 제거(`TMP_PRD6001_TOT`)**: `종합` 행은 `TMP_PRD6001_BASE`의 `LOADMIN` 합계와 `TMP_PRD6001_REP`의 `DISTINCT EQMREPKEY` 기준 합계를 결합해 다중 라인 매칭 설비의 수리 중복 집계 방지
+  - **인코딩·헤더 정리**: `CREATE DEFINER` 2행 분리 및 `Modify:` 2026-11-13 이력 1행 통합, `05.PROCEDURE/` 기준 UTF-8(BOM 제거)+CRLF 적용
+- **검증 결과**:
+  - `MES_SNS2_PRD6001_S02.sql` 바이트 검사 통과 (UTF-8 무BOM, CRLF, `bareLf=0`, `crCrLf=0`)
+  - 실 DB(`211.43.15.98:33061`, MariaDB 10.2.15) 읽기 전용 `SELECT` 시뮬레이션 검증 완료 (`2026`년 270행 기준 `부하시간(분)` 0건 오차, `(M3열전)T1` 11월 `고장건수=3`/`고장시간=0`/`고장율=5.00`/`MTBF=12000` 및 `종합` 일치 확인)
+  - MariaDB 10.2.15 읽기 전용 합성 데이터 엣지케이스 검증 완료 (완료/0분/미완료/역전/다중라인 `DISTINCT`/연도경계)
+  - ※ DB 프로시저 반영(서버 컴파일/저장)은 작업 규칙에 따라 미실행 (로컬 `.sql` 수정 상태)
+
 
 ### 2. [EQM1001_R04] 월 이동 시 대상 월 기존 주기관리 계획 덮어쓰기 차단
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql
