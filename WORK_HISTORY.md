@@ -18,6 +18,30 @@
 
 ## 🕒 2026-11-13 (금) 작업 내역
 
+### 2. [EQM1001_R04] 월 이동 시 대상 월 기존 주기관리 계획 덮어쓰기 차단
+- **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql
+- **배경 및 원인**: 5월 계획을 7월 등 다른 월로 변경 저장할 때 대상 월에 이미 정기점검 계획이 배정되어 있어도 CHKRSTEQM 실적만 없으면 덮어쓰던 문제
+- **작업 상세 내용**:
+  - ADD_CHKRSTEQM·SAVE_CHKRSTEQM 실행 전 _$CHKYM <> $YYYYMM 인 경우 CHKPLANEQM_YEARPLAN 대상 월(_$TGTEMP) 조회 후 비어있지 않으면 COMERR로 차단하도록 보완
+- **검증 결과**: UTF-8 무BOM+CRLF 및 git diff 검증 완료 (DB 컴파일 미확인)
+
+
+### 2. [EQM1001_R04] 화면 스크립트 및 프로시저 최적화
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql
+- **배경 및 원인**: 월별 점검자 표시·계획월 이동 기능 추가 후 중복 코드와 반복 조건 정리 요청
+- **작업 상세 내용**:
+  - js: 월 컬럼 판별 IS_MONTH 공통화, 점검값 보정 CHECK_CHKVALUE 및 저장 목록 ADD_CHK_LIST 공통화(grid2/grid3 중복 제거), 날짜·다중행 주석을 1줄 기능 주석으로 정리. sql: 점검월 _$CHKYM 1회 계산, 등록·수정 중복 실적 검사 공통화, 월별 현황 FIND_IN_SET/RSTMM 제거 후 실적 점검자 피벗으로 판정, 계획월 이동을 대상 년도 행 보장 후 단일 UPDATE(CASE CONCAT(YEAR,월))로 처리, 미사용 변수 5개 제거
+- **검증 결과**: node --check 통과, js UTF-8 BOM+CRLF, sql 무BOM+CRLF 확인. DB 컴파일 미확인
+
+
+### 2. [EQM1001_R04] 월별 점검자 표시, 점검일자 년월 검증 제거 및 주기관리 월 자동이동
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql
+- **배경 및 원인**: 정기점검 현황 그리드에 점검상태 아래 줄바꿈 + (점검자명) 표시 및 계획월과 다른 월에 점검 등록/수정 시 해당 월로 저장하고 주기관리(CHKPLANEQM_YEARPLAN)도 함께 이동 필요
+- **작업 상세 내용**:
+  - EQM1001_R04.js: M01~M12 multiLine/autoRowHeights 및 formatItem 줄바꿈 링크 적용. MES_SNS2_EQM1001_R04.sql: LIST_CYCLE_EQMCD에서 점검완료/점검필요 아래 \n(점검자명) 반환, ADD_CHKRSTEQM/SAVE_CHKRSTEQM 점검일자-계획년월 일치 검증 제거 및 대상월 기준 중복 체크, 저장/수정 월 변경 시 CHKPLANEQM_YEARPLAN 계획월 자동 이동
+- **검증 결과**: node --check 통과, UTF-8 BOM/무BOM 및 CRLF 검증 완료
+
+
 ### 2. [EQM1001_R01] LIST_EQMREP 공장 조건식 정리
 
 - **수정/대상 파일**: 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql
@@ -4338,6 +4362,9 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **진행중** | 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql | MES_SNS2_EQM1001_R04.sql DB 반영 후 중복 계획 월 차단 테스트 필요 | UTF-8 무BOM+CRLF 및 git diff 검증 완료 (DB 컴파일 미확인) |
+| **진행중** | 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql | MES_SNS2_EQM1001_R04.sql DB 반영 후 조회·등록·수정(월 이동) 테스트 필요 | node --check 통과, js UTF-8 BOM+CRLF, sql 무BOM+CRLF 확인. DB 컴파일 미확인 |
+| **진행중** | 01.Office/PAGEEQM/EQM1001/EQM1001_R04.js, 05.PROCEDURE/MES_SNS2_EQM1001_R04.sql | MES_SNS2_EQM1001_R04.sql DB 반영 후 화면 동작 테스트 필요 | node --check 통과, UTF-8 BOM/무BOM 및 CRLF 검증 완료 |
 | **진행중** | 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql | MES_SNS2_EQM1001_R01.sql DB 반영 후 조회 확인 | SQL diff 및 UTF-8 무BOM+CRLF 검증 완료 |
 | **진행중** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.PROCEDURE/MES_SNS2_EQM1001_R01.sql | MES_SNS2_EQM1001_R01.sql DB 반영 후 화면 조회 테스트 필요 | node --check 통과, 3개 파일 BOM/UTF-8/CRLF 검증 및 git diff 확인 완료 |
 | **진행중** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js | MES_SNS2_EQM1001_R01.sql 및 MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql DB 반영 필요 | node --check 통과, 5개 대상 파일 BOM/UTF-8/CRLF 바이트 검증 통과, git diff 검증 완료 |

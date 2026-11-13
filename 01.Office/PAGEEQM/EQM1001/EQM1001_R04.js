@@ -1,7 +1,6 @@
 ﻿/// <reference path="../../Script/reference.js" />
 
-// 2026-09-16 화면 초기 로드 시 메인 그리드(grid1) 및 팝업 점검 그리드(grid2, grid3) 생성 및 조회년도 기본값 설정
-// 2026-10-08 팝업에는 적용 REV 번호만 표시하고 월별 상태는 점검필요·점검완료로 표시
+/* 페이지 로드 시 수행 */
 ItsPage.Load = function () {
 
     ItsGrid.Create('grid1', { isCheckBoxGrid: false }, [
@@ -9,45 +8,38 @@ ItsPage.Load = function () {
         column.create('설비명', 'EQMNM', { width: 250 }),
         column.create('년도', 'YEAR', { width: 80, align: 'center' }),
 
-        column.create('1월', 'M01', { width: 105, align: 'center', readOnly: true }),
-        column.create('2월', 'M02', { width: 105, align: 'center', readOnly: true }),
-        column.create('3월', 'M03', { width: 105, align: 'center', readOnly: true }),
-        column.create('4월', 'M04', { width: 105, align: 'center', readOnly: true }),
-        column.create('5월', 'M05', { width: 105, align: 'center', readOnly: true }),
-        column.create('6월', 'M06', { width: 105, align: 'center', readOnly: true }),
-        column.create('7월', 'M07', { width: 105, align: 'center', readOnly: true }),
-        column.create('8월', 'M08', { width: 105, align: 'center', readOnly: true }),
-        column.create('9월', 'M09', { width: 105, align: 'center', readOnly: true }),
-        column.create('10월', 'M10', { width: 105, align: 'center', readOnly: true }),
-        column.create('11월', 'M11', { width: 105, align: 'center', readOnly: true }),
-        column.create('12월', 'M12', { width: 105, align: 'center', readOnly: true }),
+        column.create('1월', 'M01', { width: 105, align: 'center', readOnly: true, multiLine: true }),
+        column.create('2월', 'M02', { width: 105, align: 'center', readOnly: true, multiLine: true }),
+        column.create('3월', 'M03', { width: 105, align: 'center', readOnly: true, multiLine: true }),
+        column.create('4월', 'M04', { width: 105, align: 'center', readOnly: true, multiLine: true }),
+        column.create('5월', 'M05', { width: 105, align: 'center', readOnly: true, multiLine: true }),
+        column.create('6월', 'M06', { width: 105, align: 'center', readOnly: true, multiLine: true }),
+        column.create('7월', 'M07', { width: 105, align: 'center', readOnly: true, multiLine: true }),
+        column.create('8월', 'M08', { width: 105, align: 'center', readOnly: true, multiLine: true }),
+        column.create('9월', 'M09', { width: 105, align: 'center', readOnly: true, multiLine: true }),
+        column.create('10월', 'M10', { width: 105, align: 'center', readOnly: true, multiLine: true }),
+        column.create('11월', 'M11', { width: 105, align: 'center', readOnly: true, multiLine: true }),
+        column.create('12월', 'M12', { width: 105, align: 'center', readOnly: true, multiLine: true }),
 
         column.split()
     ]);
 
-    // 2026-09-16 메인 그리드(grid1) 1~12월 점검상태(점검필요/점검완료) 텍스트 색상 지정 및 클릭 이벤트 바인딩
-    // 2026-10-06 [메인 그리드] 점검상태(점검필요·점검완료) 텍스트 색상 분기 처리
+    ItsGrid.Get('grid1').autoRowHeights = true;
+
+    // 1~12월 점검상태 색상 및 점검자 줄바꿈 링크 표시
     ItsGrid.Get('grid1').formatItem.addHandler(function (s, e) {
-        if ((s.columns[e.col].binding == 'M01' || s.columns[e.col].binding == 'M02' || s.columns[e.col].binding == 'M03' || s.columns[e.col].binding == 'M04' || s.columns[e.col].binding == 'M05'
-            || s.columns[e.col].binding == 'M06' || s.columns[e.col].binding == 'M07' || s.columns[e.col].binding == 'M08' || s.columns[e.col].binding == 'M09' || s.columns[e.col].binding == 'M10'
-            || s.columns[e.col].binding == 'M11' || s.columns[e.col].binding == 'M12')
-            && e.panel != s.columnHeaders       // 컬럼헤더 제외
-            && e.panel != s.columnFooters) {    // 총계 제외
+        var field = s.columns[e.col].binding;
+        if (e.panel != s.cells || !IS_MONTH(field)) return;
 
-            var html = e.cell.innerHTML;
-            var value = ItsGrid.GetValue('grid1', e.row, s.columns[e.col].binding) || '';
+        var val = ItsGrid.GetValue('grid1', e.row, field) || '';
+        if (!val) return;
 
-            var color = '#337ab7';
-
-            if (value.indexOf('점검완료') >= 0)
-                color = '#1DDB16';
-
-            e.cell.innerHTML = '<a href="javascript:void(0);" style="color:' + color + '" onclick="ItsGrid.Event(\'grid1\').onDoubleClick(' + e.row + ',\'' + s.columns[e.col].binding + '\'); return false;">' + html + '</a>';
-        }
+        var color = val.indexOf('점검완료') >= 0 ? '#1DDB16' : '#337ab7';
+        var html = e.cell.innerHTML.replace(/\r?\n/g, '<br/>');
+        e.cell.innerHTML = '<a href="javascript:void(0);" style="color:' + color + '; display:inline-block; line-height:1.25;" onclick="ItsGrid.Event(\'grid1\').onDoubleClick(' + e.row + ',\'' + field + '\'); return false;">' + html + '</a>';
     });
 
     ItsGrid.Create('grid2', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        // 2026-10-02 [정기점검 등록 팝업] 이번 점검 항목의 적용 REV 번호 표시
         column.create('적용 REV', 'REVNM', { width: 90, align: 'center', readOnly: true }),
         column.create('계획구분키', 'PLANTP', { hidden: true }),
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
@@ -56,13 +48,11 @@ ItsPage.Load = function () {
         column.create('점검방법', 'CHKMTH', { width: 80, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', readOnly: true }),
         column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', readOnly: true }),
         column.create('점검값', 'CHKVALUE', { width: 80, readOnly: false }),
-        // 2026-11-09 [정기점검 등록·수정 팝업] 점검항목별 특이사항 입력
         column.create('특이사항', 'REMARK', { width: 230, readOnly: false }),
         column.split()
     ]);
 
     ItsGrid.Create('grid3', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        // 2026-10-02 [정기점검 수정 팝업] 실적에 기록된 적용 REV 번호 표시
         column.create('적용 REV', 'REVNM', { width: 90, align: 'center', readOnly: true }),
         column.create('계획구분키', 'PLANTP', { hidden: true }),
         column.create('점검코드', 'CHKKNDCD', { width: 80, align: 'center' }),
@@ -71,7 +61,6 @@ ItsPage.Load = function () {
         column.create('점검방법', 'CHKMTH', { width: 80, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', readOnly: true }),
         column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', readOnly: true }),
         column.create('점검값', 'CHKVALUE', { width: 80, readOnly: false }),
-        // 2026-11-09 [정기점검 등록·수정 팝업] 점검항목별 특이사항 입력
         column.create('특이사항', 'REMARK', { width: 230, readOnly: false }),
         column.split()
     ]);
@@ -79,9 +68,14 @@ ItsPage.Load = function () {
     ItsCombo.SetValueByIndex('cmb_SYEAR', 4);
 };
 
+// 월 컬럼(M01~M12) 여부
+function IS_MONTH(field) {
+    return /^M(0[1-9]|1[0-2])$/.test(field || '');
+}
+
 /* 메인 영역 이벤트 */
 
-// 2026-09-16 검색 조건(sdiv1) 기준 설비별 정기점검 연간 계획 및 점검상태 목록 조회 (grid1)
+// 설비별 정기점검 연간 현황 조회
 ItsButton.EventSearch = function () {
     var maria = new ItsMaria('EQM1001_R04', 'LIST_CYCLE_EQMCD');
 
@@ -98,51 +92,40 @@ ItsButton.EventSearch = function () {
     ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.data.length));
 };
 
-// 2026-09-16 메인 그리드(grid1) 특정 월 점검상태 클릭 시 점검등록(pop1) 또는 점검수정(pop2) 팝업 오픈
-// 2026-10-06 [메인 그리드] 점검상태(점검필요·점검완료) 더블클릭 팝업 분기 처리
+// 월 점검상태 클릭 시 점검필요는 등록, 점검완료는 수정 팝업 오픈
 ItsGrid.Event('grid1').onDoubleClick = function (rowindex, field) {
-    var CellValue = ItsGrid.GetValue('grid1', rowindex, field) || '';
+    if (!IS_MONTH(field)) return;
+
+    var cellVal = ItsGrid.GetValue('grid1', rowindex, field) || '';
     var EQMCD = ItsGrid.GetValue('grid1', rowindex, 'EQMCD');
-    var YEAR = ItsGrid.GetValue('grid1', rowindex, 'YEAR');
-    var MONTH = '';
+    var YYYYMM = ItsGrid.GetValue('grid1', rowindex, 'YEAR') + '-' + field.substr(1, 2);
 
-    if (field == 'M01' || field == 'M02' || field == 'M03' || field == 'M04' || field == 'M05' || field == 'M06' || field == 'M07' || field == 'M08' || field == 'M09' || field == 'M10'
-        || field == 'M11' || field == 'M12') {
-        MONTH = field.substr(1, 2);
-    }
-
-    if (MONTH != '') {
-        if (CellValue.indexOf('점검필요') >= 0) {
-            // 2026-10-02 [메인 그리드] 점검항목 조회 오류(승인 계획 없음 등) 시 정기점검 등록 팝업을 열지 않음
-            if (LIST_PLAN_EQM02(EQMCD, YEAR + '-' + MONTH)) {
-                ItsPop.Open('pop1');
-            }
+    if (cellVal.indexOf('점검필요') >= 0) {
+        if (LIST_PLAN_EQM02(EQMCD, YYYYMM)) {
+            ItsPop.Open('pop1');
         }
-        else if (CellValue.indexOf('점검완료') >= 0) {
-            if (SEARCH_CHKRSTEQM(EQMCD, YEAR + '-' + MONTH)) {
-                ItsPop.Open('pop2');
-            }
+    }
+    else if (cellVal.indexOf('점검완료') >= 0) {
+        if (SEARCH_CHKRSTEQM(EQMCD, YYYYMM)) {
+            ItsPop.Open('pop2');
         }
     }
 };
 
-// 2026-09-16 정기점검 등록 모달(pop1) 상단 패널 초기화 및 해당 설비의 점검항목 목록(grid2) 조회
+// 정기점검 등록 팝업 점검항목 조회
 var LIST_PLAN_EQM02 = function (EQMCD, YYYYMM) {
     ItsPage.InitData('pdiv1');
-    // 2026-09-30 [정기점검 등록 팝업] 이전에 연 팝업의 적용 계획키 초기화
     ShowPlanRev([]);
 
     var maria = new ItsMaria('EQM1001_R04', 'LIST_PLAN_EQM02');
 
     maria.AddParam('EQMCD', EQMCD);
-    // 2026-10-01 [정기점검 등록 팝업] 주기관리 점검자 조회용 계획 년월 전달
     maria.AddParam('YYYYMM', YYYYMM);
 
     maria.CallProc();
 
     if (maria.isError) {
         maria.ShowErrMsg();
-        // 2026-10-02 [정기점검 등록 팝업] 조회 실패 시 팝업 열지 않도록 결과 반환
         return false;
     }
 
@@ -150,14 +133,12 @@ var LIST_PLAN_EQM02 = function (EQMCD, YYYYMM) {
     ItsText.SetValue('txt_YYYYMM', YYYYMM);
 
     ItsGrid.SetStore('grid2', maria.store);
-    // 2026-09-30 [정기점검 등록 팝업] 적용 계획키 보관
     ShowPlanRev(maria.store.data);
-    // 2026-10-01 [정기점검 등록 팝업] 주기관리에서 지정한 해당 월 점검자 기본 지정
     ShowPlanEmp(maria.store.data);
     return true;
 };
 
-// 2026-10-01 정기점검 등록 모달(pop1) 주기관리에서 지정한 해당 월 점검자를 기본 점검자로 표시
+// 주기관리에서 지정한 해당 월 점검자를 기본 점검자로 표시
 function ShowPlanEmp(rows) {
     var row = rows.length > 0 ? rows[0] : {};
 
@@ -168,15 +149,14 @@ function ShowPlanEmp(rows) {
     }
 }
 
-// 2026-09-30 정기점검 등록 모달(pop1) 적용 계획키 내부 보관
-// 2026-10-08 그룹·설비 적용 계획키 보관 및 항목별 REV 표시
+// 그룹·설비 적용 계획키 보관
 function ShowPlanRev(rows) {
     var row = rows.length > 0 ? rows[0] : {};
     ItsText.SetValue('pop1_txt_REVCD', row.EQMREVCD || '');
     ItsText.SetValue('pop1_txt_GRPREVCD', row.GRPREVCD || '');
 }
 
-// 2026-09-16 정기점검 수정 모달(pop2) 상단 패널(pdiv3) 및 해당월 점검실적 항목(grid3) 조회
+// 정기점검 수정 팝업 실적 조회
 var SEARCH_CHKRSTEQM = function (EQMCD, YYYYMM) {
     ItsPage.InitData('pdiv3');
     ItsGrid.Clear('grid3');
@@ -199,22 +179,24 @@ var SEARCH_CHKRSTEQM = function (EQMCD, YYYYMM) {
     return true;
 };
 
+// 점검항목 그리드 값을 저장 파라미터 목록에 추가
+function ADD_CHK_LIST(maria, gridId) {
+    for (var i = 0; i < ItsGrid.Length(gridId); i++) {
+        maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue(gridId, i, 'CHKKNDCD'));
+        maria.AddList('PLANTP_LIST', ItsGrid.GetValue(gridId, i, 'PLANTP'));
+        maria.AddList('CHKVALUE_LIST', ItsGrid.GetValue(gridId, i, 'CHKVALUE'));
+        maria.AddList('REMARK_LIST', ItsGrid.GetValue(gridId, i, 'REMARK'));
+    }
+}
+
 /* 정기점검 등록 팝업 (pop1) 이벤트 */
 
-// 2026-09-16 정기점검 등록 모달(pop1) 상단 입력값 및 그리드(grid2) 점검값 저장
-// 2026-10-08 [정기점검 등록 팝업] 그룹·설비 계획키와 항목별 출처 전달
+// 정기점검 등록 저장
 ItsPop.Event('pop1').onAddBtnClick = function () {
-    // 2026-10-02 [정기점검 등록 팝업] 점검 항목 유무·점검값 필수 확인은 프로시저(ADD_CHKRSTEQM)에서 처리
     var maria = new ItsMaria('EQM1001_R04', 'ADD_CHKRSTEQM');
 
     maria.AddPanel('pdiv1');
-
-    for (var i = 0; i < ItsGrid.Length('grid2'); i++) {
-        maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid2', i, 'CHKKNDCD'));
-        maria.AddList('PLANTP_LIST', ItsGrid.GetValue('grid2', i, 'PLANTP'));
-        maria.AddList('CHKVALUE_LIST', ItsGrid.GetValue('grid2', i, 'CHKVALUE'));
-        maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid2', i, 'REMARK'));
-    }
+    ADD_CHK_LIST(maria, 'grid2');
 
     maria.CallProc();
 
@@ -227,7 +209,7 @@ ItsPop.Event('pop1').onAddBtnClick = function () {
     ItsButton.EventSearch();
 };
 
-// 2026-09-16 정기점검 등록 모달(pop1) 닫기 및 메인 목록 재조회
+// 정기점검 등록 팝업 닫기
 ItsPop.Event('pop1').onCancelBtnClick = function () {
     ItsPop.Close('pop1');
     ItsButton.EventSearch();
@@ -235,20 +217,12 @@ ItsPop.Event('pop1').onCancelBtnClick = function () {
 
 /* 정기점검 수정 팝업 (pop2) 이벤트 */
 
-// 2026-09-16 정기점검 수정 모달(pop2) 상단 수정값 및 그리드(grid3) 점검값 저장
-// 2026-10-08 [정기점검 수정 팝업] 항목별 출처를 유지하여 점검값 저장
+// 정기점검 수정 저장
 ItsPop.Event('pop2').onAddBtnClick = function () {
-    // 2026-10-02 [정기점검 수정 팝업] 점검값 필수 확인은 프로시저(SAVE_CHKRSTEQM)에서 처리
     var maria = new ItsMaria('EQM1001_R04', 'SAVE_CHKRSTEQM');
 
     maria.AddPanel('pdiv3');
-
-    for (var i = 0; i < ItsGrid.Length('grid3'); i++) {
-        maria.AddList('CHKKNDCD_LIST', ItsGrid.GetValue('grid3', i, 'CHKKNDCD'));
-        maria.AddList('PLANTP_LIST', ItsGrid.GetValue('grid3', i, 'PLANTP'));
-        maria.AddList('CHKVALUE_LIST', ItsGrid.GetValue('grid3', i, 'CHKVALUE'));
-        maria.AddList('REMARK_LIST', ItsGrid.GetValue('grid3', i, 'REMARK'));
-    }
+    ADD_CHK_LIST(maria, 'grid3');
 
     maria.CallProc();
 
@@ -263,7 +237,7 @@ ItsPop.Event('pop2').onAddBtnClick = function () {
     });
 };
 
-// 2026-09-16 정기점검 수정 모달(pop2) 현재 점검실적 삭제
+// 정기점검 실적 삭제
 ItsButton.Event('pop2_btn_DELETE_CHKRSTEQM').onClick = function () {
     ItsMsg.Confirm("정기점검이력을 [삭제] 하시겠습니까?", function () {
         var maria = new ItsMaria('EQM1001_R04', 'DELETE_CHKRSTEQM');
@@ -282,7 +256,7 @@ ItsButton.Event('pop2_btn_DELETE_CHKRSTEQM').onClick = function () {
     });
 };
 
-// 2026-09-16 정기점검 수정 모달(pop2) 닫기 및 메인 목록 재조회
+// 정기점검 수정 팝업 닫기
 ItsPop.Event('pop2').onCancelBtnClick = function () {
     ItsPop.Close('pop2');
     ItsButton.EventSearch();
@@ -290,66 +264,23 @@ ItsPop.Event('pop2').onCancelBtnClick = function () {
 
 /* 점검값 입력 그리드 (grid2, grid3) 이벤트 */
 
-// 2026-09-16 정기점검 등록 팝업 그리드(grid2) 점검값(CHKVALUE) 입력 시 검사타입(03: OK/NG, 기타: 숫자) 유효성 검증 및 자동 변환
-ItsGrid.Event('grid2').onChanged = function (rowIndex, field) {
-    if (field !== 'CHKVALUE') return;
+// 점검값 입력 보정 (03: OK/NG, 그 외: 숫자)
+function CHECK_CHKVALUE(gridId, rowIndex) {
+    var CHKVALTP = ItsGrid.GetValue(gridId, rowIndex, 'CHKVALTP');
+    var VALUE = (ItsGrid.GetValue(gridId, rowIndex, 'CHKVALUE') || '').toString().trim();
 
-    var CHKVALTP = ItsGrid.GetValue('grid2', rowIndex, 'CHKVALTP');
-    var VALUE = ItsGrid.GetValue('grid2', rowIndex, 'CHKVALUE');
-
-    // 03: 외관/기능 검사 (OK / NG 판정)
     if (CHKVALTP === '03') {
-        if (VALUE) {
-            VALUE = VALUE.toString().trim().toUpperCase();
-        }
-
-        if (VALUE === 'OK') {
-            ItsGrid.SetValue('grid2', rowIndex, 'CHKVALUE', 'OK');
-        } else if (VALUE === 'NG') {
-            ItsGrid.SetValue('grid2', rowIndex, 'CHKVALUE', 'NG');
-        } else {
-            ItsGrid.SetValue('grid2', rowIndex, 'CHKVALUE', '');
-        }
+        VALUE = VALUE.toUpperCase();
+        ItsGrid.SetValue(gridId, rowIndex, 'CHKVALUE', (VALUE === 'OK' || VALUE === 'NG') ? VALUE : '');
     } else {
-        var isValidNumber = /^-?\d+(\.\d+)?$/.test(VALUE);
-
-        if (!isValidNumber) {
-            ItsGrid.SetValue('grid2', rowIndex, 'CHKVALUE', '');
-        } else {
-            var num = Number(VALUE);
-            ItsGrid.SetValue('grid2', rowIndex, 'CHKVALUE', num);
-        }
+        ItsGrid.SetValue(gridId, rowIndex, 'CHKVALUE', /^-?\d+(\.\d+)?$/.test(VALUE) ? Number(VALUE) : '');
     }
+}
+
+ItsGrid.Event('grid2').onChanged = function (rowIndex, field) {
+    if (field === 'CHKVALUE') CHECK_CHKVALUE('grid2', rowIndex);
 };
 
-// 2026-09-16 정기점검 수정 팝업 그리드(grid3) 점검값(CHKVALUE) 입력 시 검사타입(03: OK/NG, 기타: 숫자) 유효성 검증 및 자동 변환
 ItsGrid.Event('grid3').onChanged = function (rowIndex, field) {
-    if (field !== 'CHKVALUE') return;
-
-    var CHKVALTP = ItsGrid.GetValue('grid3', rowIndex, 'CHKVALTP');
-    var VALUE = ItsGrid.GetValue('grid3', rowIndex, 'CHKVALUE');
-
-    // 03: 외관/기능 검사 (OK / NG 판정)
-    if (CHKVALTP === '03') {
-        if (VALUE) {
-            VALUE = VALUE.toString().trim().toUpperCase();
-        }
-
-        if (VALUE === 'OK') {
-            ItsGrid.SetValue('grid3', rowIndex, 'CHKVALUE', 'OK');
-        } else if (VALUE === 'NG') {
-            ItsGrid.SetValue('grid3', rowIndex, 'CHKVALUE', 'NG');
-        } else {
-            ItsGrid.SetValue('grid3', rowIndex, 'CHKVALUE', '');
-        }
-    } else {
-        var isValidNumber = /^-?\d+(\.\d+)?$/.test(VALUE);
-
-        if (!isValidNumber) {
-            ItsGrid.SetValue('grid3', rowIndex, 'CHKVALUE', '');
-        } else {
-            var num = Number(VALUE);
-            ItsGrid.SetValue('grid3', rowIndex, 'CHKVALUE', num);
-        }
-    }
+    if (field === 'CHKVALUE') CHECK_CHKVALUE('grid3', rowIndex);
 };
