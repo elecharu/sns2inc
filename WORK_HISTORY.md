@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-11-12
+> **최종 갱신일**: 2026-11-13
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -13,6 +13,32 @@
 2. **주석 및 네이밍 표준**: 소스코드에는 `// YYYY-MM-DD 기능설명` 표준을 준수하며, 본 문서에는 원인 분석, 설계 의도, 수정 파일 링크를 명시합니다.
 3. **컴파일 및 빌드 검증**: 소스 수정 후에는 반드시 컴파일 빌드 무결성(MSBuild 등)을 확인하고 그 결과를 기재합니다.
 4. **대화 기록 및 불러오기 연계**: 모든 사용자 요청 및 작업 결과는 본 문서에 실시간 동기화되어, 새 세션이나 나중에 작업 재개 시 "불러오기"를 통해 이전 맥락을 100% 이어받습니다.
+
+---
+
+## 🕒 2026-11-13 (금) 작업 내역
+
+### 2. MST3001_R03 INC 2공장 고정 조회, 로케이션 지정·기준정보 관리 주석처리
+- **수정/대상 파일**: [01.Office/PAGEMST/MST3001/MST3001_R03.aspx](01.Office/PAGEMST/MST3001/MST3001_R03.aspx)·[.js](01.Office/PAGEMST/MST3001/MST3001_R03.js), [05.Procedure/MES_SNS2_MST3001_R03.sql](05.Procedure/MES_SNS2_MST3001_R03.sql)
+- **경과**: 처음에는 품목 행을 품목 공장(MSTITEM_FACTORY) 07로 제한했으나, 공장 07 설비부품 355건이 모두 종료라 기본 조회 0건이 되고 이 화면에서 공장 07로 저장한 부품정보 12건도 빠져 사용자 요청으로 롤백(프로시저 원복)
+- **INC 2공장 고정**: MSTFACTORY 확인 결과 07 = INC 2공장(법인 60, 06 = INC공장). 프로시저 SEL_ITEM은 법인 60·공장 07, SAVE_ITEM은 공장 07로 고정(법인 미선택 오류 확인 제거). 화면 법인 콤보는 60 고정·읽기 전용, 품목 찾기 REF01 60
+- **로케이션 주석처리**
+  - 화면: [로케이션 기준정보 관리] 버튼·팝업(pop_LOCA) 마크업, grid_LOCA 생성, 팝업 조회·행추가·저장·삭제, 로케이션 검색 팝업(더블클릭·엔터), Delete 키 일괄 비움, 로케이션 변경 동기화, 저장 시 LOCACD_LIST 전달, 변경 감지의 로케이션 비교
+  - 로케이션코드 컬럼 readOnly true(찾기 컬럼 형식도 주석처리). 로케이션코드·로케이션명은 조회 표시만 유지
+  - 프로시저: SAVE_ITEM의 로케이션 분리·갱신 주석처리(기존 값 유지, 신규 행은 ''), SEL_LOCA·SAVE_LOCA·DEL_LOCA 블록 주석처리, Modify 1행 추가
+- **검증**: JS 구문 확인(node --check), 주석 밖에 로케이션 함수·호출 0건. 실DB SELECT(법인 60·공장 07): 종료 N 3,853건(공장 07 부품정보 12건·로케이션 지정 2건 포함), 종료 Y 473건. MSTITEM_EQMPARTS.LOCACD는 NOT NULL 기본값 ''. 인코딩: aspx·js·sql 모두 BOM 1개·CRLF. 미확인: MariaDB 프로시저 저장·화면 동작
+
+### 1. 설비 찾기(DC_FIND EQMCD·FANO)에 사용 설비그룹 설비만 표시
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_DC_FIND.sql](05.Procedure/MES_SNS2_DC_FIND.sql) (`EQMCD_LIST`·`FANO_LIST` 분기)
+- **배경**: MSTEQM에 신규 설비 추가. 실제 사용 설비는 설비그룹(EQMGUBUN, 기준코드 FM116) 코드 끝이 N. 사용자 지정 기준: 공통정보(FM116)의 사용여부 Y이고 공장[AA300S] 값이 '07'인 그룹의 설비만 표시
+- **실DB 확인(읽기 SELECT만, 로컬 localhost:33061 접속 거부로 diagnose_db.ps1 서버 사용, 사용자 승인)**
+  - 공장[AA300S] = COMTYPEGP.REF01NM → COMTYPE.REF01. FM116 43건 중 사용 Y·REF01 '07'은 14건(FM116I210N~FM116I2E0N)이며 끝이 N인 코드 14건과 정확히 같음. 옛 코드 29건은 모두 사용 N(REF01 '02' 13건·빈 값 2건·'04' 14건)
+  - MSTEQM 1,345대 → 조건 충족 118대(모두 사용 Y·공장 07·설비코드 끝 N). 공장 07 설비 254대 중 136대 제외: 설비그룹 빈 값 55대(I2C·I2CO·I2U 등), 옛 그룹코드 81대(FM116I2100 28대 등 REF01 '04' 76대, FM116E00·FM116F00 5대)
+  - 기존 이력 영향: EQMREP 21건 중 20건, CHKRSTEQM 6건 중 3건이 조건 밖 설비(I2C-002N·I2B-002N·I2G-001N 등 옛 그룹, A-001 등 시험 설비). 웹 찾기는 이름 표시도 `_LIST` 키워드 조회를 쓰므로 이 설비를 다시 불러오면 이름이 빈칸
+- **작업 상세 내용**: `EQMCD_LIST`·`FANO_LIST`에 `INNER JOIN COMTYPE ON GPCD 'FM116' AND TPCD = EQMGUBUN AND USEYN 'Y' AND REF01 '07'` 추가. `_HEAD`·`_INFO`(웹 미호출)·DC_COMBO·DC_POP(02.Site)·화면별 프로시저는 미수정
+- **영향 화면(GPCD EQMCD/FANO 찾기)**: EQM1001_R01·R03·R04·R05·S01·S03·S04, PRD0001_R02·S01, PRD6001_R02·S01·S03, PRD7001_R04, SYS4002_R03, TAL0001_R08, MST1004_R01(FANO). 설비그룹 찾기(GPCD FM116, COMTYPE 공통 분기)는 사용여부 Y만 보여 이미 신규 14개만 표시
+- **검증**: 실DB에서 변경 조건 SELECT 118건·FM116 TPCD 중복 0(행 증가 없음)·키워드 'I2C-00' 기존 20건 → 4건. 파일 형식 기존 유지(BOM 있음, LF). 미확인: MariaDB 프로시저 저장·화면 동작(사용자 DB 반영 필요)
+- **함께 발견(미수정)**: DC_COMBO `EQMCD`·`EQMCD_OQC`, DC_POP `EQMCD_*`가 SNS2 MSTEQM에 없는 컬럼(EQMCD·PRCCD·EQMNO)을 조회(TAL1001_R01·R02 콤보, SYS4002_R03 그리드 콤보, 02.Site ItsPop). PRD6001_S02 찾기 GPCD `EQMFANO`는 DC_FIND에 분기 없음(DC_POP에만 있음)
 
 ---
 

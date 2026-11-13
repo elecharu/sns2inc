@@ -15,25 +15,31 @@ ItsPage.Load = function () {
         column.create("중요도등급", "GRADE", { width: 90, align: 'center', readOnly: false }),
         column.create("안전재고", "SAFEQTY", { width: 90, align: 'right', format: '#,##0', readOnly: false }),
         column.create("현재고", "LOTQTY", { width: 90, align: 'right', format: '#,##0', readOnly: true }),
-        column.create("로케이션코드", "LOCACD", { width: 160, align: 'center', columnType: enumColumnTypes.find, readOnly: false }),
+        column.create("로케이션코드", "LOCACD", { width: 160, align: 'center', /* columnType: enumColumnTypes.find, */ readOnly: true }),
         column.create("로케이션명", "LOCANM", { width: 160, align: 'center' }),
         column.create("관리단위", "ITEMUNIT", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM150' }),
         column.create("공급구분", "ITEMSRC", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM160' }),
         column.create("종료여부", "ENDYN", { width: 100, align: 'center', columnType: enumColumnTypes.check }),
     ]);
 
-    // 2026-10-13 [설비부품 로케이션] 팝업 로케이션 
+    // 로케이션 기준정보 관리 팝업 그리드 주석처리
+    /*
+    // 2026-10-13 [설비부품 로케이션] 팝업 로케이션
     ItsGrid.Create('grid_LOCA', { isCheckBoxGrid: true }, [
         column.create("로케이션코드", "LOCACD", { width: 180, align: 'center', readOnly: false }),
         column.create("로케이션 명", "LOCANM", { width: 360, align: 'left', readOnly: false }),
     ]);
+    */
 
-    ItsCombo.SetValueByIndex('cmb_COMPANYCD', 0);
+    // INC 법인 고정
+    ItsCombo.SetValue('cmb_COMPANYCD', '60');
 
     // 2026-10-13 [설비부품정보] 품목유형 설비자재(DM100700) 고정값 설정 및 품목검색 연동
     ItsCombo.SetValue('sdiv1_combo_ITEMCG', 'DM100700');
     ItsFind.SetRef02('sdiv1_find_ITEMID', 'DM100700');
 
+    // 로케이션 지정 기능 주석처리 (Delete 키 일괄 비움)
+    /*
     // 2026-10-14 [설비부품정보] Delete 키 입력 시 드래그 선택 영역 로케이션 일괄 동기화
     var grid1 = ItsGrid.Get('grid1');
     if (grid1 && grid1.hostElement) {
@@ -57,8 +63,11 @@ ItsPage.Load = function () {
             }
         }, true);
     }
+    */
 };
 
+// 로케이션 지정 기능 주석처리 (수정·삭제 동기화, 검색 팝업, 일괄 갱신)
+/*
 // 2026-10-14 [설비부품정보] 로케이션 수정 또는 삭제 시 동기화
 ItsGrid.Event('grid1').onChanged = function (rowIndex, field, newValue, oldValue) {
     if (rowIndex < 0 || field !== 'LOCACD' || newValue === oldValue) return;
@@ -115,6 +124,7 @@ function SetLocaRows(topRow, bottomRow, locaCd, locaNm) {
     });
     grid.refresh();
 }
+*/
 
 // 2026-10-13 [설비부품정보] 품목 및 부품 재고현황 조회
 ItsButton.EventSearch = function () {
@@ -132,7 +142,7 @@ ItsButton.EventSearch = function () {
         var row = store.data[i];
         row._ORG_GRADE = row.GRADE;
         row._ORG_SAFEQTY = row.SAFEQTY;
-        row._ORG_LOCACD = row.LOCACD;
+        // row._ORG_LOCACD = row.LOCACD;
     }
 
     ItsGrid.SetStore('grid1', store);
@@ -163,7 +173,7 @@ ItsButton.EventSave = function () {
             maria.AddList('ITEMID_LIST', (row.ITEMID || '').trim());
             maria.AddList('GRADE_LIST', (row.GRADE || '').trim());
             maria.AddList('SAFEQTY_LIST', parseFloat(row.SAFEQTY) || 0);
-            maria.AddList('LOCACD_LIST', (row.LOCACD || '').trim());
+            // maria.AddList('LOCACD_LIST', (row.LOCACD || '').trim());
         }
 
         maria.CallProc();
@@ -182,6 +192,8 @@ ItsCombo.Event('sdiv1_combo_ITEMCG').onChanged = function (value) {
     ItsFind.SetRef02('sdiv1_find_ITEMID', value);
 };
 
+// 로케이션 기준정보 관리 주석처리 (팝업 열기·조회·행추가·저장·삭제)
+/*
 // 2026-10-13 [로케이션 관리] 로케이션 기준정보 관리 팝업 열기
 ItsButton.Event('btn_LOCA_MNG').onClick = function () {
     ItsPop.Open('pop_LOCA');
@@ -279,6 +291,7 @@ ItsButton.Event('btn_POP_DEL').onClick = function () {
         SearchLoca();
     });
 };
+*/
 
 // 2026-10-13 [공통 유틸] 체크 행 확인
 function GetCheckedRows(gridId, isCheckChange) {
@@ -294,7 +307,7 @@ function GetCheckedRows(gridId, isCheckChange) {
             if (isCheckChange && (
                 (row.GRADE || '').trim() !== (row._ORG_GRADE || '').trim()
                 || (parseFloat(row.SAFEQTY) || 0) !== (parseFloat(row._ORG_SAFEQTY) || 0)
-                || (row.LOCACD || '').trim() !== (row._ORG_LOCACD || '').trim())) {
+                /* || (row.LOCACD || '').trim() !== (row._ORG_LOCACD || '').trim() */)) {
                 if (row.isRowCheck !== true && row.isRowCheck !== 'true') {
                     ItsGrid.CheckRow(gridId, i);
                 }
