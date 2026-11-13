@@ -174,6 +174,35 @@
   - 원본 대비 SNS2 변경: 원본 실사입고 INTP '07'·재고조정 '97' → 실사 08만, ITEMCD·ITEMTP → ITEMID·ITEMCG, GPCD('WARECD') → MSTWARE, 조정사유(ADJUSTWHY) 제외, 행위구분 '재고정정'·입출고구분 변동없음·입고·출고(직전 사용자 결정 유지), 정렬에서 상수인 ACTION 제외
   - 정리: 변동없음의 LEFT JOIN COMCHKLOT은 WHERE 조건 때문에 사실상 INNER라 INNER JOIN으로, 입고·출고 LOT도 로트 컬럼을 쓰므로 INNER JOIN. 원본에서 빠져 있던 변동없음의 품목 조건 추가. 헤더 문구를 원본 구조 유지로 수정
   - 검증: 괄호 짝, SELECT 3·UNION ALL 2, 파라미터 7(변동 없음), BOM 없음·CRLF. 미확인: MariaDB 컴파일, 실데이터 결과(DB 접속 불가). DB 반영 필요: LOT1003_S01 재저장
+- **후속 수정 (2026-11-12, 창고 전체 제거·컬럼 자동 너비)**:
+  - LOT1003_R01.aspx 실사지시생성 팝업 창고(pdiv1_cmb_WARECD) GPCD *WARECD → WARECD(전체 없음). R01.js 팝업 열기 순서를 열기 → 초기화(InitData) → 품목조회로 변경(기존에는 품목조회 후 InitData가 창고를 초기값으로 바꿔 목록과 창고가 어긋날 수 있었고, 숨은 팝업에서 너비 계산이 안 되므로)
+  - LOT1003_R01.js: 실사지시(grid1)·실사품목(grid2)·실사로트(grid3)·팝업 품목(grid_ITEMLIST_ADD) 조회 후 autoSizeColumns() 적용(S01과 같은 ItsGrid.Get(id).autoSizeColumns())
+  - LOT1003_S01.aspx 창고(cmb_WARECD) GPCD *WARECD → WARECD + Required. S01 프로시저: 창고 미선택 시 '창고를 선택하세요.'(R01과 같음), 창고 조건 LIKE '%…%' → = (전체가 없어 부분일치 불필요, 다른 창고코드에 포함된 코드가 섞여 나오는 문제 방지)
+  - R01.aspx는 작업 전부터 LF 줄 끝이라 CRLF로 맞춤(git 내용 변경 없음)
+  - 검증: JS 구문, 인코딩(aspx·js BOM+CRLF, sql BOM 없음+CRLF), S01 IF 1쌍·파라미터 7. 미확인: 화면 동작(DB 접속 불가로 콤보·조회 확인 못 함). DB 반영 필요: LOT1003_S01 재저장
+- **후속 수정 (2026-11-12, 승인자 선택·승인 시 EMPCD 저장)**: 승인자를 일반 find로 바꾸고, 승인 처리자를 로그인 사원(CALLEMP) 대신 화면에서 선택한 승인자로 저장
+  - R01.aspx find_EMPCD: FindType="mini"·ReadOnly 제거(코드+이름, 찾기 가능, LOT1002 사원 find와 같은 형식). 초기값은 기존대로 로그인 사원
+  - R01.js 승인: 품목 선택 확인 뒤 승인자 미입력 시 '승인자를 선택하세요.', COMCHK_CONFIRM에 EMPCD 전달
+  - LOT1003_R01 프로시저: 파라미터 $EMPCD 추가(12 → 13, CHKKEYLIST 다음), COMCHK_CONFIRM에서 승인자 미입력 확인 후 IO_COMCHK_CONFIRM(_$CHKKEY, $EMPCD) 호출. SYSTEM_PARAMETERS 파일 정상 건수 13으로 수정
+  - IO_COMCHK_CONFIRM: 파라미터 $EMPCD 추가(호출처는 LOT1003_R01 1곳), 승인자 미입력 확인, COMCHK·COMCHK_GROUP CHKAPPEMP와 COMIN·COMOUT EMPCD(담당자)에 $EMPCD 저장. REMP·MEMP 등 등록·수정자 컬럼은 로그인 사원(CALLEMP) 유지
+  - LOT1003_S01: 입고·출고 행 관리자를 COMINLOT·COMOUTLOT.REMP(로그인 사원) → COMIN·COMOUT.EMPCD(선택한 승인자)로 변경
+  - 검증: IF 짝(R01 4·CONFIRM 8·S01 1), 괄호 짝, 파라미터 R01 13·CONFIRM 2·S01 7, JS 구문, 인코딩 유지. 미확인: MariaDB 컴파일, 화면 동작(DB 접속 불가). DB 반영 필요: IO_COMCHK_CONFIRM·LOT1003_R01·LOT1003_S01 재저장 후 LOT1003_R01_SYSTEM_PARAMETERS 실행(13건)
+- **후속 수정 (2026-11-12, 승인자 변경 불가·로그인 사원 유지, 너비 조정)**: 사용자 정정 — 승인자는 바꿀 수 없어야 하고 로그인 사원이 승인자로 들어가는 것이 맞음 → 직전 승인자 EMPCD 전달 변경 전부 되돌림
+  - 되돌림: R01.js 승인자 미입력 확인·EMPCD 전달 삭제, LOT1003_R01 $EMPCD 파라미터·확인 삭제(13 → 12, IO_COMCHK_CONFIRM(_$CHKKEY)), IO_COMCHK_CONFIRM $EMPCD 파라미터·확인 삭제(CHKAPPEMP·COMIN·COMOUT EMPCD 다시 CALLEMP()), S01 입고·출고 관리자 다시 COMINLOT·COMOUTLOT.REMP, SYSTEM_PARAMETERS 파일 정상 건수 12로 원복
+  - R01.aspx 승인자 find: 일반 find(코드+이름) + ReadOnly="true"(변경 불가), 코드 칸 InputWidth 60px 기본 → 90. 초기값은 기존대로 로그인 사원
+  - R01.aspx 조회 창고 콤보: Width="120"은 ItsCombo에 없는 속성이라 적용되지 않았고 실제 입력칸 90px → 1.3배 117px가 되도록 InputWidth="97"(ItsCombo는 InputWidth + 20으로 그림)
+  - 검증: 로컬 IIS Express(localhost:55085)에서 창고 콤보 117px, 승인자 코드 90px·읽기 전용·이름 111px 측정. 파라미터 R01 12·CONFIRM 1, IF 짝, JS 구문, 인코딩 유지. 이전 승인자 변경을 DB에 반영하지 않았다면 프로시저 재저장·파라미터 재등록 불필요(반영했다면 IO_COMCHK_CONFIRM·LOT1003_R01·LOT1003_S01 재저장 후 SYSTEM_PARAMETERS 12건 재실행)
+- **후속 수정 (2026-11-12, 승인자에 사원코드 저장)**: CALLEMP()는 로그인 ID(MariaCall.aspx.cs에서 SESSION_USERID로 치환)라 승인자에 ID가 들어감 → 화면 승인자(ItsPage.EMPCD, WEBSYSMAIN PAGE_LOAD의 SYSUSER.EMPCD)와 같은 사원코드(예: 9999)로 저장
+  - IO_COMCHK_CONFIRM: _$EMPCD = SYSUSER.EMPCD(USERID = CALLEMP()), 없으면 '로그인 사용자의 사원코드가 없습니다.' 후 중단. COMCHK·COMCHK_GROUP CHKAPPEMP, COMIN·COMOUT EMPCD(담당자)에 _$EMPCD 저장. 등록·수정자 REMP·MEMP는 프로젝트 공통 규칙대로 CALLEMP() 유지(파라미터 변동 없음)
+  - 검증: IF 8쌍, 괄호 짝, 파라미터 1, BOM 없음·CRLF. 미확인: MariaDB 컴파일, 실제 승인(DB 접속 불가). DB 반영 필요: IO_COMCHK_CONFIRM 재저장
+  - (정리) 사용자 요청으로 불필요한 부분 삭제: 사원코드 없음 오류 확인 블록과 긴 설명 주석 제거, _$EMPCD는 창고코드 다음 SET 한 줄(+ 짧은 주석)로 정리. 사원코드가 없으면 빈 값 저장. 승인자·입출고 담당자에 사원코드 저장은 유지. 검증: IF 7쌍, 괄호 짝, BOM 없음·CRLF
+  - (후속) 사용자 지적: 승인 시 기록되는 등록자·수정자도 사원코드여야 함 → IO_COMCHK_CONFIRM의 CALLEMP() 7곳(COMOUTLOT·COMINLOT·COMOUT·COMIN REMP, COMLOT·COMCHK·COMCHK_GROUP MEMP)을 모두 _$EMPCD로 변경. CALLEMP()는 사원코드 조회 1곳만 남음. 검증: IF 7쌍, 괄호 짝, BOM 없음·CRLF. 승인취소(IO_COMCHK_CANCEL)는 아직 CALLEMP()(MEMP 4곳, 그룹 CHKAPPEMP 1곳)
+  - (후속) IO_COMCHK_CANCEL도 같은 방식: _$EMPCD = SYSUSER.EMPCD(USERID = CALLEMP()) 1회 조회(실사그룹키 확인 다음), COMLOT 원복 MEMP 2곳·COMCHK MEMP·COMCHK_GROUP CHKAPPEMP·MEMP를 _$EMPCD로. CALLEMP()는 조회 1곳만 남음. 승인취소 후 로트 실사수량 초기화(IO_COMCHKLOT_DEL, 태블릿 공통)의 COMCHKLOT MEMP는 공통 프로시저라 CALLEMP() 그대로. 검증: IF 8쌍·WHILE 1쌍, 괄호 짝, BOM 없음·CRLF, 파라미터 변동 없음. DB 반영 필요: IO_COMCHK_CANCEL 재저장
+  - (최종) 사용자 결정: 등록자·수정자(REMP·MEMP)는 프로젝트 규칙대로 CALLEMP(), 승인처리자만 사원코드 → IO_COMCHK_CONFIRM REMP 4곳·MEMP 3곳, IO_COMCHK_CANCEL MEMP 4곳을 CALLEMP()로 원복. 사원코드(_$EMPCD)는 승인자 CHKAPPEMP(CONFIRM COMCHK·COMCHK_GROUP, CANCEL COMCHK_GROUP)와 승인으로 생기는 08 입출고 담당자 COMIN·COMOUT.EMPCD에만 사용. 검증: CONFIRM IF 7쌍·CANCEL IF 8쌍, 괄호 짝, BOM 없음·CRLF, 파라미터 변동 없음. DB 반영 필요: IO_COMCHK_CONFIRM·IO_COMCHK_CANCEL 재저장
+- **후속 수정 (2026-11-13, 이력조회 관리자 사원명 표시)**: LOT1003_S01 관리자에 로그인 ID 대신 MSTEMP.EMPNM(사원코드로 찾은 이름) 표시
+  - S01 프로시저: 변동없음은 COMCHKLOT.REMP(로그인 ID) → SYSUSER.EMPCD → MSTEMP.EMPNM(DC_FIND USERID_INFO와 같은 SYSUSER·MSTEMP 연결), 입고·출고는 승인 시 사원코드가 저장되는 COMIN·COMOUT.EMPCD → MSTEMP.EMPNM. 모두 LEFT JOIN(사원 정보가 없어도 행은 나옴, 이름만 빈칸). 반환 컬럼 EMPCD → EMPNM
+  - S01.js 관리자 컬럼: EMPCD 콤보(gpcd EMPCD) → EMPNM 일반 텍스트
+  - 검증: 괄호 짝, JS 구문, 인코딩(sql BOM 없음+CRLF, js BOM+CRLF), 파라미터 변동 없음(7). 미확인: MariaDB 컴파일, 실데이터(DB 접속 불가). 이번 변경 전에 승인된 실사는 COMIN·COMOUT.EMPCD에 로그인 ID가 있어 이름이 빈칸일 수 있음. DB 반영 필요: LOT1003_S01 재저장
 
 ### 9. COMCHK 테스트 데이터(260818…) 미조회 원인 확인 (읽기 전용)
 

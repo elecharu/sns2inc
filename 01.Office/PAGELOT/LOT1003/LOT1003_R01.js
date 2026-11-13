@@ -70,6 +70,8 @@ ItsButton.EventSearch = function () {
 
     ItsGrid.SetStore('grid1', maria.store.YnToBool('DONEYN'));
 
+    ItsGrid.Get('grid1').autoSizeColumns();
+
     ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
 };
 
@@ -103,9 +105,9 @@ ItsButton.EventDelete = function () {
 
 // 실사지시생성 팝업 열기
 ItsButton.EventAdd = function () {
-    ItsButton.Event('btn_SEARCH_ITEMLIST').onClick();
     ItsPop.Open('pop1');
     ItsPage.InitData('pdiv1');
+    ItsButton.Event('btn_SEARCH_ITEMLIST').onClick();
 }
 
 ItsPop.Event('pop1').onCancelBtnClick = function () {
@@ -126,6 +128,8 @@ ItsButton.Event('btn_SEARCH_ITEMLIST').onClick = function () {
         return;
     }
     ItsGrid.SetStore('grid_ITEMLIST_ADD', maria.store);
+
+    ItsGrid.Get('grid_ITEMLIST_ADD').autoSizeColumns();
 }
 
 // 실사지시생성 저장
@@ -170,6 +174,8 @@ ItsGrid.Event('grid1').onSelect = function (rowIndex, field) {
     }
 
     ItsGrid.SetStore('grid2', maria.store.YnToBool('CHKAPPYN'));
+
+    ItsGrid.Get('grid2').autoSizeColumns();
 };
 
 // 품목 선택 > 로트 리스트 조회
@@ -186,6 +192,8 @@ ItsGrid.Event('grid2').onSelect = function (rowIndex, field) {
     }
 
     ItsGrid.SetStore('grid3', maria.store);
+
+    ItsGrid.Get('grid3').autoSizeColumns();
 };
 
 // 승인 버튼

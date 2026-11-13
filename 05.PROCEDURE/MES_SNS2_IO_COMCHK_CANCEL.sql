@@ -15,6 +15,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$CHKKEY    VARCHAR(20);
   DECLARE _$WARECD    VARCHAR(100);
   DECLARE _$CHKTIME   VARCHAR(19);
+  DECLARE _$EMPCD     VARCHAR(100);
 -- *****************************************************************************
 IF IFNULL(@ERRMSG, '') = '' THEN
 -- *****************************************************************************
@@ -29,6 +30,8 @@ IF IFNULL(@ERRMSG, '') = '' THEN
     CALL COMERR('실사그룹키가 비어있습니다.');
     LEAVE PROC;
   END IF;
+
+  SET _$EMPCD = IFNULL((SELECT EMPCD FROM SYSUSER WHERE USERID = CALLEMP()), ''); -- 로그인 사원코드
 
   WHILE LENGTH($CHKKEYLIST) > 0 DO
     CALL COMSPLIT($CHKKEYLIST, _$CHKKEY);
@@ -109,7 +112,7 @@ IF IFNULL(@ERRMSG, '') = '' THEN
   -- 5. COMCHK_GROUP 미승인으로 수정
   IF (SELECT CHKAPPYN FROM COMCHK_GROUP WHERE CHKGROUPKEY = $CHKGROUPKEY) = 'Y' THEN
     UPDATE COMCHK_GROUP
-       SET CHKAPPYN = 'N', CHKAPPEMP = CALLEMP(), CHKAPPTIME = CALLTIME(),
+       SET CHKAPPYN = 'N', CHKAPPEMP = _$EMPCD, CHKAPPTIME = CALLTIME(),
            MTIME = CALLTIME(), MEMP = CALLEMP(), MPRG = CALLPRG()
      WHERE CHKGROUPKEY = $CHKGROUPKEY;
   END IF;

@@ -11,9 +11,9 @@
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" Runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
         <Its:dateRange runat="server" Label="실사기간" FieldFrom="SDATE" FieldTo="EDATE" ID="dr_DATE" />
-        <Its:combo runat="server" Label="창고코드" Field="WARECD" Width="120" GPCD="WARECD"  ID="cmb_WARECD" Required="true"/>
+        <Its:combo runat="server" Label="창고코드" Field="WARECD" InputWidth="97" GPCD="WARECD"  ID="cmb_WARECD" Required="true"/>
         <Its:combo runat="server" Label="품목유형" GPCD="*DM100" Field="ITEMCG" ID="cmb_ITEMCG" />
-        <Its:find runat="server" Label="승인자" ID="find_EMPCD" Field="EMPCD" GPCD="EMPCD" FindType="mini" ReadOnly="true" Required="true"  />
+        <Its:find runat="server" Label="승인자" ID="find_EMPCD" Field="EMPCD" GPCD="EMPCD" InputWidth="90" ReadOnly="true" Required="true" />
         <Its:button runat="server" Label="승인" ID="btn_CONFIRM_COMCHK" Width="80" Margin_Left="50px" BackColor="Danger" ForeColor="White"/>
         <Its:button runat="server" Label="취소" ID="btn_CANCEL_COMCHK" Width="80" />
     </Its:div>
@@ -43,7 +43,7 @@
         <Its:div runat="server" Type="SplitSingle" ID="pdiv1">
             <Its:div runat="server" Type="BasicFloat" ID="float1">
                 <Its:date runat="server" Label="실사일자" Field="CHKDATE" ID="pdiv1_date_CHKDATE" Required="true"/>
-                <Its:combo runat="server" Label="창고코드" Field="WARECD" GPCD="*WARECD" ID="pdiv1_cmb_WARECD" Required="true"/>
+                <Its:combo runat="server" Label="창고코드" Field="WARECD" GPCD="WARECD" ID="pdiv1_cmb_WARECD" Required="true"/>
                 <Its:text runat="server" Label="실사명" Field="CHKNM" Required="true" InputWidth="150"/>
                 <Its:newline runat="server" Height="5"/>
                 <Its:combo runat="server" Label="품목유형" GPCD="*DM100" Field="ITEMCG" ID="pdiv1_cmb_ITEMCG"/>

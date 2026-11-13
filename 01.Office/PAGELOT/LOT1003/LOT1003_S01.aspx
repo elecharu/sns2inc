@@ -11,7 +11,7 @@
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
         <Its:dateRange runat="server" Label="조회기간" FieldFrom="SDATE" FieldTo="EDATE" ID="dr_DATE" />
-        <Its:combo runat="server" Label="창고코드" ID="cmb_WARECD" Field="WARECD" GPCD="*WARECD"/>
+        <Its:combo runat="server" Label="창고코드" ID="cmb_WARECD" Field="WARECD" InputWidth="97" GPCD="WARECD" Required="true"/>
         <Its:combo runat="server" Label="품목유형" ID="cmb_ITEMCG" Field="ITEMCG" GPCD="*DM100" />
         <Its:find runat="server" Label="품목코드" ID="find_ITEMID" Field="ITEMID" GPCD="ITEMID" />
     </Its:div>
