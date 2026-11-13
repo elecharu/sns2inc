@@ -19,7 +19,8 @@
 ## 🕒 2026-11-13 (금) 작업 내역
 
 ### 3. PRD6001_S02 MTBF·고장율·MTTR 계산식 수정
-- **수정/대상 파일**: [05.Procedure/MES_SNS2_PRD6001_S02.sql](05.Procedure/MES_SNS2_PRD6001_S02.sql) (`LIST_EQMDATA`)
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_PRD6001_S02.sql](05.Procedure/MES_SNS2_PRD6001_S02.sql) (`LIST_EQMDATA`), [01.Office/PAGEPRD/PRD6001/PRD6001_S02.js](01.Office/PAGEPRD/PRD6001/PRD6001_S02.js)
+- **후속**: 사용자가 실DB 반영 후 조회한 (M3열전)T1·T2 값(11월 MTBF 35,991·35,894, 고장율 1.67, MTTR 9·106, 합계 437,991·437,894·0.14)이 검산값과 일치. 고장 없는 달 MTBF·MTTR은 사용자 결정으로 0 표시 유지. 조회 후 `ItsGrid.Get('grid1').autoSizeColumns()` 추가(node --check 통과, BOM·CRLF 유지)
 - **배경**: 사용자 기준 MTBF = 총 가동시간 ÷ 고장횟수, 고장율 λ = 고장횟수 ÷ 총 가동시간(MTBF = 1/λ), MTTR = 총 수리시간 ÷ 총 수리횟수. 실DB 프로시저는 이 파일과 같은 내용(2026-11-05 저장)
 - **잘못된 부분**
   - MTBF = 부하시간 ÷ 고장건수: 고장시간이 빠지지 않은 부하시간을 써서 가동시간보다 크게 계산

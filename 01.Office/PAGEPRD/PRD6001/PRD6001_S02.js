@@ -5,7 +5,7 @@ var tabState = 0;
 ItsPage.Load = function () {
     ItsGrid.Create('grid1', { isCheckBoxGrid: false, allowMerging: true }, [
         column.create('설비명', 'EQM', { width: 130, align: 'center', allowMerging: true }),
-        column.create('구분', 'ITEM', { width: 100, align: 'center' }),
+        column.create('구분', 'ITEM', { width: 120, align: 'center' }),
         column.create('1월', 'M1', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, align: 'center' }),
         column.create('2월', 'M2', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, align: 'center' }),
         column.create('3월', 'M3', { width: 100, columnType: enumColumnTypes.number, decimalPrecision: 0, align: 'center' }),
