@@ -36,12 +36,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 
   WHEN 'SEL_ITEM' THEN -- 설비부품 품목 마스터 및 재고·로케이션 조회 (화면 표시용 필수 컬럼 최적화)
     
-    IF TRIM(COALESCE($COMPANYCD, '')) = '' THEN 
-      CALL COMERR('법인을 선택하십시오.');
-      LEAVE PROC;
-    END IF; 
-
-
+    SET $COMPANYCD = '60';
     SET $FACTORYCD = '07';
 
     SET $ITEMCG = 'DM100700';
