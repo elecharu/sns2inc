@@ -29,6 +29,8 @@ namespace TML1020
     {
         ItsModelPanel MODEL_S1 = new ItsModelPanel();
         ItsModelGrid MODEL_G1 = new ItsModelGrid();
+        ItsModelPanel MODEL_S2 = new ItsModelPanel();   // [입고취소] 탭 조회조건
+        ItsModelGrid MODEL_G2 = new ItsModelGrid();     // [입고취소] 탭 입고 목록
 
         public R01()
         {
@@ -39,6 +41,12 @@ namespace TML1020
 
             MODEL_G1.Binding(GRID_G1);
             MODEL_G1.InitData();
+
+            MODEL_S2.Binding(PANEL_S2);
+            MODEL_S2.InitData();
+
+            MODEL_G2.Binding(GRID_G2);
+            MODEL_G2.InitData();
         }
 
         public override void EventPageLoaded()
@@ -47,12 +55,92 @@ namespace TML1020
 
             MODEL_S1.SetValue("MTRINDATE", DateTime.Now.ToString("yyyy-MM-dd"));
             MODEL_S1.SetValue("BARCODE", "");
+
+            MODEL_S2.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+            MODEL_S2.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+
             txt_BARCODE.Focus();
         }
 
+        // ===== [입고취소] 탭 : 입고된 거래명세서 조회 / 입고 취소 (프로시저 TML1020_R01 LIST_MTRIN, CANCEL_MTRIN → IO_MTRINVOICE_CANCEL) =====
+        private void SearchMtrin()
+        {
+            ItsMaria.Set("TML1020_R01", "LIST_MTRIN");
+            ItsMaria.AddModel(MODEL_S2);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            MODEL_G2.SetData(ds.Tables[0]);
+        }
+
+        // 조회·입고취소 버튼 처리. 처리했으면 true
+        private bool EventCommandHistory(string commandName)
+        {
+            if (commandName == "SEARCH_MTRIN")
+            {
+                if (MODEL_S2.GetText("SDATE") == "" || MODEL_S2.GetText("EDATE") == "")
+                {
+                    ShowMessageBox("", "입고일자를 선택하세요.");
+                    return true;
+                }
+
+                SearchMtrin();
+                return true;
+            }
+            else if (commandName == "CANCEL_MTRIN")
+            {
+                int cnt = 0;
+                for (int i = 0; i < MODEL_G2.ModelCount; i++)
+                {
+                    if (MODEL_G2.IsChecked(i)) cnt++;
+                }
+                if (cnt == 0)
+                {
+                    ShowMessageBox("", "입고 취소할 거래명세서를 체크하세요.");
+                    return true;
+                }
+
+                ShowMessageBox(commandName, "체크한 거래명세서 " + cnt + "건의 입고를 취소하시겠습니까?\n(입고대기 상태로 되돌립니다)");
+                return true;
+            }
+
+            return false;
+        }
+
+        // 입고취소 확인 후 처리. 처리했으면 true
+        private bool EventMessageHistory(string commandName)
+        {
+            if (commandName != "CANCEL_MTRIN") return false;
+
+            ItsMaria.Set("TML1020_R01", "CANCEL_MTRIN");
+            int cnt = 0;
+            for (int i = 0; i < MODEL_G2.ModelCount; i++)
+            {
+                if (!MODEL_G2.IsChecked(i)) continue;
+
+                ItsMaria.AddList("INVOICEKEY_LIST", MODEL_G2.GetText(i, "INVOICEKEY"));
+                cnt++;
+            }
+            ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return true;
+            }
+
+            ShowMessageBox("", "입고 취소되었습니다. (" + cnt + "건)");
+            SearchMtrin();
+            return true;
+        }
         public override void EventCommand(string commandName)
         {
             base.EventCommand(commandName);
+
+            if (EventCommandHistory(commandName)) return;
 
             // 입고 등록
             if (commandName == "ADD_MTRIN")
@@ -84,6 +172,8 @@ namespace TML1020
         public override void EventMessageResult(string commandName)
         {
             base.EventMessageResult(commandName);
+
+            if (EventMessageHistory(commandName)) return;
 
             if (commandName == "ADD_MTRIN")
             {

@@ -132,6 +132,12 @@
     <Compile Include="R06.xaml.cs">
       <DependentUpon>R06.xaml</DependentUpon>
     </Compile>
+    <Compile Include="R07.xaml.cs">
+      <DependentUpon>R07.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="R08.xaml.cs">
+      <DependentUpon>R08.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -182,6 +188,14 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="R06.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="R07.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="R08.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

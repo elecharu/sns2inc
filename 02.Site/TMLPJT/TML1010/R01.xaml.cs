@@ -123,6 +123,8 @@ namespace TML1010
             {
                 cb_CUSTCD.Value = ItsLocalInfo.TMLCUSTCD.ToString();
             }
+            // 외주 계정: 계정의 거래처로 고정 (필수), 사내 계정: 거래처 선택 가능 (필수 아님, 무상사급 발주만 조회)
+            cb_CUSTCD.ReadOnly = (ItsLocalInfo.TMLCUSTCD != "");
 
             MODEL_S1.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));
             MODEL_S1.SetValue("EDATE", DateTime.Now.AddMonths(1).AddDays(-DateTime.Now.Day).ToString("yyyy-MM-dd"));
@@ -139,9 +141,17 @@ namespace TML1010
             // 발주 조회
             if (commandName == "LIST_MTRODR")
             {
+                bool isOutside = (ItsLocalInfo.TMLCUSTCD != "");
+                if (isOutside && MODEL_S1.GetText("CUSTCD") == "")
+                {
+                    ShowMessageBox("", "거래처를 선택하세요.");
+                    return;
+                }
+
                 ItsMaria.Set("TML1010_R01", "LIST_MTRODR");
 
                 ItsMaria.AddModel(MODEL_S1);
+                ItsMaria.AddOne("INHOUSEYN", isOutside ? "N" : "Y");
 
                 DataSet ds = ItsMaria.Call();
 

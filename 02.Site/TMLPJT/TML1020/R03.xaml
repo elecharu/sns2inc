@@ -25,7 +25,7 @@
         </UserControl>
 
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="58">
-            <its:Grid x:Name="GRID_G1" Width="1056" Height="478">
+            <its:Grid x:Name="GRID_G1" Width="1056" Height="493">
                 <its:Grid.Columns>
                     <its:Column Width="55" Header="삭제" CellType="Button" ButtonText="삭제" CommandName="DEL_ROW"/>
                     <its:Column Width="140" Header="품목코드" FieldName="ITEMCD"/>
@@ -43,7 +43,7 @@
         </UserControl>
 
         <!-- 오른쪽 버튼 영역 (TML1020 R01 과 같게) -->
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="58" Width="120" Height="478">
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="58" Width="120" Height="493">
             <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
                 <its:Button Label="등 록" Width="100" Height="55" FontWeight="Bold" CommandName="ADD_MOVE" BackColor="Green"/>
                 <UserControl Height="10"/>
@@ -67,7 +67,7 @@
         </UserControl>
 
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="58">
-            <its:Grid x:Name="GRID_G2" Width="1056" Height="478">
+            <its:Grid x:Name="GRID_G2" Width="1056" Height="493">
                 <its:Grid.Columns>
                     <its:Column Width="45" Header="선택" CellType="Check" FieldName="ISCHECKED" IsRowCheck="True"/>
                     <its:Column Width="95" Header="이동일자" FieldName="MOVEDATE" ALGIN="Center"/>
@@ -87,7 +87,7 @@
             </its:Grid>
         </UserControl>
 
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="58" Width="120" Height="478">
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="58" Width="120" Height="493">
             <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
                 <its:Button Label="삭 제" Width="100" Height="55" FontWeight="Bold" CommandName="DEL_MOVE" BackColor="IndianRed"/>
             </StackPanel>

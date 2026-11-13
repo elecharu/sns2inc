@@ -5,6 +5,7 @@ PROCEDURE MES_SNS2.TML1020_R02(
 --          이동할 LOT 바코드 스캔 → 그리드에 추가 (이동량 기본 = 현재고, 수정 가능) → 등록
 --          같은 LOT 번호로 창고별 재고 관리 (IO_MOVELOT_WARE), 입출고구분 02 창고이동
 -- Create: 2026-11-10
+-- Modify: 2026-11-12: [이동내역삭제] 탭 - LIST_MOVE(조회), DEL_MOVE(삭제, IO_MOVELOT_WARE_DEL) 추가
 -- Modify: 2026-11-11: 등록 후 ERP 인터페이스(WORK_20, 창고이동 FLAG 20 외주반출) 송신 추가
 -- *****************************************************************************
   IN $MOVEDATE      VARCHAR(10),    -- 이동일자
@@ -13,6 +14,9 @@ PROCEDURE MES_SNS2.TML1020_R02(
   IN $SCANLOT       VARCHAR(100),   -- 스캔 LOT
   IN $LOTKEY_LIST   MEDIUMTEXT,     -- 이동 LOT
   IN $MOVEQTY_LIST  MEDIUMTEXT,     -- LOT 별 이동량
+  IN $SDATE        VARCHAR(10),    -- 이동내역 조회 시작일
+  IN $EDATE        VARCHAR(10),    -- 이동내역 조회 종료일
+  IN $GROUPKEY_LIST MEDIUMTEXT,    -- 삭제할 이동 GROUPKEY
 -- *****************************************************************************
   IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
@@ -94,6 +98,43 @@ WHEN 'ADD_MOVE' THEN -- 등록 : 사내 양품창고 → 외주처 창고
 
   -- ERP 인터페이스 (창고이동 FLAG 20 외주반출 : I)
   CALL IO_ERP_INTERFACE('WORK_20', @MOVEGROUPKEY, 'I');
+
+  IF IFNULL(@ERRMSG, '') <> '' THEN
+    LEAVE PROC;
+  END IF;
+
+-- ****************************************************************************
+WHEN 'LIST_MOVE' THEN -- 이동내역 조회 (이동일자 기간, 이 메뉴로 등록한 이동만, LOT 행 단위)
+
+  SELECT
+      COMOUT.GROUPKEY
+    , COMOUT.OUTDATE AS MOVEDATE
+    , COMOUTLOT.LOTKEY
+    , CAST(MSTITEM.ITEMID AS CHAR) AS ITEMID
+    , MSTITEM.ITEMCD
+    , MSTITEM.ITEMNM
+    , MSTITEM.ITEMSPEC
+    , IFNULL((SELECT MSTWARE.WARENM FROM MSTWARE WHERE MSTWARE.WARECD = COMOUTLOT.WARECD), COMOUTLOT.WARECD) AS OUTWARENM
+    , IFNULL((SELECT MSTWARE.WARENM FROM MSTWARE WHERE MSTWARE.WARECD = COMINLOT.WARECD), COMINLOT.WARECD) AS INWARENM
+    , COMOUTLOT.OUTQTY AS MOVEQTY
+    , IFNULL((SELECT COMLOT.LOTQTY FROM COMLOT WHERE COMLOT.LOTKEY = COMINLOT.LOTKEY AND COMLOT.WARECD = COMINLOT.WARECD), 0) AS INLOTQTY
+    , GPCD('EMPCD', COMOUT.EMPCD) AS EMPNM
+    , COMOUT.RTIME
+  FROM COMOUT
+  INNER JOIN COMOUTLOT ON COMOUTLOT.OUTKEY = COMOUT.OUTKEY
+  INNER JOIN COMIN ON COMIN.GROUPKEY = COMOUT.GROUPKEY
+  INNER JOIN COMINLOT ON COMINLOT.INKEY = COMIN.INKEY
+                     AND COMINLOT.LOTKEY = COMOUTLOT.LOTKEY
+  INNER JOIN MSTITEM ON MSTITEM.ITEMID = COMOUTLOT.ITEMID
+  WHERE COMOUT.OUTTP = '02'
+    AND COMOUT.RPRG = 'TML1020_R02'
+    AND COMOUT.OUTDATE BETWEEN LEFT($SDATE, 10) AND LEFT($EDATE, 10)
+  ORDER BY COMOUT.RTIME DESC, COMOUTLOT.LOTKEY;
+
+-- ****************************************************************************
+WHEN 'DEL_MOVE' THEN -- 이동내역 삭제 (선택한 이동 건 전체를 되돌림, 재고 원복)
+
+  CALL IO_MOVELOT_WARE_DEL($GROUPKEY_LIST);
 
   IF IFNULL(@ERRMSG, '') <> '' THEN
     LEAVE PROC;

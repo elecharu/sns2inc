@@ -9,6 +9,9 @@
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
       Width="980" Height="480">
     <!-- 2026-11-09 입고확인처리: 거래명세서번호 또는 LOT번호 바코드 스캔 → [등록] 하면 입고일자로 입고(수불) -->
+    <TabControl x:Name="TAB_MAIN" Width="980" Height="480" Padding="0" BorderThickness="0" Background="Silver">
+    <TabItem Height="25">
+    <TabItem.Header><TextBlock Text="  등 록  " FontSize="14" FontWeight="Bold"/></TabItem.Header>
     <Canvas Background="Silver">
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
@@ -20,7 +23,7 @@
         </UserControl>
 
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="36">
-            <its:Grid x:Name="GRID_G1" Width="860" Height="444">
+            <its:Grid x:Name="GRID_G1" Width="860" Height="419">
                 <its:Grid.Columns>
                     <its:Column Width="100" Header="거래명세서번호" FieldName="INVOICEKEY" ALGIN="Center"/>
                     <its:Column Width="100" Header="출고처" FieldName="OUTCUSTNM" ALGIN="Center"/>
@@ -38,7 +41,7 @@
         </UserControl>
 
         <!-- 오른쪽 버튼 영역: 위 조회 패널과 같은 배경 -->
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="860" Canvas.Top="36" Width="120" Height="444">
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="860" Canvas.Top="36" Width="120" Height="419">
             <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
                 <its:Button Label="등 록" Width="100" Height="55" FontWeight="Bold" CommandName="ADD_MTRIN" BackColor="Green"/>
                 <UserControl Height="10"/>
@@ -46,4 +49,44 @@
             </StackPanel>
         </UserControl>
     </Canvas>
-</its:ItsPageTml>
+    </TabItem>
+
+    <!-- [입고취소] 입고된 거래명세서 조회 (입고일자 기간), 체크한 거래명세서 입고 취소 (입고대기 상태로 되돌림) -->
+    <TabItem Height="25">
+    <TabItem.Header><TextBlock Text="  입고취소  " FontSize="14" FontWeight="Bold"/></TabItem.Header>
+    <Canvas Background="Silver">
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
+            <its:WrapContent x:Name="PANEL_S2" Width="980" Height="58">
+                <its:Date Label="입고일자" LabelWidth="70" Width="230" Value="{Binding SDATE}"/>
+                <its:Date HidenLabel="Y" Width="160" Value="{Binding EDATE}"/>
+                <UserControl Width="20"/>
+                <its:Button Label="조 회" Width="120" Height="45" FontWeight="Bold" CommandName="SEARCH_MTRIN" BackColor="SteelBlue"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="58">
+            <its:Grid x:Name="GRID_G2" Width="860" Height="397">
+                <its:Grid.Columns>
+                    <its:Column Width="45" Header="선택" CellType="Check" FieldName="ISCHECKED" IsRowCheck="True"/>
+                    <its:Column Width="90" Header="입고일자" FieldName="INDATE" ALGIN="Center"/>
+                    <its:Column Width="120" Header="거래명세번호" FieldName="INVOICEKEY" ALGIN="Center"/>
+                    <its:Column Width="110" Header="출고처" FieldName="OUTCUSTNM" ALGIN="Center"/>
+                    <its:Column Width="70" Header="구분" FieldName="INVOICETPNM" ALGIN="Center"/>
+                    <its:Column Width="100" Header="입고창고" FieldName="INWARENM" ALGIN="Center"/>
+                    <its:Column Width="55" Header="LOT수" FieldName="LOTCNT" DecimalPoint="0"/>
+                    <its:Column Width="80" Header="입고량" FieldName="INQTY" DecimalPoint="0"/>
+                    <its:Column Width="60" Header="등록자" FieldName="EMPNM" ALGIN="Center"/>
+                    <its:Column Width="130" Header="등록시간" FieldName="RTIME" ALGIN="Center"/>
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="860" Canvas.Top="58" Width="120" Height="397">
+            <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
+                <its:Button Label="입고 취소" Width="100" Height="55" FontWeight="Bold" CommandName="CANCEL_MTRIN" BackColor="IndianRed"/>
+            </StackPanel>
+        </UserControl>
+    </Canvas>
+    </TabItem>
+    </TabControl></its:ItsPageTml>

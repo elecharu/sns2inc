@@ -21,6 +21,8 @@ namespace TML1020
     {
         ItsModelPanel MODEL_S1 = new ItsModelPanel();
         ItsModelGrid MODEL_G1 = new ItsModelGrid();
+        ItsModelPanel MODEL_S2 = new ItsModelPanel();   // [이동내역삭제] 탭 조회조건
+        ItsModelGrid MODEL_G2 = new ItsModelGrid();     // [이동내역삭제] 탭 이동 이력
 
         public R02()
         {
@@ -32,6 +34,12 @@ namespace TML1020
 
             MODEL_G1.Binding(GRID_G1);
             MODEL_G1.InitData();
+
+            MODEL_S2.Binding(PANEL_S2);
+            MODEL_S2.InitData();
+
+            MODEL_G2.Binding(GRID_G2);
+            MODEL_G2.InitData();
         }
 
         public override void EventPageLoaded()
@@ -41,6 +49,10 @@ namespace TML1020
             MODEL_S1.SetValue("MOVEDATE", DateTime.Now.ToString("yyyy-MM-dd"));
             MODEL_S1.SetValue("OUTWARE", "04S111_N");   // 기본 출고창고 : 자재투입창고
             MODEL_S1.SetValue("SCANLOT", "");
+
+            MODEL_S2.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+            MODEL_S2.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+
             txt_BARCODE.Focus();
         }
 
@@ -53,9 +65,94 @@ namespace TML1020
             }
         }
 
+        // ===== [이동내역삭제] 탭 : 이동 이력 조회 / 삭제 (프로시저 TML1020_R02 LIST_MOVE, DEL_MOVE → IO_MOVELOT_WARE_DEL) =====
+        private void SearchMove()
+        {
+            ItsMaria.Set("TML1020_R02", "LIST_MOVE");
+            ItsMaria.AddModel(MODEL_S2);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            MODEL_G2.SetData(ds.Tables[0]);
+        }
+
+        // 조회·삭제 버튼 처리. 처리했으면 true
+        private bool EventCommandHistory(string commandName)
+        {
+            if (commandName == "SEARCH_MOVE")
+            {
+                if (MODEL_S2.GetText("SDATE") == "" || MODEL_S2.GetText("EDATE") == "")
+                {
+                    ShowMessageBox("", "이동일자를 선택하세요.");
+                    return true;
+                }
+
+                SearchMove();
+                return true;
+            }
+            else if (commandName == "DEL_MOVE")
+            {
+                int cnt = 0;
+                for (int i = 0; i < MODEL_G2.ModelCount; i++)
+                {
+                    if (!MODEL_G2.IsChecked(i)) continue;
+
+                    if (MODEL_G2.GetDecimal(i, "INLOTQTY") < MODEL_G2.GetDecimal(i, "MOVEQTY"))
+                    {
+                        ShowMessageBox("", "입고창고 재고가 이동량보다 적어 삭제할 수 없습니다. (이미 사용된 재고)\n- 로트번호: " + MODEL_G2.GetText(i, "LOTKEY"));
+                        return true;
+                    }
+                    cnt++;
+                }
+                if (cnt == 0)
+                {
+                    ShowMessageBox("", "삭제할 이동내역을 체크하세요.");
+                    return true;
+                }
+
+                ShowMessageBox(commandName, "체크한 이동내역 " + cnt + "건이 속한 이동 건 전체를 삭제하시겠습니까?\n(입고창고 재고를 출고창고로 되돌립니다)");
+                return true;
+            }
+
+            return false;
+        }
+
+        // 삭제 확인 후 처리. 처리했으면 true
+        private bool EventMessageHistory(string commandName)
+        {
+            if (commandName != "DEL_MOVE") return false;
+
+            ItsMaria.Set("TML1020_R02", "DEL_MOVE");
+            List<string> keys = new List<string>();
+            for (int i = 0; i < MODEL_G2.ModelCount; i++)
+            {
+                if (!MODEL_G2.IsChecked(i)) continue;
+
+                string gk = MODEL_G2.GetText(i, "GROUPKEY");
+                if (keys.Contains(gk)) continue;   // 같은 이동 건은 한 번만
+                keys.Add(gk);
+                ItsMaria.AddList("GROUPKEY_LIST", gk);
+            }
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return true;
+            }
+
+            ShowMessageBox("", "삭제되었습니다. (" + ItsData.GetText(ds.Tables[0], 0, "DELCNT") + "건)");
+            SearchMove();
+            return true;
+        }
         public override void EventCommand(string commandName)
         {
             base.EventCommand(commandName);
+
+            if (EventCommandHistory(commandName)) return;
 
             // 행 삭제
             if (commandName == "DEL_ROW")
@@ -118,6 +215,8 @@ namespace TML1020
         public override void EventMessageResult(string commandName)
         {
             base.EventMessageResult(commandName);
+
+            if (EventMessageHistory(commandName)) return;
 
             if (commandName == "ADD_MOVE")
             {

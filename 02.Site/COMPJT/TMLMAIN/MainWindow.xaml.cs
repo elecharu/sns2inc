@@ -20,7 +20,6 @@ using System.IO;
 using ITSLIB;
 using System.Globalization;
 using System.Windows.Threading;
-using DevExpress.XtraReports.UI;
 
 namespace TMLMAIN
 {
@@ -45,79 +44,91 @@ namespace TMLMAIN
         }
     }
 
+    public class clsMSTTMLEQM
+    {
+        public string PRCCD { get; set; }
+        public string LINECD { get; set; }
+        public string LINENM { get; set; }
+        public string EQMCD { get; set; }
+        public string EQMNM { get; set; }
+    }
+
     public partial class MainWindow : Window
     {
         ItsModelPanel MODEL_WAIT = new ItsModelPanel();
         ItsModelPanel MODEL_CONFIG = new ItsModelPanel();
-        // 2025-04-09 프린트 선택 옵션
-        ItsModelPanel MODEL_MAIN = new ItsModelPanel();
 
         private System.Net.WebClient webClient = new System.Net.WebClient();
 
-        // 2025-04-08 프로그램 버전 관리 -> 수정시 재실행 메시지 팝업용
+        public string FACTORYCD = string.Empty;
+        public string TMLCD = string.Empty;
+        //단말기별 설비정보
+        public List<clsMSTTMLEQM> EQMList = new List<clsMSTTMLEQM>();
+
+        //지시->실적 화면 이동에서 사용(선택한 설비코드,,)
+        public string EQMCD = string.Empty;
+        public string LINECD = string.Empty;
+        public bool ShowPrdSpec = false;
+
+        // 2025-01-09 프로그램 버전 관리 -> 수정시 재실행 메시지 팝업용
         public string PrgVer = "";
+
+        // 2020-12-08 메시지 박스 색상 변경 PJH
+        private Brush _msgback = Brushes.IndianRed;
+        public Brush msgback
+        {
+            get { return _msgback; }
+            set
+            {
+                _msgback = value;
+                PANEL_MSG.Background = _msgback;
+                MsgIcon.Background = _msgback;
+            }
+        }
 
         public MainWindow()
         {
             InitializeComponent();
 
-          //  MODEL_WAIT.Binding(WAIT_ICON);
+            MODEL_WAIT.Binding(WAIT_ICON);
             MODEL_WAIT.FieldType("WAITVISIBLE", ItsEnums.FieldTypes.String);
             MODEL_WAIT.DefaultValue("WAITVISIBLE", "Visible");
             MODEL_WAIT.InitData();
 
             MODEL_CONFIG.Binding(PANEL_OPTION);
-            MODEL_CONFIG.Binding(PANEL_PASSWORD);
-
-            MODEL_CONFIG.FieldType("BDVCD", ItsEnums.FieldTypes.String);
+            MODEL_CONFIG.FieldType("COMPANYCD", ItsEnums.FieldTypes.String);
+            MODEL_CONFIG.FieldType("FACTORYCD", ItsEnums.FieldTypes.String);
             MODEL_CONFIG.FieldType("TMLCD", ItsEnums.FieldTypes.String);
             MODEL_CONFIG.FieldType("PRINT", ItsEnums.FieldTypes.String);
-            //MODEL_CONFIG.FieldType("PRINT_SALES1", ItsEnums.FieldTypes.String);
-            //MODEL_CONFIG.FieldType("PRINT_SALES2", ItsEnums.FieldTypes.String);
-            //MODEL_CONFIG.FieldType("PRINT_DAESIN", ItsEnums.FieldTypes.String);
             MODEL_CONFIG.FieldType("PORTSCALE", ItsEnums.FieldTypes.String);
             MODEL_CONFIG.FieldType("PORTPLC", ItsEnums.FieldTypes.String);
-            MODEL_CONFIG.FieldType("EMPCD", ItsEnums.FieldTypes.String);
-            //MODEL_CONFIG.FieldType("PRINTTP", ItsEnums.FieldTypes.String);
-
             MODEL_CONFIG.InitData();
             MODEL_CONFIG.EventValueChanged += MODEL_CONFIG_EventValueChanged;
 
-            // 2025-04-09 프린트 변경에 대한 처리
-            MODEL_MAIN.Binding(DOCK_TITLE);
-            MODEL_MAIN.FieldType("PRINT", ItsEnums.FieldTypes.String);
-            MODEL_MAIN.InitData();
-            MODEL_MAIN.EventValueChanged += MODEL_MAIN_EventValueChanged;
-
-            COMBO_PRINT.ItemClear();
-            //COMBO_PRINT_SALES1.ItemClear();
-            //COMBO_PRINT_SALES2.ItemClear();
-            //COMBO_PRINT_DAESIN.ItemClear();
-            int count = PrinterSettings.InstalledPrinters.Count;
-            for (int i = 0; i < count; i++)
-            {
-                COMBO_PRINT.AddItem(PrinterSettings.InstalledPrinters[i], PrinterSettings.InstalledPrinters[i]);
-                //COMBO_PRINT_SALES1.AddItem(PrinterSettings.InstalledPrinters[i], PrinterSettings.InstalledPrinters[i]);
-                //COMBO_PRINT_SALES2.AddItem(PrinterSettings.InstalledPrinters[i], PrinterSettings.InstalledPrinters[i]);
-                //COMBO_PRINT_DAESIN.AddItem(PrinterSettings.InstalledPrinters[i], PrinterSettings.InstalledPrinters[i]);
-            }
-
-            //COMBO_PRINT.Items.Clear();
+            //COMBO_PRINT.ItemClear();
             //int count = PrinterSettings.InstalledPrinters.Count;
             //for (int i = 0; i < count; i++)
             //{
-            //    COMBO_PRINT.Items.Add(PrinterSettings.InstalledPrinters[i]);
+            //    COMBO_PRINT.AddItem(PrinterSettings.InstalledPrinters[i], PrinterSettings.InstalledPrinters[i]);
             //}
+
+            COMBO_PRINT.Items.Clear();
+            int count = PrinterSettings.InstalledPrinters.Count;
+            for (int i = 0; i < count; i++)
+            {
+                COMBO_PRINT.Items.Add(PrinterSettings.InstalledPrinters[i]);
+            }
+
 
             ItsElement.TML_MAIN_WINDOW = this;
             this.WindowState = WindowState.Maximized;
 
             if (ItsLocalInfo.IsRunMode)
             {
-                this.Topmost = true;
+                this.Topmost = false;
             }
 
-            //ICON_MENU_MouseDown(null, null);
+            ICON_MENU_MouseDown(null, null);
             MSG_CLOSE_MouseUp(null, null);
             CONFIG_CLOSE_MouseUp(null, null);
 
@@ -129,42 +140,30 @@ namespace TMLMAIN
             this.PrgVer = ItsData.GetText(dt, 0, "REF01");
         }
 
-        public static void Send(Key key)
+        private void Timer1_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (Keyboard.PrimaryDevice != null)
+            this.Dispatcher.Invoke(new Action(() =>
             {
-                if (Keyboard.PrimaryDevice.ActiveSource != null)
-                {
-                    var e = new KeyEventArgs(Keyboard.PrimaryDevice, Keyboard.PrimaryDevice.ActiveSource, 0, key)
-                    {
-                        RoutedEvent = Keyboard.KeyDownEvent
-                    };
-                    InputManager.Current.ProcessInput(e);
-
-                    // Note: Based on your requirements you may also need to fire events for:
-                    // RoutedEvent = Keyboard.PreviewKeyDownEvent
-                    // RoutedEvent = Keyboard.KeyUpEvent
-                    // RoutedEvent = Keyboard.PreviewKeyUpEvent
-                }
-            }
+                LABEL_TITLE2.Content = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
+            }));
         }
 
         private void MODEL_CONFIG_EventValueChanged(string fieldName)
         {
-            if (fieldName == "BDVCD")
+            if (fieldName == "COMPANYCD")
+            {
+                ItsElement.TML_MAIN_WINDOW.COMBO_FACTORYCD.ItemClear();
+                ItsElement.TML_MAIN_WINDOW.COMBO_FACTORYCD.REF01 = MODEL_CONFIG.GetText("COMPANYCD");
+                ItsElement.TML_MAIN_WINDOW.COMBO_FACTORYCD.Value = File.ReadAllText(MainWindow._factoryFile, Encoding.UTF8);
+                ItsElement.TML_MAIN_WINDOW.FACTORYCD = File.ReadAllText(MainWindow._factoryFile, Encoding.UTF8);
+            }
+             
+            else if (fieldName == "FACTORYCD")
             {
                 ItsElement.TML_MAIN_WINDOW.COMBO_TMLCD.ItemClear();
-                ItsElement.TML_MAIN_WINDOW.COMBO_TMLCD.REF01 = MODEL_CONFIG.GetText("BDVCD");
+                ItsElement.TML_MAIN_WINDOW.COMBO_TMLCD.REF01 = MODEL_CONFIG.GetText("FACTORYCD");
                 ItsElement.TML_MAIN_WINDOW.COMBO_TMLCD.Value = File.ReadAllText(MainWindow._tmlcdFile, Encoding.UTF8);
-            }
-        }
-
-        // 2025-04-09 프린트 선택 변경시 환경설정값 변경
-        private void MODEL_MAIN_EventValueChanged(string fieldName)
-        {
-            if (fieldName == "PRINT")
-            {
-                File.WriteAllText(_printFile, MODEL_MAIN.GetText("PRINT"), Encoding.UTF8);
+                ItsElement.TML_MAIN_WINDOW.TMLCD = File.ReadAllText(MainWindow._tmlcdFile, Encoding.UTF8);
             }
         }
 
@@ -176,78 +175,84 @@ namespace TMLMAIN
             }
         }
 
-        public static System.Timers.Timer timer;            // AUTO PRINT
-        public static System.Timers.Timer timer2;           // 프로그램 버전관리용
-        public static System.Timers.Timer timer3;           // 시간보여주기용
+        public static System.Timers.Timer timer;
+        private string mainLabel = "";
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             CONFIG_CLOSE_MouseUp(null, null);
             PASS_CHECK.Focus();
             WAIT_MSG.Visibility = Visibility.Hidden;
 
-            double printTimeout = 5000;
-            try
-            {
-                StringBuilder sb = new StringBuilder();
-                sb.AppendLine("SELECT REF01");
-                sb.AppendLine("FROM COMTYPE");
-                sb.AppendLine("WHERE GPCD = 'GLOBAL' AND TPCD = 'AUTOPRINT';");
-                printTimeout = 1000 * Convert.ToDouble(ItsData.GetScalar(ItsMaria.Query(sb.ToString())));
-            }
-            catch
-            {
-                printTimeout = 5000;
-            }
-
-            // 자동발행 경진FA는 미사용
             timer = new System.Timers.Timer();
             timer.Elapsed += Timer_Elapsed;
-            timer.Interval = printTimeout;
-            timer.Stop();
+            timer.Interval = 1000 * 60;
 
-            // 프로그램 버전 관리
-            timer2 = new System.Timers.Timer();
-            timer2.Elapsed += Timer2_Elapsed; ;
-            timer2.Interval = 1000 * 60;
+            System.Timers.Timer timer1 = new System.Timers.Timer();
+            timer1.Elapsed += Timer1_Elapsed;
+            timer1.Interval = 100;
+            timer1.Start();
 
-            timer3 = new System.Timers.Timer();
-            timer3.Elapsed += Timer3_Elapsed;
-            timer3.Interval = 100;
-            timer3.Start();
 
-            if (!File.Exists(_bdvcdFile)) File.WriteAllText(_bdvcdFile, "");
-            MODEL_CONFIG.SetValue("BDVCD", File.ReadAllText(_bdvcdFile, Encoding.UTF8));
+            if (!File.Exists(_companyFile)) File.WriteAllText(_companyFile, "");
+            MODEL_CONFIG.SetValue("COMPANYCD", File.ReadAllText(_companyFile, Encoding.UTF8));
+
+            if (!File.Exists(_factoryFile)) File.WriteAllText(_factoryFile, "");
+            MODEL_CONFIG.SetValue("FACTORYCD", File.ReadAllText(_factoryFile, Encoding.UTF8));
 
             if (!File.Exists(_tmlcdFile)) File.WriteAllText(_tmlcdFile, "");
             MODEL_CONFIG.SetValue("TMLCD", File.ReadAllText(_tmlcdFile, Encoding.UTF8));
 
+            // 2024-12-04 IT팀 테스트 내용은 EMPCD : 윤진욱 대리 사번으로 강제 임의지정
+            // 2024-12-09 외주처 로그인시 환경설정 제한
+            if (ItsMemberShip.EMPCD == "")
+            {
+                ICON_CONFIG.IsEnabled = true;
+                mainLabel = "";
+                var Tml = File.ReadAllText(_tmlcdFile, Encoding.UTF8);
+                if (Tml == "SNS_IT")
+                {
+                    ItsMemberShip.EMPCD = "SNSIT";
+                }
+            }
+            else 
+            {
+                ICON_CONFIG.IsEnabled = false;
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("SELECT A.COMPANYCD, A.FACTORYCD, A.EMPCD, B.TMLCD, B.TMLNM");
+                sb.AppendLine("FROM SYSUSER AS A");
+                sb.AppendLine("LEFT JOIN MSTTML AS B ON A.USERID = B.TMLCD AND B.OSCYN = 'Y'");
+                sb.AppendLine("WHERE A.EMPCD = '" + ItsMemberShip.EMPCD + "'; ");
+                DataSet TmlUser = ItsMaria.Query(sb.ToString());
+                mainLabel = ItsData.GetText(TmlUser.Tables[0], 0, "TMLNM");
+
+                MODEL_CONFIG.SetValue("COMPANYCD", ItsData.GetText(TmlUser.Tables[0], 0, "COMPANYCD"));
+                MODEL_CONFIG.SetValue("FACTORYCD", ItsData.GetText(TmlUser.Tables[0], 0, "FACTORYCD"));
+                MODEL_CONFIG.SetValue("TMLCD", ItsData.GetText(TmlUser.Tables[0], 0, "TMLCD"));
+
+                File.WriteAllText(_companyFile, MODEL_CONFIG.GetText("COMPANYCD"), Encoding.UTF8);
+                File.WriteAllText(_factoryFile, MODEL_CONFIG.GetText("FACTORYCD"), Encoding.UTF8);
+                File.WriteAllText(_tmlcdFile, MODEL_CONFIG.GetText("TMLCD"), Encoding.UTF8);
+            }
+
+
             if (!File.Exists(_printFile)) File.WriteAllText(_printFile, "");
             MODEL_CONFIG.SetValue("PRINT", File.ReadAllText(_printFile, Encoding.UTF8));
-
-            // 2025-04-09 기존 세팅된 프린트값 지정
-            if (!File.Exists(_printFile)) File.WriteAllText(_printFile, "");
-            MODEL_MAIN.SetValue("PRINT", File.ReadAllText(_printFile, Encoding.UTF8));
-
-            //if (!File.Exists(_printFileSales1)) File.WriteAllText(_printFileSales1, "");
-            //MODEL_CONFIG.SetValue("PRINT_SALES1", File.ReadAllText(_printFileSales1, Encoding.UTF8));
-
-            //if (!File.Exists(_printFileSales2)) File.WriteAllText(_printFileSales2, "");
-            //MODEL_CONFIG.SetValue("PRINT_SALES2", File.ReadAllText(_printFileSales2, Encoding.UTF8));
-
-            //if (!File.Exists(_printFileDaesin)) File.WriteAllText(_printFileDaesin, "");
-            //MODEL_CONFIG.SetValue("PRINT_DAESIN", File.ReadAllText(_printFileDaesin, Encoding.UTF8));
+            // 2024-10-23 초기값 지정
+            for (int i = 0; i < COMBO_PRINT.Items.Count; i++)
+            {
+                var initPrint = File.ReadAllText(_printFile, Encoding.UTF8);
+                if (initPrint != null && COMBO_PRINT.Items[i].ToString() == initPrint)
+                {
+                    COMBO_PRINT.SelectedIndex = i;
+                    break;
+                }
+            }
 
             if (!File.Exists(_scalePortFile)) File.WriteAllText(_scalePortFile, "");
             MODEL_CONFIG.SetValue("PORTSCALE", File.ReadAllText(_scalePortFile, Encoding.UTF8));
 
             if (!File.Exists(_plcPortFile)) File.WriteAllText(_plcPortFile, "");
             MODEL_CONFIG.SetValue("PORTPLC", File.ReadAllText(_plcPortFile, Encoding.UTF8));
-
-            if (!File.Exists(_empcdFile)) File.WriteAllText(_empcdFile, "");
-            MODEL_CONFIG.SetValue("TMLEMP", File.ReadAllText(_empcdFile, Encoding.UTF8));
-
-            //if (!File.Exists(_printtpFile)) File.WriteAllText(_printtpFile, "");
-            //MODEL_CONFIG.SetValue("PRINTTP", File.ReadAllText(_printtpFile, Encoding.UTF8));
 
             SetMenu(MODEL_CONFIG.GetText("TMLCD"));
 
@@ -266,6 +271,17 @@ namespace TMLMAIN
             // 메인 화면 띄우기
             PAGE_MAIN.MaxHeight = 5000;
 
+            //if (ItsMemberShip.LoginKey == null || ItsMemberShip.LoginKey == "")
+            //{
+            //    LABEL_LOGINUSER.Content = "";
+            //    LABEL_LOIGNTIME.Content = "";
+            //}
+            //else
+            //{
+            //    LABEL_LOGINUSER.Content = ItsData.GetScalar(ItsMaria.Query("SELECT EMPNM FROM MSTEMP WHERE EMPCD = '" + ItsMemberShip.EMPCD + "';"));
+            //    LABEL_LOIGNTIME.Content = "접속시간 : " + ItsMemberShip.LoginTime;
+            //}
+
             try
             {
                 Assembly pageAssembly = Assembly.LoadFrom("TML0000.exe");
@@ -279,12 +295,15 @@ namespace TMLMAIN
                 sb.AppendLine("SELECT SYSPRG.PRGNM");
                 sb.AppendLine("FROM SYSPRG");
                 sb.AppendLine("WHERE PRGCD = 'TML0000_R01';");
-                //LABEL_TITLE.Content = ItsData.GetScalar(ItsMaria.Query(sb.ToString()));
+
+                if (mainLabel == "")
+                    LABEL_TITLE.Content = ItsData.GetScalar(ItsMaria.Query(sb.ToString()));
+                else
+                    LABEL_TITLE.Content = mainLabel ;
             }
-            catch (Exception ex)
+            catch
             {
-                //MessageBox.Show("메인화면을 로딩하지 못했습니다. TML0000.exe");
-                MessageBox.Show(ex.Message);
+                MessageBox.Show("메인화면을 로딩하지 못했습니다. TML0000.exe");
             }
 
         }
@@ -292,81 +311,6 @@ namespace TMLMAIN
         private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             timer.Stop();
-
-            Dispatcher.Invoke(DispatcherPriority.Normal, new Action(delegate
-            {
-                if (AUTOPRINT.IsChecked == true)
-                {
-                    ItsMariaThread maria = new ItsMariaThread();
-                    maria.Set("TMLMAIN", "AUTO_PRINT_ORDER_LIST");
-                    maria.AddOne("TMLCD", MODEL_CONFIG.GetText("TMLCD"));
-                    maria.AddOne("CENTERCD", ItsLocalInfo.BDVCD);
-                    maria.AddOne("PRINTTP", ItsLocalInfo.PRINTTP);
-
-                    DataSet ds1 = maria.Call();
-                    if (maria.IsError)
-                    {
-                        AUTOPRINT.IsChecked = false;
-                        ShowMessageBox("", maria.ErrMessage);
-                    }
-                    else
-                    {
-                        if (ds1.Tables.Count > 1)
-                        {
-                            try
-                            {
-                                TMLRPT.AUTO_PRINT_ORDER_LIST rpt = new TMLRPT.AUTO_PRINT_ORDER_LIST();
-                                rpt.DataSource = ds1.Tables[0];
-                                rpt.PrinterName = ItsLocalInfo.PRINT_SALES2;
-                                rpt.PrintingSystem.ShowMarginsWarning = false;
-                                rpt.PrintingSystem.Document.AutoFitToPagesWidth = 1;
-                                ReportPrintTool tool = new ReportPrintTool(rpt);
-                                tool.PrintingSystem.ShowPrintStatusDialog = false;
-                                tool.PrintingSystem.Document.AutoFitToPagesWidth = 1;
-                                tool.Print();
-                            }
-                            catch(Exception ex)
-                            {
-                                AUTOPRINT.IsChecked = false;
-                                ShowMessageBox("", ex.Message);
-                            }
-                        }
-                    }
-
-                    // 물류이동
-                    //ItsMariaThread maria2 = new ItsMariaThread();
-                    //maria2.Set("TMLMAIN", "AUTO_PRINT_MOVE");
-                    //maria2.AddOne("TMLCD", MODEL_CONFIG.GetText("TMLCD"));
-                    //maria2.AddOne("CENTERCD", ItsLocalInfo.BDVCD);
-                    //DataSet ds2 = maria2.Call();
-                    //if (maria2.IsError)
-                    //{
-                    //    AUTOPRINT.IsChecked = false;
-                    //    ShowMessageBox("", maria2.ErrMessage);
-                    //}
-                    //else
-                    //{
-                    //    if (ds2.Tables.Count > 1)
-                    //    {
-                    //        TMLRPT.AUTO_PRINT_MOVE rpt = new TMLRPT.AUTO_PRINT_MOVE();
-                    //        rpt.DataSource = ds2.Tables[0];
-                    //        rpt.PrinterName = ItsLocalInfo.PRINT_SALES2;
-                    //        rpt.PrintingSystem.ShowMarginsWarning = false;
-                    //        ReportPrintTool tool = new ReportPrintTool(rpt);
-                    //        tool.PrintingSystem.ShowPrintStatusDialog = false;
-                    //        tool.Print();
-                    //    }
-                    //}
-
-                }
-            }));
-
-            timer.Start();
-        }
-
-        private void Timer2_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            timer2.Stop();
 
             this.Dispatcher.Invoke(new Action(() =>
             {
@@ -382,15 +326,7 @@ namespace TMLMAIN
                 }
             }));
 
-            timer2.Start();
-        }
-
-        private void Timer3_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            this.Dispatcher.Invoke(new Action(() =>
-            {
-                LABEL_TITLE_TIME.Content = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-            }));
+            timer.Start();
         }
 
         private double _width = 0;
@@ -400,10 +336,8 @@ namespace TMLMAIN
         {
             ItsMaria.Set("TMLMAIN", "LIST_PRG");
             ItsMaria.AddOne("TMLCD", MODEL_CONFIG.GetText("TMLCD"));
-            ItsMaria.AddOne("USERID", ItsMemberShip.USERID);
-            
             DataSet ds = ItsMaria.Call();
-
+            
             if (ItsMaria.IsError)
             {
                 ShowMessageBox("", ItsMaria.ErrMessage);
@@ -411,6 +345,23 @@ namespace TMLMAIN
             }
             else
             {
+                EQMList = new List<clsMSTTMLEQM>();
+                this.TMLCD = MODEL_CONFIG.GetText("TMLCD");
+
+                //if (ds.Tables[1].Rows.Count > 0)
+                //{
+                //    for (int i = 0; i < ds.Tables[1].Rows.Count; i++)
+                //    {
+                //        clsMSTTMLEQM _eqm = new clsMSTTMLEQM();
+                //        _eqm.PRCCD = ds.Tables[1].Rows[i]["PRCCD"].ToString();
+                //        _eqm.LINECD = ds.Tables[1].Rows[i]["LINECD"].ToString();
+                //        _eqm.LINENM = ds.Tables[1].Rows[i]["LINENM"].ToString();
+                //        _eqm.EQMCD = ds.Tables[1].Rows[i]["EQMCD"].ToString();
+                //        _eqm.EQMNM = ds.Tables[1].Rows[i]["EQMNM"].ToString();
+                //        EQMList.Add(_eqm);
+                //    }
+                //}
+
                 MENU0.Visibility = Visibility.Hidden;
                 MENU1.Visibility = Visibility.Hidden;
                 MENU2.Visibility = Visibility.Hidden;
@@ -421,7 +372,17 @@ namespace TMLMAIN
                 MENU7.Visibility = Visibility.Hidden;
                 MENU8.Visibility = Visibility.Hidden;
                 MENU9.Visibility = Visibility.Hidden;
-                MENU10.Visibility = Visibility.Hidden;
+
+                OTHER_MENU0.Visibility = Visibility.Hidden;
+                OTHER_MENU1.Visibility = Visibility.Hidden;
+                OTHER_MENU2.Visibility = Visibility.Hidden;
+                OTHER_MENU3.Visibility = Visibility.Hidden;
+                OTHER_MENU4.Visibility = Visibility.Hidden;
+                OTHER_MENU5.Visibility = Visibility.Hidden;
+                OTHER_MENU6.Visibility = Visibility.Hidden;
+                OTHER_MENU7.Visibility = Visibility.Hidden;
+                OTHER_MENU8.Visibility = Visibility.Hidden;
+                OTHER_MENU9.Visibility = Visibility.Hidden;
 
                 FRAME0.Tag = null;
                 FRAME1.Tag = null;
@@ -433,15 +394,21 @@ namespace TMLMAIN
                 FRAME7.Tag = null;
                 FRAME8.Tag = null;
                 FRAME9.Tag = null;
-                FRAME10.Tag = null;
+
+                OTHER_FRAME0.Tag = null;
+                OTHER_FRAME1.Tag = null;
+                OTHER_FRAME2.Tag = null;
+                OTHER_FRAME3.Tag = null;
+                OTHER_FRAME4.Tag = null;
+                OTHER_FRAME5.Tag = null;
+                OTHER_FRAME6.Tag = null;
+                OTHER_FRAME7.Tag = null;
+                OTHER_FRAME8.Tag = null;
+                OTHER_FRAME9.Tag = null;
 
                 UserControl MENU;
 
                 int menuCount = ds.Tables[0].Rows.Count;
-
-                // 기타메뉴(11번째부터)는 메뉴 개수만큼 새로 만든다. 10개 이하면 기타메뉴 없음
-                BuildOtherMenus(ds.Tables[0], 10);
-
                 if (menuCount <= 10)
                 {
                     for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
@@ -454,7 +421,7 @@ namespace TMLMAIN
                 }
                 else
                 {
-                    for (int i = 0; i < 10; i++)
+                    for (int i = 0; i < 9; i++)
                     {
                         MENU = PANEL_MENU.FindName("MENU" + i) as UserControl;
                         MENU.Visibility = Visibility.Visible;
@@ -462,18 +429,32 @@ namespace TMLMAIN
                         MENU.Content = ds.Tables[0].Rows[i][1].ToString();
                     }
 
-                    MENU10.Visibility = Visibility.Visible;
-                    MENU10.Tag = "OTHER";
-                    MENU10.Content = "기타메뉴";
+                    MENU9.Visibility = Visibility.Visible;
+                    MENU9.Tag = "OTHER";
+                    MENU9.Content = "기타메뉴";
+
+                    for (int i = 9; i < menuCount; i++)
+                    {
+                        MENU = PANEL_MENU.FindName("OTHER_MENU" + (i - 9)) as UserControl;
+                        MENU.Visibility = Visibility.Visible;
+                        MENU.Tag = ds.Tables[0].Rows[i][0].ToString();
+                        MENU.Content = ds.Tables[0].Rows[i][1].ToString();
+                    }
                 }
+
+                //int row = 0;
+                //for (int i = menuCount + 1; i < menuCount + ds.Tables[1].Rows.Count + 1; i++)
+                //{
+                //    MENU = PANEL_MENU.FindName(i < 10 ? "MENU" + i : "OTHER_MENU" + (i - 9)) as UserControl;
+                //    MENU.Visibility = Visibility.Hidden;
+                //    MENU.Tag = ds.Tables[1].Rows[row][0].ToString();
+                //    MENU.Content = ds.Tables[1].Rows[row++][1].ToString();
+                //}
             }
         }
 
         private void ICON_MIN_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            // 한번씩 포커스 남아있는 경우..
-            CONFIG_PASS.CloseKeypad();
-
             if (e.LeftButton != MouseButtonState.Pressed) return;
 
             this.WindowState = WindowState.Minimized;
@@ -488,22 +469,18 @@ namespace TMLMAIN
             {
                 ShowMessageBox("__MainClose", "전체 화면을 닫으시겠습니까?");
             }
-            else
+            else 
             {
                 ShowMessageBox("__PageClose", "현재 화면을 닫으시겠습니까?");
             }
         }
 
-        public static string _bdvcdFile = "ConfigBdvcd.config";
+        public static string _companyFile = "ConfigCompany.config";
+        public static string _factoryFile = "ConfigFactory.config";
         public static string _tmlcdFile = "ConfigTmlcd.config";
         public static string _printFile = "ConfigPrintBarcode.config";
-        //public static string _printFileSales1 = "ConfigPrintSales1.config";
-        //public static string _printFileSales2 = "ConfigPrintSales2.config";
-        //public static string _printFileDaesin = "ConfigPrintDaesin.config";
         public static string _scalePortFile = "ConfigPortScale.config";
         public static string _plcPortFile = "ConfigPortPlc.config";
-        public static string _empcdFile = "ConfigEmpcd.config";
-        //public static string _printtpFile = "ConfigPrinttp.config";
 
         private string _curTmlcd = "";
         private void ICON_CONFIG_MouseDown(object sender, MouseButtonEventArgs e)
@@ -516,39 +493,39 @@ namespace TMLMAIN
 
             PANEL_CONFIG.MaxHeight = 5000;
             CONFIG_LINE.MaxHeight = 10;
-            ConfigCommit.Visibility = Visibility.Hidden;
-            ConfigClose.Visibility = Visibility.Hidden;
+            ConfigIcon.Visibility = Visibility.Visible;
+            ConfigCommit.Visibility = Visibility.Visible;
+            ConfigClose.Visibility = Visibility.Visible;
 
             PANEL_MSG.MaxHeight = 0;
-           // MsgIcon.Visibility = Visibility.Hidden;
+            MsgIcon.Visibility = Visibility.Hidden;
             MsgCommit.Visibility = Visibility.Hidden;
             MsgClose.Visibility = Visibility.Hidden;
 
-            CONFIG_PASS.MaxHeight = 5000;
+
+            CONFIG_PASS.Visibility = Visibility.Visible;
             PASS_CHECK.MaxHeight = 5000;
             PANEL_OPTION.MaxHeight = 0;
-            PANEL_PASSWORD.Width = 600;
 
-            //CONFIG_PASS.Password = "";
             CONFIG_PASS.Value = "";
-            CONFIG_PASS.Focus();
+            CONFIG_PASS.SetFocus();
 
-            //COMBO_PLCPORT.ItemClear();
-            //COMBO_SCALEPORT.ItemClear();
-            //for (int i = 1; i < 10; i++)
-            //{
-            //    COMBO_PLCPORT.AddItem("COM" + i, "COM" + i);
-            //    COMBO_SCALEPORT.AddItem("COM" + i, "COM" + i);
-            //}
+            COMBO_PLCPORT.ItemClear();
+            COMBO_SCALEPORT.ItemClear();
+            for (int i = 1; i < 10; i++)
+            {
+                COMBO_PLCPORT.AddItem("COM" + i, "COM" + i);
+                COMBO_SCALEPORT.AddItem("COM" + i, "COM" + i);
+            }
 
-            //try
-            //{
-            //    COMBO_SCALEPORT.Value = System.IO.File.ReadAllText(_scalePortFile, Encoding.UTF8);
-            //    COMBO_PLCPORT.Value = System.IO.File.ReadAllText(_plcPortFile, Encoding.UTF8);
-            //}
-            //catch { }
+            try
+            {
+                COMBO_SCALEPORT.Value = System.IO.File.ReadAllText(_scalePortFile, Encoding.UTF8);
+                COMBO_PLCPORT.Value = System.IO.File.ReadAllText(_plcPortFile, Encoding.UTF8);
+            }
+            catch { }
         }
- 
+
         private void CONFIG_COMMIT_MouseUp(object sender, MouseButtonEventArgs e)
         {
             if (e != null)
@@ -559,25 +536,17 @@ namespace TMLMAIN
 
             DOCK_FRAME.Visibility = Visibility.Visible;
 
-            File.WriteAllText(_bdvcdFile, MODEL_CONFIG.GetText("BDVCD"), Encoding.UTF8);
+            File.WriteAllText(_companyFile, MODEL_CONFIG.GetText("COMPANYCD"), Encoding.UTF8);
+            File.WriteAllText(_factoryFile, MODEL_CONFIG.GetText("FACTORYCD"), Encoding.UTF8);
             File.WriteAllText(_tmlcdFile, MODEL_CONFIG.GetText("TMLCD"), Encoding.UTF8);
             File.WriteAllText(_printFile, MODEL_CONFIG.GetText("PRINT"), Encoding.UTF8);
-            //File.WriteAllText(_printFileSales1, MODEL_CONFIG.GetText("PRINT_SALES1"), Encoding.UTF8);
-            //File.WriteAllText(_printFileSales2, MODEL_CONFIG.GetText("PRINT_SALES2"), Encoding.UTF8);
-            //File.WriteAllText(_printFileDaesin, MODEL_CONFIG.GetText("PRINT_DAESIN"), Encoding.UTF8);
             File.WriteAllText(_scalePortFile, MODEL_CONFIG.GetText("PORTSCALE"), Encoding.UTF8);
             File.WriteAllText(_plcPortFile, MODEL_CONFIG.GetText("PORTPLC"), Encoding.UTF8);
-            File.WriteAllText(_empcdFile, MODEL_CONFIG.GetText("TMLEMP"), Encoding.UTF8);
-            //File.WriteAllText(_printtpFile, MODEL_CONFIG.GetText("PRINTTP"), Encoding.UTF8);
 
-            ItsLocalInfo._SetBDVCD(MODEL_CONFIG.GetText("BDVCD"));
-            //ItsLocalInfo._SetPrintSales1(MODEL_CONFIG.GetText("PRINT_SALES1"));
-            //ItsLocalInfo._SetPrintSales2(MODEL_CONFIG.GetText("PRINT_SALES2"));
-            //ItsLocalInfo._SetPrintDaesin(MODEL_CONFIG.GetText("PRINT_DAESIN"));
+            ItsLocalInfo._SetCOMPANY(MODEL_CONFIG.GetText("COMPANYCD"));
+            ItsLocalInfo._SetFACTORY(MODEL_CONFIG.GetText("FACTORYCD"));
             ItsLocalInfo._SetPORTSCALE(MODEL_CONFIG.GetText("PORTSCALE"));
             ItsLocalInfo._SetPORTPLC(MODEL_CONFIG.GetText("PORTPLC"));
-            ItsLocalInfo.TMLEMP = MODEL_CONFIG.GetText("TMLEMP");
-            //ItsLocalInfo._SetPRINTTP(MODEL_CONFIG.GetText("PRINTTP"));
 
             if (_curTmlcd != MODEL_CONFIG.GetText("TMLCD"))
             {
@@ -586,7 +555,27 @@ namespace TMLMAIN
                 string __tmlcd = ItsLocalInfo.TMLCD; // tmlware 갱신 효과
             }
 
-            HideAllPages();
+            PAGE0.MaxHeight = 0;
+            PAGE1.MaxHeight = 0;
+            PAGE2.MaxHeight = 0;
+            PAGE3.MaxHeight = 0;
+            PAGE4.MaxHeight = 0;
+            PAGE5.MaxHeight = 0;
+            PAGE6.MaxHeight = 0;
+            PAGE7.MaxHeight = 0;
+            PAGE8.MaxHeight = 0;
+            PAGE9.MaxHeight = 0;
+
+            OTHER_PAGE0.MaxHeight = 0;
+            OTHER_PAGE1.MaxHeight = 0;
+            OTHER_PAGE2.MaxHeight = 0;
+            OTHER_PAGE3.MaxHeight = 0;
+            OTHER_PAGE4.MaxHeight = 0;
+            OTHER_PAGE5.MaxHeight = 0;
+            OTHER_PAGE6.MaxHeight = 0;
+            OTHER_PAGE7.MaxHeight = 0;
+            OTHER_PAGE8.MaxHeight = 0;
+            OTHER_PAGE9.MaxHeight = 0;
 
             MainWindow_Loaded(sender, e);
             SetMenu(MODEL_CONFIG.GetText("TMLCD"));
@@ -602,34 +591,34 @@ namespace TMLMAIN
                 if (e.ChangedButton != MouseButton.Left) return;
             }
 
+            CONFIG_PASS.CloseKeypad();
+
             DOCK_FRAME.Visibility = Visibility.Visible;
 
             PANEL_CONFIG.MaxHeight = 0;
             if (CURFRAME != null) CURFRAME.IsEnabled = true;
 
-
-            CONFIG_PASS.CloseKeypad();
+            ConfigIcon.Visibility = Visibility.Hidden;
             ConfigClose.Visibility = Visibility.Hidden;
             ConfigCommit.Visibility = Visibility.Hidden;
         }
 
-        //private void ICON_MENU_MouseDown(object sender, MouseButtonEventArgs e)
-        //{
-        //    LEFT_MENU.MaxWidth = 1000;
-        //    ICON_MENU.MaxWidth = 0;
-        //    ICON_MENU.Visibility = Visibility.Hidden;
-        //}
+        private void ICON_MENU_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            LEFT_MENU.MaxWidth = 1000;
+            ICON_MENU.MaxWidth = 0;
+            ICON_MENU.Visibility = Visibility.Hidden;
+        }
 
-        //private void ICON_HIDE_MouseDown(object sender, MouseButtonEventArgs e)
-        //{
-        //    LEFT_MENU.MaxWidth = 0;
-        //    ICON_MENU.Visibility = Visibility.Visible;
-        //    ICON_MENU.MaxWidth = 1000;
-        //}
+        private void ICON_HIDE_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            LEFT_MENU.MaxWidth = 0;
+            ICON_MENU.Visibility = Visibility.Visible;
+            ICON_MENU.MaxWidth = 1000;
+        }
 
-        // 2025-04-10 메시지박스 수정
         private string command = "";
-        public void ShowMessageBox(string commandName, string msg, string msgType)
+        public void ShowMessageBox(string commandName, string msg)
         {
             command = commandName;
             TEXT_MSG.Text = msg;
@@ -637,43 +626,30 @@ namespace TMLMAIN
             if (CURFRAME != null) CURFRAME.IsEnabled = false;
 
             PANEL_MSG.MaxHeight = 5000;
-            //MsgIcon.Visibility = Visibility.Visible;
-            if (msgType == "WARN")
-            {
-                Color clr = Color.FromRgb(232, 179, 87);
-                MsgCommit.Background = new SolidColorBrush(clr);
-                MsgCommit.Margin = new Thickness(180, 9, 0, 9);
-                MsgCommit.Visibility = Visibility.Visible;
-                MsgClose.Visibility = Visibility.Hidden;
-                MsgClose.Width = 0;
-                TEXT_MSG_IMG.Source = new BitmapImage(new Uri("pack://application:,,,/TMLMAIN;component/popup_bg_warning.png"));
-            }
-            else if (msgType == "ERR" || command == "")
-            {
-                Color clr = Color.FromRgb(243, 86, 90);
-                MsgCommit.Background = new SolidColorBrush(clr);
-                MsgCommit.Margin = new Thickness(180, 9, 0, 9);
-                MsgCommit.Visibility = Visibility.Visible;
-                MsgClose.Visibility = Visibility.Hidden;
-                MsgClose.Width = 0;
-                TEXT_MSG_IMG.Source = new BitmapImage(new Uri("pack://application:,,,/TMLMAIN;component/popup_bg_error.png"));
-            }
-            else
-            {
-                Color clr = Color.FromRgb(70, 140, 198);
-                MsgCommit.Background = new SolidColorBrush(clr);
-                MsgCommit.Margin = new Thickness(130, 9, 50, 9);
-                MsgCommit.Visibility = Visibility.Visible;
-                MsgClose.Visibility = Visibility.Visible;
-                MsgClose.Width = 50;
-                TEXT_MSG_IMG.Source = new BitmapImage(new Uri("pack://application:,,,/TMLMAIN;component/popup_bg_choice.png"));
-            }
-            
+            MsgIcon.Visibility = Visibility.Visible;
+            MsgCommit.Visibility = Visibility.Visible;
+            MsgClose.Visibility = Visibility.Visible;
+
+            msgback = Brushes.IndianRed;
+
             PANEL_MSG.Focus();
         }
-        public void ShowMessageBox(string commandName, string msg)
+
+        public void ShowMessageBox_B(string commandName, string msg, Brush backcolor)
         {
-            ShowMessageBox(commandName, msg, "");
+            command = commandName;
+            TEXT_MSG.Text = msg;
+
+            if (CURFRAME != null) CURFRAME.IsEnabled = false;
+
+            PANEL_MSG.MaxHeight = 5000;
+            MsgIcon.Visibility = Visibility.Visible;
+            MsgCommit.Visibility = Visibility.Visible;
+            MsgClose.Visibility = Visibility.Visible;
+
+            msgback = backcolor;
+
+            PANEL_MSG.Focus();
         }
 
         private void MSG_CLOSE_MouseUp(object sender, MouseButtonEventArgs e)
@@ -689,13 +665,12 @@ namespace TMLMAIN
 
             if (CURFRAME != null) CURFRAME.IsEnabled = true;
 
-           // MsgIcon.Visibility = Visibility.Hidden;
+            MsgIcon.Visibility = Visibility.Hidden;
             MsgCommit.Visibility = Visibility.Hidden;
             MsgClose.Visibility = Visibility.Hidden;
 
             if (PANEL_CONFIG.Visibility == Visibility.Visible)
             {
-                //CONFIG_PASS.Password = "";
                 CONFIG_PASS.Value = "";
                 CONFIG_PASS.Focus();
             }
@@ -712,13 +687,12 @@ namespace TMLMAIN
             TEXT_MSG.Text = "오류발생: 프로그램 개발자 연락바람";
             PANEL_MSG.MaxHeight = 0;
             if (CURFRAME != null) CURFRAME.IsEnabled = true;
-           // MsgIcon.Visibility = Visibility.Hidden;
+            MsgIcon.Visibility = Visibility.Hidden;
             MsgCommit.Visibility = Visibility.Hidden;
             MsgClose.Visibility = Visibility.Hidden;
 
             if (PANEL_CONFIG.Visibility == Visibility.Visible)
             {
-                //CONFIG_PASS.Password = "";
                 CONFIG_PASS.Value = "";
                 CONFIG_PASS.Focus();
             }
@@ -729,11 +703,52 @@ namespace TMLMAIN
             }
             else if (command == "__PageClose")
             {
-                ClearAllFrames();
-                HideAllPages();
+                FRAME0.Tag = null;
+                FRAME1.Tag = null;
+                FRAME2.Tag = null;
+                FRAME3.Tag = null;
+                FRAME4.Tag = null;
+                FRAME5.Tag = null;
+                FRAME6.Tag = null;
+                FRAME7.Tag = null;
+                FRAME8.Tag = null;
+                FRAME9.Tag = null;
+
+                PAGE0.MaxHeight = 0;
+                PAGE1.MaxHeight = 0;
+                PAGE2.MaxHeight = 0;
+                PAGE3.MaxHeight = 0;
+                PAGE4.MaxHeight = 0;
+                PAGE5.MaxHeight = 0;
+                PAGE6.MaxHeight = 0;
+                PAGE7.MaxHeight = 0;
+                PAGE8.MaxHeight = 0;
+                PAGE9.MaxHeight = 0;
+
+                OTHER_FRAME0.Tag = null;
+                OTHER_FRAME1.Tag = null;
+                OTHER_FRAME2.Tag = null;
+                OTHER_FRAME3.Tag = null;
+                OTHER_FRAME4.Tag = null;
+                OTHER_FRAME5.Tag = null;
+                OTHER_FRAME6.Tag = null;
+                OTHER_FRAME7.Tag = null;
+                OTHER_FRAME8.Tag = null;
+                OTHER_FRAME9.Tag = null;
+
+                OTHER_PAGE0.MaxHeight = 0;
+                OTHER_PAGE1.MaxHeight = 0;
+                OTHER_PAGE2.MaxHeight = 0;
+                OTHER_PAGE3.MaxHeight = 0;
+                OTHER_PAGE4.MaxHeight = 0;
+                OTHER_PAGE5.MaxHeight = 0;
+                OTHER_PAGE6.MaxHeight = 0;
+                OTHER_PAGE7.MaxHeight = 0;
+                OTHER_PAGE8.MaxHeight = 0;
+                OTHER_PAGE9.MaxHeight = 0;
 
                 PAGE_MAIN.MaxHeight = 5000;
-
+                
             }
             else
             {
@@ -746,116 +761,6 @@ namespace TMLMAIN
         }
 
         private Frame CURFRAME = null;
-
-        // ------------------------------------------------------------------------------------------
-        // 기타메뉴 (11번째 메뉴부터) : 2026-11-12 고정 10칸(OTHER_MENU0~9, OTHER_PAGE0~9) → 메뉴 개수만큼 자동 생성
-        // 메뉴 버튼과 화면 칸은 같은 순서(index)로 짝을 이룬다
-        // ------------------------------------------------------------------------------------------
-        private List<UserControl> _otherMenus = new List<UserControl>();
-        private List<DockPanel> _otherPages = new List<DockPanel>();
-
-        private UserControl[] TopMenus
-        {
-            get { return new UserControl[] { MENU0, MENU1, MENU2, MENU3, MENU4, MENU5, MENU6, MENU7, MENU8, MENU9, MENU10 }; }
-        }
-        private DockPanel[] TopPages
-        {
-            get { return new DockPanel[] { PAGE0, PAGE1, PAGE2, PAGE3, PAGE4, PAGE5, PAGE6, PAGE7, PAGE8, PAGE9, PAGE10 }; }
-        }
-        private Frame[] TopFrames
-        {
-            get { return new Frame[] { FRAME0, FRAME1, FRAME2, FRAME3, FRAME4, FRAME5, FRAME6, FRAME7, FRAME8, FRAME9, FRAME10 }; }
-        }
-
-        // 메뉴 목록의 startIndex 번째부터 기타메뉴 버튼·화면 칸을 만든다 (이전 것은 지움)
-        private void BuildOtherMenus(DataTable dt, int startIndex)
-        {
-            foreach (DockPanel oldPage in _otherPages)
-            {
-                if (CURFRAME != null && oldPage.Children.Contains(CURFRAME))
-                {
-                    CURFRAME = null;
-                    PAGE_MAIN.MaxHeight = 5000;
-                }
-                DOCK_FRAME.Children.Remove(oldPage);
-            }
-            WRAP_OTHER_MENU.Children.Clear();
-            _otherMenus.Clear();
-            _otherPages.Clear();
-
-            for (int i = startIndex; i < dt.Rows.Count; i++)
-            {
-                UserControl menu = new UserControl();
-                menu.SetResourceReference(StyleProperty, "TML_MENU");
-                menu.MouseUp += MENU_MouseUp;
-                menu.Tag = dt.Rows[i][0].ToString();
-                menu.Content = dt.Rows[i][1].ToString();
-                WRAP_OTHER_MENU.Children.Add(menu);
-                _otherMenus.Add(menu);
-
-                DockPanel page = new DockPanel();
-                DockPanel.SetDock(page, Dock.Top);
-                page.MaxHeight = 0;
-                page.Children.Add(new Frame());
-                DOCK_FRAME.Children.Add(page);
-                _otherPages.Add(page);
-            }
-        }
-
-        // 모든 화면 칸 숨기기 (PAGE_MAIN 제외)
-        private void HideAllPages()
-        {
-            foreach (DockPanel page in TopPages) page.MaxHeight = 0;
-            foreach (DockPanel page in _otherPages) page.MaxHeight = 0;
-        }
-
-        // 열린 화면 모두 닫기 (다음에 누르면 새로 불러옴)
-        private void ClearAllFrames()
-        {
-            foreach (Frame frame in TopFrames) frame.Tag = null;
-            foreach (DockPanel page in _otherPages) (page.Children[0] as Frame).Tag = null;
-        }
-
-        // 메뉴 색 원래대로
-        private void ResetMenuColors(Brush brush)
-        {
-            foreach (UserControl menu in TopMenus)
-            {
-                menu.Background = brush; menu.Foreground = Brushes.White;
-                menu.BorderThickness = new Thickness(0);
-            }
-            foreach (UserControl menu in _otherMenus)
-            {
-                menu.Background = brush; menu.Foreground = Brushes.White;
-                menu.BorderThickness = new Thickness(0);
-            }
-        }
-
-        // 메뉴 버튼 → 화면 칸 (없으면 false)
-        private bool GetMenuPage(UserControl menu, out DockPanel page, out Frame frame)
-        {
-            page = null;
-            frame = null;
-
-            int idx = Array.IndexOf(TopMenus, menu);
-            if (idx >= 0)
-            {
-                page = TopPages[idx];
-                frame = TopFrames[idx];
-                return true;
-            }
-
-            idx = _otherMenus.IndexOf(menu);
-            if (idx >= 0)
-            {
-                page = _otherPages[idx];
-                frame = page.Children[0] as Frame;
-                return true;
-            }
-
-            return false;
-        }
-
         private void MENU_MouseUp(object sender, MouseButtonEventArgs e)
         {
             if (e != null)
@@ -886,20 +791,37 @@ namespace TMLMAIN
             WAIT_MSG.Visibility = Visibility.Visible;
             ItsElement.Refresh(this);
 
-            //timer.Start();
+            timer.Stop();
 
             CONFIG_CLOSE_MouseUp(null, null);
             MSG_CLOSE_MouseUp(null, null);
 
             PAGE_MAIN.MaxHeight = 0;
 
-            HideAllPages();
+            //PAGE0.MaxHeight = 0;
+            //PAGE1.MaxHeight = 0;
+            //PAGE2.MaxHeight = 0;
+            //PAGE3.MaxHeight = 0;
+            //PAGE4.MaxHeight = 0;
+            //PAGE5.MaxHeight = 0;
+            //PAGE6.MaxHeight = 0;
+            //PAGE7.MaxHeight = 0;
+            //PAGE8.MaxHeight = 0;
+            //PAGE9.MaxHeight = 0;
+
+            //OTHER_PAGE0.MaxHeight = 0;
+            //OTHER_PAGE1.MaxHeight = 0;
+            //OTHER_PAGE2.MaxHeight = 0;
+            //OTHER_PAGE3.MaxHeight = 0;
+            //OTHER_PAGE4.MaxHeight = 0;
+            //OTHER_PAGE5.MaxHeight = 0;
+            //OTHER_PAGE6.MaxHeight = 0;
+            //OTHER_PAGE7.MaxHeight = 0;
+            //OTHER_PAGE8.MaxHeight = 0;
+            //OTHER_PAGE9.MaxHeight = 0;
 
             LABEL_TITLE.Content = "[" + (sender as UserControl).Tag.ToString().Substring(0, 11)
-            + "] " + (sender as UserControl).Content.ToString();
-            BrushConverter bc = new BrushConverter();
-            Brush brush = (Brush)bc.ConvertFrom("#262938");
-            brush.Freeze();
+                + "] " + (sender as UserControl).Content.ToString();
 
             StringBuilder sb = new StringBuilder();
             sb.Append("SELECT REF01 FROM COMTYPE WHERE GPCD = 'GLOBAL' AND TPCD = 'TMLPRGVER';");
@@ -911,42 +833,95 @@ namespace TMLMAIN
                 ShowMessageBox("", "프로그램을 재시작해주세요.\n" + "현재버전: " + this.PrgVer + " -> 최신버전: " + prgVer);
             }
 
-            ResetMenuColors(brush);
+            //MENU0.Background = Brushes.WhiteSmoke; MENU0.Foreground = Brushes.Black;
+            //MENU1.Background = Brushes.WhiteSmoke; MENU1.Foreground = Brushes.Black;
+            //MENU2.Background = Brushes.WhiteSmoke; MENU2.Foreground = Brushes.Black;
+            //MENU3.Background = Brushes.WhiteSmoke; MENU3.Foreground = Brushes.Black;
+            //MENU4.Background = Brushes.WhiteSmoke; MENU4.Foreground = Brushes.Black;
+            //MENU5.Background = Brushes.WhiteSmoke; MENU5.Foreground = Brushes.Black;
+            //MENU6.Background = Brushes.WhiteSmoke; MENU6.Foreground = Brushes.Black;
+            //MENU7.Background = Brushes.WhiteSmoke; MENU7.Foreground = Brushes.Black;
+            //MENU8.Background = Brushes.WhiteSmoke; MENU8.Foreground = Brushes.Black;
+            //MENU9.Background = Brushes.WhiteSmoke; MENU9.Foreground = Brushes.Black;
+
+            //OTHER_MENU0.Background = Brushes.WhiteSmoke; OTHER_MENU0.Foreground = Brushes.Black;
+            //OTHER_MENU1.Background = Brushes.WhiteSmoke; OTHER_MENU1.Foreground = Brushes.Black;
+            //OTHER_MENU2.Background = Brushes.WhiteSmoke; OTHER_MENU2.Foreground = Brushes.Black;
+            //OTHER_MENU3.Background = Brushes.WhiteSmoke; OTHER_MENU3.Foreground = Brushes.Black;
+            //OTHER_MENU4.Background = Brushes.WhiteSmoke; OTHER_MENU4.Foreground = Brushes.Black;
+            //OTHER_MENU5.Background = Brushes.WhiteSmoke; OTHER_MENU5.Foreground = Brushes.Black;
+            //OTHER_MENU6.Background = Brushes.WhiteSmoke; OTHER_MENU6.Foreground = Brushes.Black;
+            //OTHER_MENU7.Background = Brushes.WhiteSmoke; OTHER_MENU7.Foreground = Brushes.Black;
+            //OTHER_MENU8.Background = Brushes.WhiteSmoke; OTHER_MENU8.Foreground = Brushes.Black;
+            //OTHER_MENU9.Background = Brushes.WhiteSmoke; OTHER_MENU9.Foreground = Brushes.Black;
 
             UserControl CURMENU = sender as UserControl;
-            CURMENU.Background = brush;
-            CURMENU.Foreground = new BrushConverter().ConvertFrom("#70A6F3") as SolidColorBrush;
-            CURMENU.BorderThickness = new Thickness(0,0,0,2);
-            CURMENU.BorderBrush = new BrushConverter().ConvertFrom("#70A6F3") as SolidColorBrush;
+            CURMENU.Background = Brushes.Black;
+            CURMENU.Foreground = Brushes.White;
 
-            if (CURMENU == MENU10 && MENU10.Tag.ToString() == "OTHER")
+            if (CURMENU == MENU9 && MENU9.Tag.ToString() == "OTHER")
             {
                 POP_OTHER_MENU.IsOpen = true;
 
                 WAIT_MSG.Visibility = Visibility.Visible;
+                timer.Stop();
+
                 return;
             }
 
-            DockPanel curPage;
-            if (!GetMenuPage(CURMENU, out curPage, out CURFRAME))
+            string menuNo = CURMENU.Name.Substring(4, 1);
+            // 2019.08.06 박제홍 추가 기타메뉴, 일반메뉴 같이 나오는 문제
+            string otherchk;
+
+            if (menuNo != "R") // 예: OTHER_FRAME5 
             {
-                WAIT_MSG.Visibility = Visibility.Hidden;
-                return;
+                otherchk = "N";
+                CURFRAME = this.FindName("FRAME" + menuNo) as Frame;
             }
-            curPage.MaxHeight = 5000;
+            else
+            {
+                otherchk = "Y";
+                menuNo = CURMENU.Name.Substring(10, 1);
+                CURFRAME = this.FindName("OTHER_FRAME" + menuNo) as Frame;
+            }
 
+            for (int i=0; i <= 9; i++)
+            {
+                if (i != Convert.ToInt32(menuNo))
+                {
+                    (this.FindName("PAGE" + i) as DockPanel).Visibility = Visibility.Collapsed;
+                    (this.FindName("OTHER_PAGE" + i) as DockPanel).Visibility = Visibility.Collapsed;
+                    (this.FindName("MENU" + i) as UserControl).Background = Brushes.WhiteSmoke;
+                    (this.FindName("MENU" + i) as UserControl).Foreground = Brushes.Black;
+                    (this.FindName("OTHER_MENU" + i) as UserControl).Background = Brushes.WhiteSmoke;
+                    (this.FindName("OTHER_MENU" + i) as UserControl).Foreground = Brushes.Black;
+                }
+                else
+                {
+                    if (otherchk == "N")
+                    {
+                        (this.FindName("PAGE" + i) as DockPanel).Visibility = Visibility.Visible;
+                        (this.FindName("OTHER_PAGE" + i) as DockPanel).Visibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        (this.FindName("PAGE" + i) as DockPanel).Visibility = Visibility.Collapsed;
+                        (this.FindName("OTHER_PAGE" + i) as DockPanel).Visibility = Visibility.Visible;
+                    }
+                }
+            }
+
+            string pageName = (sender as UserControl).Tag.ToString();
             if (CURFRAME.Tag == null)
             {
-                string pageName = (sender as UserControl).Tag.ToString();
+                
                 if (ItsLocalInfo.IsRunMode)
                 {
                     try
                     {
                         webClient.DownloadFile(ItsServerInfo.ServerUrl + pageName.Substring(0, 7) + ".exe", pageName.Substring(0, 7) + ".exe");
                     }
-                    catch {
-
-                    }
+                    catch { }
                 }
 
                 try
@@ -956,23 +931,27 @@ namespace TMLMAIN
                     object assObj = pageAssembly.CreateInstance(pageName.Substring(0, 7) + "." + pageName.Substring(8));
                     Page page = assObj as Page;
 
-                    // 2026-11-12 exe 안에 화면 클래스가 없으면 (예전 exe 등) 빈 화면 대신 알림
-                    if (page == null)
+                    menuNo = CURMENU.Name.Substring(4, 1);
+                    if (menuNo != "R") // 예: OTHER_FRAME5 
                     {
-                        WAIT_MSG.Visibility = Visibility.Hidden;
-                        ShowMessageBox("", (sender as UserControl).Content.ToString() + " 화면을 찾을 수 없습니다.");
-                        return;
+                        (this.FindName("PAGE" + menuNo) as DockPanel).MaxHeight = page.Height;
+                    }
+                    else
+                    {
+                        menuNo = CURMENU.Name.Substring(10, 1);
+                        (this.FindName("OTHER_PAGE" + menuNo) as DockPanel).MaxHeight = page.Height;
                     }
 
                     CURFRAME.NavigationUIVisibility = System.Windows.Navigation.NavigationUIVisibility.Hidden;
                     CURFRAME.Navigate(page);
                     CURFRAME.Tag = (sender as UserControl).Tag;
+
+                    
                 }
-                catch(Exception ex)
+                catch
                 {
                     WAIT_MSG.Visibility = Visibility.Hidden;
-                    ShowMessageBox("", ex.Message);
-                    //ShowMessageBox("", (sender as UserControl).Tag.ToString() + " 를 로딩하지 못했습니다.");
+                    ShowMessageBox("", (sender as UserControl).Tag.ToString() + " 를 로딩하지 못했습니다.");
                 }
             }
 
@@ -983,18 +962,13 @@ namespace TMLMAIN
                 else
                     ItsElement.ActivePage = (ItsPageBase)(CURFRAME.Content);
             }
-            catch (Exception ex)
-            { }
-            
+            catch { }
+
             WAIT_MSG.Visibility = Visibility.Hidden;
+            timer.Start();
         }
 
         private void PASS_CHECK_Click(object sender, RoutedEventArgs e)
-        {
-            CONFIG_PASS_KeyDown(null, null);
-        }
-
-        private void CONFIG_PASS_UP(object sender, MouseButtonEventArgs e)
         {
             CONFIG_PASS_KeyDown(null, null);
         }
@@ -1005,7 +979,6 @@ namespace TMLMAIN
             if (PANEL_CONFIG.MaxHeight == 0)
             {
                 // ICON_CONFIG_MouseDown(null, null);
-                //CONFIG_PASS.Password = "";
                 CONFIG_PASS.Value = "";
                 return;
             }
@@ -1016,19 +989,13 @@ namespace TMLMAIN
                 query.Append("SELECT REF01 FROM COMTYPE WHERE GPCD = 'GLOBAL' AND TPCD = 'TMLPASS';");
                 string pass = ItsData.GetScalar(ItsMaria.Query(query.ToString()));
 
-                //if (pass == CONFIG_PASS.Password)
                 if (pass == CONFIG_PASS.Value)
                 {
-                    CONFIG_PASS.CloseKeypad();
-                    CONFIG_PASS.MaxHeight = 0;
+                    CONFIG_PASS.Visibility = Visibility.Collapsed;
                     PASS_CHECK.MaxHeight = 0;
 
                     CONFIG_LINE.MaxHeight = 0;
                     PANEL_OPTION.MaxHeight = 5000;
-                    PANEL_PASSWORD.Width = 0;
-
-                    ConfigCommit.Visibility = Visibility.Visible;
-                    ConfigClose.Visibility = Visibility.Visible;
                 }
                 else
                 {
@@ -1038,34 +1005,22 @@ namespace TMLMAIN
             }
         }
 
-        //private void COMBO_PRINT_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        //{
-        //    File.WriteAllText(_printFile, COMBO_PRINT.SelectedItem.ToString(), Encoding.UTF8);
-        //}
-
-        // 페이지 불러오기
         public void LoadMenu(string pName)
         {
-            LoadMenu(pName, null);
-        }
-
-        public void LoadMenu(string pName, Dictionary<string, string> param)
-        {
-            ItsElement.SetMenuParam(param);
-
-            // 상단 메뉴(MENU0~9) → 기타메뉴 순서로 화면코드가 같은 메뉴를 찾는다
             UserControl menu = null;
-            List<UserControl> allMenus = new List<UserControl>(TopMenus.Take(10));
-            allMenus.AddRange(_otherMenus);
-            foreach (UserControl m in allMenus)
+
+            int j = 0;
+            while(true)
             {
-                if (pName == Convert.ToString(m.Tag))
-                {
-                    menu = m;
+                menu = PANEL_MENU.FindName(j < 10 ? "MENU" + j : "OTHER_MENU" + (j - 10)) as UserControl;
+
+                if (menu == null)
+                    return;
+                else if (pName == Convert.ToString(menu.Tag))
                     break;
-                }
+
+                j++;
             }
-            if (menu == null) return;
 
             if (menu.Tag != null)
             {
@@ -1078,80 +1033,94 @@ namespace TMLMAIN
                 {
                     POP_OTHER_MENU.IsOpen = true;
                     POP_OTHER_MENU.Focus();
-
+                    
                     return;
                 }
             }
-
+            
             POP_OTHER_MENU.IsOpen = false;
 
             WAIT_MSG.Visibility = Visibility.Visible;
             ItsElement.Refresh(this);
 
-            //timer.Start();
+            timer.Start();
 
             CONFIG_CLOSE_MouseUp(null, null);
             MSG_CLOSE_MouseUp(null, null);
 
             PAGE_MAIN.MaxHeight = 0;
 
-            HideAllPages();
-
             LABEL_TITLE.Content = "[" + menu.Tag.ToString().Substring(0, 11)
                 + "] " + menu.Content.ToString();
-            BrushConverter bc = new BrushConverter();
-            Brush brush = (Brush)bc.ConvertFrom("#262938");
-            brush.Freeze();
 
-            StringBuilder sb = new StringBuilder();
-            sb.Append("SELECT REF01 FROM COMTYPE WHERE GPCD = 'GLOBAL' AND TPCD = 'TMLPRGVER';");
-            DataSet ds = ItsMaria.Query(sb.ToString());
-            string prgVer = ItsData.GetText(ds.Tables[0], 0, "REF01");
 
-            if (prgVer != this.PrgVer)
+            UserControl CURMENU = menu;//sender as UserControl;
+            CURMENU.Background = Brushes.Black;
+            CURMENU.Foreground = Brushes.White;
+
+            //if (CURMENU == MENU9 && MENU9.Tag.ToString() == "OTHER")
+            //{
+            //    POP_OTHER_MENU.IsOpen = true;
+
+            //    WAIT_MSG.Visibility = Visibility.Visible;
+            //    timer.Stop();
+
+            //    return;
+            //}
+
+            string menuNo = CURMENU.Name.Substring(4, 1);
+            // 2019.08.06 박제홍 추가 기타메뉴, 일반메뉴 같이 나오는 문제
+            string otherchk;
+
+            if (menuNo != "R") // 예: OTHER_FRAME5 
             {
-                ShowMessageBox("", "프로그램을 재시작해주세요.\n" + "현재버전: " + this.PrgVer + " -> 최신버전: " + prgVer);
+                otherchk = "N";
+                CURFRAME = this.FindName("FRAME" + menuNo) as Frame;
+            }
+            else
+            {
+                otherchk = "Y";
+                menuNo = CURMENU.Name.Substring(10, 1);
+                CURFRAME = this.FindName("OTHER_FRAME" + menuNo) as Frame;
             }
 
-            ResetMenuColors(brush);
-
-            UserControl CURMENU = menu;
-            CURMENU.Background = brush;
-            CURMENU.Foreground = new BrushConverter().ConvertFrom("#70A6F3") as SolidColorBrush;
-            CURMENU.BorderThickness = new Thickness(0, 0, 0, 2);
-            CURMENU.BorderBrush = new BrushConverter().ConvertFrom("#70A6F3") as SolidColorBrush;
-
-            if (CURMENU == MENU10 && MENU10.Tag.ToString() == "OTHER")
+            for (int i = 0; i <= 9; i++)
             {
-                POP_OTHER_MENU.IsOpen = true;
-
-                WAIT_MSG.Visibility = Visibility.Visible;
-                return;
+                if (i != Convert.ToInt32(menuNo))
+                {
+                    (this.FindName("PAGE" + i) as DockPanel).Visibility = Visibility.Collapsed;
+                    (this.FindName("OTHER_PAGE" + i) as DockPanel).Visibility = Visibility.Collapsed;
+                    (this.FindName("MENU" + i) as UserControl).Background = Brushes.WhiteSmoke;
+                    (this.FindName("MENU" + i) as UserControl).Foreground = Brushes.Black;
+                    (this.FindName("OTHER_MENU" + i) as UserControl).Background = Brushes.WhiteSmoke;
+                    (this.FindName("OTHER_MENU" + i) as UserControl).Foreground = Brushes.Black;
+                }
+                else
+                {
+                    if (otherchk == "N")
+                    {
+                        (this.FindName("PAGE" + i) as DockPanel).Visibility = Visibility.Visible;
+                        (this.FindName("OTHER_PAGE" + i) as DockPanel).Visibility = Visibility.Collapsed;
+                    }
+                    else
+                    {
+                        (this.FindName("PAGE" + i) as DockPanel).Visibility = Visibility.Collapsed;
+                        (this.FindName("OTHER_PAGE" + i) as DockPanel).Visibility = Visibility.Visible;
+                    }
+                }
             }
 
-            DockPanel curPage;
-            if (!GetMenuPage(CURMENU, out curPage, out CURFRAME))
-            {
-                WAIT_MSG.Visibility = Visibility.Hidden;
-                return;
-            }
-            curPage.MaxHeight = 5000;
-
-            bool isNewPage = (CURFRAME.Tag == null);
-
+            string pageName = menu.Tag.ToString();
             if (CURFRAME.Tag == null)
             {
-                string pageName = menu.Tag.ToString();
+
                 if (ItsLocalInfo.IsRunMode)
                 {
                     try
                     {
                         webClient.DownloadFile(ItsServerInfo.ServerUrl + pageName.Substring(0, 7) + ".exe", pageName.Substring(0, 7) + ".exe");
                     }
-                    catch
-                    {
-
-                    }
+                    catch { }
                 }
 
                 try
@@ -1161,23 +1130,25 @@ namespace TMLMAIN
                     object assObj = pageAssembly.CreateInstance(pageName.Substring(0, 7) + "." + pageName.Substring(8));
                     Page page = assObj as Page;
 
-                    // 2026-11-12 exe 안에 화면 클래스가 없으면 (예전 exe 등) 빈 화면 대신 알림
-                    if (page == null)
+                    menuNo = CURMENU.Name.Substring(4, 1);
+                    if (menuNo != "R") // 예: OTHER_FRAME5 
                     {
-                        WAIT_MSG.Visibility = Visibility.Hidden;
-                        ShowMessageBox("", menu.Content.ToString() + " 화면을 찾을 수 없습니다.");
-                        return;
+                        (this.FindName("PAGE" + menuNo) as DockPanel).MaxHeight = page.Height;
+                    }
+                    else
+                    {
+                        menuNo = CURMENU.Name.Substring(10, 1);
+                        (this.FindName("OTHER_PAGE" + menuNo) as DockPanel).MaxHeight = page.Height;
                     }
 
                     CURFRAME.NavigationUIVisibility = System.Windows.Navigation.NavigationUIVisibility.Hidden;
                     CURFRAME.Navigate(page);
                     CURFRAME.Tag = menu.Tag;
                 }
-                catch (Exception ex)
+                catch
                 {
                     WAIT_MSG.Visibility = Visibility.Hidden;
-                    ShowMessageBox("", ex.Message);
-                    //ShowMessageBox("", (sender as UserControl).Tag.ToString() + " 를 로딩하지 못했습니다.");
+                    ShowMessageBox("", menu.Tag.ToString() + " 를 로딩하지 못했습니다.");
                 }
             }
 
@@ -1188,22 +1159,76 @@ namespace TMLMAIN
                 else
                     ItsElement.ActivePage = (ItsPageBase)(CURFRAME.Content);
             }
-            catch (Exception ex)
-            { }
-
-            // 이미 열린 화면은 Loaded 가 다시 안 불리므로 여기서 파라미터를 전달한다.
-            // 신규 화면은 ItsPageTml Loaded → EventMenuParam 에서 수신한다.
-            if (!isNewPage && param != null && param.Count > 0)
-            {
-                ItsPageBase pageBase = CURFRAME.Content as ItsPageBase;
-                if (pageBase != null)
-                {
-                    pageBase.EventMenuParam(param);
-                    ItsElement.ClearMenuParam();
-                }
-            }
+            catch { }
 
             WAIT_MSG.Visibility = Visibility.Hidden;
+            timer.Stop();
+        }
+
+        private void BTN_SET_TMLEMP_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            //POP_EMPCD.REF01 = TMLCD;
+            //POP_TMLEMP.IsOpen = true;
+            //POP_TMLEMP.Focus();
+            ////e.Handled = true;
+            //return;
+        }
+
+        private void SET_TMLEMP_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            //System.IO.File.WriteAllText("ConfigEmpcd.config", POP_EMPCD.Value, Encoding.UTF8);
+            //ItsLocalInfo.TMLEMP = System.IO.File.ReadAllText("ConfigEmpcd.config", Encoding.UTF8);
+
+            //POP_TMLEMP.IsOpen = false;
+
+            //string emp = ItsData.GetScalar(ItsMaria.Query("SELECT EMPNM FROM MSTEMP WHERE EMPCD = '" + POP_EMPCD.Value + "';"));
+            //if (emp == "")
+            //{
+            //    ShowMessageBox("", "담당자코드를 정확히 입력하세요.");
+            //    return;
+            //}
+            //else
+            //    LABEL_TMLEMP.Content = emp;
+
+            //return;
+        }
+
+        private void TMLEMP_POP_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            //if (e != null)
+            //{
+            //    e.Handled = true;
+            //    if (e.ChangedButton != MouseButton.Left) return;
+            //}
+
+            //if (POP_TMLEMP.IsOpen == true)
+            //{
+            //    POP_TMLEMP.IsOpen = false;
+            //    return;
+            //}
+            //else
+            //{
+            //    POP_TMLEMP.IsOpen = true;
+            //    POP_TMLEMP.Focus();
+            //    return;
+            //}
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            ItsMaria.Set("ITSLOGIN", "LOGOUT");
+            ItsMaria.AddOne("SESSION_LOGINKEY", ItsMemberShip.LoginKey);
+            ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+        }
+
+        private void COMBO_PRINT_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            File.WriteAllText(_printFile, COMBO_PRINT.SelectedItem.ToString(), Encoding.UTF8);
         }
     }
 }
