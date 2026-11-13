@@ -70,7 +70,7 @@
 
     <Its:split runat="server" Type="Horizon" />
 
-    <%-- 설비 고장건수 (고장건수 + 평균수리시간) --%>
+    <%-- 설비 호출건수 (호출건수 + 평균수리시간) --%>
     <Its:div runat="server" Type="SplitDown">
         <div class="chart-box">
             <div id="chart2_legend" class="chart-legend"></div>

@@ -18,6 +18,31 @@
 
 ## 🕒 2026-11-13 (금) 작업 내역
 
+### 6. EQM1001_R06 TOP ISSUE 인쇄(R0602)에 그래프 페이지·확인란 추가
+- **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R0602.cs](04.Report/PAGEEQM/EQM1001/R0602.cs), [04.Report/PAGEEQM/EQM1001/R0601.cs](04.Report/PAGEEQM/EQM1001/R0601.cs)
+- **배경**: TOP ISSUE 인쇄의 세부내용 뒤에 기존 그래프를 함께 출력하고, 그래프 우측 하단에 오늘 날짜·이름·사인 칸 요청. 시안 4종(가로 표형·한 줄 밑줄형·결재란형·세로 목록형) 중 사용자 선택: 결재란형. 성명은 빈칸(수기), 그래프 단독 인쇄(R0601)는 확인란 없이 그대로
+- **R0602**: 생성자에서 LIST_CHART(R0601과 같은 조회)도 호출, 세부내용 다음 페이지에 DRAW_GRAPH_PAGE: 제목 '■ {년}년 설비 고장율 현황' + 왼쪽 머리칸(설비 고장율/고장 건수) + 차트 2개(높이 350 → 315) + DRAW_SIGN(세로 '확인' 머리칸 26 + 일자 110(출력일 yyyy-MM-dd)·성명 90·서명 120, 머리 22·값 48, 기존 표와 같은 머리 색). Designer.cs 미변경(기존처럼 Detail에 코드로 배치)
+- **R0601**: 차트 채우기 SET_CHART_RATE·SET_CHART_CNT를 차트를 인자로 받는 internal static으로 바꿔 R0602가 같은 차트를 그림(R0601 출력은 동일)
+- **검증**: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 R0602 경고 1건). 실DB(2026년 11월)로 웹과 같은 방식 실행: R0602 표준출력 없음·PDF 생성·4페이지(표 1, 세부내용 2, 그래프 1), 마지막 페이지 이미지에서 차트 2개와 결재란 배치·일자 2026-11-13 확인. R0601 단독 출력 정상. exe를 04.Report/bin·01.Office/Reports에 배포(MD5 일치). 인코딩 BOM·CRLF. 미확인: VS 디자이너 열기(Designer.cs 미변경), 웹 화면에서 실제 [인쇄]
+
+### 5. 레포트 인쇄 'Unable to connect to any of the specified MySQL hosts' 오류
+- **수정/대상 파일**: [01.Office/Reports/ITS_CONFIG_MARIA.xml](01.Office/Reports/ITS_CONFIG_MARIA.xml), [04.Report/bin/ITS_CONFIG_MARIA.xml](04.Report/bin/ITS_CONFIG_MARIA.xml) (`--addr` 1행씩)
+- **원인**: 레포트 exe는 실행 폴더의 ITS_CONFIG_MARIA.xml로 DB에 접속. 2026-11-12 커밋 51fa63b(TQM3001 작업)에서 두 파일의 addr가 211.43.15.98 → localhost로 바뀌었고, 이 PC의 localhost:33061에는 DB가 없어 접속 실패. 웹 화면은 App_Code/ItsMaria.cs의 211.43.15.98(테스트서버)을 쓰므로 화면 조회는 정상이었음
+- **작업 상세 내용**: 두 파일의 addr만 웹과 같은 211.43.15.98로 되돌림(port·user·dbname·password 줄 미변경, BOM·줄바꿈 유지). 02.Site/AAABIN 설정(암호화)은 미변경
+- **검증**: 웹 컨트롤러와 같은 방식(Reports/EQM1001.exe R0601 파일명 SYEAR»2026 pdf)으로 실행 → 표준출력 없음(웹에서 성공 처리)·PDF 생성, 실DB 값('26년 평균 0.2·1.8, 11월 1.9·9건)으로 차트 출력. 실DB EQM1001_R06 프로시저 저장 전이라 막대는 기존 단색(설계대로). 시험 출력 파일은 삭제
+- **함께 처리**: R0601.cs의 사용자 수정(차트 제목 고장건수 → 호출건수)이 4번 빌드 이후라 MSBuild 15.0 Release Rebuild 후 exe 재배포(04.Report/bin·01.Office/Reports, MD5 일치, 기존 R0602 경고 1건). 재출력에서 제목 '호출건수' 확인. 범례 계열명은 '설비 고장횟수' 그대로
+
+### 4. EQM1001_R06 년 설비고장율 현황 차트 막대 연도별 색상
+- **수정/대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R06.sql](05.Procedure/MES_SNS2_EQM1001_R06.sql) (`LIST_CHART`), [01.Office/PAGEEQM/EQM1001/EQM1001_R06.js](01.Office/PAGEEQM/EQM1001/EQM1001_R06.js)
+- **배경**: 연도 평균 6칸('21~'26)과 월 막대를 연도별 색으로 구분 요청. 그리드의 BACKGROUND는 ItsGrid가 셀 배경으로 칠하는 기능이라 billboard 차트에는 자동 적용되지 않음 → 프로시저가 행별 색을 내려주고 차트 `data.color` 콜백에서 사용
+- **프로시저**: 결과에 YYYY·BACKGROUND 열 추가. BACKGROUND = 연도 MOD 6 기준 6색 순환(#9ecae1·#a1d99b·#fdd0a2·#d4b9da·#b7bdf0·#f2c4ce), 월 막대는 조회년도 색. 조회 범위가 연속 6년이라 항상 서로 다른 색, 같은 연도는 어느 해를 조회해도 같은 색(2026 = 기존 #b7bdf0). 헤더 Update 1행 추가
+- **화면**: `BAR_COLOR(계열, 색 배열)`로 설비 비가동시간(NONHR)·호출건수(FAILCNT) 막대만 행별 색, 선(점유율·목표·평균수리시간)은 기존 빨강·파랑 유지. 범례 막대 색은 조회년도 색(호출건수 차트 막대도 연도 색으로 바뀌어 기존 주황 대신 2026은 연보라)
+- **검증**: 격리 MariaDB 10.2.44(network none)에 실DB SELECT로 가져온 테이블로 컴파일·`LIST_CHART('2026')` 실행 → 값이 화면 캡처와 같음('26년 평균 0.2·1.8·2603, 11월 1.9·0.02·9), BACKGROUND '21 #f2c4ce ~ '26·월 #b7bdf0. 실제 EQM1001_R06.js를 billboard 1.8.1·d3 v5 시험 페이지에서 실행: 두 차트 막대 18/18개 색 일치, 선 색 유지. node --check 통과, 인코딩 js BOM·CRLF, sql BOM 없음·CRLF. 인쇄 레포트 R0601은 열 이름으로 읽어 영향 없음. 미확인: 실DB 프로시저 저장·실제 화면
+- **후속(인쇄 레포트 R0601도 연도별 색)**: [04.Report/PAGEEQM/EQM1001/R0601.cs](04.Report/PAGEEQM/EQM1001/R0601.cs)
+  - AddPoint가 만든 점을 돌려주게 하고, 비가동시간·고장횟수 막대 점마다 행의 BACKGROUND 색(SeriesPoint.Color) 적용(SET_POINT_COLOR·ROW_COLOR). 범례 막대 색은 조회년도(마지막 행) 색(YEAR_COLOR). 선 색은 그대로
+  - BACKGROUND 열이 없으면(실DB 프로시저 저장 전) 기존 단색(#b7bdf0·#f6c79a) 그대로 출력. Designer.cs 미변경
+  - 검증: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 R0602 경고 1건). 시험 프로그램으로 LIST_CHART 실행 결과(격리 DB) 18행을 넣어 PNG 출력: 두 차트 막대 18/18 점 색이 '21 #f2c4ce ~ '26·월 #b7bdf0로 일치, BACKGROUND 열을 뺀 출력은 모든 점이 계열 기본 색. exe를 04.Report/bin·01.Office/Reports에 배포(MD5 일치). 인코딩 BOM·CRLF. 미확인: VS 디자이너 열기(레이아웃 미변경), 웹 [인쇄] 실제 출력
+
 ### 3. PRD6001_S02 MTBF·고장율·MTTR 계산식 수정
 - **수정/대상 파일**: [05.Procedure/MES_SNS2_PRD6001_S02.sql](05.Procedure/MES_SNS2_PRD6001_S02.sql) (`LIST_EQMDATA`), [01.Office/PAGEPRD/PRD6001/PRD6001_S02.js](01.Office/PAGEPRD/PRD6001/PRD6001_S02.js)
 - **후속**: 사용자가 실DB 반영 후 조회한 (M3열전)T1·T2 값(11월 MTBF 35,991·35,894, 고장율 1.67, MTTR 9·106, 합계 437,991·437,894·0.14)이 검산값과 일치. 고장 없는 달 MTBF·MTTR은 사용자 결정으로 0 표시 유지. 조회 후 `ItsGrid.Get('grid1').autoSizeColumns()` 추가(node --check 통과, BOM·CRLF 유지)

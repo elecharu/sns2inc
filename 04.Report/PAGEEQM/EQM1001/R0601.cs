@@ -12,7 +12,7 @@ namespace XtraRpt
     /// <summary>
     /// 2026-11-06 [년 설비고장율 현황] 웹 EQM1001_R06 그래프 화면 출력 (A4 가로 1장)
     /// 데이터 = EQM1001_R06 LIST_CHART (화면과 같은 조회, 연도 평균 6칸 + 1~12월)
-    /// 위 = 설비 비가동시간(막대) + 점유율(점선) + 목표 0.75%(점선), 아래 = 고장건수(막대) + 평균수리시간(점선)
+    /// 위 = 설비 비가동시간(막대) + 점유율(점선) + 목표 0.75%(점선), 아래 = 호출건수(막대) + 평균수리시간(점선)
     /// </summary>
     public partial class R0601 : XtraReport
     {
@@ -47,46 +47,46 @@ namespace XtraRpt
             }
 
             lbl_TITLE.Text = "■ " + year + "년 설비 고장율 현황";
-            SET_CHART_RATE(ds.Tables[0]);
-            SET_CHART_CNT(ds.Tables[0]);
+            SET_CHART_RATE(chart_RATE, ds.Tables[0]);
+            SET_CHART_CNT(chart_CNT, ds.Tables[0]);
         }
 
-        // 설비 고장율: 비가동시간(hr, 막대) + 점유율(%, 오른쪽 축) + 목표(%, 오른쪽 축)
-        private void SET_CHART_RATE(DataTable dt)
+        // 설비 고장율: 비가동시간(hr, 막대) + 점유율(%, 오른쪽 축) + 목표(%, 오른쪽 축) (R0602 그래프 페이지도 사용)
+        internal static void SET_CHART_RATE(XRChart chartRate, DataTable dt)
         {
-            Series nonHr = NewBar("설비 비가동시간", Color.FromArgb(0xb7, 0xbd, 0xf0), "{V:0.0}hr");
+            Series nonHr = NewBar("설비 비가동시간", YEAR_COLOR(dt, Color.FromArgb(0xb7, 0xbd, 0xf0)), "{V:0.0}hr");
             Series nonRate = NewLine("비가동시간 점유율(고장시간/가동시간)", Color.Red, true, "{V:0.00}%");
             Series goal = NewLine("목표(" + GOAL_RATE + "% 이하 관리)", Color.Blue, false, "");
 
             foreach (DataRow r in dt.Rows)
             {
                 string arg = ARG(r);
-                AddPoint(nonHr, arg, r["NONHR"]);
+                SET_POINT_COLOR(AddPoint(nonHr, arg, r["NONHR"]), r);
                 AddPoint(nonRate, arg, r["NONRATE"]);
                 AddPoint(goal, arg, GOAL_RATE);
             }
 
-            SET_CHART(chart_RATE, "설비 고장율", nonHr, new Series[] { nonRate, goal });
+            SET_CHART(chartRate, "설비 고장율", nonHr, new Series[] { nonRate, goal });
         }
 
-        // 고장건수: 설비 고장건수(막대) + 평균수리시간(분, 오른쪽 축)
-        private void SET_CHART_CNT(DataTable dt)
+        // 호출건수: 설비 호출건수(막대) + 평균수리시간(분, 오른쪽 축) (R0602 그래프 페이지도 사용)
+        internal static void SET_CHART_CNT(XRChart chartCnt, DataTable dt)
         {
-            Series failCnt = NewBar("설비 고장횟수", Color.FromArgb(0xf6, 0xc7, 0x9a), "{V:0.#}건");
+            Series failCnt = NewBar("설비 고장횟수", YEAR_COLOR(dt, Color.FromArgb(0xf6, 0xc7, 0x9a)), "{V:0.#}건");
             Series avgRep = NewLine("평균수리시간", Color.Red, true, "{V:0}분");
 
             foreach (DataRow r in dt.Rows)
             {
                 string arg = ARG(r);
-                AddPoint(failCnt, arg, r["FAILCNT"]);
+                SET_POINT_COLOR(AddPoint(failCnt, arg, r["FAILCNT"]), r);
                 AddPoint(avgRep, arg, r["AVGREPMIN"]);
             }
 
-            SET_CHART(chart_CNT, "고장건수", failCnt, new Series[] { avgRep });
+            SET_CHART(chartCnt, "호출건수", failCnt, new Series[] { avgRep });
         }
 
         // 막대는 왼쪽 축, 선은 오른쪽 축 (둘 다 0 부터)
-        private void SET_CHART(XRChart chart, string title, Series bar, Series[] lines)
+        private static void SET_CHART(XRChart chart, string title, Series bar, Series[] lines)
         {
             chart.Series.Clear();
             chart.Series.Add(bar);
@@ -193,7 +193,7 @@ namespace XtraRpt
         }
 
         // 값이 없는 달(조회 시점 이후)은 빈 점으로 두어 가로축 칸은 그대로 남긴다
-        private static void AddPoint(Series s, string arg, object value)
+        private static SeriesPoint AddPoint(Series s, string arg, object value)
         {
             double v;
             if (value == null || value == DBNull.Value || !double.TryParse(value.ToString(), out v))
@@ -201,9 +201,37 @@ namespace XtraRpt
                 SeriesPoint empty = new SeriesPoint(arg, 0D);
                 empty.IsEmpty = true;
                 s.Points.Add(empty);
-                return;
+                return empty;
             }
-            s.Points.Add(new SeriesPoint(arg, v));
+            SeriesPoint point = new SeriesPoint(arg, v);
+            s.Points.Add(point);
+            return point;
+        }
+
+        // 막대 연도별 색상: 프로시저 BACKGROUND 값, 없으면 계열 기본 색상
+        private static void SET_POINT_COLOR(SeriesPoint point, DataRow r)
+        {
+            Color color = ROW_COLOR(r);
+            if (color != Color.Empty)
+            {
+                point.Color = color;
+            }
+        }
+
+        // 범례 막대 색상: 조회년도(마지막 행) 색상, 없으면 기본 색상
+        private static Color YEAR_COLOR(DataTable dt, Color defaultColor)
+        {
+            Color color = dt.Rows.Count > 0 ? ROW_COLOR(dt.Rows[dt.Rows.Count - 1]) : Color.Empty;
+            return color != Color.Empty ? color : defaultColor;
+        }
+
+        private static Color ROW_COLOR(DataRow r)
+        {
+            if (!r.Table.Columns.Contains("BACKGROUND") || r["BACKGROUND"] == DBNull.Value || r["BACKGROUND"].ToString() == "")
+            {
+                return Color.Empty;
+            }
+            return ColorTranslator.FromHtml(r["BACKGROUND"].ToString());
         }
     }
 }

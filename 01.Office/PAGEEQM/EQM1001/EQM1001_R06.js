@@ -61,7 +61,7 @@ ItsPage.Load = function () {
     ItsButton.EventSearch();
 };
 
-/* 조회 (설비 고장율 / 고장건수 차트) */
+/* 조회 (설비 고장율 / 호출건수 차트) */
 ItsButton.EventSearch = function () {
     var maria = new ItsMaria('EQM1001_R06', 'LIST_CHART');
     maria.AddPanel('sdiv1');
@@ -73,14 +73,17 @@ ItsButton.EventSearch = function () {
 
     var categories = [], nonHr = ['NONHR'], nonRate = ['NONRATE'], goalRate = ['GOALRATE'];
     var failCnt = ['FAILCNT'], avgRepMin = ['AVGREPMIN'];
+    var barColors = [];   // 막대별 연도 색상 (프로시저 BACKGROUND)
     maria.store.data.forEach(function (d) {
         categories.push(d['GUBUN']);
+        barColors.push(d['BACKGROUND'] || '');
         nonHr.push(d['NONHR']);
         nonRate.push(d['NONRATE']);
         goalRate.push(0.75);   // 목표 점유율 0.75% 고정
         failCnt.push(d['FAILCNT']);
         avgRepMin.push(d['AVGREPMIN']);
     });
+    var yearColor = barColors[barColors.length - 1];   // 조회년도 색상 (범례 표시용)
 
     chart1 = bb.generate({
         bindto: '#chart1',
@@ -92,7 +95,8 @@ ItsButton.EventSearch = function () {
             type: 'bar',
             types: { NONRATE: 'line', GOALRATE: 'line' },
             axes: { NONRATE: 'y2', GOALRATE: 'y2' },
-            colors: { NONHR: '#b7bdf0', NONRATE: 'red', GOALRATE: 'blue' },
+            colors: { NONHR: yearColor || '#b7bdf0', NONRATE: 'red', GOALRATE: 'blue' },
+            color: BAR_COLOR('NONHR', barColors),
             labels: true,
             onclick: TOPISSUE_OPEN
         },
@@ -108,14 +112,15 @@ ItsButton.EventSearch = function () {
     chart2 = bb.generate({
         bindto: '#chart2',
         size: { height: $('#chart2').height() },
-        title: { text: '고장건수' },
+        title: { text: '호출건수' },
         data: {
             columns: [failCnt, avgRepMin],
-            names: { FAILCNT: '설비 고장건수', AVGREPMIN: '평균수리시간(분)' },
+            names: { FAILCNT: '설비 호출건수', AVGREPMIN: '평균수리시간(분)' },
             type: 'bar',
             types: { AVGREPMIN: 'line' },
             axes: { AVGREPMIN: 'y2' },
-            colors: { FAILCNT: '#f6c79a', AVGREPMIN: 'red' },
+            colors: { FAILCNT: yearColor || '#f6c79a', AVGREPMIN: 'red' },
+            color: BAR_COLOR('FAILCNT', barColors),
             labels: true,
             onclick: TOPISSUE_OPEN
         },
@@ -320,13 +325,23 @@ ItsFileManager.Event('pop1_file_IMG').onUpload = function (id, fileKey) {
     POP_IMGLIST();
 };
 
+/* 막대 색상: 해당 계열 막대만 행별 연도 색상, 나머지는 계열 기본 색상 */
+function BAR_COLOR(id, barColors) {
+    return function (color, d) {
+        if (d && d.id == id && barColors[d.index]) {
+            return barColors[d.index];
+        }
+        return color;
+    };
+}
+
 /* 차트 범례 (막대 = 사각형, 선 = 점선 + 동그라미, 목표는 속이 빈 동그라미) */
 function CHART_LEGEND(id, color) {
     var name = this.config.data_names[id];
     var icon = '<svg width="34" height="10"><rect x="0" y="0" width="34" height="10" fill="' + color + '" stroke="#888" /></svg>';
     if (this.config.data_types[id] == 'line') {
         icon = '<svg width="34" height="10"><line x1="0" y1="5" x2="34" y2="5" stroke="' + color + '" stroke-dasharray="4 3" />'
-             + '<circle cx="17" cy="5" r="3" fill="' + (id == 'GOALRATE' ? '#fff' : color) + '" stroke="' + color + '" /></svg>';
+            + '<circle cx="17" cy="5" r="3" fill="' + (id == 'GOALRATE' ? '#fff' : color) + '" stroke="' + color + '" /></svg>';
     }
     return '<span>' + icon + name + '</span>';
 }

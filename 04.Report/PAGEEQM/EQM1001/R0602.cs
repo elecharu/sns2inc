@@ -16,6 +16,7 @@ namespace XtraRpt
     /// 앞 페이지 = TOP ISSUE 표 (최대 5건 모두 1페이지), 뒤 페이지 = 세부내용 (페이지당 2건: 이슈 정보 / 원인 및 예방 / 사진)
     /// 2026-11-06 표를 페이지당 3건 → 5건 (화면에 조회되는 건이 표 1페이지에 모두 나오게)
     /// 고장유형·고장부위는 설비수리(EQMREP)에 항목이 없어 화면처럼 '-'
+    /// 마지막 페이지 = 그래프 (R0601 차트, LIST_CHART) + 우측 하단 확인란 (일자·성명·서명)
     /// </summary>
     public partial class R0602 : XtraReport
     {
@@ -57,7 +58,20 @@ namespace XtraRpt
                 throw new InvalidOperationException(month + "월 설비 수리 이력이 없습니다.");
             }
 
+            // 그래프 페이지 데이터 (R0601 과 같은 조회)
+            ItsMaria chartMaria = new ItsMaria("EQM1001_R06", "LIST_CHART");
+            chartMaria.AddParam("SYEAR", year);
+            DataSet chartDs = chartMaria.CallProc();
+            if (chartMaria.IsError)
+            {
+                throw new InvalidOperationException(chartMaria.ErrMessage);
+            }
+
             DRAW(ds.Tables[0], ds.Tables[1], Convert.ToInt32(month) + "월");
+            if (chartDs != null && chartDs.Tables.Count > 0 && chartDs.Tables[0].Rows.Count > 0)
+            {
+                DRAW_GRAPH_PAGE(chartDs.Tables[0], year);
+            }
         }
 
         // 표 페이지 → 세부내용 페이지 순으로 Detail 에 그리고 페이지마다 XRPageBreak
@@ -91,6 +105,60 @@ namespace XtraRpt
             }
 
             Detail.HeightF = page * PAGE_H;
+        }
+
+        // 세부내용 뒤 그래프 페이지: R0601 과 같은 차트 2개 + 우측 하단 확인란
+        private void DRAW_GRAPH_PAGE(DataTable dt, string year)
+        {
+            const float SIDE_W = 80F, CHART_X = 90F, CHART_H = 315F, GAP = 10F;
+            int page = (int)Math.Round(Detail.HeightF / PAGE_H);
+            float y1 = NEW_PAGE(page, "■ " + year + "년 설비 고장율 현황") + 2F;
+            float y2 = y1 + CHART_H + GAP;
+
+            SIDE_LABEL("설  비\r\n고장율\r\n(비가동)", y1, SIDE_W, CHART_H);
+            R0601.SET_CHART_RATE(NEW_CHART(CHART_X, y1, W - CHART_X, CHART_H), dt);
+
+            SIDE_LABEL("고  장\r\n건  수", y2, SIDE_W, CHART_H);
+            R0601.SET_CHART_CNT(NEW_CHART(CHART_X, y2, W - CHART_X, CHART_H), dt);
+
+            DRAW_SIGN(y2 + CHART_H + 6F);
+            Detail.HeightF = (page + 1) * PAGE_H;
+        }
+
+        // 확인란 (결재란형): 세로 '확인' 머리칸 + 일자(출력일)·성명·서명
+        private void DRAW_SIGN(float y)
+        {
+            const float HEAD_W = 26F, DATE_W = 110F, NAME_W = 90F, SIGN_W = 120F, H1 = 22F, H2 = 48F;
+            float x = W - (HEAD_W + DATE_W + NAME_W + SIGN_W);
+
+            CELL("확\r\n\r\n인", x, y, HEAD_W, H1 + H2, true, TextAlignment.MiddleCenter);
+            x += HEAD_W;
+            CELL("일자", x, y, DATE_W, H1, true, TextAlignment.MiddleCenter);
+            CELL(DateTime.Now.ToString("yyyy-MM-dd"), x, y + H1, DATE_W, H2, false, TextAlignment.MiddleCenter);
+            x += DATE_W;
+            CELL("성명", x, y, NAME_W, H1, true, TextAlignment.MiddleCenter);
+            CELL("", x, y + H1, NAME_W, H2, false, TextAlignment.MiddleCenter);
+            x += NAME_W;
+            CELL("서명", x, y, SIGN_W, H1, true, TextAlignment.MiddleCenter);
+            CELL("", x, y + H1, SIGN_W, H2, false, TextAlignment.MiddleCenter);
+        }
+
+        private void SIDE_LABEL(string text, float y, float w, float h)
+        {
+            XRLabel lbl = LABEL(text, 0F, y, w, h, 14F, true);
+            lbl.Borders = BorderSide.All;
+            lbl.TextAlignment = TextAlignment.MiddleCenter;
+        }
+
+        private XRChart NEW_CHART(float x, float y, float w, float h)
+        {
+            XRChart chart = new XRChart();
+            chart.BorderColor = Color.Black;
+            chart.Borders = BorderSide.All;
+            chart.LocationFloat = new DevExpress.Utils.PointFloat(x, y);
+            chart.SizeF = new SizeF(w, h);
+            Detail.Controls.Add(chart);
+            return chart;
         }
 
         // 페이지 시작 (2페이지부터 앞에 페이지 나누기) + 제목·밑줄, 제목 아래 y 반환
