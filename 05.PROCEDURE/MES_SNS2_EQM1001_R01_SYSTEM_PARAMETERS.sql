@@ -1,6 +1,6 @@
 -- *****************************************************************************
--- Comment: EQM1001_R01 사진 파일키(FILEKEY) 입력값 추가 후 호출 파라미터 재등록
--- Create:  2026-11-09  한성수
+-- Comment: EQM1001_R01 검색 조건(FACTORYCD~EQMGROUP1) 추가 후 호출 파라미터 재등록
+-- Create:  2026-11-13  한성수
 -- *****************************************************************************
 -- R01 프로시저 전체 저장 후 아래 트랜잭션을 실행
 START TRANSACTION;
@@ -14,7 +14,7 @@ WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
   AND SPECIFIC_NAME = 'EQM1001_R01';
 COMMIT;
 
--- 정상 41건: FILEKEY 21번, CALLTYPE 40번, KEYWORD 41번
+-- 정상 45건: FACTORYCD~EQMGROUP1 3~6번, CALLTYPE 44번, KEYWORD 45번
 SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
 FROM MES_SNS2.SYSTEM_PARAMETERS
 WHERE SPECIFIC_SCHEMA = 'MES_SNS2'

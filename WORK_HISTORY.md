@@ -18,6 +18,46 @@
 
 ## 🕒 2026-11-13 (금) 작업 내역
 
+### 7. EQM1001_R01 설비 분류 필터 수정분 코드 스타일 검토·정리
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js), [05.Procedure/MES_SNS2_EQM1001_R01.sql](05.Procedure/MES_SNS2_EQM1001_R01.sql)
+- **배경**: 사용자가 수정한 R01(검색 공장·작업장·설비구분·설비대분류, 그리드 열 4개, LIST_EQMREP 조건) 스타일 검토 요청. aspx 검색조건·그리드 콤보 열은 MST1002_R06과 같은 형식, 프로시저 Modify 1행·파라미터 주석·SYSTEM_PARAMETERS 등록(45건, 3~6번)은 관례대로 확인
+- **작업 상세 내용**
+  - js: 14:49 저장에서 빠진 UTF-8 BOM 1개 복원(CRLF 유지), 주석 처리된 `autoSizeColumns()` 줄 삭제(위 '조회 후 autoSizeColumns 적용' 기록과 달리 현재는 미적용), REPIMG_LIST의 들여쓰기만 바뀐 줄 원복
+  - sql: 선택 조건 4개를 프로젝트 다수 형식 `($X = '' OR 컬럼 = $X)`(48건, IFNULL 형식 7건)으로, 같은 WHERE의 `$EMPCD` 조건과 통일
+- **검증**: node --check 통과, js BOM 1개·CRLF, sql BOM 없음·CRLF. js diff에는 기능 변경(열·콤보 연동)만 남음. 미확인: MariaDB 컴파일(Docker 꺼짐), 화면 동작·검색영역 폭
+
+### 2. [EQM1001_R01] 인코딩(UTF-8 BOM) 복구 및 중복 이벤트 제거
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js
+- **배경 및 원인**: 01.Office/web.config에 globalization fileEncoding 설정이 없는 환경에서 .aspx/.js 파일의 UTF-8 BOM이 소실되어 CP949로 오인식되는 인코딩 오류 발생 및 cmb_FACTORYCD onChanged 이벤트 중복 잔여 코드 확인
+- **작업 상세 내용**:
+  - EQM1001_R01.aspx와 EQM1001_R01.js에 단일 UTF-8 BOM(EF BB BF)과 CRLF 복원, EQM1001_R01.js의 중복 cmb_FACTORYCD.onChanged 블록 제거, SQL 2개 파일 UTF-8 무BOM+CRLF 검증
+- **검증 결과**: node --check 통과, 5개 대상 파일 BOM/UTF-8/CRLF 바이트 검증 통과, git diff 검증 완료
+
+
+### 2. EQM1001_R01 조회 후 autoSizeColumns 적용 및 프로젝트 코드 스타일 통일
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js
+- **배경 및 원인**: 프로젝트 기존 화면과 동일한 이벤트 핸들러 작성 방식 적용 및 조회 완료 시 그리드 컬럼 폭 자동 맞춤 요청
+- **작업 상세 내용**:
+  - ItsButton.EventSearch 내 grid1 autoSizeColumns() 호출 추가 및 ItsCombo.Event(cmb_FACTORYCD).onChanged 시그니처를 function (value) 형태로 정리
+- **검증 결과**: node --check 및 단일 UTF-8 BOM + CRLF 무결성 검증 완료
+
+
+### 2. EQM1001_R01 상단 검색영역 설비 분류 필터 추가
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.Procedure/MES_SNS2_EQM1001_R01.sql, 05.Procedure/MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql
+- **배경 및 원인**: 그리드에 추가된 공장·작업장·설비구분·설비대분류 컬럼에 맞춰 상단 검색영역 필터링 기능 추가 요청
+- **작업 상세 내용**:
+  - sdiv1 설비코드 앞에 FACTORYCD, LINECD, EQMTP, EQMGROUP1 콤보 추가 및 공장 변경 시 하위 콤보 연동, LIST_EQMREP 검색 조건 및 SYSTEM_PARAMETERS 스크립트 갱신
+- **검증 결과**: JS 구문검사(node --check) 및 전 파일 BOM/CRLF 무결성 검증 완료, DB 프로시저 및 SYSTEM_PARAMETERS 재등록 필요
+
+
+### 2. EQM1001_R01 수리이력 그리드 설비 분류 컬럼 추가
+- **수정/대상 파일**: 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.Procedure/MES_SNS2_EQM1001_R01.sql
+- **배경 및 원인**: 설비이력관리(EQM1001_R01) 메인 그리드에 설비코드·설비명 외 공장·작업장·설비구분·설비대분류 정보 표시 요청
+- **작업 상세 내용**:
+  - grid1 설비코드 앞에 FACTORYCD(공장), LINECD(작업장), EQMTP(설비구분), EQMGROUP1(설비대분류) 콤보 컬럼 추가 및 LIST_EQMREP SELECT에 MSTEQM 컬럼 4종 반환 추가
+- **검증 결과**: JS 구문검사(node --check) 및 인코딩/CRLF 검증 완료, 실서버 프로시저 반영 필요
+
+
 ### 6. EQM1001_R06 TOP ISSUE 인쇄(R0602)에 그래프 페이지·확인란 추가
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R0602.cs](04.Report/PAGEEQM/EQM1001/R0602.cs), [04.Report/PAGEEQM/EQM1001/R0601.cs](04.Report/PAGEEQM/EQM1001/R0601.cs)
 - **배경**: TOP ISSUE 인쇄의 세부내용 뒤에 기존 그래프를 함께 출력하고, 그래프 우측 하단에 오늘 날짜·이름·사인 칸 요청. 시안 4종(가로 표형·한 줄 밑줄형·결재란형·세로 목록형) 중 사용자 선택: 결재란형. 성명은 빈칸(수기), 그래프 단독 인쇄(R0601)는 확인란 없이 그대로
@@ -4267,6 +4307,10 @@
 
 | 상태 | 대상 프로그램/파일 | 작업 설명 | 비고 |
 | :---: | :--- | :--- | :--- |
+| **진행중** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js | MES_SNS2_EQM1001_R01.sql 및 MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql DB 반영 필요 | node --check 통과, 5개 대상 파일 BOM/UTF-8/CRLF 바이트 검증 통과, git diff 검증 완료 |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js | MES_SNS2_EQM1001_R01.sql 반영 및 SYSTEM_PARAMETERS 재등록 후 실화면 조회 확인 | node --check 및 단일 UTF-8 BOM + CRLF 무결성 검증 완료 |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx, 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.Procedure/MES_SNS2_EQM1001_R01.sql, 05.Procedure/MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql | MES_SNS2_EQM1001_R01.sql 반영 후 MES_SNS2_EQM1001_R01_SYSTEM_PARAMETERS.sql 실행 필요 | JS 구문검사(node --check) 및 전 파일 BOM/CRLF 무결성 검증 완료, DB 프로시저 및 SYSTEM_PARAMETERS 재등록 필요 |
+| **완료** | 01.Office/PAGEEQM/EQM1001/EQM1001_R01.js, 05.Procedure/MES_SNS2_EQM1001_R01.sql | MES_SNS2_EQM1001_R01.sql 실서버 반영 후 화면 조회 확인 | JS 구문검사(node --check) 및 인코딩/CRLF 검증 완료, 실서버 프로시저 반영 필요 |
 | **완료** | 05.Procedure/MES_SNS2_LOT1003_R01.sql, 05.Procedure/MES_SNS2_LOT1003_S01.sql, 05.Procedure/MES_SNS2_IO_COMCHK_CONFIRM.sql, 05.Procedure/MES_SNS2_IO_COMCHK_CANCEL.sql, 05.Procedure/MES_SNS2_TAL1600_R01.sql | - | UTF-8 without BOM, CRLF 줄바꿈 검증 완료 |
 | **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js) | MST1005_S01 계산구분 빈 항목 높이 수정 | 실제 wijmo 5.20203.748 테스트 페이지에서 항목 높이 빈 문자열 7px → 공백 문자 30px(다른 항목과 동일), 선택 값 빈 값, 그리드 표시·값 정상 확인, JS 구문 검사, 인코딩 확인. 미확인: 실제 화면 |
 | **완료** | [01.Office/PAGEMST/MST1005/MST1005_S01.js](01.Office/PAGEMST/MST1005/MST1005_S01.js) | MST1005_S01 계산구분 콤보 표시 오류 수정 | 실제 wijmo 5.20203.748로 만든 테스트 페이지에서 @ 방식 표시 오류 재현(목록 ["",null,null,null]) 및 수정 방식 확인(목록 ["",고장건수,수리시간,사용개월], 그리드 표시 고장건수·사용개월, 빈 항목 선택 시 값·표시 빈 값), JS 구문 검사, 인코딩 확인. 미확인: 실제 화면 |

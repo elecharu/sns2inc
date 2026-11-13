@@ -6,9 +6,14 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R01`(
 -- 			2026-09-16 					한성수	MSTEQM.FANO(설비코드) 컬럼 바인딩 변경 및 구분선/코드 정렬
 -- 			2026-10-06 					한성수	작업자 검색·이력 누락 보완, 수리유형 등 입력값 검증 및 부품 미사용 정리
 -- 			2026-11-09 					한성수	수리이력 사진(EQMREP_IMG) 조회·등록·삭제 추가, 수리이력 삭제 시 사진 등록 함께 삭제
+-- 			2026-11-13 					한성수	설비이력 조회 공장·작업장·설비구분·설비대분류 컬럼 및 검색 조건 추가
 -- *****************************************************************************
   IN $SDATE            VARCHAR(10),     -- 조회 시작일자
   IN $EDATE            VARCHAR(10),     -- 조회 종료일자
+  IN $FACTORYCD        VARCHAR(20),     -- 공장
+  IN $LINECD           VARCHAR(20),     -- 작업장
+  IN $EQMTP            VARCHAR(20),     -- 설비구분
+  IN $EQMGROUP1        VARCHAR(20),     -- 설비대분류
   IN $EQMCD            VARCHAR(20),     -- 설비코드
   IN $EMPCD            VARCHAR(20),     -- 사원코드
   IN $EQMREPKEY        VARCHAR(20),     -- 설비수리키
@@ -89,6 +94,10 @@ WHEN 'LIST_EQMREP' THEN  -- 설비이력조회
     LEFT(EQMREP.REPETIME, 10) AS REPEDAY,-- 완료일자
     SUBSTRING(EQMREP.REPETIME, 12, 5) AS REPETIME,-- 완료시간
     EQMREP.REPUTIME,                     -- 소요일
+    IFNULL(MSTEQM.FACTORYCD, '') AS FACTORYCD, -- 공장
+    IFNULL(MSTEQM.LINECD, '')    AS LINECD,    -- 작업장
+    IFNULL(MSTEQM.EQMTP, '')     AS EQMTP,     -- 설비구분
+    IFNULL(MSTEQM.EQMGROUP1, '') AS EQMGROUP1, -- 설비대분류
     EQMREP.EQMCD,                        -- 설비코드
     MSTEQM.EQMNM,                        -- 설비명
     EQMREP.REPAMT,
@@ -105,6 +114,10 @@ WHEN 'LIST_EQMREP' THEN  -- 설비이력조회
     WHERE EMPCD = $EMPCD
   ) REPEMP ON REPEMP.EQMREPKEY = EQMREP.EQMREPKEY
   WHERE EQMREP.REGTIME BETWEEN CONCAT($SDATE, ' 00:00') AND CONCAT($EDATE, ' 23:59:59')
+    AND ($FACTORYCD = '' OR MSTEQM.FACTORYCD = $FACTORYCD)
+    AND ($LINECD = '' OR MSTEQM.LINECD = $LINECD)
+    AND ($EQMTP = '' OR MSTEQM.EQMTP = $EQMTP)
+    AND ($EQMGROUP1 = '' OR MSTEQM.EQMGROUP1 = $EQMGROUP1)
     AND EQMREP.EQMCD LIKE CONCAT('%', $EQMCD, '%')
     AND ($EMPCD = '' OR REPEMP.EQMREPKEY IS NOT NULL)
     AND EQMREP.EQMREPTP = 'EQM01'

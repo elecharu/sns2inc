@@ -4,14 +4,18 @@
 ItsPage.Load = function () {
 
     ItsGrid.Create('grid1', { isCheckBoxGrid: true, isSubTotalGrid: true }, [
-        column.create('등록일자', 'REGDAY', { width: 90, align: 'center', columnType: enumColumnTypes.date, readOnly: false }),
+        column.create('등록일자', 'REGDAY', { width: 100, align: 'center', columnType: enumColumnTypes.date, readOnly: false }),
         column.create('등록일시', 'REGTIME', { width: 90, align: 'center', readOnly: false, mask: "00:00" }),
-        column.create('발생일자', 'REPSDAY', { width: 90, align: 'center', readOnly: false, columnType: enumColumnTypes.date }),
+        column.create('발생일자', 'REPSDAY', { width: 100, align: 'center', readOnly: false, columnType: enumColumnTypes.date }),
         column.create('발생일시', 'REPSTIME', { width: 90, align: 'center', readOnly: false, mask: "00:00" }),
-        column.create('완료일자', 'REPEDAY', { width: 90, align: 'center', readOnly: false, columnType: enumColumnTypes.date }),
+        column.create('완료일자', 'REPEDAY', { width: 100, align: 'center', readOnly: false, columnType: enumColumnTypes.date }),
         column.create('완료일시', 'REPETIME', { width: 90, align: 'center', readOnly: false, mask: "00:00" }),
         column.create('소요일', 'REPUTIME', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
-        column.create('설비코드', 'EQMCD', { width: 120, readOnly: true }),
+        column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),
+        column.create('작업장', 'LINECD', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'LINECD', readOnly: true }),
+        column.create('설비구분', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
+        column.create('설비대분류', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
+        column.create('설비코드', 'EQMCD', { width: 110, readOnly: true }),
         column.create('설비명', 'EQMNM', { width: 180, readOnly: true }),
         column.create('금액(만원)', 'REPAMT', { width: 80, columnType: enumColumnTypes.number, readOnly: false, groupType: enumGrouping.sum }),
         column.create('수리업체', 'REPCUST', { width: 120, readOnly: false }),
@@ -50,6 +54,13 @@ ItsPage.Load = function () {
         REPIMG_DELETE($(this).attr('data-filekey'));
     });
     REPIMG_LIST('');
+};
+
+// 공장 변경 시 작업장·설비구분·설비대분류 콤보 갱신
+ItsCombo.Event('cmb_FACTORYCD').onChanged = function (value) {
+    ItsCombo.SetRef01('cmb_LINECD', value || '');
+    ItsCombo.SetRef10('cmb_EQMTP', value || '');
+    ItsCombo.SetRef10('cmb_EQMGROUP1', value || '');
 };
 
 /* 조회 */
