@@ -28,7 +28,7 @@ namespace XtraRpt
         static readonly Color HEAD_BACK = Color.FromArgb(0xef, 0xeb, 0xe0);   // 표 머리 (화면과 같은 색)
         static readonly Color TAG_BACK = Color.FromArgb(0xa3, 0x9a, 0x6b);    // 세부내용 머리표
 
-        // 표 칸: 라인명, 설비명, 규격, 비가동시간, 고장횟수, 고장유형, 고장부위, 고장내용, 조치내역, 진행상태 (합 1109)
+        // 표 칸: 라인명, 설비명, 규격, 비가동시간, 호출횟수, 고장유형, 고장부위, 고장내용, 조치내역, 진행상태 (합 1109)
         static readonly float[] COL_W = { 90F, 100F, 110F, 90F, 60F, 65F, 65F, 225F, 225F, 79F };
 
         public R0602()
@@ -118,7 +118,7 @@ namespace XtraRpt
             SIDE_LABEL("설  비\r\n고장율\r\n(비가동)", y1, SIDE_W, CHART_H);
             R0601.SET_CHART_RATE(NEW_CHART(CHART_X, y1, W - CHART_X, CHART_H), dt);
 
-            SIDE_LABEL("고  장\r\n건  수", y2, SIDE_W, CHART_H);
+            SIDE_LABEL("호  출\r\n건  수", y2, SIDE_W, CHART_H);
             R0601.SET_CHART_CNT(NEW_CHART(CHART_X, y2, W - CHART_X, CHART_H), dt);
 
             DRAW_SIGN(y2 + CHART_H + 6F);

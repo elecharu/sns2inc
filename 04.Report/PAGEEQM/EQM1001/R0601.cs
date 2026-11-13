@@ -72,7 +72,7 @@ namespace XtraRpt
         // 호출건수: 설비 호출건수(막대) + 평균수리시간(분, 오른쪽 축) (R0602 그래프 페이지도 사용)
         internal static void SET_CHART_CNT(XRChart chartCnt, DataTable dt)
         {
-            Series failCnt = NewBar("설비 고장횟수", YEAR_COLOR(dt, Color.FromArgb(0xf6, 0xc7, 0x9a)), "{V:0.#}건");
+            Series failCnt = NewBar("설비 호출횟수", YEAR_COLOR(dt, Color.FromArgb(0xf6, 0xc7, 0x9a)), "{V:0.#}건");
             Series avgRep = NewLine("평균수리시간", Color.Red, true, "{V:0}분");
 
             foreach (DataRow r in dt.Rows)

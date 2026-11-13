@@ -102,7 +102,7 @@
             this.lbl_SIDE2.SizeF = new System.Drawing.SizeF(80F, 350F);
             this.lbl_SIDE2.StylePriority.UseBorders = false;
             this.lbl_SIDE2.StylePriority.UseFont = false;
-            this.lbl_SIDE2.Text = "고  장\r\n건  수";
+            this.lbl_SIDE2.Text = "호  출\r\n건  수";
             this.lbl_SIDE2.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             //
             // chart_CNT

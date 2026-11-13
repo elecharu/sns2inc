@@ -24,6 +24,7 @@
 - **R0602**: 생성자에서 LIST_CHART(R0601과 같은 조회)도 호출, 세부내용 다음 페이지에 DRAW_GRAPH_PAGE: 제목 '■ {년}년 설비 고장율 현황' + 왼쪽 머리칸(설비 고장율/고장 건수) + 차트 2개(높이 350 → 315) + DRAW_SIGN(세로 '확인' 머리칸 26 + 일자 110(출력일 yyyy-MM-dd)·성명 90·서명 120, 머리 22·값 48, 기존 표와 같은 머리 색). Designer.cs 미변경(기존처럼 Detail에 코드로 배치)
 - **R0601**: 차트 채우기 SET_CHART_RATE·SET_CHART_CNT를 차트를 인자로 받는 internal static으로 바꿔 R0602가 같은 차트를 그림(R0601 출력은 동일)
 - **검증**: MSBuild 15.0 Release Rebuild 성공(0 Error, 기존 R0602 경고 1건). 실DB(2026년 11월)로 웹과 같은 방식 실행: R0602 표준출력 없음·PDF 생성·4페이지(표 1, 세부내용 2, 그래프 1), 마지막 페이지 이미지에서 차트 2개와 결재란 배치·일자 2026-11-13 확인. R0601 단독 출력 정상. exe를 04.Report/bin·01.Office/Reports에 배포(MD5 일치). 인코딩 BOM·CRLF. 미확인: VS 디자이너 열기(Designer.cs 미변경), 웹 화면에서 실제 [인쇄]
+- **후속(고장 → 호출 문구)**: 아래 차트 왼쪽 머리칸 '고 장 건 수' → '호 출 건 수'(R0602.cs 그래프 페이지, R0601.Designer.cs lbl_SIDE2.Text 1행), 범례 '설비 고장횟수' → '설비 호출횟수'(R0601.cs 공용 차트). TOP ISSUE 표의 '고장 횟수' 열 등 표·세부내용 문구는 미변경. Rebuild 성공(0 Error, 기존 경고 1건), 실DB 출력 이미지(100dpi)로 머리칸·범례 확인, exe 2곳 배포(MD5 일치). 미확인: VS 디자이너 열기(Text 값만 변경)
 
 ### 5. 레포트 인쇄 'Unable to connect to any of the specified MySQL hosts' 오류
 - **수정/대상 파일**: [01.Office/Reports/ITS_CONFIG_MARIA.xml](01.Office/Reports/ITS_CONFIG_MARIA.xml), [04.Report/bin/ITS_CONFIG_MARIA.xml](04.Report/bin/ITS_CONFIG_MARIA.xml) (`--addr` 1행씩)
