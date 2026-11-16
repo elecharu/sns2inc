@@ -1,0 +1,22 @@
+-- *****************************************************************************
+-- Comment: EQM1001_R06 조회기간(SDATE·EDATE) 추가 후 호출 파라미터 재등록
+-- Create:  2026-11-16  한성수
+-- *****************************************************************************
+-- R06 프로시저 전체 저장 후 아래 트랜잭션을 실행
+START TRANSACTION;
+DELETE FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'EQM1001_R06';
+
+INSERT INTO MES_SNS2.SYSTEM_PARAMETERS
+SELECT * FROM information_schema.PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'EQM1001_R06';
+COMMIT;
+
+-- 정상 11건: SYEAR 1번, SMONTH 2번, SDATE 3번, EDATE 4번, CALLTYPE 10번, KEYWORD 11번
+SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
+FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'EQM1001_R06'
+ORDER BY ORDINAL_POSITION;

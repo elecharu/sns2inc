@@ -3,11 +3,12 @@
 /// <reference path="../../Script/reference.js" />
 
 var chart1, chart2;
-var topMonth, topIssueData, topIssueImg;   // 보고 있는 TOP ISSUE 달 / 조회 결과 (수정 팝업에서 씀)
+var chartRows = [];   // 차트 조회 결과 (막대 순서 = 행 순서, 월 막대는 YM 있음)
+var topYear, topMonth, topIssueData, topIssueImg;   // 보고 있는 TOP ISSUE 년·월 / 조회 결과 (수정 팝업에서 씀)
 
 /* 페이지 접근 시 수행 */
 ItsPage.Load = function () {
-    ItsCombo.SetValue('cmb_SYEAR', ItsHelper.GetYearMonthDay().substr(0, 4));
+    ItsDateRange.SetInitValueFrom('date_SEARCH', ItsHelper.GetYearMonthDay().substr(0, 4) + '-01-01');
 
     // 본문 높이는 Load 뒤 MasterBase 의 resize 에서 정해지므로, 그 뒤에 차트 높이를 칸에 맞춘다
     $(window).resize(function () {
@@ -71,10 +72,11 @@ ItsButton.EventSearch = function () {
         return;
     }
 
+    chartRows = maria.store.data;
     var categories = [], nonHr = ['NONHR'], nonRate = ['NONRATE'], goalRate = ['GOALRATE'];
     var failCnt = ['FAILCNT'], avgRepMin = ['AVGREPMIN'];
     var barColors = [];   // 막대별 연도 색상 (프로시저 BACKGROUND)
-    maria.store.data.forEach(function (d) {
+    chartRows.forEach(function (d) {
         categories.push(d['GUBUN']);
         barColors.push(d['BACKGROUND'] || '');
         nonHr.push(d['NONHR']);
@@ -134,20 +136,23 @@ ItsButton.EventSearch = function () {
     });
 };
 
-/* 월 막대 클릭 → 그 달 설비 고장 TOP ISSUE (비가동시간 상위 5개 설비) */
+/* 월 막대 클릭 → 그 달(조회기간 안) 설비 고장 TOP ISSUE (비가동시간 상위 5개 설비) */
 function TOPISSUE_OPEN(d) {
-    if (d.index < 6 || d.value == null) {   // 0~5 = 연도 평균, 값 없는 달은 제외
+    var ym = chartRows[d.index] ? chartRows[d.index]['YM'] : '';
+    if (!ym || d.value == null) {   // 연도·기간 평균, 값 없는 달은 제외
         return;
     }
-    topMonth = d.index - 5;
+    topYear = ym.substr(0, 4);
+    topMonth = parseInt(ym.substr(5, 2), 10);
     TOPISSUE_SEARCH();
     $('#div_TOPISSUE').scrollTop(0).show();
 }
 
-/* TOP ISSUE 조회 (topMonth 달), 표 + 접힌 상세 */
+/* TOP ISSUE 조회 (topYear 년 topMonth 달, 조회기간 안), 표 + 접힌 상세 */
 function TOPISSUE_SEARCH() {
     var maria = new ItsMaria('EQM1001_R06', 'LIST_TOPISSUE');
     maria.AddPanel('sdiv1');
+    maria.AddParam('SYEAR', topYear);
     maria.AddParam('SMONTH', String(topMonth));
     maria.CallProc();
     if (maria.isError) {
@@ -159,7 +164,7 @@ function TOPISSUE_SEARCH() {
 
     var html = '';
     if (topIssueData.length == 0) {
-        html = '<div style="margin-top: 40px; text-align: center; font-size: 15px; color: #999;">' + topMonth + '월 설비 수리 이력이 없습니다.</div>';
+        html = '<div style="margin-top: 40px; text-align: center; font-size: 15px; color: #999;">' + topYear + '년 ' + topMonth + '월 설비 수리 이력이 없습니다.</div>';
     }
     topIssueData.forEach(function (r, i) {
         html += '<table class="topissue-table">'
@@ -177,7 +182,7 @@ function TOPISSUE_SEARCH() {
             + TOPISSUE_DETAIL(r, i);
     });
 
-    $('#lbl_TOPISSUE').text('■ 설비 고장 TOP ISSUE_' + topMonth + '월');
+    $('#lbl_TOPISSUE').text('■ 설비 고장 TOP ISSUE_' + topYear + '년 ' + topMonth + '월');
     $('#div_TOPLIST').html(html);
 }
 
@@ -218,21 +223,18 @@ function TOPISSUE_DETAIL(r, i) {
         + '</div></div>';
 }
 
-/* 툴바 [인쇄] → 보고 있는 화면대로 출력 (그래프 = 고장율 현황 1장, TOP ISSUE = 그 달 표 + 세부내용) */
+/* 툴바 [인쇄] → 그래프 = 조회기간 그래프 + 기간 안 월별 TOP ISSUE 표·세부내용, TOP ISSUE = 그 해 1년 그래프 + 그 달 표·세부내용 */
 ItsButton.EventPrint = function () {
-    var rpt;
+    var rpt = new ItsXtraRpt('EQM1001_R0602');
+    rpt.AddParam('SDATE', ItsDateRange.GetValueFrom('date_SEARCH'));
+    rpt.AddParam('EDATE', ItsDateRange.GetValueTo('date_SEARCH'));
     if ($('#div_TOPISSUE').is(':visible')) {
         if (topIssueData == undefined || topIssueData.length == 0) {
-            ItsMsg.Alert(topMonth + '월 설비 수리 이력이 없습니다.');
+            ItsMsg.Alert(topYear + '년 ' + topMonth + '월 설비 수리 이력이 없습니다.');
             return;
         }
-        rpt = new ItsXtraRpt('EQM1001_R0602');
-        rpt.AddParam('SYEAR', ItsCombo.GetValue('cmb_SYEAR'));
+        rpt.AddParam('SYEAR', topYear);
         rpt.AddParam('SMONTH', String(topMonth));
-    }
-    else {
-        rpt = new ItsXtraRpt('EQM1001_R0601');
-        rpt.AddParam('SYEAR', ItsCombo.GetValue('cmb_SYEAR'));
     }
     rpt.CallPop();
     if (rpt.isError) {

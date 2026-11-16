@@ -55,7 +55,8 @@
 <%-- SEARCH PANEL --%>
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
-        <Its:combo runat="server" Label="조회년도" ID="cmb_SYEAR" Field="SYEAR" GPCD="YEAR" REF01="-5" REF02="0" />    </Its:div>
+        <Its:dateRange runat="server" Label="조회기간" ID="date_SEARCH" FieldFrom="SDATE" FieldTo="EDATE" />
+    </Its:div>
 </asp:Content>
 
 <%-- BODY --%>

@@ -16,10 +16,13 @@ namespace XtraRpt
     /// 앞 페이지 = TOP ISSUE 표 (최대 5건 모두 1페이지), 뒤 페이지 = 세부내용 (페이지당 2건: 이슈 정보 / 원인 및 예방 / 사진)
     /// 2026-11-06 표를 페이지당 3건 → 5건 (화면에 조회되는 건이 표 1페이지에 모두 나오게)
     /// 고장유형·고장부위는 설비수리(EQMREP)에 항목이 없어 화면처럼 '-'
-    /// 마지막 페이지 = 그래프 (R0601 차트, LIST_CHART) + 우측 하단 확인란 (일자·성명·서명)
+    /// 그래프 페이지 (R0601 차트, LIST_CHART) + 우측 하단 확인란 (일자·성명·서명)은 항상 첫 페이지
+    /// SMONTH 있으면 그 해 1년 그래프 → 그 달 TOP ISSUE 표·세부내용 (조회기간 안 수리)
+    /// SMONTH 없이 조회기간(SDATE~EDATE)만 오면 기간 그래프 → 기간 안 월별 TOP ISSUE 표·세부내용 (수리 이력 있는 달만)
     /// </summary>
     public partial class R0602 : XtraReport
     {
+        private int _page = 0;            // 지금까지 그린 페이지 수
         const float W = 1109F;            // 본문 폭 (1169 - 여백 30 x 2)
         const float PAGE_H = 765F;        // 본문 높이 (827 - 여백 30 x 2 - 2)
         const int TABLE_PER_PAGE = 5;     // 화면 TOP ISSUE(최대 5건)를 표 1페이지에 모두
@@ -38,40 +41,95 @@ namespace XtraRpt
 
         public R0602(Dictionary<string, string> param) : this()
         {
-            string year = param.ContainsKey("SYEAR") ? param["SYEAR"] : "";
-            string month = param.ContainsKey("SMONTH") ? param["SMONTH"] : "";
-            if (year == "" || month == "")
+            string year = PARAM(param, "SYEAR");
+            string month = PARAM(param, "SMONTH");
+            string sdate = PARAM(param, "SDATE");
+            string edate = PARAM(param, "EDATE");
+            if (month != "")
             {
-                throw new InvalidOperationException("TOP ISSUE 를 출력할 년월을 선택하세요.");
+                // TOP ISSUE 화면 인쇄: 그 해 1년 그래프 → 그 달 표·세부내용
+                if (year == "")
+                {
+                    throw new InvalidOperationException("TOP ISSUE 를 출력할 년월을 선택하세요.");
+                }
+                DataSet ds = CALL_TOPISSUE(year, month, sdate, edate);
+                if (ds.Tables[0].Rows.Count == 0)
+                {
+                    throw new InvalidOperationException(MONTH_TEXT(year, month) + " 설비 수리 이력이 없습니다.");
+                }
+                DataTable chart = CALL_CHART(year, "", "");
+                DRAW_GRAPH_PAGE(chart, year + "년");
+                DRAW(ds.Tables[0], ds.Tables[1], MONTH_TEXT(year, month));
+            }
+            else
+            {
+                // 그래프 화면 인쇄: 그래프 → 기간 안 월별 표·세부내용 (수리 이력 있는 달만)
+                if (sdate == "" || edate == "")
+                {
+                    throw new InvalidOperationException("조회기간을 선택하세요.");
+                }
+                DataTable chart = CALL_CHART(year, sdate, edate);
+                DRAW_GRAPH_PAGE(chart, sdate + " ~ " + edate);
+                foreach (DataRow r in chart.Rows)
+                {
+                    string ym = TEXT(r, "YM");
+                    if (ym.Length < 7) continue;
+                    DataSet ds = CALL_TOPISSUE(ym.Substring(0, 4), ym.Substring(5, 2), sdate, edate);
+                    if (ds.Tables[0].Rows.Count == 0) continue;
+                    DRAW(ds.Tables[0], ds.Tables[1], MONTH_TEXT(ym.Substring(0, 4), ym.Substring(5, 2)));
+                }
             }
 
+            Detail.HeightF = _page * PAGE_H;
+        }
+
+        // 그 달 TOP ISSUE (조회기간이 있으면 기간 안 수리만): 0 = 표·세부내용, 1 = 사진
+        private static DataSet CALL_TOPISSUE(string year, string month, string sdate, string edate)
+        {
             ItsMaria maria = new ItsMaria("EQM1001_R06", "LIST_TOPISSUE");
             maria.AddParam("SYEAR", year);
             maria.AddParam("SMONTH", month);
+            maria.AddParam("SDATE", sdate);
+            maria.AddParam("EDATE", edate);
             DataSet ds = maria.CallProc();
             if (maria.IsError)
             {
                 throw new InvalidOperationException(maria.ErrMessage);
             }
-            if (ds == null || ds.Tables.Count < 2 || ds.Tables[0].Rows.Count == 0)
+            if (ds == null || ds.Tables.Count < 2)
             {
-                throw new InvalidOperationException(month + "월 설비 수리 이력이 없습니다.");
+                throw new InvalidOperationException("TOP ISSUE 조회 결과가 없습니다.");
             }
+            return ds;
+        }
 
-            // 그래프 페이지 데이터 (R0601 과 같은 조회)
-            ItsMaria chartMaria = new ItsMaria("EQM1001_R06", "LIST_CHART");
-            chartMaria.AddParam("SYEAR", year);
-            DataSet chartDs = chartMaria.CallProc();
-            if (chartMaria.IsError)
+        // 그래프 데이터 (화면과 같은 조회, 기간이 없으면 년도 1년)
+        private static DataTable CALL_CHART(string year, string sdate, string edate)
+        {
+            ItsMaria maria = new ItsMaria("EQM1001_R06", "LIST_CHART");
+            maria.AddParam("SYEAR", year);
+            maria.AddParam("SDATE", sdate);
+            maria.AddParam("EDATE", edate);
+            DataSet ds = maria.CallProc();
+            if (maria.IsError)
             {
-                throw new InvalidOperationException(chartMaria.ErrMessage);
+                throw new InvalidOperationException(maria.ErrMessage);
             }
+            if (ds == null || ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0)
+            {
+                throw new InvalidOperationException("출력할 그래프 데이터가 없습니다.");
+            }
+            return ds.Tables[0];
+        }
 
-            DRAW(ds.Tables[0], ds.Tables[1], Convert.ToInt32(month) + "월");
-            if (chartDs != null && chartDs.Tables.Count > 0 && chartDs.Tables[0].Rows.Count > 0)
-            {
-                DRAW_GRAPH_PAGE(chartDs.Tables[0], year);
-            }
+        private static string MONTH_TEXT(string year, string month)
+        {
+            return year + "년 " + Convert.ToInt32(month) + "월";
+        }
+
+        private static string PARAM(Dictionary<string, string> param, string key)
+        {
+            return param.ContainsKey(key) && param[key] != null ? param[key].Trim() : "";
         }
 
         // 표 페이지 → 세부내용 페이지 순으로 Detail 에 그리고 페이지마다 XRPageBreak
@@ -80,7 +138,7 @@ namespace XtraRpt
             int rowCnt = top.Rows.Count;
             int tablePages = (rowCnt + TABLE_PER_PAGE - 1) / TABLE_PER_PAGE;
             int detailPages = (rowCnt + DETAIL_PER_PAGE - 1) / DETAIL_PER_PAGE;
-            int page = 0;
+            int page = _page;
 
             for (int p = 0; p < tablePages; p++, page++)
             {
@@ -104,15 +162,15 @@ namespace XtraRpt
                 }
             }
 
-            Detail.HeightF = page * PAGE_H;
+            _page = page;
         }
 
-        // 세부내용 뒤 그래프 페이지: R0601 과 같은 차트 2개 + 우측 하단 확인란
-        private void DRAW_GRAPH_PAGE(DataTable dt, string year)
+        // 그래프 페이지: R0601 과 같은 차트 2개 + 우측 하단 확인란 (제목에 조회기간)
+        private void DRAW_GRAPH_PAGE(DataTable dt, string period)
         {
             const float SIDE_W = 80F, CHART_X = 90F, CHART_H = 315F, GAP = 10F;
-            int page = (int)Math.Round(Detail.HeightF / PAGE_H);
-            float y1 = NEW_PAGE(page, "■ " + year + "년 설비 고장율 현황") + 2F;
+            int page = _page;
+            float y1 = NEW_PAGE(page, "■ 설비 고장율 현황 (" + period + ")") + 2F;
             float y2 = y1 + CHART_H + GAP;
 
             SIDE_LABEL("설  비\r\n고장율\r\n(비가동)", y1, SIDE_W, CHART_H);
@@ -122,7 +180,7 @@ namespace XtraRpt
             R0601.SET_CHART_CNT(NEW_CHART(CHART_X, y2, W - CHART_X, CHART_H), dt);
 
             DRAW_SIGN(y2 + CHART_H + 6F);
-            Detail.HeightF = (page + 1) * PAGE_H;
+            _page = page + 1;
         }
 
         // 확인란 (결재란형): 세로 '확인' 머리칸 + 일자(출력일)·성명·서명
