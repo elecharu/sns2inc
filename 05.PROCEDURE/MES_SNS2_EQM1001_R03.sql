@@ -8,7 +8,7 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R03`(
 -- 			2026-10-23 					한성수	리비전 헤더 점검구분('02') 기본값 저장
 -- 			2026-11-06 					한성수	계획서 출력 특이사항 연동 및 점검자명 조회 최적화
 -- 			2026-11-09 					한성수	정기점검('02') REV 분리·조회, 월별 점검계획 출력 추가 및 삭제 검증 보강
--- 			2026-11-16 					한성수	설비 분류·공장 필터 추가, 주기관리 잠금·등급별 주기 검증, 승인 제거 및 REV 갱신·삭제 추가, 실적 REV 항목 변경 차단, REV 1부터 표시
+-- 			2026-11-16 					한성수	설비 분류·공장 필터 추가, 주기관리 잠금·등급별 주기 검증, 승인 제거 및 REV 갱신·삭제 추가, 실적 REV 항목 변경 차단
 -- *****************************************************************************
   IN $FANO           VARCHAR(20),
   IN $FANO_COPY      VARCHAR(20),
@@ -129,7 +129,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 
     -- 점검 실적이 등록된 REV는 항목 변경 불가 (계획서 REV와 실제 점검한 REV 항목 일치 유지, 리비전 갱신 후 새 REV에서 수정)
     IF _$REVCD IS NOT NULL AND EXISTS (SELECT 1 FROM CHKRSTEQM WHERE REVCD = _$REVCD OR GRPREVCD = _$REVCD LIMIT 1) THEN
-      CALL COMERR(CONCAT('[', _$PLANCD, '] REV.', _$REVNUM + 1, '에 점검 실적이 있어 항목을 변경할 수 없습니다. [리비전 갱신] 후 새 REV에서 수정해주세요.'));
+      CALL COMERR(CONCAT('[', _$PLANCD, '] REV.', _$REVNUM, '에 점검 실적이 있어 항목을 변경할 수 없습니다. [리비전 갱신] 후 새 REV에서 수정해주세요.'));
       LEAVE PROC;
     END IF;
 
@@ -295,7 +295,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
            COMTYPE.TPNM AS EQMGRPNM,
            COMTYPE.SORTNO AS EQMGRPSORTNO,
            PLAN_REV.REVCD,
-           COALESCE(CONCAT('REV.', PLAN_REV.REVNUM + 1), '') AS REVNM
+           COALESCE(CONCAT('REV.', PLAN_REV.REVNUM), '') AS REVNM
     FROM COMTYPE
     INNER JOIN (
       SELECT DISTINCT EQMGUBUN
@@ -421,7 +421,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
            IFNULL(MSTEQM.LINECD, '')    AS LINECD,
            IFNULL(MSTEQM.EQMTP, '')     AS EQMTP,
            IFNULL(MSTEQM.EQMGROUP1, '') AS EQMGROUP1,
-           COALESCE(CONCAT('REV.', PLAN_REV.REVNUM + 1), '') AS REVNM
+           COALESCE(CONCAT('REV.', PLAN_REV.REVNUM), '') AS REVNM
     FROM MSTEQM
     LEFT JOIN (
       SELECT PLANCD, MAX(REVNUM) AS REVNUM
@@ -532,7 +532,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   -- *****************************************************************************
 
   WHEN 'LIST_PLAN_REV' THEN -- 점검계획 리비전 이력 조회 (맨 위 최신 REV가 사용 리비전)
-    SELECT CONCAT('REV.', MSTEQMREV_HEADER.REVNUM + 1) AS REVNM,
+    SELECT CONCAT('REV.', MSTEQMREV_HEADER.REVNUM) AS REVNM,
            MSTEQMREV_HEADER.REMARK,
            COALESCE(REQ_EMP.EMPNM, MSTEQMREV_HEADER.REQEMP) AS REQEMP,
            MSTEQMREV_HEADER.REQTIME,
@@ -659,8 +659,8 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     FROM MSTEQMREV_DETAIL
     WHERE REVCD = _$OLDREVCD;
 
-    -- 갱신한 REV 번호 반환 (REVNUM은 저장값, REVNM은 1부터 표시)
-    SELECT _$NEXTREVNUM AS REVNUM, CONCAT('REV.', _$NEXTREVNUM + 1) AS REVNM;
+    -- 갱신한 REV 번호 반환 (REVNUM은 저장값, REVNM은 화면 안내용)
+    SELECT _$NEXTREVNUM AS REVNUM, CONCAT('REV.', _$NEXTREVNUM) AS REVNM;
 
   -- *****************************************************************************
 
@@ -729,7 +729,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
            COALESCE(GROUP_CONCAT(DISTINCT NULLIF(MSTEQM.EQMNM_DETAIL, '') SEPARATOR ', '), '') AS EQMSPEC,
            COALESCE(GROUP_CONCAT(DISTINCT COALESCE(NULLIF(MSTLINE.LINENM, ''), NULLIF(MSTEQM.LINECD, '')) SEPARATOR ', '), '') AS LINENM,
            COALESCE(GROUP_CONCAT(DISTINCT COALESCE(NULLIF(GPCD('FM100', MSTEQM.EQMTP), ''), NULLIF(MSTEQM.EQMTP, '')) SEPARATOR ', '), '') AS PROCESSNM,
-           COALESCE(CONCAT('REV.', _$REVNUM + 1), '') AS REVNM,
+           COALESCE(CONCAT('REV.', _$REVNUM), '') AS REVNM,
            COALESCE(_$REVDATE, '') AS REVDATE
     FROM MSTEQM
     LEFT JOIN MSTLINE
@@ -754,8 +754,8 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     WHERE MSTEQMREV_DETAIL.REVCD = _$REVCD
     ORDER BY MSTEQMREV_DETAIL.SORTNO, MSTEQMREV_DETAIL.CHKKNDCD;
 
-    -- 개정 이력 (전체 리비전, 최신순, 번호는 1부터 표시, 개정일은 개정내용 작성일)
-    SELECT MSTEQMREV_HEADER.REVNUM + 1 AS REVNUM,
+    -- 개정 이력 (전체 리비전, 최신순, 개정일은 개정내용 작성일)
+    SELECT MSTEQMREV_HEADER.REVNUM,
            LEFT(COALESCE(NULLIF(MSTEQMREV_HEADER.REQTIME, ''), MSTEQMREV_HEADER.RTIME), 10) AS REVDATE,
            MSTEQMREV_HEADER.REMARK,
            COALESCE(REQ_EMP.EMPNM, MSTEQMREV_HEADER.REQEMP) AS REQEMPNM

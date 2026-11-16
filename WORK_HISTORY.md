@@ -18,6 +18,15 @@
 
 ## 🕒 2026-11-16 (월) 작업 내역
 
+### 24. 정기점검 REV 번호 표시를 DB 저장값(0부터) 그대로로 되돌림
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql), [MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql), [MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql)
+- **요청**: REV를 +1 해서 보여줄 필요 없이 레포트 포함 전부 DB 저장 REV 번호(0부터) 그대로 표시
+- **작업 상세 내용**
+  - 23번에서 넣은 표시용 `+ 1` 전부 제거: R03(목록 REVNM, REV 이력, 계획서 상단·개정이력 No, 실적 REV 차단 메시지, RENEW_REV의 REVNM), R04·R08(적용 REV)
+  - S04 점검시트 개정이력도 기존 `PLAN_REV.REVNUM + 1`을 저장값 그대로로 변경 → 계획서(R03)와 점검시트(S04A) 번호 일치
+  - R03.js 리비전 갱신 안내는 프로시저 REVNM을 그대로 쓰므로 수정 없음. 23번 Modify 이력의 'REV 1부터 표시' 문구 삭제, S04 이력 행에 '개정이력 REV 번호 저장값 그대로 표시' 추가
+- **검증**: 격리 MariaDB에서 R03 LIST_PLAN_REV REV.0~5(숨김 REVNUM과 동일), CALL_PLAN_RPT 상단 REV.5·개정이력 No 0~5, RENEW_REV REVNUM 1·REVNM REV.1, R04 LIST_PLAN_EQM02 적용 REV.5 확인. 파일 형식 BOM 없음+CRLF 유지
+
 ### 23. 승인 실적 수정·삭제 차단, R04 점검월 이동 주기 검증, 정기점검 REV 1부터 표시
 - **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql), [MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql), [MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
 - **요청**: 22번 검토 결과 중 (1) 승인한 점검이력 수정·삭제 차단, (3) REV 번호 1부터 표기, (4) R04 점검월 이동 주기 검증 반영. (2) 리비전 갱신 즉시 사용은 그대로 유지
@@ -28,7 +37,8 @@
 - **검증**: 격리 MariaDB(트랜잭션 후 ROLLBACK)에서 확인
   - 승인 실적: R04 삭제, R08 저장·삭제가 승인 메시지로 차단되고 실적 행 유지. 승인 해제 후 R08 저장 정상
   - REV 표시: R03 LIST_PLAN_REV(REV.1~6, 숨김 REVNUM은 0~5 그대로), CALL_PLAN_RPT 상단 REV.6·개정이력 No 1~6, RENEW_REV 반환 REVNUM 1·REVNM REV.2, R04 LIST_PLAN_EQM02 적용 REV.6
-  - 미확인: 테스트 실적(261116000001)에 점검항목이 없어 R04 저장 경로(승인 차단 SAVE, 점검월 이동 주기 검증 4건)는 앞단 "정기점검 항목이 없습니다" 검증에서 멈춤. 항목 있는 실적으로 다시 돌릴 스크립트는 준비됨
+  - R04 저장 경로(테스트 실적에 REV 항목 5건을 넣어 재검증): 승인 실적 SAVE 차단, 승인 해제 후 SAVE 정상. 점검월 이동 — 2년/1회 등급이 2028년 배정이 있는데 2026-11 → 2027-01 이동 시 차단("…2년에 1회까지 점검할 수 있어 2027년 1월로 점검월을 옮길 수 없습니다. (옮기면 2027년 1회, 주기 안 다른 년도 1회)"), 2028년 배정이 없으면 허용(2026 행 정리·2027 1월 배정), 년 1회 등급 같은 해 안 이동(11월 → 10월) 허용, 다음 해 5월 배정이 있을 때 1월로 이동 차단("…(옮기면 2027년 2회)")
+  - REV 1부터 표시는 24번에서 저장값 그대로로 되돌림
   - 파일 형식 sql BOM 없음+CRLF, R03.js는 원래대로 BOM 없음+CRLF 유지
 - **실DB 반영**: R03·R04·TAL0001_R08 프로시저 저장(파라미터 변경 없음, R03은 22번의 SYSTEM_PARAMETERS 31건 재등록 포함), R03.js 배포
 

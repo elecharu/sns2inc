@@ -8,7 +8,7 @@ PROCEDURE `MES_SNS2`.`EQM1001_S04`(
 -- 			2026-11-06 					한성수	점검시트 출력(CALL_CHKRST_RPT) 및 특이사항 조회 추가
 -- 			2026-11-09 					한성수	점검시트 개정이력 및 점검담당자 조회 연동
 -- 			2026-11-10 					한성수	점검실적 입력 특이사항 단독 표기 (계획 특이사항 대체 제거)
--- 			2026-11-16 					한성수	설비 분류·공장 필터 추가, 점검이력 승인·승인취소 및 점검시트 담당란 승인자 표시, 개정이력 계획 승인 조회 제거
+-- 			2026-11-16 					한성수	설비 분류·공장 필터 추가, 점검이력 승인·승인취소 및 점검시트 담당란 승인자 표시, 개정이력 계획 승인 조회 제거, 개정이력 REV 번호 저장값 그대로 표시
 -- *****************************************************************************
   IN $SDATE          VARCHAR(20),
   IN $EDATE          VARCHAR(20),
@@ -204,7 +204,7 @@ WHEN 'CALL_CHKRST_RPT' THEN -- 점검 시트 출력 데이터 조회
   ORDER BY (CHKRSTEQMKND.PLANTP = 'G') DESC, CHKRSTEQMKND.SORTNO, CHKRSTEQMKND.CHKKNDCD;
 
   -- 점검 시트 하단 개정 이력: 해당 설비의 설비별 계획 + 설비그룹 계획 전체 REV (점검구분 일치, 기존 정기점검 REV는 점검구분 빈 값 포함, 최신순)
-  SELECT PLAN_REV.REVNUM + 1 AS REVNUM,
+  SELECT PLAN_REV.REVNUM,
          CASE PLAN_REV.PLANTP WHEN 'G' THEN '그룹' ELSE '설비' END AS PLANTPNM,
          PLAN_REV.REMARK,
          COALESCE(REQ_EMP.EMPNM, PLAN_REV.REQEMP) AS REQEMPNM
