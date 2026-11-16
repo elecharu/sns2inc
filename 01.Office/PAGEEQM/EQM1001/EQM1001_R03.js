@@ -121,8 +121,6 @@ ItsPage.Load = function () {
         column.create('설비등급', 'EQMGRADENM', { width: 90, align: 'center', readOnly: true }),
         // 2026-11-16 [정기점검 주기관리 탭] 설비등급별 점검주기 (설비등급기준 관리 사용중 리비전)
         column.create('점검주기', 'CHKCYCLE2', { width: 100, align: 'center', readOnly: true }),
-        // 2026-11-16 [정기점검 주기관리 탭] 점검주기 기준 조회년도 배정 횟수·상태 (적정·부족·초과·미배정)
-        column.create('계획', 'PLANSTAT', { width: 90, align: 'center', readOnly: true }),
         column.create('년도', 'YEAR', { width: 80, align: 'center' }),
         column.create('1월', 'M01', { width: 80, align: 'center', readOnly: true }),
         column.create('2월', 'M02', { width: 80, align: 'center', readOnly: true }),
@@ -242,11 +240,6 @@ ItsButton.EventSearch = function () {
             maria.ShowErrMsg();
             return;
         }
-
-        // 2026-11-16 [정기점검 주기관리 탭] 점검주기 기준 계획 상태를 조회 결과에 바로 설정
-        maria.store.data.forEach(function (row) {
-            row.PLANSTAT = GetCyclePlanStat(function (f) { return row[f]; });
-        });
 
         ItsGrid.SetStore('grid9', maria.store);
         ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
@@ -651,7 +644,6 @@ ItsGrid.Event('grid9').onKeydown = function (rowIndex, field, keyCode) {
                 // 2026-10-02 [정기점검 주기관리 탭] 월 칸 점검자명·사원코드 함께 삭제
                 SetCycleEmp(rowIndex, field, '', '');
                 ItsGrid.CheckRow('grid9', rowIndex);
-                UpdateCyclePlanStat(rowIndex);
             }
         }
     }
@@ -674,7 +666,6 @@ ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
             if (cellVal !== '') {
                 SetCycleEmp(rowIndex, field, '', '');
                 ItsGrid.CheckRow('grid9', rowIndex);
-                UpdateCyclePlanStat(rowIndex);
             } else {
                 ItsMsg.Toast('점검자를 선택해주세요.');
             }
@@ -692,7 +683,6 @@ ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
             SetCycleEmp(rowIndex, field, emp.cd, emp.nm);
         }
         ItsGrid.CheckRow('grid9', rowIndex);
-        UpdateCyclePlanStat(rowIndex);
         if (isAdd) ToastCycleGap(rowIndex, field);
     }
 };
@@ -725,23 +715,6 @@ function GetCycleMonths(getVal) {
         if ((getVal((m < 10 ? 'M0' : 'M') + m + 'CD') || '').toString().trim() !== '') arr.push(m);
     }
     return arr;
-}
-
-// 2026-11-16 [정기점검 주기관리 탭] 점검주기(CHKYEAR년에 CHKCNT회) 기준 계획 상태, 주기 문구 해석 불가 등급은 빈값
-function GetCyclePlanStat(getVal) {
-    var n = parseInt(getVal('CHKCNT'), 10), k = parseInt(getVal('CHKYEAR'), 10);
-    if (!(n > 0) || !(k > 0)) return '';
-
-    var cnt = GetCycleMonths(getVal).length;
-    var prev = parseInt(getVal('PREVCNT'), 10) || 0, next = parseInt(getVal('NEXTCNT'), 10) || 0;
-    if (prev + cnt > n || cnt + next > n) return cnt + '회 초과';
-    if (k === 1) return cnt + '회 ' + (cnt < n ? '부족' : '적정');
-    return cnt + '회 ' + (prev + cnt + next === 0 ? '미배정' : '적정');
-}
-
-// 2026-11-16 [정기점검 주기관리 탭] 월 칸 변경 후 계획 상태 갱신
-function UpdateCyclePlanStat(rowIndex) {
-    ItsGrid.SetValue('grid9', rowIndex, 'PLANSTAT', GetCyclePlanStat(function (f) { return ItsGrid.GetValue('grid9', rowIndex, f); }));
 }
 
 // 2026-11-16 [정기점검 주기관리 탭] 대상 월(fields)을 새로 배정하면 점검주기 횟수를 넘을 때 안내 문구, 넘지 않으면 '' (저장 프로시저와 같은 기준)

@@ -18,6 +18,12 @@
 
 ## 🕒 2026-11-16 (월) 작업 내역
 
+### 13. EQM1001_R03 정기점검 주기관리 탭 '계획' 컬럼 삭제
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
+- **요청**: 11번에서 추가한 '계획'(PLANSTAT) 컬럼 표기 불필요
+- **작업 상세 내용**: grid9 '계획' 컬럼, 조회 결과에 상태를 넣던 반복문, 상태 계산·갱신 함수(GetCyclePlanStat·UpdateCyclePlanStat)와 호출 3곳 삭제(27줄). 점검주기 초과 차단(더블클릭·Enter·일괄 주기설정·저장 프로시저)과 간격 안내는 그대로
+- **검증**: `node --check` 통과, 남은 참조 없음, 일괄 주기설정 함수 Node 확인 결과 동일. CRLF 유지
+
 ### 12. EQM1001_R03 일괄 주기설정 팝업 설비등급 점검주기 반영
 - **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
 - **요청**: 11번 점검주기 검증을 일괄 주기설정 팝업에도 반영
