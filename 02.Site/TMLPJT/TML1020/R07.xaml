@@ -24,14 +24,14 @@
                 <its:Grid.Columns>
                     <its:Column Width="100" Header="거래명세서번호" FieldName="INVOICEKEY" ALGIN="Center"/>
                     <its:Column Width="100" Header="출고처" FieldName="OUTCUSTNM" ALGIN="Center"/>
-                    <its:Column Width="110" Header="입고창고" FieldName="INWARENM" ALGIN="Center"/>
+                    <its:Column Width="110" Header="이동창고" FieldName="INWARENM" ALGIN="Center"/>
                     <its:Column Width="120" Header="품목코드" FieldName="ITEMCD"/>
                     <its:Column Width="150" Header="품명" FieldName="ITEMNM"/>
                     <its:Column Width="130" Header="규격" FieldName="ITEMSPEC"/>
                     <its:Column Width="100" Header="LOT NO" FieldName="LOTKEY" ALGIN="Center"/>
                     <its:Column Width="100" Header="HEAT NO" FieldName="HEATNO" ALGIN="Center"/>
                     <its:Column Width="50" Header="단위" FieldName="UNITNM" ALGIN="Center"/>
-                    <its:Column Width="80" Header="입고수량" FieldName="INQTY" DecimalPoint="0"/>
+                    <its:Column Width="80" Header="이동수량" FieldName="INQTY" DecimalPoint="0"/>
                     <its:Column Width="100" Header="비고" FieldName="REMARK"/>
                 </its:Grid.Columns>
             </its:Grid>

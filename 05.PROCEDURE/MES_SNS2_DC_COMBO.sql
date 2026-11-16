@@ -1191,6 +1191,7 @@ PROC: BEGIN
         AND MSTLINE.EDT = ''
         AND MSTLINE.FACTORYCD LIKE CONCAT('%', $REF01, '%')
         AND CASE WHEN $REF02 = '' THEN MSTLINE.OSCCUSTCD = ''   -- REF02 빈 값: 사내 작업장만
+                 WHEN $REF02 = '*' THEN MSTLINE.OSCCUSTCD <> ''   -- REF02 '*': 외주처 작업장 전체 (사내 계정이 외주작업장을 고를 때)
                  ELSE MSTLINE.OSCCUSTCD LIKE CONCAT('%', $REF02, '%') END
       ORDER BY LINECD, LINENM;
 

@@ -7,13 +7,16 @@
 /* 페이지 로드 시 수행 */
 ItsPage.Load = function () {
 
-    ItsGrid.Create('grid1', { isCheckBoxGrid: false }, [
+    // 체크한 협력사들의 클레임통보서를 한 번에 출력한다
+    ItsGrid.Create('grid1', { isCheckBoxGrid: true }, [
         column.create('협력사', 'CUSTNM', { width: 100, align: 'center' }),
         column.create('불량수량', 'BADQTY', { width: 70, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.create('등록', 'SAVEYN', { width: 45, columnType: enumColumnTypes.check }),
         column.create('문서번호', 'CLAIMKEY', { width: 110, align: 'center' }),  // 클레임키 = 문서번호
         column.create('예정일자', 'PLANDATE', { width: 85, align: 'center' }),
         column.create('손실비용', 'TOTAMT', { width: 90, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
+        column.create('승인자', 'APRVEMPNM', { width: 70, align: 'center' }),
+        column.create('승인일시', 'APRVTIME', { width: 110, align: 'center' }),   // 승인된 클레임은 수정·삭제 불가
         column.create('발생월', 'CLAIMMONTH', { width: 70, hidden: true }),
         column.create('귀책처코드', 'CUSTCD', { width: 80, hidden: true }),
         column.split()
@@ -35,6 +38,68 @@ ItsPage.Load = function () {
         column.create('비고', 'REMARK', { width: 150, readOnly: false }),
         column.split()
     ]);
+
+    ItsFind.SetValue('find_APRVEMP', ItsPage.EMPCD);   // 승인자 기본값: 로그인 사원
+};
+
+/* 승인: 체크한 협력사들의 저장된 클레임을 승인자로 승인 (저장 안 된 클레임이 있으면 프로시저가 막는다) */
+ItsButton.Event('btn_APPROVE').onClick = function () {
+    var APRVEMP = ItsFind.GetValue('find_APRVEMP');
+    if (APRVEMP == '') {
+        ItsMsg.Alert('승인자를 선택하세요.');
+        return;
+    }
+    if (!ItsGrid.HasChecked('grid1')) {
+        ItsMsg.Alert('승인할 협력사를 체크하세요.');
+        return;
+    }
+
+    var maria = new ItsMaria('TQM3001_R01', 'APPROVE');
+    maria.AddParam('SMONTH', ItsGrid.GetValue('grid1', 0, 'CLAIMMONTH'));   // 목록은 한 발생월
+    maria.AddParam('APRVEMP', APRVEMP);
+    var cnt = 0;
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if (!ItsGrid.IsChecked('grid1', i)) continue;
+        maria.AddList('CUSTCD_LIST', ItsGrid.GetValue('grid1', i, 'CUSTCD'));
+        cnt++;
+    }
+
+    ItsMsg.Confirm(cnt + '건을 승인하시겠습니까?', function () {
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsMsg.Toast(cnt + '건 승인 되었습니다.');
+        ItsButton.EventSearch();
+    });
+};
+
+/* 승인취소: 체크한 협력사들의 클레임 승인자·승인일시를 비운다 (승인 안 된 클레임이 있으면 프로시저가 막는다) */
+ItsButton.Event('btn_APPROVE_CANCEL').onClick = function () {
+    if (!ItsGrid.HasChecked('grid1')) {
+        ItsMsg.Alert('승인취소할 협력사를 체크하세요.');
+        return;
+    }
+
+    var maria = new ItsMaria('TQM3001_R01', 'APPROVE_CANCEL');
+    maria.AddParam('SMONTH', ItsGrid.GetValue('grid1', 0, 'CLAIMMONTH'));
+    var cnt = 0;
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if (!ItsGrid.IsChecked('grid1', i)) continue;
+        maria.AddList('CUSTCD_LIST', ItsGrid.GetValue('grid1', i, 'CUSTCD'));
+        cnt++;
+    }
+
+    ItsMsg.Confirm(cnt + '건을 승인취소하시겠습니까?', function () {
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsMsg.Toast(cnt + '건 승인취소 되었습니다.');
+        ItsButton.EventSearch();
+    });
 };
 
 /* 조회: 발생월 협력사 목록 */
@@ -177,22 +242,35 @@ ItsButton.EventDelete = function () {
     });
 };
 
-/* [클레임통보서 출력] 선택한 협력사의 저장된 클레임 → 공문서 + 산출내역서 (리포트 TQM3001.exe R01) */
+/* [클레임통보서 출력] 체크한 협력사들의 저장된 클레임 → 클레임마다 공문서 + 산출내역서 (리포트 TQM3001.exe R01)
+   체크한 줄이 없으면 선택한 한 줄. CUSTCD = 귀책처코드 쉼표 구분 */
 ItsButton.Event('btn_PRINT_CLAIM').onClick = function () {
     if (ItsGrid.Length('grid1') == 0) {
         ItsMsg.Alert('협력사를 먼저 조회하세요.');
         return;
     }
 
-    var CUSTROW = ItsGrid.GetCurrentIndex('grid1');
-    if (ItsGrid.GetValue('grid1', CUSTROW, 'CLAIMKEY') == '') {
-        ItsMsg.Alert('저장한 클레임만 출력할 수 있습니다. 먼저 저장하세요.');
+    var rows = [];
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if (ItsGrid.IsChecked('grid1', i)) rows.push(i);
+    }
+    if (rows.length == 0) rows.push(ItsGrid.GetCurrentIndex('grid1'));
+
+    var custCds = [], notSaved = [];
+    for (var k = 0; k < rows.length; k++) {
+        if (ItsGrid.GetValue('grid1', rows[k], 'CLAIMKEY') == '')
+            notSaved.push(ItsGrid.GetValue('grid1', rows[k], 'CUSTNM'));
+        else
+            custCds.push(ItsGrid.GetValue('grid1', rows[k], 'CUSTCD'));
+    }
+    if (notSaved.length > 0) {
+        ItsMsg.Alert('저장한 클레임만 출력할 수 있습니다. 먼저 저장하세요.\n- ' + notSaved.join(', '));
         return;
     }
 
     var rpt = new ItsXtraRpt('TQM3001_R01');
-    rpt.AddParam('SMONTH', ItsGrid.GetValue('grid1', CUSTROW, 'CLAIMMONTH'));
-    rpt.AddParam('CUSTCD', ItsGrid.GetValue('grid1', CUSTROW, 'CUSTCD'));
+    rpt.AddParam('SMONTH', ItsGrid.GetValue('grid1', rows[0], 'CLAIMMONTH'));   // 목록은 한 발생월
+    rpt.AddParam('CUSTCD', custCds.join(','));
     rpt.CallPop();
     if (rpt.isError) {
         ItsMsg.Alert(rpt.errMessage);

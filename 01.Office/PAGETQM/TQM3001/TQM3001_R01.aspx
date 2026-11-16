@@ -13,6 +13,10 @@
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
         <Its:month runat="server" Label="발생월" ID="mon_SMONTH" Field="SMONTH" />
         <Its:button runat="server" Label="클레임통보서 출력" ID="btn_PRINT_CLAIM" MarginLeft="20" BackColor="CustomButton2" />
+        <%-- 체크한 협력사의 클레임 승인 / 승인취소. 승인자: 품질팀(44C10) --%>
+        <Its:find runat="server" Label="승인자" ID="find_APRVEMP" Field="APRVEMP" REF01="44C10" GPCD="EMPCD" InputWidth="80" NameWidth="100" MarginLeft="20" />
+        <Its:button runat="server" Label="승인" ID="btn_APPROVE" Width="80" BackColor="CustomButton" MarginLeft="10" />
+        <Its:button runat="server" Label="승인취소" ID="btn_APPROVE_CANCEL" Width="80" BackColor="CustomButton3" MarginLeft="10" />
     </Its:div>
 </asp:Content>
 

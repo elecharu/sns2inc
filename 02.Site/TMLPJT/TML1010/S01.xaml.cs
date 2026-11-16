@@ -57,6 +57,11 @@ namespace TML1010
             if (ItsLocalInfo.TMLCUSTCD != "")
             {
                 cb_CUSTCD.Value = ItsLocalInfo.TMLCUSTCD.ToString();
+                cb_CUSTCD.ReadOnly = true;
+            }
+            else
+            {
+                cb_CUSTCD.ReadOnly = false;   // 2026-11-16 사내 계정은 외주처를 직접 선택 (비우면 전체)
             }
 
             MODEL_S1.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));

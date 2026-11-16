@@ -236,7 +236,20 @@ namespace TML1020
 
                 MODEL_G1.Clear();
                 MODEL_S1.SetValue("SCANLOT", "");
-                ShowMessageBox("", "사업장 간 이동 되었습니다. (LOT " + ItsData.GetText(ds.Tables[0], 0, "LOTCNT") + "개)");
+                // 재고이동표 출력 (확인창 없이 POP 에서 고른 프린터로). 양식은 COMPJT\TMLPRINT 의 MTR_5 (AAALIB\TMLPRINT.exe)
+                try
+                {
+                    if (ds.Tables.Count > 2 && ds.Tables[2].Rows.Count > 0)
+                    {
+                        TMLPRINT.MTR_5 rptMove = new TMLPRINT.MTR_5(ds);
+                        rptMove.PrintDirect(ItsPrinter.BarcodePrintName);
+                    }
+                    ShowMessageBox("", "사업장 간 이동 되었습니다. (LOT " + ItsData.GetText(ds.Tables[0], 0, "LOTCNT") + "개)");
+                }
+                catch (Exception ex)
+                {
+                    ShowMessageBox("", "사업장 간 이동은 되었으나 재고이동표 출력에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
+                }
                 txt_BARCODE.Focus();
             }
         }

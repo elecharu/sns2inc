@@ -53,6 +53,11 @@ namespace TML1010
             if (ItsLocalInfo.TMLCUSTCD != "")
             {
                 cb_CUSTCD.Value = ItsLocalInfo.TMLCUSTCD.ToString();
+                cb_CUSTCD.ReadOnly = true;
+            }
+            else
+            {
+                cb_CUSTCD.ReadOnly = false;   // 2026-11-16 사내 계정은 외주처를 직접 선택 (비우면 전체)
             }
 
             PANEL_A1.Close();

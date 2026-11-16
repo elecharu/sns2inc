@@ -21,9 +21,9 @@ using DevExpress.Xpf.Grid;
 namespace TML1020
 {
     /// <summary>
-    /// // 2026-11-12 [유상사급 자재반출] 유상사급 납품 거래명세서 바코드 스캔 → [등록] 하면 반출일자로 반출 기록만 남김 (재고·ERP 변화 없음, 입고확인 전 단계)
-    /// 외주처가 납품등록(TML1010)한 거래명세서번호 또는 LOT번호를 바코드 스캔 → 그 거래명세서의 LOT 목록이 쌓임
-    /// [등록] 하면 스캔한 거래명세서들을 입고일자로 입고 (원자재 자재창고, 반제품 재공품창고, 상품 상품창고, 시편 시편창고)
+    /// // 2026-11-16 [유상사급 자재반출] 입고확인이 끝난 거래명세서 바코드 스캔 → [등록] 하면 입고확인·자재이동·납품등록 3건 삭제, ERP 는 D 로 역순 전송, 반출번호·반출일자 이력 저장
+    /// 입고확인(TML1020 R07)이 끝난 자재이동 거래명세서번호 또는 LOT번호를 바코드 스캔 → 그 거래명세서의 LOT 목록이 쌓임 (프로시저 TML1020_R08)
+    /// 반출수량은 수정할 수 있으나 입고확인 수량 전량이어야 반출됨. 자재반출증(유상사급) 출력은 TMLPRINT 양식이 만들어지면 PRINT_MOVEOUT 데이터로 연결
     /// </summary>
     public partial class R08 : ITSLIB.ItsPageTml
     {
@@ -70,7 +70,7 @@ namespace TML1020
                     return;
                 }
 
-                ShowMessageBox(commandName, MODEL_S1.GetText("MOVEDATE") + " 일자로 거래명세서 " + invoiceKeys.Count + "건 (LOT " + MODEL_G1.Rows.Count + "개)을 반출 등록하시겠습니까?");
+                ShowMessageBox(commandName, MODEL_S1.GetText("MOVEDATE") + " 일자로 거래명세서 " + invoiceKeys.Count + "건 (LOT " + MODEL_G1.Rows.Count + "개)을 반출하시겠습니까?\n입고확인·자재이동·납품등록이 삭제됩니다.");
             }
             // 스캔 목록 비우기
             else if (commandName == "CLEAR_SCAN")
@@ -94,6 +94,11 @@ namespace TML1020
                 {
                     ItsMaria.AddList("INVOICEKEY_LIST", invoiceKey);
                 }
+                for (int i = 0; i < MODEL_G1.Rows.Count; i++)
+                {
+                    ItsMaria.AddList("LOTKEY_LIST", MODEL_G1.GetText(i, "LOTKEY"));
+                    ItsMaria.AddList("MOVEQTY_LIST", MODEL_G1.GetDecimal(i, "MOVEQTY"));
+                }
 
                 DataSet ds = ItsMaria.Call();
                 if (ItsMaria.IsError)
@@ -105,7 +110,8 @@ namespace TML1020
                 MODEL_G1.Clear();
                 MODEL_S1.SetValue("BARCODE", "");
 
-                ShowMessageBox("", "반출 등록되었습니다. (" + ItsData.GetText(ds.Tables[0], 0, "CNT") + "건)");
+                // 반출번호 (자재반출증 출력은 TMLPRINT 양식이 만들어지면 TML1020_R08 PRINT_MOVEOUT 으로 연결)
+                ShowMessageBox("", "반출되었습니다. (" + ItsData.GetText(ds.Tables[0], 0, "CNT") + "건)\n- 반출번호: " + ItsData.GetText(ds.Tables[0], 0, "MOVEOUTKEY"));
                 txt_BARCODE.Focus();
             }
         }

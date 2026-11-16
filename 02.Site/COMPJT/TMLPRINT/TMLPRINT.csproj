@@ -110,6 +110,16 @@
     <Compile Include="MTR_2.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="MTR_3.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MTR_4.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MTR_5.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="RptKit.cs" />
     <Compile Include="SAL_1.cs">
       <SubType>Component</SubType>
     </Compile>

@@ -30,6 +30,7 @@ namespace TML1010
         ItsModelGrid MODEL_G3 = new ItsModelGrid();     // 최근 실적
         ItsModelGrid MODEL_G5 = new ItsModelGrid();     // 생산품목선택
 
+        private bool inHouse = false;   // 사내 계정 (외주 작업장을 직접 선택)
         private string chgPrccd = "";  // 라우팅 불일치 시 바꿀 기본공정
 
         public R03()
@@ -64,12 +65,20 @@ namespace TML1010
             MODEL_B1.SetValue("DNTP", "PP161100N");   // 주간 기본 (시작·종료시간은 MODEL_B1_EventValueChanged 에서)
 
             // 작업장 = 로그인 외주처의 작업장 : 작업장 콤보(DC_COMBO LINECD) REF02 에 외주처 코드 → 그 외주처 작업장만 나옴, 첫 작업장 선택
+            // 2026-11-16 사내 계정(외주처 없음) 은 외주 작업장 전체에서 직접 선택, 외주 계정은 자기 외주처의 작업장
             string custcd = ItsLocalInfo.TMLCUSTCD ?? "";
+            inHouse = (custcd == "");
             MODEL_S1.SetValue("CUSTCD", custcd);
-            if (custcd == "")
+            CMB_LINECD.ReadOnly = !inHouse;
+
+            if (inHouse)
             {
-                ShowMessageBox("", "로그인한 계정에 외주처(거래처)가 지정되어 있지 않습니다.");
-                return;
+                MODEL_S1.SetRef02("LINECD", "*");   // 외주 작업장 전체
+                if (CMB_LINECD.ModelCombo == null || CMB_LINECD.ModelCombo.Rows.Count <= 1)
+                {
+                    ShowMessageBox("", "선택할 외주 작업장이 없습니다. 작업장 관리에서 외주처를 지정하세요.");
+                }
+                return;   // 작업장을 고르면 MODEL_S1_EventValueChanged 에서 외주처·공정을 정함
             }
 
             MODEL_S1.SetRef02("LINECD", custcd);
@@ -98,6 +107,22 @@ namespace TML1010
             if (fieldName == "LINECD")
             {
                 MODEL_S1.SetRef01("PRCCD", MODEL_S1.GetText("LINECD"));
+
+                // 사내 계정: 고른 외주 작업장의 외주처를 실적 외주처로 사용
+                if (inHouse)
+                {
+                    string linecd = MODEL_S1.GetText("LINECD");
+                    string oscCust = "";
+                    if (linecd != "")
+                    {
+                        DataSet dsLine = ItsMaria.Query("SELECT OSCCUSTCD FROM MSTLINE WHERE LINECD = '" + linecd.Replace("'", "''") + "' LIMIT 1;");
+                        if (dsLine != null && dsLine.Tables.Count > 0 && dsLine.Tables[0].Rows.Count > 0)
+                        {
+                            oscCust = dsLine.Tables[0].Rows[0][0].ToString();
+                        }
+                    }
+                    MODEL_S1.SetValue("CUSTCD", oscCust);
+                }
             }
 
             // 작업장·공정이 바뀌면 투입 LOT 다시 조회
@@ -380,8 +405,8 @@ namespace TML1010
 
                 EventCommand("LIST_INPUT");
 
+                // 2026-11-16 외주실적등록은 출력물 없음 (필요하면 최근 실적에서 공정이동표 재출력)
                 string lotKey = ItsData.GetText(ds.Tables[0], 0, "LOTKEY");
-                PrintMove(lotKey);
                 ShowMessageBox("", "생산실적이 등록되었습니다.\n실적로트: " + lotKey);
             }
             else if (commandName == "DEL_RST")

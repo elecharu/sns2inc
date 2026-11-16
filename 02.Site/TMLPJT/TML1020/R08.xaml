@@ -8,7 +8,7 @@
       xmlns:local="clr-namespace:TML1020"
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
       Width="980" Height="480">
-    <!-- 2026-11-12 유상사급 자재반출: 거래명세서번호 또는 LOT번호 바코드 스캔 → [등록] 하면 반출일자로 반출 기록만 남김 (재고·ERP 변화 없음) -->
+    <!-- 2026-11-16 유상사급 자재반출: 입고확인이 끝난 거래명세서번호 또는 LOT번호 바코드 스캔 → [등록] 하면 입고확인·자재이동·납품등록 3건 삭제 + ERP D 전송 + 반출 이력(반출번호·반출일자) -->
     <Canvas Background="Silver">
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
@@ -30,7 +30,7 @@
                     <its:Column Width="100" Header="HEAT NO" FieldName="HEATNO" ALGIN="Center"/>
                     <its:Column Width="110" Header="LOT NO" FieldName="LOTKEY" ALGIN="Center"/>
                     <its:Column Width="50" Header="단위" FieldName="UNITNM" ALGIN="Center"/>
-                    <its:Column Width="80" Header="이동량" FieldName="MOVEQTY" DecimalPoint="0"/>
+                    <its:Column Width="80" Header="반출수량" FieldName="MOVEQTY" CellType="Number" DecimalPoint="0" ShowKeyPad="Y" ReadOnly="False"/>
                     <its:Column Width="100" Header="비고" FieldName="REMARK"/>
                 </its:Grid.Columns>
             </its:Grid>

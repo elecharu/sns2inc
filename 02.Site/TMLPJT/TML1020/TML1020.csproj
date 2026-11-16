@@ -138,6 +138,9 @@
     <Compile Include="R08.xaml.cs">
       <DependentUpon>R08.xaml</DependentUpon>
     </Compile>
+    <Compile Include="R09.xaml.cs">
+      <DependentUpon>R09.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -196,6 +199,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="R08.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="R09.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

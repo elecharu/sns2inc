@@ -39,6 +39,24 @@
     <ApplicationIcon>icon_tml.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DevExpress.Charts.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Data.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.DataAccess.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Office.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Pdf.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.PivotGrid.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Printing.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.RichEdit.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Sparkline.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.Utils.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Utils.v16.1.UI, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.Xpo.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraCharts.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraEditors.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraGauges.v16.1.Core, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraPrinting.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
+    <Reference Include="DevExpress.XtraReports.v16.1, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a, processorArchitecture=MSIL" />
+    <Reference Include="DevExpress.XtraReports.v16.1.Extensions, Version=16.1.8.0, Culture=neutral, PublicKeyToken=b88d1754d700e49a" />
     <Reference Include="ITSLIB, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\AAALIB\ITSLIB.exe</HintPath>
@@ -53,6 +71,10 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="TMLRPT, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\AAALIB\TMLRPT.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
@@ -90,11 +112,30 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <EmbeddedResource Include="Properties\licenses.licx" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <None Include="app.config" />
+    <Resource Include="Fonts\Roboto-Black.ttf" />
+    <Resource Include="Fonts\Roboto-BlackItalic.ttf" />
+    <Resource Include="Fonts\Roboto-Bold.ttf" />
+    <Resource Include="Fonts\Roboto-BoldItalic.ttf" />
+    <Resource Include="Fonts\Roboto-Italic.ttf" />
+    <Resource Include="Fonts\Roboto-Light.ttf" />
+    <Resource Include="Fonts\Roboto-LightItalic.ttf" />
+    <Resource Include="Fonts\Roboto-Medium.ttf" />
+    <Resource Include="Fonts\Roboto-MediumItalic.ttf" />
+    <Resource Include="Fonts\Roboto-Regular.ttf" />
+    <Resource Include="Fonts\Roboto-Thin.ttf" />
+    <Resource Include="Fonts\Roboto-ThinItalic.ttf" />
+    <Resource Include="Fonts\RobotoCondensed-Bold.ttf" />
+    <Resource Include="Fonts\RobotoCondensed-BoldItalic.ttf" />
+    <Resource Include="Fonts\RobotoCondensed-Italic.ttf" />
+    <Resource Include="Fonts\RobotoCondensed-Light.ttf" />
+    <Resource Include="Fonts\RobotoCondensed-LightItalic.ttf" />
+    <Resource Include="Fonts\RobotoCondensed-Regular.ttf" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -103,6 +144,25 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="icon_tml.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="popup_bg_choice.png" />
+    <Resource Include="popup_bg_error.png" />
+    <Resource Include="popup_bg_warning.png" />
+    <Resource Include="popup_ic_loading.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="image\settings_popup_lock.png" />
+    <Resource Include="image\main_setting.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="image\settings_ic_settings_black.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="image\settings_ic_settings_white.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="image\settings_img_printer.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

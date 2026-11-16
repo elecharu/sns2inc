@@ -29,6 +29,8 @@ namespace TML1010
         ItsModelPanel MODEL_S3 = new ItsModelPanel();   // [이동내역삭제] 탭 조회조건
         ItsModelGrid MODEL_G4 = new ItsModelGrid();     // [이동내역삭제] 탭 이동 목록
 
+        private bool inHouse = false;   // 사내 계정 (외주처 창고를 직접 선택)
+
         // 생성자
         public R02()
         {
@@ -36,6 +38,7 @@ namespace TML1010
 
             MODEL_S1.Binding(PANEL_S1);
             MODEL_S1.InitData();
+            MODEL_S1.EventValueChanged += MODEL_S1_EventValueChanged;
 
             MODEL_A1.Binding(PANEL_A1);
             MODEL_A1.InitData();
@@ -70,6 +73,13 @@ namespace TML1010
                 {
                     cb_OUTWARE.Value = dsWare.Tables[0].Rows[0]["WARECD"].ToString();
                 }
+                cb_OUTWARE.ReadOnly = true;
+            }
+            else
+            {
+                // 2026-11-16 사내 계정: 출고창고(외주처 창고) 를 직접 선택, 이동 외주처는 고른 창고의 외주처
+                inHouse = true;
+                cb_OUTWARE.ReadOnly = false;
             }
 
             MODEL_S1.SetValue("MOVEDATE", DateTime.Now.ToString("yyyy-MM-dd"));
@@ -81,6 +91,33 @@ namespace TML1010
 
             PANEL_A1.Close();
             txt_BARCODE.Focus();
+        }
+
+        // 사내 계정이 출고창고를 고르면 그 창고의 외주처를 이동 외주처로 정하고, 스캔한 LOT 는 비움 (다른 창고 것이므로)
+        private void MODEL_S1_EventValueChanged(string fieldName)
+        {
+            if (fieldName != "OUTWARE" || !inHouse) return;
+
+            string wareCd = MODEL_S1.GetText("OUTWARE");
+            string custCd = "";
+            if (wareCd != "")
+            {
+                DataSet dsCust = ItsMaria.Query("SELECT CUSTCD FROM MSTWARE WHERE WARECD = '" + wareCd.Replace("'", "''") + "' LIMIT 1;");
+                if (dsCust != null && dsCust.Tables.Count > 0 && dsCust.Tables[0].Rows.Count > 0)
+                {
+                    custCd = dsCust.Tables[0].Rows[0][0].ToString();
+                }
+                if (custCd == "")
+                {
+                    ShowMessageBox("", "선택한 창고에 외주처가 지정되어 있지 않습니다. 창고 관리에서 외주처를 지정하세요.");
+                }
+            }
+            MODEL_S1.SetValue("CUSTCD", custCd);
+
+            if (MODEL_G1.Rows.Count > 0)
+            {
+                MODEL_G1.Clear();
+            }
         }
 
         // ===== [거래명세서 발행]·[이동내역삭제] 탭 : 이동 거래명세서 조회 / 발행 / 삭제 (프로시저 TML1010_R02 LIST_INVOICE, DEL_MOVE_LOT) =====
@@ -387,7 +424,7 @@ namespace TML1010
 
             try
             {
-                TMLPRINT.MTR_1 rpt = new TMLPRINT.MTR_1(ds);
+                TMLPRINT.MTR_1 rpt = new TMLPRINT.MTR_1(ds, true);   // 2026-11-16 공급자 보관용 + 공급받는자 보관용 2장
                 rpt.PrintDirect(ItsPrinter.BarcodePrintName);
             }
             catch (Exception ex)

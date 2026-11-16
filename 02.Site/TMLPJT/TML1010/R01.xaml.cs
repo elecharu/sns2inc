@@ -448,8 +448,8 @@ namespace TML1010
             }
         }
 
-        // 2026-11-11 거래명세서(공급자보관용 + 공급받는자 보관용) + 공정이동표(재고)(LOT 1개당 1장, A4 한 장에 2개)
-        // 확인창 없이 POP 에서 고른 프린터로 바로 인쇄. 양식은 COMPJT\TMLPRINT 의 MTR_1 / MTR_2 (AAALIB\TMLPRINT.exe)
+        // 2026-11-16 납품등록은 거래명세서 없이 공정이동표(LOT 1개당 1장)만 출력 (거래명세서는 외주이동 등 이동 메뉴에서 발행)
+        // 확인창 없이 POP 에서 고른 프린터로 바로 인쇄. 양식은 COMPJT\TMLPRINT 의 MTR_2 (AAALIB\TMLPRINT.exe)
         private void PrintInvoice(string invoiceKey)
         {
             ItsMaria.Set("TML1010_R01", "PRINT_INVOICE");
@@ -463,15 +463,12 @@ namespace TML1010
 
             try
             {
-                TMLPRINT.MTR_1 rptInvoice = new TMLPRINT.MTR_1(ds, true);
-                rptInvoice.PrintDirect(ItsPrinter.BarcodePrintName);
-
                 TMLPRINT.MTR_2 rptMove = new TMLPRINT.MTR_2(ds.Tables[4]);
                 rptMove.PrintDirect(ItsPrinter.BarcodePrintName);
             }
             catch (Exception ex)
             {
-                ShowMessageBox("", "거래명세서 출력에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
+                ShowMessageBox("", "공정이동표 출력에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
             }
         }
 

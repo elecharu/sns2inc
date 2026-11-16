@@ -24,8 +24,8 @@
         <!--투입품번정보-->
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="80" Canvas.Top="0">
             <its:WrapContent x:Name="PANEL_S1" Width="1096" Height="100">
-                <!-- REF02 = 로그인 외주처 코드 (코드에서 설정) → 외주처 작업장만 -->
-                <its:Combo Label="생산작업장" LabelWidth="95" Width="365" GPCD="LINECD" Value="{Binding LINECD}" REF01="07" ReadOnly="True" x:Name="CMB_LINECD"/>
+                <!-- REF02 = 로그인 외주처 코드 (코드에서 설정) → 외주처 작업장만. 사내 계정은 REF02 = * (외주 작업장 전체) 에서 직접 선택 -->
+                <its:Combo Label="생산작업장" LabelWidth="95" Width="365" GPCD="LINECD" Value="{Binding LINECD}" REF01="07" x:Name="CMB_LINECD"/>
                 <!-- PRCCD_LINEPRC : REF01 = 작업장, 작업장 공정설정(MSTLINE_PRC) 기준 (외주처 작업장은 설비가 없어 PRCCD_LINE 은 비어 나옴) -->
                 <its:Combo Label="생산공정" LabelWidth="95" Width="365" GPCD="PRCCD_LINEPRC" Value="{Binding PRCCD}"/>
                 <its:Text Label="생산설비" LabelWidth="95" Width="365" Value="{Binding EQMNM}" ReadOnly="True"/>

@@ -236,7 +236,19 @@ namespace TML1020
 
                 MODEL_G1.Clear();
                 MODEL_S1.SetValue("SCANLOT", "");
-                ShowMessageBox("", "외주재작업반출 되었습니다. (LOT " + ItsData.GetText(ds.Tables[0], 0, "LOTCNT") + "개)");
+                // 외주반출증(재작업) 공급자 보관용 + 공급받는자 보관용 2장 출력 (확인창 없이 POP 에서 고른 프린터로). 양식은 COMPJT\TMLPRINT 의 MTR_4 (AAALIB\TMLPRINT.exe)
+                try
+                {
+                    if (ds.Tables.Count > 2 && ds.Tables[2].Rows.Count > 0)
+                    {
+                        TMLPRINT.MTR_4.Print(ds, true, ItsPrinter.BarcodePrintName);
+                    }
+                    ShowMessageBox("", "외주재작업반출 되었습니다. (LOT " + ItsData.GetText(ds.Tables[0], 0, "LOTCNT") + "개)");
+                }
+                catch (Exception ex)
+                {
+                    ShowMessageBox("", "외주재작업반출은 되었으나 외주반출증 출력에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
+                }
                 txt_BARCODE.Focus();
             }
         }

@@ -14,6 +14,7 @@ PROCEDURE MES_SNS2.PRD1001_R04(
 --         2026-11-12 MATCH 거래처 목록을 법인 60 거래처(MSTCUST_DETAIL)로 한정 (찾기 팝업과 같은 범위)
 --         2026-11-12 MATCH 결과셋 1 ITEMCD 를 엑셀 품번 대신 매칭된 MSTITEM.ITEMCD 로 (못 찾으면 '')
 --         2026-11-12 SAVE 덮어쓰기(기간 삭제) 없앰. 추가만 한다 (사용자 지시)
+--         2026-11-13 SALOUTPLANKEY 를 AUTO_INCREMENT 대신 GETKEY('SALOUTPLANKEY') 로 채번 (사용자 지시)
 -- *****************************************************************************
   IN $SDATE VARCHAR(10),              -- 기간 시작 (조회)
   IN $EDATE VARCHAR(10),              -- 기간 끝
@@ -266,7 +267,8 @@ WHEN 'SAVE' THEN  -- 추가 저장 (기존 출하계획은 지우지 않는다)
     SET _$PLTQTY = CAST(IF(IFNULL(_$PLTQTY_TXT, '') = '', '0', _$PLTQTY_TXT) AS DECIMAL(20, 8));
 
     INSERT INTO SALOUTPLAN_W (
-        OUTPLANTP
+        SALOUTPLANKEY
+      , OUTPLANTP
       , OUTDATE
       , CUSTCD
       , ENDCUSTCD
@@ -279,7 +281,8 @@ WHEN 'SAVE' THEN  -- 추가 저장 (기존 출하계획은 지우지 않는다)
       , REMARK
       , RTIME, REMP, RPRG)
     VALUES (
-        $OUTPLANTP
+        GETKEY('SALOUTPLANKEY')
+      , $OUTPLANTP
       , _$OUTDATE
       , _$CUSTCD
       , IFNULL(_$ENDCUSTCD, '')
@@ -303,7 +306,7 @@ WHEN 'DELETE' THEN  -- 선택한 출하계획 삭제
     CALL COMSPLIT(_$SALOUTPLANKEY_LIST, _$SALOUTPLANKEY);
 
     DELETE FROM SALOUTPLAN_W
-      WHERE SALOUTPLAN_W.SALOUTPLANKEY = CAST(_$SALOUTPLANKEY AS UNSIGNED);
+      WHERE SALOUTPLAN_W.SALOUTPLANKEY = _$SALOUTPLANKEY;
   END WHILE;
 
 -- ****************************************************************************

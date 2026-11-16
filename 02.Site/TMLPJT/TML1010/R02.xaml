@@ -18,7 +18,7 @@
                 <its:Combo GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ReadOnly="True" x:Name="cb_CUSTCD" Visibility="Collapsed"/>
                 <its:Date Label="이동일자" LabelWidth="70" Width="230" Value="{Binding MOVEDATE}" Foreground="Green" FontWeight="Bold"/>
                 <UserControl Width="30"/>
-                <its:Combo GPCD="WARECD_OSC" LabelWidth="70" Width="330" Label="출고창고" Value="{Binding OUTWARE}" ReadOnly="True" x:Name="cb_OUTWARE" FontWeight="Bold"/>
+                <its:Combo GPCD="WARECD_OSC" LabelWidth="70" Width="330" Label="출고창고" Value="{Binding OUTWARE}" x:Name="cb_OUTWARE" FontWeight="Bold"/>
                 <UserControl Width="30"/>
                 <its:Text x:Name="txt_BARCODE" Label="바코드 스캔" LabelWidth="90" Width="340" Value="{Binding SCANLOT}" KeyDown="Text_KeyDown"/>
                 <UserControl Width="260"/>

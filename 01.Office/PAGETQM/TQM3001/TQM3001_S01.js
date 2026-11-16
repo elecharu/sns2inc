@@ -71,5 +71,6 @@ ItsButton.EventSearch = function () {
 
     SetDayColumns();
     ItsGrid.SetStore('grid1', maria.store);
+    ItsGrid.Get('grid1').autoSizeColumns();   // 조회한 내용에 맞춰 컬럼 너비 맞춤
     ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
 };

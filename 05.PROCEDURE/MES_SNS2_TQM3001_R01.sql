@@ -13,11 +13,15 @@ PROCEDURE MES_SNS2.TQM3001_R01(
 --          ) SAVE     : 머리글 + 품목 저장. 처음 저장할 때 클레임키 = 문서번호 SSI-yy-mm-NNN 을 매긴다
 --                       (SSI 고정, yy-mm = 예정일자(= 작성일)의 연·월, NNN = 그 연·월의 순번)
 --          ) DELETE   : 클레임 삭제
+--          ) APPROVE / APPROVE_CANCEL: 체크한 협력사들의 클레임 승인 / 승인취소 (TQMCLAIM.APRVEMP·APRVTIME)
+--          ) 승인된 클레임은 SAVE·DELETE 할 수 없다 (승인취소 후)
 --          ) PRINT    : CLAIM 통보서 (리포트 TQM3001.exe R01, 1장 공문서 + 2장 산출내역서). 결과셋 1 머리글, 2 품목
 --          ) 발생 손실 비용만 다룬다. 산출내역서의 제반비용 산출 표·이의제기·CLAIM 비용(예정/확정)은
 --            출력물에서 빈칸으로 둔다 (2026-11-10 사용자 지시)
 -- Create: 2026-11-10
--- Modify:
+-- Modify: 2026-11-16 승인(APPROVE)·승인취소(APPROVE_CANCEL) 추가, 승인된 클레임 저장·삭제 막음,
+--                    LIST 에 승인자·승인일시 (파라미터 $APRVEMP·$CUSTCD_LIST 추가, 사용자 지시)
+--         2026-11-16 PRINT 머리에 승인자명(APRVEMPNM) 추가 (결재란 작성 = 담당, 승인 = 승인자)
 -- *****************************************************************************
   IN $SMONTH VARCHAR(10),             -- 발생월 (YYYY-MM)
   IN $CUSTCD VARCHAR(100),            -- 귀책처
@@ -36,6 +40,8 @@ PROCEDURE MES_SNS2.TQM3001_R01(
   IN $SALEPRICE_LIST MEDIUMTEXT,      -- 판매단가 목록
   IN $ETCAMT_LIST MEDIUMTEXT,         -- 품목 제반비용 목록
   IN $ITEMREMARK_LIST MEDIUMTEXT,     -- 품목 비고 목록
+  IN $APRVEMP VARCHAR(20),            -- 승인자 (APPROVE)
+  IN $CUSTCD_LIST MEDIUMTEXT,         -- 승인·승인취소할 귀책처 목록
 -- *****************************************************************************
   IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
@@ -68,8 +74,11 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$MFGPRICE DECIMAL(20, 8);
   DECLARE _$SALEPRICE DECIMAL(20, 8);
   DECLARE _$ETCAMT DECIMAL(20, 8);
+  DECLARE _$CUSTCD_LIST MEDIUMTEXT;
+  DECLARE _$CUSTCD VARCHAR(100);
+  DECLARE _$CUSTNM VARCHAR(200);
 -- *****************************************************************************
-  IF $CALLTYPE IN ('LIST', 'INFO_HEAD', 'LIST_ITEM', 'SAVE', 'DELETE', 'PRINT') AND IFNULL($SMONTH, '') = '' THEN
+  IF $CALLTYPE IN ('LIST', 'INFO_HEAD', 'LIST_ITEM', 'SAVE', 'DELETE', 'PRINT', 'APPROVE', 'APPROVE_CANCEL') AND IFNULL($SMONTH, '') = '' THEN
     CALL COMERR('발생월을 입력하세요.');
     LEAVE PROC;
   END IF;
@@ -156,12 +165,16 @@ WHEN 'LIST' THEN  -- 발생월 귀책처 목록 (grid1)
     , IFNULL(TQMCLAIM.CLAIMKEY, '') AS CLAIMKEY
     , IFNULL(TQMCLAIM.PLANDATE, '') AS PLANDATE
     , TQMCLAIM.TOTAMT
+    , IFNULL(MSTEMP.EMPNM, IFNULL(TQMCLAIM.APRVEMP, '')) AS APRVEMPNM
+    , IFNULL(LEFT(TQMCLAIM.APRVTIME, 16), '') AS APRVTIME
   FROM TEMP_CLAIM_CUST
   LEFT JOIN TQMCLAIM
     ON TQMCLAIM.CLAIMMONTH = LEFT($SMONTH, 7)
    AND TQMCLAIM.CUSTCD = TEMP_CLAIM_CUST.CUSTCD
   LEFT JOIN MSTCUST
     ON MSTCUST.CUSTCD = TEMP_CLAIM_CUST.CUSTCD
+  LEFT JOIN MSTEMP
+    ON MSTEMP.EMPCD = TQMCLAIM.APRVEMP
   ORDER BY IF(TEMP_CLAIM_CUST.CUSTCD = 'FAC1', 0, 1), CUSTNM;
 
 -- ****************************************************************************
@@ -301,6 +314,12 @@ WHEN 'SAVE' THEN  -- 머리글 + 품목 저장
 
   IF IFNULL($ITEMID_LIST, '') = '' THEN
     CALL COMERR('저장할 품목이 없습니다.');
+    LEAVE PROC;
+  END IF;
+
+  -- 승인된 클레임은 수정할 수 없다
+  IF _$CLAIMKEY <> '' AND IFNULL((SELECT TQMCLAIM.APRVTIME FROM TQMCLAIM WHERE TQMCLAIM.CLAIMKEY = _$CLAIMKEY), '') <> '' THEN
+    CALL COMERR('승인된 클레임은 수정할 수 없습니다.\n승인취소 후 수정하세요.');
     LEAVE PROC;
   END IF;
 
@@ -465,8 +484,98 @@ WHEN 'DELETE' THEN  -- 클레임 삭제
     LEAVE PROC;
   END IF;
 
+  -- 승인된 클레임은 삭제할 수 없다
+  IF IFNULL((SELECT TQMCLAIM.APRVTIME FROM TQMCLAIM WHERE TQMCLAIM.CLAIMKEY = _$CLAIMKEY), '') <> '' THEN
+    CALL COMERR('승인된 클레임은 삭제할 수 없습니다.\n승인취소 후 삭제하세요.');
+    LEAVE PROC;
+  END IF;
+
   DELETE FROM TQMCLAIMD WHERE TQMCLAIMD.CLAIMKEY = _$CLAIMKEY;
   DELETE FROM TQMCLAIM WHERE TQMCLAIM.CLAIMKEY = _$CLAIMKEY;
+
+-- ****************************************************************************
+WHEN 'APPROVE' THEN  -- 체크한 협력사들의 클레임 승인 (승인 버튼)
+
+  IF IFNULL($APRVEMP, '') = '' THEN
+    CALL COMERR('승인자를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($CUSTCD_LIST, '') = '' THEN
+    CALL COMERR('승인할 협력사를 체크하세요.');
+    LEAVE PROC;
+  END IF;
+
+  -- 1. 전부 확인한 뒤에 승인한다: 저장 안 된 클레임이 있으면 막는다
+  SET _$CUSTCD_LIST = $CUSTCD_LIST;
+  WHILE LENGTH(_$CUSTCD_LIST) > 0 DO
+    CALL COMSPLIT(_$CUSTCD_LIST, _$CUSTCD);
+
+    IF NOT EXISTS (SELECT TQMCLAIM.CLAIMKEY
+                     FROM TQMCLAIM
+                     WHERE TQMCLAIM.CLAIMMONTH = LEFT($SMONTH, 7)
+                       AND TQMCLAIM.CUSTCD = _$CUSTCD) THEN
+      SET _$CUSTNM = IFNULL((SELECT MSTCUST.CUSTNM FROM MSTCUST WHERE MSTCUST.CUSTCD = _$CUSTCD)
+                          , IFNULL(NULLIF(GPCD('JUDGEBADTP', _$CUSTCD), ''), _$CUSTCD));
+      CALL COMERR(CONCAT('저장하지 않은 클레임은 승인할 수 없습니다.\n- 협력사: ', _$CUSTNM));
+      LEAVE PROC;
+    END IF;
+  END WHILE;
+
+  -- 2. 승인 (이미 승인된 클레임은 승인자·승인일시를 새 값으로)
+  SET _$CUSTCD_LIST = $CUSTCD_LIST;
+  WHILE LENGTH(_$CUSTCD_LIST) > 0 DO
+    CALL COMSPLIT(_$CUSTCD_LIST, _$CUSTCD);
+
+    UPDATE TQMCLAIM
+      SET APRVEMP = $APRVEMP
+        , APRVTIME = CALLTIME()
+        , MTIME = CALLTIME()
+        , MEMP = CALLEMP()
+        , MPRG = CALLPRG()
+      WHERE TQMCLAIM.CLAIMMONTH = LEFT($SMONTH, 7)
+        AND TQMCLAIM.CUSTCD = _$CUSTCD;
+  END WHILE;
+
+-- ****************************************************************************
+WHEN 'APPROVE_CANCEL' THEN  -- 체크한 협력사들의 클레임 승인취소 (승인취소 버튼)
+
+  IF IFNULL($CUSTCD_LIST, '') = '' THEN
+    CALL COMERR('승인취소할 협력사를 체크하세요.');
+    LEAVE PROC;
+  END IF;
+
+  -- 1. 전부 확인한 뒤에 취소한다: 승인 안 된 클레임이 있으면 막는다
+  SET _$CUSTCD_LIST = $CUSTCD_LIST;
+  WHILE LENGTH(_$CUSTCD_LIST) > 0 DO
+    CALL COMSPLIT(_$CUSTCD_LIST, _$CUSTCD);
+
+    IF NOT EXISTS (SELECT TQMCLAIM.CLAIMKEY
+                     FROM TQMCLAIM
+                     WHERE TQMCLAIM.CLAIMMONTH = LEFT($SMONTH, 7)
+                       AND TQMCLAIM.CUSTCD = _$CUSTCD
+                       AND TQMCLAIM.APRVTIME <> '') THEN
+      SET _$CUSTNM = IFNULL((SELECT MSTCUST.CUSTNM FROM MSTCUST WHERE MSTCUST.CUSTCD = _$CUSTCD)
+                          , IFNULL(NULLIF(GPCD('JUDGEBADTP', _$CUSTCD), ''), _$CUSTCD));
+      CALL COMERR(CONCAT('승인되지 않은 클레임은 승인취소할 수 없습니다.\n- 협력사: ', _$CUSTNM));
+      LEAVE PROC;
+    END IF;
+  END WHILE;
+
+  -- 2. 승인취소 (승인자·승인일시를 비운다)
+  SET _$CUSTCD_LIST = $CUSTCD_LIST;
+  WHILE LENGTH(_$CUSTCD_LIST) > 0 DO
+    CALL COMSPLIT(_$CUSTCD_LIST, _$CUSTCD);
+
+    UPDATE TQMCLAIM
+      SET APRVEMP = ''
+        , APRVTIME = ''
+        , MTIME = CALLTIME()
+        , MEMP = CALLEMP()
+        , MPRG = CALLPRG()
+      WHERE TQMCLAIM.CLAIMMONTH = LEFT($SMONTH, 7)
+        AND TQMCLAIM.CUSTCD = _$CUSTCD;
+  END WHILE;
 
 -- ****************************************************************************
 WHEN 'PRINT' THEN  -- CLAIM 통보서 출력 (리포트 TQM3001.exe R01)
@@ -488,9 +597,12 @@ WHEN 'PRINT' THEN  -- CLAIM 통보서 출력 (리포트 TQM3001.exe R01)
     , TQMCLAIM.REFNM
     , TQMCLAIM.TITLE
     , CONCAT(DATE_FORMAT(_$MSDATE, '%y.%m.%d'), ' ~ ', DATE_FORMAT(_$MEDATE, '%y.%m.%d')) AS PERIOD
+    , IFNULL(MSTEMP2.EMPNM, TQMCLAIM.APRVEMP) AS APRVEMPNM   -- 결재란 승인 (승인 안 된 클레임이면 빈칸)
   FROM TQMCLAIM
   LEFT JOIN MSTEMP
     ON MSTEMP.EMPCD = TQMCLAIM.EMPCD
+  LEFT JOIN MSTEMP AS MSTEMP2
+    ON MSTEMP2.EMPCD = TQMCLAIM.APRVEMP
   WHERE TQMCLAIM.CLAIMKEY = _$CLAIMKEY;
 
   -- 결과셋 2: 품목

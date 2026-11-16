@@ -21,9 +21,9 @@ using DevExpress.Xpf.Grid;
 namespace TML1020
 {
     /// <summary>
-    /// // 2026-11-12 [유상사급 자재입고확인] 입고확인 시점에 재고 이동 (TML1020_R01 입고확인처리 기반, 유상사급 납품 거래명세서만)
-    /// 외주처가 납품등록(TML1010)한 거래명세서번호 또는 LOT번호를 바코드 스캔 → 그 거래명세서의 LOT 목록이 쌓임
-    /// [등록] 하면 스캔한 거래명세서들을 입고일자로 입고 (원자재 자재창고, 반제품 재공품창고, 상품 상품창고, 시편 시편창고)
+    /// // 2026-11-16 [유상사급 자재입고확인] 외주처 자재이동(TML1010 R06) 거래명세서 → 입고확인 = 사내창고(04S100_N) → 자재투입창고(04S111_N) 재고이동 (입고 아님)
+    /// 외주처가 자재이동(TML1010 R06)한 거래명세서번호 또는 LOT번호를 바코드 스캔 → 그 거래명세서의 LOT 목록이 쌓임
+    /// [등록] 하면 스캔한 거래명세서들을 입고일자로 사내창고에서 자재투입창고로 이동 (ERP WORK_10 송신, 프로시저 TML1020_R07)
     /// </summary>
     public partial class R07 : ITSLIB.ItsPageTml
     {
@@ -70,7 +70,7 @@ namespace TML1020
                     return;
                 }
 
-                ShowMessageBox(commandName, MODEL_S1.GetText("MTRINDATE") + " 일자로 거래명세서 " + invoiceKeys.Count + "건 (LOT " + MODEL_G1.Rows.Count + "개)을 입고하시겠습니까?");
+                ShowMessageBox(commandName, MODEL_S1.GetText("MTRINDATE") + " 일자로 거래명세서 " + invoiceKeys.Count + "건 (LOT " + MODEL_G1.Rows.Count + "개)을 입고확인(자재투입창고로 이동) 하시겠습니까?");
             }
             // 스캔 목록 비우기
             else if (commandName == "CLEAR_SCAN")
@@ -105,21 +105,8 @@ namespace TML1020
                 MODEL_G1.Clear();
                 MODEL_S1.SetValue("BARCODE", "");
 
-                // 입고된 LOT 마다 공정이동표(재고) 출력 (확인창 없이 POP 에서 고른 프린터로). 양식은 COMPJT\TMLPRINT 의 MTR_2
-                // 거래명세서는 납품등록(TML1010 R01) 에서 출력하므로 입고등록에서는 출력하지 않음
-                try
-                {
-                    if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
-                    {
-                        TMLPRINT.MTR_2 rptMove = new TMLPRINT.MTR_2(ds.Tables[0]);
-                        rptMove.PrintDirect(ItsPrinter.BarcodePrintName);
-                    }
-                    ShowMessageBox("", "입고되었습니다.");
-                }
-                catch (Exception ex)
-                {
-                    ShowMessageBox("", "입고는 되었으나 공정이동표 출력에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
-                }
+                // 2026-11-16 유상사급 자재입고확인은 출력물 없음
+                ShowMessageBox("", "입고확인 되었습니다. (자재투입창고로 이동)");
                 txt_BARCODE.Focus();
             }
         }

@@ -33,11 +33,11 @@
             this.ReportFooter = new DevExpress.XtraReports.UI.ReportFooterBand();
             this.L_P1_HEADTITLE = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P1_APP1 = new DevExpress.XtraReports.UI.XRLabel();
-            this.L_P1_SIGN1 = new DevExpress.XtraReports.UI.XRLabel();
+            this.C_P1_SIGN_EMPNM = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P1_APP2 = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P1_SIGN2 = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P1_APP3 = new DevExpress.XtraReports.UI.XRLabel();
-            this.L_P1_SIGN3 = new DevExpress.XtraReports.UI.XRLabel();
+            this.C_P1_SIGN_APRVEMPNM = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P1_ZIP = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P1_ADDR = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P1_TEL = new DevExpress.XtraReports.UI.XRLabel();
@@ -271,11 +271,11 @@
             this.L_P2_CUSTSIGN = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P2_APP = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P2_APP1 = new DevExpress.XtraReports.UI.XRLabel();
-            this.L_P2_SIGN1 = new DevExpress.XtraReports.UI.XRLabel();
+            this.C_P2_SIGN_EMPNM = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P2_APP2 = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P2_SIGN2 = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P2_APP3 = new DevExpress.XtraReports.UI.XRLabel();
-            this.L_P2_SIGN3 = new DevExpress.XtraReports.UI.XRLabel();
+            this.C_P2_SIGN_APRVEMPNM = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P2_H_NO = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P2_H_ITEMCD = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P2_H_ITEMNM = new DevExpress.XtraReports.UI.XRLabel();
@@ -618,11 +618,11 @@
             this.ReportHeader.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
             this.L_P1_HEADTITLE,
             this.L_P1_APP1,
-            this.L_P1_SIGN1,
+            this.C_P1_SIGN_EMPNM,
             this.L_P1_APP2,
             this.L_P1_SIGN2,
             this.L_P1_APP3,
-            this.L_P1_SIGN3,
+            this.C_P1_SIGN_APRVEMPNM,
             this.L_P1_ZIP,
             this.L_P1_ADDR,
             this.L_P1_TEL,
@@ -863,11 +863,11 @@
             this.L_P2_CUSTSIGN,
             this.L_P2_APP,
             this.L_P2_APP1,
-            this.L_P2_SIGN1,
+            this.C_P2_SIGN_EMPNM,
             this.L_P2_APP2,
             this.L_P2_SIGN2,
             this.L_P2_APP3,
-            this.L_P2_SIGN3,
+            this.C_P2_SIGN_APRVEMPNM,
             this.L_P2_H_NO,
             this.L_P2_H_ITEMCD,
             this.L_P2_H_ITEMNM,
@@ -1233,21 +1233,21 @@
             this.L_P1_APP1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.L_P1_APP1.WordWrap = false;
             // 
-            // L_P1_SIGN1
+            // C_P1_SIGN_EMPNM
             // 
-            this.L_P1_SIGN1.BorderColor = System.Drawing.Color.Black;
-            this.L_P1_SIGN1.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.L_P1_SIGN1.BorderWidth = 0.5F;
-            this.L_P1_SIGN1.CanGrow = false;
-            this.L_P1_SIGN1.Dpi = 100F;
-            this.L_P1_SIGN1.LocationFloat = new DevExpress.Utils.PointFloat(602F, 18F);
-            this.L_P1_SIGN1.Multiline = true;
-            this.L_P1_SIGN1.Name = "L_P1_SIGN1";
-            this.L_P1_SIGN1.Padding = new DevExpress.XtraPrinting.PaddingInfo(3, 3, 0, 0, 100F);
-            this.L_P1_SIGN1.SizeF = new System.Drawing.SizeF(55F, 45F);
-            this.L_P1_SIGN1.Text = "";
-            this.L_P1_SIGN1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.L_P1_SIGN1.WordWrap = false;
+            this.C_P1_SIGN_EMPNM.BorderColor = System.Drawing.Color.Black;
+            this.C_P1_SIGN_EMPNM.Borders = DevExpress.XtraPrinting.BorderSide.All;
+            this.C_P1_SIGN_EMPNM.BorderWidth = 0.5F;
+            this.C_P1_SIGN_EMPNM.CanGrow = false;
+            this.C_P1_SIGN_EMPNM.Dpi = 100F;
+            this.C_P1_SIGN_EMPNM.LocationFloat = new DevExpress.Utils.PointFloat(602F, 18F);
+            this.C_P1_SIGN_EMPNM.Multiline = true;
+            this.C_P1_SIGN_EMPNM.Name = "C_P1_SIGN_EMPNM";
+            this.C_P1_SIGN_EMPNM.Padding = new DevExpress.XtraPrinting.PaddingInfo(3, 3, 0, 0, 100F);
+            this.C_P1_SIGN_EMPNM.SizeF = new System.Drawing.SizeF(55F, 45F);
+            this.C_P1_SIGN_EMPNM.Text = "";
+            this.C_P1_SIGN_EMPNM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.C_P1_SIGN_EMPNM.WordWrap = false;
             // 
             // L_P1_APP2
             // 
@@ -1299,21 +1299,21 @@
             this.L_P1_APP3.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.L_P1_APP3.WordWrap = false;
             // 
-            // L_P1_SIGN3
+            // C_P1_SIGN_APRVEMPNM
             // 
-            this.L_P1_SIGN3.BorderColor = System.Drawing.Color.Black;
-            this.L_P1_SIGN3.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.L_P1_SIGN3.BorderWidth = 0.5F;
-            this.L_P1_SIGN3.CanGrow = false;
-            this.L_P1_SIGN3.Dpi = 100F;
-            this.L_P1_SIGN3.LocationFloat = new DevExpress.Utils.PointFloat(712F, 18F);
-            this.L_P1_SIGN3.Multiline = true;
-            this.L_P1_SIGN3.Name = "L_P1_SIGN3";
-            this.L_P1_SIGN3.Padding = new DevExpress.XtraPrinting.PaddingInfo(3, 3, 0, 0, 100F);
-            this.L_P1_SIGN3.SizeF = new System.Drawing.SizeF(55F, 45F);
-            this.L_P1_SIGN3.Text = "";
-            this.L_P1_SIGN3.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.L_P1_SIGN3.WordWrap = false;
+            this.C_P1_SIGN_APRVEMPNM.BorderColor = System.Drawing.Color.Black;
+            this.C_P1_SIGN_APRVEMPNM.Borders = DevExpress.XtraPrinting.BorderSide.All;
+            this.C_P1_SIGN_APRVEMPNM.BorderWidth = 0.5F;
+            this.C_P1_SIGN_APRVEMPNM.CanGrow = false;
+            this.C_P1_SIGN_APRVEMPNM.Dpi = 100F;
+            this.C_P1_SIGN_APRVEMPNM.LocationFloat = new DevExpress.Utils.PointFloat(712F, 18F);
+            this.C_P1_SIGN_APRVEMPNM.Multiline = true;
+            this.C_P1_SIGN_APRVEMPNM.Name = "C_P1_SIGN_APRVEMPNM";
+            this.C_P1_SIGN_APRVEMPNM.Padding = new DevExpress.XtraPrinting.PaddingInfo(3, 3, 0, 0, 100F);
+            this.C_P1_SIGN_APRVEMPNM.SizeF = new System.Drawing.SizeF(55F, 45F);
+            this.C_P1_SIGN_APRVEMPNM.Text = "";
+            this.C_P1_SIGN_APRVEMPNM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.C_P1_SIGN_APRVEMPNM.WordWrap = false;
             // 
             // L_P1_ZIP
             // 
@@ -5002,21 +5002,21 @@
             this.L_P2_APP1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.L_P2_APP1.WordWrap = false;
             // 
-            // L_P2_SIGN1
+            // C_P2_SIGN_EMPNM
             // 
-            this.L_P2_SIGN1.BorderColor = System.Drawing.Color.Black;
-            this.L_P2_SIGN1.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.L_P2_SIGN1.BorderWidth = 0.5F;
-            this.L_P2_SIGN1.CanGrow = false;
-            this.L_P2_SIGN1.Dpi = 100F;
-            this.L_P2_SIGN1.LocationFloat = new DevExpress.Utils.PointFloat(632F, 18F);
-            this.L_P2_SIGN1.Multiline = true;
-            this.L_P2_SIGN1.Name = "L_P2_SIGN1";
-            this.L_P2_SIGN1.Padding = new DevExpress.XtraPrinting.PaddingInfo(3, 3, 0, 0, 100F);
-            this.L_P2_SIGN1.SizeF = new System.Drawing.SizeF(45F, 48F);
-            this.L_P2_SIGN1.Text = "";
-            this.L_P2_SIGN1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.L_P2_SIGN1.WordWrap = false;
+            this.C_P2_SIGN_EMPNM.BorderColor = System.Drawing.Color.Black;
+            this.C_P2_SIGN_EMPNM.Borders = DevExpress.XtraPrinting.BorderSide.All;
+            this.C_P2_SIGN_EMPNM.BorderWidth = 0.5F;
+            this.C_P2_SIGN_EMPNM.CanGrow = false;
+            this.C_P2_SIGN_EMPNM.Dpi = 100F;
+            this.C_P2_SIGN_EMPNM.LocationFloat = new DevExpress.Utils.PointFloat(632F, 18F);
+            this.C_P2_SIGN_EMPNM.Multiline = true;
+            this.C_P2_SIGN_EMPNM.Name = "C_P2_SIGN_EMPNM";
+            this.C_P2_SIGN_EMPNM.Padding = new DevExpress.XtraPrinting.PaddingInfo(3, 3, 0, 0, 100F);
+            this.C_P2_SIGN_EMPNM.SizeF = new System.Drawing.SizeF(45F, 48F);
+            this.C_P2_SIGN_EMPNM.Text = "";
+            this.C_P2_SIGN_EMPNM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.C_P2_SIGN_EMPNM.WordWrap = false;
             // 
             // L_P2_APP2
             // 
@@ -5068,21 +5068,21 @@
             this.L_P2_APP3.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.L_P2_APP3.WordWrap = false;
             // 
-            // L_P2_SIGN3
+            // C_P2_SIGN_APRVEMPNM
             // 
-            this.L_P2_SIGN3.BorderColor = System.Drawing.Color.Black;
-            this.L_P2_SIGN3.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.L_P2_SIGN3.BorderWidth = 0.5F;
-            this.L_P2_SIGN3.CanGrow = false;
-            this.L_P2_SIGN3.Dpi = 100F;
-            this.L_P2_SIGN3.LocationFloat = new DevExpress.Utils.PointFloat(722F, 18F);
-            this.L_P2_SIGN3.Multiline = true;
-            this.L_P2_SIGN3.Name = "L_P2_SIGN3";
-            this.L_P2_SIGN3.Padding = new DevExpress.XtraPrinting.PaddingInfo(3, 3, 0, 0, 100F);
-            this.L_P2_SIGN3.SizeF = new System.Drawing.SizeF(45F, 48F);
-            this.L_P2_SIGN3.Text = "";
-            this.L_P2_SIGN3.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.L_P2_SIGN3.WordWrap = false;
+            this.C_P2_SIGN_APRVEMPNM.BorderColor = System.Drawing.Color.Black;
+            this.C_P2_SIGN_APRVEMPNM.Borders = DevExpress.XtraPrinting.BorderSide.All;
+            this.C_P2_SIGN_APRVEMPNM.BorderWidth = 0.5F;
+            this.C_P2_SIGN_APRVEMPNM.CanGrow = false;
+            this.C_P2_SIGN_APRVEMPNM.Dpi = 100F;
+            this.C_P2_SIGN_APRVEMPNM.LocationFloat = new DevExpress.Utils.PointFloat(722F, 18F);
+            this.C_P2_SIGN_APRVEMPNM.Multiline = true;
+            this.C_P2_SIGN_APRVEMPNM.Name = "C_P2_SIGN_APRVEMPNM";
+            this.C_P2_SIGN_APRVEMPNM.Padding = new DevExpress.XtraPrinting.PaddingInfo(3, 3, 0, 0, 100F);
+            this.C_P2_SIGN_APRVEMPNM.SizeF = new System.Drawing.SizeF(45F, 48F);
+            this.C_P2_SIGN_APRVEMPNM.Text = "";
+            this.C_P2_SIGN_APRVEMPNM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.C_P2_SIGN_APRVEMPNM.WordWrap = false;
             // 
             // L_P2_H_NO
             // 
@@ -10580,11 +10580,11 @@
         private DevExpress.XtraReports.UI.ReportFooterBand ReportFooter;
         private DevExpress.XtraReports.UI.XRLabel L_P1_HEADTITLE;
         private DevExpress.XtraReports.UI.XRLabel L_P1_APP1;
-        private DevExpress.XtraReports.UI.XRLabel L_P1_SIGN1;
+        private DevExpress.XtraReports.UI.XRLabel C_P1_SIGN_EMPNM;
         private DevExpress.XtraReports.UI.XRLabel L_P1_APP2;
         private DevExpress.XtraReports.UI.XRLabel L_P1_SIGN2;
         private DevExpress.XtraReports.UI.XRLabel L_P1_APP3;
-        private DevExpress.XtraReports.UI.XRLabel L_P1_SIGN3;
+        private DevExpress.XtraReports.UI.XRLabel C_P1_SIGN_APRVEMPNM;
         private DevExpress.XtraReports.UI.XRLabel L_P1_ZIP;
         private DevExpress.XtraReports.UI.XRLabel L_P1_ADDR;
         private DevExpress.XtraReports.UI.XRLabel L_P1_TEL;
@@ -10818,11 +10818,11 @@
         private DevExpress.XtraReports.UI.XRLabel L_P2_CUSTSIGN;
         private DevExpress.XtraReports.UI.XRLabel L_P2_APP;
         private DevExpress.XtraReports.UI.XRLabel L_P2_APP1;
-        private DevExpress.XtraReports.UI.XRLabel L_P2_SIGN1;
+        private DevExpress.XtraReports.UI.XRLabel C_P2_SIGN_EMPNM;
         private DevExpress.XtraReports.UI.XRLabel L_P2_APP2;
         private DevExpress.XtraReports.UI.XRLabel L_P2_SIGN2;
         private DevExpress.XtraReports.UI.XRLabel L_P2_APP3;
-        private DevExpress.XtraReports.UI.XRLabel L_P2_SIGN3;
+        private DevExpress.XtraReports.UI.XRLabel C_P2_SIGN_APRVEMPNM;
         private DevExpress.XtraReports.UI.XRLabel L_P2_H_NO;
         private DevExpress.XtraReports.UI.XRLabel L_P2_H_ITEMCD;
         private DevExpress.XtraReports.UI.XRLabel L_P2_H_ITEMNM;

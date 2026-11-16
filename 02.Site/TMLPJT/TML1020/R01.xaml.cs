@@ -195,13 +195,13 @@ namespace TML1020
                 MODEL_G1.Clear();
                 MODEL_S1.SetValue("BARCODE", "");
 
-                // 입고된 LOT 마다 공정이동표(재고) 출력 (확인창 없이 POP 에서 고른 프린터로). 양식은 COMPJT\TMLPRINT 의 MTR_2
+                // 입고된 LOT 마다 공정이동표(입고) 양품 + 공정이동표(시편, 시편수량이 있을 때) 출력 (확인창 없이 POP 에서 고른 프린터로). 양식은 COMPJT\TMLPRINT 의 MTR_3
                 // 거래명세서는 납품등록(TML1010 R01) 에서 출력하므로 입고등록에서는 출력하지 않음
                 try
                 {
                     if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
                     {
-                        TMLPRINT.MTR_2 rptMove = new TMLPRINT.MTR_2(ds.Tables[0]);
+                        TMLPRINT.MTR_3 rptMove = new TMLPRINT.MTR_3(ds.Tables[0]);
                         rptMove.PrintDirect(ItsPrinter.BarcodePrintName);
                     }
                     ShowMessageBox("", "입고되었습니다.");

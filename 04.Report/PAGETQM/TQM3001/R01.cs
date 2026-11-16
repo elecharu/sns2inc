@@ -1,4 +1,5 @@
 ﻿// 2026-11-10 [CLAIM 통보서] 협력사 클레임등록(TQM3001_R01)에서 선택한 협력사·발생월의 클레임 (세로 A4 2장)
+// 2026-11-16 여러 협력사(CUSTCD 쉼표 구분)를 한 번에 출력 (클레임마다 2장)
 // 양식은 R01.Designer.cs (디자이너에서 보임). 1장 공문서, 2장 산출내역서.
 // 여기서는 C_ 로 시작하는 칸에 이름으로 값만 넣는다. 발생 손실 비용만 채우고
 // 이의제기·확정·CLAIM 비용·제반비용 산출 칸은 빈칸으로 둔다 (2026-11-10 사용자 지시).
@@ -14,7 +15,8 @@ namespace XtraRpt
     {
         private const int ItemRowCount = 17;   // 품목 줄 수 (양식 고정)
 
-        public R01(Dictionary<string, string> param)
+        // 디자이너용 (빈 양식)
+        public R01()
         {
             InitializeComponent();
 
@@ -24,16 +26,37 @@ namespace XtraRpt
                 label.CanGrow = false;
                 label.CanShrink = false;
             }
+        }
 
+        // CUSTCD = 귀책처코드 (쉼표 구분, 여러 개면 클레임마다 2장씩 한 PDF 에 이어 붙인다, 2026-11-16 사용자 요청)
+        public R01(Dictionary<string, string> param) : this()
+        {
             // 매개변수가 없으면 빈 양식만 출력 (레이아웃 확인용)
             if (param == null || !param.ContainsKey("SMONTH") || !param.ContainsKey("CUSTCD") || param["CUSTCD"] == "")
             {
                 return;
             }
 
+            string[] custCds = param["CUSTCD"].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+            // 첫 클레임은 이 리포트에, 나머지 클레임은 따로 만들어 장을 이어 붙인다 (TQM2001 공정이동표와 같은 방식)
+            FillReport(GET_DATA(param["SMONTH"], custCds[0]));
+            this.CreateDocument();
+
+            for (int i = 1; i < custCds.Length; i++)
+            {
+                R01 claim = new R01();
+                claim.FillReport(GET_DATA(param["SMONTH"], custCds[i]));
+                claim.CreateDocument();
+                this.Pages.AddRange(claim.Pages);
+            }
+        }
+
+        private DataSet GET_DATA(string smonth, string custCd)
+        {
             ItsMaria maria = new ItsMaria("TQM3001_R01", "PRINT");
-            maria.AddParam("SMONTH", param["SMONTH"]);
-            maria.AddParam("CUSTCD", param["CUSTCD"]);
+            maria.AddParam("SMONTH", smonth);
+            maria.AddParam("CUSTCD", custCd);
             DataSet ds = maria.CallProc();
             if (maria.IsError)
             {
@@ -42,10 +65,10 @@ namespace XtraRpt
 
             if (ds == null || ds.Tables.Count < 2 || ds.Tables[0].Rows.Count == 0)
             {
-                throw new InvalidOperationException("출력할 클레임이 없습니다.");
+                throw new InvalidOperationException("출력할 클레임이 없습니다. 귀책처: " + custCd);
             }
 
-            FillReport(ds);
+            return ds;
         }
 
         private void FillReport(DataSet ds)
@@ -56,6 +79,12 @@ namespace XtraRpt
                 SetCell("C_" + field, Value(head, field));
             }
             SetCell("C_RECVNM_P2", Value(head, "RECVNM"));
+
+            // 결재란: 작성(담당) = 담당자명, 승인 = 승인자명 (승인 안 된 클레임이면 빈칸)
+            SetCell("C_P1_SIGN_EMPNM", Value(head, "EMPNM"));
+            SetCell("C_P1_SIGN_APRVEMPNM", Value(head, "APRVEMPNM"));
+            SetCell("C_P2_SIGN_EMPNM", Value(head, "EMPNM"));
+            SetCell("C_P2_SIGN_APRVEMPNM", Value(head, "APRVEMPNM"));
             SetCell("C_PLANDATE", "■ 예정일자 : " + Value(head, "PLANDATE_TXT"));
             SetCell("C_CONFDATE", "□ 확정일자 : " + Value(head, "CONFDATE_TXT"));
             SetCell("C_OBJTEXT", "      내역 참조하시고 본 건에 대한 이의사항이 있으시면 " + Value(head, "OBJDATE_MD") + " 限 서면 제출하여 주시기 바랍니다.");
