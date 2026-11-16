@@ -6,22 +6,19 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid_GRP1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('설비그룹코드', 'EQMGUBUN', { width: 120, align: 'center' }),
         column.create('설비그룹', 'EQMGRPNM', { width: 120, align: 'center' }),
+        // 2026-11-16 [설비그룹 점검계획 탭] 승인 제거로 승인상태 컬럼 삭제
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
-        column.create('승인상태', 'APRVSTTNM', { width: 70, align: 'center', readOnly: true }),
         column.split()
     ]);
 
     // 2026-09-30 [설비그룹 점검계획 탭] 우측 상단 개정 이력(REV) 그리드 초기화
+    // 2026-11-16 [설비그룹 점검계획 탭] 승인 제거로 상태·승인자·처리일시 컬럼 삭제 (맨 위 최신 REV가 사용 리비전)
     ItsGrid.Create('grid_GRP_REV', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
-        column.create('상태', 'APRVSTTNM', { width: 60, align: 'center', readOnly: true }),
         column.create('개정내용', 'REMARK', { width: 260, readOnly: false }),
         column.create('작성자', 'REQEMP', { width: 80, align: 'center', readOnly: true }),
         column.create('수정일시', 'REQTIME', { width: 130, align: 'center', readOnly: true }),
-        column.create('승인자', 'APRVEMP', { width: 80, align: 'center', readOnly: true }),
-        column.create('처리일시', 'APRVTIME', { width: 130, align: 'center', readOnly: true }),
         column.create('REV번호', 'REVNUM', { hidden: true }),
-        column.create('상태코드', 'APRVSTT', { hidden: true }),
         column.split()
     ]);
 
@@ -63,22 +60,19 @@ ItsPage.Load = function () {
         column.create('설비구분', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
         column.create('설비대분류', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
         column.create('설비명', 'EQMNM', { width: 200 }),
+        // 2026-11-16 [설비별 점검계획 탭] 승인 제거로 승인상태 컬럼 삭제
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
-        column.create('승인상태', 'APRVSTTNM', { width: 65, align: 'center', readOnly: true }),
         column.split()
     ]);
 
     // 2026-09-30 [설비별 점검계획 탭] 우측 상단 개정 이력(REV) 그리드 초기화
+    // 2026-11-16 [설비별 점검계획 탭] 승인 제거로 상태·승인자·처리일시 컬럼 삭제 (맨 위 최신 REV가 사용 리비전)
     ItsGrid.Create('grid_EQM_REV', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
-        column.create('상태', 'APRVSTTNM', { width: 60, align: 'center', readOnly: true }),
         column.create('개정내용', 'REMARK', { width: 260, readOnly: false }),
         column.create('작성자', 'REQEMP', { width: 80, align: 'center', readOnly: true }),
         column.create('수정일시', 'REQTIME', { width: 130, align: 'center', readOnly: true }),
-        column.create('승인자', 'APRVEMP', { width: 80, align: 'center', readOnly: true }),
-        column.create('처리일시', 'APRVTIME', { width: 130, align: 'center', readOnly: true }),
         column.create('REV번호', 'REVNUM', { hidden: true }),
-        column.create('상태코드', 'APRVSTT', { hidden: true }),
         column.split()
     ]);
 
@@ -240,6 +234,11 @@ ItsButton.EventSearch = function () {
             maria.ShowErrMsg();
             return;
         }
+
+        // 2026-11-16 [정기점검 주기관리 탭] 점검주기 횟수를 다 채운 설비 행 배경색 (TQM1002_R01 주간출하계획 합격과 같은 BACKGROUND·LIGHTCYAN)
+        maria.store.data.forEach(function (row) {
+            row.BACKGROUND = GetCycleFullColor(function (f) { return row[f]; });
+        });
 
         ItsGrid.SetStore('grid9', maria.store);
         ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
@@ -644,6 +643,7 @@ ItsGrid.Event('grid9').onKeydown = function (rowIndex, field, keyCode) {
                 // 2026-10-02 [정기점검 주기관리 탭] 월 칸 점검자명·사원코드 함께 삭제
                 SetCycleEmp(rowIndex, field, '', '');
                 ItsGrid.CheckRow('grid9', rowIndex);
+                UpdateCycleFullColor(rowIndex);
             }
         }
     }
@@ -666,6 +666,7 @@ ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
             if (cellVal !== '') {
                 SetCycleEmp(rowIndex, field, '', '');
                 ItsGrid.CheckRow('grid9', rowIndex);
+                UpdateCycleFullColor(rowIndex);
             } else {
                 ItsMsg.Toast('점검자를 선택해주세요.');
             }
@@ -683,6 +684,7 @@ ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
             SetCycleEmp(rowIndex, field, emp.cd, emp.nm);
         }
         ItsGrid.CheckRow('grid9', rowIndex);
+        UpdateCycleFullColor(rowIndex);
         if (isAdd) ToastCycleGap(rowIndex, field);
     }
 };
@@ -715,6 +717,22 @@ function GetCycleMonths(getVal) {
         if ((getVal((m < 10 ? 'M0' : 'M') + m + 'CD') || '').toString().trim() !== '') arr.push(m);
     }
     return arr;
+}
+
+// 2026-11-16 [정기점검 주기관리 탭] 점검주기 횟수를 다 채우면 행 배경색 LIGHTCYAN, 아니면 ''
+// 주기 안(2년/1회면 앞 또는 뒤 1년 포함) 배정 횟수가 주기 횟수 이상이면 채운 것으로 봄, 주기 문구 해석 불가 등급은 색 없음
+function GetCycleFullColor(getVal) {
+    var n = parseInt(getVal('CHKCNT'), 10), k = parseInt(getVal('CHKYEAR'), 10);
+    if (!(n > 0) || !(k > 0)) return '';
+
+    var cnt = GetCycleMonths(getVal).length;
+    var prev = parseInt(getVal('PREVCNT'), 10) || 0, next = parseInt(getVal('NEXTCNT'), 10) || 0;
+    return (cnt + Math.max(prev, next) >= n) ? 'LIGHTCYAN' : '';
+}
+
+// 2026-11-16 [정기점검 주기관리 탭] 월 칸 변경 후 행 배경색 갱신
+function UpdateCycleFullColor(rowIndex) {
+    ItsGrid.SetRowBackColor('grid9', rowIndex, GetCycleFullColor(function (f) { return ItsGrid.GetValue('grid9', rowIndex, f); }));
 }
 
 // 2026-11-16 [정기점검 주기관리 탭] 대상 월(fields)을 새로 배정하면 점검주기 횟수를 넘을 때 안내 문구, 넘지 않으면 '' (저장 프로시저와 같은 기준)
@@ -1137,7 +1155,7 @@ ItsButton.Event('btn_CANCEL_ADD_EQM02').onClick = function () {
 
 /* 점검계획 개정 이력 (REV) */
 
-// 2026-09-30 [설비그룹·설비별 점검계획 탭] 우측 하단 정기점검 편집 가능 여부 (이전 REV 승인본 조회 중이면 false)
+// 2026-09-30 [설비그룹·설비별 점검계획 탭] 우측 하단 정기점검 편집 가능 여부 (이전 REV 조회 중이면 false)
 var isPlanEdit = { G: true, E: true };
 
 // 2026-09-30 [설비그룹·설비별 점검계획 탭] 좌측 목록에서 선택한 설비그룹코드·설비코드
@@ -1203,18 +1221,28 @@ function RefreshPlanRev(planTp, planCd) {
         }
     });
     ItsGrid.SetRowData(gridId, rowIndex, {
-        REVNM: data.REVNM,
-        APRVSTTNM: data.APRVSTTNM
+        REVNM: data.REVNM
     });
     return true;
 }
 
-// 2026-10-07 설비그룹·설비별 점검계획 탭: CRUD 후 항목 갱신 및 개정내용 포커스
+// 2026-10-07 설비그룹·설비별 점검계획 탭: CRUD 후 항목 갱신
+// 2026-11-16 승인 제거로 개정내용 입력 유도(FocusPlanRev) 삭제, 항목 변경은 최신 REV에 바로 반영
 function RefreshPlan(planTp, planCd) {
     if (RefreshPlanRev(planTp, planCd)) {
         var grid = ItsGrid.Get(planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV');
         SearchPlanRevItem(planTp, planCd, grid.collectionView.items.indexOf(GetLatestPlanRev(planTp)));
-        FocusPlanRev(planTp);
+    }
+}
+
+// 2026-11-16 리비전 갱신·삭제 후 REV 목록 다시 조회(맨 위 최신 REV 선택)하고 좌측 목록 REV 갱신
+function ReloadPlanRev(planTp, planCd) {
+    SearchPlanRev(planTp, planCd);
+    var gridId = planTp == 'G' ? 'grid_GRP1' : 'grid1';
+    var rowIndex = ItsGrid.GetCurrentIndex(gridId);
+    if (rowIndex >= 0 && GetPlanCd(planTp) == planCd) {
+        var rev = GetLatestPlanRev(planTp);
+        ItsGrid.SetRowData(gridId, rowIndex, { REVNM: rev ? rev.REVNM : '' });
     }
 }
 
@@ -1240,12 +1268,12 @@ function SearchPlanRev(planTp, planCd) {
     }
 }
 
-// 2026-09-30 [설비그룹·설비별 점검계획 탭] 선택한 REV의 우측 하단 정기점검 조회 (맨 위 REV: 작업본 편집, 이전 REV: 승인본 조회 전용)
+// 2026-09-30 [설비그룹·설비별 점검계획 탭] 선택한 REV의 우측 하단 정기점검 조회 (맨 위 최신 REV: 편집, 이전 REV: 조회 전용)
 // 2026-10-06 [개정 이력] R03 전용 프로시저로 REV 조회·저장 처리
 function SearchPlanRevItem(planTp, planCd, rowIndex) {
     var revGridId = planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV';
     var itemGridId = planTp == 'G' ? 'grid_GRP2' : 'grid3';
-    // 2026-10-07 설비그룹·설비별 점검계획 탭: 최신 승인본에서 변경 시 새 REV, 이전 REV는 조회 전용
+    // 2026-11-16 설비그룹·설비별 점검계획 탭: 최신 REV(사용 리비전)만 항목 편집, 이전 REV는 조회 전용
     var rev = GetLatestPlanRev(planTp);
     var isEdit = !rev || ItsGrid.GetValue(revGridId, rowIndex, 'REVNUM') == rev.REVNUM;
     var maria;
@@ -1256,7 +1284,7 @@ function SearchPlanRevItem(planTp, planCd, rowIndex) {
         return;
     }
 
-    if (!isEdit || (rev && rev.APRVSTT == 'A')) {
+    if (!isEdit) {
         maria = new ItsMaria('EQM1001_R03', 'LIST_PLAN_REV_ITEM');
         maria.AddParam('PLANTP', planTp);
         maria.AddParam('PLANCD', planCd);
@@ -1280,12 +1308,10 @@ function SearchPlanRevItem(planTp, planCd, rowIndex) {
 }
 
 // 2026-09-30 [설비그룹·설비별 점검계획 탭] 우측 하단 복사·추가·저장·삭제 버튼 표시·숨김 및 제목에 조회 중인 REV 표시
-// 2026-10-07 설비그룹·설비별 점검계획 탭: 최신 승인 REV에서 새 개정 허용
+// 2026-11-16 승인 제거: 최신 REV를 볼 때만 항목 편집 버튼 표시, 개정내용 저장·리비전 갱신·삭제는 항상 표시
 function SetPlanEditButton(planTp, isEdit, revNm) {
     var prefix = planTp == 'G' ? 'bdiv_GRP_btn_' : 'bdiv3_btn_';
     var arrBtn = ['COPY', 'ADD', 'SAVE', 'DEL'];
-    var rev = GetLatestPlanRev(planTp);
-    var isApproved = isEdit && rev && rev.APRVSTT == 'A';
 
     isPlanEdit[planTp] = isEdit;
     for (var i = 0; i < arrBtn.length; i++) {
@@ -1295,37 +1321,30 @@ function SetPlanEditButton(planTp, isEdit, revNm) {
             ItsButton.Hide(prefix + arrBtn[i]);
         }
     }
-
-    if (isEdit && !isApproved) {
-        ItsButton.Show(planTp == 'G' ? 'btn_GRP_REV_SAVE' : 'btn_EQM_REV_SAVE');
-    } else {
-        ItsButton.Hide(planTp == 'G' ? 'btn_GRP_REV_SAVE' : 'btn_EQM_REV_SAVE');
-    }
 }
 
-// 2026-09-30 [설비그룹·설비별 점검계획 탭] 우측 상단 진행 중 REV 개정내용 저장
-// 2026-10-06 [개정 이력] R03 전용 프로시저로 REV 조회·저장 처리
+// 2026-09-30 [설비그룹·설비별 점검계획 탭] 우측 상단 개정내용 저장
+// 2026-11-16 승인 제거: 선택한 REV의 개정내용만 저장 (승인 상태 변경 없음)
 function SavePlanRev(planTp) {
-    var gridId = planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV';
-    var planCd = GetPlanCd(planTp);
-    ItsGrid.FinishEditing(gridId);
-    // 2026-10-02 [개정 이력 그리드] 진행 중 REV 확인은 프로시저(SAVE_PLAN_REV)에서 처리 (REV가 없으면 빈 값 전달)
-    var rev = GetLatestPlanRev(planTp);
+    var rev = GetPlanRev(planTp);
+    if (!rev) {
+        return;
+    }
 
     // 2026-10-07 설비그룹·설비별 점검계획 탭: 개정내용 저장, 선택 위치 유지
     var save = function () {
         var maria = new ItsMaria('EQM1001_R03', 'SAVE_PLAN_REV');
-        maria.AddParam('PLANTP', planTp);
-        maria.AddParam('PLANCD', planCd || '');
-        maria.AddParam('REVNUM', rev ? rev.REVNUM : '');
-        maria.AddParam('REMARK', rev ? (rev.REMARK || '') : '');
+        maria.AddParam('PLANTP', rev.planTp);
+        maria.AddParam('PLANCD', rev.planCd);
+        maria.AddParam('REVNUM', String(rev.revNum));
+        maria.AddParam('REMARK', rev.remark);
         maria.CallProc();
         if (maria.isError) {
             maria.ShowErrMsg();
             return;
         }
         ItsMsg.Toast('개정내용 저장이 완료되었습니다.');
-        RefreshPlanRev(planTp, planCd);
+        ReloadPlanRevKeep(rev);
     };
     if (planTp == 'G') {
         // 2026-10-08 [설비그룹 점검계획 탭] 개정내용 저장 확인 메시지
@@ -1335,16 +1354,64 @@ function SavePlanRev(planTp) {
     }
 }
 
-// 2026-09-30 [설비그룹·설비별 점검계획 탭] 정기점검 저장 후 진행 중 REV 개정내용 칸으로 이동
-function FocusPlanRev(planTp) {
-    var gridId = planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV';
-    var grid = ItsGrid.Get(gridId);
-    var rev = GetLatestPlanRev(planTp);
-    if (rev && rev.APRVSTT != 'A') {
-        ItsGrid.Focus(gridId, grid.collectionView.items.indexOf(rev), 'REMARK');
-        // 2026-10-08 [설비그룹·설비별 점검계획 탭] 정기점검 저장 후 개정내용 입력 유도 알림 간소화
-        ItsMsg.Toast('개정내용을 입력 후 저장해주세요.');
+// 2026-11-16 개정내용 저장 후 REV 목록 다시 조회하고 저장한 REV 선택 유지
+function ReloadPlanRevKeep(rev) {
+    var gridId = rev.planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV';
+    ItsGrid.Setkey(gridId, 'REVNUM', rev.revNum);
+    SearchPlanRev(rev.planTp, rev.planCd);
+}
+
+// 2026-11-16 리비전 갱신 (TQC1001_R02 방식): 선택 REV의 정기점검 항목을 복사해 다음 번호 REV 생성, 새 REV가 사용 리비전
+function RenewPlanRev(planTp) {
+    var planCd = GetPlanCd(planTp);
+    if (!planCd) {
+        ItsMsg.Toast(planTp == 'G' ? '설비그룹을 선택해주세요.' : '설비를 선택해주세요.');
+        return;
     }
+
+    var gridId = planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV';
+    ItsGrid.FinishEditing(gridId);
+    var idx = ItsGrid.GetCurrentIndex(gridId);
+    var hasRev = ItsGrid.Length(gridId) > 0 && idx >= 0;
+    var revNum = hasRev ? String(ItsGrid.GetValue(gridId, idx, 'REVNUM')) : '';
+    var msg = hasRev ? '[' + planCd + '] ' + ItsGrid.GetValue(gridId, idx, 'REVNM') + ' 기준으로 리비전을 갱신하시겠습니까?'
+        : '[' + planCd + '] 첫 리비전을 만드시겠습니까?';
+
+    ItsMsg.Confirm(msg, function () {
+        var maria = new ItsMaria('EQM1001_R03', 'RENEW_REV');
+        maria.AddParam('PLANTP', planTp);
+        maria.AddParam('PLANCD', planCd);
+        maria.AddParam('REVNUM', revNum);
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ReloadPlanRev(planTp, planCd);
+        ItsMsg.Toast('REV.' + maria.store.data[0]['REVNUM'] + ' 리비전으로 갱신되었습니다.');
+    });
+}
+
+// 2026-11-16 리비전 삭제 (TQC1001_R02 방식): 점검 실적이 있는 REV는 프로시저에서 차단, 남은 최신 REV가 사용 리비전
+function DeletePlanRev(planTp) {
+    var rev = GetPlanRev(planTp);
+    if (!rev) {
+        return;
+    }
+
+    ItsMsg.Confirm('[' + rev.planCd + '] ' + rev.revNm + ' 리비전을 삭제하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_R03', 'DEL_REV');
+        maria.AddParam('PLANTP', rev.planTp);
+        maria.AddParam('PLANCD', rev.planCd);
+        maria.AddParam('REVNUM', String(rev.revNum));
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ReloadPlanRev(rev.planTp, rev.planCd);
+        ItsMsg.Toast(ItsMsg.CommonMsg.DeleteComplete());
+    });
 }
 
 // 2026-09-30 [설비그룹 점검계획 탭] REV 선택 시 우측 하단 정기점검 조회
@@ -1357,30 +1424,30 @@ ItsGrid.Event('grid_EQM_REV').onSelect = function (rowIndex, field) {
     SearchPlanRevItem('E', GetPlanCd('E'), rowIndex);
 };
 
-// 2026-09-30 [설비그룹 점검계획 탭] 개정내용은 새로 등록된 진행 중(대기) REV 행(맨 위)에서만 입력, 승인된 REV 행은 수정 불가
+// 2026-09-30 [설비그룹 점검계획 탭] REV 그리드는 개정내용만 입력
+// 2026-11-16 승인 제거로 모든 REV 행의 개정내용 입력 허용 ([개정내용 저장]은 선택한 REV만 저장)
 ItsGrid.Event('grid_GRP_REV').onBeginningEdit = function (rowIndex, field, value) {
-    var rev = GetLatestPlanRev('G');
-    if (!rev || field != 'REMARK' || ItsGrid.GetValue('grid_GRP_REV', rowIndex, 'REVNUM') != rev.REVNUM || rev.APRVSTT == 'A') {
+    if (field != 'REMARK') {
         throw '';
     }
 };
 
-// 2026-09-30 [설비별 점검계획 탭] 개정내용은 새로 등록된 진행 중(대기) REV 행(맨 위)에서만 입력, 승인된 REV 행은 수정 불가
+// 2026-09-30 [설비별 점검계획 탭] REV 그리드는 개정내용만 입력
+// 2026-11-16 승인 제거로 모든 REV 행의 개정내용 입력 허용 ([개정내용 저장]은 선택한 REV만 저장)
 ItsGrid.Event('grid_EQM_REV').onBeginningEdit = function (rowIndex, field, value) {
-    var rev = GetLatestPlanRev('E');
-    if (!rev || field != 'REMARK' || ItsGrid.GetValue('grid_EQM_REV', rowIndex, 'REVNUM') != rev.REVNUM || rev.APRVSTT == 'A') {
+    if (field != 'REMARK') {
         throw '';
     }
 };
 
-// 2026-09-30 [설비그룹 점검계획 탭] 이전 REV 승인본 조회 중에는 우측 하단 정기점검 편집 불가
+// 2026-09-30 [설비그룹 점검계획 탭] 이전 REV 조회 중에는 우측 하단 정기점검 편집 불가
 ItsGrid.Event('grid_GRP2').onBeginningEdit = function (rowIndex, field, value) {
     if (!isPlanEdit.G) {
         throw '';
     }
 };
 
-// 2026-09-30 [설비별 점검계획 탭] 이전 REV 승인본 조회 중에는 우측 하단 정기점검 편집 불가
+// 2026-09-30 [설비별 점검계획 탭] 이전 REV 조회 중에는 우측 하단 정기점검 편집 불가
 ItsGrid.Event('grid3').onBeginningEdit = function (rowIndex, field, value) {
     if (!isPlanEdit.E) {
         throw '';
@@ -1415,42 +1482,6 @@ function GetPlanRev(planTp, rowIndex) {
     };
 }
 
-// 2026-10-06 개정 이력: 승인 확인
-function SavePlanStatus(planTp) {
-    var rev = GetPlanRev(planTp);
-    if (!rev) {
-        return;
-    }
-    // 2026-10-06 개정 이력: 개정내용이 없으면 승인 차단
-    if (!rev.remark.trim()) {
-        ItsMsg.Toast('개정내용 저장 후 승인해주세요.');
-        return;
-    }
-    SavePlanRevStatus(rev);
-}
-
-// 2026-10-06 개정 이력: 선택 REV 승인 저장 후 대상 목록 갱신
-function SavePlanRevStatus(rev) {
-    ItsMsg.Confirm('[' + rev.planCd + '] ' + rev.revNm + '을 승인하시겠습니까?', function () {
-        var maria = new ItsMaria('EQM1001_R03', 'SAVE_PLAN_STATUS');
-        maria.AddParam('PLANTP', rev.planTp);
-        maria.AddParam('PLANCD', rev.planCd);
-        maria.AddParam('REVNUM', rev.revNum);
-        maria.AddParam('REMARK', rev.remark);
-        maria.AddParam('APRVSTT', 'A');
-        maria.CallProc();
-        if (maria.isError) {
-            maria.ShowErrMsg();
-            return;
-        }
-        // 2026-10-07 개정 이력: 선택 위치를 유지하며 처리한 REV만 갱신
-        if (RefreshPlanRev(rev.planTp, rev.planCd)) {
-            SearchPlanRevItem(rev.planTp, rev.planCd, ItsGrid.GetCurrentIndex(rev.planTp == 'G' ? 'grid_GRP_REV' : 'grid_EQM_REV'));
-        }
-        ItsMsg.Toast(rev.revNm + ' 승인 처리가 완료되었습니다.');
-    });
-}
-
 // 2026-10-06 개정 이력: 계획서 출력
 // 2026-10-07 설비그룹·설비별 점검계획 탭: 선택 대상의 최신 계획·전체 개정이력 출력
 function PrintPlanRev(planTp) {
@@ -1473,12 +1504,16 @@ function PrintPlanRev(planTp) {
     }
 }
 
-// 2026-10-06 설비그룹 점검계획 탭: 승인·계획서 출력 버튼
-ItsButton.Event('btn_GRP_APPROVE').onClick = function () { SavePlanStatus('G'); };
+// 2026-10-06 설비그룹 점검계획 탭: 계획서 출력 버튼
+// 2026-11-16 승인 버튼 삭제, 리비전 갱신·삭제 버튼 추가
+ItsButton.Event('btn_GRP_REV_RENEW').onClick = function () { RenewPlanRev('G'); };
+ItsButton.Event('btn_GRP_REV_DEL').onClick = function () { DeletePlanRev('G'); };
 ItsButton.Event('btn_GRP_PLAN_RPT').onClick = function () { PrintPlanRev('G'); };
 
-// 2026-10-06 설비별 점검계획 탭: 승인·계획서 출력 버튼
-ItsButton.Event('btn_EQM_APPROVE').onClick = function () { SavePlanStatus('E'); };
+// 2026-10-06 설비별 점검계획 탭: 계획서 출력 버튼
+// 2026-11-16 승인 버튼 삭제, 리비전 갱신·삭제 버튼 추가
+ItsButton.Event('btn_EQM_REV_RENEW').onClick = function () { RenewPlanRev('E'); };
+ItsButton.Event('btn_EQM_REV_DEL').onClick = function () { DeletePlanRev('E'); };
 ItsButton.Event('btn_EQM_PLAN_RPT').onClick = function () { PrintPlanRev('E'); };
 
 // 2026-11-09 정기점검 주기관리 탭: 조회년도·설비 조건의 월별 점검계획 출력 (점검자가 배정된 월만)

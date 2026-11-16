@@ -31,7 +31,9 @@
                         <Its:div runat="server" Type="SplitTop">
                             <Its:label runat="server" Text="■ 개정 이력 (REV)" Bold="true" MarginLeft="10"/>
                             <Its:button runat="server" Label="개정내용 저장" ID="btn_GRP_REV_SAVE" MarginLeft="40" BackColor="CustomButton2" />
-                            <Its:button runat="server" Label="승인" ID="btn_GRP_APPROVE" MarginLeft="10" BackColor="CustomButton" />
+                            <%-- 2026-11-16 승인 버튼 삭제, TQC1001_R02 방식 리비전 갱신·삭제 --%>
+                            <Its:button runat="server" Label="리비전 갱신" ID="btn_GRP_REV_RENEW" MarginLeft="10" BackColor="CustomButton" />
+                            <Its:button runat="server" Label="리비전 삭제" ID="btn_GRP_REV_DEL" MarginLeft="10" BackColor="CustomButton3" />
                         </Its:div>
 
                         <Its:split runat="server" Type="Horizon" Resizeable="false" />
@@ -76,7 +78,7 @@
             <Its:split runat="server" Type="Horizon" Resizeable="false"/>                
 
             <Its:div runat="server" Type="SplitDown">
-                <Its:div runat="server" Type="SplitLeft" LeftWidthPc="26">
+                <Its:div runat="server" Type="SplitLeft" LeftWidthPc="34">
                     <Its:grid runat="server" ID="grid1" />   
                 </Its:div>
                 
@@ -87,7 +89,9 @@
                         <Its:div runat="server" Type="SplitTop">
                             <Its:label runat="server" Text="■ 개정 이력 (REV)" Bold="true" MarginLeft="10"/>
                             <Its:button runat="server" Label="개정내용 저장" ID="btn_EQM_REV_SAVE" MarginLeft="40" BackColor="CustomButton2" />
-                            <Its:button runat="server" Label="승인" ID="btn_EQM_APPROVE" MarginLeft="10" BackColor="CustomButton" />
+                            <%-- 2026-11-16 승인 버튼 삭제, TQC1001_R02 방식 리비전 갱신·삭제 --%>
+                            <Its:button runat="server" Label="리비전 갱신" ID="btn_EQM_REV_RENEW" MarginLeft="10" BackColor="CustomButton" />
+                            <Its:button runat="server" Label="리비전 삭제" ID="btn_EQM_REV_DEL" MarginLeft="10" BackColor="CustomButton3" />
                         </Its:div>
 
                         <Its:split runat="server" Type="Horizon" Resizeable="false" />

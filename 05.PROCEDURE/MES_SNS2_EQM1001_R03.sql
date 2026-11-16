@@ -7,11 +7,8 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R03`(
 -- 			2026-10-20 					한성수	설비 목록 조회 잉여 컬럼 및 조인 정리
 -- 			2026-10-23 					한성수	리비전 헤더 점검구분('02') 기본값 저장
 -- 			2026-11-06 					한성수	계획서 출력 특이사항 연동 및 점검자명 조회 최적화
--- 			2026-11-09 					한성수	정기점검('02') 리비전 분리·조회, 월별 점검계획 출력(CALL_CYCLE_RPT) 추가 및 삭제 검증 보강
--- 			2026-11-16 					한성수	설비별 점검계획·정기점검 주기관리 설비 목록 공장(2공장 기본)·작업장·설비구분·설비대분류 컬럼 및 검색 조건 추가
--- 			2026-11-16 					한성수	정기점검 주기관리 조회 시 실적 있는 점검자 배정 월(LOCKMM) 반환 (화면 덮어쓰기 차단용)
--- 			2026-11-16 					한성수	정기점검 주기관리 조회에 설비등급별 점검주기(사용중 설비등급기준 리비전) 추가
--- 			2026-11-16 					한성수	점검주기 문구 해석(N년/M회) 기반 월별 점검자 초과 배정 검증 및 주기 안 앞뒤 년도 배정 횟수 조회
+-- 			2026-11-09 					한성수	정기점검('02') REV 분리·조회, 월별 점검계획 출력 추가 및 삭제 검증 보강
+-- 			2026-11-16 					한성수	설비 분류·공장 필터 추가, 주기관리 잠금·등급별 주기 검증, 승인 제거 및 REV 갱신·삭제 추가
 -- *****************************************************************************
   IN $FANO           VARCHAR(20),
   IN $FANO_COPY      VARCHAR(20),
@@ -124,13 +121,17 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     SET _$REVCD = (SELECT REVCD FROM MSTEQMREV_HEADER WHERE CHKTP = '02' AND PLANTP = _$PLANTP AND PLANCD = _$PLANCD ORDER BY REVNUM DESC LIMIT 1 FOR UPDATE);
 
     IF _$REVCD IS NOT NULL THEN
-      SELECT REVNUM, APRVSTT INTO _$REVNUM, _$APRVSTT
-      FROM MSTEQMREV_HEADER
-      WHERE REVCD = _$REVCD;
+      SET _$REVNUM = (SELECT REVNUM FROM MSTEQMREV_HEADER WHERE REVCD = _$REVCD);
     END IF;
 
     IF COALESCE($REVNUM, '') <> '' AND ($REVNUM NOT REGEXP '^[0-9]+$' OR _$REVNUM IS NULL OR _$REVNUM <> CAST($REVNUM AS UNSIGNED)) THEN
       CALL COMERR('점검계획이 변경되었습니다. 최신 REV를 다시 조회해주세요.');
+      LEAVE PROC;
+    END IF;
+
+    -- 점검 실적이 등록된 REV는 항목 변경 불가 (계획서 REV와 실제 점검한 REV 항목 일치 유지, 리비전 갱신 후 새 REV에서 수정)
+    IF _$REVCD IS NOT NULL AND EXISTS (SELECT 1 FROM CHKRSTEQM WHERE REVCD = _$REVCD OR GRPREVCD = _$REVCD LIMIT 1) THEN
+      CALL COMERR(CONCAT('[', _$PLANCD, '] REV.', _$REVNUM, '에 점검 실적이 있어 항목을 변경할 수 없습니다. [리비전 갱신] 후 새 REV에서 수정해주세요.'));
       LEAVE PROC;
     END IF;
 
@@ -157,9 +158,9 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       LEAVE PROC;
     END IF;
 
-    -- 승인본은 그대로 두고 변경할 다음 REV에 항목을 복사
-    IF _$REVCD IS NULL OR _$APRVSTT = 'A' THEN
-      SET _$OLDREVCD = _$REVCD;
+    -- 항목 변경은 최신 REV(사용 리비전)에 바로 반영, 새 개정은 [리비전 갱신](RENEW_REV)으로 생성
+    -- REV가 하나도 없으면 첫 REV(제정)를 만들어 반영
+    IF _$REVCD IS NULL THEN
       SET _$REVCD    = GETKEY('REVCD');
       SET _$NEWREV   = 1;
 
@@ -167,18 +168,10 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       SET _$NEXTREVNUM = (SELECT COALESCE(MAX(REVNUM) + 1, 0) FROM MSTEQMREV_HEADER WHERE PLANTP = _$PLANTP AND PLANCD = _$PLANCD);
 
       INSERT INTO MSTEQMREV_HEADER (
-        REVCD, CHKTP, PLANTP, PLANCD, REVNUM, RTIME, REMP, RPRG
+        REVCD, CHKTP, PLANTP, PLANCD, REVNUM, REQTIME, REQEMP, REQPRG, RTIME, REMP, RPRG
       ) VALUES (
-        _$REVCD, '02', _$PLANTP, _$PLANCD, _$NEXTREVNUM, CALLTIME(), CALLEMP(), CALLPRG()
+        _$REVCD, '02', _$PLANTP, _$PLANCD, _$NEXTREVNUM, CALLTIME(), CALLEMP(), CALLPRG(), CALLTIME(), CALLEMP(), CALLPRG()
       );
-
-      INSERT INTO MSTEQMREV_DETAIL (
-        REVCD, CHKKNDCD, CHKCYCLE, SORTNO, CHKKNDNM, CHKLOC, CHKMTH, CHKVALTP, REMARK, RTIME, REMP, RPRG
-      )
-      SELECT _$REVCD, CHKKNDCD, CHKCYCLE, SORTNO, CHKKNDNM, CHKLOC, CHKMTH, CHKVALTP, REMARK,
-             CALLTIME(), CALLEMP(), CALLPRG()
-      FROM MSTEQMREV_DETAIL
-      WHERE REVCD = _$OLDREVCD;
     END IF;
 
     CASE SUBSTRING_INDEX($CALLTYPE, '_', 1)
@@ -282,10 +275,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 
     IF _$PLAN_CHANGED > 0 THEN
       UPDATE MSTEQMREV_HEADER
-      SET REQTIME = '',
-          REQEMP  = '',
-          REQPRG  = '',
-          MTIME   = CALLTIME(),
+      SET MTIME   = CALLTIME(),
           MEMP    = CALLEMP(),
           MPRG    = CALLPRG()
       WHERE REVCD = _$REVCD;
@@ -307,11 +297,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
            COMTYPE.TPNM AS EQMGRPNM,
            COMTYPE.SORTNO AS EQMGRPSORTNO,
            PLAN_REV.REVCD,
-           COALESCE(CONCAT('REV.', PLAN_REV.REVNUM), '') AS REVNM,
-           CASE WHEN PLAN_REV.REVCD IS NULL OR PLAN_REV.REVCD = '' THEN ''
-                WHEN PLAN_REV.APRVSTT = 'A' THEN '승인'
-                ELSE '대기' END AS APRVSTTNM,
-           COALESCE(PLAN_REV.APRVSTT, '') AS APRVSTT
+           COALESCE(CONCAT('REV.', PLAN_REV.REVNUM), '') AS REVNM
     FROM COMTYPE
     INNER JOIN (
       SELECT DISTINCT EQMGUBUN
@@ -437,11 +423,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
            IFNULL(MSTEQM.LINECD, '')    AS LINECD,
            IFNULL(MSTEQM.EQMTP, '')     AS EQMTP,
            IFNULL(MSTEQM.EQMGROUP1, '') AS EQMGROUP1,
-           COALESCE(CONCAT('REV.', PLAN_REV.REVNUM), '') AS REVNM,
-           CASE WHEN PLAN_REV.REVCD IS NULL OR PLAN_REV.REVCD = '' THEN ''
-                WHEN PLAN_REV.APRVSTT = 'A' THEN '승인'
-                ELSE '대기' END AS APRVSTTNM,
-           COALESCE(PLAN_REV.APRVSTT, '') AS APRVSTT
+           COALESCE(CONCAT('REV.', PLAN_REV.REVNUM), '') AS REVNM
     FROM MSTEQM
     LEFT JOIN (
       SELECT PLANCD, MAX(REVNUM) AS REVNUM
@@ -551,23 +533,15 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 
   -- *****************************************************************************
 
-  WHEN 'LIST_PLAN_REV' THEN -- 점검계획 리비전 이력 조회
+  WHEN 'LIST_PLAN_REV' THEN -- 점검계획 리비전 이력 조회 (맨 위 최신 REV가 사용 리비전)
     SELECT CONCAT('REV.', MSTEQMREV_HEADER.REVNUM) AS REVNM,
-           CASE MSTEQMREV_HEADER.APRVSTT
-             WHEN 'A' THEN '승인'
-             ELSE '대기' END AS APRVSTTNM,
            MSTEQMREV_HEADER.REMARK,
            COALESCE(REQ_EMP.EMPNM, MSTEQMREV_HEADER.REQEMP) AS REQEMP,
            MSTEQMREV_HEADER.REQTIME,
-           CASE WHEN MSTEQMREV_HEADER.APRVSTT = 'A' THEN COALESCE(APRV_EMP.EMPNM, MSTEQMREV_HEADER.APRVEMP) ELSE '' END AS APRVEMP,
-           CASE WHEN MSTEQMREV_HEADER.APRVSTT = 'A' THEN MSTEQMREV_HEADER.APRVTIME ELSE '' END AS APRVTIME,
-           MSTEQMREV_HEADER.REVNUM,
-           MSTEQMREV_HEADER.APRVSTT
+           MSTEQMREV_HEADER.REVNUM
     FROM MSTEQMREV_HEADER
     LEFT JOIN MSTEMP REQ_EMP
       ON REQ_EMP.EMPCD = MSTEQMREV_HEADER.REQEMP
-    LEFT JOIN MSTEMP APRV_EMP
-      ON APRV_EMP.EMPCD = MSTEQMREV_HEADER.APRVEMP
     WHERE MSTEQMREV_HEADER.CHKTP = '02'
       AND MSTEQMREV_HEADER.PLANTP = $PLANTP
       AND MSTEQMREV_HEADER.PLANCD = $PLANCD
@@ -575,7 +549,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 
   -- *****************************************************************************
 
-  WHEN 'LIST_PLAN_REV_ITEM' THEN -- 리비전 승인본 점검 항목 조회
+  WHEN 'LIST_PLAN_REV_ITEM' THEN -- 선택 리비전 점검 항목 조회
     SELECT MSTEQMREV_DETAIL.CHKKNDCD,
            MSTEQMREV_DETAIL.CHKKNDNM,
            MSTEQMREV_DETAIL.CHKLOC,
@@ -597,27 +571,16 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 
   -- *****************************************************************************
 
-  WHEN 'SAVE_PLAN_REV' THEN -- 개정내용 저장 및 승인 재요청
+  WHEN 'SAVE_PLAN_REV' THEN -- 선택 REV 개정내용 저장 (개정내용·작성자·수정일시만 반영)
     IF COALESCE($PLANTP, '') NOT IN ('G', 'E') OR COALESCE($PLANCD, '') = '' OR COALESCE($REVNUM, '') NOT REGEXP '^[0-9]+$' THEN
-      CALL COMERR('저장·재요청할 최신 REV를 선택해주세요.');
+      CALL COMERR('개정내용을 저장할 리비전을 선택해주세요.');
       LEAVE PROC;
     END IF;
 
-    IF NOT EXISTS (SELECT 1 FROM MSTEQMREV_HEADER WHERE CHKTP = '02' AND PLANTP = $PLANTP AND PLANCD = $PLANCD LIMIT 1) THEN
-      CALL COMERR('저장·재요청할 REV가 없습니다. 점검항목을 먼저 등록해주세요.');
-      LEAVE PROC;
-    END IF;
+    SET _$REVCD = (SELECT REVCD FROM MSTEQMREV_HEADER WHERE CHKTP = '02' AND PLANTP = $PLANTP AND PLANCD = $PLANCD AND REVNUM = $REVNUM LIMIT 1 FOR UPDATE);
 
-    SELECT REVCD, REVNUM, APRVSTT INTO _$REVCD, _$REVNUM, _$APRVSTT
-    FROM MSTEQMREV_HEADER
-    WHERE CHKTP = '02'
-      AND PLANTP = $PLANTP
-      AND PLANCD = $PLANCD
-    ORDER BY REVNUM DESC
-    LIMIT 1 FOR UPDATE;
-
-    IF _$REVNUM IS NULL OR _$REVNUM <> CAST($REVNUM AS UNSIGNED) OR _$APRVSTT = 'A' THEN
-      CALL COMERR('최신 대기 REV만 개정내용을 저장할 수 있습니다.');
+    IF _$REVCD IS NULL THEN
+      CALL COMERR('선택한 리비전이 없습니다. 다시 조회해주세요.');
       LEAVE PROC;
     END IF;
 
@@ -627,100 +590,103 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     END IF;
 
     UPDATE MSTEQMREV_HEADER
-    SET REMARK    = $REMARK,
-        APRVSTT   = '',
-        APRVTIME  = '',
-        APRVEMP   = '',
-        APRVPRG   = '',
-        REQTIME   = CALLTIME(),
-        REQEMP    = CALLEMP(),
-        REQPRG    = CALLPRG(),
-        MTIME     = CALLTIME(),
-        MEMP      = CALLEMP(),
-        MPRG      = CALLPRG()
+    SET REMARK  = $REMARK,
+        REQTIME = CALLTIME(),
+        REQEMP  = CALLEMP(),
+        REQPRG  = CALLPRG(),
+        MTIME   = CALLTIME(),
+        MEMP    = CALLEMP(),
+        MPRG    = CALLPRG()
     WHERE REVCD = _$REVCD;
 
   -- *****************************************************************************
 
-  WHEN 'SAVE_PLAN_STATUS' THEN -- 점검계획 승인 상태 저장
-    IF COALESCE($PLANCD, '') = '' THEN
-      CALL COMERR('승인할 점검계획을 선택해주세요.');
+  WHEN 'RENEW_REV' THEN -- 리비전 갱신 (TQC1001_R02 방식: 선택 REV의 정기점검 항목을 복사해 다음 번호 REV 생성, 최신 REV가 사용 리비전)
+    IF COALESCE($PLANTP, '') NOT IN ('G', 'E') OR COALESCE($PLANCD, '') = '' THEN
+      CALL COMERR('설비그룹 또는 설비를 선택해주세요.');
       LEAVE PROC;
     END IF;
 
-    IF $PLANTP IS NULL OR $PLANTP NOT IN ('G', 'E') THEN
-      CALL COMERR('승인 대상이 올바르지 않습니다.');
+    -- 같은 대상의 동시 변경은 기준정보 행에서 직렬화
+    IF $PLANTP = 'G' THEN
+      SET _$LOCKKEY = (SELECT TPCD FROM COMTYPE WHERE GPCD = 'FM116' AND TPCD = $PLANCD AND USEYN = 'Y' LIMIT 1 FOR UPDATE);
+
+      IF NOT EXISTS (SELECT 1 FROM MSTEQM WHERE EQMGUBUN = $PLANCD AND USEYN = 'Y' LIMIT 1) THEN
+        SET _$LOCKKEY = NULL;
+      END IF;
+    ELSE
+      SET _$LOCKKEY = (SELECT FANO FROM MSTEQM WHERE FANO = $PLANCD AND USEYN = 'Y' LIMIT 1 FOR UPDATE);
+    END IF;
+
+    IF _$LOCKKEY IS NULL THEN
+      CALL COMERR('사용 중인 설비그룹 또는 설비를 선택해주세요.');
       LEAVE PROC;
     END IF;
 
-    IF $APRVSTT IS NULL OR $APRVSTT <> 'A' THEN
-      CALL COMERR('승인 상태가 올바르지 않습니다.');
-      LEAVE PROC;
+    -- 복사 원본: 선택 REV (REV가 하나도 없을 때만 빈 REV로 시작)
+    IF COALESCE($REVNUM, '') = '' THEN
+      IF EXISTS (SELECT 1 FROM MSTEQMREV_HEADER WHERE CHKTP = '02' AND PLANTP = $PLANTP AND PLANCD = $PLANCD LIMIT 1) THEN
+        CALL COMERR('갱신할 리비전을 선택해주세요.');
+        LEAVE PROC;
+      END IF;
+    ELSE
+      IF $REVNUM NOT REGEXP '^[0-9]+$' THEN
+        CALL COMERR('갱신할 리비전을 선택해주세요.');
+        LEAVE PROC;
+      END IF;
+
+      SET _$OLDREVCD = (SELECT REVCD FROM MSTEQMREV_HEADER WHERE CHKTP = '02' AND PLANTP = $PLANTP AND PLANCD = $PLANCD AND REVNUM = $REVNUM LIMIT 1);
+
+      IF _$OLDREVCD IS NULL THEN
+        CALL COMERR('선택한 리비전이 없습니다. 다시 조회해주세요.');
+        LEAVE PROC;
+      END IF;
     END IF;
 
-    IF COALESCE($REVNUM, '') NOT REGEXP '^[0-9]+$' THEN
-      CALL COMERR('승인할 REV를 선택해주세요.');
-      LEAVE PROC;
-    END IF;
+    -- 새 REV 번호: 고유키(PLANTP, PLANCD, REVNUM)를 일상점검과 함께 쓰므로 점검구분과 무관한 최대 번호 다음
+    SET _$NEXTREVNUM = (SELECT COALESCE(MAX(REVNUM) + 1, 0) FROM MSTEQMREV_HEADER WHERE PLANTP = $PLANTP AND PLANCD = $PLANCD);
+    SET _$REVCD = GETKEY('REVCD');
 
-    IF NOT EXISTS (SELECT 1 FROM MSTEQMREV_HEADER WHERE CHKTP = '02' AND PLANTP = $PLANTP AND PLANCD = $PLANCD LIMIT 1) THEN
-      CALL COMERR('처리할 REV가 없습니다. 점검항목을 먼저 등록해주세요.');
-      LEAVE PROC;
-    END IF;
+    INSERT INTO MSTEQMREV_HEADER (
+      REVCD, CHKTP, PLANTP, PLANCD, REVNUM, REQTIME, REQEMP, REQPRG, RTIME, REMP, RPRG
+    ) VALUES (
+      _$REVCD, '02', $PLANTP, $PLANCD, _$NEXTREVNUM, CALLTIME(), CALLEMP(), CALLPRG(), CALLTIME(), CALLEMP(), CALLPRG()
+    );
 
-    SELECT MSTEQMREV_HEADER.REVCD, MSTEQMREV_HEADER.REVNUM, MSTEQMREV_HEADER.REMARK, MSTEQMREV_HEADER.APRVSTT, MSTEQMREV_HEADER.REQTIME
-      INTO _$REVCD, _$REVNUM, _$REMARK, _$APRVSTT, _$REQTIME
-    FROM MSTEQMREV_HEADER
-    WHERE MSTEQMREV_HEADER.CHKTP = '02'
-      AND MSTEQMREV_HEADER.PLANTP = $PLANTP
-      AND MSTEQMREV_HEADER.PLANCD = $PLANCD
-    ORDER BY MSTEQMREV_HEADER.REVNUM DESC
-    LIMIT 1 FOR UPDATE;
-
-    IF _$REVNUM IS NOT NULL AND _$REVNUM <> CAST($REVNUM AS UNSIGNED) THEN
-      CALL COMERR('최신 REV만 승인할 수 있습니다. 다시 조회해주세요.');
-      LEAVE PROC;
-    END IF;
-
-    IF _$REVNUM IS NULL OR _$APRVSTT = 'A' THEN
-      CALL COMERR('진행 중인 개정이 없습니다. 점검계획을 수정한 뒤 승인해주세요.');
-      LEAVE PROC;
-    END IF;
-
-    IF COALESCE(_$REQTIME, '') = '' THEN
-      CALL COMERR('점검계획이 변경되었습니다. [개정내용 저장] 후 처리해주세요.');
-      LEAVE PROC;
-    END IF;
-
-    IF COALESCE(_$REMARK, '') <> COALESCE($REMARK, '') THEN
-      CALL COMERR('개정내용이 변경되었습니다. 개정내용 저장 후 다시 조회해주세요.');
-      LEAVE PROC;
-    END IF;
-
-    IF TRIM(COALESCE(_$REMARK, '')) = '' THEN
-      CALL COMERR('개정내용을 입력하고 [개정내용 저장] 후 승인해주세요.');
-      LEAVE PROC;
-    END IF;
-
-    -- 승인 시 항목 복사 없이 선택 REV의 상태만 확정
-    INSERT INTO CHKPLANEQM_APRV (
-      APRVKEY, REVCD, PLANTP, PLANCD, APRVSTT, REQTIME, REQEMP, REQPRG,
-      APRVTIME, APRVEMP, APRVPRG, RTIME, REMP, RPRG
+    INSERT INTO MSTEQMREV_DETAIL (
+      REVCD, CHKKNDCD, CHKCYCLE, SORTNO, CHKKNDNM, CHKLOC, CHKMTH, CHKVALTP, REMARK, RTIME, REMP, RPRG
     )
-    SELECT GETKEY('APRVKEY'), REVCD, PLANTP, PLANCD, 'A', REQTIME, REQEMP, REQPRG,
-           CALLTIME(), CALLEMP(), CALLPRG(), CALLTIME(), CALLEMP(), CALLPRG()
-    FROM MSTEQMREV_HEADER
-    WHERE REVCD = _$REVCD;
+    SELECT _$REVCD, CHKKNDCD, CHKCYCLE, SORTNO, CHKKNDNM, CHKLOC, CHKMTH, CHKVALTP, REMARK,
+           CALLTIME(), CALLEMP(), CALLPRG()
+    FROM MSTEQMREV_DETAIL
+    WHERE REVCD = _$OLDREVCD;
 
-    UPDATE MSTEQMREV_HEADER
-    SET APRVSTT   = 'A',
-        APRVTIME  = CALLTIME(),
-        APRVEMP   = CALLEMP(),
-        APRVPRG   = CALLPRG(),
-        MTIME     = CALLTIME(),
-        MEMP      = CALLEMP(),
-        MPRG      = CALLPRG()
-    WHERE REVCD = _$REVCD;
+    -- 갱신한 REV 번호 반환 (화면에서 새 REV 선택)
+    SELECT _$NEXTREVNUM AS REVNUM;
+
+  -- *****************************************************************************
+
+  WHEN 'DEL_REV' THEN -- 리비전 삭제 (TQC1001_R02 방식: 점검 실적이 있는 REV는 삭제 불가, 남은 최신 REV가 사용 리비전)
+    IF COALESCE($PLANTP, '') NOT IN ('G', 'E') OR COALESCE($PLANCD, '') = '' OR COALESCE($REVNUM, '') NOT REGEXP '^[0-9]+$' THEN
+      CALL COMERR('삭제할 리비전을 선택해주세요.');
+      LEAVE PROC;
+    END IF;
+
+    SET _$REVCD = (SELECT REVCD FROM MSTEQMREV_HEADER WHERE CHKTP = '02' AND PLANTP = $PLANTP AND PLANCD = $PLANCD AND REVNUM = $REVNUM LIMIT 1 FOR UPDATE);
+
+    IF _$REVCD IS NULL THEN
+      CALL COMERR('삭제할 리비전이 없습니다. 다시 조회해주세요.');
+      LEAVE PROC;
+    END IF;
+
+    IF EXISTS (SELECT 1 FROM CHKRSTEQM WHERE REVCD = _$REVCD OR GRPREVCD = _$REVCD LIMIT 1) THEN
+      CALL COMERR('해당 리비전으로 등록한 점검 실적이 있어서 삭제할 수 없습니다.');
+      LEAVE PROC;
+    END IF;
+
+    DELETE FROM MSTEQMREV_DETAIL WHERE REVCD = _$REVCD;
+    DELETE FROM CHKPLANEQM_APRV  WHERE REVCD = _$REVCD; -- 이전 승인 이력
+    DELETE FROM MSTEQMREV_HEADER WHERE REVCD = _$REVCD;
 
   -- *****************************************************************************
 

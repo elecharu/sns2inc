@@ -18,6 +18,70 @@
 
 ## 🕒 2026-11-16 (월) 작업 내역
 
+### 19. EQM1001_R03·R04 프로시저 Modify 이력 1일 1행 간소화 정리
+- **수정 파일**: [05.PROCEDURE/MES_SNS2_EQM1001_R04.sql](05.PROCEDURE/MES_SNS2_EQM1001_R04.sql), [05.PROCEDURE/MES_SNS2_EQM1001_R03.sql](05.PROCEDURE/MES_SNS2_EQM1001_R03.sql)
+- **요청**: 두 프로시저의 상단 `Modify` 이력 주석 중 동일 날짜 중복 행(특히 `2026-11-16`) 및 장황한 설명을 `procedure_history.md` 1일 1행 규칙에 맞게 핵심만 담아 1줄로 정리
+- **작업 내용**:
+  - `MES_SNS2_EQM1001_R04.sql` : `2026-11-16` 2행을 1행으로 통합하고, 기존 이력(`2026-11-09`·`11-10`·`11-13`) 설명을 핵심 위주로 간소화
+  - `MES_SNS2_EQM1001_R03.sql` : `2026-11-16` 6행을 1행으로 통합하고, 기존 이력(`2026-11-09`) 설명을 간소화
+- **검증 결과**: 두 `.sql` 파일 모두 날짜별 1행 유지 및 UTF-8 (BOM 없음) + CRLF 무결성 확인 (프로시저 본문 및 파라미터 변경 없음)
+
+### 18. EQM1001_R03 점검 실적이 있는 REV의 정기점검 항목 변경 차단
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql) (파라미터 변경 없음)
+- **요청**: 17번 점검의 주의점 1 — 실적이 있는 최신 REV를 바로 고쳐 계획서 REV와 실제 점검 REV 항목이 달라지는 문제 차단
+- **작업 상세 내용**: 그룹·설비 공통 항목 CRUD(REG·SAVE·DEL·COPY) 앞에서 최신 REV가 CHKRSTEQM.REVCD 또는 GRPREVCD로 참조되면 "[대상] REV.n에 점검 실적이 있어 항목을 변경할 수 없습니다. [리비전 갱신] 후 새 REV에서 수정해주세요."로 차단. 개정내용 저장·리비전 갱신·삭제는 그대로
+- **검증**: 격리 MariaDB 10.2.44에서 R03 생성 성공, 7개 경우 확인 — 실적 있는 A-003 REV.4 항목 추가·저장·삭제·복사 4건 차단(항목 수 그대로), REV.4 기준 갱신 → REV.5, REV.5 항목 추가 허용, 실적 없는 I2A-002N 추가 허용. SQL BOM 없음·CRLF 유지
+- **반영 필요**: 실DB에 MES_SNS2_EQM1001_R03.sql 다시 저장
+
+### 17. 정기점검 리비전 개편(15번) 참조 화면·프로시저 워크플로우 점검 (소스 수정 없음)
+- **확인 범위**: 저장소 sql·js·cs·aspx 전체와 실DB(MES_SNS2) 루틴·뷰·트리거·이벤트를 MSTEQMREV_·CHKPLANEQM_APRV·GRPREVCD·APRVSTT로 검색(읽기 전용). 실DB의 R03·R04·TAL0001_R08은 2026-11-16 15:08~15:09에 새 버전으로 이미 반영됨
+- **참조처와 결과**
+  - EQM1001_R04(설비 정기점검 등록)·TAL0001_R08(태블릿): 최신 REV 사용으로 변경 완료. 등록 창에서 받은 REV를 저장까지 유지, 그 사이 REV가 삭제되면 R04는 'REV 변경' 오류, R08은 항목 없음 오류로 막힘. 등록 시 항목은 CHKRSTEQMKND에 복사 저장
+  - 점검 실적 조회(R04·R08 SEARCH, S04 점검 시트): 실적 항목은 CHKRSTEQMKND 복사본을 사용하고 REV 헤더는 REV 번호 표시에만 씀. 실적이 있는 REV는 R03에서 삭제 불가라 고아 실적 없음(실DB 0건)
+  - EQM1001_R02·PRD6001_R01: 점검항목 마스터 수정·삭제 차단에만 MSTEQMREV_DETAIL 사용, 영향 없음
+  - TAL0001_R05·02.Site TML2010(일상점검 CHKTP '01'): 승인본('A') 조건 그대로지만 이번 개편은 정기점검 '02'만 바꿔 영향 없음
+  - CHKPLANEQM_APRV: R03 리비전 삭제 외 사용처 없음. REV 번호 고유키 중복 0건
+  - 계획서 출력(R03.cs)·점검 시트(S04A.cs) 개정 이력의 승인자 칸: 새 REV는 빈칸(과거 승인 REV만 표시)
+- **주의점**
+  - 최신 REV에 점검 실적이 있어도 R03 항목 추가·저장·삭제·복사가 그 REV를 바로 고침(A-003 REV.4 실적 3건, A-002 REV.0 실적 1건). 실적 내용은 복사본이라 안전하지만 계획서 'REV.4'와 실제 점검한 'REV.4' 항목이 달라질 수 있음 → 실적 있는 REV는 항목 수정 차단(리비전 갱신 유도) 검토 필요
+  - 실DB 최신 REV가 바로 현장 기준: FM116I210N REV.7, I2A-001N REV.1 등 테스트로 만든 REV도 R04·태블릿에 즉시 적용됨. 항목 0건 REV(FM116I230N REV.0)는 계획 없음으로 처리
+  - 최신 REV 항목을 모두 지우면 이전 REV에 항목이 있어도 R04에서 계획 없음으로 보임(최신 REV = 사용 리비전 규칙)
+
+### 16. EQM1001_R03 설비별 점검계획 탭 좌측 설비 목록 폭 확대
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx)
+- **요청**: 좌측 그리드 표시 컬럼이 많아 처음 열 때부터 넓게 표시
+- **작업 상세 내용**: grid1 영역 LeftWidthPc 26 → 45. 컬럼 폭 합계(설비코드·설비그룹·공장·작업장·설비구분·설비대분류·설비명·REV 약 820px)가 1920 해상도에서 가로 스크롤 없이 보이는 비율. 설비그룹 점검계획 탭은 그대로(26)
+- **검증**: aspx BOM·CRLF 유지. 실제 화면 확인은 아직
+
+### 15. EQM1001_R03 설비그룹·설비별 점검계획 승인 제거, TQC1001_R02 방식 리비전 갱신·삭제 적용
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx), [EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql), [MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql) (파라미터 변경 없음, $APRVSTT는 미사용으로 남김)
+- **요청**: 두 탭의 '승인' 로직 전부 삭제, '개정내용 저장'은 개정내용만 반영, 승인자·처리일시 컬럼 삭제, TQC1001_R02의 '리비전 갱신'·'리비전 삭제' 로직 그대로 적용
+- **결정 사항 (사용자 선택)**: 사용 리비전 = 최신 REV(TQC의 USEYN='Y' 역할, 헤더 테이블에 USEYN 없음). 설비 정기점검 등록(R04)·태블릿(TAL0001_R08)도 승인본 대신 최신 REV 사용. 정기점검 항목 복사·추가·저장·삭제는 최신 REV만(이전 REV 조회 전용)
+- **작업 상세 내용**
+  - 화면: 승인 버튼 2개 삭제, '리비전 갱신'(btn_GRP/EQM_REV_RENEW)·'리비전 삭제'(btn_GRP/EQM_REV_DEL) 추가. 좌측 목록 '승인상태', REV 그리드 '상태'·'승인자'·'처리일시'·상태코드 컬럼 삭제. 승인 함수(SavePlanStatus·SavePlanRevStatus)·개정내용 입력 유도(FocusPlanRev) 삭제
+  - 개정내용 저장: 선택한 REV의 개정내용(+작성자·수정일시)만 저장, 모든 REV 행 개정내용 입력 가능, 저장 후 선택 REV 유지
+  - 리비전 갱신(RENEW_REV): 선택 REV의 항목을 복사해 다음 번호 REV 생성(REV가 없으면 빈 REV.0), 작성자·수정일시 기록, 새 REV 번호 반환 후 목록 맨 위(최신) 선택
+  - 리비전 삭제(DEL_REV): 점검 실적(CHKRSTEQM.REVCD 또는 GRPREVCD)이 있는 REV는 'TQC와 같은 문구'로 차단, 아니면 항목·이전 승인 이력(CHKPLANEQM_APRV)·헤더 삭제. 남은 최신 REV가 사용 리비전
+  - 항목 CRUD: 승인본이면 새 REV를 만들던 로직 제거, 최신 REV에 바로 반영(REV가 하나도 없을 때만 REV.0 자동 생성). 수정 시 REQTIME 초기화 제거
+  - SAVE_PLAN_STATUS 삭제, LIST_MSTEQM_GRP·LIST_MSTEQM·LIST_PLAN_REV의 승인 컬럼 삭제
+  - R04·TAL0001_R08: 적용 REV 조회·검증·월별 현황(CTE APPROVED_PLAN → LATEST_PLAN)에서 APRVSTT='A' 조건 제거, 안내 문구의 '승인' 표현 정리
+  - 계획서 출력(CALL_PLAN_RPT)·S04 이력은 레포트 레이아웃(승인자 칸)이 있어 그대로 둠(과거 승인자만 표시)
+- **검증**
+  - 격리 MariaDB 10.2.44에 실DB 정의·정기점검 REV 20건·항목 58건 복사, R03·R04·TAL0001_R08 생성 성공. 14개 경우 확인: REV 목록 승인 컬럼 없음, REV 있는데 미선택 갱신 차단, REV.0 기준 갱신 → REV.1 항목 3건 복사, 이전 REV 개정내용만 변경(상태 그대로), 최신 REV에 항목 추가 시 새 REV 없음, 이전 REV 번호로 추가 시 동시성 오류, 최신 REV 삭제 후 이전 REV가 최신, 실적 있는 A-003 REV.4 삭제 차단·REV.3 삭제 허용, REV 없는 설비 첫 갱신 REV.0, 그룹 REV.6 기준 REV.7, 빈 개정내용 차단, R04 기준 REV가 미승인 최신 REV.7, 좌측 목록 REV.7
+  - 화면 함수(개정내용 저장·갱신·삭제·REV 없는 갱신)를 Node 스텁으로 호출 파라미터 확인, `node --check` 통과. aspx BOM·CRLF, js·sql CRLF 유지. 실제 화면 확인은 아직
+- **참고**: 현재 실DB의 승인 대기 최신 REV 3건(FM116I210N REV.6, FM116I230N REV.0, I2A-002N REV.0)은 반영 즉시 R04·태블릿 적용 REV가 됨
+- **반영 필요**: 실DB에 MES_SNS2_EQM1001_R03.sql·MES_SNS2_EQM1001_R04.sql·MES_SNS2_TAL0001_R08.sql 저장 (SYSTEM_PARAMETERS 재등록 불필요)
+
+### 14. EQM1001_R03 정기점검 주기관리 탭 점검주기를 다 채운 설비 행 배경색
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
+- **요청**: TQM1002_R01 주간출하계획의 '합격' 배경색 방식·색상을 주기관리 그리드의 점검주기를 다 채운 항목에 적용
+- **참고한 방식**: TQM1002_R01은 프로시저가 BACKGROUND 컬럼(합격 'LIGHTCYAN', 불합격 'PINK')을 내려주고 ItsGrid가 행 데이터의 BACKGROUND로 행 배경을 칠함
+- **작업 상세 내용**
+  - 같은 BACKGROUND 필드·LIGHTCYAN 사용. 판단에 필요한 앞뒤 년도 배정 횟수가 조회 결과에 이미 있어, 프로시저에 같은 하위 쿼리를 반복하지 않고 화면에서 계산(GetCycleFullColor)
+  - 기준: 조회년도 배정 횟수 + 주기 안 앞·뒤 년도 배정 횟수 중 큰 값 ≥ 주기 횟수. A(2년/1회)는 올해 또는 전년·다음해에 1회 있으면, B(년 1회)는 1회, C(년 2회)는 2회 배정되면 색칠. 주기 문구 해석 불가·등급 없는 설비는 색 없음
+  - 조회 직후 store 데이터에 BACKGROUND 설정, 월 칸 더블클릭·Enter·Delete로 바꾸면 SetRowBackColor로 즉시 갱신. 일괄 주기설정은 저장 후 재조회로 반영
+- **검증**: Node로 11개 경우 확인(A 올해·전년·다음해 배정 색칠, A 미배정·B 0회·C 1회·등급 없음 색 없음 등), `node --check` 통과, CRLF 유지. 화면 확인은 아직
+
 ### 13. EQM1001_R03 정기점검 주기관리 탭 '계획' 컬럼 삭제
 - **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
 - **요청**: 11번에서 추가한 '계획'(PLANSTAT) 컬럼 표기 불필요
