@@ -3,10 +3,14 @@
 /* 페이지 접근 시 수행 */
 ItsPage.Load = function () {
     // 설비종합효율
-    ItsGrid.Create('grid1', { isSubTotalGrid: true }, [
+    ItsGrid.Create('grid1', { isCheckBoxGrid: true, isSubTotalGrid: true }, [
         column.create('점검일자', 'BASEDATE', { width: 80, columnType: enumColumnTypes.date, align: 'center' }),
         column.create('점검유형', 'CHKTP', { width: 110, columnType: enumColumnTypes.combo, gpcd: "CHKTP", align: 'center' }),
         column.create('점검자', 'EMPCD', { width: 100, columnType: enumColumnTypes.combo, gpcd: "EMPCD", align: 'center' }),
+        column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),
+        column.create('작업장', 'LINECD', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'LINECD', readOnly: true }),
+        column.create('설비구분', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
+        column.create('설비대분류', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
         column.create('설비코드', 'EQMCD', { width: 100, align: 'center' }),
         column.create('설비명', 'EQMNM', { width: 250, align: 'center' }),
         column.create('문제점', 'PROBLEM', { width: 300, multiLine: true, readOnly: true }),
@@ -66,12 +70,21 @@ ItsGrid.Event('grid1').onSelect = function () {
     ItsGrid.SetStore('grid2', maria.store);
 }
 
-// 2026-11-06 선택한 점검이력(grid1) 점검 시트 출력 (점검이력 미선택 안내는 레포트에서 처리)
+// 체크한 점검이력(grid1) 점검 시트 출력, 여러 건은 한 PDF에 점검이력마다 새 페이지
 ItsButton.Event('btn_PRINT').onClick = function () {
-    var chkRstKey = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'CHKRSTKEY') || '';
+    var keys = [];
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if (ItsGrid.IsChecked('grid1', i)) {
+            keys.push(ItsGrid.GetValue('grid1', i, 'CHKRSTKEY'));
+        }
+    }
+    if (keys.length == 0) {
+        ItsMsg.Alert('출력할 점검이력을 체크하십시오.');
+        return;
+    }
 
     var rpt = new ItsXtraRpt('EQM1001_S04A');
-    rpt.AddParam('CHKRSTKEY', chkRstKey);
+    rpt.AddParam('CHKRSTKEY_LIST', keys.join(','));
     rpt.CallPop();
 
     if (rpt.isError) {

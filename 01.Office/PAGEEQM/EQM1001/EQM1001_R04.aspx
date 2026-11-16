@@ -10,6 +10,9 @@
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
        <Its:combo runat="server" Label="조회년도" ID="cmb_SYEAR" Field="SYEAR" GPCD="YEAR" REF01="-4" REF02="0" />
+       <Its:combo runat="server" Label="작업장" ID="cmb_LINECD" Field="LINECD" GPCD="*LINECD" REF01="07" />
+       <Its:combo runat="server" Label="설비구분" ID="cmb_EQMTP" Field="EQMTP" GPCD="*FM100" InputWidth="70" REF10="07" />
+       <Its:combo runat="server" Label="설비대분류" ID="cmb_EQMGROUP1" Field="EQMGROUP1" GPCD="*FM113" InputWidth="70" REF10="07" />
        <Its:find runat="server" Label="설비" Field="EQMCD" GPCD="EQMCD" ID="find_EQMCD"/>       
     </Its:div>
 </asp:Content>

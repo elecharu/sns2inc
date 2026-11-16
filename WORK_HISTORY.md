@@ -18,6 +18,108 @@
 
 ## 🕒 2026-11-16 (월) 작업 내역
 
+### 12. EQM1001_R03 일괄 주기설정 팝업 설비등급 점검주기 반영
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
+- **요청**: 11번 점검주기 검증을 일괄 주기설정 팝업에도 반영
+- **작업 상세 내용**
+  - 팝업 상단에 체크한 설비의 등급·점검주기별 대수(예 'A등급 2년/1회 4대, C등급 년 2회 점검 1대, 주기 기준 없음 1대')와 점검주기 횟수가 찬 설비 목록(최대 5개) 안내(lbl_BATCH_CYCLE). 팝업 높이 300 → 350
+  - 기본 선택: 기존처럼 기존 배정 월(없으면 12개월 전체)을 후보로 하되, 체크한 설비 중 하나라도 횟수를 넘으면 선택 없이 열기
+  - 월 체크 시 체크한 설비 중 횟수를 넘는 설비가 생기면 체크 취소 후 안내, '전체 선택'도 같은 기준으로 차단. 등록 버튼의 기존 검사(AlertCycleOver)는 그대로 유지
+  - 11번 AlertCycleOver를 문구 반환 함수 GetCycleOverMsg로 분리해 화면 더블클릭·팝업이 같은 기준·문구 사용
+- **검증**: Node로 팝업 함수 9개 경우와 안내 문구 확인(A+C 전체 선택 차단, 3월만 허용, C 3·9월 허용, 기존 월 재선택 허용, 기존 월 합집합이 A 기준 초과면 선택 없이 열기, 등급 없음 제한 없음, 전년 배정 A 차단), `node --check` 통과. aspx BOM·CRLF, js CRLF 유지. 실제 화면 확인은 아직
+
+### 11. EQM1001_R03 정기점검 주기관리 탭 설비등급 점검주기 기준 월별 점검자 배정 검증 (문구 해석 방식)
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql) (파라미터 변경 없음, 지역 변수만 추가)
+- **요청**: 설비등급 점검주기에 맞게 1~12월 점검자 배정 제한. ERP 수신 흐름을 고려해 DB 컬럼 추가 없이 주기 문구를 해석하는 방식 선택
+- **ERP 흐름 확인 (읽기 전용)**: ERP 설비마스터 연동(IF_MES_SNS_FAC2.MES_IF_MSTEQM)은 설비별 등급 코드(EQUIP_KD → MSTEQM.EQMGRADE)만 보내고, 공통코드 FM110도 이름만 옴(REF·비고 빈값). 점검주기 문구(MSTEQM_GRADEREV_SCORE.CHKCYCLE2)는 MES 설비등급기준 관리(MST1005_S01)에서만 입력. 따라서 주기 규칙은 등급 단위로 MES에서 찾고 설비 쪽에는 둘 값이 없음
+- **작업 상세 내용**
+  - 문구 해석: '년'·'연'과 'M회'가 있으면 N년(숫자 없으면 1년)에 M회. 2년/1회 → 2년 1회, 년 1회 점검 → 1년 1회, 년 2회 점검 → 1년 2회. '오버홀'·'테스트' 등 횟수 없는 문구와 등급 없는 설비는 검증 안 함
+  - LIST_CYCLE_EQMCD: 등급기준 조인을 파생 테이블로 바꿔 CHKCNT·CHKYEAR 계산, 주기 안 앞뒤 년도 배정 횟수(PREVCNT·NEXTCNT)와 현황 문구(OTHERPLAN, 예 '2026년 1회') 추가
+  - SAVE_CYCLE_EQMCD: 실적 잠금 검사 뒤에 배정 월 수가 DB보다 늘어날 때만 `앞 년도 + 올해 ≤ 횟수`, `올해 + 뒤 년도 ≤ 횟수` 검사, 넘으면 COMERR. ERP 등급 변경 등으로 이미 초과된 계획은 점검자 변경·축소 허용
+  - 화면: 점검주기 옆 '계획' 컬럼(예 '1회 적정'·'2회 초과'·'0회 부족'·'0회 미배정'), 숨김 컬럼 5개. 빈 월 더블클릭·Enter 배정과 일괄 주기설정 팝업에서 같은 기준으로 미리 차단(AlertCycleOver), 한 해 2회 이상 주기에서 배정 월 간격이 좁으면 토스트 안내만(년 2회 → 4개월 미만, ToastCycleGap)
+- **검증**
+  - 격리 MariaDB 10.2.44(실DB 테이블·보조 함수 정의와 표본 행 복사)에서 프로시저 생성 성공, 저장 8개 경우 확인: A 7월+9월 차단, 초과 행 점검자 변경·4월 삭제 허용, 초과 행 5월 추가 차단, 2026년 7월 있는 A의 2027년 신규 차단·2028년 허용, C 8·11월+3월 차단, 등급 없는 설비 12개월 허용. 2027년 조회 시 PREVCNT·OTHERPLAN 정상
+  - 화면 함수는 Node로 계획 상태·차단·간격 안내 9개 경우 확인, `node --check` 통과
+  - 실DB 읽기 전용으로 수정한 조회 실행: 2공장 254건, A 136·B 91·C 26 해석 정상, 약 1초. 실DB 버전 10.2.15에서 REGEXP_SUBSTR·REGEXP_REPLACE 동작 확인
+- **참고**: 현재 2026년 계획 중 I2A-002N(3·4월)·I2A-004N(4·5월)은 A등급 기준 초과로 '2회 초과' 표시됨(수정은 가능, 월 추가는 차단). 일괄 주기설정 팝업은 기존 배정이 없으면 12개월 전체 선택이 기본이라 등급 있는 설비는 월을 골라야 저장됨
+- **반영 필요**: 실DB에 MES_SNS2_EQM1001_R03.sql 저장 (9·10번과 함께)
+
+### 10. EQM1001_R03 정기점검 주기관리 탭 설비등급 옆 점검주기 컬럼 추가
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql) (파라미터 변경 없음)
+- **요청**: 설비등급마다 정해진 주기를 DB에서 찾아 '설비등급' 옆에 '점검주기' 컬럼으로 표시
+- **DB 기준 확인 (읽기 전용)**: 설비등급기준 관리(MST1005_S01)가 저장하는 MSTEQM_GRADEREV_SCORE.CHKCYCLE2(정기점검주기)가 등급별 주기. 리비전(REVCD)별로 쌓이며, 설비등급 평가(MST1005_R01)와 같이 MSTEQM_GRADEREV.USEYN = 'Y' 리비전(현재 7번 261111000001)을 기준으로 씀. FM110100(A) 2년/1회, FM110200(B) 년 1회 점검, FM110300(C) 년 2회 점검 (D·E는 테스트 등급, 2공장 설비 없음)
+- **작업 상세 내용**
+  - LIST_CYCLE_EQMCD에 `LEFT JOIN MSTEQM_GRADEREV_SCORE GRADE_SCORE`(사용중 리비전 + 설비등급)와 `IFNULL(GRADE_SCORE.CHKCYCLE2, '') AS CHKCYCLE2` 추가
+  - grid9 설비등급 뒤에 `점검주기`(CHKCYCLE2, 읽기 전용) 컬럼 추가. 저장 대상 아님
+  - 등급기준 리비전을 새로 사용 처리하면 자동으로 새 주기가 보임
+- **검증**: 실DB 읽기 전용 SELECT로 수정 쿼리 실행 — 2026년 254건(행 중복 없음), A 136·B 91·C 26건 주기 매핑, 등급 없는 1건(i2C-054N)은 빈칸. SQL BOM 없음·JS CRLF 유지
+- **반영 필요**: 실DB에 MES_SNS2_EQM1001_R03.sql 저장 (9번과 함께)
+
+### 9. EQM1001_R03 정기점검 주기관리 탭 실적 있는 월 점검자 덮어쓰기 화면 단계 차단
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql) (파라미터 변경 없음, 재등록 스크립트 불필요)
+- **요청**: 점검자가 등록된 월에 정기점검 실적이 있으면 더블클릭으로 덮어쓰지 못하게 하고, 저장 때 나오는 "[I2A-001N] 2026년 11월은 정기점검 실적이 있어…" 문구를 그 자리에서 바로 띄움
+- **작업 상세 내용**
+  - LIST_CYCLE_EQMCD에 LOCKMM 컬럼 추가: 저장(SAVE_CYCLE_EQMCD) 검증과 같은 기준(그 해 정기점검 실적이 있고 계획 월 점검자가 비어 있지 않은 월)을 ',3,11,' 형식으로 반환
+  - grid9에 숨김 컬럼 LOCKMM, 공통 함수 `AlertCycleLock(rowIndex, fields)`(저장 프로시저와 같은 문구로 ItsMsg.Alert)
+  - 차단 위치: 월 칸 더블클릭·Enter(설정·토글 삭제·미선택 삭제 모두), Delete/Backspace 삭제, 일괄 주기설정 팝업(점검자가 실제로 바뀌는 잠금 월이 있으면 팝업 유지한 채 중단)
+  - 실적은 있지만 점검자가 비어 있던 월에 새로 지정하는 것은 기존 저장 검증처럼 허용. 프로시저 저장·삭제 검증은 그대로 둠(최종 방어)
+- **검증**: 실DB 읽기 전용 SELECT로 수정한 조회 쿼리 실행 — I2A-001N 11월 점검자 202507146, LOCKMM ',11,'(요청 예시와 일치), A-002 ',6,', A-003 ',3,7,11,'. SQL BOM 없음·JS 모두 CRLF 유지
+- **반영 필요**: 실DB에 MES_SNS2_EQM1001_R03.sql 저장(파라미터 그대로라 SYSTEM_PARAMETERS 재등록은 5번 작업분만)
+
+### 8. 설비 찾기 팝업(DC_FIND) 폐기 설비 제외 → 요청으로 롤백
+- **대상 파일**: [05.Procedure/MES_SNS2_DC_FIND.sql](05.Procedure/MES_SNS2_DC_FIND.sql) (최종 변경 없음, 커밋본과 동일)
+- **경과**: EQMCD_LIST·FANO_LIST에 `IFNULL(MSTEQM.EQMSTT, '') <> 'FM111400'` 조건과 주석 '설비상태 폐기 제외'를 넣었다가, 사용자 요청으로 두 줄 모두 되돌림(git diff 0줄). 지금 데이터로는 팝업 결과(118건)에 차이가 없었음(2공장 폐기 16건은 원래 팝업에 없음)
+- **참고**: 실DB DC_FIND는 저장소와 ITEMID_LIST 분기가 다름(저장소는 2026-11-04 커밋으로 품목 검색에 ITEMSPEC·EONO·SPEC6 포함, 실DB는 ITEMID·ITEMCD·ITEMNM만). 저장소 파일을 저장하면 품목 찾기 검색 대상이 넓어짐
+- **유지**: 7번 작업(R03 두 목록·R04 목록의 폐기 제외)은 그대로
+
+### 7. EQM1001_R03(설비별 점검계획·정기점검 주기관리)·EQM1001_R04 설비 목록 폐기 설비 제외 → 요청으로 롤백
+- **대상 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [05.Procedure/MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql)
+- **경과**: R03 LIST_MSTEQM·LIST_CYCLE_EQMCD, R04 LIST_CYCLE_EQMCD에 `IFNULL(MSTEQM.EQMSTT, '') <> 'FM111400'`(설비상태 폐기) 조건과 헤더 '폐기 설비 제외' 문구를 넣었다가, 8번(DC_FIND) 롤백에 이어 사용자 요청으로 모두 되돌림. 5·6번 작업(공장·작업장·설비구분·설비대분류 컬럼·검색 조건)은 그대로 유지
+- **참고(분석 결과)**: 2공장 사용 설비 254건 중 설비상태 폐기 16건(14건은 폐기일자 있음, MSTEQM.USEYN은 'Y'). 이 16건은 정기점검 계획·연간 주기·점검실적이 없음. 롤백 후 R03 두 목록 254건, R04 2026년 38건
+- **검증**: 롤백 후 격리 MariaDB 10.2.44에서 두 프로시저 생성 성공(파라미터 R03 32개, R04 20개), CRLF 유지
+
+### 6. EQM1001_R03 정기점검 주기관리 탭 공장·작업장·설비구분·설비대분류 컬럼 및 검색 조건 추가, F-xxx/F-xxxN 사용 설비 기준 분석
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx), [EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql) (파라미터는 5번 작업에서 추가한 것 그대로, 재등록 스크립트 변경 없음)
+- **요청**: 정기점검 주기관리 탭에도 R01 컬럼·검색 영역 추가. 설비코드 목록에 F-xxx와 F-xxxN이 함께 나오는 원인과 사용 설비 기준은 수정 없이 분석만
+- **작업 상세 내용**
+  - 탭 상단(div_CYCLE_EQM) 조회년도 뒤에 작업장·설비구분·설비대분류 콤보, grid9 설비코드 앞에 컬럼 4개(그리드 이벤트·저장은 필드명 기준이라 영향 없음)
+  - LIST_CYCLE_EQMCD에 공장 '07' 고정·컬럼 4개·`($X = '' OR 컬럼 = $X)` 조건. 레포트 출력(CALL_CYCLE_RPT, 조회년도·설비만 전달)은 변경 없음
+- **분석 결과 (수정 없음)**: 주기관리 목록은 기존에 공장 조건 없이 MSTEQM.USEYN = 'Y' 전체라 모든 공장 설비가 나왔음. F-xxx = 공장 01 '구)INC공장'(법인 20), F-xxxN = 공장 06 'INC공장'(법인 60). 2026-08-05 ERP에서 같은 날 일괄 생성, 01 설비 268건 전부 06에 N 쌍이 있고 04 '구)INC 2공장' 251건도 전부 07 'INC 2공장'에 N 쌍이 있음. 작업장(200→200_N)·설비구분(FM100100 사용 N → FM100100N 사용 Y)도 같은 규칙. 즉 N = 신 법인(60) 코드이며, 정확한 기준은 MSTEQM.FACTORYCD IN ('06','07') (설비코드 끝 N은 결과일 뿐). 옛 코드도 MSTEQM.USEYN은 'Y'라 사용여부로는 구분 불가. 별도로 06·07에도 설비상태 폐기(FM111400)인데 USEYN 'Y'인 설비 있음(07 16건)
+- **검증**: 격리 MariaDB 10.2.44에서 R03 생성 성공(파라미터 32개). 분석은 실DB 읽기 전용 SELECT
+- **적용**: 5번 작업과 함께 R03 프로시저 저장 + SYSTEM_PARAMETERS 재등록. 미확인: 실제 화면
+
+### 5. EQM1001_R03 설비별 점검계획·EQM1001_R04 공장·작업장·설비구분·설비대분류 컬럼 및 검색 조건 추가 (EQM1001_R01과 동일)
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx), [EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql), [01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [EQM1001_R04.js](01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [05.Procedure/MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql), [MES_SNS2_EQM1001_R04_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_R04_SYSTEM_PARAMETERS.sql)
+- **요청**: R03 "설비별 점검계획" 탭과 R04에 R01의 공장·작업장·설비구분·설비대분류 컬럼과 검색 영역 추가
+- **작업 상세 내용**
+  - R03 설비별 점검계획 탭: 상단 영역(div_EQM) 설비그룹 뒤에 작업장·설비구분·설비대분류 콤보(R01과 같은 GPCD·REF, 탭 상단 영역 여백 형식). 좌측 grid1은 폭이 좁아 설비코드·설비그룹·설비명·REV·승인상태 뒤에 4개 컬럼 추가
+  - R03 프로시저: $EQMGRP 뒤에 $FACTORYCD~$EQMGROUP1 파라미터, LIST_MSTEQM에 공장 '07' 고정·컬럼 4개·`($X = '' OR 컬럼 = $X)` 조건. 다른 탭·출력(CALL_PLAN_RPT, CALL_CYCLE_RPT)은 변경 없음
+  - R04: 검색 영역 조회년도 뒤에 작업장·설비구분·설비대분류 콤보, grid1 설비코드 앞에 4개 컬럼(그리드 이벤트는 필드명 기준이라 영향 없음). 프로시저 $YYYYMM 뒤에 파라미터 4개, LIST_CYCLE_EQMCD에 공장 '07' 고정·컬럼·조건
+  - 기존 SYSTEM_PARAMETERS 재등록 스크립트 2개는 형식 유지, Modify 줄·정상 건수(R03 32건, R04 20건)만 수정. R04 스크립트 끝에 남아 있던 잘못 입력된 'ㅊ' 한 글자 제거(파일 전체 실행 시 문법 오류 원인)
+- **검증**: 격리 MariaDB 10.2.44에서 두 프로시저 생성 성공, 재등록 스크립트 실행 결과 R03 32건(FACTORYCD~EQMGROUP1 5~8번)·R04 20건(3~6번). 실DB 읽기 전용 SELECT로 조회 본문 실행: R03 2공장 사용 설비 254건(작업장·설비구분·설비대분류 조건별 30·193·142건, 다른 공장 0건), R04 2026년 38건(기존 48건 중 1공장 A-xx 10건 제외, 조건별 12·25·23건)
+- **참고**: 지금 정기점검 월별 주기(점검자 배정)는 1공장 A-xx 설비에만 있어 R04 2공장 38건은 월 칸이 비어 있음(2공장 설비그룹·설비 승인 계획은 있음)
+- **적용**: 두 프로시저 저장 후 각 SYSTEM_PARAMETERS 재등록 스크립트 실행. 미확인: 실DB 저장 후 실제 화면(R03 탭 상단 한 줄 배치 포함)
+
+### 4. EQM1001_S04 점검이력 체크 그리드 + 체크한 여러 건 점검시트 한 번에 출력
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_S04.js](01.Office/PAGEEQM/EQM1001/EQM1001_S04.js), [04.Report/PAGEEQM/EQM1001/S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), EQM1001.exe(빌드·배포). 프로시저 변경 없음
+- **요청**: grid1을 선택(체크) 그리드로 바꾸고, 체크한 점검이력 여러 건의 점검시트를 출력
+- **작업 상세 내용**
+  - grid1 `isCheckBoxGrid: true`. 행 클릭 시 아래 점검항목(grid2) 조회는 그대로
+  - [점검시트 출력]: 체크한 행의 CHKRSTKEY를 쉼표로 이어 `CHKRSTKEY_LIST`로 전달, 체크 없으면 '출력할 점검이력을 체크하십시오.' 안내 (MST3001_R06 공구불출증과 같은 방식)
+  - S04A: `CHKRSTKEY_LIST`를 나눠 첫 건은 본 리포트, 나머지는 건마다 S04A를 만들어 `Pages.AddRange`로 뒤에 붙임 → 한 PDF에 점검이력마다 1페이지(MST3001 R06A·TQM2001 R01과 같은 방식). 없는 키는 '출력할 점검이력이 없습니다. (키)' 오류
+- **검증**: Rebuild 성공(0 Error, 기존 경고 1건). 격리 MariaDB 10.2.44에 실DB 점검 데이터(SELECT 내보내기) 적재 후 실제 Program.cs와 같은 ExportToPdf 경로로 출력: 3건 → 3페이지, 5건 → 5페이지(설비·점검값·점검자·개정이력이 건마다 다름), 1건 출력은 기존 exe 결과와 이미지 MD5 동일, 빈 목록·없는 키는 오류 문구 정상. exe 2곳 배포(MD5 593671c633d2 일치)
+- **적용**: 화면 JS·exe만 반영하면 됨(프로시저 저장 불필요). 미확인: 실제 웹 화면에서 체크 후 출력
+
+### 3. EQM1001_S04 설비점검 이력 공장·작업장·설비구분·설비대분류 컬럼 및 검색 조건 추가 (EQM1001_R01과 동일)
+- **수정/대상 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_S04.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_S04.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_S04.js](01.Office/PAGEEQM/EQM1001/EQM1001_S04.js), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [05.Procedure/MES_SNS2_EQM1001_S04_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_S04_SYSTEM_PARAMETERS.sql)(신규). aspx.cs 변경 없음
+- **요청**: EQM1001_R01에 넣은 공장·작업장·설비구분·설비대분류 컬럼과 상단 검색 영역을 S04에도 추가
+- **작업 상세 내용**
+  - 검색 영역: 점검유형 뒤에 작업장(*LINECD, REF01 07)·설비구분(*FM100, REF10 07)·설비대분류(*FM113, REF10 07) 콤보 (R01과 같은 속성)
+  - grid1: 점검자 뒤, 설비코드 앞에 공장·작업장·설비구분·설비대분류 콤보 컬럼(readOnly) 4개
+  - 프로시저: 파라미터 $FACTORYCD·$LINECD·$EQMTP·$EQMGROUP1을 $CHKTP 뒤에 추가. LIST_CHKRSTEQM에서 MSTEQM(FANO = 점검 설비코드) LEFT JOIN, 공장 '07' 고정(R01과 같음), 나머지는 `($X = '' OR 컬럼 = $X)` 조건
+- **검증**: 실DB 읽기 전용 SELECT로 조회 본문 실행. 점검이력 9건 중 2공장 설비 5건 표시(1공장 설비 M110 4건은 제외됨), 작업장·설비구분·설비대분류 단독/조합/불일치 조건 모두 기대대로. 격리 MariaDB 10.2.44에서 프로시저 생성 성공, 파라미터 11개(FACTORYCD~EQMGROUP1 4~7번)
+- **적용**: 프로시저 저장 후 SYSTEM_PARAMETERS 재등록 스크립트 실행(정상 11건). 미확인: 실DB 저장 후 실제 화면
+
 ### 2. EQM1001_R06 상세보기 인쇄 = 그 해 1년 그래프(맨 앞) + 그 달 상세, 과거 연도 막대 색 확인
 - **수정/대상 파일**: [04.Report/PAGEEQM/EQM1001/R0602.cs](04.Report/PAGEEQM/EQM1001/R0602.cs), [05.Procedure/MES_SNS2_EQM1001_R06.sql](05.Procedure/MES_SNS2_EQM1001_R06.sql), [01.Office/PAGEEQM/EQM1001/EQM1001_R06.js](01.Office/PAGEEQM/EQM1001/EQM1001_R06.js)(주석만)
 - **요청**: 막대 클릭 상세보기에서 [인쇄] 시 그래프가 조회기간을 따르지 말고 그 해 그래프만, 그래프를 맨 아래에서 맨 위로. 위·아래 차트의 '21~'25 막대 색이 서로 다른지 시험 데이터로 그려 스크린샷 확인

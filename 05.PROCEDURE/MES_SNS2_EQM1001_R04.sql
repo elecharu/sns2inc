@@ -9,9 +9,14 @@ PROCEDURE `MES_SNS2`.`EQM1001_R04`(
 -- 			2026-11-09 					한성수	점검항목 특이사항(REMARK) CRUD 추가 및 월별 점검자 배정 설비 연동
 -- 			2026-11-10 					한성수	신규 점검 시 특이사항 기본값 초기화 (계획 특이사항 대체 제거)
 -- 			2026-11-13 					한성수	월별 현황 점검자명 표시, 점검일자 년월 일치 검증 제거 및 계획월 이동·중복 계획 차단
+-- 			2026-11-16 					한성수	월별 정기점검 현황 공장(2공장 기본)·작업장·설비구분·설비대분류 컬럼 및 검색 조건 추가
 -- *****************************************************************************
   IN $SYEAR           VARCHAR(50),
   IN $YYYYMM          VARCHAR(50),
+  IN $FACTORYCD       VARCHAR(20),
+  IN $LINECD          VARCHAR(20),
+  IN $EQMTP           VARCHAR(20),
+  IN $EQMGROUP1       VARCHAR(20),
 
   IN $EQMCD           VARCHAR(20),
   IN $CHKRSTKEY       VARCHAR(20),
@@ -162,6 +167,8 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   -- *****************************************************************************
 
   WHEN 'LIST_CYCLE_EQMCD' THEN -- 월별 정기점검 현황
+    SET $FACTORYCD = '07';
+
     WITH APPROVED_PLAN AS (
       SELECT PLAN_REV.PLANTP, PLAN_REV.PLANCD, 1 AS HASPLAN
       FROM (
@@ -177,7 +184,11 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       GROUP BY PLAN_REV.PLANTP, PLAN_REV.PLANCD
     )
     -- 실적이 있으면 점검완료(실적 점검자), 계획만 있으면 점검필요(계획 점검자)
-    SELECT MSTEQM.FANO AS EQMCD, MSTEQM.EQMNM, $SYEAR AS YEAR,
+    SELECT IFNULL(MSTEQM.FACTORYCD, '') AS FACTORYCD,
+           IFNULL(MSTEQM.LINECD, '')    AS LINECD,
+           IFNULL(MSTEQM.EQMTP, '')     AS EQMTP,
+           IFNULL(MSTEQM.EQMGROUP1, '') AS EQMGROUP1,
+           MSTEQM.FANO AS EQMCD, MSTEQM.EQMNM, $SYEAR AS YEAR,
            CASE WHEN RST.EMP01 IS NOT NULL THEN CONCAT('점검완료\n(', RST.EMP01, ')')
                 WHEN YEAR_PLAN.MONTH_01 <> '' THEN CONCAT('점검필요\n(', COALESCE(EMP01.EMPNM, YEAR_PLAN.MONTH_01), ')') ELSE '' END AS M01,
            CASE WHEN RST.EMP02 IS NOT NULL THEN CONCAT('점검완료\n(', RST.EMP02, ')')
@@ -244,6 +255,10 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     LEFT JOIN APPROVED_PLAN GRP_PLAN ON GRP_PLAN.PLANTP = 'G' AND GRP_PLAN.PLANCD = MSTEQM.EQMGUBUN
     LEFT JOIN APPROVED_PLAN EQM_PLAN ON EQM_PLAN.PLANTP = 'E' AND EQM_PLAN.PLANCD = MSTEQM.FANO
     WHERE MSTEQM.USEYN = 'Y'
+      AND ($FACTORYCD = '' OR MSTEQM.FACTORYCD = $FACTORYCD)
+      AND ($LINECD = '' OR MSTEQM.LINECD = $LINECD)
+      AND ($EQMTP = '' OR MSTEQM.EQMTP = $EQMTP)
+      AND ($EQMGROUP1 = '' OR MSTEQM.EQMGROUP1 = $EQMGROUP1)
       AND (   GRP_PLAN.HASPLAN = 1
            OR EQM_PLAN.HASPLAN = 1
            OR RST.EQMCD IS NOT NULL

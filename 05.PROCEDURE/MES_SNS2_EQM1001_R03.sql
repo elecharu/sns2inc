@@ -8,11 +8,19 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R03`(
 -- 			2026-10-23 					한성수	리비전 헤더 점검구분('02') 기본값 저장
 -- 			2026-11-06 					한성수	계획서 출력 특이사항 연동 및 점검자명 조회 최적화
 -- 			2026-11-09 					한성수	정기점검('02') 리비전 분리·조회, 월별 점검계획 출력(CALL_CYCLE_RPT) 추가 및 삭제 검증 보강
+-- 			2026-11-16 					한성수	설비별 점검계획·정기점검 주기관리 설비 목록 공장(2공장 기본)·작업장·설비구분·설비대분류 컬럼 및 검색 조건 추가
+-- 			2026-11-16 					한성수	정기점검 주기관리 조회 시 실적 있는 점검자 배정 월(LOCKMM) 반환 (화면 덮어쓰기 차단용)
+-- 			2026-11-16 					한성수	정기점검 주기관리 조회에 설비등급별 점검주기(사용중 설비등급기준 리비전) 추가
+-- 			2026-11-16 					한성수	점검주기 문구 해석(N년/M회) 기반 월별 점검자 초과 배정 검증 및 주기 안 앞뒤 년도 배정 횟수 조회
 -- *****************************************************************************
   IN $FANO           VARCHAR(20),
   IN $FANO_COPY      VARCHAR(20),
   IN $SYEAR          VARCHAR(50),
   IN $EQMGRP         VARCHAR(50),
+  IN $FACTORYCD      VARCHAR(20),
+  IN $LINECD         VARCHAR(20),
+  IN $EQMTP          VARCHAR(20),
+  IN $EQMGROUP1      VARCHAR(20),
   IN $CHKKNDCD_LIST  MEDIUMTEXT,
   IN $REMARK_LIST    MEDIUMTEXT,
   IN $SORTNO_LIST    MEDIUMTEXT,
@@ -62,6 +70,14 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$YEAR          VARCHAR(20);
   DECLARE _$FANO          VARCHAR(20);
   DECLARE _$LOCKMM        VARCHAR(100);
+  DECLARE _$GRADENM       VARCHAR(100);
+  DECLARE _$CHKCYCLE      VARCHAR(10);
+  DECLARE _$CHKCNT        INT;
+  DECLARE _$CHKYEAR       INT;
+  DECLARE _$NEWCNT        INT;
+  DECLARE _$OLDCNT        INT;
+  DECLARE _$PREVCNT       INT;
+  DECLARE _$NEXTCNT       INT;
   DECLARE _$PLANTP        CHAR(1);
   DECLARE _$PLANCD        VARCHAR(50);
   DECLARE _$EQMGRPNM      VARCHAR(1000);
@@ -412,9 +428,15 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   -- *****************************************************************************
 
   WHEN 'LIST_MSTEQM' THEN -- 설비 목록 조회
+    SET $FACTORYCD = '07';
+
     SELECT MSTEQM.FANO,
            COALESCE(MSTEQM.EQMGUBUN, '') AS EQMGUBUN,
            MSTEQM.EQMNM,
+           IFNULL(MSTEQM.FACTORYCD, '') AS FACTORYCD,
+           IFNULL(MSTEQM.LINECD, '')    AS LINECD,
+           IFNULL(MSTEQM.EQMTP, '')     AS EQMTP,
+           IFNULL(MSTEQM.EQMGROUP1, '') AS EQMGROUP1,
            COALESCE(CONCAT('REV.', PLAN_REV.REVNUM), '') AS REVNM,
            CASE WHEN PLAN_REV.REVCD IS NULL OR PLAN_REV.REVCD = '' THEN ''
                 WHEN PLAN_REV.APRVSTT = 'A' THEN '승인'
@@ -432,6 +454,10 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
      AND PLAN_REV.PLANCD = LAST_REV.PLANCD
      AND PLAN_REV.REVNUM = LAST_REV.REVNUM
     WHERE MSTEQM.USEYN = 'Y'
+      AND ($FACTORYCD = '' OR MSTEQM.FACTORYCD = $FACTORYCD)
+      AND ($LINECD = '' OR MSTEQM.LINECD = $LINECD)
+      AND ($EQMTP = '' OR MSTEQM.EQMTP = $EQMTP)
+      AND ($EQMGROUP1 = '' OR MSTEQM.EQMGROUP1 = $EQMGROUP1)
       AND (COALESCE($EQMGRP, '') = '' OR MSTEQM.EQMGUBUN LIKE CONCAT('%', $EQMGRP, '%'))
       AND (COALESCE($FANO, '') = '' OR MSTEQM.FANO LIKE CONCAT('%', $FANO, '%') OR MSTEQM.EQMNM LIKE CONCAT('%', $FANO, '%'))
     ORDER BY MSTEQM.FANO;
@@ -794,12 +820,47 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       LEAVE PROC;
     END IF;
 
-    SELECT MSTEQM.FANO,
+    SET $FACTORYCD = '07';
+
+    SELECT IFNULL(MSTEQM.FACTORYCD, '') AS FACTORYCD,
+           IFNULL(MSTEQM.LINECD, '')    AS LINECD,
+           IFNULL(MSTEQM.EQMTP, '')     AS EQMTP,
+           IFNULL(MSTEQM.EQMGROUP1, '') AS EQMGROUP1,
+           MSTEQM.FANO,
            MSTEQM.EQMNM,
            MSTEQM.EQMGRADE,
            CASE WHEN LENGTH(MSTEQM.EQMGRADE) > 0 THEN
              COALESCE(NULLIF(GPCD('FM110', MSTEQM.EQMGRADE), ''), MSTEQM.EQMGRADE)
            ELSE MSTEQM.EQMGRADE END AS EQMGRADENM,
+           IFNULL(GRADE_SCORE.CHKCYCLE2, '') AS CHKCYCLE2,
+           -- 점검주기 문구 해석: CHKYEAR년에 CHKCNT회 (해석 불가 시 NULL, 화면 검증 생략)
+           GRADE_SCORE.CHKCNT,
+           GRADE_SCORE.CHKYEAR,
+           -- 주기 안의 앞뒤 년도 배정 횟수와 현황 (2년/1회면 전년·다음년)
+           (SELECT IFNULL(SUM((OTHER_PLAN.MONTH_01 <> '') + (OTHER_PLAN.MONTH_02 <> '') + (OTHER_PLAN.MONTH_03 <> '') + (OTHER_PLAN.MONTH_04 <> '') +
+                              (OTHER_PLAN.MONTH_05 <> '') + (OTHER_PLAN.MONTH_06 <> '') + (OTHER_PLAN.MONTH_07 <> '') + (OTHER_PLAN.MONTH_08 <> '') +
+                              (OTHER_PLAN.MONTH_09 <> '') + (OTHER_PLAN.MONTH_10 <> '') + (OTHER_PLAN.MONTH_11 <> '') + (OTHER_PLAN.MONTH_12 <> '')), 0)
+            FROM CHKPLANEQM_YEARPLAN OTHER_PLAN
+            WHERE OTHER_PLAN.EQMCD = MSTEQM.FANO
+              AND OTHER_PLAN.CHKTP = '02'
+              AND OTHER_PLAN.YEAR + 0 BETWEEN $SYEAR - (GRADE_SCORE.CHKYEAR - 1) AND $SYEAR - 1) AS PREVCNT,
+           (SELECT IFNULL(SUM((OTHER_PLAN.MONTH_01 <> '') + (OTHER_PLAN.MONTH_02 <> '') + (OTHER_PLAN.MONTH_03 <> '') + (OTHER_PLAN.MONTH_04 <> '') +
+                              (OTHER_PLAN.MONTH_05 <> '') + (OTHER_PLAN.MONTH_06 <> '') + (OTHER_PLAN.MONTH_07 <> '') + (OTHER_PLAN.MONTH_08 <> '') +
+                              (OTHER_PLAN.MONTH_09 <> '') + (OTHER_PLAN.MONTH_10 <> '') + (OTHER_PLAN.MONTH_11 <> '') + (OTHER_PLAN.MONTH_12 <> '')), 0)
+            FROM CHKPLANEQM_YEARPLAN OTHER_PLAN
+            WHERE OTHER_PLAN.EQMCD = MSTEQM.FANO
+              AND OTHER_PLAN.CHKTP = '02'
+              AND OTHER_PLAN.YEAR + 0 BETWEEN $SYEAR + 1 AND $SYEAR + (GRADE_SCORE.CHKYEAR - 1)) AS NEXTCNT,
+           IFNULL((SELECT GROUP_CONCAT(CONCAT(OTHER_PLAN.YEAR, '년 ',
+                                              (OTHER_PLAN.MONTH_01 <> '') + (OTHER_PLAN.MONTH_02 <> '') + (OTHER_PLAN.MONTH_03 <> '') + (OTHER_PLAN.MONTH_04 <> '') +
+                                              (OTHER_PLAN.MONTH_05 <> '') + (OTHER_PLAN.MONTH_06 <> '') + (OTHER_PLAN.MONTH_07 <> '') + (OTHER_PLAN.MONTH_08 <> '') +
+                                              (OTHER_PLAN.MONTH_09 <> '') + (OTHER_PLAN.MONTH_10 <> '') + (OTHER_PLAN.MONTH_11 <> '') + (OTHER_PLAN.MONTH_12 <> ''), '회')
+                                       ORDER BY OTHER_PLAN.YEAR SEPARATOR ', ')
+                   FROM CHKPLANEQM_YEARPLAN OTHER_PLAN
+                   WHERE OTHER_PLAN.EQMCD = MSTEQM.FANO
+                     AND OTHER_PLAN.CHKTP = '02'
+                     AND OTHER_PLAN.YEAR <> $SYEAR
+                     AND OTHER_PLAN.YEAR + 0 BETWEEN $SYEAR - (GRADE_SCORE.CHKYEAR - 1) AND $SYEAR + (GRADE_SCORE.CHKYEAR - 1)), '') AS OTHERPLAN,
            $SYEAR AS YEAR,
            -- 월별 점검자: MSTEMP 일괄 LEFT JOIN 사원명 매핑 (매핑 실패 시 사원코드 fallback, MxxCD는 저장값 유지)
            CASE WHEN LENGTH(CHKPLANEQM_YEARPLAN.MONTH_01) > 0 THEN
@@ -850,12 +911,47 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
              COALESCE(EMP12.EMPNM, CHKPLANEQM_YEARPLAN.MONTH_12)
            ELSE '' END AS M12,
            IFNULL(CHKPLANEQM_YEARPLAN.MONTH_12, '') AS M12CD,
-           IFNULL(CHKPLANEQM_YEARPLAN.REMARK, '') AS REMARK
+           IFNULL(CHKPLANEQM_YEARPLAN.REMARK, '') AS REMARK,
+           -- 정기점검 실적이 있는 점검자 배정 월 (예: ',3,11,'), 화면에서 해당 월 점검자 변경·삭제 차단
+           IFNULL(LOCK_MM.LOCKMM, '') AS LOCKMM
     FROM MSTEQM
     LEFT JOIN CHKPLANEQM_YEARPLAN
       ON CHKPLANEQM_YEARPLAN.EQMCD = MSTEQM.FANO
      AND CHKPLANEQM_YEARPLAN.YEAR = $SYEAR
      AND CHKPLANEQM_YEARPLAN.CHKTP = '02'
+    LEFT JOIN (
+      SELECT CHKRSTEQM.EQMCD,
+             CONCAT(',', GROUP_CONCAT(DISTINCT CAST(SUBSTRING(CHKRSTEQM.BASEDATE, 6, 2) AS UNSIGNED)), ',') AS LOCKMM
+      FROM CHKRSTEQM
+      INNER JOIN CHKPLANEQM_YEARPLAN
+        ON CHKPLANEQM_YEARPLAN.EQMCD = CHKRSTEQM.EQMCD
+       AND CHKPLANEQM_YEARPLAN.YEAR = $SYEAR
+       AND CHKPLANEQM_YEARPLAN.CHKTP = '02'
+      WHERE CHKRSTEQM.CHKTP = '02'
+        AND CHKRSTEQM.BASEDATE LIKE CONCAT($SYEAR, '-%')
+        AND IFNULL(ELT(CAST(SUBSTRING(CHKRSTEQM.BASEDATE, 6, 2) AS UNSIGNED),
+                    CHKPLANEQM_YEARPLAN.MONTH_01, CHKPLANEQM_YEARPLAN.MONTH_02, CHKPLANEQM_YEARPLAN.MONTH_03,
+                    CHKPLANEQM_YEARPLAN.MONTH_04, CHKPLANEQM_YEARPLAN.MONTH_05, CHKPLANEQM_YEARPLAN.MONTH_06,
+                    CHKPLANEQM_YEARPLAN.MONTH_07, CHKPLANEQM_YEARPLAN.MONTH_08, CHKPLANEQM_YEARPLAN.MONTH_09,
+                    CHKPLANEQM_YEARPLAN.MONTH_10, CHKPLANEQM_YEARPLAN.MONTH_11, CHKPLANEQM_YEARPLAN.MONTH_12), '') <> ''
+      GROUP BY CHKRSTEQM.EQMCD
+    ) LOCK_MM
+      ON LOCK_MM.EQMCD = MSTEQM.FANO
+    -- 설비등급별 정기점검주기 (설비등급기준 관리의 사용중 리비전, ERP는 등급 코드만 보내고 주기 문구는 MES에서 관리)
+    -- 문구 해석: 'N년/M회'·'년 M회 점검' → N년(없으면 1년)에 M회, '오버홀' 등 횟수 없는 문구는 NULL
+    LEFT JOIN (
+      SELECT MSTEQM_GRADEREV_SCORE.EQMGRADE,
+             MSTEQM_GRADEREV_SCORE.CHKCYCLE2,
+             CASE WHEN MSTEQM_GRADEREV_SCORE.CHKCYCLE2 REGEXP '(년|연)' AND MSTEQM_GRADEREV_SCORE.CHKCYCLE2 REGEXP '[0-9]+ *회' THEN
+               CAST(REGEXP_REPLACE(REGEXP_SUBSTR(MSTEQM_GRADEREV_SCORE.CHKCYCLE2, '[0-9]+ *회'), '[^0-9]', '') AS SIGNED)
+             END AS CHKCNT,
+             CASE WHEN MSTEQM_GRADEREV_SCORE.CHKCYCLE2 REGEXP '(년|연)' AND MSTEQM_GRADEREV_SCORE.CHKCYCLE2 REGEXP '[0-9]+ *회' THEN
+               IFNULL(CAST(NULLIF(REGEXP_REPLACE(REGEXP_SUBSTR(MSTEQM_GRADEREV_SCORE.CHKCYCLE2, '[0-9]+ *(년|연)'), '[^0-9]', ''), '') AS SIGNED), 1)
+             END AS CHKYEAR
+      FROM MSTEQM_GRADEREV_SCORE
+      WHERE MSTEQM_GRADEREV_SCORE.REVCD = (SELECT REVCD FROM MSTEQM_GRADEREV WHERE USEYN = 'Y' LIMIT 1)
+    ) GRADE_SCORE
+      ON GRADE_SCORE.EQMGRADE = MSTEQM.EQMGRADE
     LEFT JOIN MSTEMP EMP01 ON EMP01.EMPCD = CHKPLANEQM_YEARPLAN.MONTH_01
     LEFT JOIN MSTEMP EMP02 ON EMP02.EMPCD = CHKPLANEQM_YEARPLAN.MONTH_02
     LEFT JOIN MSTEMP EMP03 ON EMP03.EMPCD = CHKPLANEQM_YEARPLAN.MONTH_03
@@ -869,6 +965,10 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     LEFT JOIN MSTEMP EMP11 ON EMP11.EMPCD = CHKPLANEQM_YEARPLAN.MONTH_11
     LEFT JOIN MSTEMP EMP12 ON EMP12.EMPCD = CHKPLANEQM_YEARPLAN.MONTH_12
     WHERE MSTEQM.USEYN = 'Y'
+      AND ($FACTORYCD = '' OR MSTEQM.FACTORYCD = $FACTORYCD)
+      AND ($LINECD = '' OR MSTEQM.LINECD = $LINECD)
+      AND ($EQMTP = '' OR MSTEQM.EQMTP = $EQMTP)
+      AND ($EQMGROUP1 = '' OR MSTEQM.EQMGROUP1 = $EQMGROUP1)
       AND (MSTEQM.FANO LIKE CONCAT('%', $FANO, '%') OR MSTEQM.EQMNM LIKE CONCAT('%', $FANO, '%'))
     ORDER BY MSTEQM.FANO;
 
@@ -982,8 +1082,64 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
         CALL COMERR(CONCAT('[', _$FANO, '] ', _$YEAR, '년 ', _$LOCKMM, '은 정기점검 실적이 있어 점검자를 변경·삭제할 수 없습니다. 설비 정기점검 등록에서 해당 월 점검 실적을 먼저 삭제해주세요.'));
         LEAVE PROC;
       END IF;
-    
-      IF EXISTS (SELECT 1 FROM CHKPLANEQM_YEARPLAN WHERE EQMCD = _$FANO AND YEAR = _$YEAR AND CHKTP = '02') THEN  
+
+      -- 설비등급 점검주기(설비등급기준 문구 'N년/M회'·'년 M회') 초과 배정 차단
+      -- 배정 월 수가 늘어날 때만 검사 (ERP 등급 변경으로 이미 초과된 계획은 점검자 변경·축소 허용), 문구 해석 불가 등급은 검사 안 함
+      SET _$NEWCNT = (_$M01 <> '') + (_$M02 <> '') + (_$M03 <> '') + (_$M04 <> '') + (_$M05 <> '') + (_$M06 <> '') +
+                     (_$M07 <> '') + (_$M08 <> '') + (_$M09 <> '') + (_$M10 <> '') + (_$M11 <> '') + (_$M12 <> '');
+      SET _$OLDCNT = IFNULL((
+        SELECT (MONTH_01 <> '') + (MONTH_02 <> '') + (MONTH_03 <> '') + (MONTH_04 <> '') + (MONTH_05 <> '') + (MONTH_06 <> '') +
+               (MONTH_07 <> '') + (MONTH_08 <> '') + (MONTH_09 <> '') + (MONTH_10 <> '') + (MONTH_11 <> '') + (MONTH_12 <> '')
+        FROM CHKPLANEQM_YEARPLAN
+        WHERE EQMCD = _$FANO AND YEAR = _$YEAR AND CHKTP = '02'
+      ), 0);
+
+      IF _$NEWCNT > _$OLDCNT THEN
+        SET _$GRADENM = (SELECT GPCD('FM110', EQMGRADE) FROM MSTEQM WHERE FANO = _$FANO LIMIT 1);
+        SET _$CHKCYCLE = (
+          SELECT MSTEQM_GRADEREV_SCORE.CHKCYCLE2
+          FROM MSTEQM
+          INNER JOIN MSTEQM_GRADEREV_SCORE
+            ON MSTEQM_GRADEREV_SCORE.REVCD = (SELECT REVCD FROM MSTEQM_GRADEREV WHERE USEYN = 'Y' LIMIT 1)
+           AND MSTEQM_GRADEREV_SCORE.EQMGRADE = MSTEQM.EQMGRADE
+          WHERE MSTEQM.FANO = _$FANO
+          LIMIT 1
+        );
+
+        SET _$CHKCNT = NULL;
+        SET _$CHKYEAR = NULL;
+        IF _$CHKCYCLE REGEXP '(년|연)' AND _$CHKCYCLE REGEXP '[0-9]+ *회' THEN
+          SET _$CHKCNT  = CAST(REGEXP_REPLACE(REGEXP_SUBSTR(_$CHKCYCLE, '[0-9]+ *회'), '[^0-9]', '') AS SIGNED);
+          SET _$CHKYEAR = IFNULL(CAST(NULLIF(REGEXP_REPLACE(REGEXP_SUBSTR(_$CHKCYCLE, '[0-9]+ *(년|연)'), '[^0-9]', ''), '') AS SIGNED), 1);
+        END IF;
+
+        IF _$CHKCNT > 0 AND _$CHKYEAR > 0 THEN
+          SET _$PREVCNT = IFNULL((
+            SELECT SUM((MONTH_01 <> '') + (MONTH_02 <> '') + (MONTH_03 <> '') + (MONTH_04 <> '') + (MONTH_05 <> '') + (MONTH_06 <> '') +
+                       (MONTH_07 <> '') + (MONTH_08 <> '') + (MONTH_09 <> '') + (MONTH_10 <> '') + (MONTH_11 <> '') + (MONTH_12 <> ''))
+            FROM CHKPLANEQM_YEARPLAN
+            WHERE EQMCD = _$FANO AND CHKTP = '02'
+              AND YEAR + 0 BETWEEN _$YEAR - (_$CHKYEAR - 1) AND _$YEAR - 1
+          ), 0);
+          SET _$NEXTCNT = IFNULL((
+            SELECT SUM((MONTH_01 <> '') + (MONTH_02 <> '') + (MONTH_03 <> '') + (MONTH_04 <> '') + (MONTH_05 <> '') + (MONTH_06 <> '') +
+                       (MONTH_07 <> '') + (MONTH_08 <> '') + (MONTH_09 <> '') + (MONTH_10 <> '') + (MONTH_11 <> '') + (MONTH_12 <> ''))
+            FROM CHKPLANEQM_YEARPLAN
+            WHERE EQMCD = _$FANO AND CHKTP = '02'
+              AND YEAR + 0 BETWEEN _$YEAR + 1 AND _$YEAR + (_$CHKYEAR - 1)
+          ), 0);
+
+          IF _$PREVCNT + _$NEWCNT > _$CHKCNT OR _$NEWCNT + _$NEXTCNT > _$CHKCNT THEN
+            CALL COMERR(CONCAT('[', _$FANO, '] ', IFNULL(_$GRADENM, ''), '등급(', _$CHKCYCLE, ')은 ',
+                               IF(_$CHKYEAR > 1, CONCAT(_$CHKYEAR, '년에 '), '한 해에 '), _$CHKCNT, '회까지 점검자를 배정할 수 있습니다. (',
+                               _$YEAR, '년 ', _$NEWCNT, '회',
+                               IF(_$PREVCNT + _$NEXTCNT > 0, CONCAT(', 주기 안 다른 년도 ', _$PREVCNT + _$NEXTCNT, '회'), ''), ')'));
+            LEAVE PROC;
+          END IF;
+        END IF;
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM CHKPLANEQM_YEARPLAN WHERE EQMCD = _$FANO AND YEAR = _$YEAR AND CHKTP = '02') THEN
         UPDATE CHKPLANEQM_YEARPLAN
         SET MONTH_01 = _$M01,
             MONTH_02 = _$M02,

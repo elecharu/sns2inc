@@ -58,6 +58,10 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('설비코드', 'FANO', { width: 80, align: 'center' }),
         column.create('설비그룹', 'EQMGUBUN', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM116' }),
+        column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),
+        column.create('작업장', 'LINECD', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'LINECD', readOnly: true }),
+        column.create('설비구분', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
+        column.create('설비대분류', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
         column.create('설비명', 'EQMNM', { width: 200 }),
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('승인상태', 'APRVSTTNM', { width: 65, align: 'center', readOnly: true }),
@@ -108,9 +112,17 @@ ItsPage.Load = function () {
 
     // 정기점검 주기관리 탭: 연간 계획 초기화
     ItsGrid.Create('grid9', { isCheckBoxGrid: true }, [
+        column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),
+        column.create('작업장', 'LINECD', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'LINECD', readOnly: true }),
+        column.create('설비구분', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
+        column.create('설비대분류', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
         column.create('설비코드', 'FANO', { width: 100, align: 'center' }),
         column.create('설비명', 'EQMNM', { width: 220 }),
         column.create('설비등급', 'EQMGRADENM', { width: 90, align: 'center', readOnly: true }),
+        // 2026-11-16 [정기점검 주기관리 탭] 설비등급별 점검주기 (설비등급기준 관리 사용중 리비전)
+        column.create('점검주기', 'CHKCYCLE2', { width: 100, align: 'center', readOnly: true }),
+        // 2026-11-16 [정기점검 주기관리 탭] 점검주기 기준 조회년도 배정 횟수·상태 (적정·부족·초과·미배정)
+        column.create('계획', 'PLANSTAT', { width: 90, align: 'center', readOnly: true }),
         column.create('년도', 'YEAR', { width: 80, align: 'center' }),
         column.create('1월', 'M01', { width: 80, align: 'center', readOnly: true }),
         column.create('2월', 'M02', { width: 80, align: 'center', readOnly: true }),
@@ -136,6 +148,14 @@ ItsPage.Load = function () {
         column.create('10월점검자', 'M10CD', { hidden: true }),
         column.create('11월점검자', 'M11CD', { hidden: true }),
         column.create('12월점검자', 'M12CD', { hidden: true }),
+        // 2026-11-16 [정기점검 주기관리 탭] 정기점검 실적이 있는 점검자 배정 월 (예: ',3,11,')
+        column.create('실적월', 'LOCKMM', { hidden: true }),
+        // 2026-11-16 [정기점검 주기관리 탭] 점검주기 문구 해석값(CHKYEAR년에 CHKCNT회)과 주기 안 앞뒤 년도 배정 횟수·현황
+        column.create('주기횟수', 'CHKCNT', { hidden: true }),
+        column.create('주기년수', 'CHKYEAR', { hidden: true }),
+        column.create('이전배정', 'PREVCNT', { hidden: true }),
+        column.create('다음배정', 'NEXTCNT', { hidden: true }),
+        column.create('다른년도배정', 'OTHERPLAN', { hidden: true }),
         column.split()
     ]);
 
@@ -222,6 +242,11 @@ ItsButton.EventSearch = function () {
             maria.ShowErrMsg();
             return;
         }
+
+        // 2026-11-16 [정기점검 주기관리 탭] 점검주기 기준 계획 상태를 조회 결과에 바로 설정
+        maria.store.data.forEach(function (row) {
+            row.PLANSTAT = GetCyclePlanStat(function (f) { return row[f]; });
+        });
 
         ItsGrid.SetStore('grid9', maria.store);
         ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
@@ -621,9 +646,12 @@ ItsGrid.Event('grid9').onKeydown = function (rowIndex, field, keyCode) {
             field == 'M07' || field == 'M08' || field == 'M09' || field == 'M10' || field == 'M11' || field == 'M12') {
             var val = (ItsGrid.GetValue('grid9', rowIndex, field) || '').toString().trim();
             if (val !== '') {
+                // 2026-11-16 [정기점검 주기관리 탭] 정기점검 실적이 있는 월은 삭제 차단
+                if (AlertCycleLock(rowIndex, [field])) return;
                 // 2026-10-02 [정기점검 주기관리 탭] 월 칸 점검자명·사원코드 함께 삭제
                 SetCycleEmp(rowIndex, field, '', '');
                 ItsGrid.CheckRow('grid9', rowIndex);
+                UpdateCyclePlanStat(rowIndex);
             }
         }
     }
@@ -633,6 +661,9 @@ ItsGrid.Event('grid9').onKeydown = function (rowIndex, field, keyCode) {
 ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
     if (field == 'M01' || field == 'M02' || field == 'M03' || field == 'M04' || field == 'M05' || field == 'M06' ||
         field == 'M07' || field == 'M08' || field == 'M09' || field == 'M10' || field == 'M11' || field == 'M12') {
+        // 2026-11-16 [정기점검 주기관리 탭] 정기점검 실적이 있는 월은 점검자 덮어쓰기·삭제 차단
+        if (AlertCycleLock(rowIndex, [field])) return;
+
         var cellVal = (ItsGrid.GetValue('grid9', rowIndex, field) || '').toString().trim();
         // 2026-10-02 [정기점검 주기관리 탭] 월 칸 저장값(사원코드)과 선택 점검자 사원코드·사원명
         var cellCd = (ItsGrid.GetValue('grid9', rowIndex, field + 'CD') || '').toString().trim();
@@ -643,11 +674,16 @@ ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
             if (cellVal !== '') {
                 SetCycleEmp(rowIndex, field, '', '');
                 ItsGrid.CheckRow('grid9', rowIndex);
+                UpdateCyclePlanStat(rowIndex);
             } else {
                 ItsMsg.Toast('점검자를 선택해주세요.');
             }
             return;
         }
+
+        // 2026-11-16 [정기점검 주기관리 탭] 빈 월에 새로 배정할 때 점검주기 횟수를 넘으면 차단
+        var isAdd = (cellCd === '');
+        if (isAdd && AlertCycleOver(rowIndex, [field])) return;
 
         // 2026-10-02 [정기점검 주기관리 탭] 동일 점검자(사원코드 기준, 동명이인 구분) 토글 삭제, 다른 점검자 설정
         if (cellCd === emp.cd) {
@@ -656,6 +692,8 @@ ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
             SetCycleEmp(rowIndex, field, emp.cd, emp.nm);
         }
         ItsGrid.CheckRow('grid9', rowIndex);
+        UpdateCyclePlanStat(rowIndex);
+        if (isAdd) ToastCycleGap(rowIndex, field);
     }
 };
 
@@ -663,6 +701,114 @@ ItsGrid.Event('grid9').onKeydownEnter = function (rowIndex, field) {
 function GetCycleEmp() {
     var cd = (ItsFind.GetValue('find_EMP') || '').trim();
     return { cd: cd, nm: cd ? ((ItsFind.GetNameValue('find_EMP') || '').trim() || cd) : '' };
+}
+
+// 2026-11-16 [정기점검 주기관리 탭] 정기점검 실적이 있는 점검자 배정 월이 대상에 있으면 안내 후 true (저장 프로시저와 같은 문구)
+function AlertCycleLock(rowIndex, fields) {
+    var lockMm = (ItsGrid.GetValue('grid9', rowIndex, 'LOCKMM') || '').toString();
+    var arrLock = [];
+    for (var i = 0; i < fields.length; i++) {
+        var mm = parseInt(fields[i].substring(1), 10);
+        if (lockMm.indexOf(',' + mm + ',') >= 0) arrLock.push(mm + '월');
+    }
+    if (arrLock.length === 0) return false;
+
+    ItsMsg.Alert('[' + ItsGrid.GetValue('grid9', rowIndex, 'FANO') + '] ' + ItsGrid.GetValue('grid9', rowIndex, 'YEAR') + '년 ' + arrLock.join(', ') +
+        '은 정기점검 실적이 있어 점검자를 변경·삭제할 수 없습니다. 설비 정기점검 등록에서 해당 월 점검 실적을 먼저 삭제해주세요.');
+    return true;
+}
+
+// 2026-11-16 [정기점검 주기관리 탭] 행의 점검자 배정 월 번호 목록 (getVal: 필드명 → 값)
+function GetCycleMonths(getVal) {
+    var arr = [];
+    for (var m = 1; m <= 12; m++) {
+        if ((getVal((m < 10 ? 'M0' : 'M') + m + 'CD') || '').toString().trim() !== '') arr.push(m);
+    }
+    return arr;
+}
+
+// 2026-11-16 [정기점검 주기관리 탭] 점검주기(CHKYEAR년에 CHKCNT회) 기준 계획 상태, 주기 문구 해석 불가 등급은 빈값
+function GetCyclePlanStat(getVal) {
+    var n = parseInt(getVal('CHKCNT'), 10), k = parseInt(getVal('CHKYEAR'), 10);
+    if (!(n > 0) || !(k > 0)) return '';
+
+    var cnt = GetCycleMonths(getVal).length;
+    var prev = parseInt(getVal('PREVCNT'), 10) || 0, next = parseInt(getVal('NEXTCNT'), 10) || 0;
+    if (prev + cnt > n || cnt + next > n) return cnt + '회 초과';
+    if (k === 1) return cnt + '회 ' + (cnt < n ? '부족' : '적정');
+    return cnt + '회 ' + (prev + cnt + next === 0 ? '미배정' : '적정');
+}
+
+// 2026-11-16 [정기점검 주기관리 탭] 월 칸 변경 후 계획 상태 갱신
+function UpdateCyclePlanStat(rowIndex) {
+    ItsGrid.SetValue('grid9', rowIndex, 'PLANSTAT', GetCyclePlanStat(function (f) { return ItsGrid.GetValue('grid9', rowIndex, f); }));
+}
+
+// 2026-11-16 [정기점검 주기관리 탭] 대상 월(fields)을 새로 배정하면 점검주기 횟수를 넘을 때 안내 문구, 넘지 않으면 '' (저장 프로시저와 같은 기준)
+function GetCycleOverMsg(rowIndex, fields) {
+    var getVal = function (f) { return ItsGrid.GetValue('grid9', rowIndex, f); };
+    var n = parseInt(getVal('CHKCNT'), 10), k = parseInt(getVal('CHKYEAR'), 10);
+    if (!(n > 0) || !(k > 0)) return '';
+
+    var months = GetCycleMonths(getVal);
+    var newCnt = months.length;
+    for (var i = 0; i < fields.length; i++) {
+        if (months.indexOf(parseInt(fields[i].substring(1), 10)) < 0) newCnt++;
+    }
+    if (newCnt <= months.length) return '';
+
+    var prev = parseInt(getVal('PREVCNT'), 10) || 0, next = parseInt(getVal('NEXTCNT'), 10) || 0;
+    if (prev + newCnt <= n && newCnt + next <= n) return '';
+
+    return '[' + getVal('FANO') + '] ' + getVal('EQMGRADENM') + '등급(' + getVal('CHKCYCLE2') + ')은 ' + (k > 1 ? k + '년에 ' : '한 해에 ') + n +
+        '회까지 점검자를 배정할 수 있습니다.';
+}
+
+// 2026-11-16 [정기점검 주기관리 탭] 점검주기 횟수를 넘으면 안내 후 true
+function AlertCycleOver(rowIndex, fields) {
+    var msg = GetCycleOverMsg(rowIndex, fields);
+    if (msg === '') return false;
+    ItsMsg.Alert(msg);
+    return true;
+}
+
+// 2026-11-16 [일괄 주기설정 팝업] 체크한 설비 중 선택 월(fields)로 점검주기 횟수를 넘는 첫 설비의 안내 문구, 없으면 ''
+function GetCycleBatchOverMsg(fields) {
+    for (var i = 0; i < ItsGrid.Length('grid9'); i++) {
+        if (ItsGrid.IsChecked('grid9', i)) {
+            var msg = GetCycleOverMsg(i, fields);
+            if (msg !== '') return msg;
+        }
+    }
+    return '';
+}
+
+// 2026-11-16 [일괄 주기설정 팝업] 체크된 월 목록 (M01~M12)
+function GetBatchMonths() {
+    var arr = [];
+    $('.chk_MONTH:checked').each(function () { arr.push($(this).val()); });
+    return arr;
+}
+
+// 2026-11-16 [정기점검 주기관리 탭] 한 해 2회 이상 주기에서 새로 배정한 월과 다른 배정 월 간격이 좁으면 안내 (차단 안 함)
+function ToastCycleGap(rowIndex, field) {
+    var getVal = function (f) { return ItsGrid.GetValue('grid9', rowIndex, f); };
+    var n = parseInt(getVal('CHKCNT'), 10), k = parseInt(getVal('CHKYEAR'), 10);
+    if (!(n > 0) || !(k > 0)) return;
+
+    var perYear = Math.ceil(n / k);
+    var minGap = Math.floor(12 / perYear) - 2; // 년 2회 → 4개월
+    if (perYear < 2 || minGap < 2) return;
+
+    var mm = parseInt(field.substring(1), 10);
+    var months = GetCycleMonths(getVal);
+    for (var i = 0; i < months.length; i++) {
+        if (months[i] !== mm && Math.abs(months[i] - mm) < minGap) {
+            ItsMsg.Toast('[' + getVal('FANO') + '] ' + Math.min(months[i], mm) + '월·' + Math.max(months[i], mm) + '월 간격이 ' + Math.abs(months[i] - mm) +
+                '개월입니다. ' + getVal('CHKCYCLE2') + ' 주기는 ' + minGap + '개월 이상 간격을 권장합니다.');
+            return;
+        }
+    }
 }
 
 // 2026-10-02 [정기점검 주기관리 탭] 월 칸에 점검자 설정 (화면은 사원명, 저장은 사원코드)
@@ -707,18 +853,54 @@ ItsButton.Event('btn_OPEN_CYCLE_BATCH').onClick = function () {
     $('#lbl_BATCH_CNT').text(cnt);
 
     // 기존 등록된 월이 있으면 해당 월만 선택, 없으면 전체 선택
-    if (existCnt > 0) {
-        $('.chk_MONTH').each(function () {
-            $(this).prop('checked', !!existMonths[$(this).val()]);
-        });
-        SetAllMonthButton(existCnt === arrMonth.length);
-    } else {
-        $('.chk_MONTH').prop('checked', true);
-        SetAllMonthButton(true);
+    // 2026-11-16 [일괄 주기설정 팝업] 그 선택이 체크한 설비의 점검주기 횟수를 넘으면 선택 없이 열기
+    var arrDefault = [];
+    for (var m = 0; m < arrMonth.length; m++) {
+        if (existCnt === 0 || existMonths[arrMonth[m]]) arrDefault.push(arrMonth[m]);
     }
+    if (GetCycleBatchOverMsg(arrDefault) !== '') arrDefault = [];
+    $('.chk_MONTH').each(function () {
+        $(this).prop('checked', arrDefault.indexOf($(this).val()) >= 0);
+    });
+    SetAllMonthButton(arrDefault.length === arrMonth.length);
+
+    // 2026-11-16 [일괄 주기설정 팝업] 체크한 설비의 등급별 점검주기와 추가 배정 불가 설비 안내
+    $('#lbl_BATCH_CYCLE').html(GetCycleBatchInfo());
 
     ItsPop.Open('pop_CYCLE_BATCH');
 };
+
+// 2026-11-16 [일괄 주기설정 팝업] 체크한 설비의 등급·점검주기별 대수, 이번 년도에 월을 더 배정할 수 없는 설비 안내 HTML
+function GetCycleBatchInfo() {
+    var groups = [], groupCnt = {}, fullList = [];
+    for (var i = 0; i < ItsGrid.Length('grid9'); i++) {
+        if (!ItsGrid.IsChecked('grid9', i)) continue;
+
+        var getVal = (function (r) { return function (f) { return ItsGrid.GetValue('grid9', r, f); }; })(i);
+        var n = parseInt(getVal('CHKCNT'), 10), k = parseInt(getVal('CHKYEAR'), 10);
+        var key = (n > 0 && k > 0) ? getVal('EQMGRADENM') + '등급 ' + getVal('CHKCYCLE2') : '주기 기준 없음';
+        if (!groupCnt[key]) { groupCnt[key] = 0; groups.push(key); }
+        groupCnt[key]++;
+
+        // 비어 있는 아무 월 1개를 더해도 횟수를 넘으면 추가 배정 불가
+        var months = GetCycleMonths(getVal);
+        for (var m = 1; m <= 12; m++) {
+            if (months.indexOf(m) < 0) {
+                if (GetCycleOverMsg(i, [(m < 10 ? 'M0' : 'M') + m]) !== '') fullList.push(getVal('FANO'));
+                break;
+            }
+        }
+    }
+
+    var arrText = [];
+    for (var g = 0; g < groups.length; g++) arrText.push(groups[g] + ' ' + groupCnt[groups[g]] + '대');
+    var html = '<span style="font-weight: bold; color: #224488;">점검주기:</span> ' + arrText.join(', ');
+    if (fullList.length > 0) {
+        html += '<br/><span style="color: #e53935;">※ 점검주기 횟수가 찬 설비 ' + fullList.length + '대(' + fullList.slice(0, 5).join(', ') + (fullList.length > 5 ? ' 등' : '') +
+            ')는 새 월을 배정할 수 없습니다. 기존 배정 월만 선택하거나 체크를 해제해주세요.</span>';
+    }
+    return html;
+}
 
 // 2026-09-29 [정기점검 주기관리 탭] 전체 선택/해제 버튼 상태 설정
 function SetAllMonthButton(isAll) {
@@ -733,12 +915,30 @@ $(document).on('click', '#btn_ALL_MONTH', function () {
     var chkCnt = $('.chk_MONTH:checked').length;
     var isCheck = (chkCnt < totalCnt);
 
+    // 2026-11-16 [일괄 주기설정 팝업] 전체 선택 시 체크한 설비의 점검주기 횟수를 넘으면 차단
+    if (isCheck) {
+        var msg = GetCycleBatchOverMsg(['M01', 'M02', 'M03', 'M04', 'M05', 'M06', 'M07', 'M08', 'M09', 'M10', 'M11', 'M12']);
+        if (msg !== '') {
+            ItsMsg.Alert(msg);
+            return;
+        }
+    }
+
     $('.chk_MONTH').prop('checked', isCheck);
     SetAllMonthButton(isCheck);
 });
 
 // 2026-09-29 [정기점검 주기관리 탭] 월 체크박스 상태 변경 시 토글 버튼 동기화
 $(document).on('change', '.chk_MONTH', function () {
+    // 2026-11-16 [일괄 주기설정 팝업] 월을 체크해 체크한 설비의 점검주기 횟수를 넘으면 체크 취소
+    if ($(this).prop('checked')) {
+        var msg = GetCycleBatchOverMsg(GetBatchMonths());
+        if (msg !== '') {
+            $(this).prop('checked', false);
+            ItsMsg.Alert(msg);
+        }
+    }
+
     var totalCnt = $('.chk_MONTH').length;
     var chkCnt = $('.chk_MONTH:checked').length;
     SetAllMonthButton(chkCnt === totalCnt);
@@ -765,6 +965,20 @@ ItsButton.Event('btn_SAVE_BATCH').onClick = function () {
     if (arrSelMonth.length === 0) {
         ItsMsg.Toast('적용할 대상 월을 1개 이상 선택해주세요.');
         return;
+    }
+
+    // 2026-11-16 [일괄 주기설정 팝업] 정기점검 실적이 있는 월의 점검자가 바뀌는 설비가 있으면 덮어쓰기 차단
+    var empCd = ItsFind.GetValue('find_EMP').trim();
+    for (var i = 0; i < ItsGrid.Length('grid9'); i++) {
+        if (ItsGrid.IsChecked('grid9', i)) {
+            var arrChange = [];
+            for (var m = 0; m < arrSelMonth.length; m++) {
+                if ((ItsGrid.GetValue('grid9', i, arrSelMonth[m] + 'CD') || '').toString().trim() !== empCd) arrChange.push(arrSelMonth[m]);
+            }
+            if (AlertCycleLock(i, arrChange)) return;
+            // 2026-11-16 [일괄 주기설정 팝업] 새로 배정되는 월로 점검주기 횟수를 넘는 설비가 있으면 차단
+            if (AlertCycleOver(i, arrSelMonth)) return;
+        }
     }
 
     // 선택 설비 월별 점검자 바인딩

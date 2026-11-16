@@ -1,6 +1,7 @@
 ﻿-- *****************************************************************************
 -- Comment: EQM1001_R03 반려 입력값 제거 후 호출 파라미터 재등록
 -- Create:  2026-10-12  한성수
+-- Modify:  2026-11-16  한성수  검색 조건(FACTORYCD~EQMGROUP1) 추가 후 재등록
 -- *****************************************************************************
 -- R03 프로시저 전체 저장 후 아래 트랜잭션을 실행
 START TRANSACTION;
@@ -14,7 +15,7 @@ WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
   AND SPECIFIC_NAME = 'EQM1001_R03';
 COMMIT;
 
--- 정상 28건: APRVSTT 26번, CALLTYPE 27번, KEYWORD 28번
+-- 정상 32건: FACTORYCD~EQMGROUP1 5~8번, APRVSTT 30번, CALLTYPE 31번, KEYWORD 32번
 SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
 FROM MES_SNS2.SYSTEM_PARAMETERS
 WHERE SPECIFIC_SCHEMA = 'MES_SNS2'

@@ -19,14 +19,32 @@ namespace XtraRpt
         }
 
         // 2026-11-06 [설비점검 시트] S04A 파라미터 수신 및 선택한 점검이력 조회 바인딩
+        // 2026-11-16 CHKRSTKEY_LIST(점검키 쉼표 구분) 여러 건은 점검이력마다 새 페이지로 한 PDF에 묶음
         public S04A(Dictionary<string, string> param) : this()
         {
-            string chkRstKey = param.ContainsKey("CHKRSTKEY") ? param["CHKRSTKEY"] : "";
-            if (string.IsNullOrEmpty(chkRstKey))
+            string keyList = param.ContainsKey("CHKRSTKEY_LIST") ? param["CHKRSTKEY_LIST"] : "";
+            string[] chkRstKeys = keyList.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            if (chkRstKeys.Length == 0)
             {
                 throw new InvalidOperationException("출력할 점검이력을 선택해주세요.");
             }
 
+            // 첫 점검이력은 이 리포트에, 나머지는 따로 만들어 페이지를 뒤에 붙인다
+            SET_DATA(chkRstKeys[0]);
+            if (chkRstKeys.Length == 1) return;
+
+            CreateDocument();
+            for (int i = 1; i < chkRstKeys.Length; i++)
+            {
+                S04A next = new S04A();
+                next.SET_DATA(chkRstKeys[i]);
+                next.CreateDocument();
+                Pages.AddRange(next.Pages);
+            }
+        }
+
+        private void SET_DATA(string chkRstKey)
+        {
             ItsMaria maria = new ItsMaria("EQM1001_S04", "CALL_CHKRST_RPT");
             maria.AddParam("CHKRSTKEY", chkRstKey);
             DataSet dataSet = maria.CallProc();
@@ -37,7 +55,7 @@ namespace XtraRpt
 
             if (dataSet == null || dataSet.Tables.Count < 2 || dataSet.Tables[0].Rows.Count == 0)
             {
-                throw new InvalidOperationException("출력할 점검이력이 없습니다.");
+                throw new InvalidOperationException("출력할 점검이력이 없습니다. (" + chkRstKey + ")");
             }
 
             DataRow chkHeader = dataSet.Tables[0].Rows[0];

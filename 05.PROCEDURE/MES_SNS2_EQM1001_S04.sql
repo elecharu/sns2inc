@@ -8,11 +8,16 @@ PROCEDURE `MES_SNS2`.`EQM1001_S04`(
 -- 			2026-11-06 					한성수	점검시트 출력(CALL_CHKRST_RPT) 및 특이사항 조회 추가
 -- 			2026-11-09 					한성수	점검시트 개정이력 및 점검담당자 조회 연동
 -- 			2026-11-10 					한성수	점검실적 입력 특이사항 단독 표기 (계획 특이사항 대체 제거)
+-- 			2026-11-16 					한성수	설비점검 이력 조회 공장(2공장 기본)·작업장·설비구분·설비대분류 컬럼 및 검색 조건 추가
 -- *****************************************************************************
   IN $SDATE     VARCHAR(20),
   IN $EDATE     VARCHAR(20),
-  IN $CHKTP     VARCHAR(20), 
-  IN $EQMCD     VARCHAR(20), 
+  IN $CHKTP     VARCHAR(20),
+  IN $FACTORYCD VARCHAR(20),
+  IN $LINECD    VARCHAR(20),
+  IN $EQMTP     VARCHAR(20),
+  IN $EQMGROUP1 VARCHAR(20),
+  IN $EQMCD     VARCHAR(20),
   IN $CHKRSTKEY VARCHAR(20),
 -- *****************************************************************************
 IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
@@ -24,10 +29,16 @@ CASE $CALLTYPE
 -- * ***************************************************************************
 WHEN 'LIST_CHKRSTEQM' THEN
 
-  SELECT 
+  SET $FACTORYCD = '07';
+
+  SELECT
     CHKRSTEQM.BASEDATE,
     CHKRSTEQM.CHKTP,
     CHKRSTEQM.EMPCD,
+    IFNULL(MSTEQM.FACTORYCD, '') AS FACTORYCD,
+    IFNULL(MSTEQM.LINECD, '')    AS LINECD,
+    IFNULL(MSTEQM.EQMTP, '')     AS EQMTP,
+    IFNULL(MSTEQM.EQMGROUP1, '') AS EQMGROUP1,
     CHKRSTEQM.EQMCD,
     GPCD('EQMCD', CHKRSTEQM.EQMCD) AS EQMNM,
     CHKRSTEQM.PROBLEM,
@@ -37,9 +48,14 @@ WHEN 'LIST_CHKRSTEQM' THEN
   FROM CHKRSTEQM
   JOIN COMTYPE ON COMTYPE.TPCD = CHKRSTEQM.CHKTP
                     AND COMTYPE.GPCD = 'CHKTP'
-  
+  LEFT JOIN MSTEQM ON MSTEQM.FANO = CHKRSTEQM.EQMCD
+
   WHERE CHKRSTEQM.BASEDATE BETWEEN $SDATE AND $EDATE
     AND CHKRSTEQM.CHKTP LIKE CONCAT ('%', $CHKTP, '%')
+    AND ($FACTORYCD = '' OR MSTEQM.FACTORYCD = $FACTORYCD)
+    AND ($LINECD = '' OR MSTEQM.LINECD = $LINECD)
+    AND ($EQMTP = '' OR MSTEQM.EQMTP = $EQMTP)
+    AND ($EQMGROUP1 = '' OR MSTEQM.EQMGROUP1 = $EQMGROUP1)
     AND CHKRSTEQM.EQMCD LIKE CONCAT ('%', $EQMCD, '%')
   ORDER BY CHKRSTEQM.BASEDATE, CHKRSTEQM.CHKTP, CHKRSTEQM.EQMCD
   ;

@@ -1,6 +1,7 @@
 -- *****************************************************************************
 -- Comment: EQM1001_R04 특이사항 목록(REMARK_LIST) 입력값 추가 후 호출 파라미터 재등록
 -- Create:  2026-11-09  한성수
+-- Modify:  2026-11-16  한성수  검색 조건(FACTORYCD~EQMGROUP1) 추가 후 재등록
 -- *****************************************************************************
 -- R04 프로시저 전체 저장 후 아래 트랜잭션을 실행
 START TRANSACTION;
@@ -14,10 +15,9 @@ WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
   AND SPECIFIC_NAME = 'EQM1001_R04';
 COMMIT;
 
--- 정상 16건: REMARK_LIST 14번, CALLTYPE 15번, KEYWORD 16번
+-- 정상 20건: FACTORYCD~EQMGROUP1 3~6번, REMARK_LIST 18번, CALLTYPE 19번, KEYWORD 20번
 SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
 FROM MES_SNS2.SYSTEM_PARAMETERS
 WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
   AND SPECIFIC_NAME = 'EQM1001_R04'
 ORDER BY ORDINAL_POSITION;
-ㅊ

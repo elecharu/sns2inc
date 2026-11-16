@@ -12,6 +12,9 @@
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
         <Its:dateRange runat="server" Label="점검일자" FieldFrom="SDATE" FieldTo="EDATE" ID="date_SDATE" />
         <Its:combo runat="server" Label="점검유형" ID="cmb_CHKTP" GPCD="*CHKTP"  Field="CHKTP" />
+        <Its:combo runat="server" Label="작업장" ID="cmb_LINECD" Field="LINECD" GPCD="*LINECD" REF01="07" />
+        <Its:combo runat="server" Label="설비구분" ID="cmb_EQMTP" Field="EQMTP" GPCD="*FM100" InputWidth="70" REF10="07" />
+        <Its:combo runat="server" Label="설비대분류" ID="cmb_EQMGROUP1" Field="EQMGROUP1" GPCD="*FM113" InputWidth="70" REF10="07" />
         <Its:find runat="server" Label="설비코드" ID="find_EQMCD" GPCD="EQMCD" Field="EQMCD" />
         <%-- 2026-11-06 선택한 점검이력 점검 시트 출력 --%>
         <Its:button runat="server" Label="점검시트 출력" ID="btn_PRINT" Width="100" Float="right" MarginRight="10" MarginTop="4" BackColor="CustomButton2" />
