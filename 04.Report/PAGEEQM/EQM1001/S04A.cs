@@ -91,12 +91,12 @@ namespace XtraRpt
         }
 
         // 2026-11-09 [설비점검 시트] 하단 개정이력 바인딩 (최신 4건, R03과 동일 배치, 개정 이력 칸은 [구분] 개정내용만 표시)
+        // 2026-11-16 [설비점검 시트] 리비전 승인 제거로 개정이력 승인 칸 삭제 (개정 이력 칸이 폭을 넘겨받음)
         private void BindRevHistory(DataTable revHistory)
         {
             XRTableCell[] arrRevNo = new XRTableCell[] { cell_Rev_No0, cell_Rev_No1, cell_Rev_No2, cell_Rev_No3 };
             XRTableCell[] arrRevText = new XRTableCell[] { cell_Rev_Text0, cell_Rev_Text1, cell_Rev_Text2, cell_Rev_Text3 };
             XRTableCell[] arrRevWriter = new XRTableCell[] { cell_Rev_Writer0, cell_Rev_Writer1, cell_Rev_Writer2, cell_Rev_Writer3 };
-            XRTableCell[] arrRevApprover = new XRTableCell[] { cell_Rev_Approver0, cell_Rev_Approver1, cell_Rev_Approver2, cell_Rev_Approver3 };
 
             int historyCnt = revHistory == null ? 0 : Math.Min(revHistory.Rows.Count, 4);
             for (int rowIndex = 0; rowIndex < 4; rowIndex++)
@@ -108,14 +108,12 @@ namespace XtraRpt
                     arrRevNo[rowIndex].Text = Value(history, "REVNUM");
                     arrRevText[rowIndex].Text = ("[" + Value(history, "PLANTPNM") + "] " + Value(history, "REMARK")).Trim();
                     arrRevWriter[rowIndex].Text = Value(history, "REQEMPNM");
-                    arrRevApprover[rowIndex].Text = Value(history, "APRVEMPNM");
                 }
                 else
                 {
                     arrRevNo[rowIndex].Text = "";
                     arrRevText[rowIndex].Text = "";
                     arrRevWriter[rowIndex].Text = "";
-                    arrRevApprover[rowIndex].Text = "";
                 }
             }
         }

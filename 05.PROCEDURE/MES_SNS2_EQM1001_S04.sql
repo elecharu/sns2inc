@@ -8,22 +8,27 @@ PROCEDURE `MES_SNS2`.`EQM1001_S04`(
 -- 			2026-11-06 					한성수	점검시트 출력(CALL_CHKRST_RPT) 및 특이사항 조회 추가
 -- 			2026-11-09 					한성수	점검시트 개정이력 및 점검담당자 조회 연동
 -- 			2026-11-10 					한성수	점검실적 입력 특이사항 단독 표기 (계획 특이사항 대체 제거)
--- 			2026-11-16 					한성수	설비점검 이력 조회 공장(2공장 기본)·작업장·설비구분·설비대분류 컬럼 및 검색 조건 추가
+-- 			2026-11-16 					한성수	설비 분류·공장 필터 추가, 점검이력 승인·승인취소 및 점검시트 담당란 승인자 표시, 개정이력 계획 승인 조회 제거
 -- *****************************************************************************
-  IN $SDATE     VARCHAR(20),
-  IN $EDATE     VARCHAR(20),
-  IN $CHKTP     VARCHAR(20),
-  IN $FACTORYCD VARCHAR(20),
-  IN $LINECD    VARCHAR(20),
-  IN $EQMTP     VARCHAR(20),
-  IN $EQMGROUP1 VARCHAR(20),
-  IN $EQMCD     VARCHAR(20),
-  IN $CHKRSTKEY VARCHAR(20),
+  IN $SDATE          VARCHAR(20),
+  IN $EDATE          VARCHAR(20),
+  IN $CHKTP          VARCHAR(20),
+  IN $FACTORYCD      VARCHAR(20),
+  IN $LINECD         VARCHAR(20),
+  IN $EQMTP          VARCHAR(20),
+  IN $EQMGROUP1      VARCHAR(20),
+  IN $EQMCD          VARCHAR(20),
+  IN $CHKRSTKEY      VARCHAR(20),
+  IN $APRVEMP        VARCHAR(20),   -- 승인자 (APPROVE)
+  IN $CHKRSTKEY_LIST MEDIUMTEXT,    -- 체크한 점검이력 (APPROVE, APPROVE_CANCEL)
 -- *****************************************************************************
 IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
--- SET @DEBUGLOGYN = 'Y'; 
+-- SET @DEBUGLOGYN = 'Y';
 -- *****************************************************************************
+  DECLARE _$CHKRSTKEY      VARCHAR(100);
+  DECLARE _$CHKRSTKEY_LIST MEDIUMTEXT;
+  DECLARE _$EQMINFO        VARCHAR(200);
 
 CASE $CALLTYPE
 -- * ***************************************************************************
@@ -44,11 +49,16 @@ WHEN 'LIST_CHKRSTEQM' THEN
     CHKRSTEQM.PROBLEM,
     CHKRSTEQM.SOLUTION,
     CHKRSTEQM.CHKRSTKEY,
-    CHKRSTEQM.RTIME
+    CHKRSTEQM.RTIME,
+    -- 승인자·승인일시 (승인 안 했으면 빈 값)
+    CHKRSTEQM.APRVEMP,
+    COALESCE(APRV_EMP.EMPNM, CHKRSTEQM.APRVEMP) AS APRVEMPNM,
+    LEFT(CHKRSTEQM.APRVTIME, 16) AS APRVTIME
   FROM CHKRSTEQM
   JOIN COMTYPE ON COMTYPE.TPCD = CHKRSTEQM.CHKTP
                     AND COMTYPE.GPCD = 'CHKTP'
   LEFT JOIN MSTEQM ON MSTEQM.FANO = CHKRSTEQM.EQMCD
+  LEFT JOIN MSTEMP APRV_EMP ON APRV_EMP.EMPCD = NULLIF(CHKRSTEQM.APRVEMP, '')
 
   WHERE CHKRSTEQM.BASEDATE BETWEEN $SDATE AND $EDATE
     AND CHKRSTEQM.CHKTP LIKE CONCAT ('%', $CHKTP, '%')
@@ -81,6 +91,78 @@ WHEN 'LIST_CHKRSTEQMKND' THEN
   ;
 
 -- ****************************************************************************
+WHEN 'APPROVE' THEN -- 체크한 점검이력 승인 (TQM1002_R01 방식, 이미 승인된 이력은 승인자·승인일시를 새 값으로)
+
+  IF COALESCE($APRVEMP, '') = '' OR NOT EXISTS (SELECT 1 FROM MSTEMP WHERE EMPCD = $APRVEMP LIMIT 1) THEN
+    CALL COMERR('승인자를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF COALESCE($CHKRSTKEY_LIST, '') = '' THEN
+    CALL COMERR('승인할 점검이력을 체크하세요.');
+    LEAVE PROC;
+  END IF;
+
+  -- 1. 전부 확인한 뒤에 승인: 없는(삭제된) 점검이력이 있으면 막는다
+  SET _$CHKRSTKEY_LIST = $CHKRSTKEY_LIST;
+  WHILE LENGTH(_$CHKRSTKEY_LIST) > 0 DO
+    CALL COMSPLIT(_$CHKRSTKEY_LIST, _$CHKRSTKEY);
+
+    IF NOT EXISTS (SELECT 1 FROM CHKRSTEQM WHERE CHKRSTKEY = _$CHKRSTKEY LIMIT 1) THEN
+      CALL COMERR('조회한 점검이력이 없습니다. 다시 조회해주세요.');
+      LEAVE PROC;
+    END IF;
+  END WHILE;
+
+  -- 2. 승인
+  SET _$CHKRSTKEY_LIST = $CHKRSTKEY_LIST;
+  WHILE LENGTH(_$CHKRSTKEY_LIST) > 0 DO
+    CALL COMSPLIT(_$CHKRSTKEY_LIST, _$CHKRSTKEY);
+
+    UPDATE CHKRSTEQM
+    SET APRVEMP  = $APRVEMP,
+        APRVTIME = CALLTIME(),
+        MTIME    = CALLTIME(),
+        MEMP     = CALLEMP(),
+        MPRG     = CALLPRG()
+    WHERE CHKRSTKEY = _$CHKRSTKEY;
+  END WHILE;
+
+-- ****************************************************************************
+WHEN 'APPROVE_CANCEL' THEN -- 체크한 점검이력 승인취소 (TQM1002_R01 방식, 승인자·승인일시 비움)
+
+  IF COALESCE($CHKRSTKEY_LIST, '') = '' THEN
+    CALL COMERR('승인취소할 점검이력을 체크하세요.');
+    LEAVE PROC;
+  END IF;
+
+  -- 1. 전부 확인한 뒤에 취소: 승인 안 된 점검이력이 있으면 막는다
+  SET _$CHKRSTKEY_LIST = $CHKRSTKEY_LIST;
+  WHILE LENGTH(_$CHKRSTKEY_LIST) > 0 DO
+    CALL COMSPLIT(_$CHKRSTKEY_LIST, _$CHKRSTKEY);
+
+    IF NOT EXISTS (SELECT 1 FROM CHKRSTEQM WHERE CHKRSTKEY = _$CHKRSTKEY AND APRVTIME <> '' LIMIT 1) THEN
+      SET _$EQMINFO = COALESCE((SELECT CONCAT('[', EQMCD, '] ', BASEDATE) FROM CHKRSTEQM WHERE CHKRSTKEY = _$CHKRSTKEY LIMIT 1), _$CHKRSTKEY);
+      CALL COMERR(CONCAT('승인되지 않은 점검이력은 승인취소할 수 없습니다.\n- ', _$EQMINFO));
+      LEAVE PROC;
+    END IF;
+  END WHILE;
+
+  -- 2. 승인취소
+  SET _$CHKRSTKEY_LIST = $CHKRSTKEY_LIST;
+  WHILE LENGTH(_$CHKRSTKEY_LIST) > 0 DO
+    CALL COMSPLIT(_$CHKRSTKEY_LIST, _$CHKRSTKEY);
+
+    UPDATE CHKRSTEQM
+    SET APRVEMP  = '',
+        APRVTIME = '',
+        MTIME    = CALLTIME(),
+        MEMP     = CALLEMP(),
+        MPRG     = CALLPRG()
+    WHERE CHKRSTKEY = _$CHKRSTKEY;
+  END WHILE;
+
+-- ****************************************************************************
 WHEN 'CALL_CHKRST_RPT' THEN -- 점검 시트 출력 데이터 조회
 
   IF COALESCE($CHKRSTKEY, '') = '' THEN
@@ -88,14 +170,15 @@ WHEN 'CALL_CHKRST_RPT' THEN -- 점검 시트 출력 데이터 조회
     LEAVE PROC;
   END IF;
 
-  -- 점검 시트 상단: 설비 정보·점검일자, 하단 서명란: 점검자(점검실적)·담당(설비마스터 점검담당사번, 사원명 없으면 사번)
+  -- 점검 시트 상단: 설비 정보·점검일자, 하단 서명란: 점검자(점검실적)·담당(점검이력 승인자, 사원명 없으면 사번, 승인 전은 빈칸)
+  -- 담당란 값은 레포트 필드명 MNGEMPNM 그대로 사용
   SELECT COALESCE(MSTEQM.EQMNM, GPCD('EQMCD', CHKRSTEQM.EQMCD)) AS EQMNM,
          COALESCE(MSTEQM.EQMNM_DETAIL, '') AS EQMSPEC,
          CHKRSTEQM.EQMCD, CHKRSTEQM.BASEDATE AS CHKDATE,
          COALESCE(NULLIF(MSTLINE.LINENM, ''), MSTEQM.LINECD, '') AS LINENM,
          COALESCE(NULLIF(GPCD('FM100', MSTEQM.EQMTP), ''), MSTEQM.EQMTP, '') AS PROCESSNM,
          COALESCE(CHK_EMP.EMPNM, CHKRSTEQM.EMPCD) AS CHKEMPNM,
-         COALESCE(MNG_EMP.EMPNM, MSTEQM.EMPCD, '') AS MNGEMPNM
+         CASE WHEN CHKRSTEQM.APRVTIME <> '' THEN COALESCE(APRV_EMP.EMPNM, CHKRSTEQM.APRVEMP) ELSE '' END AS MNGEMPNM
   FROM CHKRSTEQM
   LEFT JOIN MSTEQM
     ON MSTEQM.FANO = CHKRSTEQM.EQMCD
@@ -103,8 +186,8 @@ WHEN 'CALL_CHKRST_RPT' THEN -- 점검 시트 출력 데이터 조회
     ON MSTLINE.LINECD = MSTEQM.LINECD
   LEFT JOIN MSTEMP CHK_EMP
     ON CHK_EMP.EMPCD = CHKRSTEQM.EMPCD
-  LEFT JOIN MSTEMP MNG_EMP
-    ON MNG_EMP.EMPCD = NULLIF(MSTEQM.EMPCD, '')
+  LEFT JOIN MSTEMP APRV_EMP
+    ON APRV_EMP.EMPCD = NULLIF(CHKRSTEQM.APRVEMP, '')
   WHERE CHKRSTEQM.CHKRSTKEY = $CHKRSTKEY
   LIMIT 1;
 
@@ -124,8 +207,7 @@ WHEN 'CALL_CHKRST_RPT' THEN -- 점검 시트 출력 데이터 조회
   SELECT PLAN_REV.REVNUM + 1 AS REVNUM,
          CASE PLAN_REV.PLANTP WHEN 'G' THEN '그룹' ELSE '설비' END AS PLANTPNM,
          PLAN_REV.REMARK,
-         COALESCE(REQ_EMP.EMPNM, PLAN_REV.REQEMP) AS REQEMPNM,
-         CASE WHEN PLAN_REV.APRVSTT = 'A' THEN COALESCE(APRV_EMP.EMPNM, PLAN_REV.APRVEMP) ELSE '' END AS APRVEMPNM
+         COALESCE(REQ_EMP.EMPNM, PLAN_REV.REQEMP) AS REQEMPNM
   FROM CHKRSTEQM
   LEFT JOIN MSTEQM
     ON MSTEQM.FANO = CHKRSTEQM.EQMCD
@@ -138,11 +220,8 @@ WHEN 'CALL_CHKRST_RPT' THEN -- 점검 시트 출력 데이터 조회
    AND (PLAN_REV.CHKTP = CHKRSTEQM.CHKTP OR (CHKRSTEQM.CHKTP = '02' AND PLAN_REV.CHKTP = ''))
   LEFT JOIN MSTEMP REQ_EMP
     ON REQ_EMP.EMPCD = PLAN_REV.REQEMP
-  LEFT JOIN MSTEMP APRV_EMP
-    ON APRV_EMP.EMPCD = PLAN_REV.APRVEMP
   WHERE CHKRSTEQM.CHKRSTKEY = $CHKRSTKEY
-  ORDER BY CASE WHEN PLAN_REV.APRVSTT = 'A' THEN PLAN_REV.APRVTIME ELSE PLAN_REV.REQTIME END DESC,
-           PLAN_REV.PLANTP, PLAN_REV.REVNUM DESC;
+  ORDER BY PLAN_REV.RTIME DESC, PLAN_REV.PLANTP, PLAN_REV.REVNUM DESC;
 
 -- ****************************************************************************
 END CASE; END

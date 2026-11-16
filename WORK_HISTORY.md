@@ -18,6 +18,54 @@
 
 ## 🕒 2026-11-16 (월) 작업 내역
 
+### 23. 승인 실적 수정·삭제 차단, R04 점검월 이동 주기 검증, 정기점검 REV 1부터 표시
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R04.sql](05.Procedure/MES_SNS2_EQM1001_R04.sql), [MES_SNS2_TAL0001_R08.sql](05.Procedure/MES_SNS2_TAL0001_R08.sql), [MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
+- **요청**: 22번 검토 결과 중 (1) 승인한 점검이력 수정·삭제 차단, (3) REV 번호 1부터 표기, (4) R04 점검월 이동 주기 검증 반영. (2) 리비전 갱신 즉시 사용은 그대로 유지
+- **작업 상세 내용**
+  - 승인 실적 차단: R04·TAL0001_R08의 `SAVE_CHKRSTEQM`·`DELETE_CHKRSTEQM`에서 `CHKRSTEQM.APRVTIME`이 있으면 "승인된 정기점검 실적은 수정·삭제할 수 없습니다. 설비점검 이력에서 승인취소 후 처리해주세요." 오류. 계획 쪽은 기존대로 개정내용 저장은 모든 REV 허용, 항목 변경은 최신 REV만·실적 있는 REV 차단(15·18번)
+  - 점검월 이동 주기 검증(R04): 점검일자가 계획월과 달라 주기관리 배정을 옮길 때, 옮긴 년도의 배정 월 수가 늘어나면 R03 주기관리와 같은 기준(설비등급기준 사용 리비전의 CHKCYCLE2 문구 'N년/M회'·'년 M회', 주기 안 앞뒤 년도 합산)으로 초과 여부 검사. 이동 후 실제 값으로 계산하고 초과 시 COMERR로 실적 등록·수정까지 전체 취소. 같은 년도 안 이동은 배정 수가 같아 검사하지 않음. 태블릿(R08)은 원래 계획월과 다른 점검일자를 막아 해당 없음
+  - REV 표시: 저장값 REVNUM(0부터)은 그대로 두고 화면·레포트 표시만 +1. R03(설비그룹·설비 목록, REV 이력, 계획서 상단·개정이력 No, 실적 REV 차단 메시지, 리비전 갱신 결과 REVNM 추가), R04·R08(적용 REV). S04 점검시트는 이미 +1이라 그대로. R03.js 리비전 갱신 안내는 프로시저의 REVNM 사용
+- **검증**: 격리 MariaDB(트랜잭션 후 ROLLBACK)에서 확인
+  - 승인 실적: R04 삭제, R08 저장·삭제가 승인 메시지로 차단되고 실적 행 유지. 승인 해제 후 R08 저장 정상
+  - REV 표시: R03 LIST_PLAN_REV(REV.1~6, 숨김 REVNUM은 0~5 그대로), CALL_PLAN_RPT 상단 REV.6·개정이력 No 1~6, RENEW_REV 반환 REVNUM 1·REVNM REV.2, R04 LIST_PLAN_EQM02 적용 REV.6
+  - 미확인: 테스트 실적(261116000001)에 점검항목이 없어 R04 저장 경로(승인 차단 SAVE, 점검월 이동 주기 검증 4건)는 앞단 "정기점검 항목이 없습니다" 검증에서 멈춤. 항목 있는 실적으로 다시 돌릴 스크립트는 준비됨
+  - 파일 형식 sql BOM 없음+CRLF, R03.js는 원래대로 BOM 없음+CRLF 유지
+- **실DB 반영**: R03·R04·TAL0001_R08 프로시저 저장(파라미터 변경 없음, R03은 22번의 SYSTEM_PARAMETERS 31건 재등록 포함), R03.js 배포
+
+### 22. EQM1001 정기점검 리비전 승인 잔여 코드 삭제 및 전체 워크플로우 검토
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql), [MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql)
+- **요청**: 정기점검 리비전 승인관리가 없어졌으니 남은 승인 관련 내용 삭제, 지금까지 수정분을 워크플로우 기준으로 검토
+- **작업 상세 내용**
+  - R03: 화면에서 보내지 않는 입력 파라미터 `$APRVSTT`와 `_$APRVSTT` 선언 삭제(파라미터 32 → 31개, SYSTEM_PARAMETERS 재등록 필요). `CALL_PLAN_RPT`의 개정일을 승인일시(APRVTIME) 대신 개정내용 작성일(REQTIME, 빈 값이면 RTIME)로 바꾸고, 개정이력 결과에서 APRVSTTNM·APRVSTT·APRVEMPNM 컬럼과 승인자 조인 삭제
+  - S04: `CALL_CHKRST_RPT` 개정이력의 APRVEMPNM·승인자 조인 삭제, 정렬을 승인일시 대신 REV 생성시각(RTIME) 최신순으로 변경. 점검이력 승인(CHKRSTEQM.APRV*)은 20번 기능이라 유지
+  - 유지: MSTEQMREV_HEADER의 APRVSTT·APRVTIME·APRVEMP 컬럼과 CHKPLANEQM_APRV 테이블은 일상점검(CHKTP '01', PRD6001_R02·TAL0001_R05)이 계속 사용하므로 DDL 변경 없음. R03 `DEL_REV`의 CHKPLANEQM_APRV 삭제는 승인 제거 전 쌓인 이력 정리용으로 유지
+- **검증**: 격리 MariaDB에서 R03 파라미터 31개 확인(32개 호출은 1318 오류), `CALL_PLAN_RPT` 설비그룹·설비·REV 지정 출력, REQTIME 빈 REV의 RTIME 대체, `SAVE_PLAN_REV`·`RENEW_REV`·`DEL_REV` 정상, S04 `CALL_CHKRST_RPT` 개정이력 컬럼 4개(REVNUM·PLANTPNM·REMARK·REQEMPNM). 레포트 exe는 이 컬럼만 읽어 재빌드 불필요. 파일 형식 sql BOM 없음+CRLF(SYSTEM_PARAMETERS는 기존 BOM 유지)
+- **실DB 반영 순서**: R03 프로시저 저장 → R03 SYSTEM_PARAMETERS 재등록(31건) → S04 프로시저 저장. `MES_SNS2_CHKRSTEQM_APRV_ADD.sql`은 실DB에 이미 반영됨(재실행 시 컬럼 중복 오류)
+
+### 21. EQM1001 R03(설비점검계획서)·S04A(설비 정기 점검 시트) 레포트 개정이력 '승인' 칸 삭제
+- **수정 파일**: [04.Report/PAGEEQM/EQM1001/R03.cs](04.Report/PAGEEQM/EQM1001/R03.cs), [R03.Designer.cs](04.Report/PAGEEQM/EQM1001/R03.Designer.cs), [S04A.cs](04.Report/PAGEEQM/EQM1001/S04A.cs), [S04A.Designer.cs](04.Report/PAGEEQM/EQM1001/S04A.Designer.cs), 배포 exe(04.Report/bin, 01.Office/Reports)
+- **요청**: 리비전 승인 로직이 없어져(15번) 두 레포트 하단 개정이력 표의 승인 칸 불필요
+- **작업 상세 내용**
+  - Designer: 승인 셀 5개(헤더 xrTableCellRevHdrApprover, 행 cell_Rev_Approver0~3)의 생성·행 등록·속성 블록·필드 선언 삭제. 개정 이력 셀(xrTableCellRevHdrDesc, cell_Rev_Text0~3) Weight를 0.5953 → 0.7650(승인 칸 폭 합산)으로 바꿔 표 폭 383F·우측 끝 그대로 유지
+  - .cs: BindRevHistory의 arrRevApprover 배열·대입 삭제, 날짜 주석 추가. R03 2개 파일은 원래 BOM 없음 그대로, S04A는 BOM 유지, 모두 CRLF
+  - 프로시저 결과의 APRVEMPNM 컬럼은 레포트에서 더 이상 읽지 않음(프로시저 변경 없음)
+- **검증**: MSBuild 15.0 Rebuild 성공(0 Error, 경고는 기존 R0602.cs 미사용 변수 1건), exe 3곳 MD5 56E5A48D7EEE 일치. 격리 MariaDB(실DB 함수 146개·COMCALLC 정의 복사)에서 이전·새 exe로 같은 데이터 출력 비교 — 이전은 'No·개정 이력·작성·승인', 새 exe는 'No·개정 이력·작성'이고 개정 이력 칸이 넓어짐, 다른 영역 변화 없음. S04A 담당란 승인자(20번) 정상 표시
+- **디자이너 미확인**: VS 디자이너에서 두 레포트를 열어 보는 확인은 아직(셀 삭제만 했고 새 컨트롤 종류 추가 없음)
+
+### 20. EQM1001_S04 설비점검 이력 승인·승인취소 추가 (TQM1002_R01 방식), 점검시트 담당란 승인자 표시
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_S04.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_S04.aspx), [EQM1001_S04.js](01.Office/PAGEEQM/EQM1001/EQM1001_S04.js), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [MES_SNS2_EQM1001_S04_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_S04_SYSTEM_PARAMETERS.sql), [06.Table/MES_SNS2_CHKRSTEQM.sql](06.Table/MES_SNS2_CHKRSTEQM.sql)
+- **신규 파일**: [05.Procedure/MES_SNS2_CHKRSTEQM_APRV_ADD.sql](05.Procedure/MES_SNS2_CHKRSTEQM_APRV_ADD.sql) (CHKRSTEQM에 APRVEMP·APRVTIME 컬럼 추가 ALTER, 실DB에 컬럼 없음 확인)
+- **요청**: '■ 설비점검 이력' 옆에 승인자·승인·승인취소, 점검시트 출력 버튼 이동, 그리드에 승인자·승인일시, 승인하면 정기 점검 시트 맨 아래 '담당'에 승인자 이름
+- **작업 상세 내용**
+  - 화면: 검색 영역의 점검시트 출력 버튼을 제목 줄로 옮기고, 그 앞에 승인자 찾기(기본값 로그인 사원, 사원 전체)·승인·승인취소 버튼 배치. grid1 점검자 뒤에 승인자·승인일시 컬럼
+  - 승인(APPROVE): 승인자 필수·사원 확인, 체크한 점검이력을 전부 확인한 뒤 승인(없는 이력이 하나라도 있으면 전체 취소), 이미 승인된 이력은 새 승인자·일시로 덮어씀(TQM1002_R01과 동일)
+  - 승인취소(APPROVE_CANCEL): 승인 안 된 이력이 하나라도 있으면 '[설비코드] 점검일자'와 함께 전체 차단, 아니면 승인자·승인일시 비움
+  - 점검시트(CALL_CHKRST_RPT): 담당란 값(MNGEMPNM)을 설비마스터 점검담당자 대신 승인자 이름으로, 승인 전은 빈칸. 레포트 필드명이 같아 S04A 레포트 재빌드 불필요
+  - 파라미터 $APRVEMP·$CHKRSTKEY_LIST 추가(11 → 13건), 재등록 스크립트 갱신. 19번 정리 규칙(procedure_history.md)에 맞춰 S04 2026-11-16 이력 1행 통합, 본문 날짜 주석 제거, R03 이력 행에 '실적 REV 항목 변경 차단'(18번) 추가
+- **검증**: 격리 MariaDB 10.2.44에서 컬럼 추가 스크립트·프로시저 생성 성공, 승인자 없음·없는 사원·없는 점검키 포함 시 오류(변경 없음), 2건 승인, 점검시트 담당란 승인 건 '이광우'·미승인 건 빈칸, 승인·미승인 섞은 승인취소 차단, 1건 승인취소, 목록 승인자명·승인일시 표시 확인. `node --check` 통과, aspx·js BOM·CRLF, sql BOM 없음·CRLF
+- **반영 순서(실DB)**: 1. MES_SNS2_CHKRSTEQM_APRV_ADD.sql → 2. MES_SNS2_EQM1001_S04.sql 저장 → 3. MES_SNS2_EQM1001_S04_SYSTEM_PARAMETERS.sql(13건)
+- **참고**: 승인된 점검이력도 설비 정기점검 등록(R04)·태블릿(R08)에서 수정·삭제는 아직 가능(TQM1002_R01은 승인된 검사 수정 차단)
+
 ### 19. EQM1001_R03·R04 프로시저 Modify 이력 1일 1행 간소화 정리
 - **수정 파일**: [05.PROCEDURE/MES_SNS2_EQM1001_R04.sql](05.PROCEDURE/MES_SNS2_EQM1001_R04.sql), [05.PROCEDURE/MES_SNS2_EQM1001_R03.sql](05.PROCEDURE/MES_SNS2_EQM1001_R03.sql)
 - **요청**: 두 프로시저의 상단 `Modify` 이력 주석 중 동일 날짜 중복 행(특히 `2026-11-16`) 및 장황한 설명을 `procedure_history.md` 1일 1행 규칙에 맞게 핵심만 담아 1줄로 정리

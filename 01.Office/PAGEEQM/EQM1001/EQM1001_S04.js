@@ -17,6 +17,9 @@ ItsPage.Load = function () {
         column.create('조치사항', 'SOLUTION', { width: 300, multiLine: true, readOnly: true }),
         column.create('점검키', 'CHKRSTKEY', { width: 120, readOnly: true, hidden: false, align: 'center' }),
         column.create('등록시간', 'RTIME', { width: 140, readOnly: true, align: 'center' }),
+        // 2026-11-16 TQM1002_R01 방식 승인자·승인일시
+        column.create('승인자', 'APRVEMPNM', { width: 80, align: 'center', readOnly: true }),
+        column.create('승인일시', 'APRVTIME', { width: 120, align: 'center', readOnly: true }),
         column.split()
     ]);
 
@@ -33,6 +36,72 @@ ItsPage.Load = function () {
 
         column.split()
     ]);
+
+    // 2026-11-16 승인자 기본값: 로그인 사원 (TQM1002_R01과 동일)
+    ItsFind.SetValue('find_APRVEMP', ItsPage.EMPCD);
+};
+
+// 2026-11-16 체크한 점검이력의 점검키 목록
+function GetCheckedChkRstKeys() {
+    var keys = [];
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if (ItsGrid.IsChecked('grid1', i)) {
+            keys.push(ItsGrid.GetValue('grid1', i, 'CHKRSTKEY'));
+        }
+    }
+    return keys;
+}
+
+// 2026-11-16 승인: 체크한 점검이력을 승인자로 승인 (TQM1002_R01 방식, 이미 승인된 이력은 승인자·승인일시를 새 값으로)
+ItsButton.Event('btn_APPROVE').onClick = function () {
+    var APRVEMP = ItsFind.GetValue('find_APRVEMP');
+    if (APRVEMP == '') {
+        ItsMsg.Alert('승인자를 선택하세요.');
+        return;
+    }
+    var keys = GetCheckedChkRstKeys();
+    if (keys.length == 0) {
+        ItsMsg.Alert('승인할 점검이력을 체크하세요.');
+        return;
+    }
+
+    ItsMsg.Confirm(keys.length + '건을 승인하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_S04', 'APPROVE');
+        maria.AddParam('APRVEMP', APRVEMP);
+        for (var i = 0; i < keys.length; i++) {
+            maria.AddList('CHKRSTKEY_LIST', keys[i]);
+        }
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsMsg.Toast(keys.length + '건 승인 되었습니다.');
+        ItsButton.EventSearch();
+    });
+};
+
+// 2026-11-16 승인취소: 체크한 점검이력의 승인자·승인일시를 비움 (승인 안 된 이력이 있으면 프로시저가 막음)
+ItsButton.Event('btn_APPROVE_CANCEL').onClick = function () {
+    var keys = GetCheckedChkRstKeys();
+    if (keys.length == 0) {
+        ItsMsg.Alert('승인취소할 점검이력을 체크하세요.');
+        return;
+    }
+
+    ItsMsg.Confirm(keys.length + '건을 승인취소하시겠습니까?', function () {
+        var maria = new ItsMaria('EQM1001_S04', 'APPROVE_CANCEL');
+        for (var i = 0; i < keys.length; i++) {
+            maria.AddList('CHKRSTKEY_LIST', keys[i]);
+        }
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        ItsMsg.Toast(keys.length + '건 승인취소 되었습니다.');
+        ItsButton.EventSearch();
+    });
 };
 
 /* 조회 */
@@ -72,12 +141,7 @@ ItsGrid.Event('grid1').onSelect = function () {
 
 // 체크한 점검이력(grid1) 점검 시트 출력, 여러 건은 한 PDF에 점검이력마다 새 페이지
 ItsButton.Event('btn_PRINT').onClick = function () {
-    var keys = [];
-    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
-        if (ItsGrid.IsChecked('grid1', i)) {
-            keys.push(ItsGrid.GetValue('grid1', i, 'CHKRSTKEY'));
-        }
-    }
+    var keys = GetCheckedChkRstKeys();
     if (keys.length == 0) {
         ItsMsg.Alert('출력할 점검이력을 체크하십시오.');
         return;

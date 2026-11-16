@@ -1,6 +1,7 @@
 -- *****************************************************************************
 -- Comment: EQM1001_S04 검색 조건(FACTORYCD~EQMGROUP1) 추가 후 호출 파라미터 재등록
 -- Create:  2026-11-16  한성수
+-- Modify:  2026-11-16  한성수  승인자(APRVEMP)·체크 점검이력(CHKRSTKEY_LIST) 추가 후 재등록 (MES_SNS2_CHKRSTEQM_APRV_ADD.sql 먼저 실행)
 -- *****************************************************************************
 -- S04 프로시저 전체 저장 후 아래 트랜잭션을 실행
 START TRANSACTION;
@@ -14,7 +15,7 @@ WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
   AND SPECIFIC_NAME = 'EQM1001_S04';
 COMMIT;
 
--- 정상 11건: FACTORYCD~EQMGROUP1 4~7번, EQMCD 8번, CHKRSTKEY 9번, CALLTYPE 10번, KEYWORD 11번
+-- 정상 13건: FACTORYCD~EQMGROUP1 4~7번, EQMCD 8번, CHKRSTKEY 9번, APRVEMP 10번, CHKRSTKEY_LIST 11번, CALLTYPE 12번, KEYWORD 13번
 SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
 FROM MES_SNS2.SYSTEM_PARAMETERS
 WHERE SPECIFIC_SCHEMA = 'MES_SNS2'

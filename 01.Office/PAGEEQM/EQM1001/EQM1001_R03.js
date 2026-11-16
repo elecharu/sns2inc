@@ -1388,7 +1388,7 @@ function RenewPlanRev(planTp) {
             return;
         }
         ReloadPlanRev(planTp, planCd);
-        ItsMsg.Toast('REV.' + maria.store.data[0]['REVNUM'] + ' 리비전으로 갱신되었습니다.');
+        ItsMsg.Toast(maria.store.data[0]['REVNM'] + ' 리비전으로 갱신되었습니다.');
     });
 }
 

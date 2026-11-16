@@ -87,31 +87,26 @@ namespace XtraRpt
             this.cell_Rev_No0 = new DevExpress.XtraReports.UI.XRTableCell();
             this.cell_Rev_Text0 = new DevExpress.XtraReports.UI.XRTableCell();
             this.cell_Rev_Writer0 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cell_Rev_Approver0 = new DevExpress.XtraReports.UI.XRTableCell();
 
             this.xrTableRowRev1 = new DevExpress.XtraReports.UI.XRTableRow();
             this.cell_Rev_No1 = new DevExpress.XtraReports.UI.XRTableCell();
             this.cell_Rev_Text1 = new DevExpress.XtraReports.UI.XRTableCell();
             this.cell_Rev_Writer1 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cell_Rev_Approver1 = new DevExpress.XtraReports.UI.XRTableCell();
 
             this.xrTableRowRev2 = new DevExpress.XtraReports.UI.XRTableRow();
             this.cell_Rev_No2 = new DevExpress.XtraReports.UI.XRTableCell();
             this.cell_Rev_Text2 = new DevExpress.XtraReports.UI.XRTableCell();
             this.cell_Rev_Writer2 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cell_Rev_Approver2 = new DevExpress.XtraReports.UI.XRTableCell();
 
             this.xrTableRowRev3 = new DevExpress.XtraReports.UI.XRTableRow();
             this.cell_Rev_No3 = new DevExpress.XtraReports.UI.XRTableCell();
             this.cell_Rev_Text3 = new DevExpress.XtraReports.UI.XRTableCell();
             this.cell_Rev_Writer3 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.cell_Rev_Approver3 = new DevExpress.XtraReports.UI.XRTableCell();
 
             this.xrTableRowRevHdr = new DevExpress.XtraReports.UI.XRTableRow();
             this.xrTableCellRevHdrNo = new DevExpress.XtraReports.UI.XRTableCell();
             this.xrTableCellRevHdrDesc = new DevExpress.XtraReports.UI.XRTableCell();
             this.xrTableCellRevHdrWriter = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCellRevHdrApprover = new DevExpress.XtraReports.UI.XRTableCell();
 
             ((System.ComponentModel.ISupportInitialize)(this.xrTablePlanInfo)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.xrTableDetailHeader)).BeginInit();
@@ -659,8 +654,7 @@ namespace XtraRpt
             this.xrTableRowRev0.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
                 this.cell_Rev_No0,
                 this.cell_Rev_Text0,
-                this.cell_Rev_Writer0,
-                this.cell_Rev_Approver0
+                this.cell_Rev_Writer0
             });
             this.xrTableRowRev0.Dpi = 100F;
             this.xrTableRowRev0.Name = "xrTableRowRev0";
@@ -679,7 +673,7 @@ namespace XtraRpt
             this.cell_Rev_Text0.StylePriority.UsePadding = false;
             this.cell_Rev_Text0.StylePriority.UseTextAlignment = false;
             this.cell_Rev_Text0.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.cell_Rev_Text0.Weight = 0.5953002610966057D;
+            this.cell_Rev_Text0.Weight = 0.76501305483028716D;
 
             // cell_Rev_Writer0
             this.cell_Rev_Writer0.Dpi = 100F;
@@ -687,18 +681,12 @@ namespace XtraRpt
             this.cell_Rev_Writer0.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.cell_Rev_Writer0.Weight = 0.16971279373368146D;
 
-            // cell_Rev_Approver0
-            this.cell_Rev_Approver0.Dpi = 100F;
-            this.cell_Rev_Approver0.Name = "cell_Rev_Approver0";
-            this.cell_Rev_Approver0.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cell_Rev_Approver0.Weight = 0.16971279373368146D;
 
             // xrTableRowRev1
             this.xrTableRowRev1.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
                 this.cell_Rev_No1,
                 this.cell_Rev_Text1,
-                this.cell_Rev_Writer1,
-                this.cell_Rev_Approver1
+                this.cell_Rev_Writer1
             });
             this.xrTableRowRev1.Dpi = 100F;
             this.xrTableRowRev1.Name = "xrTableRowRev1";
@@ -717,7 +705,7 @@ namespace XtraRpt
             this.cell_Rev_Text1.StylePriority.UsePadding = false;
             this.cell_Rev_Text1.StylePriority.UseTextAlignment = false;
             this.cell_Rev_Text1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.cell_Rev_Text1.Weight = 0.5953002610966057D;
+            this.cell_Rev_Text1.Weight = 0.76501305483028716D;
 
             // cell_Rev_Writer1
             this.cell_Rev_Writer1.Dpi = 100F;
@@ -725,18 +713,12 @@ namespace XtraRpt
             this.cell_Rev_Writer1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.cell_Rev_Writer1.Weight = 0.16971279373368146D;
 
-            // cell_Rev_Approver1
-            this.cell_Rev_Approver1.Dpi = 100F;
-            this.cell_Rev_Approver1.Name = "cell_Rev_Approver1";
-            this.cell_Rev_Approver1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cell_Rev_Approver1.Weight = 0.16971279373368146D;
 
             // xrTableRowRev2
             this.xrTableRowRev2.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
                 this.cell_Rev_No2,
                 this.cell_Rev_Text2,
-                this.cell_Rev_Writer2,
-                this.cell_Rev_Approver2
+                this.cell_Rev_Writer2
             });
             this.xrTableRowRev2.Dpi = 100F;
             this.xrTableRowRev2.Name = "xrTableRowRev2";
@@ -755,7 +737,7 @@ namespace XtraRpt
             this.cell_Rev_Text2.StylePriority.UsePadding = false;
             this.cell_Rev_Text2.StylePriority.UseTextAlignment = false;
             this.cell_Rev_Text2.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.cell_Rev_Text2.Weight = 0.5953002610966057D;
+            this.cell_Rev_Text2.Weight = 0.76501305483028716D;
 
             // cell_Rev_Writer2
             this.cell_Rev_Writer2.Dpi = 100F;
@@ -763,18 +745,12 @@ namespace XtraRpt
             this.cell_Rev_Writer2.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.cell_Rev_Writer2.Weight = 0.16971279373368146D;
 
-            // cell_Rev_Approver2
-            this.cell_Rev_Approver2.Dpi = 100F;
-            this.cell_Rev_Approver2.Name = "cell_Rev_Approver2";
-            this.cell_Rev_Approver2.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cell_Rev_Approver2.Weight = 0.16971279373368146D;
 
             // xrTableRowRev3
             this.xrTableRowRev3.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
                 this.cell_Rev_No3,
                 this.cell_Rev_Text3,
-                this.cell_Rev_Writer3,
-                this.cell_Rev_Approver3
+                this.cell_Rev_Writer3
             });
             this.xrTableRowRev3.Dpi = 100F;
             this.xrTableRowRev3.Name = "xrTableRowRev3";
@@ -793,7 +769,7 @@ namespace XtraRpt
             this.cell_Rev_Text3.StylePriority.UsePadding = false;
             this.cell_Rev_Text3.StylePriority.UseTextAlignment = false;
             this.cell_Rev_Text3.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.cell_Rev_Text3.Weight = 0.5953002610966057D;
+            this.cell_Rev_Text3.Weight = 0.76501305483028716D;
 
             // cell_Rev_Writer3
             this.cell_Rev_Writer3.Dpi = 100F;
@@ -801,18 +777,12 @@ namespace XtraRpt
             this.cell_Rev_Writer3.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.cell_Rev_Writer3.Weight = 0.16971279373368146D;
 
-            // cell_Rev_Approver3
-            this.cell_Rev_Approver3.Dpi = 100F;
-            this.cell_Rev_Approver3.Name = "cell_Rev_Approver3";
-            this.cell_Rev_Approver3.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.cell_Rev_Approver3.Weight = 0.16971279373368146D;
 
             // xrTableRowRevHdr
             this.xrTableRowRevHdr.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
                 this.xrTableCellRevHdrNo,
                 this.xrTableCellRevHdrDesc,
-                this.xrTableCellRevHdrWriter,
-                this.xrTableCellRevHdrApprover
+                this.xrTableCellRevHdrWriter
             });
             this.xrTableRowRevHdr.Dpi = 100F;
             this.xrTableRowRevHdr.Name = "xrTableRowRevHdr";
@@ -830,7 +800,7 @@ namespace XtraRpt
             this.xrTableCellRevHdrDesc.Name = "xrTableCellRevHdrDesc";
             this.xrTableCellRevHdrDesc.Text = "개정 이력";
             this.xrTableCellRevHdrDesc.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCellRevHdrDesc.Weight = 0.5953002610966057D;
+            this.xrTableCellRevHdrDesc.Weight = 0.76501305483028716D;
 
             // xrTableCellRevHdrWriter
             this.xrTableCellRevHdrWriter.Dpi = 100F;
@@ -839,12 +809,6 @@ namespace XtraRpt
             this.xrTableCellRevHdrWriter.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.xrTableCellRevHdrWriter.Weight = 0.16971279373368146D;
 
-            // xrTableCellRevHdrApprover
-            this.xrTableCellRevHdrApprover.Dpi = 100F;
-            this.xrTableCellRevHdrApprover.Name = "xrTableCellRevHdrApprover";
-            this.xrTableCellRevHdrApprover.Text = "승인";
-            this.xrTableCellRevHdrApprover.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCellRevHdrApprover.Weight = 0.16971279373368146D;
 
             // 
             // R03 Report Properties
@@ -928,30 +892,25 @@ namespace XtraRpt
         private DevExpress.XtraReports.UI.XRTableCell cell_Rev_No0;
         private DevExpress.XtraReports.UI.XRTableCell cell_Rev_Text0;
         private DevExpress.XtraReports.UI.XRTableCell cell_Rev_Writer0;
-        private DevExpress.XtraReports.UI.XRTableCell cell_Rev_Approver0;
 
         private DevExpress.XtraReports.UI.XRTableRow xrTableRowRev1;
         private DevExpress.XtraReports.UI.XRTableCell cell_Rev_No1;
         private DevExpress.XtraReports.UI.XRTableCell cell_Rev_Text1;
         private DevExpress.XtraReports.UI.XRTableCell cell_Rev_Writer1;
-        private DevExpress.XtraReports.UI.XRTableCell cell_Rev_Approver1;
 
         private DevExpress.XtraReports.UI.XRTableRow xrTableRowRev2;
         private DevExpress.XtraReports.UI.XRTableCell cell_Rev_No2;
         private DevExpress.XtraReports.UI.XRTableCell cell_Rev_Text2;
         private DevExpress.XtraReports.UI.XRTableCell cell_Rev_Writer2;
-        private DevExpress.XtraReports.UI.XRTableCell cell_Rev_Approver2;
 
         private DevExpress.XtraReports.UI.XRTableRow xrTableRowRev3;
         private DevExpress.XtraReports.UI.XRTableCell cell_Rev_No3;
         private DevExpress.XtraReports.UI.XRTableCell cell_Rev_Text3;
         private DevExpress.XtraReports.UI.XRTableCell cell_Rev_Writer3;
-        private DevExpress.XtraReports.UI.XRTableCell cell_Rev_Approver3;
 
         private DevExpress.XtraReports.UI.XRTableRow xrTableRowRevHdr;
         private DevExpress.XtraReports.UI.XRTableCell xrTableCellRevHdrNo;
         private DevExpress.XtraReports.UI.XRTableCell xrTableCellRevHdrDesc;
         private DevExpress.XtraReports.UI.XRTableCell xrTableCellRevHdrWriter;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCellRevHdrApprover;
     }
 }
