@@ -16,8 +16,11 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid_GRP_REV', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('개정내용', 'REMARK', { width: 260, readOnly: false }),
-        column.create('작성자', 'REQEMP', { width: 80, align: 'center', readOnly: true }),
-        column.create('수정일시', 'REQTIME', { width: 130, align: 'center', readOnly: true }),
+        column.create('작성자사번', 'REQEMP', { hidden: true }),
+        column.create('작성자', 'REQEMPNM', { width: 80, align: 'center', readOnly: true }),
+        column.create('작성일시', 'REQTIME', { width: 130, align: 'center', readOnly: true }),
+        column.create('수정자', 'MEMPNM', { width: 80, align: 'center', readOnly: true }),
+        column.create('수정일시', 'MTIME', { width: 130, align: 'center', readOnly: true }),
         column.create('REV번호', 'REVNUM', { hidden: true }),
         column.split()
     ]);
@@ -70,8 +73,11 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid_EQM_REV', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.create('개정내용', 'REMARK', { width: 260, readOnly: false }),
-        column.create('작성자', 'REQEMP', { width: 80, align: 'center', readOnly: true }),
-        column.create('수정일시', 'REQTIME', { width: 130, align: 'center', readOnly: true }),
+        column.create('작성자사번', 'REQEMP', { hidden: true }),
+        column.create('작성자', 'REQEMPNM', { width: 80, align: 'center', readOnly: true }),
+        column.create('작성일시', 'REQTIME', { width: 130, align: 'center', readOnly: true }),
+        column.create('수정자', 'MEMPNM', { width: 80, align: 'center', readOnly: true }),
+        column.create('수정일시', 'MTIME', { width: 130, align: 'center', readOnly: true }),
         column.create('REV번호', 'REVNUM', { hidden: true }),
         column.split()
     ]);

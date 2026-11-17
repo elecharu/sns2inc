@@ -18,6 +18,71 @@
 
 ## 🕒 2026-11-17 (화) 작업 내역
 
+### 29. EQM1001_R03 계획서 레포트 개정이력을 S04 점검시트와 같은 형식으로 ([구분] 개정내용, 날짜 제거)
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [04.Report/PAGEEQM/EQM1001/R03.cs](04.Report/PAGEEQM/EQM1001/R03.cs), 빌드 산출물 EQM1001.exe(04.Report/PAGEEQM/EQM1001/bin/Release → 04.Report/bin, 01.Office/Reports 배포)
+- **요청**: 계획서 출력 개정이력에 '날짜 개정내용'으로 표시하지 말고 EQM1001_S04 점검시트처럼 표시
+- **작업 내용**
+  - 1. 프로시저 CALL_PLAN_RPT 개정이력 : REVDATE 대신 PLANTPNM(그룹/설비) 반환 — S04 CALL_CHKRST_RPT와 같은 REVNUM·PLANTPNM·REMARK·REQEMPNM
+  - 2. 레포트 R03.cs BindRevHistory : 개정 이력 칸을 '날짜 개정내용' → '[구분] 개정내용' (S04A와 동일 식), 레이아웃(Designer.cs)은 변경 없음
+  - 3. 계획서 머리글 REV 날짜(REVDATE)는 개정이력과 별개라 유지
+- **검증**: MSBuild 15.0 Rebuild 성공(오류 0, 경고는 기존 R0602 미사용 변수), exe 3곳 동일(md5) 배포, 실DB로 R03 계획서 exe 출력(PLANTP G, FM116I210N) → 개정이력에 날짜 없이 개정내용·작성자 표시 확인(실DB 프로시저가 아직 이전 버전이라 구분은 '[]' 빈 값, 프로시저 저장 후 [그룹]/[설비] 표시). 테스트 출력 파일 삭제. 디자이너 파일 변경 없음(디자이너 미확인)
+- **실DB 반영**: R03 프로시저 저장(26~28번과 함께) → 파라미터 재등록(31건) → S04 저장 → R03.js·레포트 exe 배포
+
+### 28. EQM1001_R03 개정내용 저장은 수정자·수정일시만 기록 (작성자는 리비전 갱신 때만)
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql)
+- **요청**: 리비전 갱신 때는 작성자 입력, 개정내용 저장 때는 작성자 컬럼에 넣지 말고 수정자·수정일시에만 기록
+- **작업 내용**
+  - 1. 개정내용 저장(SAVE_PLAN_REV) : 개정내용·수정자(MEMP)·수정일시(MTIME)만 UPDATE, 작성자(REQEMP)·작성일시(REQTIME)·작성프로그램(REQPRG)은 건드리지 않음. 작성자 채우기용이던 '사원 연결 없는 로그인 차단'도 삭제
+  - 2. 리비전 갱신·첫 REV 생성 : 로그인 사원코드를 작성자로 기록 (27번 그대로)
+- **검증**: 격리 MariaDB(SYSUSER 테스트 행)에서 admin 리비전 갱신 → 작성자 기록·수정자 빈 값, user2 개정내용 저장 → 작성자·작성일시 유지, 수정자 user2·수정일시 갱신, 사원 연결 없는 계정 저장 허용(수정자 로그인 ID), 작성자 빈 REV 저장해도 작성자 빈 값 유지. 파일 형식 유지(LF 원본). 실서버 화면은 미확인
+- **실DB 반영**: 26·27번과 함께 R03 프로시저 저장 → MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql 실행(정상 31건) → S04 저장 → R03.js 배포
+
+### 27. EQM1001_R03 리비전 갱신·첫 REV 생성 시 작성자 빈 값 수정
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql)
+- **요청**: '리비전 갱신'을 누르면 작성자가 빈 값으로 들어가는 문제 수정
+- **작업 내용**
+  - 1. 로그인 사원코드 : 프로시저 시작 시 한 번 조회 (SYSUSER.USERID = CALLEMP()의 EMPCD 중 MSTEMP에 있는 사원)
+  - 2. 리비전 갱신(RENEW_REV)·첫 REV 생성(점검항목 등록 시 REV가 없을 때) : 작성자(REQEMP)에 로그인 사원코드 기록 (사원 연결이 없는 계정은 빈 값, 갱신 자체는 막지 않음)
+  - 3. 개정내용 저장 : 작성자가 이미 있으면 유지하고 수정자(MEMP)·수정일시(MTIME)만 갱신(26번과 동일), 사원 연결 없는 계정은 저장 차단(동일)
+- **검증**: 격리 MariaDB(SYSUSER 테스트 행)에서 admin이 리비전 갱신 → REV.7 작성자 사원코드 기록, user2가 개정내용 저장 → 작성자 유지·수정자 user2, 사원 연결 없는 계정 리비전 갱신 → 작성자 빈 값으로 생성, REV 없는 설비 점검항목 등록 → 첫 REV.0 작성자 기록. 파일 형식 유지(LF 원본). 실서버 화면은 미확인
+- **실DB 반영**: 26번과 함께 R03 프로시저 저장 → MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql 실행(정상 31건) → S04 저장 → R03.js 배포
+
+### 26. 개정이력 작성자 자동 기록·수정자 기록 (EQM1001_R03·S04, 25번 대체)
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
+- **요청**: 개정이력 사번 숨김, 작성자는 저장 버튼을 누른 로그인 사용자로 자동 입력, 다른 사람이 개정내용을 수정하면 그 기록도 남김
+- **작업 내용**
+  - 1. 조회 (R03 개정이력 그리드 2개) : 사번(REQEMP) 숨김, 작성자·작성일시·수정자·수정일시 표시, 25번의 사원 찾기 팝업(더블클릭·Enter) 삭제
+  - 2. 저장 (SAVE_PLAN_REV) : 로그인 사용자(CALLEMP)의 SYSUSER.EMPCD를 사원코드로 사용(MSTEMP에 없으면 '로그인 사용자에 연결된 사원 정보가 없습니다' 차단). 작성자(REQEMP)·작성일시(REQTIME)는 비어 있을 때(처음 저장)만 기록, 매 저장은 수정자(MEMP 로그인 ID)·수정일시(MTIME) 갱신 → 작성자와 다른 사람이 수정하면 수정자로 남음
+  - 3. 파라미터 : 25번에서 추가한 REQEMP 삭제 → 31개로 원복 (SYSTEM_PARAMETERS 파일도 31건 기준으로 원복)
+  - 4. 표시 (R03 LIST_PLAN_REV·CALL_PLAN_RPT, S04 CALL_CHKRST_RPT) : 작성자 = REQEMP 사원코드의 사원명(이전에 로그인 ID로 저장된 REV는 SYSUSER 사원코드로 연결), 수정자 = MEMP 로그인 ID의 사용자 사원명
+  - 5. 새 REV(첫 REV·리비전 갱신)는 작성자 빈 값 → 개정내용 처음 저장한 사람이 작성자
+- **참고**: 수정자·수정일시(MEMP·MTIME)는 해당 REV의 점검항목 변경 때도 갱신(기존 동작)되어 '마지막 수정자' 1명만 보관. 수정 이력을 모두 남기려면 별도 이력 테이블(DDL) 필요. 현재 실DB 로그인 계정 5개는 모두 사원 9999(MES관리자)에 연결
+- **검증**: 격리 MariaDB(SYSUSER 테스트 행)에서 파라미터 31개, 리비전 갱신 새 REV 작성자 빈 값, 첫 저장 시 로그인 사원이 작성자, 다른 로그인 사용자가 수정하면 작성자·작성일시 유지·수정자만 변경, 사원 연결 없는 로그인 차단, 이전 로그인 ID REV는 작성자 유지·사원명 표시, R03 그리드·계획서·S04 시트 사원명 표시. `node --check` 통과, 파일 형식 유지. 실서버 화면·레포트 출력은 미확인
+- **실DB 반영**: 현재 실DB R03은 25번(32개) 상태 → R03 프로시저 저장 후 MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql 실행(정상 31건), S04 프로시저 저장, R03.js 배포를 함께 진행
+
+### 25. 개정이력 작성자를 ERP 사원(MSTEMP)에서 선택·저장 (EQM1001_R03·S04, 24번 대체) — 26번으로 대체
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql), [01.Office/PAGEEQM/EQM1001/EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js)
+- **요청**: MSTEMP는 ERP에서 받은 실제 사원이니 개정이력 작성자는 그 사원으로 (24번 재확인 결과 반영)
+- **확인 내용(실DB SELECT)**: MSTEMP 337명 중 336명 ERP 연동(MES_IF_MSTEMP, REMP 'ERP'), 1명은 9999 MES관리자. 로그인 계정(SYSUSER) 5개 모두 사원코드 9999 → 24번 방식은 모든 개정이력이 'MES관리자'로만 표시되어 실제 작성자 구분 불가. 기존 조회는 REQEMP를 사원코드로 보고 MSTEMP와 연결하는 설계였으나 저장이 CALLEMP()(로그인 ID)라 맞지 않았음
+- **작업 내용**
+  - 1. 조회 (R03 설비그룹·설비별 점검계획 탭 개정이력 그리드) : '사번'(REQEMP, EMPCD 찾기 컬럼)·'작성자'(REQEMPNM) 컬럼, 사번·작성자 칸 더블클릭·Enter 시 ERP 사원 찾기 팝업(ItsPop.OpenFindCOM, EQM1001_R01 방식)으로 선택
+  - 2. 저장 (SAVE_PLAN_REV) : REQEMP 파라미터 추가, 선택한 사원코드가 MSTEMP에 없으면 '작성자를 선택해주세요.' 차단, REQEMP에 사원코드 저장
+  - 3. 새 REV (첫 REV 생성·RENEW_REV) : REQEMP 빈 값 (개정내용 저장 때 작성자 지정), 등록자(REMP)는 기존대로 로그인 ID
+  - 4. 표시 (R03 LIST_PLAN_REV·CALL_PLAN_RPT, S04 CALL_CHKRST_RPT) : REQEMP 사원코드의 MSTEMP 사원명, 사원이 아닌 값(기존 로그인 ID ADMIN 등)은 빈칸 — 24번의 SYSUSER 연결 제거
+- **검증**: 격리 MariaDB에서 파라미터 32개, 작성자 없음·로그인 ID(ADMIN) 저장 차단, ERP 사원코드 저장 후 그리드·계획서에 사원명 표시, 리비전 갱신 새 REV 작성자 빈 값, 기존 로그인 ID REV는 빈칸(R03 그리드·계획서·S04 시트). Node 모의 실행 5건 통과(개정내용 칸은 찾기 안 열림, 작성자·사번 더블클릭·Enter 시 EMPCD 찾기, 선택 사원 행 반영, 저장 시 REQEMP 전달). `node --check` 통과, 파일 형식 유지(R03.sql LF, S04 CRLF, js·SYSTEM_PARAMETERS 원본 그대로). 실서버 화면·레포트 출력은 미확인
+- **실DB 반영**: R03 프로시저 저장 → MES_SNS2_EQM1001_R03_SYSTEM_PARAMETERS.sql 실행(정상 32건) → S04 프로시저 저장 → R03.js 배포. 기존 REV 28건(로그인 ID 저장)은 작성자 빈칸 → 개정내용 저장 시 작성자 선택하면 채워짐
+
+### 24. 개정이력 '작성' 표시를 로그인 ID 대신 사원명으로 (EQM1001_R03·S04) — 25번으로 대체
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql)
+- **요청**: 설비 정기 점검 시트 등 개정이력 '작성'에 ID가 아니라 사원코드(EMPCD)를 통한 사원명(EMPNM) 표시
+- **원인**: MSTEQMREV_HEADER.REQEMP에는 CALLEMP()로 로그인 ID(ADMIN, admin_sns2)가 저장되는데, 조회는 REQEMP를 사원코드로 보고 MSTEMP와 연결 → 일치하는 사원이 없어 ID가 그대로 표시
+- **작업 내용**
+  - 1. 개정이력 작성자 : REQEMP(로그인 ID) → SYSUSER.USERID로 사원코드(EMPCD) 조회 → MSTEMP 사원명, 사용자가 없으면 REQEMP를 사원코드로 보고 사원명, 둘 다 없으면 저장값 그대로
+  - 2. 적용 위치 : R03 CALL_PLAN_RPT(점검계획서 개정이력), R03 LIST_PLAN_REV(개정이력 그리드), S04 CALL_CHKRST_RPT(점검시트 개정이력)
+  - 3. 저장 방식(REQEMP에 로그인 ID 저장)은 그대로
+- **검증**: 격리 MariaDB(SYSUSER 테스트 행 추가)에서 3곳 모두 ADMIN → 사원명 표시. 실DB SELECT: ADMIN 26건·admin_sns2 2건 모두 ID → 'MES관리자'(사용자 admin·admin_sns2의 사원코드 9999), 작성자 빈 REV 2건은 빈칸. 파일 형식 유지(R03은 원본처럼 LF, S04 CRLF). 레포트 실제 출력은 미확인
+- **실DB 반영**: R03·S04 프로시저 저장 (파라미터 변경 없음)
+
 ### 23. 예방보전(CHKTP '03') 추가에 따른 전체 작업 흐름 점검 (소스 수정 없음)
 - **요청**: 예방보전 추가로 작업 흐름상 문제 될 부분 조사·목록화
 - **조사 범위**: 저장소 프로시저 8개(EQM1001_R02·R03·R04·R07·S04, TAL0001_R05·R08, CHKRSTEQM_APRV_ADD), 실DB에서 CHKRSTEQM을 참조하는 프로시저 9개(저장소에 없는 PRD6001_R01·S01 포함), SYSTEM_PARAMETERS 등록 수, COMTYPE CHKTP, CHKRSTKEY 참조 테이블, S04A 레포트

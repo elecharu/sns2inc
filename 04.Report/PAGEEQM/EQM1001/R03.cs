@@ -85,7 +85,7 @@ namespace XtraRpt
                 if (history != null)
                 {
                     arrRevNo[rowIndex].Text = Value(history, "REVNUM");
-                    arrRevText[rowIndex].Text = (Value(history, "REVDATE") + " " + Value(history, "REMARK")).Trim();
+                    arrRevText[rowIndex].Text = ("[" + Value(history, "PLANTPNM") + "] " + Value(history, "REMARK")).Trim();
                     arrRevWriter[rowIndex].Text = Value(history, "REQEMPNM");
                 }
                 else
