@@ -15,7 +15,7 @@
         <Its:combo runat="server" Label="작업장" ID="cmb_LINECD" Field="LINECD" GPCD="*LINECD" REF01="07" />
         <Its:combo runat="server" Label="공정" ID="cmb_EQMTP" Field="EQMTP" GPCD="*EQMTP" InputWidth="70" />
         <Its:combo runat="server" Label="라인" ID="cmb_EQMGROUP1" Field="EQMGROUP1" GPCD="*EQMGROUP1" InputWidth="70" />
-        <Its:find runat="server" Label="설비코드" ID="find_EQMCD" GPCD="EQMCD" Field="EQMCD" />
+        <Its:find runat="server" Label="설비코드" ID="find_EQMCD" GPCD="EQMCD" Field="EQMCD" InputWidth="80" NameWidth="120" />
     </Its:div>
 </asp:Content>
 

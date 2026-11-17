@@ -9,7 +9,7 @@ PROCEDURE `MES_SNS2`.`EQM1001_S04`(
 -- 			2026-11-09 					한성수	점검시트 개정이력 및 점검담당자 조회 연동
 -- 			2026-11-10 					한성수	점검실적 입력 특이사항 단독 표기 (계획 특이사항 대체 제거)
 -- 			2026-11-16 					한성수	설비 분류·공장 필터 추가, 점검이력 승인·승인취소 및 점검시트 담당란 승인자 표시, 개정이력 계획 승인 조회 제거, 개정이력 REV 번호 저장값 그대로 표시
--- 			2026-11-17 					한성수	점검이력 점검일자·등록일시 오래된 순 정렬
+-- 			2026-11-17 					한성수	점검이력 점검일자·등록일시 오래된 순 정렬, 예방보전 점검시트 개정이력에 정기점검 계획 REV 표시
 -- *****************************************************************************
   IN $SDATE          VARCHAR(20),
   IN $EDATE          VARCHAR(20),
@@ -204,7 +204,7 @@ WHEN 'CALL_CHKRST_RPT' THEN -- 점검 시트 출력 데이터 조회
   WHERE CHKRSTEQMKND.CHKRSTKEY = $CHKRSTKEY
   ORDER BY (CHKRSTEQMKND.PLANTP = 'G') DESC, CHKRSTEQMKND.SORTNO, CHKRSTEQMKND.CHKKNDCD;
 
-  -- 점검 시트 하단 개정 이력: 해당 설비의 설비별 계획 + 설비그룹 계획 전체 REV (점검구분 일치, 기존 정기점검 REV는 점검구분 빈 값 포함, 최신순)
+  -- 점검 시트 하단 개정 이력: 해당 설비의 설비별 계획 + 설비그룹 계획 전체 REV (점검구분 일치, 예방보전('03')은 정기점검('02') 계획 사용, 기존 정기점검 REV는 점검구분 빈 값 포함, 최신순)
   SELECT PLAN_REV.REVNUM,
          CASE PLAN_REV.PLANTP WHEN 'G' THEN '그룹' ELSE '설비' END AS PLANTPNM,
          PLAN_REV.REMARK,
@@ -218,7 +218,7 @@ WHEN 'CALL_CHKRST_RPT' THEN -- 점검 시트 출력 데이터 조회
     ON (   (PLAN_REV.PLANTP = 'E' AND PLAN_REV.PLANCD = CHKRSTEQM.EQMCD)
         OR (PLAN_REV.PLANTP = 'G' AND PLAN_REV.PLANCD = COALESCE(GRP_REV.PLANCD, MSTEQM.EQMGUBUN))
        )
-   AND (PLAN_REV.CHKTP = CHKRSTEQM.CHKTP OR (CHKRSTEQM.CHKTP = '02' AND PLAN_REV.CHKTP = ''))
+   AND (PLAN_REV.CHKTP = IF(CHKRSTEQM.CHKTP = '03', '02', CHKRSTEQM.CHKTP) OR (CHKRSTEQM.CHKTP IN ('02', '03') AND PLAN_REV.CHKTP = ''))
   LEFT JOIN MSTEMP REQ_EMP
     ON REQ_EMP.EMPCD = PLAN_REV.REQEMP
   WHERE CHKRSTEQM.CHKRSTKEY = $CHKRSTKEY

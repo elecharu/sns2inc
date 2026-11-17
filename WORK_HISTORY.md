@@ -18,6 +18,70 @@
 
 ## 🕒 2026-11-17 (화) 작업 내역
 
+### 23. 예방보전(CHKTP '03') 추가에 따른 전체 작업 흐름 점검 (소스 수정 없음)
+- **요청**: 예방보전 추가로 작업 흐름상 문제 될 부분 조사·목록화
+- **조사 범위**: 저장소 프로시저 8개(EQM1001_R02·R03·R04·R07·S04, TAL0001_R05·R08, CHKRSTEQM_APRV_ADD), 실DB에서 CHKRSTEQM을 참조하는 프로시저 9개(저장소에 없는 PRD6001_R01·S01 포함), SYSTEM_PARAMETERS 등록 수, COMTYPE CHKTP, CHKRSTKEY 참조 테이블, S04A 레포트
+- **문제 목록**
+  - 1. (높음) 2공장 사용 설비 254대 중 214대는 정기점검('02') 계획 항목이 없어 R07에서 예방보전 등록 불가 (목록에는 보이지만 '점검 등록' 시 '계획 항목이 없습니다' 차단)
+  - 2. (중간) S04A 점검시트 제목이 '설비 정기 점검 시트' 고정 — 예방보전·일상점검 이력도 '정기 점검'으로 출력
+  - 3. (중간) 실DB S04 프로시저에 22번(예방보전 개정이력) 미반영 — 저장 전까지 예방보전 시트 개정이력 0건
+  - 4. (흐름) 예방보전 실적이 등록된 '02' REV는 R03에서 항목 변경·REV 삭제 차단 → 정기점검 계획 수정은 [리비전 갱신] 후 진행 (정기점검과 같은 규칙)
+  - 5. (낮음) 같은 날 미승인 중복 차단은 잠금 없이 확인 → 두 사람이 동시에 등록하면 2건 가능
+  - 6. (낮음) R07 점검일자 기본값 당일이라 이전 이력은 기간을 넓혀야 보임 (최근 점검일 컬럼은 전체 기준)
+- **문제 없음 확인**: R04·TAL0001_R08(정기 '02'만), TAL0001_R05·PRD6001_R01·PRD6001_S01(일상 '01'만), R02 항목 삭제 시 실적 사용 차단('03' 포함), S04 목록·승인('03' 포함 정상), COMTYPE CHKTP '03' 등록됨, 승인 컬럼 존재, SYSTEM_PARAMETERS 등록 수 = 프로시저 파라미터 수(R02 21, R03 31, R04 20, R07 19, S01 7, S04 13, TAL0001_R05 21, TAL0001_R08 16), 현재 같은 날 미승인 중복 0건, ERP 공통코드 동기화는 '03' 삭제 안 함(기존 분석)
+- **실DB 반영**: 없음
+
+### 22. EQM1001_S04 예방보전('03') 점검시트 개정이력 미표시 수정
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql)
+- **요청**: 점검유형 '03(예방보전)' 이력을 레포트로 출력하면 개정이력이 하나도 나오지 않는 문제 수정
+- **원인**: CALL_CHKRST_RPT 개정이력 조회가 계획 REV 점검구분 = 실적 점검구분('03')인 REV만 가져옴. 예방보전은 정기점검('02') 계획 항목을 쓰므로 '03' REV가 없어 0건
+- **작업 내용**
+  - 1. 점검시트 개정이력 : 실적 점검구분이 '03'이면 '02' 계획 REV(점검구분 빈 값 기존 REV 포함)를 조회, 일상('01')·정기('02')는 기존과 동일
+- **검증**: 격리 MariaDB에서 예방보전 실적 개정이력 9건(설비·설비그룹 '02' REV 직접 집계와 일치), 정기점검 실적 1건(기존과 동일). 실DB SELECT 비교: 예방보전 4건 0 → 1~2건, 정기점검 5건 변경 전후 동일. 레포트 실제 출력은 미확인
+- **실DB 반영**: S04 프로시저 저장 (파라미터 변경 없음)
+
+### 21. 레포트 출력 시 'Unable to connect to any of the specified MySQL hosts' 오류 수정
+- **수정 파일**: [01.Office/Reports/ITS_CONFIG_MARIA.xml](01.Office/Reports/ITS_CONFIG_MARIA.xml), [04.Report/bin/ITS_CONFIG_MARIA.xml](04.Report/bin/ITS_CONFIG_MARIA.xml)
+- **요청**: 레포트 출력 시 DB 접속 오류 수정
+- **원인**: 2026-11-16 커밋(312acad)에서 레포트용 DB 설정 addr이 211.43.15.98 → localhost로 바뀜. 이 PC는 localhost:33061에 MariaDB가 없어 접속 실패 (화면 쪽 ItsMaria.cs는 211.43.15.98 사용 중이라 화면 조회는 정상)
+- **작업 내용**
+  - 1. 두 설정 파일의 addr만 localhost → 211.43.15.98 (화면 ItsMaria.cs와 같은 DB 서버), port·user·password·dbname·파일 형식은 그대로
+- **검증**: 포트 확인 localhost:33061 닫힘, 211.43.15.98:33061 열림. git diff로 addr 1줄씩만 변경 확인. 레포트 실제 출력은 미확인
+- **실DB 반영**: 없음. 설정 파일 배포 (서버에서 레포트가 DB와 같은 장비에서 localhost로 접속해야 하는 구성이라면 배포 환경 확인 필요)
+
+### 20. EQM1001_S01 설비 목록 조회 조건을 EQM1001_R07과 동일하게 (2공장 사용 설비)
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_S01.sql](05.Procedure/MES_SNS2_EQM1001_S01.sql), [01.Office/PAGEEQM/EQM1001/EQM1001_S01.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_S01.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_S01.js](01.Office/PAGEEQM/EQM1001/EQM1001_S01.js)
+- **요청**: S01 설비 목록이 미사용·다른 공장 설비까지 나오니 R07 설비 목록과 같은 조건으로
+- **작업 내용**
+  - 1. 조회
+    - 1) 프로시저 LIST_EQMCD : R07과 같은 조건 — 공장 '07' 고정(S04처럼 SET $FACTORYCD = '07'), USEYN = 'Y', 작업장·공정·라인 조건, 설비코드 순 (설비코드 검색은 S01 그대로 유지)
+    - 2) 검색조건 공장 콤보 : 07 표시 + ReadOnly (조회는 항상 2공장), 공장 변경 연동 핸들러 삭제
+  - 2. 파라미터 변경 없음 (19번 SYSTEM_PARAMETERS 7건 그대로)
+- **검증**: 격리 MariaDB에서 S01·R07 설비 목록이 조건 없음(7대)·작업장 지정(2대) 모두 같은 설비, 공장 '02'를 넘겨도 2공장만 조회. 실DB SELECT 건수: 전체 1345대 중 2공장 254대(전부 사용), 다른 공장 1091대 → 기존 S01은 1345대, 변경 후 R07과 같은 254대. `node --check` 통과, 파일 형식 유지
+- **실DB 반영**: S01 프로시저 저장 → MES_SNS2_EQM1001_S01_SYSTEM_PARAMETERS.sql 실행(7건, 19번과 동일), aspx·js 배포
+
+### 19. EQM1001_S01 설비 목록 공장·작업장·공정·라인 컬럼 및 검색조건 추가
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_S01.sql](05.Procedure/MES_SNS2_EQM1001_S01.sql), [05.Procedure/MES_SNS2_EQM1001_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_S01_SYSTEM_PARAMETERS.sql) (신규), [01.Office/PAGEEQM/EQM1001/EQM1001_S01.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_S01.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_S01.js](01.Office/PAGEEQM/EQM1001/EQM1001_S01.js)
+- **요청**: 공장·작업장·공정·라인 컬럼과 검색조건 추가
+- **작업 내용**
+  - 1. 조회
+    - 1) 검색조건 : 공장(*FACTORYCD, 기본 07 — MST1002_R05 등과 같은 방식), 작업장(*LINECD, REF01 07), 공정(*EQMTP), 라인(*EQMGROUP1), 설비코드 순. 공장 → 작업장(REF01 공장) → 공정(REF01 작업장) → 라인(REF01 작업장·REF02 공정) 연동, 상위 변경 시 하위 값 초기화
+    - 2) 좌측그리드 : 설비코드, 설비명 뒤에 공장(FACTORYCD), 작업장(LINECD), 공정(FM100), 라인(FM113) 콤보 컬럼 추가 (EQM1001_S04와 같은 형식)
+  - 2. 프로시저 : 파라미터 FACTORYCD·LINECD·EQMTP·EQMGROUP1을 EQMCD 앞에 추가, LIST_EQMCD에 컬럼 반환·조건 추가(빈 값이면 전체), CALL_RPT는 변경 없음(이력카드는 EQMCD만 전달)
+- **참고**: 공정·라인 콤보 목록(DC_COMBO *EQMTP·*EQMGROUP1)은 공통 프로시저에서 2공장(07) 설비 기준으로 고정이라, 다른 공장 선택 시 공정·라인 목록은 2공장 값으로 표시 (공통 프로시저는 변경하지 않음)
+- **검증**: 격리 MariaDB에서 파라미터 7개, 조건 없음 9건(전체), 공장 07 7건·02 2건, 07+작업장+공정+라인 1건(직접 집계와 일치), 설비코드 'I2A-00' 4건, 6개 컬럼 반환 확인. `node --check` 통과, 파일 형식 유지(S01.sql 원본처럼 BOM, aspx·js BOM, CRLF, SYSTEM_PARAMETERS는 기존 파일처럼 BOM 없음). 실서버 화면·이력카드 출력은 미확인(격리 DB에 MSTCUST 없음)
+- **실DB 반영**: S01 프로시저 저장 → MES_SNS2_EQM1001_S01_SYSTEM_PARAMETERS.sql 실행(정상 7건), aspx·js 배포
+
+### 18. 설비 검색조건 find 크기 통일 (EQM1001_R03 정기점검 주기관리 기준)
+- **수정 파일**: [EQM1001_R03.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx), [EQM1001_S04.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_S04.aspx), [EQM1001_R04.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [EQM1001_R01.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx), [EQM1001_S01.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_S01.aspx), [PRD6001_S02.aspx](01.Office/PAGEPRD/PRD6001/PRD6001_S02.aspx)
+- **요청**: R03 '정기점검 주기관리' 탭의 설비 find 크기를 기준으로 각 화면 검색조건 설비코드 find 크기 통일
+- **작업 내용**
+  - 1. 기준 : R03 정기점검 주기관리 find1 (InputWidth 80, NameWidth 120)
+  - 2. 변경 : R03 설비별 점검계획 find_EQMCD 110/170 → 80/120, S04 find_EQMCD 기본값 → 80/120, R04 find_EQMCD 기본값 → 80/120, R01 find_code 90/100 → 80/120, S01 find_code 110/220 → 80/120, PRD6001_S02 sdiv1_find_EQMCD 기본값 → 80/120
+  - 3. 그대로 : 라벨·여백(LabelWidth, MarginLeft 등)과 팝업 안 설비 find(R04 pop1·pop2, R01 pop1)는 검색조건이 아니라 변경 없음
+- **검증**: 파일별 git diff로 설비 find 1줄만 변경된 것 확인, 파일 형식 유지(aspx BOM, CRLF). 실서버 화면은 미확인
+- **실DB 반영**: 없음 (aspx 배포만)
+
 ### 17. EQM1001_S04 점검이력 그리드 오래된 순 정렬
 - **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_S04.sql](05.Procedure/MES_SNS2_EQM1001_S04.sql)
 - **요청**: 상단 점검이력 그리드를 가장 오래된 것부터 아래로 갈수록 최신 순으로 정렬

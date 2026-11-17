@@ -7,7 +7,12 @@
 -- 			2026-09-17 					한성수	수리시간(분) 계산 로직 변경 및 보전구분 기본값 공백 처리
 -- 			2026-09-17 					한성수	컬럼 매핑 단순화(IFNULL/GPCD 통일) 및 구매가격 기본값(0(KRW)) 적용
 -- 			2026-10-06 					한성수	구입금액·작업자·보전구분 매핑 보완 및 수리이력 정렬 안정화
+-- 			2026-11-17 					한성수	설비 목록 공장·작업장·공정·라인 컬럼 및 검색조건 추가, EQM1001_R07과 같은 2공장 사용 설비만 조회
 -- *****************************************************************************
+  IN $FACTORYCD        VARCHAR(20),     -- 공장
+  IN $LINECD           VARCHAR(20),     -- 작업장
+  IN $EQMTP            VARCHAR(20),     -- 공정 (MSTEQM.EQMTP, FM100)
+  IN $EQMGROUP1        VARCHAR(20),     -- 라인 (MSTEQM.EQMGROUP1, FM113)
   IN $EQMCD            VARCHAR(20),     -- 설비코드
 
 -- *****************************************************************************
@@ -21,12 +26,24 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 CASE $CALLTYPE
 
 -- *****************************************************************************
-WHEN 'LIST_EQMCD' THEN  -- 설비 목록 조회
-  SELECT 
+WHEN 'LIST_EQMCD' THEN  -- 설비 목록 조회 (EQM1001_R07과 같은 2공장 사용 설비, 작업장·공정·라인 조건)
+
+  SET $FACTORYCD = '07';
+
+  SELECT
     MSTEQM.FANO        AS EQMCD,
-    MSTEQM.EQMNM
+    MSTEQM.EQMNM,
+    IFNULL(MSTEQM.FACTORYCD, '') AS FACTORYCD,
+    IFNULL(MSTEQM.LINECD, '')    AS LINECD,
+    IFNULL(MSTEQM.EQMTP, '')     AS EQMTP,
+    IFNULL(MSTEQM.EQMGROUP1, '') AS EQMGROUP1
   FROM MSTEQM
-  WHERE MSTEQM.FANO LIKE CONCAT('%', $EQMCD, '%')
+  WHERE MSTEQM.FACTORYCD = $FACTORYCD
+    AND MSTEQM.USEYN = 'Y'
+    AND MSTEQM.FANO LIKE CONCAT('%', $EQMCD, '%')
+    AND ($LINECD = '' OR MSTEQM.LINECD = $LINECD)
+    AND ($EQMTP = '' OR MSTEQM.EQMTP = $EQMTP)
+    AND ($EQMGROUP1 = '' OR MSTEQM.EQMGROUP1 = $EQMGROUP1)
   ORDER BY MSTEQM.FANO;
 
 -- *****************************************************************************
