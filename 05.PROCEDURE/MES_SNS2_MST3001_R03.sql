@@ -6,6 +6,7 @@ PROCEDURE `MES_SNS2`.`MST3001_R03`(
 -- Modify:  2026-10-13          한성수  부품재고·로케이션 최적화 조회/저장, 안전재고 부족 시 핑크색(BACKGROUND) 표기, 로케이션 코드 수정 및 중복 검증·SQL 튜닝
 --          2026-10-14          한성수  로케이션 연동·초기화 및 비움 삭제 처리, 중요도등급(GRADE) 저장 및 공통 감사함수 적용
 --          2026-11-13          한성수  INC 2공장(법인 60·공장 07) 고정 조회·저장, 로케이션 지정·기준정보 관리 주석처리
+--          2026-11-17          한성수  SEL_ITEM 품목공장(MSTITEM_FACTORY) 조인으로 INC 2공장(07) 품목만 조회
 -- *****************************************************************************
   IN $COMPANYCD       VARCHAR(100),
   IN $FACTORYCD       VARCHAR(100),
@@ -67,6 +68,9 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
                 ELSE ''
            END AS BACKGROUND
     FROM MSTITEM
+    INNER JOIN MSTITEM_FACTORY -- 2026-11-17 INC 2공장(07) 품목만 조회
+      ON MSTITEM_FACTORY.ITEMID = MSTITEM.ITEMID
+     AND MSTITEM_FACTORY.FACTORYCD = $FACTORYCD
     LEFT JOIN MSTITEM_EQMPARTS
       ON MSTITEM_EQMPARTS.ITEMID = MSTITEM.ITEMID
      AND MSTITEM_EQMPARTS.FACTORYCD = $FACTORYCD

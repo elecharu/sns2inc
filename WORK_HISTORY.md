@@ -18,6 +18,16 @@
 
 ## 🕒 2026-11-17 (화) 작업 내역
 
+### 30. MST3001_R03 설비부품 조회를 INC 2공장(07) 품목으로 제한
+- **수정 파일**: [05.Procedure/MES_SNS2_MST3001_R03.sql](05.Procedure/MES_SNS2_MST3001_R03.sql)
+- **요청**: 조회 시 INC 2공장 데이터만 가져오는지 검토 후 수정
+- **원인**: SEL_ITEM이 MSTITEM을 법인(60)·품목구분(DM100700)으로만 걸러, 공장 '07'은 MSTITEM_EQMPARTS LEFT JOIN 조건에만 쓰임 → 1공장(06) 품목까지 조회됨. 실DB 확인 결과 설비자재 4,326건 중 06 3,906건 / 07 355건 / 품목공장 없음 65건
+- **작업 내용**
+  - 1. SEL_ITEM : `INNER JOIN MSTITEM_FACTORY ON ITEMID AND FACTORYCD = $FACTORYCD('07')` 추가 (MST1003_R04·DC_FIND와 같은 방식) → 2공장 품목 355건만 조회, 품목공장 없는 65건도 제외
+  - 2. 파라미터 변경 없음 → SYSTEM_PARAMETERS 재등록 불필요
+- **검증**: 파일 형식 유지(BOM·LF 원본). 실DB 프로시저 저장·화면 조회는 미확인
+- **실DB 반영**: MES_SNS2_MST3001_R03.sql 프로시저 저장
+
 ### 29. EQM1001_R03 계획서 레포트 개정이력을 S04 점검시트와 같은 형식으로 ([구분] 개정내용, 날짜 제거)
 - **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [04.Report/PAGEEQM/EQM1001/R03.cs](04.Report/PAGEEQM/EQM1001/R03.cs), 빌드 산출물 EQM1001.exe(04.Report/PAGEEQM/EQM1001/bin/Release → 04.Report/bin, 01.Office/Reports 배포)
 - **요청**: 계획서 출력 개정이력에 '날짜 개정내용'으로 표시하지 말고 EQM1001_S04 점검시트처럼 표시
