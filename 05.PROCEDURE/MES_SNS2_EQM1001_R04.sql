@@ -10,6 +10,7 @@ PROCEDURE `MES_SNS2`.`EQM1001_R04`(
 -- 			2026-11-10 					한성수	신규 점검 시 특이사항 기본값 초기화
 -- 			2026-11-13 					한성수	점검자명 표시, 점검일자 검증 제거 및 계획월 이동·중복 차단
 -- 			2026-11-16 					한성수	설비 분류·공장 필터 추가 및 최신 정기점검 REV 적용, 승인 실적 수정·삭제 차단, 점검월 이동 시 등급별 주기 검증
+-- 			2026-11-17 					한성수	점검일자 검증을 없는 날짜(2026-02-30 등)까지 막도록 변경
 -- *****************************************************************************
   IN $SYEAR           VARCHAR(50),
   IN $YYYYMM          VARCHAR(50),
@@ -70,7 +71,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       LEAVE PROC;
     END IF;
 
-    IF STR_TO_DATE($BASEDATE, '%Y-%m-%d') IS NULL THEN
+    IF $BASEDATE NOT REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' OR DATE($BASEDATE) IS NULL THEN
       CALL COMERR('점검일자 형식이 올바르지 않습니다.');
       LEAVE PROC;
     END IF;

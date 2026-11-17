@@ -9,6 +9,7 @@ PROCEDURE `MES_SNS2`.`EQM1001_S04`(
 -- 			2026-11-09 					한성수	점검시트 개정이력 및 점검담당자 조회 연동
 -- 			2026-11-10 					한성수	점검실적 입력 특이사항 단독 표기 (계획 특이사항 대체 제거)
 -- 			2026-11-16 					한성수	설비 분류·공장 필터 추가, 점검이력 승인·승인취소 및 점검시트 담당란 승인자 표시, 개정이력 계획 승인 조회 제거, 개정이력 REV 번호 저장값 그대로 표시
+-- 			2026-11-17 					한성수	점검이력 점검일자·등록일시 오래된 순 정렬
 -- *****************************************************************************
   IN $SDATE          VARCHAR(20),
   IN $EDATE          VARCHAR(20),
@@ -67,7 +68,7 @@ WHEN 'LIST_CHKRSTEQM' THEN
     AND ($EQMTP = '' OR MSTEQM.EQMTP = $EQMTP)
     AND ($EQMGROUP1 = '' OR MSTEQM.EQMGROUP1 = $EQMGROUP1)
     AND CHKRSTEQM.EQMCD LIKE CONCAT ('%', $EQMCD, '%')
-  ORDER BY CHKRSTEQM.BASEDATE, CHKRSTEQM.CHKTP, CHKRSTEQM.EQMCD
+  ORDER BY CHKRSTEQM.BASEDATE, CHKRSTEQM.RTIME, CHKRSTEQM.CHKRSTKEY
   ;
 
 -- *****************************************************************                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     **********
