@@ -27,8 +27,8 @@
     <Its:div runat="server" ID="sdiv1" Type="SearchPanel">
         <Its:dateRange runat="server" Label="등록일자" ID="date_SEARCH" FieldFrom="SDATE" FieldTo="EDATE" />
         <Its:combo runat="server" Label="작업장" ID="cmb_LINECD" Field="LINECD" GPCD="*LINECD" REF01="07" />
-        <Its:combo runat="server" Label="설비구분" ID="cmb_EQMTP" Field="EQMTP" GPCD="*FM100" InputWidth="70" REF10="07" />
-        <Its:combo runat="server" Label="설비대분류" ID="cmb_EQMGROUP1" Field="EQMGROUP1" GPCD="*FM113" InputWidth="70" REF10="07" />
+        <Its:combo runat="server" Label="공정" ID="cmb_EQMTP" Field="EQMTP" GPCD="*EQMTP" InputWidth="70" />
+        <Its:combo runat="server" Label="라인" ID="cmb_EQMGROUP1" Field="EQMGROUP1" GPCD="*EQMGROUP1" InputWidth="70" />
         <Its:find runat="server" Label="설비코드" ID="find_code" GPCD="EQMCD" Field="EQMCD" InputWidth="90" NameWidth="100"/>
         <Its:find runat="server" Label="작업자" ID="find_EMP" GPCD="EMPCD" Field="EMPCD" InputWidth="90" NameWidth="80" />
     </Its:div>

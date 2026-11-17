@@ -57,8 +57,8 @@ ItsPage.Load = function () {
         column.create('설비그룹', 'EQMGUBUN', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM116' }),
         column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),
         column.create('작업장', 'LINECD', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'LINECD', readOnly: true }),
-        column.create('설비구분', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
-        column.create('설비대분류', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
+        column.create('공정', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
+        column.create('라인', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
         column.create('설비명', 'EQMNM', { width: 200 }),
         // 2026-11-16 [설비별 점검계획 탭] 승인 제거로 승인상태 컬럼 삭제
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
@@ -108,8 +108,8 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid9', { isCheckBoxGrid: true }, [
         column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),
         column.create('작업장', 'LINECD', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'LINECD', readOnly: true }),
-        column.create('설비구분', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
-        column.create('설비대분류', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
+        column.create('공정', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
+        column.create('라인', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
         column.create('설비코드', 'FANO', { width: 100, align: 'center' }),
         column.create('설비명', 'EQMNM', { width: 220 }),
         column.create('설비등급', 'EQMGRADENM', { width: 90, align: 'center', readOnly: true }),
@@ -164,6 +164,38 @@ ItsPage.Load = function () {
     // 조회년도 기본값
     ItsCombo.SetValueByIndex('cmb_SYEAR', 4);
 
+};
+
+// 작업장 변경 시 공정·라인 콤보를 그 작업장 기준으로 변경
+ItsCombo.Event('cmb_LINECD').onChanged = function (value, oldValue) {
+    ItsCombo.SetRef01('cmb_EQMTP', ItsCombo.GetValue('cmb_LINECD'));
+    ItsCombo.SetValue('cmb_EQMTP', '', false);
+
+    ItsCombo.SetRef01('cmb_EQMGROUP1', ItsCombo.GetValue('cmb_LINECD'), false);
+    ItsCombo.SetRef02('cmb_EQMGROUP1', '');
+    ItsCombo.SetValue('cmb_EQMGROUP1', '', false);
+};
+
+// 공정 변경 시 라인 콤보를 그 공정 기준으로 변경
+ItsCombo.Event('cmb_EQMTP').onChanged = function (value, oldValue) {
+    ItsCombo.SetRef02('cmb_EQMGROUP1', ItsCombo.GetValue('cmb_EQMTP'));
+    ItsCombo.SetValue('cmb_EQMGROUP1', '', false);
+};
+
+// 주기관리 탭 작업장 변경 시 공정·라인 콤보를 그 작업장 기준으로 변경
+ItsCombo.Event('cmb_CYCLE_LINECD').onChanged = function (value, oldValue) {
+    ItsCombo.SetRef01('cmb_CYCLE_EQMTP', ItsCombo.GetValue('cmb_CYCLE_LINECD'));
+    ItsCombo.SetValue('cmb_CYCLE_EQMTP', '', false);
+
+    ItsCombo.SetRef01('cmb_CYCLE_EQMGROUP1', ItsCombo.GetValue('cmb_CYCLE_LINECD'), false);
+    ItsCombo.SetRef02('cmb_CYCLE_EQMGROUP1', '');
+    ItsCombo.SetValue('cmb_CYCLE_EQMGROUP1', '', false);
+};
+
+// 주기관리 탭 공정 변경 시 라인 콤보를 그 공정 기준으로 변경
+ItsCombo.Event('cmb_CYCLE_EQMTP').onChanged = function (value, oldValue) {
+    ItsCombo.SetRef02('cmb_CYCLE_EQMGROUP1', ItsCombo.GetValue('cmb_CYCLE_EQMTP'));
+    ItsCombo.SetValue('cmb_CYCLE_EQMGROUP1', '', false);
 };
 
 // 공통: 체크 행 존재 여부

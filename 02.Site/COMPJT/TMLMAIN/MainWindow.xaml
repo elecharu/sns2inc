@@ -176,17 +176,20 @@
                     </DockPanel>
                     <Border DockPanel.Dock="Bottom" BorderBrush="Silver" BorderThickness="0">
                         <DockPanel x:Name="PANEL_MENU" DockPanel.Dock="Bottom" Width="600" Background="#262938"  >
-                            <UserControl Name="MENU0" Style="{DynamicResource TML_MENU}" MouseUp="MENU_MouseUp">메뉴</UserControl>
-                            <UserControl Name="MENU1" Style="{DynamicResource TML_MENU}" MouseUp="MENU_MouseUp">메뉴</UserControl>
-                            <UserControl Name="MENU2" Style="{DynamicResource TML_MENU}" MouseUp="MENU_MouseUp">메뉴</UserControl>
-                            <UserControl Name="MENU3" Style="{DynamicResource TML_MENU}" MouseUp="MENU_MouseUp">메뉴</UserControl>
-                            <UserControl Name="MENU4" Style="{DynamicResource TML_MENU}" MouseUp="MENU_MouseUp">메뉴</UserControl>
-                            <UserControl Name="MENU5" Style="{DynamicResource TML_MENU}" MouseUp="MENU_MouseUp">메뉴</UserControl>
-                            <UserControl Name="MENU6" Style="{DynamicResource TML_MENU}" MouseUp="MENU_MouseUp">메뉴</UserControl>
-                            <UserControl Name="MENU7" Style="{DynamicResource TML_MENU}" MouseUp="MENU_MouseUp">메뉴</UserControl>
-                            <UserControl Name="MENU8" Style="{DynamicResource TML_MENU}" MouseUp="MENU_MouseUp">메뉴</UserControl>
-                            <UserControl Name="MENU9" Style="{DynamicResource TML_MENU}" MouseUp="MENU_MouseUp">메뉴</UserControl>
-                            <UserControl Name="MENU10" Style="{DynamicResource TML_MENU}" MouseUp="MENU_MouseUp">메뉴</UserControl>
+                            <!-- 2026-11-16 상단 메뉴줄(MENU0~10, 기타메뉴) 없앰 → 전체화면 타일 메뉴(PANEL_HOME). 이 버튼은 타일 메뉴로 돌아가기 -->
+                            <UserControl x:Name="MENU_HOME" Style="{DynamicResource TML_MENU}" MouseUp="MENU_HOME_MouseUp">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="6" VerticalAlignment="Center" Margin="0 0 2 0"/>
+                                    <TextBlock Text="메뉴" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </UserControl>
+                            <!-- 2026-11-16 메뉴 목록·타일 설정을 DB 에서 다시 읽기 (열린 화면은 닫힘) -->
+                            <UserControl x:Name="MENU_REFRESH" Style="{DynamicResource TML_MENU}" MouseUp="MENU_REFRESH_MouseUp">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="5.5" VerticalAlignment="Center" Margin="0 0 2 0"/>
+                                    <TextBlock Text="새로고침" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </UserControl>
 
                             <Canvas x:Name="ICON_CONFIG" DockPanel.Dock="Left" Width="30" Height="11" 
                                     Style="{DynamicResource TopMenuIcon}" MouseDown="ICON_CONFIG_MouseDown" Margin="15 0 0 0">
@@ -368,60 +371,34 @@
  
                 </DockPanel>
 
-                <!-- 컨텐츠 -->
-                <Viewbox Stretch="Fill" DockPanel.Dock="Bottom">
-                    <DockPanel x:Name="DOCK_FRAME" Background="White">
-                        <DockPanel x:Name="PAGE_MAIN" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME_MAIN"></Frame>
+                <!-- 컨텐츠 : 화면(DOCK_FRAME) 위에 타일 메뉴(PANEL_HOME)를 겹쳐 둔다 -->
+                <Grid x:Name="GRID_CONTENT">
+                    <Viewbox Stretch="Fill">
+                        <DockPanel x:Name="DOCK_FRAME" Background="White">
+                            <DockPanel x:Name="PAGE_MAIN" DockPanel.Dock="Top">
+                                <Frame x:Name="FRAME_MAIN"></Frame>
+                            </DockPanel>
+                            <!-- 메뉴별 화면 칸은 메뉴 개수만큼 SetMenu 에서 이 아래에 만든다 (2026-11-16 고정 PAGE0~10 없앰) -->
                         </DockPanel>
-                        <DockPanel x:Name="PAGE0" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME0"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE1" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME1"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE2" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME2"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE3" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME3"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE4" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME4"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE5" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME5"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE6" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME6"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE7" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME7"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE8" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME8"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE9" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME9"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE10" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME10"></Frame>
-                        </DockPanel>
-                        <!--<DockPanel x:Name="PAGE11" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME11"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE12" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME12"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE13" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME13"></Frame>
-                        </DockPanel>
-                        <DockPanel x:Name="PAGE14" DockPanel.Dock="Top">
-                            <Frame x:Name="FRAME14"></Frame>
-                        </DockPanel>-->
-                        <!-- 기타메뉴 화면 칸(OTHER_PAGE)은 메뉴 개수만큼 SetMenu 에서 이 아래에 만든다 (2026-11-12 고정 10칸 → 자동 생성) -->
-                    </DockPanel>
-                </Viewbox>
+                    </Viewbox>
+
+                    <!-- 2026-11-16 타일 메뉴 : 로그인 후 첫 화면. 타일은 SetMenu 에서 메뉴 순번대로 만든다 -->
+                    <Grid x:Name="PANEL_HOME" Background="#F4F4F4">
+                        <!-- 위→아래로 채우고 다음 열로. 열 사이 간격 칸은 SetMenu(BuildMenus) 에서 만든다
+                             2026-11-16 7열부터는 열 폭을 6열일 때로 고정하고 가로 스크롤 (터치로 끌기, 마우스 휠) -->
+                        <ScrollViewer x:Name="SCROLL_TILE" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Disabled"
+                                      PanningMode="HorizontalOnly" PreviewMouseWheel="SCROLL_TILE_PreviewMouseWheel">
+                            <ScrollViewer.Resources>
+                                <!-- 화면 전체가 확대되어 보이므로 스크롤바를 얇게 -->
+                                <Style TargetType="ScrollBar">
+                                    <Setter Property="Height" Value="6"/>
+                                    <Setter Property="MinHeight" Value="6"/>
+                                </Style>
+                            </ScrollViewer.Resources>
+                            <Grid x:Name="GRID_TILE" Margin="6 6 6 6"/>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
             </DockPanel>
 
             <!-- 처리중 박스 -->
@@ -490,31 +467,6 @@
                     </StackPanel>
                 </Border>
             </DockPanel>
-
-            <!-- 기타 메뉴 -->
-            <Popup x:Name="POP_OTHER_MENU" IsOpen="False" StaysOpen="False" Width="472"
-                   PlacementTarget="{Binding ElementName=DOCK_TITLE}" Placement="Bottom">
-                <DockPanel>
-                    <Border DockPanel.Dock="Bottom" BorderBrush="Silver" BorderThickness="1">
-                        <StackPanel x:Name="PANEL_OTHER_MENU" Background="WhiteSmoke">
-                            <UserControl Tag="OTHER_CLOSE" MouseUp="MENU_MouseUp" Background="#141622" Foreground="White"
-                                     HorizontalContentAlignment="Right" FontSize="9"
-                                     VerticalContentAlignment="Center">
-                                <DockPanel HorizontalAlignment="Right">
-                                    <TextBlock VerticalAlignment="Center" Margin="0 0 3 0">기타메뉴</TextBlock>
-                                    <Canvas Width="10" Height="10">
-                                        <Line X1="2" Y1="2" X2="8" Y2="8" Stroke="White" StrokeThickness="2"></Line>
-                                        <Line X1="2" Y1="8" X2="8" Y2="2" Stroke="White" StrokeThickness="2"></Line>
-                                    </Canvas>
-                                </DockPanel>
-                            </UserControl>
-                            <!-- 기타메뉴 버튼은 메뉴 개수만큼 SetMenu 에서 만든다. 버튼 너비 47 → 한 줄 10개씩 자동 줄바꿈 -->
-                            <WrapPanel x:Name="WRAP_OTHER_MENU" Width="470"/>
-                        </StackPanel>
-                    </Border>
-                    <UserControl></UserControl>
-                </DockPanel>
-            </Popup>
         </Grid>
     </Viewbox>
 </Window>

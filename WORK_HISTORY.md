@@ -16,6 +16,37 @@
 
 ---
 
+## 🕒 2026-11-17 (화) 작업 내역
+
+### 1. EQM1001 설비 검색조건·그리드 '설비구분/설비대분류' → '공정/라인' 변경 및 작업장 → 공정 → 라인 콤보 연동
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx), [EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js), [EQM1001_R03.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R03.aspx), [EQM1001_R03.js](01.Office/PAGEEQM/EQM1001/EQM1001_R03.js), [EQM1001_R04.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R04.aspx), [EQM1001_R04.js](01.Office/PAGEEQM/EQM1001/EQM1001_R04.js), [EQM1001_S04.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_S04.aspx), [EQM1001_S04.js](01.Office/PAGEEQM/EQM1001/EQM1001_S04.js)
+- **요청**: 지금까지 추가한 설비 분류 컬럼명이 잘못됨 → EQM1001_R07처럼 '공정', '라인' 순서로 변경하고 작업장 선택 시 REF 연동 적용 (MST1002_R06은 그대로)
+- **작업 내용**
+  - 1. 조회조건
+    - 1) 공정 콤보 : 설비구분(`*FM100`, `REF10='07'`) → 공정(`*EQMTP`, DC_COMBO: MSTEQM 2공장 사용 설비 중 작업장(REF01) 설비의 EQMTP)
+    - 2) 라인 콤보 : 설비대분류(`*FM113`, `REF10='07'`) → 라인(`*EQMGROUP1`, DC_COMBO: 작업장(REF01)·공정(REF02) 설비의 EQMGROUP1)
+    - 3) 작업장 변경시 공정 REF01·라인 REF01 설정 후 공정·라인 빈 값, 공정 변경시 라인 REF02 설정 후 라인 빈 값 (TAL0001_R05·EQM1001_R07 방식)
+    - 4) 적용 화면 : R01, R03(설비별 점검계획 탭 `cmb_*`, 정기점검 주기관리 탭 `cmb_CYCLE_*`), R04, S04
+  - 2. 그리드
+    - 1) 컬럼명 : 설비구분 → 공정(EQMTP, FM100 콤보), 설비대분류 → 라인(EQMGROUP1, FM113 콤보), 순서 그대로
+    - 2) 적용 그리드 : R01, R03(설비별·주기관리), R04, S04
+  - 프로시저 변경 없음 (조회조건 값은 같은 EQMTP·EQMGROUP1 코드)
+- **검증**: `node --check`로 5개 JS 구문 확인, 공통 `ItsCombo.SetRef01/SetRef02` 동작 소스 확인. 파일 형식 aspx·js 기존 BOM 유무 유지(R03.js는 원래 BOM 없음) + CRLF. 브라우저 화면 확인은 미실행
+
+### 2. EQM1001_R07 설비 예방보전 점검등록 신규 화면 (설비 목록까지) — 2026-11-16 작업분
+- **신규 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R07.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R07.aspx), [EQM1001_R07.aspx.cs](01.Office/PAGEEQM/EQM1001/EQM1001_R07.aspx.cs), [EQM1001_R07.js](01.Office/PAGEEQM/EQM1001/EQM1001_R07.js), [05.Procedure/MES_SNS2_EQM1001_R07.sql](05.Procedure/MES_SNS2_EQM1001_R07.sql), [MES_SNS2_EQM1001_R07_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_EQM1001_R07_SYSTEM_PARAMETERS.sql)
+- **요청**: 예방보전 관련 공통코드 확인, 좌측 그리드에 TAL0001_R05와 같은 조건의 사용 설비 목록까지 구축
+- **작업 내용**
+  - 1. 조회
+    - 1) 설비 목록 조회 : MSTEQM (FACTORYCD = '07', USEYN = 'Y', 작업장·공정·라인 조건)
+    - 2) 조회조건 : 작업장(`*LINECD`, REF01 '07'), 공정(`*EQMTP`), 라인(`*EQMGROUP1`) 연동
+    - 3) 좌측그리드 : MSTEQM (설비번호, 설비명, 공정(FM100), 라인(FM113))
+    - 4) 프로시저 : EQM1001_R07 / LIST_EQMCD, 우측 영역은 빈 상태
+  - 예방보전 관련 공통코드(실DB 조회): FM300 설비수리보전구분(FM300100 예방(계획보전) 외), FM301 FM301350·FM301350N 계획 보전, FM303 교체·점검·백업(계획보전), FM309 FM309304 예방보전, DAILYINFOTP 01 예방보전. CHKTP(점검유형)는 01 일상·02 정기만 있음
+- **검증**: 격리 MariaDB에서 프로시저 생성·LIST_EQMCD 조회 정상(2공장 사용 설비 수와 일치). 브라우저·메뉴 등록 미실행, 실DB는 프로시저 저장 후 SYSTEM_PARAMETERS 5건 등록 필요
+
+---
+
 ## 🕒 2026-11-16 (월) 작업 내역
 
 ### 24. 정기점검 REV 번호 표시를 DB 저장값(0부터) 그대로로 되돌림

@@ -1,0 +1,22 @@
+-- *****************************************************************************
+-- Comment: EQM1001_R07 신규 생성 후 호출 파라미터 등록
+-- Create:  2026-11-16  한성수
+-- *****************************************************************************
+-- R07 프로시저 저장 후 아래 트랜잭션을 실행
+START TRANSACTION;
+DELETE FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'EQM1001_R07';
+
+INSERT INTO MES_SNS2.SYSTEM_PARAMETERS
+SELECT * FROM information_schema.PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'EQM1001_R07';
+COMMIT;
+
+-- 정상 5건: LINECD 1번, EQMTP 2번, EQMGROUP1 3번, CALLTYPE 4번, KEYWORD 5번
+SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
+FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'EQM1001_R07'
+ORDER BY ORDINAL_POSITION;

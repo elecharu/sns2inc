@@ -6,8 +6,8 @@ ItsPage.Load = function () {
     ItsGrid.Create('grid1', { isCheckBoxGrid: false }, [
         column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),
         column.create('작업장', 'LINECD', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'LINECD', readOnly: true }),
-        column.create('설비구분', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
-        column.create('설비대분류', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
+        column.create('공정', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
+        column.create('라인', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
         column.create('설비코드', 'EQMCD', { width: 100, align: 'center' }),
         column.create('설비명', 'EQMNM', { width: 250 }),
         column.create('년도', 'YEAR', { width: 80, align: 'center' }),
@@ -70,6 +70,22 @@ ItsPage.Load = function () {
     ]);
 
     ItsCombo.SetValueByIndex('cmb_SYEAR', 4);
+};
+
+// 작업장 변경 시 공정·라인 콤보를 그 작업장 기준으로 변경
+ItsCombo.Event('cmb_LINECD').onChanged = function (value, oldValue) {
+    ItsCombo.SetRef01('cmb_EQMTP', ItsCombo.GetValue('cmb_LINECD'));
+    ItsCombo.SetValue('cmb_EQMTP', '', false);
+
+    ItsCombo.SetRef01('cmb_EQMGROUP1', ItsCombo.GetValue('cmb_LINECD'), false);
+    ItsCombo.SetRef02('cmb_EQMGROUP1', '');
+    ItsCombo.SetValue('cmb_EQMGROUP1', '', false);
+};
+
+// 공정 변경 시 라인 콤보를 그 공정 기준으로 변경
+ItsCombo.Event('cmb_EQMTP').onChanged = function (value, oldValue) {
+    ItsCombo.SetRef02('cmb_EQMGROUP1', ItsCombo.GetValue('cmb_EQMTP'));
+    ItsCombo.SetValue('cmb_EQMGROUP1', '', false);
 };
 
 // 월 컬럼(M01~M12) 여부

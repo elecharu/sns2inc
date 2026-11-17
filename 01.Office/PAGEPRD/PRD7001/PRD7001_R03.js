@@ -25,6 +25,9 @@ ItsPage.Load = function () {
         ]),
         column.create('사용여부', 'USEYN', { width: 70, align: 'center', columnType: enumColumnTypes.check, readOnly: false }),
         column.create('순번', 'SORTNO', { width: 60, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
+        // 2026-11-16 현장프로그램 메뉴타일 : 반칸 = 가로 절반, 열바꿈 = 이 메뉴 다음부터 다음 열에 표시
+        column.create('반칸', 'TILEHALFYN', { width: 50, align: 'center', columnType: enumColumnTypes.check, readOnly: false }),
+        column.create('열바꿈', 'TILEBREAKYN', { width: 60, align: 'center', columnType: enumColumnTypes.check, readOnly: false }),
         column.create('비고', 'REMARK', { width: 300, readOnly: false }),
         column.split()
     ]);
@@ -94,7 +97,7 @@ ItsGrid.Event('grid_TML').onSelect = function (rowIndex, field) {
         maria.ShowErrMsg();
     }
     else {
-        ItsGrid.SetStore('grid_TMLPRG', maria.store.YnToBool('USEYN'));
+        ItsGrid.SetStore('grid_TMLPRG', maria.store.YnToBool('USEYN').YnToBool('TILEHALFYN').YnToBool('TILEBREAKYN'));
     }
 };
 
@@ -109,6 +112,8 @@ ItsButton.EventAdd = function () {
                 PRGNM: '',
                 USEYN: false,
                 SORTNO: null,
+                TILEHALFYN: false,
+                TILEBREAKYN: false,
                 REMARK: '',
                 REGYN: 'N'
             });
@@ -146,6 +151,8 @@ ItsGrid.Event('grid_TMLPRG').onDoubleClick = function (rowIndex, field) {
                     PRGNM: res['NAME'],
                     USEYN: false,
                     SORTNO: null,
+                    TILEHALFYN: false,
+                    TILEBREAKYN: false,
                     REMARK: '',
                     REGYN: 'N'
                 });
@@ -184,6 +191,8 @@ ItsButton.EventSave = function () {
                     maria.AddList('SORTNO_LIST', ROWDATA.SORTNO);
                     maria.AddList('USEYN_LIST', ItsHelper.ToYn(ROWDATA.USEYN));
                     maria.AddList('REMARK_LIST', ROWDATA.REMARK);
+                    maria.AddList('TILEHALFYN_LIST', ItsHelper.ToYn(ROWDATA.TILEHALFYN));
+                    maria.AddList('TILEBREAKYN_LIST', ItsHelper.ToYn(ROWDATA.TILEBREAKYN));
                     UPCNT++;
                 }
             }

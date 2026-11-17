@@ -411,61 +411,9 @@ namespace TMLMAIN
             }
             else
             {
-                MENU0.Visibility = Visibility.Hidden;
-                MENU1.Visibility = Visibility.Hidden;
-                MENU2.Visibility = Visibility.Hidden;
-                MENU3.Visibility = Visibility.Hidden;
-                MENU4.Visibility = Visibility.Hidden;
-                MENU5.Visibility = Visibility.Hidden;
-                MENU6.Visibility = Visibility.Hidden;
-                MENU7.Visibility = Visibility.Hidden;
-                MENU8.Visibility = Visibility.Hidden;
-                MENU9.Visibility = Visibility.Hidden;
-                MENU10.Visibility = Visibility.Hidden;
-
-                FRAME0.Tag = null;
-                FRAME1.Tag = null;
-                FRAME2.Tag = null;
-                FRAME3.Tag = null;
-                FRAME4.Tag = null;
-                FRAME5.Tag = null;
-                FRAME6.Tag = null;
-                FRAME7.Tag = null;
-                FRAME8.Tag = null;
-                FRAME9.Tag = null;
-                FRAME10.Tag = null;
-
-                UserControl MENU;
-
-                int menuCount = ds.Tables[0].Rows.Count;
-
-                // 기타메뉴(11번째부터)는 메뉴 개수만큼 새로 만든다. 10개 이하면 기타메뉴 없음
-                BuildOtherMenus(ds.Tables[0], 10);
-
-                if (menuCount <= 10)
-                {
-                    for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
-                    {
-                        MENU = PANEL_MENU.FindName("MENU" + i) as UserControl;
-                        MENU.Visibility = Visibility.Visible;
-                        MENU.Tag = ds.Tables[0].Rows[i][0].ToString();
-                        MENU.Content = ds.Tables[0].Rows[i][1].ToString();
-                    }
-                }
-                else
-                {
-                    for (int i = 0; i < 10; i++)
-                    {
-                        MENU = PANEL_MENU.FindName("MENU" + i) as UserControl;
-                        MENU.Visibility = Visibility.Visible;
-                        MENU.Tag = ds.Tables[0].Rows[i][0].ToString();
-                        MENU.Content = ds.Tables[0].Rows[i][1].ToString();
-                    }
-
-                    MENU10.Visibility = Visibility.Visible;
-                    MENU10.Tag = "OTHER";
-                    MENU10.Content = "기타메뉴";
-                }
+                // 2026-11-16 상단 메뉴줄 → 전체화면 타일 메뉴. 메뉴 개수만큼 타일과 화면 칸을 만든다
+                BuildMenus(ds.Tables[0]);
+                ShowHome();
             }
         }
 
@@ -484,7 +432,7 @@ namespace TMLMAIN
         {
             if (e.LeftButton != MouseButtonState.Pressed) return;
 
-            if (PAGE_MAIN.MaxHeight > 0)
+            if (PANEL_HOME.Visibility == Visibility.Visible)
             {
                 ShowMessageBox("__MainClose", "전체 화면을 닫으시겠습니까?");
             }
@@ -508,7 +456,7 @@ namespace TMLMAIN
         private string _curTmlcd = "";
         private void ICON_CONFIG_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            DOCK_FRAME.Visibility = Visibility.Hidden;
+            GRID_CONTENT.Visibility = Visibility.Hidden;
 
             _curTmlcd = MODEL_CONFIG.GetText("TMLCD");
 
@@ -557,7 +505,7 @@ namespace TMLMAIN
                 if (e.ChangedButton != MouseButton.Left) return;
             }
 
-            DOCK_FRAME.Visibility = Visibility.Visible;
+            GRID_CONTENT.Visibility = Visibility.Visible;
 
             File.WriteAllText(_bdvcdFile, MODEL_CONFIG.GetText("BDVCD"), Encoding.UTF8);
             File.WriteAllText(_tmlcdFile, MODEL_CONFIG.GetText("TMLCD"), Encoding.UTF8);
@@ -602,7 +550,7 @@ namespace TMLMAIN
                 if (e.ChangedButton != MouseButton.Left) return;
             }
 
-            DOCK_FRAME.Visibility = Visibility.Visible;
+            GRID_CONTENT.Visibility = Visibility.Visible;
 
             PANEL_CONFIG.MaxHeight = 0;
             if (CURFRAME != null) CURFRAME.IsEnabled = true;
@@ -727,12 +675,18 @@ namespace TMLMAIN
             {
                 this.Close();
             }
+            else if (command == "__MenuRefresh")
+            {
+                RefreshMenu();
+            }
             else if (command == "__PageClose")
             {
                 ClearAllFrames();
                 HideAllPages();
 
                 PAGE_MAIN.MaxHeight = 5000;
+                CURFRAME = null;
+                ShowHome();
 
             }
             else
@@ -748,29 +702,17 @@ namespace TMLMAIN
         private Frame CURFRAME = null;
 
         // ------------------------------------------------------------------------------------------
-        // 기타메뉴 (11번째 메뉴부터) : 2026-11-12 고정 10칸(OTHER_MENU0~9, OTHER_PAGE0~9) → 메뉴 개수만큼 자동 생성
-        // 메뉴 버튼과 화면 칸은 같은 순서(index)로 짝을 이룬다
+        // 타일 메뉴 : 2026-11-16 상단 메뉴줄(MENU0~10 + 기타메뉴) → 로그인 후 전체화면 타일 메뉴
+        // 타일과 화면 칸은 같은 순서(index)로 짝을 이룬다. 타일의 Tag = 화면코드(PRGCD)
         // ------------------------------------------------------------------------------------------
-        private List<UserControl> _otherMenus = new List<UserControl>();
-        private List<DockPanel> _otherPages = new List<DockPanel>();
+        private List<UserControl> _menus = new List<UserControl>();
+        private List<DockPanel> _pages = new List<DockPanel>();
+        private UserControl _pressedTile = null;   // 마우스를 누른 타일 (뗄 때 같은 타일이어야 연다)
 
-        private UserControl[] TopMenus
+        // 메뉴 목록(0열 PRGCD, 1열 PRGNM)으로 타일·화면 칸을 새로 만든다 (이전 것은 지움)
+        private void BuildMenus(DataTable dt)
         {
-            get { return new UserControl[] { MENU0, MENU1, MENU2, MENU3, MENU4, MENU5, MENU6, MENU7, MENU8, MENU9, MENU10 }; }
-        }
-        private DockPanel[] TopPages
-        {
-            get { return new DockPanel[] { PAGE0, PAGE1, PAGE2, PAGE3, PAGE4, PAGE5, PAGE6, PAGE7, PAGE8, PAGE9, PAGE10 }; }
-        }
-        private Frame[] TopFrames
-        {
-            get { return new Frame[] { FRAME0, FRAME1, FRAME2, FRAME3, FRAME4, FRAME5, FRAME6, FRAME7, FRAME8, FRAME9, FRAME10 }; }
-        }
-
-        // 메뉴 목록의 startIndex 번째부터 기타메뉴 버튼·화면 칸을 만든다 (이전 것은 지움)
-        private void BuildOtherMenus(DataTable dt, int startIndex)
-        {
-            foreach (DockPanel oldPage in _otherPages)
+            foreach (DockPanel oldPage in _pages)
             {
                 if (CURFRAME != null && oldPage.Children.Contains(CURFRAME))
                 {
@@ -779,81 +721,475 @@ namespace TMLMAIN
                 }
                 DOCK_FRAME.Children.Remove(oldPage);
             }
-            WRAP_OTHER_MENU.Children.Clear();
-            _otherMenus.Clear();
-            _otherPages.Clear();
+            GRID_TILE.Children.Clear();
+            GRID_TILE.RowDefinitions.Clear();
+            GRID_TILE.ColumnDefinitions.Clear();
+            _menus.Clear();
 
-            for (int i = startIndex; i < dt.Rows.Count; i++)
+            _pages.Clear();
+
+            Dictionary<string, string[]> tileInfo = GetTileInfo();
+
+            // 칸 나누기 : 보통 타일은 한 칸, 반칸 타일(TILEHALFYN=Y)은 순번상 이어진 2개가 한 칸을 왼쪽·오른쪽으로 나눠 쓴다
+            // 열바꿈(TILEBREAKYN=Y) 타일이 들어간 칸 다음부터는 다음 열 맨 위에서 시작한다 (반칸 짝도 거기서 끊음)
+            int[] cellNo = new int[dt.Rows.Count];
+            bool[] isHalf = new bool[dt.Rows.Count];
+            bool[] isRight = new bool[dt.Rows.Count];
+            List<bool> breakAfterCell = new List<bool>();   // 칸마다 : 이 칸 다음에 열을 바꾸는지
+            int cellCount = 0;
+            bool halfOpen = false;   // 왼쪽만 찬 반칸 칸이 있음
+            for (int i = 0; i < dt.Rows.Count; i++)
             {
-                UserControl menu = new UserControl();
-                menu.SetResourceReference(StyleProperty, "TML_MENU");
-                menu.MouseUp += MENU_MouseUp;
-                menu.Tag = dt.Rows[i][0].ToString();
-                menu.Content = dt.Rows[i][1].ToString();
-                WRAP_OTHER_MENU.Children.Add(menu);
-                _otherMenus.Add(menu);
+                string prgcd = dt.Rows[i][0].ToString();
+                isHalf[i] = tileInfo.ContainsKey(prgcd) && tileInfo[prgcd][2] == "Y";
+                bool isBreak = tileInfo.ContainsKey(prgcd) && tileInfo[prgcd][3] == "Y";
+                if (isHalf[i] && halfOpen)
+                {
+                    cellNo[i] = cellCount - 1;
+                    isRight[i] = true;
+                    halfOpen = false;
+                }
+                else
+                {
+                    cellNo[i] = cellCount++;
+                    breakAfterCell.Add(false);
+                    halfOpen = isHalf[i];
+                }
+                if (isBreak)
+                {
+                    breakAfterCell[cellNo[i]] = true;
+                    halfOpen = false;
+                }
+            }
+
+            // 줄 수 : 메뉴 개수와 상관없이 5줄 고정 (2026-11-16 사용자 지시)
+            const int rows = 5;
+
+            // 칸 위치 : 위→아래로 채우고, 줄이 다 차거나 열바꿈이면 다음 열로
+            int[] cellRow = new int[cellCount];
+            int[] cellCol = new int[cellCount];
+            int curRow = 0, curCol = 0;
+            for (int c = 0; c < cellCount; c++)
+            {
+                cellRow[c] = curRow;
+                cellCol[c] = curCol;
+                curRow++;
+                if (curRow >= rows || breakAfterCell[c])
+                {
+                    curRow = 0;
+                    curCol++;
+                }
+            }
+
+            // 열 수 : 최소 4열. 한 열은 [왼쪽 절반][오른쪽 절반] 두 칸이고, 열 사이에 간격 칸이 있다 → 열 c 의 시작 칸 = c * 3
+            int cols = Math.Max(4, cellCount == 0 ? 0 : cellCol[cellCount - 1] + 1);
+
+            // 6열까지는 화면 폭에 맞춘다. 7열부터는 열 폭을 6열일 때로 고정하고 넓어진 만큼 가로 스크롤
+            //   화면 폭(논리 단위) 600 - 여백 12 = 588, 열 사이 간격 10
+            const double tileAreaWidth = 588;
+            const double colGap = 10;
+            if (cols > 6)
+            {
+                double colWidth = (tileAreaWidth - colGap * 5) / 6;
+                GRID_TILE.Width = colWidth * cols + colGap * (cols - 1);
+                SCROLL_TILE.HorizontalScrollBarVisibility = ScrollBarVisibility.Auto;
+            }
+            else
+            {
+                // 가로 스크롤을 끄면 화면 폭 안에서 열이 늘어난다 (켜 두면 폭 제한이 없어 열이 내용 크기로 줄어듦)
+                GRID_TILE.Width = double.NaN;
+                SCROLL_TILE.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+            }
+            SCROLL_TILE.ScrollToHorizontalOffset(0);
+
+            // 타일 안쪽 크기 (이름 글자 크기·줄바꿈 계산용) : 칸 크기 - 타일 바깥 여백 6 - 안쪽 여백 (가로 8, 세로 4)
+            double colWidthNow = cols > 6 ? (tileAreaWidth - colGap * 5) / 6 : (tileAreaWidth - colGap * (cols - 1)) / cols;
+            double tileAreaHeight = (PANEL_HOME.ActualHeight > 0 ? PANEL_HOME.ActualHeight : 275) - 12;
+            double innerH = tileAreaHeight / rows - 6 - 4;
+
+            for (int r = 0; r < rows; r++) GRID_TILE.RowDefinitions.Add(new RowDefinition());
+            for (int c = 0; c < cols; c++)
+            {
+                if (c > 0) GRID_TILE.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(10) });   // 열 사이 간격
+                GRID_TILE.ColumnDefinitions.Add(new ColumnDefinition());   // 왼쪽 절반
+                GRID_TILE.ColumnDefinitions.Add(new ColumnDefinition());   // 오른쪽 절반
+            }
+
+            for (int i = 0; i < dt.Rows.Count; i++)
+            {
+                string prgcd = dt.Rows[i][0].ToString();
+                string prgnm = dt.Rows[i][1].ToString().Trim();
+
+                // 색·아이콘 : 메뉴관리(SYS0001_R03)에 지정한 값. 2026-11-16 색이 없으면 검정, 아이콘이 없으면 이름만 (화면명 자동 지정 없앰)
+                string colorHex = "";
+                string iconHex = "";
+                if (tileInfo.ContainsKey(prgcd))
+                {
+                    colorHex = tileInfo[prgcd][0];
+                    iconHex = tileInfo[prgcd][1];
+                }
+
+                StackPanel box = new StackPanel();
+
+                // 이름 글자 크기·줄바꿈과 아이콘 크기 : 최소 글자 크기를 지키고, 넘치면 띄어쓰기에서 줄바꿈 (2026-11-16)
+                string glyph = ToGlyph(iconHex);
+                bool hasIcon = TileShapes.ContainsKey(iconHex) || glyph != "";
+                double innerW = (isHalf[i] ? colWidthNow / 2 : colWidthNow) - 6 - 8;
+                double fontSize, iconSize;
+                string nameText = FitTileName(prgnm, innerW, innerH, hasIcon, out fontSize, out iconSize);
+
+                if (TileShapes.ContainsKey(iconHex))
+                {
+                    // 글꼴에 없는 아이콘(트럭 등)은 직접 그린 모양으로
+                    System.Windows.Shapes.Path shape = new System.Windows.Shapes.Path();
+                    shape.Data = GetTileShape(iconHex);
+                    shape.Fill = Brushes.White;
+                    shape.Stretch = Stretch.Uniform;
+                    shape.Width = iconSize * 30 / 23;
+                    shape.Height = iconSize;
+                    shape.HorizontalAlignment = HorizontalAlignment.Center;
+                    shape.Margin = new Thickness(0, 0, 0, 3);
+                    box.Children.Add(shape);
+                }
+                else if (glyph != "")
+                {
+                    TextBlock icon = new TextBlock();
+                    icon.Text = glyph;
+                    icon.FontFamily = new FontFamily("Segoe MDL2 Assets");
+                    icon.FontSize = iconSize;
+                    icon.HorizontalAlignment = HorizontalAlignment.Center;
+                    icon.Margin = new Thickness(0, 0, 0, 3);
+                    box.Children.Add(icon);
+                }
+
+                TextBlock name = new TextBlock();
+                name.Text = nameText;
+                name.FontSize = fontSize;
+                name.FontWeight = FontWeights.Bold;
+                name.TextAlignment = TextAlignment.Center;
+                name.HorizontalAlignment = HorizontalAlignment.Center;
+                box.Children.Add(name);
+
+                // 그래도 넘치면(띄어쓰기 없는 아주 긴 이름 등) 아이콘·글자를 함께 줄여 타일 안에 다 보이게 한다 (키우지는 않음)
+                Viewbox fit = new Viewbox();
+                fit.Stretch = Stretch.Uniform;
+                fit.StretchDirection = StretchDirection.DownOnly;
+                fit.Margin = new Thickness(4, 2, 4, 2);
+                fit.Child = box;
+
+                UserControl tile = new UserControl();
+                tile.Tag = prgcd;
+                tile.Content = fit;
+                tile.Background = colorHex == "" ? Brushes.Black : ToBrush(colorHex);
+                tile.Foreground = Brushes.White;
+                tile.Margin = new Thickness(3);
+                tile.HorizontalContentAlignment = HorizontalAlignment.Center;
+                tile.VerticalContentAlignment = VerticalAlignment.Center;
+                tile.MouseEnter += (s, e) => { (s as UIElement).Opacity = 0.85; };
+                tile.MouseLeave += (s, e) => { (s as UIElement).Opacity = 1; };
+                // 2026-11-16 이 타일에서 눌렀다 뗀 경우만 연다. 로그인 버튼을 뗄 때 그 자리 타일이 열리던 문제 방지
+                tile.PreviewMouseLeftButtonDown += (s, e) => { _pressedTile = s as UserControl; };
+                tile.MouseUp += (s, e) =>
+                {
+                    bool pressedHere = (_pressedTile == s);
+                    _pressedTile = null;
+                    if (pressedHere) MENU_MouseUp(s, e);
+                };
+                System.Windows.Controls.Grid.SetRow(tile, cellRow[cellNo[i]]);
+                System.Windows.Controls.Grid.SetColumn(tile, cellCol[cellNo[i]] * 3 + (isRight[i] ? 1 : 0));
+                System.Windows.Controls.Grid.SetColumnSpan(tile, isHalf[i] ? 1 : 2);
+                GRID_TILE.Children.Add(tile);
+                _menus.Add(tile);
 
                 DockPanel page = new DockPanel();
                 DockPanel.SetDock(page, Dock.Top);
                 page.MaxHeight = 0;
                 page.Children.Add(new Frame());
                 DOCK_FRAME.Children.Add(page);
-                _otherPages.Add(page);
+                _pages.Add(page);
             }
+        }
+
+        // 타일 이름 글자 크기 : 기본 11, 최소 8.5 (사진의 '외주간 재고이동' 크기). 아이콘 기본 23, 최소 12
+        private const double TileFontMax = 11;
+        private const double TileFontMin = 8.5;
+        private const double TileIconMax = 23;
+        private const double TileIconMin = 12;
+
+        // 타일 이름을 타일 안쪽(maxW x maxH)에 맞춘다 → 줄바꿈한 이름을 돌려주고, 글자·아이콘 크기를 정한다
+        //   1) 한 줄로 : 큰 글자부터 0.5 씩 줄여 가며 최소 크기까지 들어가는지 본다
+        //   2) 그래도 안 되면 줄바꿈 : 띄어쓰기 자리에서만 줄을 바꿔(글자 중간은 안 끊음) 다시 큰 글자부터 맞춰 본다
+        //   최소 크기로도 안 들어가면 최소 크기로 두고, 남는 부분은 타일의 Viewbox 가 줄여서 맞춘다
+        private string FitTileName(string text, double maxW, double maxH, bool hasIcon, out double fontSize, out double iconSize)
+        {
+            double iconNeed = hasIcon ? TileIconMin + 3 : 0;   // 아이콘 최소 크기 + 아래 여백
+            for (int pass = 1; pass <= 2; pass++)
+            {
+                for (double f = TileFontMax; f >= TileFontMin; f -= 0.5)
+                {
+                    string candidate = pass == 1 ? text : WrapTileName(text, maxW, f);
+                    Size s = MeasureTileName(candidate, f);
+                    if (s.Width <= maxW && s.Height + iconNeed <= maxH)
+                    {
+                        fontSize = f;
+                        iconSize = hasIcon ? Math.Min(TileIconMax, maxH - s.Height - 3) : 0;
+                        return candidate;
+                    }
+                }
+            }
+            fontSize = TileFontMin;
+            iconSize = hasIcon ? TileIconMin : 0;
+            return WrapTileName(text, maxW, TileFontMin);
+        }
+
+        // 띄어쓰기 단위로 한 줄에 들어가는 만큼 채우고 다음 줄로 (단어 하나가 폭보다 길면 그 단어는 한 줄에 그대로)
+        private string WrapTileName(string text, double maxW, double fontSize)
+        {
+            string[] words = text.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (words.Length == 0) return text;
+
+            List<string> lines = new List<string>();
+            string line = words[0];
+            for (int w = 1; w < words.Length; w++)
+            {
+                string candidate = line + " " + words[w];
+                if (MeasureTileName(candidate, fontSize).Width <= maxW)
+                {
+                    line = candidate;
+                }
+                else
+                {
+                    lines.Add(line);
+                    line = words[w];
+                }
+            }
+            lines.Add(line);
+            return string.Join("\n", lines.ToArray());
+        }
+
+        // 타일 이름(굵게, 창 글꼴)의 그려질 크기
+        private Size MeasureTileName(string text, double fontSize)
+        {
+            FormattedText ft = new FormattedText(text, CultureInfo.CurrentUICulture, FlowDirection.LeftToRight,
+                new Typeface(this.FontFamily, FontStyles.Normal, FontWeights.Bold, FontStretches.Normal), fontSize, Brushes.White);
+            ft.TextAlignment = TextAlignment.Center;
+            return new Size(ft.WidthIncludingTrailingWhitespace, ft.Height);
+        }
+
+        // 메뉴별 타일 색·아이콘 : 메뉴관리(SYS0001_R03)에서 지정한 SYSPRG.TILECOLOR/TILEICON → 공통코드(TMLCOLOR/TMLICON) REF01
+        //   → 화면코드마다 하나라서 모든 단말기에 같게 나온다
+        // 반칸·열바꿈 : 단말기별 프로그램 정보(PRD7001_R03)에서 지정한 MSTTMLPRG.TILEHALFYN/TILEBREAKYN → 단말기마다 다르다
+        // 반환 : PRGCD → { 색(#RRGGBB), 아이콘(Segoe MDL2 Assets 글자코드 16진수), 반칸(Y/N), 열바꿈(Y/N) }. 컬럼이 아직 없거나 오류면 빈 목록(전부 검정·아이콘 없음·한 칸·열바꿈 없음)
+        private Dictionary<string, string[]> GetTileInfo()
+        {
+            Dictionary<string, string[]> info = new Dictionary<string, string[]>();
+            try
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine("SELECT TP.PRGCD, IFNULL(CC.REF01, '') AS COLORHEX, IFNULL(CI.REF01, '') AS ICONHEX, IFNULL(TP.TILEHALFYN, 'N') AS TILEHALFYN, IFNULL(TP.TILEBREAKYN, 'N') AS TILEBREAKYN");
+                sb.AppendLine("FROM MSTTMLPRG AS TP");
+                sb.AppendLine("INNER JOIN SYSPRG AS P ON P.PRGCD = TP.PRGCD");
+                sb.AppendLine("LEFT JOIN COMTYPE AS CC ON CC.GPCD = 'TMLCOLOR' AND CC.TPCD = P.TILECOLOR");
+                sb.AppendLine("LEFT JOIN COMTYPE AS CI ON CI.GPCD = 'TMLICON'  AND CI.TPCD = P.TILEICON");
+                sb.AppendLine("WHERE TP.TMLCD = '" + MODEL_CONFIG.GetText("TMLCD").Replace("'", "''") + "'");
+                DataSet ds = ItsMaria.Query(sb.ToString());
+                if (ItsMaria.IsError || ds.Tables.Count == 0) return info;
+
+                foreach (DataRow row in ds.Tables[0].Rows)
+                {
+                    info[row["PRGCD"].ToString()] = new string[] { row["COLORHEX"].ToString().Trim(), row["ICONHEX"].ToString().Trim(), row["TILEHALFYN"].ToString().Trim(), row["TILEBREAKYN"].ToString().Trim() };
+                }
+            }
+            catch { }
+            return info;
+        }
+
+        private Brush ToBrush(string hex)
+        {
+            try
+            {
+                if (!hex.StartsWith("#")) hex = "#" + hex;
+                Brush brush = new BrushConverter().ConvertFrom(hex) as Brush;
+                brush.Freeze();
+                return brush;
+            }
+            catch
+            {
+                return Brushes.Black;   // 색 값이 잘못되면 색 없음과 같게 검정
+            }
+        }
+
+        // 글꼴에 없는 아이콘 : 공통코드 TMLICON 의 REF01 이 이 이름이면 직접 그린다 (웹 SYS0001_R03.js 의 TILE_SHAPES 와 같은 모양)
+        // { 면(F0 짝홀 규칙, 겹친 곳은 구멍), 선(둥근 끝, 없으면 ""), 선 굵기, 회전 "각도,중심x,중심y" (없으면 "") }
+        private static readonly Dictionary<string, string[]> TileShapes = new Dictionary<string, string[]>
+        {
+            // 트럭에 상자가 쌓인 모양 (짐칸 상자 5개 + 운전석 + 바퀴 2개)
+            { "TRUCK", new string[] {
+                "F0 M3,0 h6 v6 h-6 Z M10,0 h6 v6 h-6 Z M0,7 h6 v6 h-6 Z M7,7 h6 v6 h-6 Z M14,7 h6 v6 h-6 Z"
+                + " M0,14 h20 v4 h-20 Z M21,7 h6 l4,5 v6 h-10 Z M22.5,8.5 h3.8 l2.7,3.5 h-6.5 Z"
+                + " M3.5,21 a3.2,3.2 0 1 0 6.4,0 a3.2,3.2 0 1 0 -6.4,0 Z M5.4,21 a1.3,1.3 0 1 0 2.6,0 a1.3,1.3 0 1 0 -2.6,0 Z"
+                + " M21.5,21 a3.2,3.2 0 1 0 6.4,0 a3.2,3.2 0 1 0 -6.4,0 Z M23.4,21 a1.3,1.3 0 1 0 2.6,0 a1.3,1.3 0 1 0 -2.6,0 Z",
+                "", "0", "" } },
+            // 손수레에 상자 2개 (상자 2개 + 바퀴는 면, 손잡이·기둥·바닥판은 선). 뒤로 14도 기울임
+            { "HANDTRUCK", new string[] {
+                "F0 M10.2,11 H23.8 A1.2,1.2 0 0 1 25,12.2 V21.5 A1.2,1.2 0 0 1 23.8,22.7 H10.2 A1.2,1.2 0 0 1 9,21.5 V12.2 A1.2,1.2 0 0 1 10.2,11 Z"
+                + " M14.2,14 H19.8 A1.2,1.2 0 0 1 21,15.2 A1.2,1.2 0 0 1 19.8,16.4 H14.2 A1.2,1.2 0 0 1 13,15.2 A1.2,1.2 0 0 1 14.2,14 Z"
+                + " M11.2,0.5 H22.8 A1.2,1.2 0 0 1 24,1.7 V8.6 A1.2,1.2 0 0 1 22.8,9.8 H11.2 A1.2,1.2 0 0 1 10,8.6 V1.7 A1.2,1.2 0 0 1 11.2,0.5 Z"
+                + " M14.2,3.2 H19.8 A1.2,1.2 0 0 1 21,4.4 A1.2,1.2 0 0 1 19.8,5.6 H14.2 A1.2,1.2 0 0 1 13,4.4 A1.2,1.2 0 0 1 14.2,3.2 Z"
+                + " M1.6,28.6 A3.4,3.4 0 1 0 8.4,28.6 A3.4,3.4 0 1 0 1.6,28.6 Z M3.7,28.6 A1.3,1.3 0 1 0 6.3,28.6 A1.3,1.3 0 1 0 3.7,28.6 Z",
+                "M1,1.4 H4.6 Q6.2,1.4 6.2,3 V22 Q6.2,24.6 8.8,24.6 H27",
+                "2.8", "-14,14,16" } },
+            // 상자 1개 (입체 : 윗면 + 왼쪽면 + 오른쪽면, 윗면에 U자 테이프 홈)
+            { "BOX", new string[] {
+                "F0 M16,0 L30,7 L16,14 L2,7 Z M4.8,8.4 L10.68,11.34 L19.68,6.84 L13.8,3.9 Z M6.06,9.03 L9.42,10.71 L17.12,6.86 L13.76,5.18 Z"
+                + " M2,8.8 L15.2,15.4 V31 L2,24.4 Z M16.8,15.4 L30,8.8 V24.4 L16.8,31 Z",
+                "", "0", "" } },
+            // 상자 3개 쌓은 모양 (위 1개 + 아래 2개, 뚜껑·테이프 자국)
+            { "BOXES", new string[] {
+                "F0 M8,0 h5 v2.5 h4 v-2.5 h5 v4 h-14 Z M8,5 h14 v7 h-14 Z"
+                + " M0,14 h5 v2.5 h4 v-2.5 h5 v4 h-14 Z M0,19 h14 v7 h-14 Z"
+                + " M16,14 h5 v2.5 h4 v-2.5 h5 v4 h-14 Z M16,19 h14 v7 h-14 Z",
+                "", "0", "" } }
+        };
+
+        // TileShapes 의 모양 하나를 그림으로 (면 + 선을 합치고 회전)
+        private static Geometry GetTileShape(string key)
+        {
+            string[] s = TileShapes[key];
+            Geometry g = Geometry.Parse(s[0]);
+            if (s[1] != "")
+            {
+                Pen pen = new Pen(Brushes.White, double.Parse(s[2], CultureInfo.InvariantCulture));
+                pen.StartLineCap = PenLineCap.Round;
+                pen.EndLineCap = PenLineCap.Round;
+                pen.LineJoin = PenLineJoin.Round;
+                g = new CombinedGeometry(GeometryCombineMode.Union, g, Geometry.Parse(s[1]).GetWidenedPathGeometry(pen));
+            }
+            if (s[3] != "")
+            {
+                string[] r = s[3].Split(',');
+                g = g.Clone();
+                g.Transform = new RotateTransform(double.Parse(r[0], CultureInfo.InvariantCulture),
+                    double.Parse(r[1], CultureInfo.InvariantCulture), double.Parse(r[2], CultureInfo.InvariantCulture));
+            }
+            return g;
+        }
+
+        // 아이콘 글자코드(16진수) → 글자. 비었거나 잘못되면 "" (아이콘 안 보임)
+        private string ToGlyph(string hex)
+        {
+            if (hex == "" || TileShapes.ContainsKey(hex)) return "";
+            try
+            {
+                return char.ConvertFromUtf32(Convert.ToInt32(hex.Replace("&#x", "").Replace(";", ""), 16));
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        // 타일 메뉴 보이기 (열려 있는 화면은 닫지 않고 숨기기만 한다)
+        private void ShowHome()
+        {
+            PANEL_HOME.Visibility = Visibility.Visible;
+            LABEL_TITLE.Content = "";
+        }
+
+        private void MENU_HOME_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e != null)
+            {
+                e.Handled = true;
+                if (e.ChangedButton != MouseButton.Left) return;
+            }
+
+            CONFIG_CLOSE_MouseUp(null, null);
+            ShowHome();
+        }
+
+        // 타일 메뉴에서 마우스 휠을 굴리면 가로로 스크롤
+        private void SCROLL_TILE_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            SCROLL_TILE.ScrollToHorizontalOffset(SCROLL_TILE.HorizontalOffset - e.Delta / 3.0);
+            e.Handled = true;
+        }
+
+        // 2026-11-16 새로고침 : 열린 화면이 있으면 닫을지 묻고, 없으면 바로 메뉴를 다시 읽는다
+        private void MENU_REFRESH_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e != null)
+            {
+                e.Handled = true;
+                if (e.ChangedButton != MouseButton.Left) return;
+            }
+
+            CONFIG_CLOSE_MouseUp(null, null);
+
+            bool hasOpenPage = _pages.Any(p => (p.Children[0] as Frame).Tag != null);
+            if (hasOpenPage)
+            {
+                ShowMessageBox("__MenuRefresh", "열린 화면을 모두 닫고 메뉴를 새로고침하시겠습니까?");
+            }
+            else
+            {
+                RefreshMenu();
+            }
+        }
+
+        // 메뉴 목록·타일 설정(색·아이콘·반칸·열바꿈)을 DB 에서 다시 읽어 타일 메뉴를 새로 만든다. 열린 화면은 모두 닫힌다
+        private void RefreshMenu()
+        {
+            WAIT_MSG.Visibility = Visibility.Visible;
+            ItsElement.Refresh(this);
+
+            ClearAllFrames();
+            HideAllPages();
+            PAGE_MAIN.MaxHeight = 5000;
+            CURFRAME = null;
+            SetMenu(MODEL_CONFIG.GetText("TMLCD"));   // 타일·화면 칸을 새로 만들고 타일 메뉴를 보여준다
+
+            WAIT_MSG.Visibility = Visibility.Hidden;
         }
 
         // 모든 화면 칸 숨기기 (PAGE_MAIN 제외)
         private void HideAllPages()
         {
-            foreach (DockPanel page in TopPages) page.MaxHeight = 0;
-            foreach (DockPanel page in _otherPages) page.MaxHeight = 0;
+            foreach (DockPanel page in _pages) page.MaxHeight = 0;
         }
 
         // 열린 화면 모두 닫기 (다음에 누르면 새로 불러옴)
         private void ClearAllFrames()
         {
-            foreach (Frame frame in TopFrames) frame.Tag = null;
-            foreach (DockPanel page in _otherPages) (page.Children[0] as Frame).Tag = null;
+            foreach (DockPanel page in _pages) (page.Children[0] as Frame).Tag = null;
         }
 
-        // 메뉴 색 원래대로
-        private void ResetMenuColors(Brush brush)
+        // 타일에 적힌 화면명
+        private string GetMenuName(UserControl menu)
         {
-            foreach (UserControl menu in TopMenus)
+            // 타일 구조 : Viewbox > StackPanel > [아이콘] + 이름(마지막 TextBlock)
+            Viewbox fit = menu.Content as Viewbox;
+            StackPanel box = (fit != null ? fit.Child : menu.Content) as StackPanel;
+            if (box != null && box.Children.Count > 0)
             {
-                menu.Background = brush; menu.Foreground = Brushes.White;
-                menu.BorderThickness = new Thickness(0);
+                TextBlock name = box.Children[box.Children.Count - 1] as TextBlock;
+                if (name != null) return name.Text;
             }
-            foreach (UserControl menu in _otherMenus)
-            {
-                menu.Background = brush; menu.Foreground = Brushes.White;
-                menu.BorderThickness = new Thickness(0);
-            }
+            return Convert.ToString(menu.Tag);
         }
 
-        // 메뉴 버튼 → 화면 칸 (없으면 false)
+        // 타일 → 화면 칸 (없으면 false)
         private bool GetMenuPage(UserControl menu, out DockPanel page, out Frame frame)
         {
             page = null;
             frame = null;
 
-            int idx = Array.IndexOf(TopMenus, menu);
-            if (idx >= 0)
-            {
-                page = TopPages[idx];
-                frame = TopFrames[idx];
-                return true;
-            }
+            int idx = _menus.IndexOf(menu);
+            if (idx < 0) return false;
 
-            idx = _otherMenus.IndexOf(menu);
-            if (idx >= 0)
-            {
-                page = _otherPages[idx];
-                frame = page.Children[0] as Frame;
-                return true;
-            }
-
-            return false;
+            page = _pages[idx];
+            frame = page.Children[0] as Frame;
+            return true;
         }
 
         private void MENU_MouseUp(object sender, MouseButtonEventArgs e)
@@ -865,23 +1201,9 @@ namespace TMLMAIN
             }
 
             UserControl menu = sender as UserControl;
-            if (menu.Tag != null)
-            {
-                if (menu.Tag.ToString() == "OTHER_CLOSE")
-                {
-                    POP_OTHER_MENU.IsOpen = false;
-                    return;
-                }
-                else if (menu.Tag.ToString() == "OTHER")
-                {
-                    POP_OTHER_MENU.IsOpen = true;
-                    POP_OTHER_MENU.Focus();
-                    e.Handled = true;
-                    return;
-                }
-            }
+            string menuName = GetMenuName(menu);
 
-            POP_OTHER_MENU.IsOpen = false;
+            PANEL_HOME.Visibility = Visibility.Collapsed;
 
             WAIT_MSG.Visibility = Visibility.Visible;
             ItsElement.Refresh(this);
@@ -895,11 +1217,9 @@ namespace TMLMAIN
 
             HideAllPages();
 
-            LABEL_TITLE.Content = "[" + (sender as UserControl).Tag.ToString().Substring(0, 11)
-            + "] " + (sender as UserControl).Content.ToString();
-            BrushConverter bc = new BrushConverter();
-            Brush brush = (Brush)bc.ConvertFrom("#262938");
-            brush.Freeze();
+            // TextBlock 로 넣어야 화면코드의 밑줄(_)이 Label 단축키 표시로 먹히지 않는다
+            LABEL_TITLE.Content = new TextBlock { Text = "[" + (sender as UserControl).Tag.ToString().Substring(0, 11)
+            + "] " + menuName };
 
             StringBuilder sb = new StringBuilder();
             sb.Append("SELECT REF01 FROM COMTYPE WHERE GPCD = 'GLOBAL' AND TPCD = 'TMLPRGVER';");
@@ -911,21 +1231,7 @@ namespace TMLMAIN
                 ShowMessageBox("", "프로그램을 재시작해주세요.\n" + "현재버전: " + this.PrgVer + " -> 최신버전: " + prgVer);
             }
 
-            ResetMenuColors(brush);
-
             UserControl CURMENU = sender as UserControl;
-            CURMENU.Background = brush;
-            CURMENU.Foreground = new BrushConverter().ConvertFrom("#70A6F3") as SolidColorBrush;
-            CURMENU.BorderThickness = new Thickness(0,0,0,2);
-            CURMENU.BorderBrush = new BrushConverter().ConvertFrom("#70A6F3") as SolidColorBrush;
-
-            if (CURMENU == MENU10 && MENU10.Tag.ToString() == "OTHER")
-            {
-                POP_OTHER_MENU.IsOpen = true;
-
-                WAIT_MSG.Visibility = Visibility.Visible;
-                return;
-            }
 
             DockPanel curPage;
             if (!GetMenuPage(CURMENU, out curPage, out CURFRAME))
@@ -960,7 +1266,8 @@ namespace TMLMAIN
                     if (page == null)
                     {
                         WAIT_MSG.Visibility = Visibility.Hidden;
-                        ShowMessageBox("", (sender as UserControl).Content.ToString() + " 화면을 찾을 수 없습니다.");
+                        ShowMessageBox("", menuName + " 화면을 찾을 수 없습니다.");
+                        ShowHome();
                         return;
                     }
 
@@ -972,6 +1279,7 @@ namespace TMLMAIN
                 {
                     WAIT_MSG.Visibility = Visibility.Hidden;
                     ShowMessageBox("", ex.Message);
+                    ShowHome();
                     //ShowMessageBox("", (sender as UserControl).Tag.ToString() + " 를 로딩하지 못했습니다.");
                 }
             }
@@ -1053,11 +1361,9 @@ namespace TMLMAIN
         {
             ItsElement.SetMenuParam(param);
 
-            // 상단 메뉴(MENU0~9) → 기타메뉴 순서로 화면코드가 같은 메뉴를 찾는다
+            // 화면코드가 같은 타일을 찾는다
             UserControl menu = null;
-            List<UserControl> allMenus = new List<UserControl>(TopMenus.Take(10));
-            allMenus.AddRange(_otherMenus);
-            foreach (UserControl m in allMenus)
+            foreach (UserControl m in _menus)
             {
                 if (pName == Convert.ToString(m.Tag))
                 {
@@ -1067,23 +1373,9 @@ namespace TMLMAIN
             }
             if (menu == null) return;
 
-            if (menu.Tag != null)
-            {
-                if (menu.Tag.ToString() == "OTHER_CLOSE")
-                {
-                    POP_OTHER_MENU.IsOpen = false;
-                    return;
-                }
-                else if (menu.Tag.ToString() == "OTHER")
-                {
-                    POP_OTHER_MENU.IsOpen = true;
-                    POP_OTHER_MENU.Focus();
+            string menuName = GetMenuName(menu);
 
-                    return;
-                }
-            }
-
-            POP_OTHER_MENU.IsOpen = false;
+            PANEL_HOME.Visibility = Visibility.Collapsed;
 
             WAIT_MSG.Visibility = Visibility.Visible;
             ItsElement.Refresh(this);
@@ -1097,11 +1389,8 @@ namespace TMLMAIN
 
             HideAllPages();
 
-            LABEL_TITLE.Content = "[" + menu.Tag.ToString().Substring(0, 11)
-                + "] " + menu.Content.ToString();
-            BrushConverter bc = new BrushConverter();
-            Brush brush = (Brush)bc.ConvertFrom("#262938");
-            brush.Freeze();
+            LABEL_TITLE.Content = new TextBlock { Text = "[" + menu.Tag.ToString().Substring(0, 11)
+                + "] " + menuName };
 
             StringBuilder sb = new StringBuilder();
             sb.Append("SELECT REF01 FROM COMTYPE WHERE GPCD = 'GLOBAL' AND TPCD = 'TMLPRGVER';");
@@ -1113,21 +1402,7 @@ namespace TMLMAIN
                 ShowMessageBox("", "프로그램을 재시작해주세요.\n" + "현재버전: " + this.PrgVer + " -> 최신버전: " + prgVer);
             }
 
-            ResetMenuColors(brush);
-
             UserControl CURMENU = menu;
-            CURMENU.Background = brush;
-            CURMENU.Foreground = new BrushConverter().ConvertFrom("#70A6F3") as SolidColorBrush;
-            CURMENU.BorderThickness = new Thickness(0, 0, 0, 2);
-            CURMENU.BorderBrush = new BrushConverter().ConvertFrom("#70A6F3") as SolidColorBrush;
-
-            if (CURMENU == MENU10 && MENU10.Tag.ToString() == "OTHER")
-            {
-                POP_OTHER_MENU.IsOpen = true;
-
-                WAIT_MSG.Visibility = Visibility.Visible;
-                return;
-            }
 
             DockPanel curPage;
             if (!GetMenuPage(CURMENU, out curPage, out CURFRAME))
@@ -1165,7 +1440,8 @@ namespace TMLMAIN
                     if (page == null)
                     {
                         WAIT_MSG.Visibility = Visibility.Hidden;
-                        ShowMessageBox("", menu.Content.ToString() + " 화면을 찾을 수 없습니다.");
+                        ShowMessageBox("", menuName + " 화면을 찾을 수 없습니다.");
+                        ShowHome();
                         return;
                     }
 
@@ -1177,6 +1453,7 @@ namespace TMLMAIN
                 {
                     WAIT_MSG.Visibility = Visibility.Hidden;
                     ShowMessageBox("", ex.Message);
+                    ShowHome();
                     //ShowMessageBox("", (sender as UserControl).Tag.ToString() + " 를 로딩하지 못했습니다.");
                 }
             }
