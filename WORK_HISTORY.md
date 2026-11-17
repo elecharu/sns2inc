@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-11-16
+> **최종 갱신일**: 2026-11-17
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -18,15 +18,36 @@
 
 ## 🕒 2026-11-17 (화) 작업 내역
 
-### 30. MST3001_R03 설비부품 조회를 INC 2공장(07) 품목으로 제한
-- **수정 파일**: [05.Procedure/MES_SNS2_MST3001_R03.sql](05.Procedure/MES_SNS2_MST3001_R03.sql)
+### 31. TML1010 설비부품 입고등록(R08) 신규 분리 및 출고등록(R05) 전용 전환
+- **수정 파일**: [02.Site/TMLPJT/TML1010/R08.xaml](02.Site/TMLPJT/TML1010/R08.xaml), [02.Site/TMLPJT/TML1010/R08.xaml.cs](02.Site/TMLPJT/TML1010/R08.xaml.cs), [02.Site/TMLPJT/TML1010/R05.xaml](02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](02.Site/TMLPJT/TML1010/R05.xaml.cs), [02.Site/TMLPJT/TML1010/TML1010.csproj](02.Site/TMLPJT/TML1010/TML1010.csproj), [05.PROCEDURE/MES_SNS2_TML1010_R08.sql](05.PROCEDURE/MES_SNS2_TML1010_R08.sql)(신규), [05.PROCEDURE/MES_SNS2_TML1010_R08_SYSTEM_PARAMETERS.sql](05.PROCEDURE/MES_SNS2_TML1010_R08_SYSTEM_PARAMETERS.sql)(신규), [05.PROCEDURE/MES_SNS2_TML1010_R05.sql](05.PROCEDURE/MES_SNS2_TML1010_R05.sql), [05.PROCEDURE/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql](05.PROCEDURE/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql)
+- **요청**: 기존 TML1010_R05(설비부품 입출고등록)를 설비부품 입고등록(R08)과 설비부품 출고등록(R05)으로 분리하고 R08을 프로젝트(`TML1010.csproj`)에 반영
+- **작업 내용**:
+  - 1. 설비부품 입고등록 (`TML1010_R08`)
+    - 1) 재고 조회 : `MSTITEM`, `MSTITEM_EQMPARTS` (`FACTORYCD = '07'`), `MSTLOCA_EQMPARTS` (`COMPANYCD = '60'`, `ITEMCG = 'DM100700'`, `ENDYN = 'N'`)
+    - 2) 재고 그리드(`GRID_G1`) : 설비부품코드, 설비부품명, 중요도등급, 로케이션, 안전재고, 현재고, 단위(`DM150`), 입고 버튼, 입고 이력 버튼, 라벨출력 버튼 (출고 버튼 및 출고 팝업 `POP_OUT`·`MODEL_A3` 제거)
+    - 3) 발주 조회 및 입고 등록(`POP_IN`) : `MTRODRD`, `MTRODR` (`ODRFACTORY = '07'`, `MTRODRSTT IN ('MM110201', 'MM110300')`) 조회 후 `INOUT_EQMPARTS` (`INOROUT = 'IN'`), `MSTITEM_EQMPARTS` 재고 증가, `MTRODRD` 입고수량 반영 및 라벨(`EQMPARTS`) 출력
+    - 4) 입고 이력(`POP_IN_HIS`) : `INOUT_EQMPARTS` (`INOROUT = 'IN'`) — 발생일자, 입고유형(`INOUTTP_EQMPARTS`), 입고량, 처리자(`EMPCD`)
+    - 5) 프로시저 : `TML1010_R08` (`LIST_EQMPARTS`, `LIST_ODR_EQMPARTS`, `IN_EQMPARTS`, `LIST_IN_EQMPARTS`, `LABEL_REPRINT`, 파라미터 12건)
+  - 2. 설비부품 출고등록 (`TML1010_R05`)
+    - 1) 재고 그리드(`GRID_G1`) : 설비부품코드, 설비부품명, 중요도등급, 로케이션, 안전재고, 현재고, 단위(`DM150`), 출고 버튼, 출고 이력 버튼, 라벨출력 버튼 (입고 버튼 및 입고·발주 팝업 `POP_IN`·`MODEL_ODR_S`·`MODEL_IN_INFO`·`MODEL_A2`·`MODEL_ODR` 제거)
+    - 2) 출고 등록(`POP_OUT`) : `INOUT_EQMPARTS` (`INOROUT = 'OUT'`), `MSTITEM_EQMPARTS` (`FACTORYCD = '07'`) 재고 차감
+    - 3) 출고 이력(`POP_OUT_HIS`) : `INOUT_EQMPARTS` (`INOROUT = 'OUT'`) — 발생일자, 출고유형(`INOUTTP_EQMPARTS`), 출고량, 처리자(`EMPCD`)
+    - 4) 프로시저 : `TML1010_R05` (`LIST_EQMPARTS`, `OUT_EQMPARTS`, `LIST_OUT_EQMPARTS`, `LABEL_REPRINT`, 파라미터 8건)
+  - 3. 프로젝트 반영 : `TML1010.csproj`에 `R08.xaml`, `R08.xaml.cs` 추가 및 Release 빌드(`bin/Release/TML1010.exe`, `02.Site/TMLPJT/TML1010/TML1010.exe` 반영; `02.Site/AAABIN/TML1010.exe`는 실행 중인 `SYS0101 (6396)` 프로세스 점유로 종료 후 복사 필요)
+- **검증**: MSBuild 15.0 Release Rebuild 성공(0 Warning, 0 Error), 컴파일된 `TML1010.exe` 내 `TML1010.R05`·`TML1010.R08` 클래스 확인, 전 파일 인코딩(C#/XAML/csproj/md 단일 UTF-8 with BOM + CRLF, 프로시저 SQL 4종 UTF-8 without BOM + CRLF) 검증 완료
+- **실DB 반영 순서**:
+  - 1) `05.PROCEDURE/MES_SNS2_TML1010_R08.sql` 저장 → `05.PROCEDURE/MES_SNS2_TML1010_R08_SYSTEM_PARAMETERS.sql` 실행 (정상 12건)
+  - 2) `05.PROCEDURE/MES_SNS2_TML1010_R05.sql` 저장 → `05.PROCEDURE/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql` 실행 (정상 8건)
+
+### 30. MST3001_R03 설비부품 조회 2공장 필터 검토 → 품목공장 조인 적용 후 원복
+- **수정 파일**: [05.Procedure/MES_SNS2_MST3001_R03.sql](05.Procedure/MES_SNS2_MST3001_R03.sql) (최종 변경 없음, 원복)
 - **요청**: 조회 시 INC 2공장 데이터만 가져오는지 검토 후 수정
-- **원인**: SEL_ITEM이 MSTITEM을 법인(60)·품목구분(DM100700)으로만 걸러, 공장 '07'은 MSTITEM_EQMPARTS LEFT JOIN 조건에만 쓰임 → 1공장(06) 품목까지 조회됨. 실DB 확인 결과 설비자재 4,326건 중 06 3,906건 / 07 355건 / 품목공장 없음 65건
-- **작업 내용**
-  - 1. SEL_ITEM : `INNER JOIN MSTITEM_FACTORY ON ITEMID AND FACTORYCD = $FACTORYCD('07')` 추가 (MST1003_R04·DC_FIND와 같은 방식) → 2공장 품목 355건만 조회, 품목공장 없는 65건도 제외
-  - 2. 파라미터 변경 없음 → SYSTEM_PARAMETERS 재등록 불필요
-- **검증**: 파일 형식 유지(BOM·LF 원본). 실DB 프로시저 저장·화면 조회는 미확인
-- **실DB 반영**: MES_SNS2_MST3001_R03.sql 프로시저 저장
+- **검토**: SEL_ITEM은 MSTITEM을 법인(60)·품목구분(DM100700)·종료여부로만 거르고, 공장 '07'은 MSTITEM_EQMPARTS LEFT JOIN 조건에만 쓰임. 설비자재 품목공장(MSTITEM_FACTORY): 06 3,906건 / 07 355건 / 없음 65건
+- **시도**: `INNER JOIN MSTITEM_FACTORY ... FACTORYCD = '07'` 추가 → 실DB 반영 후 화면 0건
+- **원인(실DB SELECT, 사용자 실행)**: 품목공장 07인 355건이 전부 ENDYN 'Y'(종료). 2공장에서 등급·안전재고를 저장한 품목(MSTITEM_EQMPARTS 07)은 품목공장 06 11건·없음 1건(모두 ENDYN 'N') → 품목 마스터 공장은 2공장 사용 여부 기준이 아님
+- **조치**: 품목공장 조인 제거, 기존 조회로 원복 (법인 60 설비자재 전체 + 2공장 등급·안전재고·재고). 2공장 품목을 구분할 기준은 별도 확인 필요
+- **검증**: 파일 형식 유지(BOM·LF 원본). 원복 프로시저 실DB 저장·화면 조회는 미확인
+- **실DB 반영**: MES_SNS2_MST3001_R03.sql 프로시저 다시 저장
 
 ### 29. EQM1001_R03 계획서 레포트 개정이력을 S04 점검시트와 같은 형식으로 ([구분] 개정내용, 날짜 제거)
 - **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R03.sql](05.Procedure/MES_SNS2_EQM1001_R03.sql), [04.Report/PAGEEQM/EQM1001/R03.cs](04.Report/PAGEEQM/EQM1001/R03.cs), 빌드 산출물 EQM1001.exe(04.Report/PAGEEQM/EQM1001/bin/Release → 04.Report/bin, 01.Office/Reports 배포)
