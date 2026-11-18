@@ -3,7 +3,7 @@ PROCEDURE `MES_SNS2`.`TML1010_R08`(
 -- *****************************************************************************
 -- Comment: 현장터미널 설비부품 입고등록
 -- Create:  2026-11-17  생성          한성수  TML1010_R05 설비부품 입출고에서 입고등록·입고이력·라벨출력 분리
--- Modify:  2026-11-18                한성수  재고 조회 중요도등급·로케이션 조건 추가, 입고 이력 입고취소 추가 (이력 삭제, 재고 차감), 입고 시 로케이션 덮어쓰기 제거, 불필요 NULL 처리·중복 조회 정리, 발주 잔량을 MES 입고 이력 합계로 계산하고 발주 입고수량·진행상태 변경 제거 (ERP 인터페이스 덮어쓰기 대응), 입고 가능 발주 상태에 발주(MM110100) 추가
+-- Modify:  2026-11-18                한성수  재고 조회 중요도등급·로케이션 조건 추가, 입고 이력 입고취소 추가 (이력 삭제, 재고 차감), 입고 시 로케이션 덮어쓰기 제거, 불필요 NULL 처리·중복 조회 정리, 발주 잔량을 MES 입고 이력 합계로 계산하고 발주 입고수량·진행상태 변경 제거 (ERP 인터페이스 덮어쓰기 대응), 입고 가능 발주 상태를 진행 중 상태(발주·발주확정·발주승인)로 변경, 발주 공장 조건을 발주공장에서 입고공장(INC 2공장) 기준으로 변경
 -- *****************************************************************************
   IN $SDATE       VARCHAR(10),
   IN $EDATE       VARCHAR(10),
@@ -123,11 +123,11 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       ON INSUM.MTRODRKEY = MTRODRD.MTRODRKEY
      AND INSUM.MTRODRSEQ = MTRODRD.MTRODRSEQ
     WHERE MTRODRD.ITEMID = $ITEMID
-      AND MTRODR.ODRFACTORY = '07'
+      AND MTRODR.INFACTORYCD = '07'
       AND ($SDATE = '' OR MTRODR.MTRODRDATE >= $SDATE)
       AND ($EDATE = '' OR MTRODR.MTRODRDATE <= $EDATE)
       AND ($CUSTCD = '' OR MTRODR.CUSTCD = $CUSTCD)
-      AND MTRODRD.MTRODRSTT IN ('MM110100', 'MM110201', 'MM110300')
+      AND MTRODRD.MTRODRSTT IN ('MM110100', 'MM110200', 'MM110201')
       AND IFNULL(MTRODRD.ODRQTY, 0) > IFNULL(INSUM.INQTY, 0)
     ORDER BY MTRODR.MTRODRDATE DESC, MTRODRD.MTRODRKEY DESC, MTRODRD.MTRODRSEQ;
 
@@ -162,8 +162,8 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
                        WHERE MTRODRD.MTRODRKEY = $MTRODRKEY
                          AND MTRODRD.MTRODRSEQ = $MTRODRSEQ
                          AND MTRODRD.ITEMID = $ITEMID
-                         AND MTRODR.ODRFACTORY = '07'
-                         AND MTRODRD.MTRODRSTT IN ('MM110100', 'MM110201', 'MM110300') FOR UPDATE)
+                         AND MTRODR.INFACTORYCD = '07'
+                         AND MTRODRD.MTRODRSTT IN ('MM110100', 'MM110200', 'MM110201') FOR UPDATE)
                     - IFNULL((SELECT SUM(INOUTQTY)
                               FROM INOUT_EQMPARTS
                               WHERE MTRODRKEY = $MTRODRKEY
@@ -182,7 +182,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       LEAVE PROC;
     END IF;
 
-    -- 입출고 이력 등록
+    -- 입고 이력 등록
     INSERT INTO INOUT_EQMPARTS (
         INOUTKEY, INOROUT, INOUTDATE, INOUTTP_EQMPARTS, INOUTQTY, OLDQTY,
         ITEMID, EMPCD, MTRODRKEY, MTRODRSEQ, REMARK,

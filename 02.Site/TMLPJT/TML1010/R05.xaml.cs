@@ -479,7 +479,7 @@ namespace TML1010
                 ItsMaria.Set("TML1010_R05", "OUT_EQMPARTS");
                 ItsMaria.AddModel(MODEL_A3);
 
-                DataSet ds = ItsMaria.Call();
+                ItsMaria.Call();
                 if (ItsMaria.IsError)
                 {
                     ShowMessageBox("", ItsMaria.ErrMessage);

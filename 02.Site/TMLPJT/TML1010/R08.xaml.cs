@@ -383,12 +383,6 @@ namespace TML1010
             // 설비부품 입고 저장 및 라벨 출력
             if (commandName == "IN_EQMPARTS")
             {
-                if (MODEL_A2.GetText("MTRODRKEY") == "" || MODEL_A2.GetText("MTRODRSEQ") == "")
-                {
-                    ShowMessageBox("", "입고할 발주를 선택해주세요.");
-                    return;
-                }
-
                 ItsMaria.Set("TML1010_R08", "IN_EQMPARTS");
                 ItsMaria.AddModel(MODEL_A2);
 
