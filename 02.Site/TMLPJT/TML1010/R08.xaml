@@ -26,8 +26,24 @@
 
         <!-- 상단 조회 패널 -->
         <UserControl Canvas.Left="0" Canvas.Top="0" Style="{DynamicResource TML_PANEL}">
-            <its:WrapContent Width="980" Height="45">
-                <its:Button Width="150" Height="36" CommandName="SEARCH_EQMPARTS" Label="설비부품 재고조회" />
+            <its:WrapContent x:Name="PANEL_S1" Width="980" Height="45">
+                <Grid Width="980" Height="45">
+                    <Grid.Resources>
+                        <ScaleTransform x:Key="HEADER_SCALE" ScaleX="1.36" ScaleY="1.36" />
+                    </Grid.Resources>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="6" />
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="10" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <its:Button Grid.Column="1" Width="150" Height="36" VerticalAlignment="Center" CommandName="SEARCH_EQMPARTS" Label="설비부품 재고조회" SetFontSize="13" />
+                    <its:Combo Grid.Column="3" x:Name="cmb_S_GRADE" Label="등급" LabelWidth="30" Width="110" VerticalAlignment="Center" Value="{Binding GRADE}" LayoutTransform="{StaticResource HEADER_SCALE}" />
+                    <its:Combo Grid.Column="5" x:Name="cmb_S_LOCACD" Label="로케이션" LabelWidth="48" Width="150" VerticalAlignment="Center" Value="{Binding LOCACD}" LayoutTransform="{StaticResource HEADER_SCALE}" />
+                </Grid>
             </its:WrapContent>
         </UserControl>
 
@@ -120,10 +136,11 @@
                 <its:Button Width="160" Height="32" Label="입고 이력조회" CommandName="SEARCH_IN_EQMPARTS" BackColor="SeaGreen" SetFontSize="16" />
                 <its:Grid x:Name="GRID_G2" Width="940" Height="430" Margin="2,5,2,0">
                     <its:Grid.Columns>
-                        <its:Column Width="180" FieldName="INOUTDATE" Header="발생일자" ALGIN="Center" />
-                        <its:Column Width="280" FieldName="INOUTTPNM" Header="입고유형" ALGIN="Center" />
-                        <its:Column Width="200" FieldName="INQTY" Header="입고량" ALGIN="Right" DecimalPoint="0" />
-                        <its:Column Width="230" FieldName="EMPNM" Header="처리자" ALGIN="Center" />
+                        <its:Column Width="160" FieldName="INOUTDATE" Header="발생일자" ALGIN="Center" />
+                        <its:Column Width="250" FieldName="INOUTTPNM" Header="입고유형" ALGIN="Center" />
+                        <its:Column Width="180" FieldName="INQTY" Header="입고량" ALGIN="Right" DecimalPoint="0" />
+                        <its:Column Width="200" FieldName="EMPNM" Header="처리자" ALGIN="Center" />
+                        <its:Column Width="100" Header="입고취소" CellType="Button" ButtonText="취소" CommandName="CANCEL_IN_EQMPARTS" />
                     </its:Grid.Columns>
                 </its:Grid>
             </its:WrapContent>

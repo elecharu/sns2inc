@@ -10,6 +10,7 @@ namespace TML1010
     // 현장터미널 설비부품 입고등록
     public partial class R08 : ITSLIB.ItsPageTml
     {
+        ItsModelPanel MODEL_S1 = new ItsModelPanel();
         ItsModelPanel MODEL_ODR_S = new ItsModelPanel();
         ItsModelPanel MODEL_IN_INFO = new ItsModelPanel();
         ItsModelPanel MODEL_A2 = new ItsModelPanel();
@@ -17,6 +18,8 @@ namespace TML1010
         ItsModelGrid MODEL_G1 = new ItsModelGrid();
         ItsModelGrid MODEL_G2 = new ItsModelGrid();
         ItsModelGrid MODEL_ODR = new ItsModelGrid();
+
+        private bool filterLoading = false;
 
         public R08()
         {
@@ -31,6 +34,10 @@ namespace TML1010
             }
             Resources.MergedDictionaries.Add(gridStyle);
 
+            MODEL_S1.Binding(PANEL_S1);
+            MODEL_S1.InitData();
+            MODEL_S1.EventValueChanged += MODEL_S1_EventValueChanged;
+
             MODEL_ODR_S.Binding(PANEL_ODR);
             MODEL_ODR_S.InitData();
 
@@ -41,7 +48,6 @@ namespace TML1010
             MODEL_A2.FieldType("ITEMID", ItsEnums.FieldTypes.String);
             MODEL_A2.FieldType("MTRODRKEY", ItsEnums.FieldTypes.String);
             MODEL_A2.FieldType("MTRODRSEQ", ItsEnums.FieldTypes.String);
-            MODEL_A2.FieldType("LOCACD", ItsEnums.FieldTypes.String);
             MODEL_A2.InitData();
 
             MODEL_A1.Binding(PANEL_A1);
@@ -67,12 +73,48 @@ namespace TML1010
 
             try
             {
+                LoadSearchFilter();
                 EventCommand("SEARCH_EQMPARTS");
             }
             catch
             {
                 // 화면 확인용 안전 처리
             }
+        }
+
+        // 조회 조건 중요도등급·로케이션 목록
+        private void LoadSearchFilter()
+        {
+            filterLoading = true;
+
+            ItsMaria.Set("TML1010_R08", "LIST_GRADE");
+            DataSet dsGrade = ItsMaria.Call();
+            if (!ItsMaria.IsError)
+            {
+                cmb_S_GRADE.ItemClear();
+                cmb_S_GRADE.AddItem(dsGrade.Tables[0], "전체");
+            }
+
+            ItsMaria.Set("TML1010_R08", "LIST_LOCA");
+            DataSet dsLoca = ItsMaria.Call();
+            if (!ItsMaria.IsError)
+            {
+                cmb_S_LOCACD.ItemClear();
+                cmb_S_LOCACD.AddItem(dsLoca.Tables[0], "전체");
+            }
+
+            MODEL_S1.SetValue("GRADE", "");
+            MODEL_S1.SetValue("LOCACD", "");
+            filterLoading = false;
+        }
+
+        // 조회 조건 중요도등급·로케이션 변경 시 바로 재조회
+        private void MODEL_S1_EventValueChanged(string fieldName)
+        {
+            if (filterLoading) return;
+            if (fieldName != "GRADE" && fieldName != "LOCACD") return;
+
+            EventCommand("SEARCH_EQMPARTS");
         }
 
         // 팝업 타이틀바 색상 설정
@@ -98,6 +140,8 @@ namespace TML1010
             if (commandName == "SEARCH_EQMPARTS")
             {
                 ItsMaria.Set("TML1010_R08", "LIST_EQMPARTS");
+                ItsMaria.AddOne("GRADE", MODEL_S1.GetText("GRADE"));
+                ItsMaria.AddOne("LOCACD", MODEL_S1.GetText("LOCACD"));
 
                 try
                 {
@@ -134,7 +178,6 @@ namespace TML1010
                 string itemCd = MODEL_G1.GetText(rowIdx, "ITEMCD");
                 string itemNm = MODEL_G1.GetText(rowIdx, "ITEMNM");
                 string itemId = MODEL_G1.GetText(rowIdx, "ITEMID");
-                string locaCd = MODEL_G1.GetText(rowIdx, "LOCACD");
 
                 MODEL_IN_INFO.SetValue("ITEMCD", itemCd);
                 MODEL_IN_INFO.SetValue("ITEMNM", itemNm);
@@ -143,7 +186,6 @@ namespace TML1010
                 MODEL_A2.InitData();
                 MODEL_A2.SetValue("ITEMID", itemId);
                 MODEL_A2.SetValue("INDATE", DateTime.Now.ToString("yyyy-MM-dd"));
-                MODEL_A2.SetValue("LOCACD", locaCd);
                 MODEL_A2.SetValue("INTP", "IN_01");
                 MODEL_A2.SetValue("EMPCD", (ItsMemberShip.EMPCD ?? "").Trim());
 
@@ -277,6 +319,16 @@ namespace TML1010
                     ShowMessageBox("", "이력 조회 중 오류: " + ex.Message);
                 }
             }
+            // 설비부품 입고취소 확인
+            else if (commandName == "CANCEL_IN_EQMPARTS")
+            {
+                if (MODEL_G2.ModelCount <= 0 || MODEL_G2.CurrentIndex < 0)
+                {
+                    return;
+                }
+
+                ShowMessageBox("CANCEL_IN_EQMPARTS", "입고를 취소하시겠습니까?");
+            }
             // 라벨출력 버튼 클릭
             else if (commandName == "POP_PRINT_LABEL")
             {
@@ -358,6 +410,22 @@ namespace TML1010
                 {
                     ShowMessageBox("", "입고는 완료되었습니다. 라벨 출력을 확인해주세요.");
                 }
+            }
+            // 설비부품 입고취소 저장
+            else if (commandName == "CANCEL_IN_EQMPARTS")
+            {
+                ItsMaria.Set("TML1010_R08", "CANCEL_IN_EQMPARTS");
+                ItsMaria.AddOne("INOUTKEY", MODEL_G2.GetText(MODEL_G2.CurrentIndex, "INOUTKEY"));
+
+                ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                EventCommand("SEARCH_EQMPARTS");
+                EventCommand("SEARCH_IN_EQMPARTS");
             }
         }
     }
