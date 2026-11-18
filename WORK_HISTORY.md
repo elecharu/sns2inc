@@ -18,6 +18,17 @@
 
 ## 🕒 2026-11-18 (수) 작업 내역
 
+### 18. MST1002_R06 검색조건 작업장 → 설비구분 → 설비대분류 연쇄 REF 적용
+- **수정 파일**: [01.Office/PAGEMST/MST1002/MST1002_R06.aspx](01.Office/PAGEMST/MST1002/MST1002_R06.aspx), [01.Office/PAGEMST/MST1002/MST1002_R06.js](01.Office/PAGEMST/MST1002/MST1002_R06.js)
+- **요청**: EQM1001_R03 "설비별 점검계획" 탭처럼 작업장 → 공정 → 라인 순서로 REF가 넘어가 하위 콤보가 바뀌는 방식 적용 (처음에 공장 변경 기준으로 잘못 반영했다가 이 방식으로 다시 수정)
+- **원인**: 설비구분·설비대분류가 공통코드 `*FM100`·`*FM113` 전체 목록(`REF10="07"`)을 쓰고 있어 선택한 작업장·설비구분과 무관한 값까지 표시
+- **작업 내용**
+  - 1. aspx : 작업장·설비구분·설비대분류 콤보 ID를 R03과 같이 `cmb_LINECD`·`cmb_EQMTP`·`cmb_EQMGROUP1`로 부여, 설비구분 GPCD `*EQMTP`, 설비대분류 GPCD `*EQMGROUP1`로 변경 (값은 같은 FM100·FM113 코드, 실제 설비가 있는 값만 표시), 라벨 유지
+  - 2. js : 작업장 변경 시 설비구분 REF01·설비대분류 REF01을 작업장으로 바꾸고 선택값 초기화, 설비구분 변경 시 설비대분류 REF02를 설비구분으로 바꾸고 선택값 초기화 (R03 `cmb_LINECD`·`cmb_EQMTP` 이벤트와 같은 코드)
+  - 3. 조회 프로시저(`SEL_EQM`) 조건은 같은 필드라 변경 없음, 공통 컨트롤 변경 없음
+- **참고**: DC_COMBO `EQMTP`·`EQMGROUP1`은 공장 07 고정이라 공장 콤보 변경과는 연동하지 않음 (R03과 동일)
+- **검증**: `node --check` 문법 정상, aspx·js UTF-8 BOM·CRLF 유지 확인. 실제 화면 미확인
+
 ### 17. PRD6001_S03 개선사항 그리드 설비명을 프로시저 조회값으로 변경
 - **수정 파일**: [01.Office/PAGEPRD/PRD6001/PRD6001_S03.js](01.Office/PAGEPRD/PRD6001/PRD6001_S03.js), [05.Procedure/MES_SNS2_PRD6001_S03.sql](05.Procedure/MES_SNS2_PRD6001_S03.sql)(사용자 제공 원본)
 - **요청**: 14번의 설비명 채우기(`ItsGrid.$getGpcdData`로 DC_COMBO FANO 목록을 받아 js에서 매핑)를 쓰지 말고 프로젝트 구조에 맞게 구현

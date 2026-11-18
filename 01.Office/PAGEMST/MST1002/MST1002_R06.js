@@ -64,6 +64,22 @@ ItsButton.EventSearch = function () {
     ItsGrid.Get('grid1').autoSizeColumns();
 };
 
+/* 작업장 변경 시 설비구분·설비대분류 콤보를 그 작업장 기준으로 변경 */
+ItsCombo.Event('cmb_LINECD').onChanged = function (value, oldValue) {
+    ItsCombo.SetRef01('cmb_EQMTP', ItsCombo.GetValue('cmb_LINECD'));
+    ItsCombo.SetValue('cmb_EQMTP', '', false);
+
+    ItsCombo.SetRef01('cmb_EQMGROUP1', ItsCombo.GetValue('cmb_LINECD'), false);
+    ItsCombo.SetRef02('cmb_EQMGROUP1', '');
+    ItsCombo.SetValue('cmb_EQMGROUP1', '', false);
+};
+
+/* 설비구분 변경 시 설비대분류 콤보를 그 설비구분 기준으로 변경 */
+ItsCombo.Event('cmb_EQMTP').onChanged = function (value, oldValue) {
+    ItsCombo.SetRef02('cmb_EQMGROUP1', ItsCombo.GetValue('cmb_EQMTP'));
+    ItsCombo.SetValue('cmb_EQMGROUP1', '', false);
+};
+
 
 
 
