@@ -5,7 +5,8 @@ PROCEDURE `MES_SNS2`.`TML1010_R05`(
 -- Create:  2025-10-27  생성          신정수
 -- Modify:  2026-10-16                한성수  발주 조회 중복 조인 제거, 재고조회 미등록 품목 필터링 및 쿼리 최적화
 --          2026-10-19                한성수  INC 2공장(07) 고정, 파라미터 15건 최적화, ENDYN 표준화, 라벨 반환데이터 통일
---          2026-11-17                한성수  설비부품 출고등록 전용 전환 (입고 기능 TML1010_R08 분리 및 미사용 파라미터 제거), 출고 이력 출고취소 추가
+--          2026-11-17                한성수  설비부품 출고등록 전용 전환 (입고 기능 TML1010_R08 분리 및 미사용 파라미터 제거)
+--          2026-11-18                한성수  출고 이력 출고취소 추가 (이력 삭제 및 재고 복원), 출고 라인·설비 저장 및 라인별 설비 목록 추가, 출고 이력 라인·설비 표시, 설비부품 로케이션 지정·해제 추가, 재고 조회 중요도등급·로케이션 조건 추가, 출고 이력 설비부품코드 표시
 -- *****************************************************************************
   IN $SDATE       VARCHAR(10),
   IN $EDATE       VARCHAR(10),
@@ -14,7 +15,11 @@ PROCEDURE `MES_SNS2`.`TML1010_R05`(
   IN $OUTTP       VARCHAR(100),
   IN $OUTQTY      DECIMAL(20, 8),
   IN $EMPCD       VARCHAR(100),
+  IN $EQMGROUP1   VARCHAR(100),
+  IN $EQMCD       VARCHAR(100),
   IN $INOUTKEY    VARCHAR(100),
+  IN $LOCACD      VARCHAR(100),
+  IN $GRADE       VARCHAR(100),
 -- *****************************************************************************
   IN $CALLTYPE    VARCHAR(50)
 )
@@ -29,7 +34,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   SET $EDATE = IFNULL($EDATE, '');
 
   -- 부품 선택 확인
-  IF $CALLTYPE IN ('OUT_EQMPARTS', 'LIST_OUT_EQMPARTS', 'LABEL_REPRINT') THEN
+  IF $CALLTYPE IN ('OUT_EQMPARTS', 'LIST_OUT_EQMPARTS', 'LABEL_REPRINT', 'SET_LOCA', 'CLEAR_LOCA') THEN
     IF IFNULL($ITEMID, '') = '' THEN
       CALL COMERR('부품을 선택해주세요.');
       LEAVE PROC;
@@ -52,6 +57,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     SELECT CAST(MSTITEM.ITEMID AS CHAR) AS ITEMID,
            MSTITEM.ITEMCD, MSTITEM.ITEMNM,
            IFNULL(MSTITEM_EQMPARTS.GRADE, IFNULL(MSTITEM.GRADE, '')) AS GRADE,
+           IFNULL(MSTITEM_EQMPARTS.LOCACD, '') AS LOCACD,
            IFNULL(MSTLOCA_EQMPARTS.LOCANM, IFNULL(MSTITEM_EQMPARTS.LOCACD, '')) AS LOCANM,
            CAST(IFNULL(MSTITEM_EQMPARTS.SAFEQTY, 0) AS DOUBLE) AS SAFEQTY,
            CAST(IFNULL(MSTITEM_EQMPARTS.LOTQTY, 0) AS DOUBLE) AS LOTQTY,
@@ -69,7 +75,37 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     WHERE MSTITEM.COMPANYCD = '60'
       AND MSTITEM.ITEMCG = 'DM100700'
       AND MSTITEM.ENDYN = 'N'
+      AND (IFNULL($GRADE, '') = '' OR IFNULL(MSTITEM_EQMPARTS.GRADE, IFNULL(MSTITEM.GRADE, '')) = $GRADE)
+      AND (IFNULL($LOCACD, '') = '' OR MSTITEM_EQMPARTS.LOCACD = $LOCACD)
     ORDER BY MSTITEM.ITEMCD, MSTITEM.ITEMID;
+
+-- *****************************************************************************
+
+  WHEN 'LIST_GRADE' THEN -- 조회 조건 중요도등급 목록 (INC 2공장 설비부품에 등록된 등급)
+
+    SELECT DISTINCT IFNULL(MSTITEM_EQMPARTS.GRADE, IFNULL(MSTITEM.GRADE, '')) AS Label,
+           IFNULL(MSTITEM_EQMPARTS.GRADE, IFNULL(MSTITEM.GRADE, '')) AS Value
+    FROM MSTITEM
+    INNER JOIN MSTITEM_EQMPARTS
+      ON MSTITEM_EQMPARTS.ITEMID = MSTITEM.ITEMID
+     AND MSTITEM_EQMPARTS.FACTORYCD = '07'
+    WHERE MSTITEM.COMPANYCD = '60'
+      AND MSTITEM.ITEMCG = 'DM100700'
+      AND MSTITEM.ENDYN = 'N'
+      AND IFNULL(MSTITEM_EQMPARTS.GRADE, IFNULL(MSTITEM.GRADE, '')) <> ''
+    ORDER BY Value;
+
+-- *****************************************************************************
+
+  WHEN 'LIST_EQMCD' THEN -- 출고 팝업 라인별 INC 2공장 사용 설비 목록
+
+    SELECT CONCAT(MSTEQM.FANO, '  ', MSTEQM.EQMNM) AS Label,
+           MSTEQM.FANO AS Value
+    FROM MSTEQM
+    WHERE MSTEQM.FACTORYCD = '07'
+      AND MSTEQM.USEYN = 'Y'
+      AND MSTEQM.EQMGROUP1 = IFNULL($EQMGROUP1, '')
+    ORDER BY MSTEQM.FANO;
 
 -- *****************************************************************************
 
@@ -101,11 +137,11 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     -- 입출고 이력 등록
     INSERT INTO INOUT_EQMPARTS (
         INOUTKEY, INOROUT, INOUTDATE, INOUTTP_EQMPARTS, INOUTQTY, OLDQTY,
-        ITEMID, EMPCD, REMARK,
+        ITEMID, EMPCD, EQMGROUP1, EQMCD, REMARK,
         RTIME, REMP, RPRG
     ) VALUES (
         GETKEY('INOUTKEY'), 'OUT', $OUTDATE, $OUTTP, $OUTQTY, _$OLDQTY,
-        $ITEMID, $EMPCD, '',
+        $ITEMID, $EMPCD, IFNULL($EQMGROUP1, ''), IFNULL($EQMCD, ''), '',
         CALLTIME(), CALLEMP(), CALLPRG()
     );
 
@@ -125,9 +161,16 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     SELECT INOUT_EQMPARTS.INOUTKEY,
            INOUT_EQMPARTS.INOUTDATE,
            GPCD('INOUTTP_EQMPARTS', INOUT_EQMPARTS.INOUTTP_EQMPARTS) AS INOUTTPNM,
+           GPCD('FM113', INOUT_EQMPARTS.EQMGROUP1) AS EQMGROUP1NM,
+           IF(INOUT_EQMPARTS.EQMCD = '', '', CONCAT(INOUT_EQMPARTS.EQMCD, '  ', IFNULL(MSTEQM.EQMNM, ''))) AS EQMNM,
+           IFNULL(MSTITEM.ITEMCD, '') AS ITEMCD,
            CAST(INOUT_EQMPARTS.INOUTQTY AS DOUBLE) AS OUTQTY,
            GPCD('EMPCD', INOUT_EQMPARTS.EMPCD) AS EMPNM
     FROM INOUT_EQMPARTS
+    LEFT JOIN MSTEQM
+      ON MSTEQM.FANO = INOUT_EQMPARTS.EQMCD
+    LEFT JOIN MSTITEM
+      ON MSTITEM.ITEMID = INOUT_EQMPARTS.ITEMID
     WHERE INOUT_EQMPARTS.ITEMID = $ITEMID
       AND INOUT_EQMPARTS.INOROUT = 'OUT'
       AND ($SDATE = '' OR INOUT_EQMPARTS.INOUTDATE >= $SDATE)
@@ -158,6 +201,45 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
         MEMP   = CALLEMP(),
         MPRG   = CALLPRG()
     WHERE ITEMID = _$ITEMID
+      AND FACTORYCD = '07';
+
+-- *****************************************************************************
+
+  WHEN 'LIST_LOCA' THEN -- 설비부품 로케이션 기준정보 목록
+
+    SELECT CONCAT(MSTLOCA_EQMPARTS.LOCACD, '  ', IFNULL(MSTLOCA_EQMPARTS.LOCANM, '')) AS Label,
+           MSTLOCA_EQMPARTS.LOCACD AS Value,
+           IFNULL(MSTLOCA_EQMPARTS.LOCANM, MSTLOCA_EQMPARTS.LOCACD) AS LOCANM
+    FROM MSTLOCA_EQMPARTS
+    ORDER BY MSTLOCA_EQMPARTS.LOCACD;
+
+-- *****************************************************************************
+
+  WHEN 'SET_LOCA' THEN -- 설비부품 로케이션 지정
+
+    IF NOT EXISTS (SELECT 1 FROM MSTLOCA_EQMPARTS WHERE LOCACD = IFNULL($LOCACD, '') LIMIT 1) THEN
+      CALL COMERR('로케이션을 선택해주세요.');
+      LEAVE PROC;
+    END IF;
+
+    UPDATE MSTITEM_EQMPARTS
+    SET LOCACD = $LOCACD,
+        MTIME  = CALLTIME(),
+        MEMP   = CALLEMP(),
+        MPRG   = CALLPRG()
+    WHERE ITEMID = $ITEMID
+      AND FACTORYCD = '07';
+
+-- *****************************************************************************
+
+  WHEN 'CLEAR_LOCA' THEN -- 설비부품 로케이션 해제
+
+    UPDATE MSTITEM_EQMPARTS
+    SET LOCACD = '',
+        MTIME  = CALLTIME(),
+        MEMP   = CALLEMP(),
+        MPRG   = CALLPRG()
+    WHERE ITEMID = $ITEMID
       AND FACTORYCD = '07';
 
 -- *****************************************************************************
