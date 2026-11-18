@@ -18,6 +18,53 @@
 
 ## 🕒 2026-11-18 (수) 작업 내역
 
+### 17. PRD6001_S03 개선사항 그리드 설비명을 프로시저 조회값으로 변경
+- **수정 파일**: [01.Office/PAGEPRD/PRD6001/PRD6001_S03.js](01.Office/PAGEPRD/PRD6001/PRD6001_S03.js), [05.Procedure/MES_SNS2_PRD6001_S03.sql](05.Procedure/MES_SNS2_PRD6001_S03.sql)(사용자 제공 원본)
+- **요청**: 14번의 설비명 채우기(`ItsGrid.$getGpcdData`로 DC_COMBO FANO 목록을 받아 js에서 매핑)를 쓰지 말고 프로젝트 구조에 맞게 구현
+- **확인**: 다른 화면(PRD1001_R04 거래처명 등)은 이름을 프로시저 조회 결과로 받음. PRD6001_S03 프로시저의 SEL_EQMREP·PRINT_EQMREP도 MSTEQM `FANO` LEFT JOIN으로 설비명 조회
+- **작업 내용**
+  - 1. 프로시저 `SEL_EQMREPDAILY` 개선업무(첫 번째 결과) : MSTEQM LEFT JOIN(`FANO = TITLE`)으로 설비명 `EQMNM` 반환(없으면 빈 값), 요청사항(두 번째 결과)·파라미터·다른 분기 변경 없음, Modify 이력 1행 추가
+  - 2. js : 전역 `fanoNm`, 페이지 로드 시 `$getGpcdData` 호출, 조회 후 설비명 매핑 반복문 삭제 → grid2 `EQMNM` 컬럼이 프로시저 값을 그대로 표시
+  - 3. 유지 : 설비코드 find 컬럼, 더블클릭·엔터 시 공통 찾기 창으로 코드·이름 입력, 저장(TITLELIST)·삭제·팝업 등록 로직
+  - 4. 사용자가 넣은 프로시저 파일에 BOM이 있어 규칙(`encoding.md` 프로시저 sql BOM 없음)에 맞게 제거, CRLF 유지
+- **참고**: 14번의 "목록에 없는 코드는 설비명이 비어 보임" 제약 해소(MSTEQM 전체 기준 조회)
+- **검증**: `node --check` 문법 정상, js UTF-8 BOM·CRLF, sql BOM 없음·CRLF 확인. 사용자가 실DB에 프로시저 저장 후 화면에서 설비명 표시 확인
+- **실DB 반영**: PRD6001_S03 프로시저 저장(파라미터 변경 없음) 후 화면 js 배포. 프로시저 저장 전 js만 배포하면 개선사항 설비명이 비어 보임
+
+### 16. MST1004_R01 호출사원 등록 팝업 취소 버튼 닫기 처리
+- **수정 파일**: [01.Office/PAGEMST/MST1004/MST1004_R01.js](01.Office/PAGEMST/MST1004/MST1004_R01.js)
+- **요청**: "호출사원 등록" 팝업에서 취소 버튼을 눌러도 창이 닫히지 않음
+- **원인**: 공통 ItsPop은 취소 버튼 클릭 시 화면의 `onCancelBtnClick`만 호출하고 기본값은 빈 함수인데, MST1004_R01에는 pop1의 `onCancelBtnClick`이 정의되어 있지 않았음
+- **작업 내용**
+  - 1. `ItsPop.Event('pop1').onCancelBtnClick`에서 `ItsPop.Close('pop1')` 호출 (MST1005_R01 등 다른 화면과 같은 방식), 공통 컨트롤 변경 없음
+- **검증**: `node --check` 문법 정상, UTF-8 BOM·CRLF 유지 확인. 실제 화면 미확인
+
+### 15. MST1004_R01 호출사원 그리드에서 사원코드 앞 컬럼 삭제
+- **수정 파일**: [01.Office/PAGEMST/MST1004/MST1004_R01.js](01.Office/PAGEMST/MST1004/MST1004_R01.js), [05.Procedure/MES_SNS2_MST1004_R01.sql](05.Procedure/MES_SNS2_MST1004_R01.sql)
+- **요청**: "사원코드"부터 "수리종료 지연시간(분)"까지만 남기고 그 앞 항목 모두 삭제, 프로시저에도 반영
+- **확인**: 해당 범위는 메인 그리드(grid1) 컬럼(사원코드·사원명·호출도착 지연시간(분)·수리종료 지연시간(분)). aspx 조회 패널·등록 팝업(pop1)에는 이 범위가 없어 aspx 변경 없음. 공통 `ItsGrid.GetValue`는 컬럼이 아닌 행 데이터에서 값을 읽으므로, 컬럼을 지워도 저장·삭제에서 쓰는 설비코드(EQMCD) 값은 조회 결과에 그대로 남음
+- **작업 내용**
+  - 1. grid1 컬럼 삭제 : 작업장코드(LINECD, 숨김)·작업장(LINENM)·설비구분(EQMTP)·설비대분류(EQMGROUP1)·설비중분류(EQMGROUP2)·설비소분류(EQMGROUP3)·설비코드(EQMCD, 숨김)·설비(EQMNM) 8개
+  - 2. 유지 : 사원코드~수리종료 지연시간(분) 4개 컬럼, grid1 옵션(체크박스·셀 병합·작업장 그룹 `groupField: 'LINENM'`), 조회·저장(UPD_EQM_CALLEMP EQMCD_LIST)·삭제(DEL_EQM_CALLEMP EQMCD_LIST)·등록 팝업 로직, 팝업 설비 조회조건 연쇄 처리(팝업 컨트롤 전용이라 grid1 컬럼과 무관)
+  - 3. 삭제한 컬럼만 쓰던 js 코드 없음(정리 대상 없음)
+  - 4. 프로시저 `LIST_EQM_CALLEMP` : 화면에서 지운 컬럼의 반환(MSTEQM.LINECD·EQMTP·EQMGROUP1~3·EQMNM) 제거. 저장·삭제 키 EQMCD와 grid1 그룹 기준 LINENM은 유지. JOIN·조회 조건·정렬, 파라미터, 다른 분기는 변경 없음. Modify 이력 1행 추가. `MST1004_R01`을 호출하는 곳은 이 화면뿐
+- **참고**: 그룹 기준(작업장)은 동작 기능이라 유지했으므로 조회 시 작업장별 그룹 행은 계속 보임. 행만으로는 어느 설비의 호출사원인지 구분되지 않음(저장·삭제 키 EQMCD는 데이터로 유지)
+- **검증**: `node --check` 문법 정상, js UTF-8 BOM·CRLF, sql BOM 없음·CRLF 유지 확인. 프로시저 컴파일·실DB 조회·실제 화면 미확인
+- **실DB 반영**: MST1004_R01 프로시저 저장(파라미터 변경 없음)
+
+### 14. PRD6001_S03 개선사항 그리드 설비 컬럼을 코드 + 이름 표시로 변경
+- **수정 파일**: [01.Office/PAGEPRD/PRD6001/PRD6001_S03.js](01.Office/PAGEPRD/PRD6001/PRD6001_S03.js)
+- **요청**: 하단 좌측 그리드(grid2)의 설비 컬럼을 "개선사항 및 요구사항 추가" 팝업의 설비 find처럼 설비 코드와 이름이 함께 보이도록 변경
+- **확인**: grid2 설비 컬럼은 TITLE 콤보(GPCD FANO, DC_COMBO → 설비명만 표시, 값 FANO). 팝업 설비는 `Its:find` GPCD FANO(DC_FIND FANO_HEAD/LIST/INFO → 코드·이름 표시, 값 FANO). 저장(UP_EQMREP TITLELIST)·등록(INS_EQMREPDAILY TITLE)은 모두 설비코드. PRD6001_S03 프로시저는 저장소에 없음
+- **작업 내용**
+  - 1. 설비 콤보 컬럼을 `설비코드`(TITLE, find 컬럼) + `설비명`(EQMNM, 표시 전용) 두 컬럼으로 변경
+  - 2. 설비코드·설비명 셀 더블클릭 또는 엔터 시 팝업과 같은 GPCD FANO 공통 찾기 창(`ItsPop.OpenFindCOM`)을 열고, 선택한 코드·이름을 넣고 행 체크
+  - 3. 조회 시 설비명은 기존 콤보와 같은 DC_COMBO FANO 목록(페이지 로드 시 1회 조회)으로 채움, 프로시저·aspx 변경 없음
+  - 4. 저장값은 기존과 같이 TITLE(설비코드), 저장·삭제·팝업 등록 로직 변경 없음
+  - 5. 설비 찾기로 설비코드·설비명을 바꾼 직후 grid2 `autoSizeColumns()` 호출(조회·저장·삭제·추가 후에는 기존 조회 단계의 호출로 이미 적용, grid3도 조회 시 적용 중)
+- **참고**: 설비명은 DC_COMBO FANO 목록(MSTEQM_MATCH 연결·사용 설비) 기준이라, 목록에 없는 코드(예: 팝업 find로만 고른 설비, 예전 자유 입력 값)는 재조회 시 설비명이 비어 보임(기존 콤보도 이 경우 코드만 표시). 프로시저가 설비명을 함께 반환하도록 바꾸면 해소되나 저장소에 원본이 없어 이번 범위에서 제외
+- **검증**: `node --check` 문법 정상, UTF-8 BOM·CRLF 유지 확인. 실DB 조회·실제 화면 미확인
+
 ### 13. TML1010_R08 발주조회 테스트 발주 데이터 SQL 작성 (7-AMP-50-245)
 - **추가 파일**: [05.Procedure/MES_SNS2_TML1010_R08_TEST_DATA.sql](05.Procedure/MES_SNS2_TML1010_R08_TEST_DATA.sql)
 - **요청**: 7-AMP-50-245 입고 시 발주조회에 나오도록 현재 DB 데이터 기준 발주 2건 생성

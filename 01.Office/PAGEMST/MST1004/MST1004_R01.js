@@ -5,14 +5,6 @@ ItsPage.Load = function () {
     
     /* 그리드 생성 */
     ItsGrid.Create('grid1', { isCheckBoxGrid: true, allowMerging: 'Cells', groupField: 'LINENM' }, [
-        column.create("작업장코드", "LINECD", { width: 100, align: 'center', hidden: true }),
-        column.create("작업장", "LINENM", { width: 100, align: 'center', allowMerging: true }),
-        column.create("설비구분", "EQMTP", { width: 100, align: 'center', allowMerging: true }),
-        column.create("설비대분류", "EQMGROUP1", { width: 100, align: 'center', allowMerging: true }),
-        column.create("설비중분류", "EQMGROUP2", { width: 100, align: 'center', allowMerging: true }),
-        column.create("설비소분류", "EQMGROUP3", { width: 100, align: 'center', allowMerging: true }),
-        column.create("설비코드", "EQMCD", { width: 100, align: 'center', hidden: true }),
-        column.create("설비", "EQMNM", { width: 200, allowMerging: true }),
         column.create("사원코드", "EMPCD", { width: 100, align: 'center' }),
         column.create("사원명", "EMPNM", { width: 100, align: 'center' }),
         column.create("호출도착 지연시간(분)", "DELAYMIN_ARRIVE", { width: 150, align: 'center', columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
@@ -88,6 +80,10 @@ ItsPop.Event('pop1').onAddBtnClick = function () {
         ItsPop.Close('pop1');
         ItsButton.EventSearch();
     });
+};
+
+ItsPop.Event('pop1').onCancelBtnClick = function () {
+    ItsPop.Close('pop1');
 };
 
 // ── 저장 ─────────────────────────────────────────────────

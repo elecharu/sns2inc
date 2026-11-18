@@ -2,7 +2,7 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`MST1004_R01`(
 -- *****************************************************************************
 -- Comment: 설비별 생기팀 호출사원 정보
 -- Create: 2026-10-20 17:51: KYC
--- Modify: 
+-- Modify:  2026-11-18                한성수  호출사원 조회 화면 미사용 설비 컬럼(작업장코드·설비구분·설비분류·설비명) 반환 제거
 -- *****************************************************************************
 
   IN $EQMCD           VARCHAR(20),
@@ -44,13 +44,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 
     SELECT 
         EQMCD
-      , MSTEQM.LINECD
       , MSTLINE.LINENM
-      , GPCD('FM100', MSTEQM.EQMTP) AS EQMTP
-      , GPCD('FM113', MSTEQM.EQMGROUP1) AS EQMGROUP1
-      , GPCD('FM114', MSTEQM.EQMGROUP2) AS EQMGROUP2
-      , GPCD('FM115', MSTEQM.EQMGROUP3) AS EQMGROUP3
-      , MSTEQM.EQMNM
       , MSTEMP.EMPCD
       , MSTEMP.EMPNM
       , DELAYMIN_ARRIVE

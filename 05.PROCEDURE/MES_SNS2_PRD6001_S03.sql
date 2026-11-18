@@ -9,6 +9,7 @@
 --                       설비수리 EQMREP 2공장 컬럼으로 (비가동 PRDRSTNON 연결 없음), 고장유형(FM307) → 수리유형(ISSUE)
 --                       근무일 함수(MAKEINS_IFDT) 대신 완료시간 06:00 기준 범위 조건, MSTEMP.WORKDUTY 없음 → ''
 --         2026-11-06 : 김영철 SEL_EQMREP 에 작업장(LINENM)·설비구분(EQMTPNM)·설비대분류(EQMGROUP1NM) 추가
+--         2026-11-18 : 한성수 SEL_EQMREPDAILY 개선업무에 설비명(EQMNM) 추가
 -- *****************************************************************************
   IN $DATE VARCHAR(19),               -- 수리일자 / 입력일자
   IN $TITLE VARCHAR(255),             -- 타이틀 (개선업무 = 설비번호)
@@ -99,12 +100,15 @@ WHEN 'SEL_EQMREPDAILY' THEN  -- [0] 그날 개선업무, [1] 진행 중인 요�
     , EQMREPDAILY.WORKTIME
     , EQMREPDAILY.EMPCD
     , EQMREPDAILY.TITLE
+    , IFNULL(MSTEQM.EQMNM, '') AS EQMNM  -- 설비명
     , EQMREPDAILY.REMARK
     , MSTEMP.DEPTCD
     , '' AS WORKDUTY  -- 2공장 MSTEMP 에 근무직구분 없음 (화면에서 숨김 컬럼)
   FROM EQMREPDAILY
   LEFT JOIN MSTEMP
     ON MSTEMP.EMPCD = EQMREPDAILY.EMPCD
+  LEFT JOIN MSTEQM
+    ON MSTEQM.FANO = EQMREPDAILY.TITLE
   WHERE EQMREPDAILY.DATETIME = $DATE
     AND EQMREPDAILY.GUBUN = '1';
 

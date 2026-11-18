@@ -27,7 +27,8 @@ ItsPage.Load = function () {
         column.create('근무직구분', 'WORKDUTY', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'HR160', align: 'center', hidden: true }),
         column.create('순번', 'SEQ', { width: 50, align: 'center', hidden: true }),
         column.create('구분', 'GUBUN', { width: 50, align: 'center', hidden: true }),
-        column.create('설비', 'TITLE', { width: 150, columnType: enumColumnTypes.combo, gpcd: 'FANO', readOnly: false }),
+        column.create('설비코드', 'TITLE', { width: 100, columnType: enumColumnTypes.find }),
+        column.create('설비명', 'EQMNM', { width: 150 }),
         column.create('작업시간(분)', 'WORKTIME', { width: 100, columnType: enumColumnTypes.number, readOnly: false}),
         column.create('개선사항', 'REMARK', { width: 500, readOnly: false }),
         column.create('업무정보', 'DAILYINFOTP', { width: 100, align: 'center', readOnly: false, columnType: enumColumnTypes.combo, gpcd: 'DAILYINFOTP'}),
@@ -206,6 +207,23 @@ ItsPop.Event('pop1').onAddBtnClick = function () {
     ItsPop.Close('pop1');
 
     ItsButton.EventSearch();
+}
+
+/* 개선사항 그리드 설비 선택 */
+ItsGrid.Event('grid2').onKeydownEnter = function (rowIndex, field) {
+    if (field != 'TITLE' && field != 'EQMNM') {
+        return;
+    }
+    ItsPop.OpenFindCOM({ gpcd: 'FANO' }, function (res) {
+        ItsGrid.SetValue('grid2', rowIndex, 'TITLE', res['CODE']);
+        ItsGrid.SetValue('grid2', rowIndex, 'EQMNM', res['NAME']);
+        ItsGrid.CheckRow('grid2', rowIndex);
+        ItsGrid.Get('grid2').autoSizeColumns();
+    });
+}
+
+ItsGrid.Event('grid2').onDoubleClick = function (rowIndex, field) {
+    ItsGrid.Event('grid2').onKeydownEnter(rowIndex, field);
 }
 
 ItsPop.Event('pop1').onCancelBtnClick = function () {
