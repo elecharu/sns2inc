@@ -11,7 +11,7 @@
       FontFamily="Malgun Gothic">
     <!--
         구조: 조회조건(작업장) → 진행 중 호출 카드(현황판) → 하단 버튼
-              [호출] → 3단계 팝업 (① 설비 → ② 호출이유 → ③ 호출자)
+              [호출] → 3단계 팝업 (① 설비 → ② 호출이유 → ③ 호출 대상 = 작업장에 배치된 생기팀 전원)
         상태 색: 호출 #E53935 / 도착 #FB8C00 / 수리중 #1E88E5 / 완료 #43A047
         글자: 맑은 고딕, 제목 22~26 / 본문 16~19 / 하단 버튼 24
         ※ 팝업 Show/Close 가 루트 Canvas 의 UserControl 들을 켜고 끄므로 모든 레이어는 UserControl 로 감쌈
@@ -41,9 +41,6 @@
                         <Border Background="#E53935" CornerRadius="11" Padding="12 1" Margin="6 0 0 0">
                             <TextBlock Text="호출" FontSize="16" FontWeight="Bold" Foreground="White"/>
                         </Border>
-                        <Border Background="#FB8C00" CornerRadius="11" Padding="12 1" Margin="6 0 0 0">
-                            <TextBlock Text="도착" FontSize="16" FontWeight="Bold" Foreground="#263238"/>
-                        </Border>
                         <Border Background="#1E88E5" CornerRadius="11" Padding="12 1" Margin="6 0 0 0">
                             <TextBlock Text="수리중" FontSize="16" FontWeight="Bold" Foreground="White"/>
                         </Border>
@@ -64,7 +61,6 @@
                 <UserControl Width="6"/>
                 <its:Button x:Name="btn_CALL" Label="호  출" Width="160" Height="70" SetFontSize="22" CommandName="CALL" BackColor="#E53935"/>
                 <its:Button x:Name="btn_CALL_CANCEL" Label="호출취소" Width="160" Height="70" SetFontSize="22" CommandName="CALL_CANCEL" BackColor="#6D4C41"/>
-                <its:Button x:Name="btn_ARRIVE" Label="도  착" Width="160" Height="70" SetFontSize="22" CommandName="ARRIVE" BackColor="#FB8C00"/>
                 <its:Button x:Name="btn_REPAIR_START" Label="수리시작" Width="160" Height="70" SetFontSize="22" CommandName="REPAIR_START" BackColor="#1E88E5"/>
                 <its:Button x:Name="btn_REPAIR_END" Label="수리종료" Width="160" Height="70" SetFontSize="22" CommandName="REPAIR_END" BackColor="#43A047"/>
                 <its:Button x:Name="btn_HISTORY" Label="이력조회" Width="160" Height="70" SetFontSize="22" CommandName="HISTORY" BackColor="#37474F"/>
@@ -87,62 +83,6 @@
                     <its:ButtonList Grid.Row="1" x:Name="LINE_LIST" PanelWidth="788" Height="290" Margin="16 0 16 0"/>
                     <DockPanel Grid.Row="2" Margin="16 0 16 8" LastChildFill="False">
                         <its:Button DockPanel.Dock="Right" Label="닫  기" Width="180" Height="58" SetFontSize="22" CommandName="CLOSE_LINE" BackColor="#90A4AE"/>
-                    </DockPanel>
-                </Grid>
-            </its:WrapContent>
-        </UserControl>
-
-        <!--도착 등록 팝업-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="78" Canvas.Top="16">
-            <its:WrapContent x:Name="PANEL_A3" Width="820" Height="420" Background="#FAFAFA">
-                <Grid Width="820" Height="420">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="50"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="70"/>
-                    </Grid.RowDefinitions>
-                    <Grid Grid.Row="0" Margin="20 0 20 0">
-                        <TextBlock Text="도착 등록" FontSize="26" FontWeight="Bold" Foreground="#263238" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="txt_ARRV_NOTE" FontSize="16" FontWeight="Bold" Foreground="#E65100" HorizontalAlignment="Right" VerticalAlignment="Center"/>
-                    </Grid>
-
-                    <StackPanel Grid.Row="1" Margin="16 0 16 0">
-                        <!--호출 내용 요약-->
-                        <Border Background="#FFFFFF" BorderBrush="#CFD8DC" BorderThickness="1" CornerRadius="8" Padding="18 8" Margin="0 4 0 10">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="86"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="100"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="32"/>
-                                    <RowDefinition Height="32"/>
-                                    <RowDefinition Height="32"/>
-                                </Grid.RowDefinitions>
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="설비" FontSize="16" Foreground="#78909C" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="txt_ARRV_EQM" FontSize="19" FontWeight="Bold" Foreground="#263238" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="이유" FontSize="16" Foreground="#78909C" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3" x:Name="txt_ARRV_REASON" FontSize="19" FontWeight="Bold" Foreground="#E53935" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="호출" FontSize="16" Foreground="#78909C" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="txt_ARRV_CALL" FontSize="19" FontWeight="Bold" Foreground="#263238" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                                <TextBlock Grid.Row="2" Grid.Column="2" Text="대기시간" FontSize="16" Foreground="#78909C" VerticalAlignment="Center"/>
-                                <TextBlock Grid.Row="2" Grid.Column="3" x:Name="txt_ARRV_WAIT" FontSize="19" FontWeight="Bold" Foreground="#E53935" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Border>
-                        <TextBlock Text="도착자 (여러 명 선택 가능)" FontSize="16" Foreground="#546E7A" Margin="2 0 0 2"/>
-                        <Grid>
-                            <its:ButtonList x:Name="ARRVEMP_LIST" PanelWidth="788" Height="120"/>
-                            <TextBlock x:Name="txt_ARRVEMP_EMPTY" FontSize="18" Foreground="#E53935" TextWrapping="Wrap" Visibility="Collapsed"
-                                       HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"
-                                       Text="이 설비에 등록된 생기팀 사원이 없습니다.&#10;기준정보(설비별 생기팀 호출사원)에서 먼저 등록하세요."/>
-                        </Grid>
-                    </StackPanel>
-
-                    <DockPanel Grid.Row="2" Margin="16 0 16 8" LastChildFill="False">
-                        <its:Button x:Name="btn_ARRV_SAVE" DockPanel.Dock="Right" Label="도착 등록" Width="230" Height="58" SetFontSize="22" CommandName="ADD_ARRIVE" BackColor="#FB8C00"/>
-                        <its:Button DockPanel.Dock="Right" Label="취  소" Width="180" Height="58" SetFontSize="22" CommandName="CLOSE_ARRIVE" BackColor="#90A4AE"/>
                     </DockPanel>
                 </Grid>
             </its:WrapContent>
@@ -208,7 +148,7 @@
                             <its:ButtonList x:Name="R_EQM_LIST" PanelWidth="788" Height="68"/>
                         </StackPanel>
 
-                        <TextBlock Text="수리자 (여러 명 선택 가능, 첫 번째 선택자가 대표 수리자)" FontSize="16" Foreground="#546E7A" Margin="2 4 0 2"/>
+                        <TextBlock Text="인원 (작업장에 배치된 생기팀 · 여러 명 선택 가능, 첫 번째 선택자가 대표 · 도착도 함께 등록)" FontSize="16" Foreground="#546E7A" Margin="2 4 0 2"/>
                         <Grid>
                             <its:ButtonList x:Name="REPEMP_LIST" PanelWidth="788" Height="64"/>
                             <TextBlock x:Name="txt_REPEMP_EMPTY" FontSize="18" Foreground="#78909C" TextWrapping="Wrap" Visibility="Collapsed"
@@ -239,8 +179,12 @@
                     </Grid>
 
                     <StackPanel Grid.Row="1" Margin="16 0 16 0">
+                        <!--종료할 설비 (작업장의 수리 중 설비)-->
+                        <TextBlock Text="종료할 설비 (수리 중인 설비)" FontSize="16" Foreground="#546E7A" Margin="2 0 0 2"/>
+                        <its:ButtonList x:Name="END_EQM_LIST" PanelWidth="788" Height="68"/>
+
                         <!--수리 내용 요약-->
-                        <Border Background="#FFFFFF" BorderBrush="#CFD8DC" BorderThickness="1" CornerRadius="8" Padding="18 6" Margin="0 2 0 12">
+                        <Border Background="#FFFFFF" BorderBrush="#CFD8DC" BorderThickness="1" CornerRadius="8" Padding="18 6" Margin="0 6 0 8">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="86"/>
@@ -266,8 +210,8 @@
                             </Grid>
                         </Border>
 
-                        <TextBlock Text="수리가 끝났으면 [수리종료]를 누르세요." FontSize="22" FontWeight="Bold" Foreground="#263238"
-                                   HorizontalAlignment="Center" Margin="0 40 0 0"/>
+                        <TextBlock x:Name="txt_END_GUIDE" Text="수리가 끝났으면 [수리종료]를 누르세요." FontSize="22" FontWeight="Bold" Foreground="#263238"
+                                   HorizontalAlignment="Center" Margin="0 8 0 0"/>
                     </StackPanel>
 
                     <DockPanel Grid.Row="2" Margin="16 0 16 8" LastChildFill="False">
@@ -335,7 +279,7 @@
                             <TextBlock Text="  ─  " FontSize="18" Foreground="#B0BEC5"/>
                             <TextBlock x:Name="txt_STEP2" Text="② 호출이유" FontSize="18"/>
                             <TextBlock Text="  ─  " FontSize="18" Foreground="#B0BEC5"/>
-                            <TextBlock x:Name="txt_STEP3" Text="③ 호출자" FontSize="18"/>
+                            <TextBlock x:Name="txt_STEP3" Text="③ 호출 대상" FontSize="18"/>
                         </StackPanel>
                     </Grid>
 
@@ -373,7 +317,7 @@
                         </StackPanel>
                     </StackPanel>
 
-                    <!--③ 호출자 + 확인-->
+                    <!--③ 호출 대상(작업장에 배치된 생기팀 전원, 선택 없음) + 확인-->
                     <StackPanel Grid.Row="1" x:Name="STEP3" Margin="16 0 16 0" Visibility="Collapsed">
                         <!--호출 내용 요약: 라벨(회색) / 값(굵게) 정렬-->
                         <Border Background="#FFFFFF" BorderBrush="#CFD8DC" BorderThickness="1" CornerRadius="8" Padding="18 8" Margin="0 4 0 10">
@@ -399,12 +343,14 @@
                                 <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="3" x:Name="txt_INFO_REASON" FontSize="19" FontWeight="Bold" Foreground="#E53935" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
                             </Grid>
                         </Border>
-                        <TextBlock Text="호출자 (설비에 등록된 사원)" FontSize="16" Foreground="#546E7A" Margin="2 0 0 2"/>
-                        <Grid>
-                            <its:ButtonList x:Name="CALLEMP_LIST" PanelWidth="788" Height="100"/>
+                        <TextBlock Text="호출 대상 (작업장에 배치된 생기팀 전원을 호출합니다)" FontSize="16" Foreground="#546E7A" Margin="2 0 0 2"/>
+                        <Grid Height="100">
+                            <Border Background="#FFFFFF" BorderBrush="#CFD8DC" BorderThickness="1" CornerRadius="8" Padding="18 8">
+                                <TextBlock x:Name="txt_CALLEMP_NAMES" FontSize="20" FontWeight="Bold" Foreground="#263238" TextWrapping="Wrap" VerticalAlignment="Center"/>
+                            </Border>
                             <TextBlock x:Name="txt_CALLEMP_EMPTY" FontSize="18" Foreground="#E53935" TextWrapping="Wrap"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"
-                                       Text="이 설비에 등록된 호출자가 없습니다.&#10;기준정보(설비별 생기팀 호출사원)에서 먼저 등록하세요."/>
+                                       Text="이 작업장에 배치된 생기팀 호출사원이 없습니다.&#10;기준정보(설비별 생기팀 호출사원)에서 먼저 등록하세요."/>
                         </Grid>
                     </StackPanel>
 

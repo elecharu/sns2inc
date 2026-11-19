@@ -49,12 +49,6 @@ namespace TML2050
         private Dictionary<string, string> reasonNmDic = new Dictionary<string, string>(); //사유코드 → 사유명
         private Dictionary<string, string> lineNmDic = new Dictionary<string, string>();   //작업장코드 → 작업장명
 
-        //도착 팝업
-        private string arrvCallKey = "";
-        private List<string> arrvEmpKeys = new List<string>();                              //도착자 후보 (버튼 순서)
-        private List<string> arrvEmpSel = new List<string>();                               //선택한 도착자 (여러 명)
-        private Dictionary<string, string> arrvEmpNmDic = new Dictionary<string, string>(); //사원코드 → 이름
-
         //수리시작 팝업
         private string repCallKey = "";                                                     //호출키 ('' = 직접 수리)
         private string repLineKey = "";                                                     //라인 호출이면 호출키 (설비 선택 필요)
@@ -69,6 +63,7 @@ namespace TML2050
         //수리종료 팝업
         private string endRepKey = "";
         private string endEqmNm = "";
+        private List<string> endRepKeys = new List<string>(); //수리 중 설비 버튼 (수리키, 버튼 순서)
 
         //이력조회
         private bool hisReady = false; //팝업 여는 중에는 조건 변경으로 조회하지 않음
@@ -79,6 +74,7 @@ namespace TML2050
 
         //호출 팝업
         private int callStep = 1;
+        private int callEmpCnt = 0; //호출 대상 인원 (작업장에 배치된 생기팀)
         private bool isPopupOpen = false;
         private List<string> selEqmList = new List<string>();                           //선택한 설비코드 (여러 개)
         private HashSet<string> callEqmSet = new HashSet<string>();                     //진행 중인 호출이 있는 설비코드
@@ -142,7 +138,6 @@ namespace TML2050
 
             PANEL_A1.Close();
             PANEL_A2.Close();
-            PANEL_A3.Close();
             PANEL_A4.Close();
             PANEL_A5.Close();
             PANEL_A6.Close();
@@ -219,34 +214,7 @@ namespace TML2050
                 ShowMessageBox("DEL_CALL", "호출을 취소(삭제)할까요?\n" + target);
                 return;
             }
-            else if (commandName == "ARRIVE") //도착
-            {
-                if (!CheckSelCall("CALL")) return;
-                OpenArrivePop();
-            }
-            else if (commandName == "ARRVEMP_LIST") //도착자 선택 (누르면 선택, 다시 누르면 해제)
-            {
-                string empcd = ARRVEMP_LIST.Value;
-                if (arrvEmpSel.Contains(empcd)) arrvEmpSel.Remove(empcd);
-                else arrvEmpSel.Add(empcd);
-                PaintMulti(ARRVEMP_LIST, arrvEmpKeys, arrvEmpSel, COLOR_FILTER, COLOR_FILTER_SELECT);
-            }
-            else if (commandName == "ADD_ARRIVE") //도착 등록
-            {
-                if (arrvEmpSel.Count == 0)
-                {
-                    ShowMessageBox("", "도착자를 선택하세요.");
-                    return;
-                }
-                ShowMessageBox("ADD_ARRIVE", "도착 등록할까요?\n도착자: " + EmpSummary(arrvEmpSel, arrvEmpNmDic));
-                return;
-            }
-            else if (commandName == "CLOSE_ARRIVE")
-            {
-                PANEL_A3.Close();
-                isPopupOpen = false;
-            }
-            else if (commandName == "REPAIR_START") //수리시작: 카드 선택 → 호출 기준, 선택 없음 → 직접 수리
+            else if (commandName == "REPAIR_START") //수리시작: 카드 선택 → 호출 기준(도착 전이면 도착도 함께 등록), 선택 없음 → 직접 수리
             {
                 if (MODEL_S1.GetText("LINECD") == "")
                 {
@@ -290,7 +258,7 @@ namespace TML2050
                 else repEmpSel.Add(empcd);
                 PaintMulti(REPEMP_LIST, repEmpKeys, repEmpSel, COLOR_FILTER, COLOR_FILTER_SELECT);
             }
-            else if (commandName == "ADD_REPAIR") //수리시작 등록
+            else if (commandName == "ADD_REPAIR") //수리시작 등록 (도착 전 호출이면 도착 등록 후 수리시작)
             {
                 if (repEqmcd == "")
                 {
@@ -299,7 +267,7 @@ namespace TML2050
                 }
                 if (repEmpSel.Count == 0)
                 {
-                    ShowMessageBox("", "수리자를 선택하세요.");
+                    ShowMessageBox("", "인원을 선택하세요.");
                     return;
                 }
                 ShowMessageBox("ADD_REPAIR", "수리를 시작할까요?\n" + GetDicText(repEqmNmDic, repEqmcd));
@@ -310,13 +278,26 @@ namespace TML2050
                 PANEL_A4.Close();
                 isPopupOpen = false;
             }
-            else if (commandName == "REPAIR_END") //수리종료
+            else if (commandName == "REPAIR_END") //수리종료: 팝업에서 수리 중 설비 선택 (수리 중 카드를 골랐으면 그 설비 선택된 상태)
             {
-                if (!CheckSelCall("REPAIR")) return;
+                if (!HasRepair())
+                {
+                    ShowMessageBox("", "수리 중인 설비가 없습니다.");
+                    return;
+                }
                 OpenEndPop(GetSelRow());
+            }
+            else if (commandName == "END_EQM_LIST") //종료할 설비 선택
+            {
+                ShowEndInfo(END_EQM_LIST.Value);
             }
             else if (commandName == "END_REPAIR") //수리종료 등록 (종료시각만 기록)
             {
+                if (endRepKey == "")
+                {
+                    ShowMessageBox("", "종료할 설비를 선택하세요.");
+                    return;
+                }
                 ShowMessageBox("END_REPAIR", "수리를 종료할까요?\n" + endEqmNm);
                 return;
             }
@@ -533,17 +514,12 @@ namespace TML2050
                 }
                 else
                 {
-                    if (CALLEMP_LIST.Count == 0)
+                    if (callEmpCnt == 0)
                     {
-                        ShowMessageBox("", "등록된 호출자가 없습니다.\n기준정보에서 먼저 등록하세요.");
+                        ShowMessageBox("", "작업장에 배치된 생기팀이 없습니다.\n기준정보에서 먼저 등록하세요.");
                         return;
                     }
-                    if (CALLEMP_LIST.Value == "")
-                    {
-                        ShowMessageBox("", "호출자를 선택하세요.");
-                        return;
-                    }
-                    ShowMessageBox("ADD_CALL", "호출하시겠습니까?");
+                    ShowMessageBox("ADD_CALL", "생기팀 " + callEmpCnt + "명을 모두 호출하시겠습니까?");
                     return;
                 }
             }
@@ -584,7 +560,7 @@ namespace TML2050
                 ItsMaria.Set("TML2050_R01", "ADD_REPAIR");
                 ItsMaria.AddOne("EQMCALLKEY", repCallKey);
                 ItsMaria.AddOne("EQMCD", repEqmcd);
-                foreach (string empcd in repEmpSel) //첫 번째가 대표 수리자
+                foreach (string empcd in repEmpSel) //첫 번째가 대표 수리자 (도착 전 호출이면 도착자로도 등록)
                 {
                     ItsMaria.AddList("EMPCD_LIST", empcd);
                 }
@@ -600,26 +576,6 @@ namespace TML2050
                 selCardKey = repCallKey + "|" + repEqmcd; //수리 시작한 카드 선택
                 LoadCalls(true);
                 ShowMessageBox("", "수리를 시작했습니다.");
-            }
-            else if (commandName == "ADD_ARRIVE")
-            {
-                ItsMaria.Set("TML2050_R01", "ADD_ARRIVE");
-                ItsMaria.AddOne("EQMCALLKEY", arrvCallKey);
-                foreach (string empcd in arrvEmpSel)
-                {
-                    ItsMaria.AddList("EMPCD_LIST", empcd);
-                }
-                ItsMaria.Call();
-                if (ItsMaria.IsError)
-                {
-                    ShowMessageBox("", ItsMaria.ErrMessage);
-                    return;
-                }
-
-                PANEL_A3.Close();
-                isPopupOpen = false;
-                LoadCalls(true);
-                ShowMessageBox("", "도착 등록되었습니다.");
             }
             else if (commandName == "DEL_CALL")
             {
@@ -647,7 +603,7 @@ namespace TML2050
                 ItsMaria.AddOne("LINECD", MODEL_S1.GetValue("LINECD"));
                 ItsMaria.AddOne("EQMTP", EQMTP_LIST.Value);
                 ItsMaria.AddOne("EQMGROUP1", EQMGROUP1_LIST.Value);
-                ItsMaria.AddOne("EMPCD_CALL", CALLEMP_LIST.Value);
+                ItsMaria.AddOne("EMPCD_CALL", ItsLocalInfo.TMLEMP); //호출 대상은 작업장에 배치된 생기팀 전원, 호출자는 단말기 작업자
                 ItsMaria.AddOne("REMARK", GetReasonText());
                 if (selEqmList.Count == 0)
                 {
@@ -735,78 +691,6 @@ namespace TML2050
             Dispatcher.BeginInvoke(new Action(() => ApplyFont(PANEL_A2)), DispatcherPriority.Loaded);
         }
 
-        // ==================================================================== 도착 팝업
-
-        //선택한 카드의 호출로 도착 등록 팝업 열기 (도착은 호출 단위 → 같이 호출된 설비 모두 도착)
-        private void OpenArrivePop()
-        {
-            int sel = GetSelRow();
-            if (sel < 0) return;
-
-            arrvCallKey = ItsData.GetText(callTable, sel, "EQMCALLKEY");
-
-            //같이 호출된 설비 이름
-            List<string> eqmNames = new List<string>();
-            for (int i = 0; i < callTable.Rows.Count; i++)
-            {
-                if (ItsData.GetText(callTable, i, "EQMCALLKEY") != arrvCallKey) continue;
-                eqmNames.Add(ItsData.GetText(callTable, i, "EQMCD") == ""
-                    ? ItsData.GetText(callTable, i, "EQMGROUP1NM") + " (설비 모름)"
-                    : ItsData.GetText(callTable, i, "EQMNM"));
-            }
-
-            int eqmCnt = 0;
-            int.TryParse(ItsData.GetText(callTable, sel, "EQMCNT"), out eqmCnt);
-            txt_ARRV_NOTE.Text = eqmCnt > 1 ? "같이 호출된 설비 " + eqmCnt + "대가 모두 도착 처리됩니다" : "";
-
-            string callTime = ItsData.GetText(callTable, sel, "CALLTIME");
-            txt_ARRV_EQM.Text = string.Join(", ", eqmNames.ToArray());
-            txt_ARRV_REASON.Text = ItsData.GetText(callTable, sel, "REMARK");
-            txt_ARRV_CALL.Text = ItsData.GetText(callTable, sel, "EMPNM_CALL") + "  " + (callTime.Length >= 16 ? callTime.Substring(11, 5) : callTime);
-            txt_ARRV_WAIT.Text = ItsData.GetText(callTable, sel, "ELAPSEMIN") + "분";
-
-            //도착자 후보: 설비별 생기팀 호출사원(MSTEQM_CALLEMP)
-            ARRVEMP_LIST.Clear();
-            arrvEmpKeys.Clear();
-            arrvEmpSel.Clear();
-            arrvEmpNmDic.Clear();
-
-            ItsMaria.Set("TML2050_R01", "LIST_ARRVEMP");
-            ItsMaria.AddOne("EQMCALLKEY", arrvCallKey);
-            DataTable dt = ItsMaria.Call().Tables[0];
-            if (ItsMaria.IsError)
-            {
-                ShowMessageBox("", ItsMaria.ErrMessage);
-                return;
-            }
-
-            ARRVEMP_LIST.ButtonWidth = "200";
-            ARRVEMP_LIST.ButtonHeight = "56";
-            ARRVEMP_LIST.ButtonBackColor = COLOR_FILTER;
-            ARRVEMP_LIST.ButtonSelectBackColor = COLOR_FILTER_SELECT;
-
-            for (int i = 0; i < dt.Rows.Count; i++)
-            {
-                string empcd = ItsData.GetText(dt, i, "EMPCD");
-                arrvEmpKeys.Add(empcd);
-                arrvEmpNmDic[empcd] = ItsData.GetText(dt, i, "EMPNM");
-                ARRVEMP_LIST.AddButton(ItsData.GetText(dt, i, "EMPNM"), empcd);
-            }
-            StyleButtonList(ARRVEMP_LIST, 20);
-
-            //1명뿐이면 자동 선택, 로그인 작업자가 후보에 있으면 기본 선택
-            if (dt.Rows.Count == 1) arrvEmpSel.Add(arrvEmpKeys[0]);
-            else if (arrvEmpKeys.Contains(ItsLocalInfo.TMLEMP)) arrvEmpSel.Add(ItsLocalInfo.TMLEMP);
-            PaintMulti(ARRVEMP_LIST, arrvEmpKeys, arrvEmpSel, COLOR_FILTER, COLOR_FILTER_SELECT);
-
-            txt_ARRVEMP_EMPTY.Visibility = dt.Rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-
-            PANEL_A3.Show();
-            isPopupOpen = true;
-
-            Dispatcher.BeginInvoke(new Action(() => ApplyFont(PANEL_A3)), DispatcherPriority.Loaded);
-        }
-
         // ==================================================================== 수리시작 팝업
 
         //sel >= 0: 선택한 호출 카드 기준, sel < 0: 직접 수리 (작업장 설비 선택)
@@ -847,11 +731,13 @@ namespace TML2050
                     //라인 호출: 그 라인 설비 중에서 수리할 설비 선택
                     repLineKey = repCallKey;
                     REP_EQM.Visibility = Visibility.Visible;
+                    REPEMP_LIST.Height = 64; //설비 선택 영역이 있어 남는 높이만
                     LoadRepEqm(ItsData.GetText(callTable, sel, "EQMTP"), ItsData.GetText(callTable, sel, "EQMGROUP1"));
                 }
                 else
                 {
                     REP_EQM.Visibility = Visibility.Collapsed;
+                    REPEMP_LIST.Height = 150; //설비 선택 영역이 없으므로 인원 영역을 2줄 높이로
                     repEqmcd = eqmcd;
                     repEqmNmDic[eqmcd] = ItsData.GetText(callTable, sel, "EQMNM");
                     LoadRepEmp();
@@ -865,6 +751,7 @@ namespace TML2050
                 REP_SUMMARY.Visibility = Visibility.Collapsed;
                 REP_FILTER.Visibility = Visibility.Visible;
                 REP_EQM.Visibility = Visibility.Visible;
+                REPEMP_LIST.Height = 80; //설비구분·라인·설비 선택 아래 남는 높이
 
                 ItsMaria.Set("TML2050_R01", "LIST_EQMTP");
                 ItsMaria.AddOne("LINECD", MODEL_S1.GetValue("LINECD"));
@@ -962,12 +849,13 @@ namespace TML2050
             StyleButtonList(R_EQM_LIST, 17);
         }
 
-        //수리자 후보: 설비별 생기팀 호출사원(MSTEQM_CALLEMP). 이 호출의 도착자는 기본 선택
+        //인원 후보: 작업장에 배치된 생기팀(작업장 설비의 MSTEQM_CALLEMP). 이 호출의 도착자는 기본 선택
         private void LoadRepEmp()
         {
             ClearRepEmp("");
 
             ItsMaria.Set("TML2050_R01", "LIST_REPEMP");
+            ItsMaria.AddOne("LINECD", MODEL_S1.GetValue("LINECD"));
             ItsMaria.AddOne("EQMCALLKEY", repCallKey);
             ItsMaria.AddOne("EQMCD", repEqmcd);
             DataTable dt = ItsMaria.Call().Tables[0];
@@ -1002,7 +890,7 @@ namespace TML2050
 
             if (dt.Rows.Count == 0)
             {
-                txt_REPEMP_EMPTY.Text = "이 설비에 등록된 생기팀 사원이 없습니다. 기준정보(설비별 생기팀 호출사원)에서 먼저 등록하세요.";
+                txt_REPEMP_EMPTY.Text = "이 작업장에 배치된 생기팀 사원이 없습니다. 기준정보(설비별 생기팀 호출사원)에서 먼저 등록하세요.";
                 txt_REPEMP_EMPTY.Visibility = Visibility.Visible;
             }
         }
@@ -1028,11 +916,63 @@ namespace TML2050
 
         // ==================================================================== 수리종료 팝업
 
+        //sel: 현황판에서 고른 카드 (수리 중 카드면 그 설비를 선택한 상태로 열기)
         private void OpenEndPop(int sel)
         {
-            if (sel < 0) return;
+            //종료할 설비 목록: 현황판의 수리 중 설비 (설비명만 표시)
+            END_EQM_LIST.Clear();
+            endRepKeys.Clear();
+            END_EQM_LIST.ButtonWidth = "190";
+            END_EQM_LIST.ButtonHeight = "60";
+            END_EQM_LIST.ButtonBackColor = COLOR_EQM;
+            END_EQM_LIST.ButtonSelectBackColor = COLOR_EQM_SELECT;
+            for (int i = 0; i < callTable.Rows.Count; i++)
+            {
+                if (ItsData.GetText(callTable, i, "CALLSTAT") != "REPAIR") continue;
+                string repKey = ItsData.GetText(callTable, i, "EQMREPKEY");
+                endRepKeys.Add(repKey);
+                END_EQM_LIST.AddButton(ItsData.GetText(callTable, i, "EQMNM"), repKey);
+            }
+            StyleButtonList(END_EQM_LIST, 17);
 
-            endRepKey = ItsData.GetText(callTable, sel, "EQMREPKEY");
+            string selRepKey = sel >= 0 && ItsData.GetText(callTable, sel, "CALLSTAT") == "REPAIR" ? ItsData.GetText(callTable, sel, "EQMREPKEY") : "";
+            if (selRepKey == "" && endRepKeys.Count == 1) selRepKey = endRepKeys[0]; //1대뿐이면 자동 선택
+            ShowEndInfo(selRepKey);
+            if (selRepKey != "") END_EQM_LIST.Value = selRepKey;
+
+            PANEL_A5.Show();
+            isPopupOpen = true;
+
+            Dispatcher.BeginInvoke(new Action(() => ApplyFont(PANEL_A5)), DispatcherPriority.Loaded);
+        }
+
+        //선택한 수리 중 설비의 수리 내용 표시 (repKey '' = 선택 없음)
+        private void ShowEndInfo(string repKey)
+        {
+            int sel = -1;
+            for (int i = 0; i < callTable.Rows.Count; i++)
+            {
+                if (repKey != "" && ItsData.GetText(callTable, i, "CALLSTAT") == "REPAIR" && ItsData.GetText(callTable, i, "EQMREPKEY") == repKey)
+                {
+                    sel = i;
+                    break;
+                }
+            }
+
+            if (sel < 0)
+            {
+                endRepKey = "";
+                endEqmNm = "";
+                txt_END_EQM.Text = "";
+                txt_END_EMP.Text = "";
+                txt_END_GUBUN.Text = "";
+                txt_END_START.Text = "";
+                txt_END_ELAPSE.Text = "";
+                txt_END_GUIDE.Text = "종료할 설비를 선택하세요.";
+                return;
+            }
+
+            endRepKey = repKey;
             endEqmNm = ItsData.GetText(callTable, sel, "EQMNM");
             bool isDirect = ItsData.GetText(callTable, sel, "EQMCALLKEY") == "";
             string repStart = ItsData.GetText(callTable, sel, "REPSTIME");
@@ -1044,11 +984,17 @@ namespace TML2050
             txt_END_GUBUN.Text = isDirect ? "직접 수리" : "호출 (" + ItsData.GetText(callTable, sel, "REMARK") + ")";
             txt_END_START.Text = repStart.Length >= 16 ? repStart.Substring(11, 5) : repStart;
             txt_END_ELAPSE.Text = ItsData.GetText(callTable, sel, "ELAPSEMIN") + "분";
+            txt_END_GUIDE.Text = "수리가 끝났으면 [수리종료]를 누르세요.";
+        }
 
-            PANEL_A5.Show();
-            isPopupOpen = true;
-
-            Dispatcher.BeginInvoke(new Action(() => ApplyFont(PANEL_A5)), DispatcherPriority.Loaded);
+        //현황판에 수리 중 설비가 있는지
+        private bool HasRepair()
+        {
+            for (int i = 0; i < callTable.Rows.Count; i++)
+            {
+                if (ItsData.GetText(callTable, i, "CALLSTAT") == "REPAIR") return true;
+            }
+            return false;
         }
 
         // ==================================================================== 이력조회 화면
@@ -1129,14 +1075,6 @@ namespace TML2050
             MODEL_H1.SetData(dt);
         }
 
-        //확인 메시지용 사람 요약: "김다정" / "김다정 외 2명" (메시지 한 줄이 길어지지 않게)
-        private string EmpSummary(List<string> sel, Dictionary<string, string> nmDic)
-        {
-            if (sel.Count == 0) return "";
-            string first = GetDicText(nmDic, sel[0]);
-            return sel.Count == 1 ? first : first + " 외 " + (sel.Count - 1) + "명";
-        }
-
         private string ShortTime(string t)
         {
             return t.Length >= 16 ? t.Substring(5, 11) : t; //yyyy-MM-dd HH:mm → MM-dd HH:mm
@@ -1180,7 +1118,7 @@ namespace TML2050
         {
             PANEL_CARDS.Children.Clear();
 
-            int cntCall = 0, cntArrive = 0, cntRepair = 0;
+            int cntCall = 0, cntRepair = 0;
             bool hasSel = false;
             for (int i = 0; i < callTable.Rows.Count; i++)
             {
@@ -1192,8 +1130,7 @@ namespace TML2050
             for (int i = 0; i < callTable.Rows.Count; i++)
             {
                 string stat = ItsData.GetText(callTable, i, "CALLSTAT");
-                if (stat == "CALL") cntCall++;
-                else if (stat == "ARRIVE") cntArrive++;
+                if (stat == "CALL" || stat == "ARRIVE") cntCall++; //도착은 수리시작과 함께 등록되므로 예전 도착 상태도 호출로 집계
                 else if (stat == "REPAIR") cntRepair++;
 
                 PANEL_CARDS.Children.Add(MakeCard(i, selCallKey));
@@ -1206,8 +1143,8 @@ namespace TML2050
             }
             else
             {
-                txt_SUMMARY.Text = string.Format("진행 중 호출 설비 {0}대   (호출 {1} · 도착 {2} · 수리중 {3})",
-                                                 callTable.Rows.Count, cntCall, cntArrive, cntRepair);
+                txt_SUMMARY.Text = string.Format("진행 중 호출 설비 {0}대   (호출 {1} · 수리중 {2})",
+                                                 callTable.Rows.Count, cntCall, cntRepair);
                 txt_EMPTY.Text = callTable.Rows.Count == 0 ? "진행 중인 호출이 없습니다.\n[호출] 버튼으로 생산기술팀을 부를 수 있습니다." : "";
             }
             txt_EMPTY.Visibility = txt_EMPTY.Text == "" ? Visibility.Collapsed : Visibility.Visible;
@@ -1304,9 +1241,8 @@ namespace TML2050
         {
             string stat = GetSelCallStat();
             SetActionButton(btn_CALL_CANCEL, stat == "CALL", "#6D4C41");
-            SetActionButton(btn_ARRIVE, stat == "CALL", COLOR_ARRIVE);
             SetActionButton(btn_REPAIR_START, stat == "" || stat == "CALL" || stat == "ARRIVE", COLOR_REPAIR); //선택 없음 = 직접 수리
-            SetActionButton(btn_REPAIR_END, stat == "REPAIR", COLOR_DONE);
+            SetActionButton(btn_REPAIR_END, HasRepair(), COLOR_DONE); //수리 중 설비가 있으면 팝업에서 설비 선택
         }
 
         private void SetActionButton(ITSLIB.Button btn, bool on, string color)
@@ -1368,7 +1304,8 @@ namespace TML2050
         private void OpenCallPop()
         {
             MODEL_A1.InitData();
-            CALLEMP_LIST.Clear();
+            callEmpCnt = 0;
+            txt_CALLEMP_NAMES.Text = "";
 
             LoadReasons();
 
@@ -1410,24 +1347,15 @@ namespace TML2050
             }
         }
 
-        //호출자 목록: MSTEQM_CALLEMP 에 등록된 사원만 (설비를 고르면 그 설비, 라인 호출이면 라인 전체 설비 기준)
+        //호출 대상: 작업장에 배치된 생기팀 전원 (작업장 설비의 MSTEQM_CALLEMP, 선택 없음)
         private void LoadCallEmp()
         {
-            CALLEMP_LIST.Clear();
+            callEmpCnt = 0;
+            txt_CALLEMP_NAMES.Text = "";
             txt_CALLEMP_EMPTY.Visibility = Visibility.Collapsed;
 
             ItsMaria.Set("TML2050_R01", "LIST_CALLEMP");
             ItsMaria.AddOne("LINECD", MODEL_S1.GetValue("LINECD"));
-            ItsMaria.AddOne("EQMTP", EQMTP_LIST.Value);
-            ItsMaria.AddOne("EQMGROUP1", EQMGROUP1_LIST.Value);
-            if (selEqmList.Count == 0)
-            {
-                ItsMaria.AddOne("EQMCD_LIST", "");
-            }
-            foreach (string eqmcd in selEqmList)
-            {
-                ItsMaria.AddList("EQMCD_LIST", eqmcd);
-            }
             DataTable dt = ItsMaria.Call().Tables[0];
             if (ItsMaria.IsError)
             {
@@ -1435,37 +1363,21 @@ namespace TML2050
                 return;
             }
 
-            CALLEMP_LIST.ButtonWidth = "200";
-            CALLEMP_LIST.ButtonHeight = "56";
-            CALLEMP_LIST.ButtonBackColor = COLOR_FILTER;
-            CALLEMP_LIST.ButtonSelectBackColor = COLOR_FILTER_SELECT;
-
-            bool hasTmlEmp = false;
+            List<string> names = new List<string>();
             for (int i = 0; i < dt.Rows.Count; i++)
             {
-                string empcd = ItsData.GetText(dt, i, "EMPCD");
-                if (empcd == ItsLocalInfo.TMLEMP) hasTmlEmp = true;
-                CALLEMP_LIST.AddButton(ItsData.GetText(dt, i, "EMPNM"), empcd);
+                names.Add(ItsData.GetText(dt, i, "EMPNM"));
             }
-            StyleButtonList(CALLEMP_LIST, 20);
+            callEmpCnt = names.Count;
+            txt_CALLEMP_NAMES.Text = callEmpCnt == 0 ? "" : string.Join(", ", names.ToArray()) + "  (" + callEmpCnt + "명)";
 
-            //1명뿐이면 자동 선택, 로그인 작업자가 목록에 있으면 그 사람을 기본 선택
-            if (dt.Rows.Count == 1)
-            {
-                CALLEMP_LIST.Value = ItsData.GetText(dt, 0, "EMPCD");
-            }
-            else if (hasTmlEmp)
-            {
-                CALLEMP_LIST.Value = ItsLocalInfo.TMLEMP;
-            }
-
-            txt_CALLEMP_EMPTY.Visibility = dt.Rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            txt_CALLEMP_EMPTY.Visibility = callEmpCnt == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         //지난 단계는 회색 ✔, 지금 단계는 빨강 굵게, 남은 단계는 회색
         private void SetStepText(TextBlock tb, int nowStep, int myStep)
         {
-            string[] names = { "", "설비", "호출이유", "호출자" };
+            string[] names = { "", "설비", "호출이유", "호출 대상" };
             string[] nums = { "", "①", "②", "③" };
 
             tb.Text = (myStep < nowStep ? "✔ " : nums[myStep] + " ") + names[myStep];

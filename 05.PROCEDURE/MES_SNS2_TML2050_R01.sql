@@ -2,7 +2,7 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`TML2050_R01`(
 -- *****************************************************************************
 -- Comment: 생산기술팀 호출 (POP)
 -- Create: 2026-10-22 : 김영철
--- Modify: 
+-- Modify: 2026-11-19 한성수 호출 대상 작업장 배치 생기팀 전원으로 변경, 수리시작 인원 작업장 기준으로 변경
 -- *****************************************************************************
   IN $CALLTYPE VARCHAR(50),
   IN $LINECD VARCHAR(100),
@@ -221,9 +221,12 @@ WHEN 'LIST_REASON' THEN -- 호출이유 목록 (공통코드 EQMCALLRSN: 생기�
   ORDER BY A.SORTNO, A.TPCD;
 
 -- ****************************************************************************
-WHEN 'LIST_CALLEMP' THEN -- 호출자 목록 (MSTEQM_CALLEMP 에 등록된 사원만)
-  -- 설비를 고른 경우: 고른 설비에 등록된 사원
-  -- 설비를 모르는 경우(라인 호출): 그 라인 설비에 등록된 사원
+WHEN 'LIST_CALLEMP' THEN -- 호출 대상 (작업장에 배치된 생기팀 전원 = 작업장 설비의 MSTEQM_CALLEMP)
+
+  IF $LINECD = '' THEN
+    CALL COMERR('작업장을 선택하세요.');
+    LEAVE PROC;
+  END IF;
 
   SELECT
     C.EMPCD, IFNULL(P.EMPNM, C.EMPCD) AS EMPNM
@@ -231,9 +234,6 @@ WHEN 'LIST_CALLEMP' THEN -- 호출자 목록 (MSTEQM_CALLEMP 에 등록된 사�
   INNER JOIN MSTEQM AS M ON C.EQMCD = M.FANO
   LEFT JOIN MSTEMP AS P ON C.EMPCD = P.EMPCD
   WHERE M.LINECD = $LINECD
-    AND M.EQMTP = $EQMTP
-    AND M.EQMGROUP1 = $EQMGROUP1
-    AND ($EQMCD_LIST = '' OR FIND_IN_SET(C.EQMCD, REPLACE($EQMCD_LIST, '»', ',')) > 0)
   GROUP BY C.EMPCD, P.EMPNM
   ORDER BY P.EMPNM, C.EMPCD;
 
@@ -245,20 +245,12 @@ WHEN 'ADD_CALL' THEN -- 호출 등록
     LEAVE PROC;
   END IF;
 
-  IF $EMPCD_CALL = '' THEN
-    CALL COMERR('호출자를 선택하세요.');
-    LEAVE PROC;
-  END IF;
-
-  -- 호출자는 MSTEQM_CALLEMP 에 등록된 사원만 허용
+  -- 호출 대상 = 작업장에 배치된 생기팀 전원 (인원 선택 없음), $EMPCD_CALL = 단말기 작업자
   IF NOT EXISTS (SELECT 1 FROM MSTEQM_CALLEMP AS C
                   INNER JOIN MSTEQM AS M ON C.EQMCD = M.FANO
-                  WHERE C.EMPCD = $EMPCD_CALL
-                    AND M.LINECD = $LINECD
-                    AND M.EQMTP = $EQMTP
-                    AND M.EQMGROUP1 = $EQMGROUP1
-                    AND ($EQMCD_LIST = '' OR FIND_IN_SET(C.EQMCD, REPLACE($EQMCD_LIST, '»', ',')) > 0)) THEN
-    CALL COMERR('선택한 설비에 등록되지 않은 호출자입니다.');
+                  WHERE M.LINECD = $LINECD) THEN
+    CALL COMERR(CONCAT('이 작업장에 배치된 생기팀 호출사원이 없습니다.'
+                      , '\n기준정보(설비별 생기팀 호출사원)에서 먼저 등록하세요.'));
     LEAVE PROC;
   END IF;
 
@@ -432,8 +424,8 @@ WHEN 'ADD_ARRIVE' THEN -- 도착 등록 (호출 단위: 같이 호출된 설비 
   END WHILE;
 
 -- ****************************************************************************
-WHEN 'LIST_REPEMP' THEN -- 수리자 후보 (MSTEQM_CALLEMP 생기팀 호출사원)
-  -- 설비를 정했으면 그 설비 기준, 라인 호출이라 설비가 아직 없으면 그 라인 설비 기준
+WHEN 'LIST_REPEMP' THEN -- 수리시작 인원 후보 (작업장에 배치된 생기팀 = 작업장 설비의 MSTEQM_CALLEMP)
+  -- 선택한 인원이 도착자(도착 전 호출)와 수리자로 함께 등록됨
   -- ARRVYN: 이 호출의 도착자 (화면에서 기본 선택)
 
   SELECT
@@ -444,12 +436,7 @@ WHEN 'LIST_REPEMP' THEN -- 수리자 후보 (MSTEQM_CALLEMP 생기팀 호출사�
   FROM MSTEQM_CALLEMP AS C
   INNER JOIN MSTEQM AS M ON C.EQMCD = M.FANO
   LEFT JOIN MSTEMP AS P ON C.EMPCD = P.EMPCD
-  WHERE ($EQMCD <> '' AND C.EQMCD = $EQMCD)
-     OR ($EQMCD = '' AND EXISTS (SELECT 1 FROM EQMCALLEMP AS H
-                                  WHERE H.EQMCALLKEY = $EQMCALLKEY
-                                    AND H.LINECD = M.LINECD
-                                    AND H.EQMTP = M.EQMTP
-                                    AND H.EQMGROUP1 = M.EQMGROUP1))
+  WHERE M.LINECD = $LINECD
   GROUP BY C.EMPCD, P.EMPNM
   ORDER BY P.EMPNM, C.EMPCD;
 
