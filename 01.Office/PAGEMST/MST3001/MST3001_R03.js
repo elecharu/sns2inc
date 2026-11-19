@@ -31,8 +31,8 @@ ItsPage.Load = function () {
     ]);
     */
 
-    // INC 법인 고정
-    ItsCombo.SetValue('cmb_COMPANYCD', '60');
+    // 공장 기본값 (법인은 공장의 법인코드를 씀)
+    ItsCombo.SetValue('cmb_FACTORYCD', '07');
 
     // 2026-10-13 [설비부품정보] 품목유형 설비자재(DM100700) 고정값 설정 및 품목검색 연동
     ItsCombo.SetValue('sdiv1_combo_ITEMCG', 'DM100700');
@@ -131,6 +131,7 @@ ItsButton.EventSearch = function () {
 
     var maria = new ItsMaria('MST3001_R03', 'SEL_ITEM');
     maria.AddPanel('sdiv1');
+    maria.AddParam('COMPANYCD', ItsFind.GetRef01('sdiv1_find_ITEMID'));   // 법인 = 선택한 공장의 법인코드
     maria.CallProc();
     if (maria.isError) {
         maria.ShowErrMsg();
@@ -168,6 +169,7 @@ ItsButton.EventSave = function () {
     ItsMsg.Confirm('선택된 설비부품 ' + arrRows.length + '건을 저장하시겠습니까?', function () {
         var maria = new ItsMaria('MST3001_R03', 'SAVE_ITEM');
         maria.AddPanel('sdiv1');
+        maria.AddParam('COMPANYCD', ItsFind.GetRef01('sdiv1_find_ITEMID'));   // 법인 = 선택한 공장의 법인코드
         for (var i = 0; i < arrRows.length; i++) {
             var row = arrRows[i];
             maria.AddList('ITEMID_LIST', (row.ITEMID || '').trim());
@@ -190,6 +192,14 @@ ItsButton.EventSave = function () {
 // 2026-10-13 [설비부품정보] 품목유형 변경 시 품목검색 조건 연동
 ItsCombo.Event('sdiv1_combo_ITEMCG').onChanged = function (value) {
     ItsFind.SetRef02('sdiv1_find_ITEMID', value);
+};
+
+/* 공장이 정해지면 품목 find 에 법인(REF01)·공장(REF03) 넣기. 법인코드는 공장 콤보 목록 줄의 REF01(DC_COMBO FACTORYCD) */
+ItsCombo.Event('cmb_FACTORYCD').onChanged = function (value) {
+    var companycd = $('#cmb_FACTORYCD').siblings('ul').children('li').filter('[data-value="' + value + '"]').attr('data-ref01');
+    if (companycd == undefined || companycd == 'undefined') companycd = '';
+    ItsFind.SetRef01('sdiv1_find_ITEMID', companycd);
+    ItsFind.SetRef03('sdiv1_find_ITEMID', value);
 };
 
 // 로케이션 기준정보 관리 주석처리 (팝업 열기·조회·행추가·저장·삭제)

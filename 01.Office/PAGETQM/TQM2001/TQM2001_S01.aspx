@@ -15,6 +15,7 @@
         <Its:combo runat="server" Label="판정유형" ID="cmb_JUDGETP" Field="JUDGETP" GPCD="*JUDGETP" />
         <Its:combo runat="server" Label="후처리" ID="cmb_PROCYN" Field="PROCYN" GPCD="SELECT '전체', '' UNION SELECT '미처리', 'N' UNION SELECT '처리완료', 'Y'" />
         <Its:combo runat="server" Label="품목유형" ID="cmb_ITEMCG" Field="ITEMCG" GPCD="*DM100" />
+        <Its:combo runat="server" Label="공장" ID="cmb_FACTORYCD" Field="FACTORYCD" GPCD="FACTORYCD" InputWidth="120"/>
         <Its:find runat="server" Label="품목" ID="find_ITEMID" Field="ITEMID" GPCD="ITEMID" NameWidth="150" />
     </Its:div>
 </asp:Content>

@@ -60,15 +60,17 @@ ItsPage.Load = function () {
         return ret;
     };
 
-    // 2026-10-28 [외주처 소모품] 법인 60 / 공장 INC 2공장(07) 디폴트, 품목유형 소모공구류(DM100990) 고정 및 품목검색 연동
-    ItsCombo.SetValue('cmb_COMPANYCD', '60');
+    // 2026-10-28 [외주처 소모품] 공장 INC 2공장(07) 디폴트, 품목유형 소모공구류(DM100990) 고정 및 품목검색 연동 (법인은 공장의 법인코드를 씀)
+    ItsCombo.SetValue('cmb_FACTORYCD', '07');
     ItsFind.SetRef02('sdiv1_find_ITEMID', 'DM100990');
 };
 
-// 2026-10-28 [외주처 소모품] 법인 변경 시 공장 목록을 해당 법인 공장으로 갱신
-ItsCombo.Event('cmb_COMPANYCD').onChanged = function (value) {
-    ItsCombo.SetRef01('cmb_FACTORYCD', value);
-    ItsCombo.SetValueByIndex('cmb_FACTORYCD', 2);
+/* 공장이 정해지면 품목 find 에 법인(REF01)·공장(REF03) 넣기. 법인코드는 공장 콤보 목록 줄의 REF01(DC_COMBO FACTORYCD) */
+ItsCombo.Event('cmb_FACTORYCD').onChanged = function (value) {
+    var companycd = $('#cmb_FACTORYCD').siblings('ul').children('li').filter('[data-value="' + value + '"]').attr('data-ref01');
+    if (companycd == undefined || companycd == 'undefined') companycd = '';
+    ItsFind.SetRef01('sdiv1_find_ITEMID', companycd);
+    ItsFind.SetRef03('sdiv1_find_ITEMID', value);
 };
 
 // 2026-10-28 [외주처 소모품] INC 2공장 소모품 조회 (첫 행 선택 시 오른쪽에 사용위치 조회)
@@ -76,6 +78,7 @@ ItsButton.EventSearch = function () {
 
     var maria = new ItsMaria('MST3001_R05', 'SEL_ITEM');
     maria.AddPanel('sdiv1');
+    maria.AddParam('COMPANYCD', ItsFind.GetRef01('sdiv1_find_ITEMID'));   // 법인 = 선택한 공장의 법인코드
     maria.CallProc();
     if (maria.isError) {
         maria.ShowErrMsg();

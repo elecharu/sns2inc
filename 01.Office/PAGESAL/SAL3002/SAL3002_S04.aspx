@@ -14,6 +14,7 @@
         <Its:dateRange runat="server" Label="출하일자" ID="dr_DATE" FieldFrom="SDATE" FieldTo="EDATE" />
         <Its:combo runat="server" Label="구분" ID="cmb_DEBC" Field="DEBC" GPCD="*SD300" />
         <Its:find runat="server" Label="고객사" ID="find_CUSTCD" Field="CUSTCD" REF01="60" GPCD="CUSTCD_COMPANY" />
+        <Its:combo runat="server" Label="공장" ID="cmb_FACTORYCD" Field="FACTORYCD" GPCD="FACTORYCD" InputWidth="120"/>
         <Its:find runat="server" Label="품목" ID="find_ITEMID" Field="ITEMID" GPCD="ITEMID" />
     </Its:div>
 </asp:Content>

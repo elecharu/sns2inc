@@ -9,9 +9,9 @@
 <%-- SEARCH --%>
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" Runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
-        <Its:combo runat="server" Label="법인" ID="cmb_COMPANYCD" Field="COMPANYCD" GPCD="COMPANYCD" Value="60" InputWidth="120" ReadOnly="true"/>
+        <Its:combo runat="server" Label="공장" ID="cmb_FACTORYCD" Field="FACTORYCD" GPCD="FACTORYCD" InputWidth="120"/>
         <Its:combo runat="server" Label="품목유형" ID="sdiv1_combo_ITEMCG" Field="ITEMCG" GPCD="DM100" Value="DM100700" ReadOnly="true"/>
-        <Its:find runat="server" Label="품목" ID="sdiv1_find_ITEMID" Field="ITEMID" GPCD="ITEMID" REF01="60" REF02="DM100700"/>
+        <Its:find runat="server" Label="품목" ID="sdiv1_find_ITEMID" Field="ITEMID" GPCD="ITEMID" REF02="DM100700"/>
         <Its:check runat="server" Label="종료 여부" ID="sdiv1_check_ENDYN" Field="ENDYN" Value="N"/>
         <%-- <Its:button runat="server" Label="로케이션 기준정보 관리" ID="btn_LOCA_MNG" Float="right" MarginRight="10" MarginTop="5" BackColor="CustomButton2" /> --%>
     </Its:div>

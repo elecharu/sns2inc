@@ -11,6 +11,7 @@
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
         <Its:combo runat="server" Label="품목유형" ID="cmb_ITEMCG" Field="ITEMCG" GPCD="*DM100" />
+        <Its:combo runat="server" Label="공장" ID="cmb_FACTORYCD" Field="FACTORYCD" GPCD="FACTORYCD" InputWidth="120"/>
         <Its:find runat="server" Label="품목" ID="find_ITEMID" Field="ITEMID" GPCD="ITEMID" />
     </Its:div>
 </asp:Content>

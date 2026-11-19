@@ -12,6 +12,7 @@
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
         <Its:dateRange runat="server" Label="조회기간" FieldFrom="SDATE" FieldTo="EDATE" ID="dr_DATE" />
         <Its:combo runat="server" Label="품목유형" ID="cmb_ITEMCG" Field="ITEMCG" GPCD="*DM100" />
+        <Its:combo runat="server" Label="공장" ID="cmb_FACTORYCD" Field="FACTORYCD" GPCD="FACTORYCD" InputWidth="120"/>
         <Its:find runat="server" Label="품목코드" ID="find_ITEMID" Field="ITEMID" GPCD="ITEMID" />
         <Its:button runat="server" Label="기타입출고 이력삭제" BackColor="CustomButton3" ID="btn_DELETE_INOUT_ETC" />
     </Its:div>

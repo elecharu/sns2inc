@@ -15,6 +15,7 @@
         <Its:combo runat="server" Label="작업장" ID="cmb_LINECD" Field="LINECD" GPCD="*LINECD" REF01="07" />
         <Its:combo runat="server" Label="공정" ID="cmb_PRCCD" Field="PRCCD" GPCD="*PRCCD_LINE" />
         <Its:combo runat="server" Label="라인" ID="cmb_EQMCD" Field="EQMCD" GPCD="*EQMCD_LINE" />
+        <Its:combo runat="server" Label="공장" ID="cmb_FACTORYCD" Field="FACTORYCD" GPCD="FACTORYCD" InputWidth="120"/>
         <Its:find runat="server" Label="품목" ID="find_ITEMID" Field="ITEMID" GPCD="ITEMID" NameWidth="150" />
         <Its:button runat="server" Label="생산일보 출력" ID="btn_PRINT_DAILY" MarginLeft="20" BackColor="CustomButton2" />
     </Its:div>

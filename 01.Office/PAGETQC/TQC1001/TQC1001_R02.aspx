@@ -10,7 +10,8 @@
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
         <Its:combo runat="server" Label="품목유형" GPCD="*DM100" Field="ITEMCG" />
-        <Its:find runat="server" Label="품목" GPCD="ITEMID" Field="ITEMID" InputWidth="130" />
+        <Its:combo runat="server" Label="공장" ID="cmb_FACTORYCD" Field="FACTORYCD" GPCD="FACTORYCD" InputWidth="120"/>
+        <Its:find runat="server" Label="품목" ID="sdiv1_find_ITEMID" GPCD="ITEMID" Field="ITEMID" InputWidth="130" />
     </Its:div>
 </asp:Content>
 

@@ -5,7 +5,7 @@ ItsPage.Load = function () {
     
     /* 그리드 생성 */
     ItsGrid.Create('grid1', { isCheckBoxGrid: false }, [
-        column.create("법인", "COMPANYCD", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'COMPANYCD' }),
+        column.create("공장", "FACTORYCD", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD' }),
         column.create("품목유형", "ITEMCG", { width: 70, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center' }),
         column.create("품목ID", "ITEMID", { width: 100}),
         column.create("품목코드", "ITEMCD", { width: 100 }),        
@@ -52,7 +52,15 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
-    ItsCombo.SetValueByIndex('cmb_COMPANYCD', 0);
+    ItsCombo.SetValue('cmb_FACTORYCD', '07');
+};
+
+/* 공장이 정해지면 품목 find 에 법인(REF01)·공장(REF03) 넣기. 법인코드는 공장 콤보 목록 줄의 REF01(DC_COMBO FACTORYCD) */
+ItsCombo.Event('cmb_FACTORYCD').onChanged = function (value) {
+    var companycd = $('#cmb_FACTORYCD').siblings('ul').children('li').filter('[data-value="' + value + '"]').attr('data-ref01');
+    if (companycd == undefined || companycd == 'undefined') companycd = '';
+    ItsFind.SetRef01('sdiv1_find_ITEMID', companycd);
+    ItsFind.SetRef03('sdiv1_find_ITEMID', value);
 };
 
 /* 조회 */
@@ -62,7 +70,8 @@ ItsButton.EventSearch = function () {
     var maria = new ItsMaria('MST1001_S01 ', 'LIST_ITEM');
 
     maria.AddPanel('sdiv1');
-    
+    maria.AddParam('COMPANYCD', ItsFind.GetRef01('sdiv1_find_ITEMID'));   // 법인 = 선택한 공장의 법인코드
+
     maria.CallProc();
     if (maria.isError) {
         maria.ShowErrMsg();

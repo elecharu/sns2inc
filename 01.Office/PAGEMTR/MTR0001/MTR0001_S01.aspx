@@ -12,8 +12,7 @@
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" Runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
         <Its:dateRange runat="server" Label="발주일자" FieldFrom="SDATE" FieldTo="EDATE" ID="date_DATE" />
-        <Its:combo runat="server" Label="법인" ID="sdiv1_combo_COMPANYCD" Field="COMPANYCD" GPCD="*COMPANYCD" InputWidth="148"/> 
-        <Its:combo runat="server" Label="공장" ID="sdiv1_combo_FACTORYCD" Field="FACTORYCD" GPCD="*FACTORYCD" InputWidth="120"/>
+        <Its:combo runat="server" Label="공장" ID="sdiv1_combo_FACTORYCD" Field="FACTORYCD" GPCD="FACTORYCD" InputWidth="120"/>
         <Its:find runat="server" Label="거래처" Field="CUSTCD" GPCD="CUSTCD" InputWidth="60" NameWidth="190" REF02="Y" />   
         <Its:find runat="server"  Label="품목" Field="ITEMID" ID="find_ITEMID" GPCD="ITEMID"/>                       
     </Its:div>

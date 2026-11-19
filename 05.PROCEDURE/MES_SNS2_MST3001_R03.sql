@@ -1,4 +1,4 @@
-﻿CREATE DEFINER=`root`@`%` 
+CREATE DEFINER=`root`@`%` 
 PROCEDURE `MES_SNS2`.`MST3001_R03`(
 -- *****************************************************************************
 -- Comment: 설비부품정보 마스터관리
@@ -6,40 +6,30 @@ PROCEDURE `MES_SNS2`.`MST3001_R03`(
 -- Modify:  2026-10-13          한성수  부품재고·로케이션 최적화 조회/저장, 안전재고 부족 시 핑크색(BACKGROUND) 표기, 로케이션 코드 수정 및 중복 검증·SQL 튜닝
 --          2026-10-14          한성수  로케이션 연동·초기화 및 비움 삭제 처리, 중요도등급(GRADE) 저장 및 공통 감사함수 적용
 --          2026-11-13          한성수  INC 2공장(법인 60·공장 07) 고정 조회·저장, 로케이션 지정·기준정보 관리 주석처리
+--          2026-11-19          한성수  미사용 파라미터·지역변수·컬럼 및 주석처리된 로케이션 분기 삭제, SAVE_ITEM 선택 공장 반영
 -- *****************************************************************************
   IN $COMPANYCD       VARCHAR(100),
   IN $FACTORYCD       VARCHAR(100),
   IN $ITEMID          VARCHAR(100),
-  IN $ITEMCG          VARCHAR(100),
+  IN $ENDYN           VARCHAR(1),
   IN $ITEMID_LIST     MEDIUMTEXT,
   IN $GRADE_LIST      MEDIUMTEXT,
   IN $SAFEQTY_LIST    MEDIUMTEXT,
-  IN $LOCACD_LIST     VARCHAR(2000),
-  IN $LOCANM_LIST     VARCHAR(4000),
-  IN $OLD_LOCACD_LIST VARCHAR(2000),
-  IN $CALLTYPE        VARCHAR(100),
-  IN $ENDYN           VARCHAR(1),
-  IN $KEYWORD         VARCHAR(1000)
+-- *****************************************************************************
+  IN $CALLTYPE        VARCHAR(100)
 )
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 -- *****************************************************************************
-  DECLARE _$ITEMID     VARCHAR(100);
-  DECLARE _$GRADE      VARCHAR(100);
-  DECLARE _$SAFEQTY    VARCHAR(100);
-  DECLARE _$LOCACD     VARCHAR(100);
-  DECLARE _$LOCANM     VARCHAR(100);
-  DECLARE _$OLD_LOCACD VARCHAR(100);
+  DECLARE _$ITEMID    VARCHAR(100);
+  DECLARE _$GRADE     VARCHAR(100);
+  DECLARE _$SAFEQTY   VARCHAR(100);
 
 -- *****************************************************************************
   CASE $CALLTYPE
 -- *****************************************************************************
 
-  WHEN 'SEL_ITEM' THEN -- 설비부품 품목 마스터 및 재고·로케이션 조회 (화면 표시용 필수 컬럼 최적화)
-    
-    SET $COMPANYCD = '60';
-    SET $FACTORYCD = '07';
+  WHEN 'SEL_ITEM' THEN -- 설비부품 품목 마스터 및 재고·로케이션 조회
 
-    SET $ITEMCG = 'DM100700';
     SET $ITEMID = TRIM(COALESCE($ITEMID, ''));
 
     SELECT CAST(MSTITEM.ITEMID AS CHAR) AS ITEMID,
@@ -55,8 +45,6 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
            MSTITEM.ITEMUNIT,
            MSTITEM.ITEMSRC,
            MSTITEM.ENDYN,
-           MSTITEM.IOYN,
-           MSTITEM.SEPAYN,
            COALESCE(MSTITEM_EQMPARTS.GRADE, MSTITEM.GRADE, '') AS GRADE,
            COALESCE(MSTITEM_EQMPARTS.SAFEQTY, 0) AS SAFEQTY,
            COALESCE(MSTITEM_EQMPARTS.LOTQTY, 0) AS LOTQTY,
@@ -67,12 +55,15 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
                 ELSE ''
            END AS BACKGROUND
     FROM MSTITEM
+    INNER JOIN MSTITEM_FACTORY
+      ON MSTITEM_FACTORY.ITEMID = MSTITEM.ITEMID
     LEFT JOIN MSTITEM_EQMPARTS
       ON MSTITEM_EQMPARTS.ITEMID = MSTITEM.ITEMID
      AND MSTITEM_EQMPARTS.FACTORYCD = $FACTORYCD
     LEFT JOIN MSTLOCA_EQMPARTS
       ON MSTLOCA_EQMPARTS.LOCACD = MSTITEM_EQMPARTS.LOCACD
     WHERE MSTITEM.COMPANYCD = $COMPANYCD
+      AND MSTITEM_FACTORY.FACTORYCD = $FACTORYCD
       AND MSTITEM.ITEMCG = 'DM100700'
       AND MSTITEM.ENDYN = $ENDYN
       AND (   $ITEMID = ''
@@ -80,36 +71,36 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
            OR MSTITEM.ITEMCD LIKE CONCAT('%', $ITEMID, '%')
            OR MSTITEM.ITEMNM LIKE CONCAT('%', $ITEMID, '%')
           )
-    ORDER BY MSTITEM.COMPANYCD, MSTITEM.ITEMCD;
+    ORDER BY MSTITEM.ITEMCD;
 
-  -- *****************************************************************************
+-- *****************************************************************************
 
   WHEN 'SAVE_ITEM' THEN -- 설비부품 등급·안전재고 저장
+
+    IF TRIM(COALESCE($FACTORYCD, '')) = '' THEN
+      CALL COMERR('공장을 선택해주세요.');
+      LEAVE PROC;
+    END IF;
 
     IF TRIM(COALESCE($ITEMID_LIST, '')) = '' THEN
       CALL COMERR('저장할 품목을 선택해주세요.');
       LEAVE PROC;
     END IF;
 
-    SET $FACTORYCD = '07'; -- INC 2공장
-
     WHILE LENGTH($ITEMID_LIST) > 0 DO
       CALL COMSPLIT($ITEMID_LIST, _$ITEMID);
       CALL COMSPLIT($GRADE_LIST, _$GRADE);
       CALL COMSPLIT($SAFEQTY_LIST, _$SAFEQTY);
-      -- CALL COMSPLIT($LOCACD_LIST, _$LOCACD);
 
       SET _$ITEMID  = TRIM(COALESCE(_$ITEMID, ''));
       SET _$GRADE   = TRIM(COALESCE(_$GRADE, ''));
       SET _$SAFEQTY = TRIM(COALESCE(_$SAFEQTY, '0'));
-      -- SET _$LOCACD  = TRIM(COALESCE(_$LOCACD, ''));
 
       IF _$ITEMID <> '' THEN
         IF EXISTS (SELECT 1 FROM MSTITEM_EQMPARTS WHERE FACTORYCD = $FACTORYCD AND ITEMID = CAST(_$ITEMID AS UNSIGNED) LIMIT 1) THEN
           UPDATE MSTITEM_EQMPARTS
           SET GRADE   = _$GRADE,
               SAFEQTY = CAST(_$SAFEQTY AS DECIMAL(20, 8)),
-              -- LOCACD  = _$LOCACD,
               MTIME   = CALLTIME(),
               MEMP    = CALLEMP(),
               MPRG    = CALLPRG()
@@ -121,13 +112,12 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
             RTIME, REMP, RPRG, MTIME, MEMP, MPRG
           ) VALUES (
             $FACTORYCD, CAST(_$ITEMID AS UNSIGNED), _$GRADE,
-            CAST(_$SAFEQTY AS DECIMAL(20, 8)), '' /* _$LOCACD */,
+            CAST(_$SAFEQTY AS DECIMAL(20, 8)), '',
             CALLTIME(), CALLEMP(), CALLPRG(), '', '', ''
           );
         END IF;
       END IF;
     END WHILE;
-
   -- *****************************************************************************
 
   /* 로케이션 기준정보 관리 주석처리 (SEL_LOCA·SAVE_LOCA·DEL_LOCA)

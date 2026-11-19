@@ -15,7 +15,8 @@
         <Its:combo runat="server" Label="구분" ID="cmb_OUTPLANTP" Field="OUTPLANTP" GPCD="SELECT '전체' AS Label, '' AS Value UNION ALL SELECT '수출', 'EXP' UNION ALL SELECT '내수', 'DOM'" />
         <%-- 거래처: 법인 60 거래처 (출하계획의 거래처 또는 고객) / 품목코드: 법인 60 품목 (값은 품목ID) --%>
         <Its:find runat="server" Label="거래처" ID="find_CUSTCD" Field="CUSTCD" REF01="60" GPCD="CUSTCD_COMPANY" />
-        <Its:find runat="server" Label="품목코드" ID="find_ITEMID" Field="ITEMID" REF01="60" GPCD="ITEMID" />
+        <Its:combo runat="server" Label="공장" ID="cmb_FACTORYCD" Field="FACTORYCD" GPCD="FACTORYCD" InputWidth="120"/>
+        <Its:find runat="server" Label="품목코드" ID="find_ITEMID" Field="ITEMID" GPCD="ITEMID" />
     </Its:div>
 </asp:Content>
 

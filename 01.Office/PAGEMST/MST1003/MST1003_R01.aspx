@@ -11,8 +11,8 @@
 <%-- SEARCH --%>
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" Runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
-        <Its:combo runat="server" Label="공장" Field="FACTORYCD" GPCD="*FACTORYCD" InputWidth="100" Value="07"/>
-        <Its:find runat="server" Label="품목코드" Field="ITEMID" GPCD="ITEMID" />
+        <Its:combo runat="server" Label="공장" ID="cmb_FACTORYCD" Field="FACTORYCD" GPCD="*FACTORYCD" InputWidth="100" Value="07"/>
+        <Its:find runat="server" Label="품목코드" ID="sdiv1_find_ITEMID" Field="ITEMID" GPCD="ITEMID" />
         <Its:check runat="server" Label="사용여부" Field="USEYN" Value="Y" MarginLeft="20"/>
     </Its:div>
 </asp:Content>

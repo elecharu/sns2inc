@@ -13,6 +13,7 @@
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
         <Its:combo runat="server" Label="불량창고" ID="cmb_WARECD" Field="WARECD" GPCD="*WARECD_BAD" REF01="07" REF03="Y" />
         <Its:combo runat="server" Label="품목유형" ID="cmb_ITEMCG" Field="ITEMCG" GPCD="*DM100" />
+        <Its:combo runat="server" Label="공장" ID="cmb_FACTORYCD" Field="FACTORYCD" GPCD="FACTORYCD" InputWidth="120"/>
         <Its:find runat="server" Label="품목" ID="find_ITEMID" Field="ITEMID" GPCD="ITEMID" NameWidth="150" />
         <Its:combo runat="server" Label="판정상태" ID="cmb_JUDGESTT" Field="JUDGESTT" GPCD="*JUDGESTT" />
         <Its:button runat="server" Label="일괄판정" ID="btn_JUDGE_MULTI" MarginLeft="20" BackColor="CustomButton2" />

@@ -100,15 +100,20 @@ ItsPage.Load = function () {
         column.create("등록일시", "RTIME", { width: 100, align: 'center' })
     ]);
 
-    ItsCombo.SetValueByIndex('cmb_COMPANYCD', 0);
     ItsCombo.SetValue('cmb_FACTORYCD', '07');
 };
 /************************************************************************************************************************************************************/
 /* 조회 */
 ItsButton.EventSearch = function () {
 
+    /* 법인은 조회조건에 없고, 선택한 공장의 법인코드(공장 콤보 목록 줄의 REF01, DC_COMBO FACTORYCD)를 보낸다 */
+    var factorycd = ItsCombo.GetValue('cmb_FACTORYCD');
+    var companycd = $('#cmb_FACTORYCD').siblings('ul').children('li').filter('[data-value="' + factorycd + '"]').attr('data-ref01');
+    if (companycd == undefined || companycd == 'undefined') companycd = '';
+
     var maria = new ItsMaria('MST1003_R04', 'SEL_ITEM');
     maria.AddPanel('sdiv1');
+    maria.AddParam('COMPANYCD', companycd);
     maria.CallProc();
     if (maria.isError) {
         maria.ShowErrMsg();
@@ -159,6 +164,14 @@ ItsButton.EventSave = function () {
 /************************************************************************************************************************************************************/
 ItsCombo.Event('sdiv1_combo_ITEMCG').onChanged = function (value) {
     ItsFind.SetRef02('sdiv1_find_ITEMID', value);
+}
+/************************************************************************************************************************************************************/
+/* 공장이 정해지면 품목 find 에 법인(REF01)·공장(REF03) 넣기. 법인코드는 공장 콤보 목록 줄의 REF01(DC_COMBO FACTORYCD) */
+ItsCombo.Event('cmb_FACTORYCD').onChanged = function (value) {
+    var companycd = $('#cmb_FACTORYCD').siblings('ul').children('li').filter('[data-value="' + value + '"]').attr('data-ref01');
+    if (companycd == undefined || companycd == 'undefined') companycd = '';
+    ItsFind.SetRef01('sdiv1_find_ITEMID', companycd);
+    ItsFind.SetRef03('sdiv1_find_ITEMID', value);
 }
 /************************************************************************************************************************************************************/
 

@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-11-18
+> **최종 갱신일**: 2026-11-19
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -15,6 +15,28 @@
 4. **대화 기록 및 불러오기 연계**: 모든 사용자 요청 및 작업 결과는 본 문서에 실시간 동기화되어, 새 세션이나 나중에 작업 재개 시 "불러오기"를 통해 이전 맥락을 100% 이어받습니다.
 
 ---
+
+## 🕒 2026-11-19 (목) 작업 내역
+
+### 1. MST3001_R03 프로시저 불필요 변수·파라미터 및 미사용 SQL 정리
+- **수정 파일**: [05.PROCEDURE/MES_SNS2_MST3001_R03.sql](05.PROCEDURE/MES_SNS2_MST3001_R03.sql), [05.PROCEDURE/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](05.PROCEDURE/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql)
+- **요청**: `MES_SNS2_MST3001_R03.sql` 내 불필요한 변수 및 미사용 SQL문 확인 후 삭제
+- **작업 내용**:
+  - 1. 입력 파라미터 정리 (`13건 → 8건`)
+    - 1) 삭제(5건) : `$ITEMCG` (미참조), `$LOCACD_LIST`·`$LOCANM_LIST`·`$OLD_LOCACD_LIST` (주석처리된 로케이션 기능 전용), `$KEYWORD` (미사용)
+    - 2) 유지(8건) : `$COMPANYCD`, `$FACTORYCD`, `$ITEMID`, `$ENDYN`, `$ITEMID_LIST`, `$GRADE_LIST`, `$SAFEQTY_LIST`, `$CALLTYPE`
+  - 2. 지역 변수 정리 (`6개 → 3개`)
+    - 1) 삭제(3개) : `_$LOCACD`, `_$LOCANM`, `_$OLD_LOCACD`
+    - 2) 유지(3개) : `_$ITEMID`, `_$GRADE`, `_$SAFEQTY`
+  - 3. 조회 (`SEL_ITEM`)
+    - 1) 대상 테이블 : `MSTITEM`, `MSTITEM_FACTORY`, `MSTITEM_EQMPARTS`, `MSTLOCA_EQMPARTS` (`COMPANYCD = $COMPANYCD`, `FACTORYCD = $FACTORYCD`, `ITEMCG = 'DM100700'`, `ENDYN = $ENDYN`)
+    - 2) 불필요 SQL·컬럼 삭제 : 죽은 대입문 `SET $ITEMCG = 'DM100700'` 삭제, 화면 미사용 컬럼 `MSTITEM.IOYN`·`MSTITEM.SEPAYN` 제거, 불필요한 상수 정렬 키 `MSTITEM.COMPANYCD` 제거
+  - 4. 저장 (`SAVE_ITEM`)
+    - 1) 대상 테이블 : `MSTITEM_EQMPARTS` (`FACTORYCD = $FACTORYCD`, `ITEMID`) — `GRADE`, `SAFEQTY` 수정·등록
+    - 2) 불필요 SQL 삭제 : 주석처리된 로케이션 분리·갱신 잔여 코드 4곳 삭제, 구 공장 고정문 `SET $FACTORYCD = '07'` 제거 후 전달된 `$FACTORYCD` 미선택 검증 추가
+  - 5. 주석 처리된 폐기 분기 삭제 : `SEL_LOCA`, `SAVE_LOCA`, `DEL_LOCA` 주석 블록(123줄) 완전 삭제, 선언부 2행 개행 및 `SYSTEM_PARAMETERS` 스크립트 8건 기준으로 갱신
+- **검증**: 구조 검증(파라미터 8건, 지역변수 3개, `IF` 4/4, `WHILE` 1/1, 괄호 58/58), 실DB 읽기 전용 `SEL_ITEM` SELECT 실행 오류 없음(19개 컬럼 `grid1` 일치), `.sql` 2종 UTF-8(BOM 없음)+CRLF 확인
+- **실DB 반영 순서**: `MES_SNS2_MST3001_R03.sql` 저장 → `MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql` 실행 (정상 8건)
 
 ## 🕒 2026-11-18 (수) 작업 내역
 

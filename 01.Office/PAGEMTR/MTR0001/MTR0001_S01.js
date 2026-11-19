@@ -40,14 +40,15 @@ ItsPage.Load = function () {
      
     ItsDateRange.SetInitValueFrom('date_DATE', ItsHelper.AddDay(-7, ItsHelper.GetYearMonthDay()));
 
-    // 2025-06-27 법인 콤보박스 값을 60으로 고정
-    ItsCombo.SetValue('sdiv1_combo_COMPANYCD', '60');
+    // 공장 기본값 (법인은 공장의 법인코드를 씀)
+    ItsCombo.SetValue('sdiv1_combo_FACTORYCD', '07');
 };
 
 // 조회버튼
 ItsButton.EventSearch = function () {
     var maria = new ItsMaria('MTR0001_S01', 'LIST_MTRIN');
     maria.AddPanel('sdiv1');
+    maria.AddParam('COMPANYCD', ItsFind.GetRef01('find_ITEMID'));   // 법인 = 선택한 공장의 법인코드
     maria.CallProc();
     if (maria.isError) {
         maria.ShowErrMsg();
@@ -73,7 +74,10 @@ ItsGrid.Event('grid1').onSelect = function (rowIndex) {
     //ItsGrid.Get('grid2').autoSizeColumns();
 }
 
-ItsCombo.Event('sdiv1_combo_COMPANYCD').onChanged = function (value) {
-    ItsCombo.SetRef01('sdiv1_combo_FACTORYCD', value);
-    ItsCombo.SetValueByIndex('sdiv1_combo_FACTORYCD', 2);
+/* 공장이 정해지면 품목 find 에 법인(REF01)·공장(REF03) 넣기. 법인코드는 공장 콤보 목록 줄의 REF01(DC_COMBO FACTORYCD) */
+ItsCombo.Event('sdiv1_combo_FACTORYCD').onChanged = function (value) {
+    var companycd = $('#sdiv1_combo_FACTORYCD').siblings('ul').children('li').filter('[data-value="' + value + '"]').attr('data-ref01');
+    if (companycd == undefined || companycd == 'undefined') companycd = '';
+    ItsFind.SetRef01('find_ITEMID', companycd);
+    ItsFind.SetRef03('find_ITEMID', value);
 }

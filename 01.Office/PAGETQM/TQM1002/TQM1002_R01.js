@@ -79,6 +79,15 @@ ItsPage.Load = function () {
     ItsDateRange.SetValueTo('dr_DATE', ItsHelper.AddDay(7, ItsHelper.GetYearMonthDay()));
 
     ItsFind.SetValue('find_APRVEMP', ItsPage.EMPCD);   // 승인자 기본값: 로그인 사원
+    ItsCombo.SetValue('cmb_FACTORYCD', '07');   // 공장 기본값 (onChanged 로 품목 find 법인·공장도 들어감)
+};
+
+/* 공장이 정해지면 품목 find 에 법인(REF01)·공장(REF03) 넣기. 법인코드는 공장 콤보 목록 줄의 REF01(DC_COMBO FACTORYCD) */
+ItsCombo.Event('cmb_FACTORYCD').onChanged = function (value) {
+    var companycd = $('#cmb_FACTORYCD').siblings('ul').children('li').filter('[data-value="' + value + '"]').attr('data-ref01');
+    if (companycd == undefined || companycd == 'undefined') companycd = '';
+    ItsFind.SetRef01('find_ITEMID', companycd);
+    ItsFind.SetRef03('find_ITEMID', value);
 };
 
 /* 승인: 체크한 출하계획의 검사를 승인자로 승인 (미검사·검사중 계획이 있으면 프로시저가 막는다) */
