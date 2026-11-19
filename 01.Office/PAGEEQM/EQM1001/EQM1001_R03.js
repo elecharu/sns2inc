@@ -2,16 +2,13 @@
 
 // 페이지 로드
 ItsPage.Load = function () {
-    // 2026-09-23 설비그룹 점검계획 탭: 목록 초기화 (2026-10-12 양탭 반려사유 제거)
     ItsGrid.Create('grid_GRP1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('설비그룹코드', 'EQMGUBUN', { width: 120, align: 'center' }),
         column.create('설비그룹', 'EQMGRPNM', { width: 120, align: 'center' }),
-        // 2026-11-16 [설비그룹 점검계획 탭] 승인 제거로 승인상태 컬럼 삭제
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
         column.split()
     ]);
 
-    // 2026-09-30 [설비그룹 점검계획 탭] 우측 상단 개정 이력(REV) 그리드 초기화
     // 2026-11-16 [설비그룹 점검계획 탭] 승인 제거로 상태·승인자·처리일시 컬럼 삭제 (맨 위 최신 REV가 사용 리비전)
     ItsGrid.Create('grid_GRP_REV', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
@@ -68,7 +65,6 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
-    // 2026-09-30 [설비별 점검계획 탭] 우측 상단 개정 이력(REV) 그리드 초기화
     // 2026-11-16 [설비별 점검계획 탭] 승인 제거로 상태·승인자·처리일시 컬럼 삭제 (맨 위 최신 REV가 사용 리비전)
     ItsGrid.Create('grid_EQM_REV', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
@@ -119,7 +115,6 @@ ItsPage.Load = function () {
         column.create('설비코드', 'FANO', { width: 100, align: 'center' }),
         column.create('설비명', 'EQMNM', { width: 220 }),
         column.create('설비등급', 'EQMGRADENM', { width: 90, align: 'center', readOnly: true }),
-        // 2026-11-16 [정기점검 주기관리 탭] 설비등급별 점검주기 (설비등급기준 관리 사용중 리비전)
         column.create('점검주기', 'CHKCYCLE2', { width: 100, align: 'center', readOnly: true }),
         column.create('년도', 'YEAR', { width: 80, align: 'center' }),
         column.create('1월', 'M01', { width: 80, align: 'center', readOnly: true }),
@@ -134,26 +129,6 @@ ItsPage.Load = function () {
         column.create('10월', 'M10', { width: 80, align: 'center', readOnly: true }),
         column.create('11월', 'M11', { width: 80, align: 'center', readOnly: true }),
         column.create('12월', 'M12', { width: 80, align: 'center', readOnly: true }),
-        column.create('1월점검자', 'M01CD', { hidden: true }),
-        column.create('2월점검자', 'M02CD', { hidden: true }),
-        column.create('3월점검자', 'M03CD', { hidden: true }),
-        column.create('4월점검자', 'M04CD', { hidden: true }),
-        column.create('5월점검자', 'M05CD', { hidden: true }),
-        column.create('6월점검자', 'M06CD', { hidden: true }),
-        column.create('7월점검자', 'M07CD', { hidden: true }),
-        column.create('8월점검자', 'M08CD', { hidden: true }),
-        column.create('9월점검자', 'M09CD', { hidden: true }),
-        column.create('10월점검자', 'M10CD', { hidden: true }),
-        column.create('11월점검자', 'M11CD', { hidden: true }),
-        column.create('12월점검자', 'M12CD', { hidden: true }),
-        // 2026-11-16 [정기점검 주기관리 탭] 정기점검 실적이 있는 점검자 배정 월 (예: ',3,11,')
-        column.create('실적월', 'LOCKMM', { hidden: true }),
-        // 2026-11-16 [정기점검 주기관리 탭] 점검주기 문구 해석값(CHKYEAR년에 CHKCNT회)과 주기 안 앞뒤 년도 배정 횟수·현황
-        column.create('주기횟수', 'CHKCNT', { hidden: true }),
-        column.create('주기년수', 'CHKYEAR', { hidden: true }),
-        column.create('이전배정', 'PREVCNT', { hidden: true }),
-        column.create('다음배정', 'NEXTCNT', { hidden: true }),
-        column.create('다른년도배정', 'OTHERPLAN', { hidden: true }),
         column.split()
     ]);
 

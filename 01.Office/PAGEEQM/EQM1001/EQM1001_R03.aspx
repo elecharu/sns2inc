@@ -13,7 +13,7 @@
         <%-- 설비그룹 점검계획 탭: 화면 영역 --%>
         <Its:div runat="server" Type="SplitSingle" TabTitle="설비그룹 점검계획">         
             <Its:div runat="server" Type="SplitTop" TopHeightPc="4" BackColor="White" ID="div_GRP">
-                <Its:find runat="server" Label="설비그룹" Field="EQMGRP" GPCD="FM116" ID="find_GRP" MarginLeft="10" MarginTop="6" LabelWidth="60" InputWidth="110" NameWidth="170"/>
+                <Its:find runat="server" Label="설비그룹" Field="EQMGRP" GPCD="FM116" ID="find_GRP" MarginLeft="10" MarginTop="6" LabelWidth="60" InputWidth="110" NameWidth="130"/>
                 <Its:button runat="server" Label="계획서 출력" ID="btn_GRP_PLAN_RPT" Width="100" Float="right" MarginRight="10" MarginTop="6" BackColor="CustomButton2" />
             </Its:div>
             
@@ -67,8 +67,8 @@
         <%-- 설비별 점검계획 탭: 화면 영역 --%>
         <Its:div runat="server" Type="SplitSingle" TabTitle="설비별 점검계획">         
             <Its:div runat="server" Type="SplitTop" TopHeightPc="4" BackColor="White" ID="div_EQM">
+                <Its:find runat="server" Label="설비그룹" Field="EQMGRP" GPCD="FM116" ID="find_EQM_GRP" MarginLeft="15" MarginTop="6" LabelWidth="60" InputWidth="110" NameWidth="130"/>
                 <Its:find runat="server" Label="설비" Field="FANO" GPCD="EQMCD" ID="find_EQMCD" MarginLeft="10" MarginTop="6" LabelWidth="38" InputWidth="80" NameWidth="120"/>                      
-                <Its:find runat="server" Label="설비그룹" Field="EQMGRP" GPCD="FM116" ID="find_EQM_GRP" MarginLeft="15" MarginTop="6" LabelWidth="60" InputWidth="110" NameWidth="170"/>
                 <Its:combo runat="server" Label="작업장" ID="cmb_LINECD" Field="LINECD" GPCD="*LINECD" REF01="07" MarginLeft="15" MarginTop="6" LabelWidth="50" />
                 <Its:combo runat="server" Label="공정" ID="cmb_EQMTP" Field="EQMTP" GPCD="*EQMTP" InputWidth="70" MarginLeft="15" MarginTop="6" LabelWidth="60" />
                 <Its:combo runat="server" Label="라인" ID="cmb_EQMGROUP1" Field="EQMGROUP1" GPCD="*EQMGROUP1" InputWidth="70" MarginLeft="15" MarginTop="6" LabelWidth="70" />
