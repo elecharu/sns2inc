@@ -18,6 +18,18 @@
 
 ## 🕒 2026-11-19 (목) 작업 내역
 
+### 2. 공통 설비 찾기(DC_FIND EQMCD·FANO) 조회 기준을 공장 07·사용 설비로 변경
+- **수정 파일**: [05.Procedure/MES_SNS2_DC_FIND.sql](05.Procedure/MES_SNS2_DC_FIND.sql)
+- **요청**: EQM1001_R03 "설비별 점검계획" 탭의 설비 find와 왼쪽 그리드 설비 수가 다른 원인 확인 후, find를 그리드와 같은 공장 07·사용 Y 기준으로 변경
+- **원인(실DB SELECT)**: 그리드(`LIST_MSTEQM`)는 설비 공장 07·사용 Y로 254대, find(`EQMCD_LIST`)는 설비그룹이 FM116 2공장용(REF01 07·사용) 코드인 설비만 INNER JOIN으로 118대. 예전 04용 설비그룹 코드(CNC FM116I2100 등, 미사용)가 지정된 81대와 설비그룹 없는 55대가 find에서 빠짐
+- **작업 내용**
+  - 1. `EQMCD_LIST`·`FANO_LIST` : COMTYPE FM116 INNER JOIN 제거, `MSTEQM.FACTORYCD = '07' AND MSTEQM.USEYN = 'Y'` 조건 추가. 표시 컬럼·REF01~05 분류 조건·검색어·건수 제한(LIMIT) 변경 없음
+  - 2. `EQMCD_INFO`(코드 직접 입력 확인)·다른 GPCD 분기 변경 없음, 파일 형식(BOM·LF) 원본 유지
+- **영향 화면**: 공통 find라 GPCD EQMCD·FANO 사용 화면 모두 적용 (EQM1001_R01·R03·R04·R05·S01·S03·S04, MST1004_R01, PRD0001_R02, PRD6001_R02·S01·S03, PRD7001_R04, SYS4002_R03, TAL0001_R08). 공장 07 외 설비·사용 안 함 설비는 find에서 제외됨
+- **검증(실DB SELECT)**: 변경 조건으로 검색어 없이 254대(그리드와 동일), 이전에 빠지던 I2A-006N·I2C-001N 조회 확인, 공장 07 설비 중 분류·작업장 NULL 0건이라 LIKE 조건 누락 없음. 프로시저 실DB 저장·화면 확인은 미실시
+- **참고**: find는 공통 기본 건수 제한 100건이 그대로라 검색어 없이 열면 254대 중 100대까지만 표시
+- **실DB 반영**: MES_SNS2_DC_FIND.sql 프로시저 저장 (파라미터 변경 없음)
+
 ### 1. MST3001_R03 프로시저 불필요 변수·파라미터 및 미사용 SQL 정리
 - **수정 파일**: [05.PROCEDURE/MES_SNS2_MST3001_R03.sql](05.PROCEDURE/MES_SNS2_MST3001_R03.sql), [05.PROCEDURE/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql](05.PROCEDURE/MES_SNS2_MST3001_R03_SYSTEM_PARAMETERS.sql)
 - **요청**: `MES_SNS2_MST3001_R03.sql` 내 불필요한 변수 및 미사용 SQL문 확인 후 삭제
