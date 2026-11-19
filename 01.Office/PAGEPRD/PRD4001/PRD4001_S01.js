@@ -4,8 +4,11 @@
 ItsPage.Load = function () {
 
     ItsGrid.Create('grid1', { isSubTotalGrid: true, allowMerging: 'Cells' }, [
+        column.create('창고', 'WARECD', { width: 100, align: 'center', hidden: true }),
+        column.create('창고', 'WARENM', { width: 100, align: 'center' }),       
         column.create('품목ID', 'ITEMID', { width: 200, align: 'center', hidden: true }),
         column.create('품목유형', 'ITEMCG', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center' }),        
+        column.create('공장', 'FACTORYCD', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', align: 'center' }),        
         column.create('품목코드', 'ITEMCD', { width: 200 }),        
         column.create('품명', 'ITEMNM', { width: 250 }),
         column.create('규격', 'ITEMSPEC', { width: 250 }),
@@ -17,7 +20,6 @@ ItsPage.Load = function () {
     ]);
 
     ItsGrid.Create('grid2', { isSubTotalGrid: true }, [
-        column.create('창고', 'WARECD', { width: 120, align: 'center' }),
         column.create('로트번호', 'LOTKEY', { width: 120, align: 'center' }),
         column.create('재고수량', 'LOTQTY', { width: 90, columnType: enumColumnTypes.number, groupType: enumGrouping.sum, decimalPrecision: 0 }),
         column.create('입고일자', 'RTIME', { width: 100, align: 'center' }),

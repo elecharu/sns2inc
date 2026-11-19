@@ -5,8 +5,9 @@ ItsPage.Load = function () {
 
     ItsGrid.Create('grid1', { isSubTotalGrid: true, allowMerging: 'Cells' }, [
         column.create('창고', 'WARECD', { width: 100, align: 'center', hidden: true }),
-        column.create('창고', 'WARENM', { width: 100, align: 'center' }),
+        column.create('창고', 'WARENM', { width: 100, align: 'center' }),        
         column.create('품목유형', 'ITEMCG', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center' }),
+        column.create('공장', 'FACTORYCD', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', align: 'center' }),
         column.create('품목코드', 'ITEMCD', { width: 200 }),
         column.create('품명', 'ITEMNM', { width: 250 }),
         column.create('규격', 'ITEMSPEC', { width: 250 }),        
@@ -17,7 +18,7 @@ ItsPage.Load = function () {
     ]);
 
     // 공장 기본값 (법인은 공장의 법인코드를 씀)
-    ItsCombo.SetValue('sdiv1_combo_FACTORYCD', '07');
+    //ItsCombo.SetValue('sdiv1_combo_FACTORYCD', '07');
 };
 
 /* 조회 */

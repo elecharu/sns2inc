@@ -1,14 +1,14 @@
 ﻿CREATE DEFINER = 'root'@'localhost'
 PROCEDURE MES_SNS2.MST1001_S01(
 -- *****************************************************************************
--- Comment: BOM 정보
+-- Comment: BOM 정보2
 -- Create:  2026-09-14 신정수
 -- Modify:  
 -- *****************************************************************************
   IN $COMPANYCD VARCHAR(100), 
+  IN $FACTORYCD VARCHAR(100), 
   IN $ITEMCG VARCHAR(100), -- 품목유형
-  IN $ITEMID VARCHAR(100), -- 품목코드
-  IN $ITEMCD VARCHAR(100), -- 품목코드
+  IN $ITEMID VARCHAR(100), -- 품목ID  
   IN $ENDYN       VARCHAR(1),   
 -- *****************************************************************************
  IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
@@ -23,18 +23,21 @@ CASE $CALLTYPE
 WHEN 'LIST_ITEM' THEN
 
   SELECT 
-      COMPANYCD
-    , CAST(ITEMID AS CHAR) ITEMID
-    , ITEMCD   
-    , ITEMNM   
-    , ITEMCG 
-    , ENDYN
+      MSTITEM_FACTORY.FACTORYCD
+    , MSTITEM.COMPANYCD
+    , CAST(MSTITEM.ITEMID AS CHAR) ITEMID
+    , MSTITEM.ITEMCD   
+    , MSTITEM.ITEMNM   
+    , MSTITEM.ITEMCG 
+    , MSTITEM.ENDYN
   FROM MSTITEM
-  WHERE COMPANYCD = $COMPANYCD
-    AND ENDYN = $ENDYN  -- 종료여부
-    AND IF($ITEMCG = '', 1=1, ITEMCG = $ITEMCG)
-    AND ITEMCD LIKE CONCAT($ITEMCD, '%')
-  ORDER BY  COMPANYCD, ITEMID, ITEMCD
+  INNER JOIN MSTITEM_FACTORY
+    ON MSTITEM_FACTORY.ITEMID = MSTITEM.ITEMID  
+  WHERE MSTITEM_FACTORY.FACTORYCD = $FACTORYCD
+    AND MSTITEM.ENDYN = $ENDYN  -- 종료여부
+    AND IF($ITEMCG = '', 1=1, MSTITEM.ITEMCG = $ITEMCG)
+    AND MSTITEM.ITEMID LIKE CONCAT($ITEMID, '%')
+  ORDER BY  MSTITEM_FACTORY.FACTORYCD, MSTITEM.ITEMCD
   ;
 -- ****************************************************************************
 WHEN 'LIST_BOM' THEN
