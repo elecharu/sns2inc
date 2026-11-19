@@ -26,6 +26,7 @@
         // 공문서 품목 줄: C_P1_{줄}_{ITEMCD|ITEMNM|BADCONT|QTY|AMT}, 산출내역서 품목 줄: C_P2_{줄}_{ITEMCD|ITEMNM|BADCONT|QTY|INPRICE|MFGPRICE|SALEPRICE|ETCAMT|AMT}
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(R01));
             this.TopMargin = new DevExpress.XtraReports.UI.TopMarginBand();
             this.BottomMargin = new DevExpress.XtraReports.UI.BottomMarginBand();
             this.ReportHeader = new DevExpress.XtraReports.UI.ReportHeaderBand();
@@ -599,6 +600,8 @@
             this.L_P2_R_2V = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P2_R_3 = new DevExpress.XtraReports.UI.XRLabel();
             this.L_P2_R_3V = new DevExpress.XtraReports.UI.XRLabel();
+            this.pic_P1_LOGO = new DevExpress.XtraReports.UI.XRPictureBox();
+            this.pic_P2_LOGO = new DevExpress.XtraReports.UI.XRPictureBox();
             ((System.ComponentModel.ISupportInitialize)(this)).BeginInit();
             // 
             // TopMargin
@@ -617,6 +620,7 @@
             // 
             this.ReportHeader.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
             this.L_P1_HEADTITLE,
+            this.pic_P1_LOGO,
             this.L_P1_APP1,
             this.C_P1_SIGN_EMPNM,
             this.L_P1_APP2,
@@ -1190,9 +1194,10 @@
             this.L_P2_R_2,
             this.L_P2_R_2V,
             this.L_P2_R_3,
-            this.L_P2_R_3V});
+            this.L_P2_R_3V,
+            this.pic_P2_LOGO});
             this.ReportFooter.Dpi = 100F;
-            this.ReportFooter.HeightF = 700F;
+            this.ReportFooter.HeightF = 712F;
             this.ReportFooter.Name = "ReportFooter";
             this.ReportFooter.PageBreak = DevExpress.XtraReports.UI.PageBreak.BeforeBand;
             // 
@@ -1202,8 +1207,26 @@
             this.Detail.HeightF = 0F;
             this.Detail.Name = "Detail";
             // 
+            // pic_P1_LOGO (S&S INC 로고, 엑셀 양식 "공문서" 왼쪽 위와 같은 자리. 그림은 R01.resx)
+            //
+            this.pic_P1_LOGO.Dpi = 100F;
+            this.pic_P1_LOGO.Image = ((System.Drawing.Image)(resources.GetObject("pic_P1_LOGO.Image")));
+            this.pic_P1_LOGO.LocationFloat = new DevExpress.Utils.PointFloat(20F, 20F);
+            this.pic_P1_LOGO.Name = "pic_P1_LOGO";
+            this.pic_P1_LOGO.SizeF = new System.Drawing.SizeF(102F, 37F);
+            this.pic_P1_LOGO.Sizing = DevExpress.XtraPrinting.ImageSizeMode.StretchImage;
+            //
+            // pic_P2_LOGO (S&S INC 로고, 제반 비용 총 합계 아래 가운데. 엑셀 비율(가로로 늘림)대로 StretchImage. 그림은 R01.resx)
+            //
+            this.pic_P2_LOGO.Dpi = 100F;
+            this.pic_P2_LOGO.Image = ((System.Drawing.Image)(resources.GetObject("pic_P2_LOGO.Image")));
+            this.pic_P2_LOGO.LocationFloat = new DevExpress.Utils.PointFloat(347F, 686F);
+            this.pic_P2_LOGO.Name = "pic_P2_LOGO";
+            this.pic_P2_LOGO.SizeF = new System.Drawing.SizeF(73F, 25F);
+            this.pic_P2_LOGO.Sizing = DevExpress.XtraPrinting.ImageSizeMode.StretchImage;
+            //
             // L_P1_HEADTITLE
-            // 
+            //
             this.L_P1_HEADTITLE.CanGrow = false;
             this.L_P1_HEADTITLE.Dpi = 100F;
             this.L_P1_HEADTITLE.Font = new System.Drawing.Font("맑은 고딕", 24F, System.Drawing.FontStyle.Bold);
@@ -4789,7 +4812,7 @@
             this.L_P1_SENDER.Name = "L_P1_SENDER";
             this.L_P1_SENDER.Padding = new DevExpress.XtraPrinting.PaddingInfo(3, 3, 0, 0, 100F);
             this.L_P1_SENDER.SizeF = new System.Drawing.SizeF(767F, 30F);
-            this.L_P1_SENDER.Text = "에스앤에스아이앤씨㈜ 품질임원 최 인 규";
+            this.L_P1_SENDER.Text = "에스앤에스아이앤씨㈜ 제조총괄 최 병 일";
             this.L_P1_SENDER.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
             this.L_P1_SENDER.WordWrap = false;
             // 
@@ -11146,5 +11169,7 @@
         private DevExpress.XtraReports.UI.XRLabel L_P2_R_2V;
         private DevExpress.XtraReports.UI.XRLabel L_P2_R_3;
         private DevExpress.XtraReports.UI.XRLabel L_P2_R_3V;
+        private DevExpress.XtraReports.UI.XRPictureBox pic_P1_LOGO;
+        private DevExpress.XtraReports.UI.XRPictureBox pic_P2_LOGO;
     }
 }

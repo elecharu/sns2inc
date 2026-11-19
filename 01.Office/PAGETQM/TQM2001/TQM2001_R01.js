@@ -29,6 +29,8 @@ ItsPage.Load = function () {
         column.create('판정일자', 'JUDGEDATE', { width: 90, align: 'center', columnType: enumColumnTypes.date, readOnly: false }),
         column.create('판정유형', 'JUDGETP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'JUDGETP', readOnly: false }),
         column.create('불량구분', 'JUDGEBADTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'JUDGEBADTP', readOnly: false }),
+        column.create('외주처코드', 'OSCCUSTCD', { width: 90, align: 'center', columnType: enumColumnTypes.find, gpcd: 'CUSTCD_OSC', readOnly: false }),
+        column.create('외주처명', 'OSCCUSTNM', { width: 120 }),
         column.create('불량코드', 'BADCD', { width: 90, align: 'center', columnType: enumColumnTypes.find, gpcd: 'BADCD', readOnly: false }),
         column.create('불량명', 'BADNM', { width: 120 }),
         column.create('판정수량', 'JUDGEQTY', { width: 70, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
@@ -97,6 +99,8 @@ ItsButton.EventAdd = function () {
         JUDGEDATE: ItsHelper.GetYearMonthDay(),
         JUDGETP: '',
         JUDGEBADTP: '',
+        OSCCUSTCD: '',
+        OSCCUSTNM: '',
         BADCD: '',
         BADNM: '',
         JUDGEQTY: REMAINQTY,
@@ -107,7 +111,8 @@ ItsButton.EventAdd = function () {
     });
 };
 
-/* 판정자코드 칸 더블클릭·Enter → 사원 찾기 팝업, 발생내용코드 칸 → 폐기 불량코드 찾기 팝업 */
+/* 판정자코드 칸 더블클릭·Enter → 사원 찾기 팝업, 발생내용코드 칸 → 폐기 불량코드 찾기 팝업
+   외주처코드 칸 → 외주처 찾기 팝업 (불량구분이 외주일 때만) */
 ItsGrid.Event('grid2').onDoubleClick = function (rowIndex, field) {
     ItsGrid.Event('grid2').onKeydownEnter(rowIndex, field);
 };
@@ -126,14 +131,34 @@ ItsGrid.Event('grid2').onKeydownEnter = function (rowIndex, field) {
             ItsGrid.SetValue('grid2', rowIndex, 'BADNM', res['NAME']);
             ItsGrid.CheckRow('grid2', rowIndex);
         });
+    } else if (field == 'OSCCUSTCD') {
+        if (ItsGrid.GetValue('grid2', rowIndex, 'JUDGEBADTP') != 'OSC') {
+            ItsMsg.Alert('불량구분이 외주일 때만 외주처를 선택합니다.');
+            return;
+        }
+        ItsPop.OpenFindCOM({ gpcd: 'CUSTCD_OSC', keyword: ItsGrid.GetValue('grid2', rowIndex, field) }, function (res) {
+            ItsGrid.SetValue('grid2', rowIndex, 'OSCCUSTCD', res['CODE']);
+            ItsGrid.SetValue('grid2', rowIndex, 'OSCCUSTNM', res['NAME']);
+            ItsGrid.CheckRow('grid2', rowIndex);
+        });
     }
 };
 
-/* 판정자코드·발생내용코드를 지우면 이름도 지움 */
+/* 판정자코드·발생내용코드·외주처코드를 지우면 이름도 지움, 불량구분이 외주가 아니게 되면 외주처를 지움 */
 ItsGrid.Event('grid2').onChanged = function (rowIndex, field, newValue) {
+    if (field == 'JUDGEBADTP') {
+        if (newValue != 'OSC') {
+            ItsGrid.SetValue('grid2', rowIndex, 'OSCCUSTCD', '');
+            ItsGrid.SetValue('grid2', rowIndex, 'OSCCUSTNM', '');
+        }
+        return;
+    }
+
     if (newValue != undefined && newValue != '') return;
 
-    if (field == 'EMPCD') {
+    if (field == 'OSCCUSTCD') {
+        ItsGrid.SetValue('grid2', rowIndex, 'OSCCUSTNM', '');
+    } else if (field == 'EMPCD') {
         ItsGrid.SetValue('grid2', rowIndex, 'EMPNM', '');
     } else if (field == 'BADCD') {
         ItsGrid.SetValue('grid2', rowIndex, 'BADNM', '');
@@ -163,6 +188,7 @@ ItsButton.EventSave = function () {
             maria.AddList('JUDGETP_LIST', ROWDATA.JUDGETP);
             maria.AddList('JUDGEBADTP_LIST', ROWDATA.JUDGEBADTP);
             maria.AddList('BADCD_LIST', ROWDATA.BADCD);
+            maria.AddList('OSCCUSTCD_LIST', ROWDATA.OSCCUSTCD);
             maria.AddList('JUDGEQTY_LIST', ROWDATA.JUDGEQTY);
             maria.AddList('EMPCD_LIST', ROWDATA.EMPCD);
             maria.AddList('REMARK_LIST', ROWDATA.REMARK);
@@ -256,9 +282,10 @@ ItsButton.Event('btn_JUDGE_MULTI').onClick = function () {
     ItsFind.SetValue('pop1_find_EMPCD', ItsPage.EMPCD);
     ItsCombo.SetValue('pop1_cmb_JUDGETP', '');
     ItsCombo.SetValue('pop1_cmb_JUDGEBADTP', '');
+    ItsFind.SetValue('pop1_find_OSCCUSTCD', '');
     ItsFind.SetValue('pop1_find_BADCD', '');
     ItsText.SetValue('pop1_txt_REMARK', '');
-    $('#pop1').height(245);   // Type="add" 팝업은 열 때마다 45px 씩 커지는 라이브러리 버그가 있어 되돌림
+    $('#pop1').height(290);   // Type="add" 팝업은 열 때마다 45px 씩 커지는 라이브러리 버그가 있어 되돌림
     ItsPop.Open('pop1');
 };
 

@@ -3,7 +3,8 @@ PROCEDURE MES_SNS2.TQM3001_R01(
 -- *****************************************************************************
 -- Comment: 협력사 클레임등록 (품질팀) - "CLAIM 통보서" (공문서 + 산출내역서) 양식
 --          ) 클레임 1건 = 협력사(귀책처) × 발생월. 발생기간은 그 달 1일~말일
---          ) 귀책처 = 판정한 로트를 만든 외주실적(OSCRSTLOT → OSCRST.CUSTCD)의 거래처,
+--          ) 귀책처 = 불량구분이 외주이고 판정 때 고른 외주처(TQMJUDGE.OSCCUSTCD)가 있으면 그 외주처,
+--            없으면 판정한 로트를 만든 외주실적(OSCRSTLOT → OSCRST.CUSTCD)의 거래처,
 --            외주 로트가 아니면 불량구분(JUDGEBADTP) 코드 (TQM3001_S01 협력사 불량조회와 같은 기준)
 --          ) 대상 판정: 판정유형 불량(BAD), 불량구분 1공장(FAC1)·외주(OSC)
 --          ) LIST     : 발생월의 귀책처 목록 (불량수량, 등록한 클레임)
@@ -22,6 +23,7 @@ PROCEDURE MES_SNS2.TQM3001_R01(
 -- Modify: 2026-11-16 승인(APPROVE)·승인취소(APPROVE_CANCEL) 추가, 승인된 클레임 저장·삭제 막음,
 --                    LIST 에 승인자·승인일시 (파라미터 $APRVEMP·$CUSTCD_LIST 추가, 사용자 지시)
 --         2026-11-16 PRINT 머리에 승인자명(APRVEMPNM) 추가 (결재란 작성 = 담당, 승인 = 승인자)
+--         2026-11-18 불량구분 외주는 판정 외주처(TQMJUDGE.OSCCUSTCD)를 귀책처로 (사용자 지시)
 -- *****************************************************************************
   IN $SMONTH VARCHAR(10),             -- 발생월 (YYYY-MM)
   IN $CUSTCD VARCHAR(100),            -- 귀책처
@@ -97,7 +99,11 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     DROP TEMPORARY TABLE IF EXISTS TEMP_CLAIM_JUDGE;
     CREATE TEMPORARY TABLE TEMP_CLAIM_JUDGE AS
       SELECT
-          IF(IFNULL(LOT_OSC.CUSTCD, '') <> '', LOT_OSC.CUSTCD, TQMJUDGE.JUDGEBADTP) AS CUSTCD
+          CASE
+            WHEN TQMJUDGE.JUDGEBADTP = 'OSC' AND TQMJUDGE.OSCCUSTCD <> '' THEN TQMJUDGE.OSCCUSTCD  -- 판정 때 고른 외주처
+            WHEN IFNULL(LOT_OSC.CUSTCD, '') <> '' THEN LOT_OSC.CUSTCD                           -- 로트를 만든 외주실적의 거래처
+            ELSE TQMJUDGE.JUDGEBADTP
+          END AS CUSTCD
         , TQMJUDGE.ITEMID
         , TQMJUDGE.BADCD
         , TQMJUDGE.JUDGEQTY

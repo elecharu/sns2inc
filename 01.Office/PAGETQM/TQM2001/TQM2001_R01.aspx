@@ -40,7 +40,7 @@
 
 <%-- POP --%>
 <asp:Content ContentPlaceHolderID="CPH_POP" runat="server">
-    <Its:pop runat="server" Type="add" ID="pop1" Title="일괄판정" Width="420" Height="245" AddBtnName="판정등록">
+    <Its:pop runat="server" Type="add" ID="pop1" Title="일괄판정" Width="420" Height="290" AddBtnName="판정등록">
         <Its:div runat="server" Type="SplitSingle" ID="pdiv1">
             <Its:date runat="server" Label="판정일자" ID="pop1_date_JUDGEDATE" Field="JUDGEDATE" />
             <Its:newline runat="server" />
@@ -49,6 +49,9 @@
             <Its:combo runat="server" Label="판정유형" ID="pop1_cmb_JUDGETP" Field="JUDGETP" GPCD="@JUDGETP" />
             <Its:newline runat="server" />
             <Its:combo runat="server" Label="불량구분" ID="pop1_cmb_JUDGEBADTP" Field="JUDGEBADTP" GPCD="@JUDGEBADTP" />
+            <Its:newline runat="server" />
+            <%-- 외주처: 불량구분이 외주일 때만 (외주가 아니면 저장할 때 비운다) --%>
+            <Its:find runat="server" Label="외주처" ID="pop1_find_OSCCUSTCD" Field="OSCCUSTCD" GPCD="CUSTCD_OSC" InputWidth="80" NameWidth="160" />
             <Its:newline runat="server" />
             <%-- 발생내용: 대분류(QM210)가 폐기인 불량코드만 --%>
             <Its:find runat="server" Label="발생내용" ID="pop1_find_BADCD" Field="BADCD" GPCD="BADCD" REF02="QM210I210N" InputWidth="80" NameWidth="160" />

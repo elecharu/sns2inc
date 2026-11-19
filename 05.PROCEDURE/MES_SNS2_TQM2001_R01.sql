@@ -21,6 +21,7 @@ PROCEDURE MES_SNS2.TQM2001_R01(
 --         2026-11-10 발생내용(BADCD, MSTBAD 대분류 폐기 QM210I210N) 추가. 판정유형이 불량이면 필수
 --                    (협력사 클레임등록 TQM3001_R01 에서 씀, 파라미터 $BADCD·$BADCD_LIST 2개 추가)
 --         2026-11-12 조회조건 생산일자 삭제 (파라미터 $SDATE·$EDATE 삭제)
+--         2026-11-18 불량구분이 외주(OSC)이면 외주처(OSCCUSTCD) 필수 (파라미터 $OSCCUSTCD·$OSCCUSTCD_LIST 2개 추가)
 -- *****************************************************************************
   IN $WARECD VARCHAR(100),            -- 불량창고
   IN $ITEMCG VARCHAR(100),            -- 품목유형 (공통코드 DM100)
@@ -33,6 +34,7 @@ PROCEDURE MES_SNS2.TQM2001_R01(
   IN $JUDGETP VARCHAR(100),           -- 일괄판정 판정유형
   IN $JUDGEBADTP VARCHAR(100),        -- 일괄판정 불량구분
   IN $BADCD VARCHAR(100),             -- 일괄판정 발생내용 (MSTBAD.BADCD)
+  IN $OSCCUSTCD VARCHAR(100),         -- 일괄판정 외주처 (불량구분이 외주일 때)
   IN $REMARK VARCHAR(1000),           -- 일괄판정 비고
   IN $EMPCD VARCHAR(100),             -- 일괄판정 판정자, 공정이동표 출력자
   IN $JUDGEKEY_LIST MEDIUMTEXT,       -- 판정키 목록 (신규는 ''), 공정이동표는 판정키 1개
@@ -40,6 +42,7 @@ PROCEDURE MES_SNS2.TQM2001_R01(
   IN $JUDGETP_LIST MEDIUMTEXT,        -- 판정유형 목록
   IN $JUDGEBADTP_LIST MEDIUMTEXT,     -- 불량구분 목록
   IN $BADCD_LIST MEDIUMTEXT,          -- 발생내용 목록
+  IN $OSCCUSTCD_LIST MEDIUMTEXT,      -- 외주처 목록
   IN $JUDGEQTY_LIST MEDIUMTEXT,       -- 판정수량 목록
   IN $EMPCD_LIST MEDIUMTEXT,          -- 판정자 목록
   IN $REMARK_LIST MEDIUMTEXT,         -- 비고 목록
@@ -56,6 +59,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$JUDGETP_LIST MEDIUMTEXT;
   DECLARE _$JUDGEBADTP_LIST MEDIUMTEXT;
   DECLARE _$BADCD_LIST MEDIUMTEXT;
+  DECLARE _$OSCCUSTCD_LIST MEDIUMTEXT;
   DECLARE _$JUDGEQTY_LIST MEDIUMTEXT;
   DECLARE _$REMARK_LIST MEDIUMTEXT;
   DECLARE _$EMPCD_LIST MEDIUMTEXT;
@@ -65,6 +69,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$JUDGETP VARCHAR(100);
   DECLARE _$JUDGEBADTP VARCHAR(100);
   DECLARE _$BADCD VARCHAR(100);
+  DECLARE _$OSCCUSTCD VARCHAR(100);
   DECLARE _$JUDGEQTY_TXT VARCHAR(100);
   DECLARE _$JUDGEQTY DECIMAL(20, 8);
   DECLARE _$REMARK VARCHAR(1000);
@@ -141,6 +146,8 @@ WHEN 'LIST_JUDGE' THEN  -- 선택 로트의 판정이력 (grid2)
     , TQMJUDGE.JUDGEDATE
     , TQMJUDGE.JUDGETP
     , TQMJUDGE.JUDGEBADTP
+    , TQMJUDGE.OSCCUSTCD
+    , IFNULL(MSTCUST.CUSTNM, '') AS OSCCUSTNM
     , TQMJUDGE.BADCD
     , IFNULL(MSTBAD.BADNM, '') AS BADNM
     , TQMJUDGE.JUDGEQTY
@@ -153,6 +160,8 @@ WHEN 'LIST_JUDGE' THEN  -- 선택 로트의 판정이력 (grid2)
     ON MSTEMP.EMPCD = TQMJUDGE.EMPCD
   LEFT JOIN MSTBAD
     ON MSTBAD.BADCD = TQMJUDGE.BADCD
+  LEFT JOIN MSTCUST
+    ON MSTCUST.CUSTCD = TQMJUDGE.OSCCUSTCD
   WHERE TQMJUDGE.LOTKEY = $LOTKEY
     AND TQMJUDGE.WARECD = $WARECD
   ORDER BY TQMJUDGE.JUDGEDATE, TQMJUDGE.JUDGEKEY;
@@ -203,6 +212,7 @@ WHEN 'SAVE_JUDGE' THEN  -- 판정 등록·수정
   SET _$JUDGETP_LIST = $JUDGETP_LIST;
   SET _$JUDGEBADTP_LIST = $JUDGEBADTP_LIST;
   SET _$BADCD_LIST = $BADCD_LIST;
+  SET _$OSCCUSTCD_LIST = $OSCCUSTCD_LIST;
   SET _$JUDGEQTY_LIST = $JUDGEQTY_LIST;
   SET _$EMPCD_LIST = $EMPCD_LIST;
   SET _$OLDQTY = 0;   -- 수정하는 판정의 기존 수량 합
@@ -214,6 +224,7 @@ WHEN 'SAVE_JUDGE' THEN  -- 판정 등록·수정
     CALL COMSPLIT(_$JUDGETP_LIST, _$JUDGETP);
     CALL COMSPLIT(_$JUDGEBADTP_LIST, _$JUDGEBADTP);
     CALL COMSPLIT(_$BADCD_LIST, _$BADCD);
+    CALL COMSPLIT(_$OSCCUSTCD_LIST, _$OSCCUSTCD);
     CALL COMSPLIT(_$JUDGEQTY_LIST, _$JUDGEQTY_TXT);
     CALL COMSPLIT(_$EMPCD_LIST, _$EMPCD);
     SET _$JUDGEQTY = CAST(IF(IFNULL(_$JUDGEQTY_TXT, '') = '', '0', _$JUDGEQTY_TXT) AS DECIMAL(20, 8));
@@ -235,6 +246,11 @@ WHEN 'SAVE_JUDGE' THEN  -- 판정 등록·수정
 
     IF _$JUDGETP = 'BAD' AND IFNULL(_$JUDGEBADTP, '') = '' THEN
       CALL COMERR('판정유형이 불량이면 불량구분(1공장/2공장/외주)을 선택하세요.');
+      LEAVE PROC;
+    END IF;
+
+    IF _$JUDGETP = 'BAD' AND _$JUDGEBADTP = 'OSC' AND IFNULL(_$OSCCUSTCD, '') = '' THEN
+      CALL COMERR('불량구분이 외주이면 외주처를 선택하세요.');
       LEAVE PROC;
     END IF;
 
@@ -306,6 +322,7 @@ WHEN 'SAVE_JUDGE' THEN  -- 판정 등록·수정
   SET _$JUDGETP_LIST = $JUDGETP_LIST;
   SET _$JUDGEBADTP_LIST = $JUDGEBADTP_LIST;
   SET _$BADCD_LIST = $BADCD_LIST;
+  SET _$OSCCUSTCD_LIST = $OSCCUSTCD_LIST;
   SET _$JUDGEQTY_LIST = $JUDGEQTY_LIST;
   SET _$REMARK_LIST = $REMARK_LIST;
   SET _$EMPCD_LIST = $EMPCD_LIST;
@@ -317,6 +334,7 @@ WHEN 'SAVE_JUDGE' THEN  -- 판정 등록·수정
     CALL COMSPLIT(_$JUDGETP_LIST, _$JUDGETP);
     CALL COMSPLIT(_$JUDGEBADTP_LIST, _$JUDGEBADTP);
     CALL COMSPLIT(_$BADCD_LIST, _$BADCD);
+    CALL COMSPLIT(_$OSCCUSTCD_LIST, _$OSCCUSTCD);
     CALL COMSPLIT(_$JUDGEQTY_LIST, _$JUDGEQTY_TXT);
     CALL COMSPLIT(_$REMARK_LIST, _$REMARK);
     CALL COMSPLIT(_$EMPCD_LIST, _$EMPCD);
@@ -326,6 +344,11 @@ WHEN 'SAVE_JUDGE' THEN  -- 판정 등록·수정
     IF _$JUDGETP <> 'BAD' THEN
       SET _$JUDGEBADTP = '';
       SET _$BADCD = '';
+    END IF;
+
+    -- 불량구분이 외주가 아니면 외주처를 비운다
+    IF IFNULL(_$JUDGEBADTP, '') <> 'OSC' THEN
+      SET _$OSCCUSTCD = '';
     END IF;
 
     IF IFNULL(_$JUDGEKEY, '') = '' THEN
@@ -339,6 +362,7 @@ WHEN 'SAVE_JUDGE' THEN  -- 판정 등록·수정
         , ITEMID
         , JUDGETP
         , JUDGEBADTP
+        , OSCCUSTCD
         , BADCD
         , JUDGEQTY
         , EMPCD
@@ -353,6 +377,7 @@ WHEN 'SAVE_JUDGE' THEN  -- 판정 등록·수정
         , _$ITEMID
         , _$JUDGETP
         , _$JUDGEBADTP
+        , _$OSCCUSTCD
         , IFNULL(_$BADCD, '')
         , _$JUDGEQTY
         , _$EMPCD
@@ -365,6 +390,7 @@ WHEN 'SAVE_JUDGE' THEN  -- 판정 등록·수정
         SET JUDGEDATE = _$JUDGEDATE
           , JUDGETP = _$JUDGETP
           , JUDGEBADTP = _$JUDGEBADTP
+          , OSCCUSTCD = _$OSCCUSTCD
           , BADCD = IFNULL(_$BADCD, '')
           , JUDGEQTY = _$JUDGEQTY
           , EMPCD = _$EMPCD
@@ -406,6 +432,11 @@ WHEN 'SAVE_JUDGE_MULTI' THEN  -- 여러 로트 일괄판정 (로트마다 미판
 
   IF $JUDGETP = 'BAD' AND $JUDGEBADTP = '' THEN
     CALL COMERR('판정유형이 불량이면 불량구분(1공장/2공장/외주)을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $JUDGETP = 'BAD' AND $JUDGEBADTP = 'OSC' AND $OSCCUSTCD = '' THEN
+    CALL COMERR('불량구분이 외주이면 외주처를 선택하세요.');
     LEAVE PROC;
   END IF;
 
@@ -461,6 +492,7 @@ WHEN 'SAVE_JUDGE_MULTI' THEN  -- 여러 로트 일괄판정 (로트마다 미판
   -- 불량이 아니면 불량구분·발생내용을 비운다
   SET _$JUDGEBADTP = IF($JUDGETP = 'BAD', $JUDGEBADTP, '');
   SET _$BADCD = IF($JUDGETP = 'BAD', $BADCD, '');
+  SET _$OSCCUSTCD = IF(_$JUDGEBADTP = 'OSC', $OSCCUSTCD, '');  -- 외주가 아니면 외주처를 비운다
   SET _$PRINTKEYS = '';
 
   WHILE LENGTH(_$LOTKEY_LIST) > 0 DO
@@ -491,6 +523,7 @@ WHEN 'SAVE_JUDGE_MULTI' THEN  -- 여러 로트 일괄판정 (로트마다 미판
       , ITEMID
       , JUDGETP
       , JUDGEBADTP
+      , OSCCUSTCD
       , BADCD
       , JUDGEQTY
       , EMPCD
@@ -505,6 +538,7 @@ WHEN 'SAVE_JUDGE_MULTI' THEN  -- 여러 로트 일괄판정 (로트마다 미판
       , _$ITEMID
       , $JUDGETP
       , _$JUDGEBADTP
+      , _$OSCCUSTCD
       , _$BADCD
       , _$LOTQTY - _$SUMQTY
       , $EMPCD

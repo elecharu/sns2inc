@@ -229,12 +229,12 @@ WHEN 'SAVE' THEN  -- 추가 저장 (기존 출하계획은 지우지 않는다)
     END IF;
 
     IF IFNULL(_$OUTTIME, '') <> '' AND _$OUTTIME NOT REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$' THEN
-      CALL COMERR(CONCAT(_$SEQ, '번째 줄: 출하시간은 YYYY-MM-DD HH:mm 으로 입력하세요.'));
+      CALL COMERR(CONCAT(_$SEQ, '번째 줄: 출하예정시간은 YYYY-MM-DD HH:mm 으로 입력하세요.'));
       LEAVE PROC;
     END IF;
 
     IF IFNULL(_$ARRVTIME, '') <> '' AND _$ARRVTIME NOT REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$' THEN
-      CALL COMERR(CONCAT(_$SEQ, '번째 줄: 도착시간은 YYYY-MM-DD HH:mm 으로 입력하세요.'));
+      CALL COMERR(CONCAT(_$SEQ, '번째 줄: 도착예정시간은 YYYY-MM-DD HH:mm 으로 입력하세요.'));
       LEAVE PROC;
     END IF;
   END WHILE;

@@ -20,8 +20,8 @@ ItsPage.Load = function () {
         column.create('출하수량', 'PLANQTY', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.create('적입수량', 'PACKQTY', { width: 70, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.create('파렛트수', 'PLTQTY', { width: 70, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
-        column.create('출하시간', 'OUTTIME', { width: 120, align: 'center' }),
-        column.create('도착시간', 'ARRVTIME', { width: 120, align: 'center' }),
+        column.create('출하예정시간','OUTTIME', { width: 120, align: 'center' }),
+        column.create('도착예정시간','ARRVTIME', { width: 120, align: 'center' }),
         column.create('비고', 'REMARK', { width: 200 }),
         column.create('등록시간', 'RTIME', { width: 130, align: 'center' }),
         column.create('출하계획키', 'SALOUTPLANKEY', { width: 80, hidden: true }),
@@ -50,8 +50,8 @@ ItsPage.Load = function () {
         column.create('출하수량', 'PLANQTY', { width: 75, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
         column.create('적입수량', 'PACKQTY', { width: 65, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
         column.create('파렛트수', 'PLTQTY', { width: 65, columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
-        column.create('출하시간', 'OUTTIME', { width: 120, align: 'center', readOnly: false }),
-        column.create('도착시간', 'ARRVTIME', { width: 120, align: 'center', readOnly: false }),
+        column.create('출하예정시간','OUTTIME', { width: 120, align: 'center', readOnly: false }),
+        column.create('도착예정시간','ARRVTIME', { width: 120, align: 'center', readOnly: false }),
         column.create('비고', 'REMARK', { width: 200, readOnly: false }),
         column.create('품목ID', 'ITEMID', { width: 70, hidden: true }),
         column.split()
@@ -604,8 +604,8 @@ function CHECK_ROW(row) {
         else if ((row.ENDCUSTNM || '') == '') err.push('고객코드 없음');
     }
     if (!(parseFloat(row.PLANQTY) > 0)) err.push('출하수량 없음');
-    if ((row.OUTTIME || '') != '' && !dt.test(row.OUTTIME)) err.push('출하시간 형식 오류');
-    if ((row.ARRVTIME || '') != '' && !dt.test(row.ARRVTIME)) err.push('도착시간 형식 오류');
+    if ((row.OUTTIME || '') != '' && !dt.test(row.OUTTIME)) err.push('출하예정시간 형식 오류');
+    if ((row.ARRVTIME || '') != '' && !dt.test(row.ARRVTIME)) err.push('도착예정시간 형식 오류');
 
     row.ERRYN = err.length > 0 ? 'Y' : 'N';
     row.MSG = err.join(', ');

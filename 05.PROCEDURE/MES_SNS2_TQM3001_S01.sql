@@ -4,10 +4,11 @@ PROCEDURE MES_SNS2.TQM3001_S01(
 -- Comment: 협력사 불량조회 (품질팀) - "협력업체 불량 현황" 양식
 --          ) LIST: 조회월의 부적합 판정(TQMJUDGE) 중 판정유형 불량(BAD), 불량구분 1공장(FAC1)·외주(OSC) 인 것을
 --                  협력업체 + 품목(ITEMID) + 판정일자로 집계해 일자(1~31일)별 수량을 가로로 펼친다
---          ) 협력업체 = 판정한 로트를 만든 외주실적(OSCRSTLOT → OSCRST.CUSTCD)의 거래처, 외주 로트가 아니면 불량구분 이름(1공장 등)
+--          ) 협력업체 = 불량구분이 외주이고 판정 때 고른 외주처(TQMJUDGE.OSCCUSTCD)가 있으면 그 외주처,
+--            없으면 판정한 로트를 만든 외주실적(OSCRSTLOT → OSCRST.CUSTCD)의 거래처, 외주 로트가 아니면 불량구분 이름(1공장 등)
 --          ) 목표(PPM)·주요 ISSUE 및 대책은 칸만 두고 빈 값 (2026-11-10 사용자 지시)
 -- Create: 2026-11-10
--- Modify:
+-- Modify: 2026-11-18 불량구분 외주는 판정 외주처(TQMJUDGE.OSCCUSTCD)명을 협력업체로 (사용자 지시)
 -- *****************************************************************************
   IN $SMONTH VARCHAR(10),       -- 조회월 (YYYY-MM)
 -- *****************************************************************************
@@ -75,9 +76,13 @@ WHEN 'LIST' THEN  -- 협력업체·품목별 일자 불량수량
            , TQMJUDGE.ITEMID
            , TQMJUDGE.JUDGEQTY
            , TQMJUDGE.JUDGEBADTP
-           , IF(IFNULL(LOT_OSC.CUSTCD, '') <> ''
-              , IFNULL(MSTCUST.CUSTNM, LOT_OSC.CUSTCD)
-              , IFNULL(GPCD('JUDGEBADTP', TQMJUDGE.JUDGEBADTP), TQMJUDGE.JUDGEBADTP)) AS CUSTNM
+           , CASE
+               WHEN TQMJUDGE.JUDGEBADTP = 'OSC' AND TQMJUDGE.OSCCUSTCD <> ''
+                 THEN IFNULL(OSCCUST.CUSTNM, TQMJUDGE.OSCCUSTCD)                 -- 판정 때 고른 외주처
+               WHEN IFNULL(LOT_OSC.CUSTCD, '') <> ''
+                 THEN IFNULL(MSTCUST.CUSTNM, LOT_OSC.CUSTCD)                     -- 로트를 만든 외주실적의 거래처
+               ELSE IFNULL(GPCD('JUDGEBADTP', TQMJUDGE.JUDGEBADTP), TQMJUDGE.JUDGEBADTP)
+             END AS CUSTNM
          FROM TQMJUDGE
          LEFT JOIN (
                      -- 로트를 만든 외주실적의 거래처 (로트당 하나)
@@ -92,6 +97,8 @@ WHEN 'LIST' THEN  -- 협력업체·품목별 일자 불량수량
            ON LOT_OSC.LOTKEY = TQMJUDGE.LOTKEY
          LEFT JOIN MSTCUST
            ON MSTCUST.CUSTCD = LOT_OSC.CUSTCD
+         LEFT JOIN MSTCUST AS OSCCUST
+           ON OSCCUST.CUSTCD = TQMJUDGE.OSCCUSTCD
          WHERE TQMJUDGE.JUDGEDATE BETWEEN _$MSDATE AND _$MEDATE
            AND TQMJUDGE.JUDGETP = 'BAD'
            AND TQMJUDGE.JUDGEBADTP IN ('FAC1', 'OSC')
