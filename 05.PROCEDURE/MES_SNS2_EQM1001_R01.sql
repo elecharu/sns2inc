@@ -8,7 +8,7 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R01`(
 -- 			2026-11-09 					한성수	수리이력 사진(EQMREP_IMG) 조회·등록·삭제 추가, 수리이력 삭제 시 사진 등록 함께 삭제
 -- 			2026-11-13 					한성수	설비이력 조회 공장(2공장 기본)·작업장·설비구분·설비대분류 컬럼 및 검색 조건 추가
 -- 			2026-11-19 					한성수	공무작업일지 등록(작업구분·고장유형·고장부위·중단구분·비가동·원인분석·재발방지·사용부품)·비가동·출고부품 조회 추가, 이력 저장 시 수리업체·수리유형 선택 입력, 수리키 MT-YYYY-MMDD-순번 형식으로 변경, 수리이력(태블릿 수리 포함)으로 공무작업일지 등록(LIST_REP_WAIT 수리 기록 선택, GET_EQMREP_WORK 조회, ADD_EQMREP_WORK는 새 수리 기록 없이 선택한 수리 기록에 저장), 설비이력 조회 작업일지 작성 여부 추가
--- 			2026-11-20 					한성수	비가동은 수리 설비가 속한 생산라인(MSTEQM_MATCH)의 수리시간과 겹친 비가동으로 자동 연결, 비가동 선택 목록(LIST_NON)·그리드 저장(SAVE_EQMREP) 분기와 전용 파라미터 14개·변수 제거, 사용 부품 출고일자 입력 저장(INOUTDATE_LIST)·단위 공통코드(DM150) 저장 및 확인, 설비이력 조회를 공무작업일지 항목(수리시간·작업구분·고장유형·고장부위·중단구분·비가동·작업자·원인분석·재발방지) 기준으로 변경, 태블릿 수리 기록 삭제(DELETE_EQMREP)·작업자 별도 추가/삭제(SAVE_EMPCD·DELETE_EMPCD)·미사용 웹 수리 기록 생성(ADD_EQMREP) 분기와 미사용 파라미터 15개·변수 5개 제거, 설비이력 조회 공장 조건 2공장 고정으로 정리, 공무작업일지 팝업 조회(GET_EQMREP_WORK)에 비가동 발생·종료일시 따로 추가(비가동은 유형명만), 설비이력 조회(LIST_EQMREP)는 그리드 컬럼(수리시간까지)만, 작업자 목록(LIST_EMPCD) 분기 제거, 출고 부품 선택(LIST_OUTPART) 기간·라인 제한 제거(출고 전체)와 $REPSDAY 파라미터 제거, 공무작업일지 삭제(DELETE_WORKLOG: 작업일지 항목·사용 부품만 비움, 수리 기록·작업자·사진 유지)·출력(PRINT_WORKLOG, PRD6001_S03에서 이동) 추가, 설비이력 조회(LIST_EQMREP)는 공무작업일지를 작성한 수리 기록만(작업일지 작성 여부 컬럼 제거)
+-- 			2026-11-20 					한성수	비가동은 수리 설비가 속한 생산라인(MSTEQM_MATCH)의 수리시간과 겹친 비가동으로 자동 연결, 비가동 선택 목록(LIST_NON)·그리드 저장(SAVE_EQMREP) 분기와 전용 파라미터 14개·변수 제거, 사용 부품 출고일자 입력 저장(INOUTDATE_LIST)·단위 공통코드(DM150) 저장 및 확인, 설비이력 조회를 공무작업일지 항목(수리시간·작업구분·고장유형·고장부위·중단구분·비가동·작업자·원인분석·재발방지) 기준으로 변경, 태블릿 수리 기록 삭제(DELETE_EQMREP)·작업자 별도 추가/삭제(SAVE_EMPCD·DELETE_EMPCD)·미사용 웹 수리 기록 생성(ADD_EQMREP) 분기와 미사용 파라미터 15개·변수 5개 제거, 설비이력 조회 공장 조건 2공장 고정으로 정리, 공무작업일지 팝업 조회(GET_EQMREP_WORK)에 비가동 발생·종료일시 따로 추가(비가동은 유형명만), 설비이력 조회(LIST_EQMREP)는 그리드 컬럼(수리시간까지)만, 작업자 목록(LIST_EMPCD) 분기 제거, 출고 부품 선택(LIST_OUTPART) 기간·라인 제한 제거(출고 전체)와 $REPSDAY 파라미터 제거, 공무작업일지 삭제(DELETE_WORKLOG: 작업일지 항목·사용 부품만 비움, 수리 기록·작업자·사진 유지)·출력(PRINT_WORKLOG, PRD6001_S03에서 이동) 추가, 설비이력 조회(LIST_EQMREP)는 공무작업일지를 작성한 수리 기록만(작업일지 작성 여부 컬럼 제거), 부품 선택을 출고 이력(LIST_OUTPART) 대신 설비부품 기준정보 전체(LIST_PART)로 변경(부품 구분 PART 추가)
 -- *****************************************************************************
   IN $SDATE            VARCHAR(10),     -- 조회 시작일자
   IN $EDATE            VARCHAR(10),     -- 조회 종료일자
@@ -110,24 +110,23 @@ WHEN 'LIST_EQMREP' THEN  -- 공무작업일지 목록 (작성된 일지만)
   ORDER BY EQMREP.REGTIME, EQMREP.EQMREPKEY;
 
 -- *****************************************************************************
-WHEN 'LIST_OUTPART' THEN  -- 공무작업일지 출고 부품 선택 목록
-  -- 설비부품 출고(OUT) 전체 (기간·라인 제한 없음, 최근 출고 먼저)
+WHEN 'LIST_PART' THEN  -- 공무작업일지 부품 선택 목록 (2공장 설비부품 기준정보 전체 = MST3001_R03 설비부품과 같은 기준: 품목구분 DM100700, 공장 07 품목)
   SELECT
-    I.INOUTKEY,
-    I.INOUTDATE,
-    IF(I.EQMGROUP1 = '' AND I.EQMCD = '', '라인 미지정', '라인 출고') AS OUTGUBUN,
-    IFNULL(GPCD('FM113', I.EQMGROUP1), '') AS EQMGROUP1NM,
-    I.ITEMID,
-    IFNULL(T.ITEMCD, '') AS ITEMCD,
-    IFNULL(T.ITEMNM, '') AS ITEMNM,
+    CAST(T.ITEMID AS CHAR) AS ITEMID,
+    T.ITEMCD,
+    T.ITEMNM,
     IFNULL(T.ITEMSPEC, '') AS ITEMSPEC,
-    IFNULL(T.ITEMUNIT, '') AS ITEMUNIT, -- 단위 (공통코드 DM150)
-    I.INOUTQTY,
-    IFNULL((SELECT SUM(P.PARTQTY) FROM EQMREP_PART AS P WHERE P.INOUTKEY = I.INOUTKEY AND P.EQMREPKEY <> IFNULL($EQMREPKEY, '')), 0) AS USEDQTY -- 다른 작업일지 사용수량
-  FROM INOUT_EQMPARTS AS I
-  LEFT JOIN MSTITEM AS T ON T.ITEMID = I.ITEMID
-  WHERE I.INOROUT = 'OUT'
-  ORDER BY I.INOUTDATE DESC, I.INOUTKEY DESC;
+    IFNULL(T.ITEMUNIT, '') AS ITEMUNIT,  -- 단위 (공통코드 DM150)
+    IFNULL(E.LOTQTY, 0) AS LOTQTY        -- 현재고
+  FROM MSTITEM AS T
+  INNER JOIN MSTITEM_FACTORY AS F
+    ON F.ITEMID = T.ITEMID
+   AND F.FACTORYCD = '07'
+  LEFT JOIN MSTITEM_EQMPARTS AS E
+    ON E.ITEMID = T.ITEMID
+   AND E.FACTORYCD = '07'
+  WHERE T.ITEMCG = 'DM100700'
+  ORDER BY T.ITEMCD;
 
 -- *****************************************************************************
 WHEN 'LIST_REP_WAIT' THEN  -- 공무작업일지 등록할 수리 기록 (수리가 끝났고 작업일지 미작성, 수리종료일이 조회기간 안)
@@ -226,7 +225,7 @@ WHEN 'GET_EQMREP_WORK' THEN  -- 공무작업일지 조회 (화면 가운데 공�
 
   SELECT
     P.PARTTP,
-    IF(P.PARTTP = 'OUT', '출고', '스페셜') AS PARTTPNM,
+    CASE P.PARTTP WHEN 'OUT' THEN '출고' WHEN 'PART' THEN '부품' ELSE '스페셜' END AS PARTTPNM,
     P.INOUTKEY,
     P.ITEMID,
     P.INOUTDATE,
@@ -301,11 +300,12 @@ WHEN 'ADD_EQMREP_WORK' THEN  -- 공무작업일지 저장 = 수리 기록(태블
     IF _$FIRSTEMP = '' THEN SET _$FIRSTEMP = _$EMPCD; END IF;
   END WHILE;
 
-  -- 사용 자재·부품 확인 (부품명 필수, 수량 0보다 큰 숫자, 출고 부품은 출고이력 확인, 단위는 공통코드 DM150, 출고일자는 날짜 형식)
+  -- 사용 자재·부품 확인 (부품명 필수, 수량 0보다 큰 숫자, 출고 부품은 출고이력·부품은 설비부품 기준정보 확인, 단위는 공통코드 DM150, 출고일자는 날짜 형식)
   SET _$LIST1 = IFNULL($PARTTP_LIST, '');
   SET _$LIST2 = IFNULL($INOUTKEY_LIST, '');
   SET _$LIST3 = IFNULL($PARTNM_LIST, '');
   SET _$LIST4 = IFNULL($PARTQTY_LIST, '');
+  SET _$LIST5 = IFNULL($ITEMID_LIST, '');
   SET _$LIST7 = IFNULL($PARTUNIT_LIST, '');
   SET _$LIST9 = IFNULL($INOUTDATE_LIST, '');
   WHILE LENGTH(_$LIST1) > 0 DO
@@ -313,9 +313,10 @@ WHEN 'ADD_EQMREP_WORK' THEN  -- 공무작업일지 저장 = 수리 기록(태블
     CALL COMSPLIT(_$LIST2, _$INOUTKEY);
     CALL COMSPLIT(_$LIST3, _$PARTNM);
     CALL COMSPLIT(_$LIST4, _$PARTQTY);
+    CALL COMSPLIT(_$LIST5, _$ITEMID);
     CALL COMSPLIT(_$LIST7, _$PARTUNIT);
     CALL COMSPLIT(_$LIST9, _$INOUTDATE);
-    IF _$PARTTP NOT IN ('OUT', 'SPECIAL') THEN
+    IF _$PARTTP NOT IN ('OUT', 'PART', 'SPECIAL') THEN
       CALL COMERR('사용 부품 구분을 확인하세요.');
       LEAVE PROC;
     END IF;
@@ -329,6 +330,10 @@ WHEN 'ADD_EQMREP_WORK' THEN  -- 공무작업일지 저장 = 수리 기록(태블
     END IF;
     IF _$PARTTP = 'OUT' AND NOT EXISTS (SELECT 1 FROM INOUT_EQMPARTS WHERE INOUTKEY = _$INOUTKEY AND INOROUT = 'OUT') THEN
       CALL COMERR(CONCAT('출고 이력을 찾을 수 없는 부품입니다.', '\n- 부품: ', _$PARTNM));
+      LEAVE PROC;
+    END IF;
+    IF _$PARTTP = 'PART' AND NOT EXISTS (SELECT 1 FROM MSTITEM WHERE ITEMID = _$ITEMID AND ITEMCG = 'DM100700') THEN
+      CALL COMERR(CONCAT('설비부품 기준정보에 없는 부품입니다. 부품을 다시 선택하세요.', '\n- 부품: ', _$PARTNM));
       LEAVE PROC;
     END IF;
     IF TRIM(_$PARTUNIT) <> '' AND NOT EXISTS (SELECT 1 FROM COMTYPE WHERE GPCD = 'DM150' AND TPCD = TRIM(_$PARTUNIT)) THEN
@@ -402,7 +407,7 @@ WHEN 'ADD_EQMREP_WORK' THEN  -- 공무작업일지 저장 = 수리 기록(태블
       RTIME, REMP, RPRG
     ) VALUES (
       $EQMREPKEY, _$SEQ, _$PARTTP,
-      IF(_$PARTTP = 'OUT', _$INOUTKEY, ''), IF(_$PARTTP = 'OUT', _$ITEMID, ''), TRIM(_$INOUTDATE),
+      IF(_$PARTTP = 'OUT', _$INOUTKEY, ''), IF(_$PARTTP IN ('OUT', 'PART'), _$ITEMID, ''), TRIM(_$INOUTDATE),
       TRIM(_$PARTNM), TRIM(_$PARTSPEC), CAST(TRIM(_$PARTQTY) AS DECIMAL(20, 8)), TRIM(_$PARTUNIT), TRIM(_$PARTREMARK),
       CALLTIME(), CALLEMP(), CALLPRG()
     );

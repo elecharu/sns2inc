@@ -18,6 +18,46 @@
 
 ## 🕒 2026-11-20 (금) 작업 내역
 
+### 22. EQM1001_R01.js 프로젝트 구조 정비 및 불필요 코드 삭제
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js)
+- **요청**: `EQM1001_R01.js`를 프로젝트 구조·코딩 규칙에 맞게 정비하고 불필요한 코드 삭제 (기존 기능 100% 유지)
+- **작업 내용**:
+  - 1. 불필요 `hidden: true` 컬럼 7개 삭제 : `grid1`(`EQMREPKEY`), `grid_REPSEL`(`EQMREPKEY`), `grid_PART`(`ITEMID`), `wl_grid_PART`·`pop1_grid_PART`(`INOUTDATE`, `PARTTP`, `INOUTKEY`, `ITEMID`) — `ItsGrid.GetValue`·`Setkey`·`AddRow`는 원본 행 데이터에서 직접 참조
+  - 2. 중복·단일 호출 보조 코드 제거 : `WORKLOG_LOAD`의 작업자·사용 부품 `AddRow` 반복 호출을 `ItsGrid.SetStore`로 전환, 단일 호출 래퍼 3건(`WORKLOG_STATE`, `WORKLOG_VAL`, `GetRepImgList`) 통합 및 `WORKLOG_INIT` 중복 초기화 정리
+  - 3. 프로젝트 구조 및 코딩 규칙 통일 : 전역 변수 상단 일괄 배치(`wlKey`, `arrPartAll`, `arrRepImg` 등), `ItsPage.Load` → 콤보 연동 → 상단 툴바 이벤트 → 목록·팝업 이벤트 → 공통 함수 → 수리 사진 영역 순으로 재배치, `WORKLOG_BIND_EVENTS` 호이스팅 변수 상단 선언, 날짜 주석 11곳 제거 및 1줄 기능 주석 통일
+- **검증**: `node --check` 구문 검사 통과(오류 0건), 날짜 주석 0건·불필요 `hidden` 컬럼 0건, 단일 UTF-8 with BOM + CRLF 확인 (실제 화면 동작 미확인)
+
+### 21. EQM1001_R01 사용 자재·부품 출고일자 컬럼 숨김, 작업자·부품 [행삭제] 오동작 수정
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js)
+- **요청**: 6. 사용 자재/부품 출고일자 컬럼 삭제, 행삭제 버튼이 제대로 되는지 기능 확인
+- **원인**: 공통 그리드(ItsGrid cellEditEnded)는 칸 값을 바꾸면 그 행을 자동 체크함 → 체크가 [행삭제] 대상인 작업자·사용 부품 그리드에서 수량·비고·사번 등을 입력한 행이 다른 행을 지울 때 함께 삭제됨
+- **작업 내용**
+  - 1. 출고일자(INOUTDATE) 컬럼 숨김(예전 출고 부품의 저장값은 그대로 유지·저장), 잠금 주석에서 출고일자 제거
+  - 2. 작업자·사용 부품 그리드: 편집 시작 때 체크 상태를 기억하고 onChanged(cellEditEnded)에서 되돌림 → 체크는 사용자가 직접 한 것만
+  - 4. 사용 자재·부품 '구분'(PARTTPNM) 컬럼 삭제(필요 없음), 행 추가·불러오기에서 PARTTPNM 값도 제거. 부품 구분(PARTTP: 부품·스페셜·예전 출고)은 숨김 컬럼으로 그대로 저장·잠금 판단에 사용
+  - 3. 두 [행삭제]를 WORKLOG_DELETE_CHECKED 로 합침: 편집 중인 칸 먼저 반영(finishEditing) 후 체크한 행을 뒤에서부터 삭제, 체크한 행이 없으면 '선택된 항목이 없습니다.'
+- **검증**: 저장소의 jQuery·wijmo·ItsGrid·ItsButton 등 공통 스크립트와 EQM1001_R01.js 를 그대로 올린 시험 페이지에서 확인. 보정 전: A행 수량 입력 후 C행만 체크하고 행삭제 → A·C 삭제(재현). 보정 후: C만 삭제, 체크한 행을 편집해도 체크 유지, 출고 행 수량 편집 막힘·비고 입력, 작업자 사번 입력 후 다른 행 삭제 시 그 행만 삭제, 체크 없이 행삭제 시 행 유지, 출고일자 컬럼 숨김. 실제 화면은 미확인
+
+### 20. EQM1001_R01 부품 선택 코드그룹·건수 표시 제거, 검색줄 간격, js 정리
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js), [05.Procedure/MES_SNS2_EQM1001_R01.sql](05.Procedure/MES_SNS2_EQM1001_R01.sql)
+- **요청**: 부품 선택 코드그룹 기능·건수 표시 삭제, 검색어와 그리드 사이 간격, 그 밖에는 건드리지 말 것, js 파일 정리·불필요 코드 제거·최적화
+- **작업 내용**
+  - 1. 부품 선택 팝업 코드그룹 콤보(pp_cmb_GROUP)·건수(spn_PART_CNT)·관련 스타일과 스크립트 제거, LIST_PART의 ITEMGRP 제거, 검색줄(pp_div1) 아래 간격 8px(CSS, MarginBottom 속성 미사용)
+  - 2. js 정리(형식·날짜 주석·구조 유지, 국소 수정): 저장 후 처리(완료 알림·재조회·선택)를 WORKLOG_AFTER_SAVE 로 합침(툴바 저장·등록 팝업 저장 공통), [삭제]는 WORKLOG_CHECKED_KEYS 재사용, 사용 부품 목록 파라미터 9개를 [목록, 필드] 배열 반복으로, 부품 선택 추가 시 이미 추가한 품목ID를 한 번만 모아 비교, 쓰지 않는 grid1 autoRowHeights(여러 줄 컬럼 없음) 제거, onSelect 세미콜론
+- **검증**: EQM1001_R01.js 구문 확인, js가 쓰는 화면 ID가 aspx에 모두 있음 확인(wl·pop1), 인코딩·CRLF 유지. 화면 동작 미확인
+
+### 19. EQM1001_R01 사용 자재·부품 [부품 선택] = 설비부품 기준정보 전체
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx), [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js), [05.Procedure/MES_SNS2_EQM1001_R01.sql](05.Procedure/MES_SNS2_EQM1001_R01.sql)
+- **요청**: '출고 부품 선택' → '부품 선택', 출고 이력이 있는 부품이 아니라 부품 리스트 전체를 보여주고 선택
+- **작업 내용**
+  - 1. LIST_OUTPART(출고 이력) 제거, LIST_PART 신규: 2공장 설비부품 기준정보 전체(MST3001_R03 설비부품과 같은 기준: MSTITEM 품목구분 DM100700 + MSTITEM_FACTORY 07), 품목코드·품목명·규격·단위·현재고(MSTITEM_EQMPARTS 07)
+  - 2. 가운데·등록 팝업 버튼 '부품 선택'(wl_btn_PART·pop1_btn_PART), 선택 팝업 제목 '부품 선택', 가져온 행은 구분 '부품'(PARTTP = 'PART', 품목ID 저장), 같은 품목은 한 번만
+  - 3. 부품 행은 부품명·규격·단위(기준정보 값) 수정 불가, 수량·비고·출고일자 입력(출고 기록이 없어 수량은 사용자가 입력). 예전에 저장한 출고(OUT) 행은 비고만 입력 그대로, 스페셜은 모두 입력
+  - 4. ADD_EQMREP_WORK: 부품 구분에 PART 허용, PART는 설비부품 기준정보(DM100700) 품목인지 확인, 품목ID 저장. GET_EQMREP_WORK 구분명 출고/부품/스페셜
+  - 5. 부품 선택 팝업 검색줄: 검색어(품목코드·품목명·규격, 입력 즉시 거름, 띄어 쓰면 모두 포함)·코드그룹 콤보(품목코드 두 번째 마디, 예 M3T050, 2공장 26개)·'보이는 건수 / 전체 · 선택 n건' 표시. 거르는 동안에도 체크는 품목ID로 기억해 [선택 추가] 때 모두 추가(ItsGrid는 값은 보이는 행 번호로 읽어 그리드 자체 필터 대신 목록을 다시 넣는 방식). LIST_PART에 ITEMGRP 반환
+  - 6. 부품 선택 그리드를 팝업 높이에 맞춤(onPopOpened에서 검색줄·버튼 영역 뺀 높이로), 팝업 높이 480 → 600, 마지막 컬럼 뒤 빈 폭 채움(column.split)
+- **검증**: LIST_PART 실DB SELECT 355건·ITEMGRP 확인, EQM1001_R01.js 구문·두 화면 ID 대조·인코딩 확인. 실DB 반영 전이라 화면·저장 미확인
+
 ### 18. 수리키 순번 2자리(01)부터 시작
 - **수정 파일**: [05.Procedure/MES_SNS2_TML2050_R01.sql](05.Procedure/MES_SNS2_TML2050_R01.sql)
 - **요청**: 수리키가 001로 시작하는데 01로
@@ -34,6 +74,7 @@
   - 4. 스크립트를 화면 접두어(wl = 가운데, pop1 = 팝업) 공통 함수로 정리: WORKLOG_LOAD·INIT·SAVE·REPMIN·NON_SET·CREATE_GRIDS·BIND_EVENTS, 출고 부품 선택은 연 화면(partTarget)에 추가. 화면 ID: 가운데 wl_div1~4·wl_grid_EMP·wl_grid_PART, 팝업 pop1_*·pop1_div1~4·pop1_grid_EMP·pop1_grid_PART
   - 5. 사진은 가운데에서 보고 있는 일지 기준(WL_KEY.wl)
   - 6. 왼쪽 그리드 '작업일지' 컬럼과 LIST_EQMREP의 WORKLOGYN 제거(목록이 작성된 일지만이라 불필요), 인쇄 대상은 체크한 행 전체
+  - 8. 가운데 제목 줄의 작성/미작성 배지(spn_WL_BADGE·wl-badge 스타일) 제거 → '공무작업일지 + 수리키'만 표시
   - 7. 실DB EQM1001_R01은 15:50 저장본이라 작성된 일지만 조건이 없어 미작성 건이 보였음 → 이 파일로 프로시저를 다시 저장해야 반영
 - **검증**: LIST_EQMREP 실DB SELECT(작성된 일지 1건만), EQM1001_R01.js 구문 확인, 두 화면 ID가 aspx에 모두 있음 확인, 인코딩·CRLF 유지. 화면 동작 미확인
 
@@ -44,7 +85,7 @@
   - 1. Load의 ItsButton.Hide('COMMON_SAVE'·'COMMON_DELETE') 제거(권한대로 표시), grid1 isCheckBoxGrid
   - 2. 툴바 [저장] = ItsButton.EventSave 로 공무작업일지 저장(가운데 제목 줄 [저장] 버튼 삭제)
   - 3. 툴바 [삭제] = 체크한 행의 공무작업일지 내용만 삭제(사용자 선택, 작성 여부 확인 없이 체크한 행 그대로 삭제·확인 창은 다른 화면과 같은 '선택한 항목을 삭제하시겠습니까?' 하나): DELETE_WORKLOG 신규, 작업구분·고장유형·고장부위·중단구분·비가동 연결·원인분석·조치내역·재발방지대책 비우고 사용 부품 삭제 → 미작성. 태블릿 수리 기록·작업자·사진·고장현상(호출이유)은 유지(태블릿 현황판 영향 없음). 확인 창 후 실행, $EQMREPKEY_LIST 파라미터 다시 추가 → 31건
-  - 4. 검색 영역 오른쪽 끝 [공무작업일지 인쇄]: 체크한 작성 일지를 ItsXtraRpt('EQM1001_R01') 한 PDF로 출력(일지 1건 = A4 1장)
+  - 4. 검색 영역 [공무작업일지 인쇄](처음 오른쪽 끝 → 사진 등록 버튼과 헷갈려 작업자 검색칸 바로 옆으로 이동): 체크한 작성 일지를 ItsXtraRpt('EQM1001_R01') 한 PDF로 출력(일지 1건 = A4 1장)
   - 5. 프로시저 PRINT_WORKLOG를 EQM1001_R01로 이동(내용 동일), 리포트 클래스를 EQM1001 리포트 프로젝트 R01로 옮기고(PRD6001 S03과 같은 양식·1장 맞춤) EQM1001.exe 다시 빌드·반영
   - 6. PRD6001_S03 화면·프로시저·PRD6001 리포트 프로젝트는 지우지 않고 그대로 둠(메뉴에서 빼면 사용 안 함)
 - **검증**: EQM1001 리포트 VS2017 빌드 성공(기존 R0602 경고만), R01 예시 데이터 PDF 1장·양식 동일 확인. EQM1001_R01.js 구문·인코딩 확인. DELETE_WORKLOG는 DML이라 실DB 실행 확인 안 함, 실DB 반영 전이라 화면·인쇄 미확인

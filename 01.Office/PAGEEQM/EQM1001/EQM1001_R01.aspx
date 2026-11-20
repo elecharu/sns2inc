@@ -21,6 +21,7 @@
         #file_REPIMG { display: none !important; }
         .wl-body { height: 100%; overflow-y: auto; overflow-x: hidden; padding: 10px 12px; box-sizing: border-box; background: #f4f6f9; }
         .wl-pop { height: calc(100% - 52px); }
+        #pp_div1 { margin-bottom: 8px; }
         .wl-card { background: #fff; border: 1px solid #e1e6ed; border-radius: 6px; padding: 0 14px 12px 14px; margin-bottom: 10px; overflow: hidden; }
         .wl-card-hd { margin: 0 -14px 10px -14px; padding: 0 14px; height: 36px; line-height: 36px; border-bottom: 1px solid #eef1f5; font-weight: bold; color: #1f3b63; }
         .wl-card-hd .ItsButton { margin-top: 6px; line-height: normal; }
@@ -37,9 +38,6 @@
         .wl-head .ItsButton { margin-top: 5px; line-height: normal; }
         .wl-title { font-weight: bold; font-size: 14px; color: #1f3b63; }
         .wl-key { margin-left: 10px; font-weight: bold; color: #378add; }
-        .wl-badge { display: inline-block; margin-left: 6px; padding: 0 8px; height: 20px; line-height: 20px; border-radius: 10px; font-size: 11px; background: #eef1f5; color: #5f6b78; }
-        .wl-badge.done { background: #e3f3e6; color: #2a7a3b; }
-        .wl-badge.todo { background: #fff3dc; color: #9a6200; }
         .wl-note { margin-left: 8px; font-size: 12px; color: #8a96a3; }
     </style>
 </asp:Content>
@@ -53,7 +51,7 @@
         <Its:combo runat="server" Label="라인" ID="cmb_EQMGROUP1" Field="EQMGROUP1" GPCD="*EQMGROUP1" InputWidth="70" />
         <Its:find runat="server" Label="설비코드" ID="find_code" GPCD="EQMCD" Field="EQMCD" InputWidth="80" NameWidth="120"/>
         <Its:find runat="server" Label="작업자" ID="find_EMP" GPCD="EMPCD" Field="EMPCD" InputWidth="90" NameWidth="80" />
-        <Its:button runat="server" Label="공무작업일지 인쇄" ID="sdiv1_btn_PRINT" Float="right" MarginRight="10" BackColor="CustomButton2" />
+        <Its:button runat="server" Label="공무작업일지 인쇄" ID="sdiv1_btn_PRINT" MarginLeft="10" BackColor="CustomButton2" />
     </Its:div>
 </asp:Content>
 
@@ -71,7 +69,6 @@
                 <div class="wl-head">
                     <span class="wl-title">공무작업일지</span>
                     <span id="spn_WL_KEY" class="wl-key"></span>
-                    <span id="spn_WL_BADGE" class="wl-badge" style="display:none;"></span>
                     <span id="spn_WL_NOTE" class="wl-note">왼쪽 목록에서 공무작업일지를 선택하세요.</span>
                 </div>
             </Its:div>
@@ -138,7 +135,7 @@
                         <div class="wl-card-hd"><span class="wl-no">6</span>사용 자재 / 부품
                             <Its:button runat="server" Label="행삭제" ID="wl_btn_PARTDEL" Float="right" MarginLeft="6" BackColor="CustomButton3" />
                             <Its:button runat="server" Label="스페셜 부품 추가" ID="wl_btn_PARTSP" Float="right" MarginLeft="6" BackColor="CustomButton2" />
-                            <Its:button runat="server" Label="출고 부품 선택" ID="wl_btn_PARTOUT" Float="right" BackColor="CustomButton2" />
+                            <Its:button runat="server" Label="부품 선택" ID="wl_btn_PART" Float="right" BackColor="CustomButton2" />
                         </div>
                         <div class="wl-grid"><Its:grid runat="server" ID="wl_grid_PART" Height="130" /></div>
                     </div>
@@ -242,7 +239,7 @@
                 <div class="wl-card-hd"><span class="wl-no">6</span>사용 자재 / 부품
                     <Its:button runat="server" Label="행삭제" ID="pop1_btn_PARTDEL" Float="right" MarginLeft="6" BackColor="CustomButton3" />
                     <Its:button runat="server" Label="스페셜 부품 추가" ID="pop1_btn_PARTSP" Float="right" MarginLeft="6" BackColor="CustomButton2" />
-                    <Its:button runat="server" Label="출고 부품 선택" ID="pop1_btn_PARTOUT" Float="right" BackColor="CustomButton2" />
+                    <Its:button runat="server" Label="부품 선택" ID="pop1_btn_PART" Float="right" BackColor="CustomButton2" />
                 </div>
                 <div class="wl-grid"><Its:grid runat="server" ID="pop1_grid_PART" Height="130" /></div>
             </div>
@@ -263,11 +260,12 @@
         </Its:div>
     </Its:pop>
 
-    <%-- 공무작업일지 출고 부품 선택 (설비부품 출고 전체) --%>
-    <Its:pop runat="server" Type="add" ID="pop_PART" Title="출고 부품 선택" AddBtnName="선택 추가" Width="1100" Height="480">
-        <Its:div runat="server" Type="SplitSingle">
-            <Its:grid runat="server" ID="grid_PART" Height="380" />
+    <%-- 공무작업일지 부품 선택 (2공장 설비부품 기준정보 전체) --%>
+    <Its:pop runat="server" Type="add" ID="pop_PART" Title="부품 선택" AddBtnName="선택 추가" Width="1100" Height="600">
+        <Its:div runat="server" Type="BasicBlock" ID="pp_div1">
+            <Its:text runat="server" Label="검색어" ID="pp_txt_KEYWORD" Field="PARTKEYWORD" InputWidth="280" Tooltip="품목코드·품목명·규격에 들어간 글자 (띄어 쓰면 모두 포함)" />
         </Its:div>
+        <div id="div_PART_GRID"><Its:grid runat="server" ID="grid_PART" Height="430" /></div>
     </Its:pop>
 
     <Its:pop runat="server" ID="pop_REPIMG" Title="수리 사진 크게 보기" Width="650">
