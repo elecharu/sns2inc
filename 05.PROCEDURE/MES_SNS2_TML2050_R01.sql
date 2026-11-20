@@ -2,7 +2,8 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`TML2050_R01`(
 -- *****************************************************************************
 -- Comment: 생산기술팀 호출 (POP)
 -- Create: 2026-10-22 : 김영철
--- Modify: 2026-11-19 한성수 호출 대상 작업장 배치 생기팀 전원으로 변경, 수리시작 인원 작업장 기준으로 변경
+-- Modify: 2026-11-19 한성수 호출 대상 작업장 배치 생기팀 전원으로 변경, 수리시작 인원 작업장 기준으로 변경, 수리키 MT-YYYY-MMDD-순번 형식으로 변경
+--         2026-11-20 한성수 수리키 순번 2자리(01)부터 시작
 -- *****************************************************************************
   IN $CALLTYPE VARCHAR(50),
   IN $LINECD VARCHAR(100),
@@ -542,7 +543,8 @@ WHEN 'ADD_REPAIR' THEN -- 수리시작 등록 (EQMREP, EQMREP_EMP)
   SET _$CHK_LIST = $EMPCD_LIST;
   CALL COMSPLIT(_$CHK_LIST, _$FIRSTEMP);
 
-  SET _$EQMREPKEY = GETKEY('EQMREPKEY');
+  SET _$EQMREPKEY = GETKEY('EQMREPNO');  -- 수리키 = MT-YYYY-MMDD-순번 (그날 발생 순서대로 +1, 순번 2자리 01부터, 100건부터 3자리)
+  SET _$EQMREPKEY = CONCAT('MT-20', LEFT(_$EQMREPKEY, 2), '-', SUBSTRING(_$EQMREPKEY, 3, 4), '-', LPAD(CAST(RIGHT(_$EQMREPKEY, 6) AS UNSIGNED), GREATEST(2, LENGTH(CAST(RIGHT(_$EQMREPKEY, 6) AS UNSIGNED))), '0'));
 
   INSERT INTO EQMREP (
       EQMREPKEY

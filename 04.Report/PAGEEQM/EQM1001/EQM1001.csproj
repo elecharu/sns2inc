@@ -202,6 +202,12 @@
   <ItemGroup>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="R01.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="R01.Designer.cs">
+      <DependentUpon>R01.cs</DependentUpon>
+    </Compile>
     <Compile Include="S01A.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -259,6 +265,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\licenses.licx" />
+    <EmbeddedResource Include="R01.resx">
+      <DependentUpon>R01.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="S01A.resx">
       <DependentUpon>S01A.cs</DependentUpon>
     </EmbeddedResource>
