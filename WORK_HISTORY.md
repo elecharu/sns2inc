@@ -1,4 +1,4 @@
-# MES 프로젝트 작업 이력 및 변경 관리 대장 (Work History)
+﻿# MES 프로젝트 작업 이력 및 변경 관리 대장 (Work History)
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
@@ -17,6 +17,14 @@
 ---
 
 ## 🕒 2026-11-20 (금) 작업 내역
+
+### 23. PRD6001_S02 설비수리(EQMREP) 기준 집계 검증 및 로컬 SQL 파일 복구
+- **수정 파일**: [05.Procedure/MES_SNS2_PRD6001_S02.sql](05.Procedure/MES_SNS2_PRD6001_S02.sql)
+- **요청**: `2026-11-13` `MTBF/고장율/MTTR` 기준 변경 및 `EQMREP` 전환 로직 정상 여부 확인 후, 구버전으로 덮어써진 로컬 파일 복구
+- **작업 내용**:
+  - 1. 실DB(`MES_SNS2.PRD6001_S02`) 검증 : `EQMREP(EQM01)` × `MSTEQM(07)` × `MSTEQM_MATCH` × `MSTLINE_EQM(USEYN='Y')` 연결, `종합` 행 `DISTINCT EQMREPKEY` 중복 제거, `고장율·MTBF·MTTR` 월별·연간(`MSUM`) 산식 정상 확인 (실데이터 2026년 2공장 수리 22건 중 `MSTEQM_MATCH` 매칭 4건 반영·18건 미매칭 확인)
+  - 2. 로컬 SQL 복구 : `8f14315` 커밋으로 구버전(`2026-11-05` `PRDRSTNON` 기준)이 반영된 [05.Procedure/MES_SNS2_PRD6001_S02.sql](05.Procedure/MES_SNS2_PRD6001_S02.sql)을 `0ffea75`(`2026-11-13` 실DB 동일본) 기준으로 복구 및 UTF-8 무BOM + CRLF 정규화
+- **검증**: 실DB `SHOW CREATE PROCEDURE MES_SNS2.PRD6001_S02` 본문과 100% 일치 확인, 바이트 검사 통과(UTF-8 무BOM, `crCrLf=0`, `bareLf=0`), 실DB는 이미 동일본 반영 상태
 
 ### 22. EQM1001_R01.js 프로젝트 구조 정비 및 불필요 코드 삭제
 - **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js)
