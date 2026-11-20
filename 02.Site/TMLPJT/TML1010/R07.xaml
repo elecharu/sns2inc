@@ -8,13 +8,17 @@
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
       Width="1176" Height="576">
     <!-- 2026-11-10 화면 크기 980x480 → 1176x576 (무상사급 실적등록 R03 과 같게) -->
+    <!-- 2026-11-19 탭 구성: [납품등록] (기존 화면) / [납품이력] (납품일자 기간 조회, 체크한 거래명세서 납품 취소·재출력). 탭 머리글 25 만큼 아래 영역 높이를 줄임 -->
+    <TabControl x:Name="TAB_MAIN" Width="1176" Height="576" Padding="0" BorderThickness="0" Background="Silver">
+    <TabItem Height="25">
+    <TabItem.Header><TextBlock Text="  납품등록  " FontSize="14" FontWeight="Bold"/></TabItem.Header>
     <Canvas Background="WhiteSmoke">
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
             <its:WrapContent x:Name="PANEL_S1" Width="1176" Height="60">
                 <its:Date Label="발주일자" Width="180" Value="{Binding SDATE}"/>
                 <its:Date HidenLabel="Y" Width="100"  Value="{Binding EDATE}"/>
-                <its:Combo GPCD="*CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" x:Name="cb_CUSTCD"/>
+                <its:Pop GPCD="CUSTCD_OSC" Width="250" Label="거래처" Value="{Binding CUSTCD}" x:Name="cb_CUSTCD" ShowKeyPad="True"/>
                 <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True" />
                 <UserControl Width="20"/>
                 <its:Button Label="발 주 조 회" Width="100" Height="30" CommandName="LIST_MTRODR" FontWeight="Bold"/>
@@ -25,7 +29,7 @@
         <!-- 2026-11-09 발주 행의 [입력] 버튼 → 정보입력 팝업에서 BOX 단위 수량 x BOX 수량으로 납품등록 -->
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="60">
             <!-- 2026-11-10 오른쪽에 납품등록 BOX 현황을 두려고 폭 1176 → 816, 규격은 숨김 (입력 팝업에 표시) -->
-            <its:Grid x:Name="GRID_G1" Width="816" Height="516">
+            <its:Grid x:Name="GRID_G1" Width="816" Height="490">
                 <its:Grid.Columns>
                     <its:Column Width="55" Header="납품" CellType="Button" ButtonText="입력" CommandName="POP_INPUT"/>
                     <its:Column Width="85" Header="발주일자" FieldName="MTRODRDATE" ALGIN="Center"/>
@@ -47,10 +51,10 @@
         </UserControl>
 
         <!-- 2026-11-10 납품등록 BOX 현황: 입력 팝업 [확인] 으로 쌓고, [등록] 때 한 번에 저장 (발주별 거래명세서 1장). 화면에만 있고 닫으면 사라짐 -->
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="816" Canvas.Top="60" Width="360" Height="516">
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="816" Canvas.Top="60" Width="360" Height="490">
             <StackPanel>
                 <TextBlock Text=" ■ 납품등록 BOX 현황" FontWeight="Bold" FontSize="14" Margin="5,6,0,4"/>
-                <its:Grid x:Name="GRID_G4" Width="350" Height="410">
+                <its:Grid x:Name="GRID_G4" Width="350" Height="384">
                     <its:Grid.Columns>
                         <its:Column Width="105" Header="품목코드" FieldName="ITEMCD"/>
                         <its:Column Width="55" Header="BOX단위" FieldName="BOXQTY" DecimalPoint="0"/>
@@ -159,4 +163,47 @@
             </Grid>
         </UserControl>
     </Canvas>
+    </TabItem>
+
+    <!-- [납품이력] 납품일자 기간의 거래명세서 조회 → 체크한 거래명세서 납품 취소 (입고확인 했으면 입고도 같이 취소) / 현재 줄 재출력 -->
+    <TabItem Height="25">
+    <TabItem.Header><TextBlock Text="  납품이력  " FontSize="14" FontWeight="Bold"/></TabItem.Header>
+    <Canvas Background="WhiteSmoke">
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
+            <its:WrapContent x:Name="PANEL_S2" Width="1176" Height="60">
+                <its:Date Label="납품일자" Width="180" Value="{Binding SDATE}"/>
+                <its:Date HidenLabel="Y" Width="100" Value="{Binding EDATE}"/>
+                <its:Pop GPCD="CUSTCD_OSC" Width="250" Label="거래처" Value="{Binding CUSTCD}" x:Name="cb_CUSTCD2" ShowKeyPad="True"/>
+                <UserControl Width="20"/>
+                <its:Button Label="조 회" Width="100" Height="30" CommandName="SEARCH_INVOICE" FontWeight="Bold" BackColor="SteelBlue"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="60">
+            <its:Grid x:Name="GRID_G5" Width="1056" Height="490">
+                <its:Grid.Columns>
+                    <its:Column Width="45" Header="선택" CellType="Check" FieldName="ISCHECKED" IsRowCheck="True"/>
+                    <its:Column Width="100" Header="납품일자" FieldName="INVOICEDATE" ALGIN="Center"/>
+                    <its:Column Width="140" Header="거래명세서" FieldName="INVOICEKEY" ALGIN="Center"/>
+                    <its:Column Width="160" Header="거래처" FieldName="CUSTNM"/>
+                    <its:Column Width="70" Header="LOT수" FieldName="LOTCNT" DecimalPoint="0"/>
+                    <its:Column Width="100" Header="납품량" FieldName="LOTQTY" DecimalPoint="0"/>
+                    <its:Column Width="90" Header="입고상태" FieldName="INSTATUS" ALGIN="Center"/>
+                    <its:Column Width="90" Header="등록자" FieldName="EMPNM" ALGIN="Center"/>
+                    <its:Column Width="160" Header="등록시간" FieldName="RTIME" ALGIN="Center"/>
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="60" Width="120" Height="490">
+            <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
+                <its:Button Label="재출력" Width="100" Height="55" FontWeight="Bold" CommandName="PRINT_HIST" BackColor="Green"/>
+                <UserControl Height="10"/>
+                <its:Button Label="납품 취소" Width="100" Height="55" FontWeight="Bold" CommandName="CANCEL_HIST" BackColor="IndianRed"/>
+            </StackPanel>
+        </UserControl>
+    </Canvas>
+    </TabItem>
+    </TabControl>
 </its:ItsPageTml>

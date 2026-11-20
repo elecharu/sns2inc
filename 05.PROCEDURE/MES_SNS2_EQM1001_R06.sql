@@ -1,25 +1,23 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R06`(
+﻿CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.EQM1001_R06(
 -- *****************************************************************************
 -- Comment: 년 설비고장율 현황
 --          비가동 = 비가동 이력(PRDRSTNON) 중 TO 그룹(MSTNON.NONGROUPCD1 PP409I210N) 전체
 --          설비 = 비가동 PRDRSTNON.EQMCD = MSTLINE_EQM.EQMCD (2공장 작업장), 수리 EQMREP.EQMCD = MSTEQM.FANO
 --          근무일 주간/야간(PP161, 2공장 REF05 07) 시간대와 겹치는 만큼만 근무조별로 잘라 근무일 기준 월로 합산
 --          점유율(%) = 비가동 / 가동시간, 가동시간 = 근무조 시간(조회 시점까지) x 사용 설비 수(2공장)
---          호출건수/평균수리시간 = 설비 수리정보(EQMREP, EQM01) 발생일자 월 기준, 평균수리시간 = 완료된 건의 (완료-발생) 평균
+--          고장건수/평균수리시간 = 설비 수리정보(EQMREP, EQM01) 발생일자 월 기준, 평균수리시간 = 완료된 건의 (완료-발생) 평균
 -- Create: 2026-11-03
 -- Update: 2026-11-04 작업장 조회조건 제거 ($LINECD 파라미터 삭제)
---         2026-11-04 호출건수/평균수리시간을 수리정보(EQMREP) 기준으로 변경, 점유율 계산 추가
+--         2026-11-04 고장건수/평균수리시간을 수리정보(EQMREP) 기준으로 변경, 점유율 계산 추가
 --         2026-11-04 설비 고장 TOP ISSUE(LIST_TOPISSUE) 추가 - 설비 수리정보(EQMREP) 기준, $SMONTH 파라미터 추가
 --         2026-11-05 비가동 설비 연결을 MSTLINE_EQM(2공장 작업장 설비)으로 수정 (MSTEQM.FANO 로는 연결 안 됨), 가동시간 설비 수도 같은 기준
 --         2026-11-04 TOP ISSUE 원인 및 예방(EQMREP_ISSUE)·사진(EQMREP_ISSUE_IMG) 등록/삭제 추가
 --                    (SAVE_ISSUE, DEL_ISSUE, LIST_ISSUEIMG, ADD_ISSUEIMG, DEL_ISSUEIMG)
 --                    $EQMCD, $YM, $CAUSE, $PREVENT, $FILEKEY 파라미터 추가
---         2026-11-13 차트 막대 연도별 색상(BACKGROUND) 반환, 조회기간($SDATE~$EDATE) 기준 차트·TOP ISSUE (기간 없으면 $SYEAR 1년)
 -- *****************************************************************************
-  IN $SYEAR           VARCHAR(4),       -- 조회년도 (TOP ISSUE 년, 기간 없을 때 차트 년도)
+  IN $SYEAR           VARCHAR(4),       -- 조회년도
   IN $SMONTH          VARCHAR(2),       -- 조회월 (TOP ISSUE)
-  IN $SDATE           VARCHAR(10),      -- 조회 시작일자
-  IN $EDATE           VARCHAR(10),      -- 조회 종료일자
   IN $EQMCD           VARCHAR(100),     -- 설비코드 (TOP ISSUE 등록)
   IN $YM              VARCHAR(7),       -- 년월 (TOP ISSUE 등록, YYYY-MM)
   IN $CAUSE           VARCHAR(2000),    -- 원인
@@ -35,37 +33,18 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$NOW        VARCHAR(19);
   DECLARE _$YM         VARCHAR(7);
   DECLARE _$EQMCNT     INT;
-  DECLARE _$SDATE      VARCHAR(10);
-  DECLARE _$EDATE      VARCHAR(10);
-  DECLARE _$EDATE1     VARCHAR(10);   -- 종료일자 다음날
-  DECLARE _$SYEAR0     INT;           -- 기간 시작연도 (연도 평균 = 직전 5년)
 -- ****************************************************************************
 CASE $CALLTYPE
 -- ****************************************************************************
-WHEN 'LIST_CHART' THEN  -- 고장율 현황 (기간 시작연도 직전 5년 평균, 기간 평균, 기간 월별)
+WHEN 'LIST_CHART' THEN  -- 고장율 현황 (전년도까지 5년 평균, 당해 평균, 1~12월)
 
-  SET _$SDATE = IF($SDATE = '' AND $EDATE = '' AND $SYEAR <> '', CONCAT($SYEAR, '-01-01'), $SDATE);
-  SET _$EDATE = IF($SDATE = '' AND $EDATE = '' AND $SYEAR <> '', CONCAT($SYEAR, '-12-31'), $EDATE);
-
-  IF _$SDATE = '' OR _$EDATE = '' THEN
-    CALL COMERR('조회기간을 선택하세요.');
-    LEAVE PROC;
-  END IF;
-
-  IF _$SDATE > _$EDATE THEN
-    CALL COMERR('조회 시작일자가 종료일자보다 늦습니다.');
-    LEAVE PROC;
-  END IF;
-
-  IF PERIOD_DIFF(REPLACE(LEFT(_$EDATE, 7), '-', ''), REPLACE(LEFT(_$SDATE, 7), '-', '')) >= 12 THEN
-    CALL COMERR('조회기간은 최대 12개월까지 선택하세요.');
+  IF $SYEAR = '' THEN
+    CALL COMERR('조회년도를 선택하세요.');
     LEAVE PROC;
   END IF;
 
   SET _$NOW = CALLTIME();
   SET _$NOWYM = LEFT(_$NOW, 7);
-  SET _$SYEAR0 = CAST(LEFT(_$SDATE, 4) AS UNSIGNED);
-  SET _$EDATE1 = DATE_FORMAT(DATE_ADD(_$EDATE, INTERVAL 1 DAY), '%Y-%m-%d');
 
   -- 가동시간용 설비 수 (2공장 작업장의 사용 설비, 비가동 이력과 같은 기준)
   SELECT
@@ -78,7 +57,6 @@ WHEN 'LIST_CHART' THEN  -- 고장율 현황 (기간 시작연도 직전 5년 평
     AND MSTLINE_EQM.USEYN = 'Y';
 
   -- 근무일별 주간/야간 근무조 (야간은 시작일이 근무일, 종료가 시작보다 이르면 익일)
-  -- 근무일 = 직전 5년 전체 + 조회기간 (기간 시작연도의 기간 이전 날짜는 제외)
   DROP TEMPORARY TABLE IF EXISTS TMP_EQMSHIFT;
   CREATE TEMPORARY TABLE TMP_EQMSHIFT (
     WORKDATE  VARCHAR(10)   NOT NULL,              -- 근무일
@@ -97,21 +75,20 @@ WHEN 'LIST_CHART' THEN  -- 고장율 현황 (기간 시작연도 직전 5년 평
     , CONCAT(IF(COMTYPE.REF02 <= COMTYPE.REF01, DATE_FORMAT(DATE_ADD(WORKDAY.WORKDATE, INTERVAL 1 DAY), '%Y-%m-%d'), WORKDAY.WORKDATE), ' ', COMTYPE.REF02, ':00')
   FROM (
     SELECT
-        DATE_FORMAT(DATE_ADD(CONCAT(_$SYEAR0 - 5, '-01-01'), INTERVAL NUM1.N + NUM2.N * 10 + NUM3.N * 100 + NUM4.N * 1000 DAY), '%Y-%m-%d') AS WORKDATE
+        DATE_FORMAT(DATE_ADD(CONCAT(CAST($SYEAR AS UNSIGNED) - 5, '-01-01'), INTERVAL NUM1.N + NUM2.N * 10 + NUM3.N * 100 + NUM4.N * 1000 DAY), '%Y-%m-%d') AS WORKDATE
     FROM (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
           UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS NUM1
     CROSS JOIN (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
           UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS NUM2
     CROSS JOIN (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4
           UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS NUM3
-    CROSS JOIN (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2) AS NUM4  -- 최대 3000일 (직전 5년 + 기간 최대 12개월)
+    CROSS JOIN (SELECT 0 AS N UNION ALL SELECT 1 UNION ALL SELECT 2) AS NUM4  -- 6년치 (최대 2192일)
   ) AS WORKDAY
   INNER JOIN COMTYPE
     ON COMTYPE.GPCD = 'PP161'
     AND COMTYPE.USEYN = 'Y'
     AND COMTYPE.REF05 = '07'  -- 2공장 근무조
-  WHERE WORKDAY.WORKDATE <= _$EDATE
-    AND (WORKDAY.WORKDATE < CONCAT(_$SYEAR0, '-01-01') OR WORKDAY.WORKDATE >= _$SDATE);
+  WHERE WORKDAY.WORKDATE <= CONCAT($SYEAR, '-12-31');
 
   -- 대상 비가동 (종료된 건만 비가동시간에 포함)
   DROP TEMPORARY TABLE IF EXISTS TMP_EQMNON;
@@ -132,8 +109,8 @@ WHEN 'LIST_CHART' THEN  -- 고장율 현황 (기간 시작연도 직전 5년 평
     ON MSTLINE.LINECD = MSTLINE_EQM.LINECD
     AND MSTLINE.FACTORYCD = '07'
   WHERE PRDRSTNON.NONCD IN (SELECT MSTNON.NONCD FROM MSTNON WHERE MSTNON.NONGROUPCD1 = _$NONGROUPCD)
-    AND (PRDRSTNON.NONETIME = '' OR PRDRSTNON.NONETIME > CONCAT(_$SYEAR0 - 5, '-01-01'))
-    AND PRDRSTNON.NONSTIME < DATE_FORMAT(DATE_ADD(_$EDATE, INTERVAL 2 DAY), '%Y-%m-%d');
+    AND (PRDRSTNON.NONETIME = '' OR PRDRSTNON.NONETIME > CONCAT(CAST($SYEAR AS UNSIGNED) - 5, '-01-01'))
+    AND PRDRSTNON.NONSTIME < CONCAT(CAST($SYEAR AS UNSIGNED) + 1, '-01-02');
 
   -- 월별 비가동(분): 근무조 시간과 겹치는 만큼만 근무조별로 잘라 근무일 월에 합산
   DROP TEMPORARY TABLE IF EXISTS TMP_EQMFAIL;
@@ -141,7 +118,7 @@ WHEN 'LIST_CHART' THEN  -- 고장율 현황 (기간 시작연도 직전 5년 평
     YM        VARCHAR(7)    NOT NULL,
     NONMIN    DECIMAL(20,2) NOT NULL DEFAULT 0,  -- 비가동(분)
     AVAILMIN  DECIMAL(20,2) NOT NULL DEFAULT 0,  -- 가동시간(분) = 근무조 시간 x 설비 수
-    FAILCNT   INT           NOT NULL DEFAULT 0,  -- 호출건수 (수리 건수)
+    FAILCNT   INT           NOT NULL DEFAULT 0,  -- 고장건수 (수리 건수)
     ENDCNT    INT           NOT NULL DEFAULT 0,  -- 완료된 수리 건수
     REPMIN    DECIMAL(20,2) NOT NULL DEFAULT 0,  -- 완료된 수리 (완료-발생) 합계(분)
     PRIMARY KEY (YM)
@@ -170,7 +147,7 @@ WHEN 'LIST_CHART' THEN  -- 고장율 현황 (기간 시작연도 직전 5년 평
     ON SHIFT_SUM.YM = TMP_EQMFAIL.YM
   SET TMP_EQMFAIL.AVAILMIN = SHIFT_SUM.SHIFTMIN * _$EQMCNT;
 
-  -- 호출건수/평균수리시간: 설비 수리정보(EQMREP, EQM01) 발생일자 월 기준 (완료가 발생보다 이른 잘못된 건은 평균에서 제외)
+  -- 고장건수/평균수리시간: 설비 수리정보(EQMREP, EQM01) 발생일자 월 기준 (완료가 발생보다 이른 잘못된 건은 평균에서 제외)
   UPDATE TMP_EQMFAIL
   INNER JOIN (
     SELECT
@@ -182,8 +159,8 @@ WHEN 'LIST_CHART' THEN  -- 고장율 현황 (기간 시작연도 직전 5년 평
     INNER JOIN MSTEQM
       ON MSTEQM.FANO = EQMREP.EQMCD
     WHERE EQMREP.EQMREPTP = 'EQM01'
-      AND (   (EQMREP.REPSTIME >= CONCAT(_$SYEAR0 - 5, '-01-01') AND EQMREP.REPSTIME < CONCAT(_$SYEAR0, '-01-01'))
-           OR (EQMREP.REPSTIME >= _$SDATE AND EQMREP.REPSTIME < _$EDATE1))
+      AND EQMREP.REPSTIME >= CONCAT(CAST($SYEAR AS UNSIGNED) - 5, '-01-01')
+      AND EQMREP.REPSTIME < CONCAT(CAST($SYEAR AS UNSIGNED) + 1, '-01-01')
     GROUP BY LEFT(EQMREP.REPSTIME, 7)
   ) AS REP_SUM
     ON REP_SUM.YM = TMP_EQMFAIL.YM
@@ -191,54 +168,29 @@ WHEN 'LIST_CHART' THEN  -- 고장율 현황 (기간 시작연도 직전 5년 평
     , TMP_EQMFAIL.ENDCNT = REP_SUM.ENDCNT
     , TMP_EQMFAIL.REPMIN = REP_SUM.REPMIN;
 
-  -- 연도·기간 평균은 지난 달까지만 (조회 시점 이후 월 제외)
-  -- YM = 월 막대의 년월 (TOP ISSUE 조회용, 평균 칸은 '')
-  -- 차트 막대 색상: 연도별 7색 순환 (기간이 해를 넘으면 연도 7개), 기간 평균은 종료일자 연도 색
-  SELECT CHART.*
-       , ELT(MOD(CAST(CHART.YYYY AS UNSIGNED), 7) + 1, '#a1d99b', '#fdd0a2', '#d4b9da', '#b7bdf0', '#a6dcd4', '#f2c4ce', '#9ecae1') AS BACKGROUND
-  FROM (
+  -- 연도 평균은 지난 달까지만 (조회 시점 이후 월 제외)
+  SELECT CHART.* FROM (
     SELECT
-        CAST(LEFT(TMP_EQMFAIL.YM, 4) AS SIGNED) - _$SYEAR0 + 5 AS SORTNO  -- 직전 5년 0~4
-      , LEFT(TMP_EQMFAIL.YM, 4) AS YYYY
-      , '' AS YM
+        CAST(LEFT(TMP_EQMFAIL.YM, 4) AS SIGNED) - CAST($SYEAR AS SIGNED) + 5 AS SORTNO  -- 전년도까지 0~4, 당해 평균 5
       , CONCAT('''', SUBSTRING(TMP_EQMFAIL.YM, 3, 2), '년 평균') AS GUBUN
       , ROUND(SUM(IF(TMP_EQMFAIL.YM <= _$NOWYM, TMP_EQMFAIL.NONMIN, 0)) / NULLIF(SUM(TMP_EQMFAIL.YM <= _$NOWYM), 0) / 60, 1) AS NONHR
       , ROUND(SUM(IF(TMP_EQMFAIL.YM <= _$NOWYM, TMP_EQMFAIL.NONMIN, 0)) / NULLIF(SUM(IF(TMP_EQMFAIL.YM <= _$NOWYM, TMP_EQMFAIL.AVAILMIN, 0)), 0) * 100, 2) AS NONRATE  -- 비가동시간 점유율(%)
       , ROUND(SUM(IF(TMP_EQMFAIL.YM <= _$NOWYM, TMP_EQMFAIL.FAILCNT, 0)) / NULLIF(SUM(TMP_EQMFAIL.YM <= _$NOWYM), 0), 1) AS FAILCNT
       , ROUND(SUM(TMP_EQMFAIL.REPMIN) / NULLIF(SUM(TMP_EQMFAIL.ENDCNT), 0), 0) AS AVGREPMIN
     FROM TMP_EQMFAIL
-    WHERE TMP_EQMFAIL.YM < CONCAT(_$SYEAR0, '-01')
     GROUP BY LEFT(TMP_EQMFAIL.YM, 4)
 
     UNION ALL
 
     SELECT
-        5 AS SORTNO  -- 기간 평균
-      , LEFT(_$EDATE, 4) AS YYYY
-      , '' AS YM
-      , IF($SDATE = '' AND $EDATE = '', CONCAT('''', SUBSTRING(_$SDATE, 3, 2), '년 평균'), '기간 평균') AS GUBUN  -- 년도 조회는 'YY년 평균
-      , ROUND(SUM(IF(TMP_EQMFAIL.YM <= _$NOWYM, TMP_EQMFAIL.NONMIN, 0)) / NULLIF(SUM(TMP_EQMFAIL.YM <= _$NOWYM), 0) / 60, 1) AS NONHR
-      , ROUND(SUM(IF(TMP_EQMFAIL.YM <= _$NOWYM, TMP_EQMFAIL.NONMIN, 0)) / NULLIF(SUM(IF(TMP_EQMFAIL.YM <= _$NOWYM, TMP_EQMFAIL.AVAILMIN, 0)), 0) * 100, 2) AS NONRATE
-      , ROUND(SUM(IF(TMP_EQMFAIL.YM <= _$NOWYM, TMP_EQMFAIL.FAILCNT, 0)) / NULLIF(SUM(TMP_EQMFAIL.YM <= _$NOWYM), 0), 1) AS FAILCNT
-      , ROUND(SUM(TMP_EQMFAIL.REPMIN) / NULLIF(SUM(TMP_EQMFAIL.ENDCNT), 0), 0) AS AVGREPMIN
-    FROM TMP_EQMFAIL
-    WHERE TMP_EQMFAIL.YM >= LEFT(_$SDATE, 7)
-
-    UNION ALL
-
-    SELECT
-        6 + PERIOD_DIFF(REPLACE(TMP_EQMFAIL.YM, '-', ''), REPLACE(LEFT(_$SDATE, 7), '-', '')) AS SORTNO  -- 기간 월 6~
-      , LEFT(TMP_EQMFAIL.YM, 4) AS YYYY
-      , TMP_EQMFAIL.YM AS YM
-      , IF(LEFT(_$SDATE, 4) = LEFT(_$EDATE, 4)
-         , CONCAT(CAST(RIGHT(TMP_EQMFAIL.YM, 2) AS UNSIGNED), '월')
-         , CONCAT('''', SUBSTRING(TMP_EQMFAIL.YM, 3, 2), '.', CAST(RIGHT(TMP_EQMFAIL.YM, 2) AS UNSIGNED), '월')) AS GUBUN
+        5 + CAST(RIGHT(TMP_EQMFAIL.YM, 2) AS UNSIGNED) AS SORTNO
+      , CONCAT(CAST(RIGHT(TMP_EQMFAIL.YM, 2) AS UNSIGNED), '월') AS GUBUN
       , IF(TMP_EQMFAIL.YM > _$NOWYM, NULL, ROUND(TMP_EQMFAIL.NONMIN / 60, 1)) AS NONHR
       , IF(TMP_EQMFAIL.YM > _$NOWYM, NULL, ROUND(TMP_EQMFAIL.NONMIN / NULLIF(TMP_EQMFAIL.AVAILMIN, 0) * 100, 2)) AS NONRATE
       , IF(TMP_EQMFAIL.YM > _$NOWYM, NULL, TMP_EQMFAIL.FAILCNT) AS FAILCNT
       , ROUND(TMP_EQMFAIL.REPMIN / NULLIF(TMP_EQMFAIL.ENDCNT, 0), 0) AS AVGREPMIN
     FROM TMP_EQMFAIL
-    WHERE TMP_EQMFAIL.YM >= LEFT(_$SDATE, 7)
+    WHERE LEFT(TMP_EQMFAIL.YM, 4) = $SYEAR
   ) AS CHART
   ORDER BY CHART.SORTNO;
 
@@ -261,9 +213,6 @@ WHEN 'LIST_TOPISSUE' THEN  -- 설비 고장 TOP ISSUE (그 달 수리 비가동�
 
   SET _$NOW = CALLTIME();
   SET _$YM = CONCAT($SYEAR, '-', LPAD($SMONTH, 2, '0'));
-  -- 조회기간이 있으면 그 달 중 기간 안의 수리만
-  SET _$SDATE = $SDATE;
-  SET _$EDATE1 = IF($EDATE = '', '', DATE_FORMAT(DATE_ADD($EDATE, INTERVAL 1 DAY), '%Y-%m-%d'));
 
   SELECT
       TOP5.EQMCD
@@ -291,8 +240,6 @@ WHEN 'LIST_TOPISSUE' THEN  -- 설비 고장 TOP ISSUE (그 달 수리 비가동�
           WHERE EQMREP2.EQMCD = EQMREP.EQMCD
             AND EQMREP2.EQMREPTP = 'EQM01'
             AND LEFT(EQMREP2.REPSTIME, 7) = _$YM
-            AND (_$SDATE = '' OR EQMREP2.REPSTIME >= _$SDATE)
-            AND (_$EDATE1 = '' OR EQMREP2.REPSTIME < _$EDATE1)
           ORDER BY TIMESTAMPDIFF(MINUTE, EQMREP2.REPSTIME, IF(EQMREP2.REPETIME = '', _$NOW, EQMREP2.REPETIME)) DESC, EQMREP2.EQMREPKEY
           LIMIT 1) AS EQMREPKEY
     FROM EQMREP
@@ -300,8 +247,6 @@ WHEN 'LIST_TOPISSUE' THEN  -- 설비 고장 TOP ISSUE (그 달 수리 비가동�
       ON MSTEQM.FANO = EQMREP.EQMCD
     WHERE EQMREP.EQMREPTP = 'EQM01'
       AND LEFT(EQMREP.REPSTIME, 7) = _$YM
-      AND (_$SDATE = '' OR EQMREP.REPSTIME >= _$SDATE)
-      AND (_$EDATE1 = '' OR EQMREP.REPSTIME < _$EDATE1)
     GROUP BY EQMREP.EQMCD
     ORDER BY NONMIN DESC, FAILCNT DESC
     LIMIT 5

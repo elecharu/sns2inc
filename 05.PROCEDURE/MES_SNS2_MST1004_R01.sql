@@ -1,18 +1,20 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`MST1004_R01`(
+﻿CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.MST1004_R01(
 -- *****************************************************************************
 -- Comment: 설비별 생기팀 호출사원 정보
--- Create: 2026-10-20 17:51: KYC
--- Modify:  2026-11-18                한성수  호출사원 조회 화면 미사용 설비 컬럼(작업장코드·설비구분·설비분류·설비명) 반환 제거
+-- Create: 2026-10-20 17:51: 김영철
+-- Modify: 2026-10-27: 조회조건 공장·작업장·사원 추가 (LIST_EQM_CALLEMP)
 -- *****************************************************************************
 
+  IN $FACTORYCD       VARCHAR(10),       -- 공장
   IN $EQMCD           VARCHAR(20),
-  IN $LINECD          VARCHAR(20),  
+  IN $LINECD          VARCHAR(20),
   IN $EMPCD           VARCHAR(20),
 
   IN $EMPCD_LIST      MEDIUMTEXT,        -- 선택 사원CD 목록
-  IN $EQMCD_LIST      MEDIUMTEXT,        
-  IN $DELAYMIN_ARRIVE_LIST      MEDIUMTEXT,        
-  IN $DELAYMIN_REPAIR_LIST      MEDIUMTEXT,        
+  IN $EQMCD_LIST      MEDIUMTEXT,
+  IN $DELAYMIN_ARRIVE_LIST      MEDIUMTEXT,
+  IN $DELAYMIN_REPAIR_LIST      MEDIUMTEXT,
 
   IN $EQMTP           VARCHAR(10),       -- 설비구분
   IN $EQMGROUP1       VARCHAR(10),       -- 설비대분류
@@ -22,11 +24,10 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`MST1004_R01`(
 
   IN $DELAYMIN_ARRIVE DECIMAL(20, 0),    -- 호출도착 지연시간(분)
   IN $DELAYMIN_REPAIR DECIMAL(20, 0),    -- 수리종료 지연시간(분)
-  
+
   IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 -- SET @DEBUGLOGYN = 'Y';
--- *****************************************************************************
 
   DECLARE _$FANO_LIST MEDIUMTEXT;
 
@@ -42,9 +43,15 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 -- ****************************************************************************
   WHEN 'LIST_EQM_CALLEMP' THEN
 
-    SELECT 
+    SELECT
         EQMCD
+      , MSTEQM.LINECD
       , MSTLINE.LINENM
+      , GPCD('FM100', MSTEQM.EQMTP) AS EQMTP
+      , GPCD('FM113', MSTEQM.EQMGROUP1) AS EQMGROUP1
+      , GPCD('FM114', MSTEQM.EQMGROUP2) AS EQMGROUP2
+      , GPCD('FM115', MSTEQM.EQMGROUP3) AS EQMGROUP3
+      , MSTEQM.EQMNM
       , MSTEMP.EMPCD
       , MSTEMP.EMPNM
       , DELAYMIN_ARRIVE
@@ -53,8 +60,9 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       INNER JOIN MSTEMP ON MSTEQM_CALLEMP.EMPCD = MSTEMP.EMPCD
       INNER JOIN MSTEQM ON MSTEQM_CALLEMP.EQMCD = MSTEQM.FANO
       INNER JOIN MSTLINE ON MSTEQM.LINECD = MSTLINE.LINECD
-    WHERE MSTLINE.LINECD LIKE CONCAT('%', $LINECD, '%')
-      AND MSTEMP.EMPCD LIKE CONCAT('%', $EMPCD, '%')
+      WHERE (IFNULL($FACTORYCD, '') = '' OR MSTEQM.FACTORYCD = $FACTORYCD)
+        AND (IFNULL($LINECD, '') = '' OR MSTEQM.LINECD = $LINECD)
+        AND (IFNULL($EMPCD, '') = '' OR MSTEQM_CALLEMP.EMPCD = $EMPCD)
     ORDER BY MSTEQM.LINECD
             , MSTEQM.EQMTP
             , MSTEQM.EQMGROUP1
@@ -66,7 +74,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 -- ****************************************************************************
   WHEN 'LIST_EMP' THEN
 
-    SELECT 
+    SELECT
         EMPCD
       , EMPNM
       , MSTDEPT.DEPTNM AS DEPTCD
@@ -84,7 +92,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       CALL COMERR('등록할 사원이 없습니다.');
       LEAVE PROC;
     END IF;
-   
+
     IF IFNULL($LINECD, '') = '' AND IFNULL($EQMTP, '') = ''
       AND IFNULL($EQMGROUP1, '') = '' AND IFNULL($EQMGROUP2, '') = ''
       AND IFNULL($EQMGROUP3, '') = '' AND IFNULL($FANO, '')      = '' THEN
@@ -106,7 +114,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       CALL COMERR('조건에 해당하는 설비가 없습니다.');
       LEAVE PROC;
     END IF;
-  
+
     -- 바깥 루프 : 사원
     WHILE IFNULL($EMPCD_LIST, '') <> '' DO
       CALL COMSPLIT($EMPCD_LIST, _$EMPCD);
@@ -118,7 +126,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
         CALL COMERR(CONCAT('사원(', _$EMPCD, ')을 찾을 수 없습니다.'));
         LEAVE PROC;
       END IF;
-    
+
       SET _$FANO_REST = _$FANO_LIST;
 
       WHILE IFNULL(_$FANO_REST, '') <> '' DO
@@ -134,9 +142,9 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
             GPCD('EMPCD', _$EMPCD), '(', _$EMPCD, ') / 설비 ', _$FANO));
           LEAVE PROC;
         END IF;
-    
+
         INSERT INTO MSTEQM_CALLEMP(
-          EQMCD, EMPCD, DELAYMIN_ARRIVE, DELAYMIN_REPAIR, 
+          EQMCD, EMPCD, DELAYMIN_ARRIVE, DELAYMIN_REPAIR,
           RTIME, REMP, RPRG)
           VALUES(
           _$FANO, _$EMPCD, IFNULL($DELAYMIN_ARRIVE, 0), IFNULL($DELAYMIN_REPAIR, 0),

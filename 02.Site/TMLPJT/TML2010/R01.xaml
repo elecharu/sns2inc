@@ -20,6 +20,7 @@
                 <its:Button Label="작업자" Width="75" Height="60" SetFontSize="13" CommandName="POP_EMP" FontWeight="Bold"/>
                 <its:Button Label="설비&#x0a;일상점검" Width="75" Height="60" SetFontSize="13" CommandName="POP_CHK" FontWeight="Bold"/>
                 <its:Button Label="자주검사&#x0a;등록" Width="75" Height="60" SetFontSize="13" CommandName="POP_PRCTEST" FontWeight="Bold"/>
+                <its:Button Label="공정&#x0a;이동표" Width="75" Height="60" SetFontSize="13" CommandName="POP_MOVE" FontWeight="Bold"/>
             </its:WrapContent>
         </UserControl>
 
@@ -27,7 +28,7 @@
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="80" Canvas.Top="0">
             <its:WrapContent x:Name="PANEL_S1" Width="1096" Height="100">
                 <its:Combo Label="생산작업장" LabelWidth="95" Width="365" GPCD="LINECD" Value="{Binding LINECD}" REF01="07"/>
-                <its:Combo Label="생산공정" LabelWidth="95" Width="365" GPCD="PRCCD_LINE" Value="{Binding PRCCD}"/>
+                <its:Combo Label="생산공정" LabelWidth="95" Width="365" GPCD="PRCCD_LINEROUT" Value="{Binding PRCCD}"/>
                 <its:Combo Label="생산라인" LabelWidth="95" Width="365" GPCD="EQMCD_LINE" Value="{Binding EQMCD}" x:Name="CMB_EQMCD"/>
                 <its:Text Label="생산품목코드" LabelWidth="95" Width="365" Value="{Binding ITEMCD}" ReadOnly="True"/>
                 <its:Text Label="생산품명" LabelWidth="95" Width="365" Value="{Binding ITEMNM}" ReadOnly="True"/>
@@ -199,7 +200,7 @@
             <its:WrapContent x:Name="PANEL_A5" Width="1000" Height="540">
                 <UserControl Width="1000" Height="5"/>
                 <its:Combo Label="작업장" LabelWidth="80" Width="300" GPCD="LINECD" Value="{Binding LINECD}" REF01="07" ReadOnly="True"/>
-                <its:Combo Label="공정" LabelWidth="80" Width="300" GPCD="PRCCD_LINE" Value="{Binding PRCCD}" ReadOnly="True"/>
+                <its:Combo Label="공정" LabelWidth="80" Width="300" GPCD="PRCCD_LINEROUT" Value="{Binding PRCCD}" ReadOnly="True"/>
                 <its:Combo Label="라인" LabelWidth="80" Width="300" GPCD="EQMCD_LINE" Value="{Binding EQMCD}" ReadOnly="True"/>
                 <its:ButtonList x:Name="FANO_LIST" PanelWidth="980" Height="150" Width="1000"/>
                 <its:Date Label="조회일자" LabelWidth="80" Width="220" Value="{Binding SDATE}"/>
@@ -236,7 +237,7 @@
             <its:WrapContent x:Name="PANEL_A10" Width="1176" Height="500">
                 <UserControl Width="1000" Height="5"/>
                 <its:Combo Label="작업장" LabelWidth="80" Width="365" GPCD="LINECD" Value="{Binding LINECD}" REF01="07" ReadOnly="True"/>
-                <its:Combo Label="공정" LabelWidth="80" Width="365" GPCD="PRCCD_LINE" Value="{Binding PRCCD}" ReadOnly="True"/>
+                <its:Combo Label="공정" LabelWidth="80" Width="365" GPCD="PRCCD_LINEROUT" Value="{Binding PRCCD}" ReadOnly="True"/>
                 <its:Combo Label="라인" LabelWidth="80" Width="365" GPCD="EQMCD_LINE" Value="{Binding EQMCD}" ReadOnly="True"/>
                 <its:Text Label="품목코드" LabelWidth="80" Width="365" Value="{Binding ITEMCD}" ReadOnly="True"/>
                 <its:Text Label="품목명" LabelWidth="80" Width="365" Value="{Binding ITEMNM}" ReadOnly="True"/>
@@ -350,6 +351,56 @@
                 <UserControl Width="700" Height="10"/>
                 <UserControl Width="530"/>
                 <its:Button Label="저    장" Width="150" Height="40" SetFontSize="18" CommandName="SAVE_CHKERR" BackColor="DARKORANGE" FontWeight="Bold"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--공정이동표 발행 팝업 (작업장·공정은 메인 값, 라벨프린터·라벨출력·라벨발행은 출하검사공정 I2M1400_N 일 때만)-->
+        <UserControl x:Name="POPUP_A11" Style="{DynamicResource TML_POP}" Canvas.Left="0" Canvas.Top="0" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A11" Width="1170" Height="540">
+                <TextBlock x:Name="TXT_MOVE_TITLE" Width="1170" Height="36" FontSize="20" FontWeight="Bold" Padding="10,5,0,0" Text="공정이동표 인쇄"/>
+                <its:Date Label="생산일자" LabelWidth="70" Width="220" Value="{Binding SDATE}"/>
+                <its:Date HidenLabel="Y" Width="140" Value="{Binding EDATE}"/>
+                <UserControl Width="10"/>
+                <its:Button Label="조    회" Width="110" Height="35" SetFontSize="16" CommandName="SEARCH_MOVE" FontWeight="Bold"/>
+                <UserControl Width="20"/>
+                <its:Check Label="실적 조회" Width="120" Value="{Binding ALLYN}"/>
+                <its:Number Label="발행매수(박스 당 수량)" LabelWidth="150" Width="230" Value="{Binding PRINTCNT}" DecimalPoint="0" ShowKeyPad="True"/>
+                <UserControl Width="1170" Height="3"/>
+                <its:Combo Label="프린터" LabelWidth="70" Width="400" Value="{Binding PRINT}" x:Name="CMB_PRINT"/>
+                <its:Combo Label="라벨프린터" LabelWidth="80" Width="410" Value="{Binding LABELPRINT}" x:Name="CMB_LABELPRINT"/>
+                <UserControl Width="1170" Height="5"/>
+                <its:Grid x:Name="GRID_G12" Width="1040" Height="425">
+                    <its:Grid.Columns>
+                        <its:Column Width="70" Header="선택" CellType="Button" ButtonText="라벨출력" CommandName="PRINT_LABEL_ROW" x:Name="COL_LABELBTN"/>
+                        <its:Column Width="35" Header="..." IsRowCheck="True"/>
+                        <its:Column Width="60" Header="등록자" FieldName="EMPNM"/>
+                        <its:Column Width="85" Header="생산일자" FieldName="WORKDATE" ALGIN="CENTER"/>
+                        <its:Column Width="50" Header="주야" FieldName="DNTPNM" ALGIN="CENTER"/>
+                        <its:Column Width="115" Header="LOTNO" FieldName="LOTKEY" ALGIN="CENTER"/>
+                        <its:Column Width="130" Header="품명" FieldName="ITEMNM"/>
+                        <its:Column Width="95" Header="규격" FieldName="ITEMSPEC"/>
+                        <its:Column Width="85" Header="품번" FieldName="ITEMCD"/>
+                        <its:Column Width="60" Header="HEAT NO" FieldName="HEATNO"/>
+                        <its:Column Width="55" Header="양품수량" FieldName="GOODQTY" DecimalPoint="0"/>
+                        <its:Column Width="55" Header="불량수량" FieldName="BADQTY" DecimalPoint="0"/>
+                        <its:Column Width="65" Header="양품재고수량" FieldName="GOODSTOCKQTY" DecimalPoint="0"/>
+                        <its:Column Width="65" Header="불량재고수량" FieldName="BADSTOCKQTY" DecimalPoint="0"/>
+                        <its:Column Width="90" Header="생산실적번호" FieldName="PRDRSTKEY" ALGIN="CENTER"/>
+                        <its:Column Width="85" Header="라벨번호" FieldName="LABELKEY" ALGIN="CENTER" x:Name="COL_LABELKEY"/>
+                    </its:Grid.Columns>
+                </its:Grid>
+                <StackPanel Width="125" Height="425">
+                    <WrapPanel Margin="5,0,0,0">
+                        <its:Button Label="▲" Width="55" Height="50" SetFontSize="20" CommandName="MOVE_UP" FontWeight="Bold"/>
+                        <its:Button Label="▼" Width="55" Height="50" SetFontSize="20" CommandName="MOVE_DOWN" FontWeight="Bold"/>
+                    </WrapPanel>
+                    <its:Button Label="전체발행" Width="115" Height="45" SetFontSize="16" CommandName="PRINT_ALL" FontWeight="Bold" Margin="0,8,0,0"/>
+                    <its:Button Label="양품발행" Width="115" Height="45" SetFontSize="16" CommandName="PRINT_GOOD" BackColor="GREEN" FontWeight="Bold" Margin="0,5,0,0"/>
+                    <its:Button Label="불량발행" Width="115" Height="45" SetFontSize="16" CommandName="PRINT_BAD" BackColor="RED" FontWeight="Bold" Margin="0,5,0,0"/>
+                    <its:Button Label="잔량발행" Width="115" Height="45" SetFontSize="16" CommandName="PRINT_REMAIN" BackColor="DARKORANGE" FontWeight="Bold" Margin="0,5,0,0"/>
+                    <its:Button Label="라벨발행" Width="115" Height="45" SetFontSize="16" CommandName="PRINT_LABEL" FontWeight="Bold" Margin="0,5,0,0" x:Name="BTN_LABELPRINT"/>
+                    <its:Button Label="취    소" Width="115" Height="45" SetFontSize="16" CommandName="CLOSE_MOVE" BackColor="GRAY" FontWeight="Bold" Margin="0,40,0,0"/>
+                </StackPanel>
             </its:WrapContent>
         </UserControl>
     </Canvas>

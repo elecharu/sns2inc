@@ -89,6 +89,18 @@
     <Compile Include="PRD_1.Designer.cs">
       <DependentUpon>PRD_1.cs</DependentUpon>
     </Compile>
+    <Compile Include="PRD_2.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PRD_2.Designer.cs">
+      <DependentUpon>PRD_2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PRD_3.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="PRD_3.Designer.cs">
+      <DependentUpon>PRD_3.cs</DependentUpon>
+    </Compile>
     <Compile Include="MTR_1.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -110,18 +122,33 @@
     <Compile Include="MTR_2.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="MTR_2.Designer.cs">
+      <DependentUpon>MTR_2.cs</DependentUpon>
+    </Compile>
     <Compile Include="MTR_3.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MTR_3.Designer.cs">
+      <DependentUpon>MTR_3.cs</DependentUpon>
     </Compile>
     <Compile Include="MTR_4.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="MTR_4.Designer.cs">
+      <DependentUpon>MTR_4.cs</DependentUpon>
+    </Compile>
     <Compile Include="MTR_5.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="MTR_5.Designer.cs">
+      <DependentUpon>MTR_5.cs</DependentUpon>
     </Compile>
     <Compile Include="RptKit.cs" />
     <Compile Include="SAL_1.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="SAL_1.Designer.cs">
+      <DependentUpon>SAL_1.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -149,6 +176,21 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MTR_1_SUB.resx">
       <DependentUpon>MTR_1_SUB.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MTR_2.resx">
+      <DependentUpon>MTR_2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MTR_3.resx">
+      <DependentUpon>MTR_3.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MTR_4.resx">
+      <DependentUpon>MTR_4.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MTR_5.resx">
+      <DependentUpon>MTR_5.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SAL_1.resx">
+      <DependentUpon>SAL_1.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Licenses.licx" />
     <EmbeddedResource Include="Properties\Resources.resx">

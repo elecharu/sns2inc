@@ -1,12 +1,10 @@
-﻿CREATE DEFINER = 'root'@'%'
+CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.TML5000_R02(
 -- *****************************************************************************
 -- Comment: 외주처 판매출고
 -- Create : 2026-10-12 13:21: 김영철
 -- Modify : 2026-11-11 PRINT_SALOUT 추가 (거래명세서 출고부서용 출력 - TMLPRINT.SAL_1)
---          (저장소 파일이 DB 보다 오래돼서, DB 에 올라가 있던 프로시저를 기준으로 맞춤)
---          2026-11-17 출고확정(MAKE_SALOUT) 때 출하 1건 = 거래명세서 1장 이력(SALINVOICE·SALINVOICED, INVOICEKEY) 생성,
---                     출고이력 COMOUT.INVOICEKEY 에도 기록. 출하취소(DEL_SALOUT) 때 이력 삭제. 거래명세서(PRINT_SALOUT) 번호 = INVOICEKEY
+--          (저장소 파일이 DB 보다 오래돼서, DB 에 올라가 있던 프로시저를 기준으로 맞춤) 
 -- *****************************************************************************
 
   IN $CUSTCD VARCHAR(20),               -- 거래처정보
@@ -47,7 +45,6 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$FLAG VARCHAR(10);
   DECLARE _$KEYDATE VARCHAR(10);
   DECLARE _$SEQ INT;
-  DECLARE _$INVOICEKEY VARCHAR(20);
 
 -- ****************************************************************************
   -- 선택한 수주 (1건)
@@ -300,30 +297,6 @@ WHEN 'MAKE_SALOUT' THEN -- 출고확정: OUTYN = 'Y' + 재고 출고/차감
     LEAVE PROC;
   END IF;
 
-  -- 거래명세서 이력 (출하 1건 = 거래명세서 1장, LOT 1개 = 상세 1줄)
-  SET _$INVOICEKEY = GETKEY('INVOICEKEY');
-
-  INSERT INTO SALINVOICE (INVOICEKEY, INVOICEDATE, CUSTCD, SALOUTGROUPKEY, WARECD, EMPCD, REMARK,
-                          RTIME, REMP, RPRG)
-  SELECT _$INVOICEKEY, LEFT($OUTTIME, 10), SALOUT.CUSTCD, '', SALOUT.WARECD, CALLEMP(), '',
-         CALLTIME(), CALLEMP(), CALLPRG()
-    FROM SALOUT
-    WHERE SALOUT.SALOUTKEY = _$SALOUTKEY;
-
-  INSERT INTO SALINVOICED (INVOICEKEY, SALOUTKEY, LOTKEY, ITEMID, OUTQTY, RTIME, REMP, RPRG)
-  SELECT _$INVOICEKEY, SALOUT.SALOUTKEY, SALOUTLOT.LOTKEY, SALOUT.ITEMID, SALOUTLOT.LOTQTY, CALLTIME(), CALLEMP(), CALLPRG()
-    FROM SALOUT
-    INNER JOIN SALOUTLOT ON SALOUTLOT.SALOUTKEY = SALOUT.SALOUTKEY
-    WHERE SALOUT.SALOUTKEY = _$SALOUTKEY;
-
-  -- 출하 출고이력에도 거래명세서키 (재고 입출고 조회 SAL3002_S03 명세서번호)
-  UPDATE COMOUT
-     SET COMOUT.INVOICEKEY = _$INVOICEKEY
-       , COMOUT.MTIME = CALLTIME()
-       , COMOUT.MEMP = CALLEMP()
-       , COMOUT.MPRG = CALLPRG()
-   WHERE COMOUT.SALOUTKEY = _$SALOUTKEY;
-
   SELECT _$SALOUTKEY AS SALOUTKEY;
 
 -- ****************************************************************************
@@ -377,19 +350,6 @@ WHEN 'DEL_SALOUT' THEN -- 출하취소 (확정 출하 1건): 재고 복원 후 �
 
   -- 재고 복원·출고이력 삭제·출하 삭제는 IO 프로시저에서 처리
   CALL IO_SALOUT_OSC_DEL($SALOUTKEY);
-
-  IF IFNULL(@ERRMSG, '') <> '' THEN
-    LEAVE PROC;
-  END IF;
-
-  -- 거래명세서 이력 삭제 (이 출하의 상세, 상세가 남지 않은 헤더)
-  SET _$INVOICEKEY = (SELECT SALINVOICED.INVOICEKEY FROM SALINVOICED WHERE SALINVOICED.SALOUTKEY = $SALOUTKEY LIMIT 1);
-
-  DELETE FROM SALINVOICED WHERE SALINVOICED.SALOUTKEY = $SALOUTKEY;
-
-  IF _$INVOICEKEY IS NOT NULL AND NOT EXISTS (SELECT 1 FROM SALINVOICED WHERE SALINVOICED.INVOICEKEY = _$INVOICEKEY) THEN
-    DELETE FROM SALINVOICE WHERE SALINVOICE.INVOICEKEY = _$INVOICEKEY;
-  END IF;
 
 
 -- ****************************************************************************
@@ -449,10 +409,10 @@ WHEN 'PRINT_SALOUT' THEN -- 거래명세서 (출고부서용) : 출하 1건 (TML
   WHERE SALOUT.SALOUTKEY = $SALOUTKEY
   ORDER BY SALOUTLOT.LOTKEY;
 
-  -- [3] 총 수량·거래명세서 번호 (INVOICEKEY. 이력이 없는 예전 출하는 출하번호)
+  -- [3] 총 수량·출하번호
   SELECT
       FORMAT(IFNULL(SUM(SALOUT.OUTQTY), 0), 0) AS SUMQTY
-    , IFNULL((SELECT SALINVOICED.INVOICEKEY FROM SALINVOICED WHERE SALINVOICED.SALOUTKEY = $SALOUTKEY LIMIT 1), $SALOUTKEY) AS GROUPKEY
+    , $SALOUTKEY AS GROUPKEY
     , '' AS REMARK
   FROM SALOUT
   WHERE SALOUT.SALOUTKEY = $SALOUTKEY;

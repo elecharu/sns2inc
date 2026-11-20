@@ -3,13 +3,14 @@ PROCEDURE MES_SNS2.LOT1002_R02(
 -- *****************************************************************************
 -- Comment: 재고 기타출고 등록
 -- Create: 2026-09-02 : 11:47 : 김영철
--- Modify:  
+-- Modify: 2026-11-19: 출고구분을 ETCTP 공통코드로 변경 (파라미터 $ETCTP 추가, OUTTP 는 IO_ETC_OUT 에서 99 고정)
 -- *****************************************************************************
   IN $WARECD       VARCHAR(20),
   IN $ITEMCG       VARCHAR(20),
   IN $ITEMID       VARCHAR(50),
   IN $OUTDATE      VARCHAR(10),
   IN $OUTTP        VARCHAR(20),
+  IN $ETCTP        VARCHAR(20),   -- 출고구분 (공통코드 ETCTP)
   IN $EMPCD        VARCHAR(20),
   IN $REMARK       VARCHAR(100), 
   
@@ -60,7 +61,7 @@ WHEN 'LIST_COMLOT_LOTLIST' THEN
 -- * ***************************************************************************
 WHEN 'ETC_OUT' THEN  
 
-  CALL IO_ETC_OUT($ITEMID, $OUTDATE, $OUTTP, $EMPCD, $REMARK, $LOTKEYLIST, $OUTQTYLIST);   
+  CALL IO_ETC_OUT($ITEMID, $OUTDATE, $ETCTP, $EMPCD, $REMARK, $LOTKEYLIST, $OUTQTYLIST);   
 
 -- * ***************************************************************************
 END CASE;  END

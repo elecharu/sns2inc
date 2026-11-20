@@ -33,6 +33,8 @@ namespace TML1010
         ItsModelGrid MODEL_G2 = new ItsModelGrid();
         ItsModelGrid MODEL_G3 = new ItsModelGrid(); // 2026-11-09 BOX 단위 수량 x BOX 수량
         ItsModelGrid MODEL_G4 = new ItsModelGrid(); // 2026-11-10 납품등록 BOX 현황 ([등록] 전까지 화면에만)
+        ItsModelPanel MODEL_S2 = new ItsModelPanel(); // 2026-11-19 [납품이력] 탭 조회조건
+        ItsModelGrid MODEL_G5 = new ItsModelGrid();   // 2026-11-19 [납품이력] 탭 거래명세서 목록
 
 
         // 생성자
@@ -63,6 +65,109 @@ namespace TML1010
             (GRID_G3.View as TableView).AllowSorting = false;
 
             MODEL_G4.Binding(GRID_G4);
+
+            MODEL_S2.Binding(PANEL_S2);
+            MODEL_S2.DefaultValue("SDATE", DateTime.Now);
+            MODEL_S2.DefaultValue("EDATE", DateTime.Now);
+            MODEL_S2.InitData();
+
+            MODEL_G5.Binding(GRID_G5);
+        }
+
+        // ===== [납품이력] 탭 : 납품일자 기간의 거래명세서 조회 / 납품 취소 / 재출력 (프로시저 TML1010_R07 LIST_INVOICE, DEL_MTRCUSTLOT) =====
+        private void SearchInvoice()
+        {
+            ItsMaria.Set("TML1010_R07", "LIST_INVOICE");
+            ItsMaria.AddModel(MODEL_S2);
+            ItsMaria.AddOne("INHOUSEYN", (ItsLocalInfo.TMLCUSTCD != "") ? "N" : "Y");
+
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            MODEL_G5.SetData(ds.Tables[0]);
+        }
+
+        // 조회·재출력·납품취소 버튼 처리. 처리했으면 true
+        private bool EventCommandHistory(string commandName)
+        {
+            if (commandName == "SEARCH_INVOICE")
+            {
+                if (MODEL_S2.GetText("SDATE") == "" || MODEL_S2.GetText("EDATE") == "")
+                {
+                    ShowMessageBox("", "납품일자를 선택하세요.");
+                    return true;
+                }
+                if (ItsLocalInfo.TMLCUSTCD != "" && MODEL_S2.GetText("CUSTCD") == "")
+                {
+                    ShowMessageBox("", "거래처를 선택하세요.");
+                    return true;
+                }
+
+                SearchInvoice();
+                return true;
+            }
+            else if (commandName == "PRINT_HIST")
+            {
+                int row = MODEL_G5.CurrentIndex;
+                if (row < 0 || MODEL_G5.GetText(row, "INVOICEKEY") == "")
+                {
+                    ShowMessageBox("", "재출력할 거래명세서를 선택하세요.");
+                    return true;
+                }
+
+                PrintInvoice(MODEL_G5.GetText(row, "INVOICEKEY"));
+                return true;
+            }
+            else if (commandName == "CANCEL_HIST")
+            {
+                int cnt = 0;
+                for (int i = 0; i < MODEL_G5.ModelCount; i++)
+                {
+                    if (MODEL_G5.IsChecked(i)) cnt++;
+                }
+                if (cnt == 0)
+                {
+                    ShowMessageBox("", "납품 취소할 거래명세서를 체크하세요.");
+                    return true;
+                }
+
+                ShowMessageBox(commandName, "체크한 거래명세서 " + cnt + "건을 납품 취소하시겠습니까?\n(입고확인이 된 건은 입고도 같이 취소됩니다)");
+                return true;
+            }
+
+            return false;
+        }
+
+        // 납품 취소 확인 후 처리 (거래명세서마다 DEL_MTRCUSTLOT 호출). 처리했으면 true
+        private bool EventMessageHistory(string commandName)
+        {
+            if (commandName != "CANCEL_HIST") return false;
+
+            int cnt = 0;
+            for (int i = 0; i < MODEL_G5.ModelCount; i++)
+            {
+                if (!MODEL_G5.IsChecked(i)) continue;
+
+                ItsMaria.Set("TML1010_R07", "DEL_MTRCUSTLOT");
+                ItsMaria.AddOne("INVOICEKEY", MODEL_G5.GetText(i, "INVOICEKEY"));
+                ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    string err = ItsMaria.ErrMessage;
+                    if (cnt > 0) SearchInvoice();   // 앞에서 취소된 건은 목록에서 빠지게
+                    ShowMessageBox("", "[" + MODEL_G5.GetText(i, "INVOICEKEY") + "] " + err);
+                    return true;
+                }
+                cnt++;
+            }
+
+            ShowMessageBox("", "납품 취소되었습니다. (" + cnt + "건)");
+            SearchInvoice();
+            return true;
         }
 
         // 결과 팝업에서 고른 줄의 거래명세서 (등록 한 번에 발주별로 여러 장이 만들어질 수 있음)
@@ -130,6 +235,15 @@ namespace TML1010
             MODEL_S1.SetValue("EDATE", DateTime.Now.AddMonths(1).AddDays(-DateTime.Now.Day).ToString("yyyy-MM-dd"));
             MODEL_S1.SetValue("PRDDATE", DateTime.Now.ToString("yyyy-MM-dd"));
 
+            // [납품이력] 탭 : 외주 계정은 계정의 거래처로 고정
+            if (ItsLocalInfo.TMLCUSTCD != "")
+            {
+                cb_CUSTCD2.Value = ItsLocalInfo.TMLCUSTCD.ToString();
+            }
+            cb_CUSTCD2.ReadOnly = (ItsLocalInfo.TMLCUSTCD != "");
+            MODEL_S2.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+            MODEL_S2.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+
             PANEL_A1.Close();
             PANEL_A3.Close();
         }
@@ -137,6 +251,8 @@ namespace TML1010
         public override void EventCommand(string commandName)
         {
             base.EventCommand(commandName);
+
+            if (EventCommandHistory(commandName)) return;
 
             // 발주 조회
             if (commandName == "LIST_MTRODR")
@@ -375,6 +491,8 @@ namespace TML1010
         public override void EventMessageResult(string commandName)
         {
             base.EventMessageResult(commandName);
+
+            if (EventMessageHistory(commandName)) return;
 
             // 납품 취소
             if (commandName == "MTRCUST_INVOICE_CANCEL")

@@ -8,7 +8,7 @@
       xmlns:local="clr-namespace:TML1020"
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
       Width="980" Height="480">
-    <!-- 2026-11-12 유상사급 자재입고확인 (R01 입고확인처리 기반, 유상사급 납품(01) 거래명세서만): 거래명세서번호 또는 LOT번호 바코드 스캔 → [등록] 하면 입고일자로 입고(수불) -->
+    <!-- 2026-11-12 유상사급 자재입고확인 (R01 입고확인처리 기반, 유상사급 납품(01) 거래명세서만): 거래명세서번호 또는 LOT번호 바코드 스캔 → [등록] 하면 입고일자로 사내창고 입고(INTP 011, 2026-11-19 납품등록에서 이동) 후 자재투입창고로 이동 -->
     <Canvas Background="Silver">
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">

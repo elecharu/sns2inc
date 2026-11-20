@@ -27,7 +27,7 @@ ItsPage.Load = function () {
         column.create('등록일시', 'RTIME', { width: 100, align: 'center', allowMerging: true }),
         column.create('창고코드', 'WARECD', { width: 100, hidden: true }),
         column.create('창고명', 'WARENM', { width: 100, align: 'center', allowMerging: true }),
-        column.create("출고구분", "OUTTP", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'OUTTP', align: 'center', allowMerging: true }),
+        column.create("출고구분", "ETCTP", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'ETCTP', align: 'center', allowMerging: true }),
         column.create('사원', 'EMPNM', { width: 100, align: 'center', allowMerging: true }),
         column.create('사유', 'REMARK', { width: 100, allowMerging: true }),
         column.create("품목유형", "ITEMCG", { width: 90, columnType: enumColumnTypes.combo, gpcd: 'DM100', align: 'center', allowMerging: true }),

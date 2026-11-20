@@ -15,7 +15,7 @@
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
             <its:WrapContent x:Name="PANEL_S1" Width="980" Height="62">
-                <its:Combo GPCD="CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" ReadOnly="True" x:Name="cb_CUSTCD" Visibility="Collapsed"/>
+                <its:Pop GPCD="CUSTCD_OSC" Width="250" Label="거래처" Value="{Binding CUSTCD}" ReadOnly="True" x:Name="cb_CUSTCD" ShowKeyPad="True" Visibility="Collapsed"/>
                 <its:Date Label="이동일자" LabelWidth="70" Width="230" Value="{Binding MOVEDATE}" Foreground="Green" FontWeight="Bold"/>
                 <UserControl Width="30"/>
                 <its:Combo GPCD="WARECD_OSC" LabelWidth="70" Width="330" Label="출고창고" Value="{Binding OUTWARE}" x:Name="cb_OUTWARE" FontWeight="Bold"/>

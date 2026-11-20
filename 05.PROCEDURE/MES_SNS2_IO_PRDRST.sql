@@ -1,4 +1,4 @@
-﻿CREATE DEFINER = 'root'@'%'
+CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.IO_PRDRST(
 -- *****************************************************************************
 -- Comment: 생산실적 등록 (작업지시·작업이력·생산실적·자재사용출고·실적로트 입고)
@@ -15,6 +15,7 @@ PROCEDURE MES_SNS2.IO_PRDRST(
 --         2026-11-05 작업지시 주야구분(PRDINS.DNTP) 저장 (DAY/NIGHT)
 --         2026-11-06 실적로트 불량수량(PRDRSTLOT.BADQTY), 불량재고 입고(COMIN·COMINLOT·COMLOT)
 --         2026-11-11 ERP 인터페이스(PRDINS, PRDRST) 송신 추가
+--         2026-11-19 17:40 신정수 실적로트 라벨번호(PRDRSTLOT.LABELKEY, 소라벨) 저장: 품목 PARTNO·INITCD 가 있으면 GETLABELKEY
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),      -- 공정
@@ -52,6 +53,7 @@ PROC: BEGIN
   DECLARE _$OUTKEY VARCHAR(100);
   DECLARE _$USEITEMID VARCHAR(100);
   DECLARE _$RSTLOTKEY VARCHAR(100);
+  DECLARE _$LABELKEY VARCHAR(20);
 -- *****************************************************************************
 
   -- 0. 입력 확인
@@ -476,13 +478,20 @@ PROC: BEGIN
     END IF;
   END WHILE;
 
-  -- 6. 실적로트 (양품수량, 불량수량)
+  -- 6. 실적로트 (양품수량, 불량수량, 라벨번호)
+  --    라벨번호(소라벨): 품목 PARTNO·INITCD 가 둘 다 있으면 작업시작일 YYMMDD + INITCD + 순번3자리, 없으면 ''
+  SET _$LABELKEY = IFNULL((SELECT IF(IFNULL(MSTITEM.PARTNO, '') <> '' AND IFNULL(MSTITEM.INITCD, '') <> ''
+                                    , GETLABELKEY($WORKSDAY, MSTITEM.INITCD), '')
+                             FROM MSTITEM
+                             WHERE MSTITEM.ITEMID = $ITEMID), '');
+
   INSERT INTO PRDRSTLOT (
       PRDRSTKEY
     , LOTKEY
     , LOTTIME
     , LOTQTY
     , BADQTY
+    , LABELKEY
     , RTIME, REMP, RPRG)
   VALUES (
       _$PRDRSTKEY
@@ -490,6 +499,7 @@ PROC: BEGIN
     , CALLTIME()
     , _$GOODQTY
     , _$BADQTY
+    , _$LABELKEY
     , CALLTIME(), CALLEMP(), CALLPRG()
   );
 
@@ -692,6 +702,6 @@ PROC: BEGIN
       AND PRDLINEBAD.EQMCD = $EQMCD;
 
   -- 결과: 실적로트번호
-  SELECT _$RSTLOTKEY AS LOTKEY, _$GOODQTY AS GOODQTY;
+  SELECT _$RSTLOTKEY AS LOTKEY, _$GOODQTY AS GOODQTY, _$LABELKEY AS LABELKEY;
 -- *****************************************************************************
 END

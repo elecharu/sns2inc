@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using DevExpress.XtraReports.UI;
 using DevExpress.XtraPrinting;
@@ -68,6 +69,28 @@ namespace TMLPRINT
             this.ShowPrintStatusDialog = false;
             this.CreateDocument();
             PrintToolBase tool = new PrintToolBase(this.PrintingSystem);
+            tool.Print(printerName);
+        }
+
+        // 2026-11-19 여러 장(로트·발행매수)을 문서 하나로 합쳐 한 번에 인쇄. 장마다 인쇄하면 인쇄작업이 여러 개라 PDF 로 출력 시 파일이 여러 개 생김
+        public static void PrintDirect(List<PRD_1> reports, string printerName)
+        {
+            if (reports == null || reports.Count == 0)
+            {
+                return;
+            }
+
+            PRD_1 first = reports[0];
+            first.ShowPrintMarginsWarning = false;
+            first.ShowPrintStatusDialog = false;
+            first.CreateDocument();
+            for (int i = 1; i < reports.Count; i++)
+            {
+                reports[i].CreateDocument();
+                first.Pages.AddRange(reports[i].Pages);
+            }
+
+            PrintToolBase tool = new PrintToolBase(first.PrintingSystem);
             tool.Print(printerName);
         }
     }

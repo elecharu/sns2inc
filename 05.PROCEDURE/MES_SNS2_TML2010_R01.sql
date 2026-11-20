@@ -1,9 +1,11 @@
-﻿CREATE DEFINER = 'root'@'%'
+CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.TML2010_R01(
 -- *****************************************************************************
 -- Comment: 생산실적등록 (현장)
 -- Create: 2026-10-26 신정수
--- Modify:
+-- Modify: 2026-11-19 16:36 신정수 공정이동표 발행 팝업: 실적로트 조회(LIST_MOVE), 잔량 자재로트(LIST_REMAIN),
+--           PRINT_MOVE 에 $PRINTTP = 'REMAIN'(자재로트 현재고로 출력) 추가
+--         2026-11-19 17:40 신정수 소라벨(해외 수출) 출력 PRINT_LABEL (MAGNA / 일반), LIST_MOVE 라벨번호
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),       -- 공정
@@ -27,6 +29,10 @@ PROCEDURE MES_SNS2.TML2010_R01(
   IN $NONETIME VARCHAR(19),    -- 비가동 종료시간
   IN $REMARK VARCHAR(1000),    -- 비고
   IN $LOTKEY VARCHAR(100),     -- 실적로트번호 (공정이동표 출력)
+  IN $SDATE VARCHAR(10),       -- 공정이동표 발행: 생산일자 시작일
+  IN $EDATE VARCHAR(10),       -- 공정이동표 발행: 생산일자 종료일
+  IN $ALLYN VARCHAR(1),        -- 공정이동표 발행: 실적 조회 (Y 면 현재고 없는 로트까지)
+  IN $PRINTTP VARCHAR(10),     -- 공정이동표 출력 구분 ('' 실적로트, REMAIN 자재로트 잔량)
 -- *****************************************************************************
   IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
@@ -38,6 +44,8 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$EMPCD VARCHAR(100);
   DECLARE _$PRDNONKEY VARCHAR(20);
   DECLARE _$LVL INT;
+  DECLARE _$LABELTP VARCHAR(10);   -- 소라벨 양식 (MAGNA / NORMAL)
+  DECLARE _$LABELKEY VARCHAR(20);  -- 라벨번호 (PRDRSTLOT.LABELKEY)
 -- *****************************************************************************
 CASE $CALLTYPE
 -- ****************************************************************************
@@ -936,7 +944,195 @@ WHEN 'LIST_FANO' THEN  -- 라인 설비 목록
   ;
 
 -- ****************************************************************************
+WHEN 'LIST_MOVE' THEN  -- 공정이동표 발행: 작업장·공정의 생산일자(작업일 PRDWORK.WORKDATE) 기간 실적로트 (양품·불량 현재고 포함)
+  -- 생산일자는 작업시작일 기준이라 자정 넘어 등록한 야간 실적도 작업일로 잡힘 (RSTTIME 은 등록 시각)
+  -- 양품재고 = 실적 입고창고(PRDRST.WARECD), 불량재고 = 불량창고(제품 04S230_N, 반제품 04S130_N) 의 같은 로트 현재고 (IO_PRDRST 와 같음)
+  -- 실적 조회($ALLYN = 'Y')가 아니면 양품·불량 현재고가 하나라도 있는 로트만
+
+  IF $LINECD = '' THEN
+    CALL COMERR('생산작업장을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $PRCCD = '' THEN
+    CALL COMERR('생산공정을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF $SDATE = '' OR $EDATE = '' THEN
+    CALL COMERR('생산일자를 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  SELECT
+      IFNULL(MSTEMP.EMPNM, PRDRST.EMPCD) AS EMPNM
+    , PRDWORK.WORKDATE
+    , CASE PRDINS.DNTP WHEN 'DAY' THEN '주간' WHEN 'NIGHT' THEN '야간' ELSE '' END AS DNTPNM  -- 작업지시 주야구분 (IO_PRDRST 가 DAY/NIGHT 로 저장)
+    , PRDRSTLOT.LOTKEY
+    , MSTITEM.ITEMNM
+    , MSTITEM.ITEMSPEC
+    , MSTITEM.ITEMCD
+    , '' AS HEATNO       -- 아직 빈값 (PRINT_MOVE 와 같음)
+    , PRDRSTLOT.LOTQTY AS GOODQTY
+    , PRDRSTLOT.BADQTY
+    , IFNULL(COMLOT1.LOTQTY, 0) AS GOODSTOCKQTY
+    , IFNULL(COMLOT2.LOTQTY, 0) AS BADSTOCKQTY
+    , PRDRST.PRDRSTKEY
+    , PRDRSTLOT.LABELKEY -- 라벨번호 (소라벨)
+  FROM PRDRST
+  INNER JOIN PRDRSTLOT
+    ON PRDRSTLOT.PRDRSTKEY = PRDRST.PRDRSTKEY
+  INNER JOIN PRDWORK
+    ON PRDWORK.PRDWORKKEY = PRDRST.PRDWORKKEY
+  LEFT JOIN PRDINS
+    ON PRDINS.PRDINSKEY = PRDWORK.PRDINSKEY
+  INNER JOIN MSTITEM
+    ON MSTITEM.ITEMID = PRDRST.ITEMID
+  LEFT JOIN MSTEMP
+    ON MSTEMP.EMPCD = PRDRST.EMPCD
+  LEFT JOIN COMLOT AS COMLOT1  -- 양품 현재고
+    ON COMLOT1.LOTKEY = PRDRSTLOT.LOTKEY
+   AND COMLOT1.WARECD = PRDRST.WARECD
+  LEFT JOIN COMLOT AS COMLOT2  -- 불량 현재고
+    ON COMLOT2.LOTKEY = PRDRSTLOT.LOTKEY
+   AND COMLOT2.WARECD = IF(MSTITEM.ITEMCG = 'DM100100', '04S230_N', '04S130_N')
+  WHERE PRDRST.LINECD = $LINECD
+    AND PRDRST.PRCCD = $PRCCD
+    AND PRDWORK.WORKDATE BETWEEN $SDATE AND $EDATE
+    AND ($ALLYN = 'Y' OR IFNULL(COMLOT1.LOTQTY, 0) > 0 OR IFNULL(COMLOT2.LOTQTY, 0) > 0)
+  ORDER BY PRDWORK.WORKDATE DESC, PRDRST.RSTTIME DESC, PRDRSTLOT.LOTKEY DESC
+  ;
+
+-- ****************************************************************************
+WHEN 'PRINT_LABEL' THEN  -- 소라벨(해외 수출) 출력 데이터: 실적로트 1건
+  -- 양식: 출력하는 달 이 품목의 수주 거래처가 MAGNA(9054740899)면 MAGNA 라벨(TMLPRINT.PRD_2),
+  --       아니고 품목 PARTNO·INITCD 가 둘 다 있으면 일반 라벨(TMLPRINT.PRD_3), 둘 다 아니면 오류
+  -- 일반 라벨인데 라벨번호가 없으면(라벨번호 생기기 전 실적) 여기서 채번해 저장
+  -- 결과: LABELTP(MAGNA/NORMAL), PARTNO, ITEMNM, CUSTADDR, LOTKEY, LOTQTY(양품수량), PRDRSTKEY, PRDDATE(작업일), LABELKEY
+
+  IF $LOTKEY = '' THEN
+    CALL COMERR('실적로트번호가 없습니다.');
+    LEAVE PROC;
+  END IF;
+
+  IF NOT EXISTS (SELECT PRDRSTLOT.LOTKEY FROM PRDRSTLOT WHERE PRDRSTLOT.LOTKEY = $LOTKEY) THEN
+    CALL COMERR(CONCAT('실적로트가 없습니다.', '\n- 로트번호: ', $LOTKEY));
+    LEAVE PROC;
+  END IF;
+
+  SET _$ITEMID = (SELECT PRDRST.ITEMID
+                    FROM PRDRSTLOT
+                    INNER JOIN PRDRST
+                      ON PRDRST.PRDRSTKEY = PRDRSTLOT.PRDRSTKEY
+                    WHERE PRDRSTLOT.LOTKEY = $LOTKEY
+                    LIMIT 1);
+
+  IF EXISTS (SELECT SALODRD.ITEMID
+               FROM SALODR
+               INNER JOIN SALODRD
+                 ON SALODRD.SALODRKEY = SALODR.SALODRKEY
+               WHERE SALODRD.ITEMID = _$ITEMID
+                 AND SALODR.CUSTCD = '9054740899'  -- MAGNA
+                 AND LEFT(SALODR.ODRDATE, 7) = LEFT(GETDATE(), 7)) THEN
+    SET _$LABELTP = 'MAGNA';
+  ELSEIF EXISTS (SELECT MSTITEM.ITEMID
+                   FROM MSTITEM
+                   WHERE MSTITEM.ITEMID = _$ITEMID
+                     AND IFNULL(MSTITEM.PARTNO, '') <> ''
+                     AND IFNULL(MSTITEM.INITCD, '') <> '') THEN
+    SET _$LABELTP = 'NORMAL';
+  ELSE
+    CALL COMERR(CONCAT('소라벨 출력 대상 품목이 아닙니다.'
+                      , '\n(당월 MAGNA 수주가 없고, 품목의 PART NO·INITIAL 이 없습니다.)'
+                      , '\n- 품목코드: ', (SELECT MSTITEM.ITEMCD FROM MSTITEM WHERE MSTITEM.ITEMID = _$ITEMID)
+                      , '\n- 로트번호: ', $LOTKEY
+                      )
+               );
+    LEAVE PROC;
+  END IF;
+
+  -- 일반 라벨인데 라벨번호가 없으면 생산일자(작업일) 기준으로 채번
+  IF _$LABELTP = 'NORMAL'
+     AND (SELECT PRDRSTLOT.LABELKEY FROM PRDRSTLOT WHERE PRDRSTLOT.LOTKEY = $LOTKEY LIMIT 1) = '' THEN
+    SET _$LABELKEY = (SELECT GETLABELKEY(PRDWORK.WORKDATE, MSTITEM.INITCD)
+                        FROM PRDRSTLOT
+                        INNER JOIN PRDRST
+                          ON PRDRST.PRDRSTKEY = PRDRSTLOT.PRDRSTKEY
+                        INNER JOIN PRDWORK
+                          ON PRDWORK.PRDWORKKEY = PRDRST.PRDWORKKEY
+                        INNER JOIN MSTITEM
+                          ON MSTITEM.ITEMID = PRDRST.ITEMID
+                        WHERE PRDRSTLOT.LOTKEY = $LOTKEY
+                        LIMIT 1);
+
+    IF IFNULL(_$LABELKEY, '') = '' THEN
+      CALL COMERR(CONCAT('라벨번호를 만들지 못했습니다. 생산일자를 확인하세요.', '\n- 로트번호: ', $LOTKEY));
+      LEAVE PROC;
+    END IF;
+
+    UPDATE PRDRSTLOT
+    SET LABELKEY = _$LABELKEY
+      , MTIME = CALLTIME()
+      , MEMP = CALLEMP()
+      , MPRG = CALLPRG()
+    WHERE PRDRSTLOT.LOTKEY = $LOTKEY
+      AND PRDRSTLOT.LABELKEY = '';
+  END IF;
+
+  SELECT
+      _$LABELTP AS LABELTP
+    , IFNULL(MSTITEM.PARTNO, '') AS PARTNO
+    , MSTITEM.ITEMNM
+    , IFNULL((SELECT MSTCUST.CUSTADDR2  -- 매출처 단가(MSTITEM_SDV) 거래처 주소, 거래종료 제외·기본업체 우선·최근 적용
+                FROM MSTITEM_SDV
+                INNER JOIN MSTCUST
+                  ON MSTCUST.CUSTCD = MSTITEM_SDV.CUSTCD
+                WHERE MSTITEM_SDV.ITEMID = PRDRST.ITEMID
+                  AND IFNULL(MSTITEM_SDV.ENDYN, '') <> 'Y'
+                ORDER BY IF(MSTITEM_SDV.MAINYN = 'Y', 0, 1), MSTITEM_SDV.SDT DESC
+                LIMIT 1), '') AS CUSTADDR
+    , PRDRSTLOT.LOTKEY
+    , FORMAT(PRDRSTLOT.LOTQTY, 0) AS LOTQTY
+    , PRDRSTLOT.PRDRSTKEY
+    , PRDWORK.WORKDATE AS PRDDATE
+    , PRDRSTLOT.LABELKEY
+  FROM PRDRSTLOT
+  INNER JOIN PRDRST
+    ON PRDRST.PRDRSTKEY = PRDRSTLOT.PRDRSTKEY
+  INNER JOIN PRDWORK
+    ON PRDWORK.PRDWORKKEY = PRDRST.PRDWORKKEY
+  INNER JOIN MSTITEM
+    ON MSTITEM.ITEMID = PRDRST.ITEMID
+  WHERE PRDRSTLOT.LOTKEY = $LOTKEY
+  LIMIT 1
+  ;
+
+-- ****************************************************************************
+WHEN 'LIST_REMAIN' THEN  -- 공정이동표 잔량발행: 실적로트가 사용한 자재로트 중 현재고가 남은 것
+
+  IF $LOTKEY = '' THEN
+    CALL COMERR('실적로트번호가 없습니다.');
+    LEAVE PROC;
+  END IF;
+
+  SELECT
+      PRDRSTUSE.USELOTKEY AS LOTKEY
+    , MAX(COMLOT.LOTQTY) AS LOTQTY
+  FROM PRDRSTLOT
+  INNER JOIN PRDRSTUSE
+    ON PRDRSTUSE.PRDRSTKEY = PRDRSTLOT.PRDRSTKEY
+  INNER JOIN COMLOT
+    ON COMLOT.LOTKEY = PRDRSTUSE.USELOTKEY
+   AND COMLOT.WARECD = PRDRSTUSE.USEWARECD
+  WHERE PRDRSTLOT.LOTKEY = $LOTKEY
+    AND COMLOT.LOTQTY > 0
+  GROUP BY PRDRSTUSE.USELOTKEY
+  ORDER BY PRDRSTUSE.USELOTKEY
+  ;
+
+-- ****************************************************************************
 -- 공정이동표 (작업완료 후 양품로트·불량로트 각 1장, 양식 TMLPRINT.PRD_1)
+--   $PRINTTP = 'REMAIN' 이면 자재투입창고(04S111_N) 자재로트의 현재고로 출력 (공정이동표 발행 팝업의 잔량발행)
 -- ****************************************************************************
 WHEN 'PRINT_MOVE' THEN  -- 실적로트 공정이동표
 
@@ -945,6 +1141,52 @@ WHEN 'PRINT_MOVE' THEN  -- 실적로트 공정이동표
     LEAVE PROC;
   END IF;
 
+  IF $PRINTTP = 'REMAIN' THEN
+    IF NOT EXISTS (SELECT COMLOT.LOTKEY FROM COMLOT WHERE COMLOT.LOTKEY = $LOTKEY AND COMLOT.WARECD = '04S111_N') THEN
+      CALL COMERR(CONCAT('자재투입창고에 없는 로트번호입니다.', '\n- 로트번호: ', $LOTKEY));
+      LEAVE PROC;
+    END IF;
+
+    -- 0. 자재로트 품목·현재고 (이 로트를 만든 사내 실적이 있으면 그 생산정보, 없으면 빈값)
+    SELECT
+        MSTITEM.ITEMCD
+      , MSTITEM.ITEMNM
+      , MSTITEM.ITEMSPEC
+      , '' AS HEATNO
+      , '' AS HEATLOTKEY
+      , IFNULL(PRDWORK.WORKDATE, IFNULL(COMLOT.PRDDATE, '')) AS PRDDATE
+      , IFNULL(MSTEMP.EMPNM, IFNULL(PRDRST.EMPCD, '')) AS EMPNM
+      , IFNULL(LEFT(PRDRST.RSTTIME, 16), '') AS RSTTIME
+      , COMLOT.LOTKEY
+      , IFNULL(MSTLINE.LINENM, IFNULL(PRDRST.LINECD, '')) AS LINENM
+      , IFNULL(MSTPRC.PRCNM, '') AS PRCNM
+      , IFNULL(MSTLINE_EQM.EQMNM, '') AS EQMNM
+      , IFNULL(GPCD('DM150', MSTITEM.ITEMUNIT), '') AS UNITNM
+      , FORMAT(COMLOT.LOTQTY, 0) AS GOODQTY
+      , '0' AS BADQTY
+      , '' AS BADTPNM
+      , IFNULL((SELECT MSTEMP.EMPNM FROM MSTEMP WHERE MSTEMP.EMPCD = CALLEMP() LIMIT 1), CALLEMP()) AS PRINTEMPNM
+      , CALLTIME() AS PRINTTIME
+    FROM COMLOT
+    INNER JOIN MSTITEM
+      ON MSTITEM.ITEMID = COMLOT.ITEMID
+    LEFT JOIN PRDRST
+      ON PRDRST.PRDRSTKEY = (SELECT PRDRSTLOT.PRDRSTKEY FROM PRDRSTLOT WHERE PRDRSTLOT.LOTKEY = COMLOT.LOTKEY LIMIT 1)
+    LEFT JOIN PRDWORK
+      ON PRDWORK.PRDWORKKEY = PRDRST.PRDWORKKEY
+    LEFT JOIN MSTEMP
+      ON MSTEMP.EMPCD = PRDRST.EMPCD
+    LEFT JOIN MSTLINE
+      ON MSTLINE.LINECD = PRDRST.LINECD
+    LEFT JOIN MSTPRC
+      ON MSTPRC.PRCCD = IFNULL(PRDRST.PRCCD, COMLOT.PRCCD)
+    LEFT JOIN MSTLINE_EQM
+      ON MSTLINE_EQM.EQMCD = PRDRST.EQMCD
+    WHERE COMLOT.LOTKEY = $LOTKEY
+      AND COMLOT.WARECD = '04S111_N'
+    LIMIT 1
+    ;
+  ELSE
   -- 0. 생산품·생산정보·생산로트 (양품수량·불량수량, 불량 대분류는 불량코드가 여러 개면 모두)
   SELECT
       MSTITEM.ITEMCD
@@ -987,6 +1229,7 @@ WHEN 'PRINT_MOVE' THEN  -- 실적로트 공정이동표
   WHERE PRDRSTLOT.LOTKEY = $LOTKEY
   LIMIT 1
   ;
+  END IF;
 
   -- 1. 로트추적: 현공정 생산로트부터 투입로트를 거슬러 원소재까지
   --    사내 실적(PRDRSTLOT → PRDRSTUSE), 외주 실적(OSCRSTLOT → OSCRSTUSE), 둘 다 없으면 원소재
@@ -1012,11 +1255,16 @@ WHEN 'PRINT_MOVE' THEN  -- 실적로트 공정이동표
     LOTKEY VARCHAR(100) NOT NULL
   );
 
+  -- 시작 로트를 만든 실적 (사내 → 외주 → 원소재 순, 잔량발행 자재로트는 원소재일 수 있음)
   INSERT INTO TEMP_CUR (LOTKEY, RSTTP, RSTKEY)
-  SELECT PRDRSTLOT.LOTKEY, 'P', PRDRSTLOT.PRDRSTKEY
-  FROM PRDRSTLOT
-  WHERE PRDRSTLOT.LOTKEY = $LOTKEY
-  LIMIT 1;
+  SELECT
+      $LOTKEY
+    , IF(STARTLOT.PRDRSTKEY <> '', 'P', IF(STARTLOT.OSCRSTKEY <> '', 'O', ''))
+    , IF(STARTLOT.PRDRSTKEY <> '', STARTLOT.PRDRSTKEY, STARTLOT.OSCRSTKEY)
+  FROM (SELECT
+            IFNULL((SELECT PRDRSTLOT.PRDRSTKEY FROM PRDRSTLOT WHERE PRDRSTLOT.LOTKEY = $LOTKEY LIMIT 1), '') AS PRDRSTKEY
+          , IFNULL((SELECT OSCRSTLOT.OSCRSTKEY FROM OSCRSTLOT WHERE OSCRSTLOT.LOTKEY = $LOTKEY LIMIT 1), '') AS OSCRSTKEY
+       ) AS STARTLOT;
 
   SET _$LVL = 0;
   WHILE _$LVL < 30 AND EXISTS (SELECT TEMP_CUR.LOTKEY FROM TEMP_CUR) DO  -- 30단계 넘으면 끊음 (잘못된 순환 방지)

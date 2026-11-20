@@ -21,7 +21,8 @@ using DevExpress.Xpf.Grid;
 namespace TML1020
 {
     /// <summary>
-    /// // 2026-11-16 [유상사급 자재입고확인] 외주처 자재이동(TML1010 R06) 거래명세서 → 입고확인 = 사내창고(04S100_N) → 자재투입창고(04S111_N) 재고이동 (입고 아님)
+    /// // 2026-11-16 [유상사급 자재입고확인] 외주처 자재이동(TML1010 R06) 거래명세서 → 입고확인 = 사내창고(04S100_N) → 자재투입창고(04S111_N) 재고이동
+    /// // 2026-11-19 입고수불을 납품등록에서 이 화면으로 옮김: 입고확인 때 납품 LOT 를 사내창고에 입고(INTP 011, ERP DLV 송신)한 뒤 자재투입창고로 이동
     /// 외주처가 자재이동(TML1010 R06)한 거래명세서번호 또는 LOT번호를 바코드 스캔 → 그 거래명세서의 LOT 목록이 쌓임
     /// [등록] 하면 스캔한 거래명세서들을 입고일자로 사내창고에서 자재투입창고로 이동 (ERP WORK_10 송신, 프로시저 TML1020_R07)
     /// </summary>
@@ -70,7 +71,7 @@ namespace TML1020
                     return;
                 }
 
-                ShowMessageBox(commandName, MODEL_S1.GetText("MTRINDATE") + " 일자로 거래명세서 " + invoiceKeys.Count + "건 (LOT " + MODEL_G1.Rows.Count + "개)을 입고확인(자재투입창고로 이동) 하시겠습니까?");
+                ShowMessageBox(commandName, MODEL_S1.GetText("MTRINDATE") + " 일자로 거래명세서 " + invoiceKeys.Count + "건 (LOT " + MODEL_G1.Rows.Count + "개)을 입고확인(사내창고 입고 후 자재투입창고로 이동) 하시겠습니까?");
             }
             // 스캔 목록 비우기
             else if (commandName == "CLEAR_SCAN")
@@ -106,7 +107,7 @@ namespace TML1020
                 MODEL_S1.SetValue("BARCODE", "");
 
                 // 2026-11-16 유상사급 자재입고확인은 출력물 없음
-                ShowMessageBox("", "입고확인 되었습니다. (자재투입창고로 이동)");
+                ShowMessageBox("", "입고확인 되었습니다. (사내창고 입고 후 자재투입창고로 이동)");
                 txt_BARCODE.Focus();
             }
         }

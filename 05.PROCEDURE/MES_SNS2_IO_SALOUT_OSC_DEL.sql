@@ -1,8 +1,8 @@
 ﻿CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.IO_SALOUT_OSC_DEL(
 -- *****************************************************************************
--- Comment: 외주처 판매출고 출하취소 프로시저
--- Create: 2026-10-26 17:02 : KYC
+-- Comment: 외주처 판매출고 출하취소 프로시저 (출고구분 31 확정 출하 1건)
+-- Create: 2026-10-26 17:02:      TML5000_R02 DEL_SALOUT 에서 분리
 -- Modify:
 -- *****************************************************************************
   IN $SALOUTKEY  VARCHAR(20)      -- 출하번호 (확정 OUTYN = 'Y')
@@ -23,7 +23,7 @@ IF IFNULL(@ERRMSG, '') = '' THEN
 
   -- 1. 확정 출하 확인
   IF $SALOUTKEY = '' THEN
-    CALL COMERR('출하번호가 없습니다.');
+    CALL COMERR('출하번호가 없습니다. (IO_SALOUT_OSC_DEL)');
     LEAVE PROC;
   END IF;
 
@@ -39,12 +39,14 @@ IF IFNULL(@ERRMSG, '') = '' THEN
 
   -- 2. 재고 복원
   UPDATE SALOUTLOT
-  INNER JOIN COMLOT ON COMLOT.LOTKEY = SALOUTLOT.LOTKEY
+  INNER JOIN COMLOT
+    ON COMLOT.LOTKEY = SALOUTLOT.LOTKEY
   SET COMLOT.LOTQTY = COMLOT.LOTQTY + SALOUTLOT.LOTQTY
     , COMLOT.MTIME = CALLTIME()
     , COMLOT.MEMP = CALLEMP()
     , COMLOT.MPRG = CALLPRG()
-  WHERE SALOUTLOT.SALOUTKEY = $SALOUTKEY;
+  WHERE SALOUTLOT.SALOUTKEY = $SALOUTKEY
+  ;
 
   -- 3. 출고 이력 삭제
   DELETE FROM COMOUTLOT WHERE COMOUTLOT.OUTKEY = _$OUTKEY;

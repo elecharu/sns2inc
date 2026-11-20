@@ -4,10 +4,11 @@ PROCEDURE MES_SNS2.IO_ETC_OUT(
 -- Comment: 기타 출고 프로시저
 -- Create: 2026-09-04: 김영철
 -- Modify: 2026-11-11: ERP 인터페이스(ETC_OUT) 송신 추가
+-- Modify: 2026-11-19: 출고구분을 ETCTP 로 받아 COMOUTLOT.ETCTP·COMOUT.ETCTP 에 저장, OUTTP 는 99 고정
 -- ***************************************************************************** 
  IN $ITEMID         VARCHAR(50),
  IN $OUTDATE         VARCHAR(10),
- IN $OUTTP           VARCHAR(20),
+ IN $ETCTP           VARCHAR(20),   -- 출고구분 (공통코드 ETCTP)
  IN $EMPCD          VARCHAR(20),
  IN $REMARK         VARCHAR(100),
 
@@ -44,7 +45,7 @@ IF IFNULL(@ERRMSG, '') = '' THEN
     LEAVE PROC;
   END IF;
 
-  IF $OUTTP = '' THEN
+  IF $ETCTP = '' THEN
     CALL COMERR('출고구분이 없습니다. (IO_OUT_ETC)');
     LEAVE PROC;
   END IF;
@@ -96,17 +97,17 @@ IF IFNULL(@ERRMSG, '') = '' THEN
 -- ----------------------------------------------------------------------------------------------------------------------------------------
 -- 1_2. COMOUTLOT 테이블에 출고정보가 INSERT
     INSERT INTO COMOUTLOT
-      (OUTKEY, LOTKEY, WARECD, OUTTP, OUTDATE, OUTQTY, ITEMID,  RTIME, REMP, RPRG)
+      (OUTKEY, LOTKEY, WARECD, OUTTP, ETCTP, OUTDATE, OUTQTY, ITEMID,  RTIME, REMP, RPRG)
       VALUES
-      (_$OUTKEY, _$LOTKEY, _$WARECD, $OUTTP, $OUTDATE, _$OUTQTY, $ITEMID, CALLTIME(), CALLEMP(), CALLPRG());
+      (_$OUTKEY, _$LOTKEY, _$WARECD, '99', $ETCTP, $OUTDATE, _$OUTQTY, $ITEMID, CALLTIME(), CALLEMP(), CALLPRG());   -- OUTTP 99 고정 (기타출고)
 -- ----------------------------------------------------------------------------------------------------------------------------------------
 -- 1_3. COMOUT 테이블 출고정보 UPDATE
     INSERT INTO COMOUT
-      (OUTKEY, WARECD, OUTTP, OUTDATE, 
+      (OUTKEY, WARECD, OUTTP, ETCTP, OUTDATE, 
        OUTQTY, ITEMID, EMPCD, REMARK, 
        RTIME, REMP, RPRG)
       VALUES
-      (_$OUTKEY, _$WARECD, $OUTTP, $OUTDATE, 
+      (_$OUTKEY, _$WARECD, '99', $ETCTP, $OUTDATE, 
        _$OUTQTY, $ITEMID, $EMPCD, $REMARK, 
        CALLTIME(), CALLEMP(), CALLPRG());
   

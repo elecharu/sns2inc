@@ -1,4 +1,4 @@
-﻿CREATE DEFINER = 'root'@'%'
+CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.DC_COMBO(
 -- *****************************************************************************
 -- Comment: COMBOBOX
@@ -223,6 +223,116 @@ PROC: BEGIN
         ORDER BY MSTPRC.PRCCD
         LIMIT 100;
 -- *****************************************************************************
+  ELSEIF $GPCD = 'PRCCD_LINEROUT' THEN -- 2026-11-19 신정수 작업장 생산품목의 제품을 만드는 공정 (REF01 = 작업장, TML2010_R01 생산실적등록)
+    -- 1. 기본 라우팅에 이 작업장이 있는 품목 → 2. BOM 위로 제품(DM100100)까지 → 3. 제품 BOM 아래 모든 품목(제품 포함)의 기본 라우팅 공정
+    -- 4. 2공장 사내공정만, 홀 1차(I2M0105_N)·레이져마킹(I2M0112_N)·황삭공정(I2M1301_N) 제외. BOM 은 20단계까지만
+    BEGIN
+      DECLARE _$LVL INT DEFAULT 0;
+
+      DROP TABLE IF EXISTS TEMP_ROUTPRC_CUR;
+      CREATE TEMPORARY TABLE TEMP_ROUTPRC_CUR (ITEMID INT NOT NULL);
+      DROP TABLE IF EXISTS TEMP_ROUTPRC_NEXT;
+      CREATE TEMPORARY TABLE TEMP_ROUTPRC_NEXT (ITEMID INT NOT NULL);
+      DROP TABLE IF EXISTS TEMP_ROUTPRC_PROD;
+      CREATE TEMPORARY TABLE TEMP_ROUTPRC_PROD (ITEMID INT NOT NULL);
+      DROP TABLE IF EXISTS TEMP_ROUTPRC_ALL;
+      CREATE TEMPORARY TABLE TEMP_ROUTPRC_ALL (ITEMID INT NOT NULL);
+
+      -- 1. 이 작업장에서 생산하는 품목 (기본 라우팅)
+      INSERT INTO TEMP_ROUTPRC_CUR (ITEMID)
+      SELECT DISTINCT MSTROUT_MATCH.ITEMID
+      FROM MSTROUT_DETAIL
+      INNER JOIN MSTROUT_MATCH
+        ON MSTROUT_MATCH.ROUTCD = MSTROUT_DETAIL.ROUTCD
+       AND MSTROUT_MATCH.BASEYN = 'Y'
+      INNER JOIN MSTROUT
+        ON MSTROUT.ROUTCD = MSTROUT_DETAIL.ROUTCD
+       AND MSTROUT.USEYN = 'Y'
+      WHERE MSTROUT_DETAIL.LINCD = $REF01
+        AND (MSTROUT_DETAIL.EDT IS NULL OR MSTROUT_DETAIL.EDT = '' OR LEFT(MSTROUT_DETAIL.EDT, 4) = '9999');
+
+      -- 2. BOM 위로 올라가며 제품 찾기 (제품에 닿으면 더 올라가지 않음)
+      SET _$LVL = 0;
+      WHILE _$LVL < 20 AND EXISTS (SELECT TEMP_ROUTPRC_CUR.ITEMID FROM TEMP_ROUTPRC_CUR) DO
+        INSERT INTO TEMP_ROUTPRC_PROD (ITEMID)
+        SELECT TEMP_ROUTPRC_CUR.ITEMID
+        FROM TEMP_ROUTPRC_CUR
+        INNER JOIN MSTITEM
+          ON MSTITEM.ITEMID = TEMP_ROUTPRC_CUR.ITEMID
+        WHERE MSTITEM.ITEMCG = 'DM100100';
+
+        DELETE FROM TEMP_ROUTPRC_NEXT;
+        INSERT INTO TEMP_ROUTPRC_NEXT (ITEMID)
+        SELECT DISTINCT MSTBOM.MITEMID
+        FROM TEMP_ROUTPRC_CUR
+        INNER JOIN MSTITEM
+          ON MSTITEM.ITEMID = TEMP_ROUTPRC_CUR.ITEMID
+         AND MSTITEM.ITEMCG <> 'DM100100'
+        INNER JOIN MSTBOM
+          ON MSTBOM.CITEMID = TEMP_ROUTPRC_CUR.ITEMID
+        WHERE MSTBOM.USEYN = 'Y'
+          AND (MSTBOM.USETODT IS NULL OR MSTBOM.USETODT = '' OR LEFT(MSTBOM.USETODT, 4) = '9999');
+
+        DELETE FROM TEMP_ROUTPRC_CUR;
+        INSERT INTO TEMP_ROUTPRC_CUR (ITEMID)
+        SELECT TEMP_ROUTPRC_NEXT.ITEMID FROM TEMP_ROUTPRC_NEXT;
+
+        SET _$LVL = _$LVL + 1;
+      END WHILE;
+
+      -- 3. 제품부터 BOM 아래로 모든 품목
+      DELETE FROM TEMP_ROUTPRC_CUR;
+      INSERT INTO TEMP_ROUTPRC_CUR (ITEMID)
+      SELECT DISTINCT TEMP_ROUTPRC_PROD.ITEMID FROM TEMP_ROUTPRC_PROD;
+
+      SET _$LVL = 0;
+      WHILE _$LVL < 20 AND EXISTS (SELECT TEMP_ROUTPRC_CUR.ITEMID FROM TEMP_ROUTPRC_CUR) DO
+        INSERT INTO TEMP_ROUTPRC_ALL (ITEMID)
+        SELECT TEMP_ROUTPRC_CUR.ITEMID FROM TEMP_ROUTPRC_CUR;
+
+        DELETE FROM TEMP_ROUTPRC_NEXT;
+        INSERT INTO TEMP_ROUTPRC_NEXT (ITEMID)
+        SELECT DISTINCT MSTBOM.CITEMID
+        FROM TEMP_ROUTPRC_CUR
+        INNER JOIN MSTBOM
+          ON MSTBOM.MITEMID = TEMP_ROUTPRC_CUR.ITEMID
+        WHERE MSTBOM.USEYN = 'Y'
+          AND (MSTBOM.USETODT IS NULL OR MSTBOM.USETODT = '' OR LEFT(MSTBOM.USETODT, 4) = '9999');
+
+        DELETE FROM TEMP_ROUTPRC_CUR;
+        INSERT INTO TEMP_ROUTPRC_CUR (ITEMID)
+        SELECT TEMP_ROUTPRC_NEXT.ITEMID FROM TEMP_ROUTPRC_NEXT;
+
+        SET _$LVL = _$LVL + 1;
+      END WHILE;
+
+      -- 4. 그 품목들의 기본 라우팅 공정 중 2공장 사내공정 (제외 공정 빼고)
+      SELECT MSTPRC.PRCNM AS Label, MSTPRC.PRCCD AS Value
+      FROM MSTPRC
+      WHERE MSTPRC.USEYN = 'Y'
+        AND MSTPRC.FACTORYCD = '07'           -- 2공장
+        AND MSTPRC.GUBUN_BC = 'PP412001'      -- 사내공정
+        AND MSTPRC.PRCCD NOT IN ('I2M0105_N', 'I2M0112_N', 'I2M1301_N') -- 홀 1차, 레이져마킹, 황삭공정
+        AND MSTPRC.PRCCD IN (SELECT MSTROUT_DETAIL.PRCCD
+                               FROM TEMP_ROUTPRC_ALL
+                               INNER JOIN MSTROUT_MATCH
+                                 ON MSTROUT_MATCH.ITEMID = TEMP_ROUTPRC_ALL.ITEMID
+                                AND MSTROUT_MATCH.BASEYN = 'Y'
+                               INNER JOIN MSTROUT
+                                 ON MSTROUT.ROUTCD = MSTROUT_MATCH.ROUTCD
+                                AND MSTROUT.USEYN = 'Y'
+                               INNER JOIN MSTROUT_DETAIL
+                                 ON MSTROUT_DETAIL.ROUTCD = MSTROUT_MATCH.ROUTCD
+                               WHERE (MSTROUT_DETAIL.EDT IS NULL OR MSTROUT_DETAIL.EDT = '' OR LEFT(MSTROUT_DETAIL.EDT, 4) = '9999'))
+      ORDER BY MSTPRC.PRCCD
+      LIMIT 100;
+
+      DROP TABLE IF EXISTS TEMP_ROUTPRC_CUR;
+      DROP TABLE IF EXISTS TEMP_ROUTPRC_NEXT;
+      DROP TABLE IF EXISTS TEMP_ROUTPRC_PROD;
+      DROP TABLE IF EXISTS TEMP_ROUTPRC_ALL;
+    END;
+-- *****************************************************************************
   ELSEIF $GPCD = 'WARECD_PROD' THEN -- 출하 출고창고 (2공장 제품창고 여부 Y, 사용, 불량창고 제외) - TML5000_R01 출하등록 2026-11-10
       SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
         FROM MSTWARE
@@ -231,6 +341,16 @@ PROC: BEGIN
           AND MSTWARE.USEYN = 'Y'
           AND IFNULL(MSTWARE.BAD_YN, 'N') <> 'Y'
         ORDER BY MSTWARE.WARECD;
+-- *****************************************************************************
+  ELSEIF $GPCD = 'ITEMID_SALCUST' THEN -- 2026-11-20 거래처(REF01)에 출하 확정(01 고객사, 011 유상사급)한 품목 - TML6001_R01 제품 반입등록 (공정이동표 없음)
+      SELECT CONCAT(MSTITEM.ITEMCD, ' ', MSTITEM.ITEMNM) AS Label, CAST(MSTITEM.ITEMID AS CHAR) AS Value
+        FROM MSTITEM
+        WHERE MSTITEM.ITEMID IN (SELECT SALOUT.ITEMID
+                                   FROM SALOUT
+                                   WHERE SALOUT.CUSTCD = $REF01
+                                     AND SALOUT.OUTYN = 'Y'
+                                     AND SALOUT.SALOUTTP IN ('01', '011'))
+        ORDER BY MSTITEM.ITEMCD;
 -- *****************************************************************************
   ELSEIF $GPCD = 'PRCCD_LINEPRC' THEN -- 작업장별 공정코드 (작업장 공정설정 MSTLINE_PRC 기준, 설비 없는 외주처 작업장용 - TML1010_R03) 2026-11-09
       SELECT MSTPRC.PRCNM AS Label, MSTPRC.PRCCD AS Value
@@ -795,6 +915,18 @@ PROC: BEGIN
         WHERE MSTEQM.EQMCD LIKE CONCAT('%', $REF01, '%')
           AND MSTEQM.PRCCD = 'OQC01'
         ORDER BY MSTEQM.EQMNO;
+
+-- *****************************************************************************
+  ELSEIF $GPCD = 'ETCTP' THEN -- 출고구분
+
+    SELECT 
+      COMTYPE.TPNM AS Label, 
+      COMTYPE.TPCD AS Value,
+      COMTYPE.TPNM AS Tag
+      FROM COMTYPE
+      WHERE COMTYPE.GPCD = 'LE200'
+        AND USEYN = 'Y'
+        AND REF11 = '1';
 
 -- *****************************************************************************
    ELSEIF $GPCD = 'LABELCD' THEN

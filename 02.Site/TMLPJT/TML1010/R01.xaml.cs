@@ -28,11 +28,13 @@ namespace TML1010
         ItsModelPanel MODEL_S1 = new ItsModelPanel();
         ItsModelPanel MODEL_A1 = new ItsModelPanel();
         ItsModelPanel MODEL_A3 = new ItsModelPanel(); // 2026-11-09 정보입력 팝업
+        ItsModelPanel MODEL_S3 = new ItsModelPanel(); // 2026-11-19 [납품내역삭제] 탭 조회조건
 
         ItsModelGrid MODEL_G1 = new ItsModelGrid();
         ItsModelGrid MODEL_G2 = new ItsModelGrid();
         ItsModelGrid MODEL_G3 = new ItsModelGrid(); // 2026-11-09 BOX 단위 수량 x BOX 수량
         ItsModelGrid MODEL_G4 = new ItsModelGrid(); // 2026-11-10 납품등록 BOX 현황 ([등록] 전까지 화면에만)
+        ItsModelGrid MODEL_G5 = new ItsModelGrid(); // 2026-11-19 [납품내역삭제] 납품 목록 (거래명세서 단위)
 
 
         // 생성자
@@ -51,6 +53,9 @@ namespace TML1010
             MODEL_A3.Binding(PANEL_A3);
             MODEL_A3.InitData();
 
+            MODEL_S3.Binding(PANEL_S3);
+            MODEL_S3.InitData();
+
             MODEL_G1.Binding(GRID_G1);
 
             MODEL_G2.Binding(GRID_G2);
@@ -63,6 +68,8 @@ namespace TML1010
             (GRID_G3.View as TableView).AllowSorting = false;
 
             MODEL_G4.Binding(GRID_G4);
+
+            MODEL_G5.Binding(GRID_G5);
         }
 
         // 결과 팝업에서 고른 줄의 거래명세서 (등록 한 번에 발주별로 여러 장이 만들어질 수 있음)
@@ -130,6 +137,15 @@ namespace TML1010
             MODEL_S1.SetValue("EDATE", DateTime.Now.AddMonths(1).AddDays(-DateTime.Now.Day).ToString("yyyy-MM-dd"));
             MODEL_S1.SetValue("PRDDATE", DateTime.Now.ToString("yyyy-MM-dd"));
 
+            // [납품내역삭제] 탭 : 납품일자 이번 달 1일 ~ 오늘, 외주 계정은 계정의 거래처로 고정
+            MODEL_S3.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));
+            MODEL_S3.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+            if (ItsLocalInfo.TMLCUSTCD != "")
+            {
+                cb_CUSTCD3.Value = ItsLocalInfo.TMLCUSTCD.ToString();
+            }
+            cb_CUSTCD3.ReadOnly = (ItsLocalInfo.TMLCUSTCD != "");
+
             PANEL_A1.Close();
             PANEL_A3.Close();
         }
@@ -163,6 +179,37 @@ namespace TML1010
 
                 MODEL_G1.SetData(ds.Tables[0]);
                // (GRID_G1.View as TableView).BestFitColumns();
+            }
+            // [납품내역삭제] 탭 : 납품일자 기간의 유상사급 납품 조회 (거래명세서 1장이 1행)
+            else if (commandName == "SEARCH_DLV")
+            {
+                if (ItsLocalInfo.TMLCUSTCD != "" && MODEL_S3.GetText("CUSTCD") == "")
+                {
+                    ShowMessageBox("", "거래처를 선택하세요.");
+                    return;
+                }
+
+                ItsMaria.Set("TML1010_R01", "LIST_DLV");
+                ItsMaria.AddModel(MODEL_S3);
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_G5.SetData(ds.Tables[0]);
+            }
+            // [납품내역삭제] 고른 줄의 납품 삭제 (확인 후 EventMessageResult 에서 처리)
+            else if (commandName == "DEL_DLV")
+            {
+                if (MODEL_G5.Rows.Count == 0 || MODEL_G5.CurrentIndex < 0)
+                {
+                    ShowMessageBox("", "삭제할 납품을 선택하세요.");
+                    return;
+                }
+
+                ShowMessageBox(commandName, "거래명세서 [" + MODEL_G5.GetText(MODEL_G5.CurrentIndex, "INVOICEKEY") + "] 의 납품을 삭제하시겠습니까?\n(자재이동에 올라간 납품은 삭제할 수 없습니다.)");
             }
             // 정보입력 팝업 열기 (발주 행의 [입력] 버튼)
             else if (commandName == "POP_INPUT")
@@ -394,6 +441,22 @@ namespace TML1010
                 PANEL_A1.Close();
 
                 EventCommand("LIST_MTRODR");
+            }
+            // [납품내역삭제] 납품 삭제
+            else if (commandName == "DEL_DLV")
+            {
+                ItsMaria.Set("TML1010_R01", "DEL_MTRCUSTLOT");
+                ItsMaria.AddOne("INVOICEKEY", MODEL_G5.GetText(MODEL_G5.CurrentIndex, "INVOICEKEY"));
+
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                EventCommand("SEARCH_DLV");
+                EventCommand("LIST_MTRODR");   // 미납량 다시 조회
             }
             // BOX 현황 비우기
             else if (commandName == "CLEAR_STAGE")

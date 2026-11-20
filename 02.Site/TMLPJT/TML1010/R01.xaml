@@ -8,13 +8,19 @@
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
       Width="1176" Height="576">
     <!-- 2026-11-10 화면 크기 980x480 → 1176x576 (무상사급 실적등록 R03 과 같게) -->
+    <!-- 2026-11-19 탭 [납품등록] / [납품내역삭제] 추가. 탭 머리글 25 만큼 아래 영역 높이를 줄임. 입력·결과 팝업은 탭 위에 겹쳐 뜸 -->
+    <Canvas Background="WhiteSmoke">
+    <TabControl x:Name="TAB_MAIN" Canvas.Left="0" Canvas.Top="0" Width="1176" Height="576" Padding="0" BorderThickness="0" Background="WhiteSmoke">
+
+    <TabItem Height="25">
+    <TabItem.Header><TextBlock Text="  납품등록  " FontSize="14" FontWeight="Bold"/></TabItem.Header>
     <Canvas Background="WhiteSmoke">
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
             <its:WrapContent x:Name="PANEL_S1" Width="1176" Height="60">
                 <its:Date Label="발주일자" Width="180" Value="{Binding SDATE}"/>
                 <its:Date HidenLabel="Y" Width="100"  Value="{Binding EDATE}"/>
-                <its:Combo GPCD="*CUSTCD" Width="250" Label="거래처" Value="{Binding CUSTCD}" x:Name="cb_CUSTCD"/>
+                <its:Pop GPCD="CUSTCD_OSC" Width="250" Label="거래처" Value="{Binding CUSTCD}" x:Name="cb_CUSTCD" ShowKeyPad="True"/>
                 <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True" />
                 <UserControl Width="20"/>
                 <its:Button Label="발 주 조 회" Width="100" Height="30" CommandName="LIST_MTRODR" FontWeight="Bold"/>
@@ -25,7 +31,7 @@
         <!-- 2026-11-09 발주 행의 [입력] 버튼 → 정보입력 팝업에서 BOX 단위 수량 x BOX 수량으로 납품등록 -->
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="60">
             <!-- 2026-11-10 오른쪽에 납품등록 BOX 현황을 두려고 폭 1176 → 816, 규격은 숨김 (입력 팝업에 표시) -->
-            <its:Grid x:Name="GRID_G1" Width="816" Height="516">
+            <its:Grid x:Name="GRID_G1" Width="816" Height="491">
                 <its:Grid.Columns>
                     <its:Column Width="55" Header="납품" CellType="Button" ButtonText="입력" CommandName="POP_INPUT"/>
                     <its:Column Width="85" Header="발주일자" FieldName="MTRODRDATE" ALGIN="Center"/>
@@ -47,10 +53,10 @@
         </UserControl>
 
         <!-- 2026-11-10 납품등록 BOX 현황: 입력 팝업 [확인] 으로 쌓고, [등록] 때 한 번에 저장 (발주별 거래명세서 1장). 화면에만 있고 닫으면 사라짐 -->
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="816" Canvas.Top="60" Width="360" Height="516">
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="816" Canvas.Top="60" Width="360" Height="491">
             <StackPanel>
                 <TextBlock Text=" ■ 납품등록 BOX 현황" FontWeight="Bold" FontSize="14" Margin="5,6,0,4"/>
-                <its:Grid x:Name="GRID_G4" Width="350" Height="410">
+                <its:Grid x:Name="GRID_G4" Width="350" Height="385">
                     <its:Grid.Columns>
                         <its:Column Width="105" Header="품목코드" FieldName="ITEMCD"/>
                         <its:Column Width="55" Header="BOX단위" FieldName="BOXQTY" DecimalPoint="0"/>
@@ -70,6 +76,50 @@
                 </StackPanel>
             </StackPanel>
         </UserControl>
+
+    </Canvas>
+    </TabItem>
+
+    <!-- [납품내역삭제] 납품일자 기간의 유상사급 납품(거래명세서 단위) 조회 → 고른 줄의 납품 삭제 (자재이동에 올라간 납품은 삭제 불가) -->
+    <TabItem Height="25">
+    <TabItem.Header><TextBlock Text="  납품내역삭제  " FontSize="14" FontWeight="Bold"/></TabItem.Header>
+    <Canvas Background="WhiteSmoke">
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
+            <its:WrapContent x:Name="PANEL_S3" Width="1176" Height="60">
+                <its:Date Label="납품일자" Width="180" Value="{Binding SDATE}"/>
+                <its:Date HidenLabel="Y" Width="100" Value="{Binding EDATE}"/>
+                <its:Pop GPCD="CUSTCD_OSC" Width="250" Label="거래처" Value="{Binding CUSTCD}" x:Name="cb_CUSTCD3" ShowKeyPad="True"/>
+                <its:Pop GPCD="ITEMID" Width="250" Label="품목" Value="{Binding ITEMID}" ShowKeyPad="True" />
+                <UserControl Width="20"/>
+                <its:Button Label="조 회" Width="100" Height="30" CommandName="SEARCH_DLV" FontWeight="Bold" BackColor="SteelBlue"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="60">
+            <its:Grid x:Name="GRID_G5" Width="1056" Height="491">
+                <its:Grid.Columns>
+                    <its:Column Width="90" Header="납품일자" FieldName="INVOICEDATE" ALGIN="Center"/>
+                    <its:Column Width="110" Header="거래명세서번호" FieldName="INVOICEKEY" ALGIN="Center"/>
+                    <its:Column Width="150" Header="거래처명" FieldName="CUSTNM"/>
+                    <its:Column Width="130" Header="품목코드" FieldName="ITEMCD"/>
+                    <its:Column Width="200" Header="품명" FieldName="ITEMNM"/>
+                    <its:Column Width="70" Header="LOT수" FieldName="LOTCNT" DecimalPoint="0"/>
+                    <its:Column Width="90" Header="납품량" FieldName="TOTQTY" DecimalPoint="0"/>
+                    <its:Column Width="100" Header="상태" FieldName="STATUSNM" ALGIN="Center"/>
+                    <its:Column Width="100" Header="등록자" FieldName="EMPNM" ALGIN="Center"/>
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="60" Width="120" Height="491">
+            <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
+                <its:Button Label="납품 삭제" Width="100" Height="55" FontWeight="Bold" CommandName="DEL_DLV" BackColor="IndianRed"/>
+            </StackPanel>
+        </UserControl>
+    </Canvas>
+    </TabItem>
+    </TabControl>
 
         <UserControl Canvas.Left="238" Canvas.Top="88" Style="{DynamicResource TML_POP}" Width="700" Height="400">
             <Grid>
@@ -113,8 +163,8 @@
         </UserControl>
 
         <!-- 정보입력 팝업: BOX 단위 수량(1박스 적입량) x BOX 수량(박스 개수) → BOX 1개당 LOT 1개 -->
-        <!-- 2026-11-10 화면 크기에 맞춰 900x500 으로 키움, BOX 그리드는 칸을 꽉 채우고 컬럼 합계를 줄여 수량 합계까지 스크롤 없이 보이게 -->
-        <UserControl Canvas.Left="138" Canvas.Top="38" Style="{DynamicResource TML_POP}" Width="900" Height="500">
+        <!-- 2026-11-19 가로를 700 으로 줄임 (2026-11-10 900x500 으로 키움), BOX 그리드는 칸을 꽉 채우고 컬럼 합계를 줄여 수량 합계까지 스크롤 없이 보이게 -->
+        <UserControl Canvas.Left="238" Canvas.Top="38" Style="{DynamicResource TML_POP}" Width="700" Height="500">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="150" />
@@ -128,23 +178,23 @@
                 <its:WrapContent x:Name="PANEL_A3" Grid.ColumnSpan="2" Margin="5,5,5,0">
                     <its:Text Label="발주키" Value="{Binding MTRODRKEY}" ReadOnly="True" Visibility="Collapsed"/>
                     <its:Text Label="발주상세키" Value="{Binding MTRODRSEQ}" ReadOnly="True" Visibility="Collapsed"/>
-                    <its:Text Label="품목명" LabelWidth="80" Width="880" Value="{Binding ITEMNM}" ReadOnly="True"/>
-                    <its:Text Label="규격" LabelWidth="80" Width="520" Value="{Binding ITEMSPEC}" ReadOnly="True"/>
-                    <its:Text Label="품목코드" LabelWidth="80" Width="360" Value="{Binding ITEMCD}" ReadOnly="True"/>
-                    <its:Text Label="거래처" LabelWidth="80" Width="520" Value="{Binding CUSTNM}" ReadOnly="True"/>
-                    <its:Number Label="미납량" LabelWidth="80" Width="360" Value="{Binding OKQTY}" DecimalPoint="0" ReadOnly="True"/>
-                    <its:Text Label="HEAT NO" LabelWidth="80" Width="520" Value="{Binding HEATNO}" ShowKeyPad="True"/>
-                    <its:Number Label="납품량" LabelWidth="80" Width="360" Value="{Binding TOTQTY}" DecimalPoint="0" ReadOnly="True" Foreground="Green" FontWeight="Bold"/>
+                    <its:Text Label="품목명" LabelWidth="80" Width="680" Value="{Binding ITEMNM}" ReadOnly="True"/>
+                    <its:Text Label="규격" LabelWidth="80" Width="400" Value="{Binding ITEMSPEC}" ReadOnly="True"/>
+                    <its:Text Label="품목코드" LabelWidth="80" Width="280" Value="{Binding ITEMCD}" ReadOnly="True"/>
+                    <its:Text Label="거래처" LabelWidth="80" Width="400" Value="{Binding CUSTNM}" ReadOnly="True"/>
+                    <its:Number Label="미납량" LabelWidth="80" Width="280" Value="{Binding OKQTY}" DecimalPoint="0" ReadOnly="True"/>
+                    <its:Text Label="HEAT NO" LabelWidth="80" Width="400" Value="{Binding HEATNO}" ShowKeyPad="True"/>
+                    <its:Number Label="납품량" LabelWidth="80" Width="280" Value="{Binding TOTQTY}" DecimalPoint="0" ReadOnly="True" Foreground="Green" FontWeight="Bold"/>
                 </its:WrapContent>
 
                 <Border Grid.Row="1" Margin="5" BorderBrush="Black" BorderThickness="1" Background="White">
                     <!-- 팝업 틀(TML_POP)이 세로 길이를 제한하지 않아 크기는 지정 (칸 760 x 310 에 맞춤, 컬럼 합계 670) -->
-                    <its:Grid x:Name="GRID_G3" Width="760" Height="300">
+                    <its:Grid x:Name="GRID_G3" Width="560" Height="300">
                         <its:Grid.Columns>
                             <its:Column Width="80" Header="삭제" CellType="Button" ButtonText="삭제" CommandName="DEL_BOX"/>
-                            <its:Column Width="210" Header="BOX 단위 수량" FieldName="BOXQTY" ALGIN="Right" CellType="Number" DecimalPoint="0" ShowKeyPad="Y" ReadOnly="False"/>
-                            <its:Column Width="190" Header="BOX 수량" FieldName="BOXCNT" ALGIN="Right" CellType="Number" DecimalPoint="0" ShowKeyPad="Y" ReadOnly="False"/>
-                            <its:Column Width="190" Header="수량 합계" FieldName="BOXSUM" ALGIN="Right" CellType="Number" DecimalPoint="0"/>
+                            <its:Column Width="150" Header="BOX 단위 수량" FieldName="BOXQTY" ALGIN="Right" CellType="Number" DecimalPoint="0" ShowKeyPad="Y" ReadOnly="False"/>
+                            <its:Column Width="140" Header="BOX 수량" FieldName="BOXCNT" ALGIN="Right" CellType="Number" DecimalPoint="0" ShowKeyPad="Y" ReadOnly="False"/>
+                            <its:Column Width="140" Header="수량 합계" FieldName="BOXSUM" ALGIN="Right" CellType="Number" DecimalPoint="0"/>
                         </its:Grid.Columns>
                     </its:Grid>
                 </Border>

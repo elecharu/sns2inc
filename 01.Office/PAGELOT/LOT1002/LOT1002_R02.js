@@ -79,7 +79,7 @@ ItsButton.Event('btn_OUT_ETC').onClick = function () {
 
             maria.AddParam('ITEMID', ItsGrid.GetValue('grid1', ItsGrid.$GetRowIndex('grid1'), 'ITEMID'));
             maria.AddParam('OUTDATE', ItsDate.GetValue('date_OUTDATE'));
-            maria.AddParam('OUTTP', ItsCombo.GetValue('cmb_OUTTP'));
+            maria.AddParam('ETCTP', ItsCombo.GetValue('cmb_ETCTP'));   // 출고구분(ETCTP). OUTTP 는 IO_ETC_OUT 에서 99 고정
             maria.AddParam('EMPCD', ItsFind.GetValue('find_EMPCD'));
             maria.AddParam('REMARK', ItsText.GetValue('txt_REMARK'));
 

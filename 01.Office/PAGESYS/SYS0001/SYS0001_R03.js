@@ -113,6 +113,11 @@ function SetTileComboHtml(gridId) {
             });
         }
     });
+    // 2026-11-20 타일아이콘은 빈칸(아이콘 없음 → 현장 타일에 이름만)으로도 되돌릴 수 있게 맨 위에 빈 항목
+    //   Label 을 '' 로 두면 드롭다운 줄 높이가 없어져 고를 수 없으므로 &nbsp;
+    if (iconItems.length > 0) {
+        iconItems.unshift({ Value: '', Label: '&nbsp;' });
+    }
 
     [['TILECOLOR', colorItems], ['TILEICON', iconItems]].forEach(function (c) {
         if (c[1].length == 0) return;

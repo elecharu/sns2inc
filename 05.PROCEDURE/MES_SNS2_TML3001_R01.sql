@@ -12,6 +12,7 @@ PROCEDURE MES_SNS2.TML3001_R01(
 --          ) DEL_MOVE  : 양품전환 이력 LOT 행 단위 삭제 (재고 원복, 이동 이력 삭제, 재작업 판정 후처리 취소)
 -- Create: 2026-11-11
 -- Modify: 2026-11-12: 조회(LIST_MOVE)·삭제(DEL_MOVE) 추가, 등록 시 재작업 판정에 이동 GROUPKEY 기록 (TQMJUDGE.GROUPKEY)
+-- Modify: 2026-11-19: 이동이 품목별 COMOUT·COMIN 1건으로 묶여 만들어지므로, DEL_MOVE 이력 삭제는 LOT 상세만 지우고 수량을 줄임 (남은 LOT 이 없을 때만 헤더 삭제)
 -- *****************************************************************************
   IN $MOVEDATE      VARCHAR(10),    -- 이동일자
   IN $OUTWARE       VARCHAR(20),    -- 출고창고 (불량창고)
@@ -382,11 +383,15 @@ WHEN 'DEL_MOVE' THEN -- 삭제 : 양품전환 이력 LOT 행 단위 (입고창�
      WHERE COMLOT.LOTKEY = _$LOTKEY
        AND COMLOT.WARECD = _$OUTWARE;
 
-    -- 2-3. 이동 이력 삭제 (IO_MOVELOT_WARE 는 LOT 마다 INKEY·OUTKEY 를 하나씩 만든다)
+    -- 2-3. 이동 이력 삭제 (IO_MOVELOT_WARE 는 같은 품목을 INKEY·OUTKEY 1건으로 묶는다 : 그 LOT 상세만 지우고 수량을 줄이며, 남은 LOT 이 없을 때만 헤더를 지움)
     DELETE FROM COMINLOT WHERE COMINLOT.INKEY = _$INKEY AND COMINLOT.LOTKEY = _$LOTKEY;
-    DELETE FROM COMIN WHERE COMIN.INKEY = _$INKEY;
+    UPDATE COMIN SET COMIN.INQTY = COMIN.INQTY - _$MOVEQTY WHERE COMIN.INKEY = _$INKEY;
+    DELETE FROM COMIN WHERE COMIN.INKEY = _$INKEY
+       AND NOT EXISTS (SELECT 1 FROM COMINLOT WHERE COMINLOT.INKEY = _$INKEY);
     DELETE FROM COMOUTLOT WHERE COMOUTLOT.OUTKEY = _$OUTKEY AND COMOUTLOT.LOTKEY = _$LOTKEY;
-    DELETE FROM COMOUT WHERE COMOUT.OUTKEY = _$OUTKEY;
+    UPDATE COMOUT SET COMOUT.OUTQTY = COMOUT.OUTQTY - _$MOVEQTY WHERE COMOUT.OUTKEY = _$OUTKEY;
+    DELETE FROM COMOUT WHERE COMOUT.OUTKEY = _$OUTKEY
+       AND NOT EXISTS (SELECT 1 FROM COMOUTLOT WHERE COMOUTLOT.OUTKEY = _$OUTKEY);
 
     -- 2-4. 이 이동으로 후처리한 재작업 판정을 후처리 전으로
     UPDATE TQMJUDGE

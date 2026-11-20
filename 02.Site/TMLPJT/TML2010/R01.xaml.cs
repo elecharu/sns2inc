@@ -33,6 +33,7 @@ namespace TML2010
         ItsModelPanel MODEL_A7 = new ItsModelPanel(); //점검값 입력(숫자)
         ItsModelPanel MODEL_A9 = new ItsModelPanel(); //문제점/조치사항
         ItsModelPanel MODEL_A10 = new ItsModelPanel(); //자주검사 등록
+        ItsModelPanel MODEL_A11 = new ItsModelPanel(); //공정이동표 발행
 
         ItsModelGrid MODEL_G1 = new ItsModelGrid(); //투입목록
         ItsModelGrid MODEL_G2 = new ItsModelGrid(); //작업자
@@ -45,9 +46,12 @@ namespace TML2010
         ItsModelGrid MODEL_G9 = new ItsModelGrid(); //일상점검 등록·수정 항목
         ItsModelGrid MODEL_G10 = new ItsModelGrid(); //자주검사 검사항목
         ItsModelGrid MODEL_G11 = new ItsModelGrid(); //자주검사 검사값
+        ItsModelGrid MODEL_G12 = new ItsModelGrid(); //공정이동표 발행 실적로트
 
         private string chgLinecd = ""; //BOM 불일치 시 바꿀 작업장
         private string chgPrccd = "";  //BOM 불일치 시 바꿀 공정
+
+        private const string SHIP_PRCCD = "I2M1400_N"; //출하검사공정 (공정이동표 발행 팝업에서 라벨 관련 칸·버튼을 보임)
 
         public R01()
         {
@@ -78,6 +82,10 @@ namespace TML2010
             MODEL_A9.Binding(PANEL_A9);
             MODEL_A10.Binding(PANEL_A10);
             MODEL_A10.EventValueChanged += MODEL_A10_EventValueChanged;
+            MODEL_A11.Binding(PANEL_A11);
+            MODEL_A11.FieldType("PRINT", ItsEnums.FieldTypes.String);
+            MODEL_A11.FieldType("LABELPRINT", ItsEnums.FieldTypes.String);
+            MODEL_A11.InitData();
 
             MODEL_G1.Binding(GRID_G1);
             MODEL_G1.EventValueChanged += MODEL_G1_EventValueChanged;
@@ -94,6 +102,16 @@ namespace TML2010
             MODEL_G10.EventRowChanged += MODEL_G10_EventRowChanged;
             MODEL_G11.Binding(GRID_G11);
             MODEL_G11.EventValueChanged += MODEL_G11_EventValueChanged;
+            MODEL_G12.Binding(GRID_G12);
+
+            //공정이동표 발행 팝업 프린터 목록 (TMLMAIN 프린터 설정과 같은 방식)
+            CMB_PRINT.ItemClear();
+            CMB_LABELPRINT.ItemClear();
+            foreach (string printer in ItsPrinter.GetPrinterList())
+            {
+                CMB_PRINT.AddItem(printer, printer);
+                CMB_LABELPRINT.AddItem(printer, printer);
+            }
         }
         /***************************************************************************************************************************************************************/
         private void MODEL_S1_EventValueChanged(string fieldName)
@@ -428,11 +446,13 @@ namespace TML2010
             POPUP_A2.ApplyTemplate();
             POPUP_A3.ApplyTemplate();
             POPUP_A4.ApplyTemplate();
+            POPUP_A11.ApplyTemplate();
 
             SetTMLPOPTitle(POPUP_A1, "생산품목선택");
             SetTMLPOPTitle(POPUP_A2, "불량등록");
             SetTMLPOPTitle(POPUP_A3, "비가동등록");
             SetTMLPOPTitle(POPUP_A4, "작업자선택");
+            SetTMLPOPTitle(POPUP_A11, "공정이동표 발행");
 
             MODEL_B1.SetValue("WORKSDAY", DateTime.Now.ToString("yyyy-MM-dd"));
             MODEL_B1.SetValue("WORKEDAY", DateTime.Now.ToString("yyyy-MM-dd"));
@@ -1097,6 +1117,267 @@ namespace TML2010
                 PANEL_A4.Close();
                 EventCommand("LIST_INPUT");
             }
+            else if (commandName == "POP_MOVE")
+            {   // 공정이동표 발행 팝업 (작업장·공정은 메인에서 선택한 값)
+                if (MODEL_S1.GetText("LINECD") == "" || MODEL_S1.GetText("PRCCD") == "")
+                {
+                    ShowMessageBox("", "생산작업장, 생산공정을 선택하세요.");
+                    return;
+                }
+
+                // 라벨프린터·라벨출력 열·라벨번호 열·라벨발행 버튼은 출하검사공정일 때만
+                bool isShip = MODEL_S1.GetText("PRCCD") == SHIP_PRCCD;
+                CMB_LABELPRINT.Visibility = isShip ? Visibility.Visible : Visibility.Collapsed;
+                BTN_LABELPRINT.Visibility = isShip ? Visibility.Visible : Visibility.Collapsed;
+                COL_LABELBTN.Visible = isShip;
+                COL_LABELKEY.Visible = isShip;
+
+                MODEL_A11.InitData();
+                MODEL_A11.SetValue("SDATE", DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd"));
+                MODEL_A11.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+                MODEL_A11.SetValue("PRINTCNT", 1);
+                MODEL_A11.SetValue("PRINT", ItsPrinter.BarcodePrintName);
+                MODEL_A11.SetValue("LABELPRINT", ItsPrinter.BarcodePrintName);
+                MODEL_G12.InitData();
+
+                EventCommand("SEARCH_MOVE");
+                PANEL_A11.Show();
+            }
+            else if (commandName == "SEARCH_MOVE")
+            {   // 생산일자 기간 실적로트 (실적 조회 체크 안 하면 생산 입고창고에 현재고가 있는 로트만)
+                TXT_MOVE_TITLE.Text = "공정이동표 인쇄 (생산일자 : " + MODEL_A11.GetText("SDATE") + " ~ " + MODEL_A11.GetText("EDATE") + ")";
+
+                ItsMaria.Set("TML2010_R01", "LIST_MOVE");
+                ItsMaria.AddOne("LINECD", MODEL_S1.GetText("LINECD"));
+                ItsMaria.AddOne("PRCCD", MODEL_S1.GetText("PRCCD"));
+                ItsMaria.AddOne("SDATE", MODEL_A11.GetText("SDATE"));
+                ItsMaria.AddOne("EDATE", MODEL_A11.GetText("EDATE"));
+                ItsMaria.AddOne("ALLYN", MODEL_A11.GetYn("ALLYN"));
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                MODEL_G12.SetData(ds.Tables[0]);
+            }
+            else if (commandName == "MOVE_UP" || commandName == "MOVE_DOWN")
+            {   // 선택한 행을 위·아래로 (체크 상태도 같이 옮김)
+                int row = MODEL_G12.CurrentIndex;
+                int target = commandName == "MOVE_UP" ? row - 1 : row + 1;
+                if (row < 0 || target < 0 || target >= MODEL_G12.Rows.Count)
+                {
+                    return;
+                }
+
+                bool rowChecked = MODEL_G12.IsChecked(row);
+                bool targetChecked = MODEL_G12.IsChecked(target);
+                object[] rowValues = MODEL_G12.Rows[row].ItemArray;
+                MODEL_G12.Rows[row].ItemArray = MODEL_G12.Rows[target].ItemArray;
+                MODEL_G12.Rows[target].ItemArray = rowValues;
+                MODEL_G12.SetChecked(row, targetChecked);
+                MODEL_G12.SetChecked(target, rowChecked);
+                MODEL_G12.SelectRow(target);
+            }
+            else if (commandName == "PRINT_GOOD" || commandName == "PRINT_BAD" || commandName == "PRINT_REMAIN")
+            {   // 양품발행: 실적로트 양품수량, 불량발행: 실적로트 불량수량, 잔량발행: 실적로트가 사용한 자재로트의 현재고
+                List<int> rows = MoveTargetRows();
+                if (rows.Count == 0)
+                {
+                    ShowMessageBox("", "발행할 실적로트를 선택하세요.");
+                    return;
+                }
+
+                int copies = (int)MODEL_A11.GetDecimal("PRINTCNT");
+                if (copies < 1)
+                {
+                    ShowMessageBox("", "발행매수(박스 당 수량)를 1 이상 입력하세요.");
+                    return;
+                }
+
+                string printer = MODEL_A11.GetText("PRINT") != "" ? MODEL_A11.GetText("PRINT") : ItsPrinter.BarcodePrintName;
+                List<TMLPRINT.PRD_1> reports = new List<TMLPRINT.PRD_1>(); // 모아서 한 번에 인쇄 (인쇄작업 1개)
+                int printed = 0;
+                foreach (int row in rows)
+                {
+                    string lotKey = MODEL_G12.GetText(row, "LOTKEY");
+
+                    if (commandName == "PRINT_REMAIN")
+                    {
+                        ItsMaria.Set("TML2010_R01", "LIST_REMAIN");
+                        ItsMaria.AddOne("LOTKEY", lotKey);
+                        DataSet ds = ItsMaria.Call();
+                        if (ItsMaria.IsError)
+                        {
+                            ShowMessageBox("", ItsMaria.ErrMessage);
+                            return;
+                        }
+
+                        for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                        {
+                            if (!AddMoveLot(reports, ItsData.GetText(ds.Tables[0], i, "LOTKEY"), "REMAIN", false, copies))
+                            {
+                                return;
+                            }
+                            printed++;
+                        }
+                    }
+                    else
+                    {
+                        bool isBad = commandName == "PRINT_BAD";
+                        if (MODEL_G12.GetDecimal(row, isBad ? "BADQTY" : "GOODQTY") <= 0)
+                        {
+                            continue;
+                        }
+
+                        if (!AddMoveLot(reports, lotKey, "", isBad, copies))
+                        {
+                            return;
+                        }
+                        printed++;
+                    }
+                }
+
+                if (printed == 0)
+                {
+                    ShowMessageBox("", commandName == "PRINT_GOOD" ? "발행할 양품수량이 없습니다."
+                                     : commandName == "PRINT_BAD" ? "발행할 불량수량이 없습니다."
+                                     : "현재고가 남은 자재로트가 없습니다.");
+                    return;
+                }
+
+                try
+                {
+                    TMLPRINT.PRD_1.PrintDirect(reports, printer);
+                }
+                catch (Exception ex)
+                {
+                    ShowMessageBox("", "공정이동표 출력에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
+                    return;
+                }
+
+                ShowMessageBox("", "공정이동표 " + printed + "건을 발행했습니다.");
+            }
+            else if (commandName == "PRINT_ALL")
+            {   // 전체발행: 기능 미정 (버튼만 둠)
+                ShowMessageBox("", "준비 중인 기능입니다.");
+            }
+            else if (commandName == "PRINT_LABEL" || commandName == "PRINT_LABEL_ROW")
+            {   // 소라벨(해외 수출) 출력. 라벨출력(그리드 버튼) = 그 행, 라벨발행 = 체크한 행(없으면 선택한 행)
+                // 양식은 프로시저가 정함: MAGNA 수주면 PRD_2, 품목 PARTNO·INITCD 가 있으면 일반 PRD_3
+                List<int> rows = new List<int>();
+                if (commandName == "PRINT_LABEL_ROW")
+                {
+                    if (MODEL_G12.CurrentIndex >= 0) rows.Add(MODEL_G12.CurrentIndex);
+                }
+                else
+                {
+                    rows = MoveTargetRows();
+                }
+
+                if (rows.Count == 0)
+                {
+                    ShowMessageBox("", "라벨을 발행할 실적로트를 선택하세요.");
+                    return;
+                }
+
+                int copies = (int)MODEL_A11.GetDecimal("PRINTCNT");
+                if (copies < 1)
+                {
+                    ShowMessageBox("", "발행매수(박스 당 수량)를 1 이상 입력하세요.");
+                    return;
+                }
+
+                string printer = MODEL_A11.GetText("LABELPRINT") != "" ? MODEL_A11.GetText("LABELPRINT") : ItsPrinter.BarcodePrintName;
+                List<ItsReport> reports = new List<ItsReport>(); // 모아서 한 번에 인쇄 (인쇄작업 1개)
+                foreach (int row in rows)
+                {
+                    ItsMaria.Set("TML2010_R01", "PRINT_LABEL");
+                    ItsMaria.AddOne("LOTKEY", MODEL_G12.GetText(row, "LOTKEY"));
+                    DataSet ds = ItsMaria.Call();
+                    if (ItsMaria.IsError)
+                    {
+                        ShowMessageBox("", ItsMaria.ErrMessage);
+                        return;
+                    }
+
+                    // 라벨번호가 이번에 매겨졌을 수 있으니 그리드에 표시 (값을 바꾸면 행이 체크되므로 체크 상태는 되돌림)
+                    bool isChecked = MODEL_G12.IsChecked(row);
+                    MODEL_G12.SetValue(row, "LABELKEY", ItsData.GetText(ds.Tables[0], 0, "LABELKEY"));
+                    MODEL_G12.SetChecked(row, isChecked);
+
+                    for (int i = 0; i < copies; i++)
+                    {
+                        if (ItsData.GetText(ds.Tables[0], 0, "LABELTP") == "MAGNA")
+                        {
+                            reports.Add(new TMLPRINT.PRD_2(ds.Tables[0]));
+                        }
+                        else
+                        {
+                            reports.Add(new TMLPRINT.PRD_3(ds.Tables[0]));
+                        }
+                    }
+                }
+
+                try
+                {
+                    TMLPRINT.PRD_3.PrintDirect(reports, printer);
+                }
+                catch (Exception ex)
+                {
+                    ShowMessageBox("", "소라벨 출력에 실패했습니다. 라벨프린터를 확인해주세요.\n" + ex.Message);
+                    return;
+                }
+
+                ShowMessageBox("", "소라벨 " + rows.Count + "건을 발행했습니다.");
+            }
+            else if (commandName == "CLOSE_MOVE")
+            {   // 공정이동표 발행 팝업 닫기
+                PANEL_A11.Close();
+            }
+        }
+
+        // 공정이동표 발행 대상 행: 체크한 행(화면 순서대로), 체크한 행이 없으면 선택한 행
+        private List<int> MoveTargetRows()
+        {
+            List<int> rows = new List<int>();
+            for (int i = 0; i < MODEL_G12.Rows.Count; i++)
+            {
+                if (MODEL_G12.IsChecked(i)) rows.Add(i);
+            }
+
+            if (rows.Count == 0 && MODEL_G12.Rows.Count > 0 && MODEL_G12.CurrentIndex >= 0)
+            {
+                rows.Add(MODEL_G12.CurrentIndex);
+            }
+            return rows;
+        }
+
+        // 공정이동표 한 로트를 발행매수만큼 reports 에 추가 (양식 TMLPRINT.PRD_1, 인쇄는 모은 뒤 한 번에). printTp = "REMAIN" 이면 자재로트 현재고. 실패하면 메시지 후 false
+        private bool AddMoveLot(List<TMLPRINT.PRD_1> reports, string lotKey, string printTp, bool isBad, int copies)
+        {
+            ItsMaria.Set("TML2010_R01", "PRINT_MOVE");
+            ItsMaria.AddOne("LOTKEY", lotKey);
+            ItsMaria.AddOne("PRINTTP", printTp);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return false;
+            }
+
+            if (ds.Tables[0].Rows.Count == 0)
+            {
+                ShowMessageBox("", "공정이동표 정보가 없습니다.\n- 로트번호: " + lotKey);
+                return false;
+            }
+
+            for (int i = 0; i < copies; i++)
+            {
+                reports.Add(new TMLPRINT.PRD_1(ds, isBad));
+            }
+            return true;
         }
         /***************************************************************************************************************************************************************/
         public override void EventMessageResult(string commandName)
@@ -1203,16 +1484,17 @@ namespace TML2010
 
             try
             {
+                // 양품·불량을 문서 하나로 합쳐 한 번에 인쇄 (인쇄작업 1개)
+                List<TMLPRINT.PRD_1> reports = new List<TMLPRINT.PRD_1>();
                 if (ItsData.GetDecimal(ds.Tables[0], 0, "GOODQTY") > 0)
                 {
-                    TMLPRINT.PRD_1 rpt = new TMLPRINT.PRD_1(ds, false);
-                    rpt.PrintDirect(ItsPrinter.BarcodePrintName);
+                    reports.Add(new TMLPRINT.PRD_1(ds, false));
                 }
                 if (ItsData.GetDecimal(ds.Tables[0], 0, "BADQTY") > 0)
                 {
-                    TMLPRINT.PRD_1 rptBad = new TMLPRINT.PRD_1(ds, true);
-                    rptBad.PrintDirect(ItsPrinter.BarcodePrintName);
+                    reports.Add(new TMLPRINT.PRD_1(ds, true));
                 }
+                TMLPRINT.PRD_1.PrintDirect(reports, ItsPrinter.BarcodePrintName);
             }
             catch (Exception ex)
             {

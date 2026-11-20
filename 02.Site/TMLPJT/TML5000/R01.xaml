@@ -7,6 +7,12 @@
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
       Width="1176" Height="576">
     <!-- 2026-11-10 출하등록: 왼쪽 수주내역(다중선택) → 오른쪽 출고창고 선택 후 LOT 바코드 스캔 → 출하량(수정 가능)·비고 입력 → 등록 -->
+    <!-- 2026-11-19 ERP 화면과 같게: 탭 [출하등록] / [발행] / [출하내역삭제] (외주처 판매출고 R02 를 이 화면으로 합침). 탭 머리글 25 만큼 아래 영역 높이를 줄임 -->
+    <TabControl x:Name="TAB_MAIN" Width="1176" Height="576" Padding="0" BorderThickness="0" Background="Silver">
+
+    <!-- [출하등록] -->
+    <TabItem Height="25">
+    <TabItem.Header><TextBlock Text="  출하등록  " FontSize="14" FontWeight="Bold"/></TabItem.Header>
     <Canvas Background="Silver">
 
         <!-- 수주내역 조회 -->
@@ -22,18 +28,18 @@
         </UserControl>
 
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="94">
-            <its:Grid x:Name="GRID_G1" Width="490" Height="482">
+            <its:Grid x:Name="GRID_G1" Width="490" Height="457">
                 <its:Grid.Columns>
                     <its:Column Width="45" Header="선택" CellType="Check" FieldName="ISCHECKED" IsRowCheck="True"/>
-                    <its:Column Width="80" Header="납기일자" FieldName="DLVDT" ALGIN="Center"/>
-                    <its:Column Width="90" Header="납품처" FieldName="CUSTNM"/>
-                    <its:Column Width="100" Header="품목코드" FieldName="ITEMCD"/>
-                    <its:Column Width="100" Header="품명" FieldName="ITEMNM"/>
+                    <its:Column Width="110" Header="품목명" FieldName="ITEMNM"/>
+                    <its:Column Width="90" Header="규격" FieldName="ITEMSPEC"/>
                     <its:Column Width="70" Header="출하잔량" FieldName="REMQTY" DecimalPoint="0"/>
+                    <its:Column Width="70" Header="매출구분" FieldName="SALBCNM" ALGIN="Center"/>
+                    <its:Column Width="100" Header="납품처" FieldName="CUSTNM"/>
+                    <its:Column Width="80" Header="납기일자" FieldName="DLVDT" ALGIN="Center"/>
+                    <its:Column Width="100" Header="품목코드" FieldName="ITEMCD" Visible="False"/>
                     <its:Column Width="60" Header="수주량" FieldName="SALQTY" DecimalPoint="0" Visible="False"/>
                     <its:Column Width="60" Header="출하량" FieldName="OUTQTY" DecimalPoint="0" Visible="False"/>
-                    <its:Column Width="90" Header="규격" FieldName="ITEMSPEC" Visible="False"/>
-                    <its:Column Width="80" Header="매출구분" FieldName="SALBCNM" ALGIN="Center" Visible="False"/>
                     <its:Column Width="80" Header="수주번호" FieldName="SALODRKEY" Visible="False"/>
                     <its:Column Width="60" Header="수주순번" FieldName="ODRSEQ" Visible="False"/>
                     <its:Column Width="80" Header="품목ID" FieldName="ITEMID" Visible="False"/>
@@ -51,7 +57,7 @@
         </UserControl>
 
         <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="490" Canvas.Top="94">
-            <its:Grid x:Name="GRID_G2" Width="566" Height="482">
+            <its:Grid x:Name="GRID_G2" Width="566" Height="457">
                 <its:Grid.Columns>
                     <its:Column Width="45" Header="삭제" CellType="Button" ButtonText="삭제" CommandName="DEL_ROW"/>
                     <its:Column Width="105" Header="품명" FieldName="ITEMNM"/>
@@ -60,11 +66,11 @@
                     <its:Column Width="40" Header="단위" FieldName="UNITNM" ALGIN="Center"/>
                     <its:Column Width="70" Header="출하량" FieldName="OUTQTY" CellType="Number" DecimalPoint="0" ShowKeyPad="Y" ReadOnly="False"/>
                     <its:Column Width="70" Header="잔여재고량" FieldName="LOTQTY" DecimalPoint="0"/>
-                    <its:Column Width="56" Header="비고" FieldName="REMARK" ReadOnly="False"/>
+                    <its:Column Width="80" Header="비고" FieldName="REMARK" ReadOnly="False"/>
+                    <its:Column Width="70" Header="매출구분" FieldName="SALBCNM" ALGIN="Center"/>
+                    <its:Column Width="80" Header="창고명" FieldName="WARENM"/>
+                    <its:Column Width="80" Header="수주단가" FieldName="SALUP" DecimalPoint="0"/>
                     <its:Column Width="90" Header="HEAT NO" FieldName="HEATNO" Visible="False"/>
-                    <its:Column Width="70" Header="매출구분" FieldName="SALBCNM" ALGIN="Center" Visible="False"/>
-                    <its:Column Width="80" Header="창고명" FieldName="WARENM" Visible="False"/>
-                    <its:Column Width="80" Header="수주단가" FieldName="SALUP" DecimalPoint="0" Visible="False"/>
                     <its:Column Width="80" Header="수주번호" FieldName="SALODRKEY" Visible="False"/>
                     <its:Column Width="60" Header="수주순번" FieldName="ODRSEQ" Visible="False"/>
                     <its:Column Width="80" Header="품목ID" FieldName="ITEMID" Visible="False"/>
@@ -73,7 +79,7 @@
         </UserControl>
 
         <!-- 오른쪽 버튼 영역 -->
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="94" Width="120" Height="482">
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="94" Width="120" Height="457">
             <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
                 <its:Button Label="등 록" Width="100" Height="55" FontWeight="Bold" CommandName="ADD_SALOUT" BackColor="Green"/>
                 <UserControl Height="10"/>
@@ -81,4 +87,82 @@
             </StackPanel>
         </UserControl>
     </Canvas>
+    </TabItem>
+
+    <!-- [발행] 출하일자 기간의 출하(출하번호별 = 납품처별) 조회 → 고른 줄의 거래명세서(출고부서용) 재발행 -->
+    <TabItem Height="25">
+    <TabItem.Header><TextBlock Text="  발행  " FontSize="14" FontWeight="Bold"/></TabItem.Header>
+    <Canvas Background="Silver">
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
+            <its:WrapContent x:Name="PANEL_S3" Width="1176" Height="60">
+                <its:Date Label="출하일자" Width="180" Value="{Binding SDATE}"/>
+                <its:Date HidenLabel="Y" Width="100" Value="{Binding EDATE}"/>
+                <its:Pop GPCD="CUSTCD" Label="납품처" Width="250" Value="{Binding CUSTCD}" ShowKeyPad="True"/>
+                <its:Text Label="출하번호" Width="230" Value="{Binding SALOUTGROUPKEY}"/>
+                <UserControl Width="20"/>
+                <its:Button Label="조 회" Width="100" Height="30" CommandName="SEARCH_HIST1" FontWeight="Bold" BackColor="SteelBlue"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="60">
+            <its:Grid x:Name="GRID_G3" Width="1056" Height="491">
+                <its:Grid.Columns>
+                    <its:Column Width="100" Header="출하일자" FieldName="OUTDATE" ALGIN="Center"/>
+                    <its:Column Width="160" Header="출하그룹키" FieldName="GROUPKEY" ALGIN="Center" Visible="False"/>
+                    <its:Column Width="160" Header="출하번호" FieldName="INVOICEKEY" ALGIN="Center"/>
+                    <its:Column Width="200" Header="납품처" FieldName="CUSTNM"/>
+                    <its:Column Width="90" Header="출하구분" FieldName="OUTTPNM" ALGIN="Center"/>
+                    <its:Column Width="100" Header="출하량" FieldName="OUTQTY" DecimalPoint="0"/>
+                    <its:Column Width="80" Header="LOT수" FieldName="LOTCNT" DecimalPoint="0"/>
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="60" Width="120" Height="491">
+            <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
+                <its:Button Label="발 행" Width="100" Height="55" FontWeight="Bold" CommandName="PRINT_HIST" BackColor="Green"/>
+            </StackPanel>
+        </UserControl>
+    </Canvas>
+    </TabItem>
+
+    <!-- [출하내역삭제] 출하일자 기간의 출하 조회 → 고른 줄의 출하 삭제 (출고 재고 복원, ERP 삭제 송신) -->
+    <TabItem Height="25">
+    <TabItem.Header><TextBlock Text="  출하내역삭제  " FontSize="14" FontWeight="Bold"/></TabItem.Header>
+    <Canvas Background="Silver">
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
+            <its:WrapContent x:Name="PANEL_S4" Width="1176" Height="60">
+                <its:Date Label="출하일자" Width="180" Value="{Binding SDATE}"/>
+                <its:Date HidenLabel="Y" Width="100" Value="{Binding EDATE}"/>
+                <its:Pop GPCD="CUSTCD" Label="납품처" Width="250" Value="{Binding CUSTCD}" ShowKeyPad="True"/>
+                <its:Text Label="출하번호" Width="230" Value="{Binding SALOUTGROUPKEY}"/>
+                <UserControl Width="20"/>
+                <its:Button Label="조 회" Width="100" Height="30" CommandName="SEARCH_HIST2" FontWeight="Bold" BackColor="SteelBlue"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="60">
+            <its:Grid x:Name="GRID_G4" Width="1056" Height="491">
+                <its:Grid.Columns>
+                    <its:Column Width="100" Header="출하일자" FieldName="OUTDATE" ALGIN="Center"/>
+                    <its:Column Width="160" Header="출하그룹키" FieldName="GROUPKEY" ALGIN="Center" Visible="False"/>
+                    <its:Column Width="160" Header="출하번호" FieldName="INVOICEKEY" ALGIN="Center"/>
+                    <its:Column Width="200" Header="납품처" FieldName="CUSTNM"/>
+                    <its:Column Width="90" Header="출하구분" FieldName="OUTTPNM" ALGIN="Center"/>
+                    <its:Column Width="100" Header="출하량" FieldName="OUTQTY" DecimalPoint="0"/>
+                    <its:Column Width="80" Header="LOT수" FieldName="LOTCNT" DecimalPoint="0"/>
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="60" Width="120" Height="491">
+            <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
+                <its:Button Label="출하 삭제" Width="100" Height="55" FontWeight="Bold" CommandName="DEL_HIST" BackColor="IndianRed"/>
+            </StackPanel>
+        </UserControl>
+    </Canvas>
+    </TabItem>
+    </TabControl>
 </its:ItsPageTml>

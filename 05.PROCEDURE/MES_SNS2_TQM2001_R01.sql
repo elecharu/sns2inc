@@ -1,4 +1,4 @@
-CREATE DEFINER = 'root'@'%'
+﻿CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.TQM2001_R01(
 -- *****************************************************************************
 -- Comment: 부적합 판정등록 (품질팀)
@@ -136,7 +136,7 @@ WHEN 'LIST_LOT' THEN  -- 불량재고 목록 (grid1)
             AND ($ITEMID = '' OR COMLOT.ITEMID = $ITEMID)
        ) AS BAD_LOT
   WHERE ($JUDGESTT = '' OR BAD_LOT.JUDGESTT = $JUDGESTT)
-  ORDER BY BAD_LOT.PRDDATE, BAD_LOT.LOTKEY;
+  ORDER BY BAD_LOT.WARECD, BAD_LOT.LOTKEY;
 
 -- ****************************************************************************
 WHEN 'LIST_JUDGE' THEN  -- 선택 로트의 판정이력 (grid2)
