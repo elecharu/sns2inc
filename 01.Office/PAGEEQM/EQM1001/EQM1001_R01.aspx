@@ -104,7 +104,7 @@
                             <Its:text runat="server" HiddenLabel="true" ID="wl_txt_NONETIME" Field="NONETIME" InputWidth="60" Type="hhmm" ReadOnly="true" />
                             <Its:num runat="server" Label="정지시간(분)" ID="wl_num_STOPMIN" Field="STOPMIN" Value="0" ReadOnly="true" InputWidth="70" />
                             <Its:newline runat="server" />
-                            <Its:text runat="server" Label="비가동" ID="wl_txt_NONINFO" Field="NONINFO" InputWidth="210" ReadOnly="true" />
+                            <Its:text runat="server" Label="비가동명" ID="wl_txt_NONINFO" Field="NONINFO" InputWidth="210" ReadOnly="true" />
                             <Its:text runat="server" Label="비가동키" ID="wl_txt_PRDNONKEY" Field="PRDNONKEY" Hidden="true" />
 
                             <div class="wl-sub">
@@ -208,7 +208,7 @@
                     <Its:text runat="server" HiddenLabel="true" ID="pop1_txt_NONETIME" Field="NONETIME" InputWidth="60" Type="hhmm" ReadOnly="true" />
                     <Its:num runat="server" Label="정지시간(분)" ID="pop1_num_STOPMIN" Field="STOPMIN" Value="0" ReadOnly="true" InputWidth="70" />
                     <Its:newline runat="server" />
-                    <Its:text runat="server" Label="비가동" ID="pop1_txt_NONINFO" Field="NONINFO" InputWidth="210" ReadOnly="true" />
+                    <Its:text runat="server" Label="비가동명" ID="pop1_txt_NONINFO" Field="NONINFO" InputWidth="210" ReadOnly="true" />
                     <Its:text runat="server" Label="비가동키" ID="pop1_txt_PRDNONKEY" Field="PRDNONKEY" Hidden="true" />
 
                     <div class="wl-sub">
