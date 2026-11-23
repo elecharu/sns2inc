@@ -5,8 +5,14 @@
     width: 381px !important;
 }
 
-/* 출고수량 라벨 여백을 다른 입력칸(좌우 20px)과 같게 */
+/* 현재고·출고수량 라벨 여백을 다른 입력칸(좌우 20px)과 같게 */
 #pdiv_OUT div.ItsNum_table > span {
     margin-left: 20px;
     margin-right: 20px;
+}
+
+/* 출고 등록 창 현재고는 굵게 강조 (현장터미널 출고 팝업과 같은 색) */
+#pop_num_LOTQTY + .ItsNumView {
+    font-weight: bold;
+    color: #4682B4 !important;
 }
