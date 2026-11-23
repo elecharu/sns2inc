@@ -260,7 +260,7 @@
         </Its:div>
     </Its:pop>
 
-    <%-- 공무작업일지 부품 선택 (2공장 설비부품 기준정보 전체) --%>
+    <%-- 공무작업일지 부품 선택 (법인 60·설비부품(DM100700)·사용 품목 중 2공장(07) 설비부품 재고에 등록된 품목, 재고 0 포함) --%>
     <Its:pop runat="server" Type="add" ID="pop_PART" Title="부품 선택" AddBtnName="선택 추가" Width="1100" Height="600">
         <Its:div runat="server" Type="BasicBlock" ID="pp_div1">
             <Its:text runat="server" Label="검색어" ID="pp_txt_KEYWORD" Field="PARTKEYWORD" InputWidth="280" Tooltip="품목코드·품목명·규격에 들어간 글자 (띄어 쓰면 모두 포함)" />

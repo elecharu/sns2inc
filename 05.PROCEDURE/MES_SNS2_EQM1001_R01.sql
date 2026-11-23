@@ -3,12 +3,13 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R01`(
 -- Comment: 설비이력관리 
 -- Create: 	2025-06-24  	생성 			이대규
 -- Modify: 	2026-09-16 		마이그레이션	한성수
--- 			2026-09-16 					한성수	MSTEQM.FANO(설비코드) 컬럼 바인딩 변경 및 구분선/코드 정렬
--- 			2026-10-06 					한성수	작업자 검색·이력 누락 보완, 수리유형 등 입력값 검증 및 부품 미사용 정리
--- 			2026-11-09 					한성수	수리이력 사진(EQMREP_IMG) 조회·등록·삭제 추가, 수리이력 삭제 시 사진 등록 함께 삭제
--- 			2026-11-13 					한성수	설비이력 조회 공장(2공장 기본)·작업장·설비구분·설비대분류 컬럼 및 검색 조건 추가
--- 			2026-11-19 					한성수	공무작업일지 등록(작업구분·고장유형·고장부위·중단구분·비가동·원인분석·재발방지·사용부품)·비가동·출고부품 조회 추가, 이력 저장 시 수리업체·수리유형 선택 입력, 수리키 MT-YYYY-MMDD-순번 형식으로 변경, 수리이력(태블릿 수리 포함)으로 공무작업일지 등록(LIST_REP_WAIT 수리 기록 선택, GET_EQMREP_WORK 조회, ADD_EQMREP_WORK는 새 수리 기록 없이 선택한 수리 기록에 저장), 설비이력 조회 작업일지 작성 여부 추가
--- 			2026-11-20 					한성수	비가동은 수리 설비가 속한 생산라인(MSTEQM_MATCH)의 수리시간과 겹친 비가동으로 자동 연결, 비가동 선택 목록(LIST_NON)·그리드 저장(SAVE_EQMREP) 분기와 전용 파라미터 14개·변수 제거, 사용 부품 출고일자 입력 저장(INOUTDATE_LIST)·단위 공통코드(DM150) 저장 및 확인, 설비이력 조회를 공무작업일지 항목(수리시간·작업구분·고장유형·고장부위·중단구분·비가동·작업자·원인분석·재발방지) 기준으로 변경, 태블릿 수리 기록 삭제(DELETE_EQMREP)·작업자 별도 추가/삭제(SAVE_EMPCD·DELETE_EMPCD)·미사용 웹 수리 기록 생성(ADD_EQMREP) 분기와 미사용 파라미터 15개·변수 5개 제거, 설비이력 조회 공장 조건 2공장 고정으로 정리, 공무작업일지 팝업 조회(GET_EQMREP_WORK)에 비가동 발생·종료일시 따로 추가(비가동은 유형명만), 설비이력 조회(LIST_EQMREP)는 그리드 컬럼(수리시간까지)만, 작업자 목록(LIST_EMPCD) 분기 제거, 출고 부품 선택(LIST_OUTPART) 기간·라인 제한 제거(출고 전체)와 $REPSDAY 파라미터 제거, 공무작업일지 삭제(DELETE_WORKLOG: 작업일지 항목·사용 부품만 비움, 수리 기록·작업자·사진 유지)·출력(PRINT_WORKLOG, PRD6001_S03에서 이동) 추가, 설비이력 조회(LIST_EQMREP)는 공무작업일지를 작성한 수리 기록만(작업일지 작성 여부 컬럼 제거), 부품 선택을 출고 이력(LIST_OUTPART) 대신 설비부품 기준정보 전체(LIST_PART)로 변경(부품 구분 PART 추가)
+-- 			2026-09-16 					한성수	MSTEQM.FANO 바인딩 변경 및 서식 정리
+-- 			2026-10-06 					한성수	작업자 조회·입력값 검증 보완 및 미사용 정리
+-- 			2026-11-09 					한성수	수리이력 사진(EQMREP_IMG) 조회·등록·삭제 추가
+-- 			2026-11-13 					한성수	2공장 설비 분류 컬럼·검색 조건 추가
+-- 			2026-11-19 					한성수	공무작업일지 등록·조회 추가 및 수리키 형식 변경
+-- 			2026-11-20 					한성수	공무작업일지 조회·삭제·출력 정비, 비가동 자동연결 및 미사용 분기 제거
+-- 			2026-11-23 					한성수	부품 선택(LIST_PART) 2공장 재고 등록 품목 기준으로 변경
 -- *****************************************************************************
   IN $SDATE            VARCHAR(10),     -- 조회 시작일자
   IN $EDATE            VARCHAR(10),     -- 조회 종료일자
@@ -110,22 +111,21 @@ WHEN 'LIST_EQMREP' THEN  -- 공무작업일지 목록 (작성된 일지만)
   ORDER BY EQMREP.REGTIME, EQMREP.EQMREPKEY;
 
 -- *****************************************************************************
-WHEN 'LIST_PART' THEN  -- 공무작업일지 부품 선택 목록 (2공장 설비부품 기준정보 전체 = MST3001_R03 설비부품과 같은 기준: 품목구분 DM100700, 공장 07 품목)
+WHEN 'LIST_PART' THEN  -- 공무작업일지 부품 선택 목록 (TML1010_R05·R08 설비부품 재고 목록과 같은 기준: 법인 60, 품목구분 DM100700, 2공장 07 재고 등록 품목, 재고 0 포함)
   SELECT
     CAST(T.ITEMID AS CHAR) AS ITEMID,
     T.ITEMCD,
     T.ITEMNM,
     IFNULL(T.ITEMSPEC, '') AS ITEMSPEC,
     IFNULL(T.ITEMUNIT, '') AS ITEMUNIT,  -- 단위 (공통코드 DM150)
-    IFNULL(E.LOTQTY, 0) AS LOTQTY        -- 현재고
+    E.LOTQTY                             -- 현재고
   FROM MSTITEM AS T
-  INNER JOIN MSTITEM_FACTORY AS F
-    ON F.ITEMID = T.ITEMID
-   AND F.FACTORYCD = '07'
-  LEFT JOIN MSTITEM_EQMPARTS AS E
+  INNER JOIN MSTITEM_EQMPARTS AS E
     ON E.ITEMID = T.ITEMID
    AND E.FACTORYCD = '07'
-  WHERE T.ITEMCG = 'DM100700'
+  WHERE T.COMPANYCD = '60'
+    AND T.ITEMCG = 'DM100700'
+    AND T.ENDYN = 'N'
   ORDER BY T.ITEMCD;
 
 -- *****************************************************************************
