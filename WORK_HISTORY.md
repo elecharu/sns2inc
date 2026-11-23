@@ -1,4 +1,4 @@
-# MES 프로젝트 작업 이력 및 변경 관리 대장 (Work History)
+﻿# MES 프로젝트 작업 이력 및 변경 관리 대장 (Work History)
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
@@ -17,6 +17,16 @@
 ---
 
 ## 🕒 2026-11-23 (월) 작업 내역
+
+### 6. DB 연동 설정·하드코딩 소스 파일 .gitignore 추가 및 Git 추적 해제(git rm --cached)
+- **수정 파일**: [.gitignore](.gitignore)
+- **요청**: 프로젝트 내 DB 연동 정보가 기록된 설정 파일 및 C# 소스 파일 전체를 `.gitignore`에 추가하고 로컬 파일은 유지한 채 Git 추적 대상에서만 삭제 처리
+- **작업 내용**:
+  - 1. `.gitignore` 등록 : DB 설정 패턴(`ITS_CONFIG_MARIA.xml`, `ITS_CONFIG_MSSQL.xml`, `MariaConfig.txt`, `IfConfig.txt`, `ITS_MARIA_BACKUP_Config.txt`, `MailServiceInfo.txt`, `diagnose_db.ps1`) 및 DB 접속정보 하드코딩 C# 소스 13개 경로 추가
+  - 2. Git 추적 해제(`git rm --cached`, 로컬 파일 유지) 총 24개
+    - 설정·스크립트 11개 : `01.Office/Reports/ITS_CONFIG_MARIA.xml`, `02.Site/AAABIN/ITS_CONFIG_MARIA.xml`, `02.Site/AAALIB/ITS_CONFIG_MARIA.xml`, `04.Report/bin/ITS_CONFIG_MARIA.xml`, `02.Site/AAALIB/ITS_MARIA_BACKUP_Config.txt`, `02.Site/COMPJT/ITSIF_INTERFACE/bin/Debug/IfConfig.txt`, `02.Site/COMPJT/ITSIF_INTERFACE/bin/Debug/MariaConfig.txt`, `바코드디자인/MariaConfig.txt`, `01.Office/Service/Schedule/MailServiceHour/MailServiceInfo.txt`, `01.Office/Service/Schedule/MailServiceTrigger/MailServiceInfo.txt`, `diagnose_db.ps1`
+    - C# 소스 13개 : `01.Office/App_Code/ItsMaria.cs`, `01.Office/App_Code/ItsMssql.cs`, `03.Pda/App_Code/ItsMaria.cs`, `03.Pda/App_Code/ItsMssql.cs`, `04.Report/PAGEMST/MST3001/R06A.cs`, `04.Report/PAGEMTR/MTR0001/S04A.cs`, `01.Office/Service/Schedule/{Assign,ExchangeRate,MailServiceDay,MailServiceHour,MailServiceTrigger,MonthClosing,RetireEMP}/ItsMaria.cs`
+- **검증**: 24개 전건 `git rm --cached` 완료, 로컬 디스크 24개 파일 잔존(`EXISTS=True`) 및 `git check-ignore -v` 매칭 확인, `.gitignore`·`WORK_HISTORY.md` 단일 UTF-8 with BOM + CRLF 검증 완료
 
 ### 5. EQM1001_R01 목록 행 이동 시 저장 안 한 공무작업일지 수정 경고
 - **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js)

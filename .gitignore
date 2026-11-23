@@ -68,3 +68,31 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 .BIN/
+
+# Database Connection Configuration Files
+**/ITS_CONFIG_MARIA.xml
+ITS_CONFIG_MARIA.xml
+**/ITS_CONFIG_MSSQL.xml
+ITS_CONFIG_MSSQL.xml
+**/MariaConfig.txt
+MariaConfig.txt
+**/IfConfig.txt
+IfConfig.txt
+**/ITS_MARIA_BACKUP_Config.txt
+**/MailServiceInfo.txt
+diagnose_db.ps1
+
+# Source Files Containing Hardcoded DB Connection Info
+01.Office/App_Code/ItsMaria.cs
+01.Office/App_Code/ItsMssql.cs
+03.Pda/App_Code/ItsMaria.cs
+03.Pda/App_Code/ItsMssql.cs
+04.Report/PAGEMST/MST3001/R06A.cs
+04.Report/PAGEMTR/MTR0001/S04A.cs
+01.Office/Service/Schedule/Assign/ItsMaria.cs
+01.Office/Service/Schedule/ExchangeRate/ItsMaria.cs
+01.Office/Service/Schedule/MailServiceDay/ItsMaria.cs
+01.Office/Service/Schedule/MailServiceHour/ItsMaria.cs
+01.Office/Service/Schedule/MailServiceTrigger/ItsMaria.cs
+01.Office/Service/Schedule/MonthClosing/ItsMaria.cs
+01.Office/Service/Schedule/RetireEMP/ItsMaria.cs
