@@ -1,6 +1,7 @@
 /// <reference path="../../Script/reference.js" />
 
 var wlKey = { wl: '', pop1: '' };
+var wlSnap = '';
 var partTarget = 'wl';
 var arrPartAll = [];
 var partChecked = {};
@@ -187,14 +188,33 @@ ItsButton.Event('sdiv1_btn_PRINT').onClick = function () {
     }
 };
 
-// 목록 행 선택 시 가운데 공무작업일지 및 수리 사진 조회
+// 목록 행 선택 시 가운데 공무작업일지 및 수리 사진 조회 (저장 안 한 수정이 있으면 이동 확인)
 ItsGrid.Event('grid1').onSelect = function () {
     var eqmRepKey = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'EQMREPKEY');
     if (eqmRepKey == wlKey.wl) {
         return;
     }
-    WORKLOG_PANEL_OPEN(eqmRepKey);
+    if (!WORKLOG_IS_CHANGED()) {
+        WORKLOG_PANEL_OPEN(eqmRepKey);
+        return;
+    }
+
+    ItsMsg.Confirm('저장하지 않은 공무작업일지 수정 내용이 있습니다.<br/>이동하면 수정 내용이 사라집니다. 이동하시겠습니까?', function () {
+        WORKLOG_PANEL_OPEN(eqmRepKey);
+    }, function () {
+        WORKLOG_SELECT_EDIT_ROW();
+    });
 };
+
+// 목록에서 가운데 공무작업일지 행 다시 선택
+function WORKLOG_SELECT_EDIT_ROW() {
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if (ItsGrid.GetValue('grid1', i, 'EQMREPKEY') == wlKey.wl) {
+            ItsGrid.SelectRow('grid1', i);
+            return;
+        }
+    }
+}
 
 // 수리 기록 선택 팝업 확인
 ItsPop.Event('pop_REPSEL').onAddBtnClick = function () {
@@ -418,15 +438,50 @@ WORKLOG_BIND_EVENTS('pop1');
 function WORKLOG_PANEL_OPEN(eqmRepKey) {
     var row = WORKLOG_LOAD('wl', eqmRepKey);
     if (!row) {
+        wlSnap = '';
         $('#spn_WL_KEY').text('');
         $('#spn_WL_NOTE').text('왼쪽 목록에서 공무작업일지를 선택하세요.');
         REPIMG_LIST('');
         return;
     }
 
+    wlSnap = WORKLOG_SNAP('wl');
     $('#spn_WL_KEY').text(eqmRepKey);
     $('#spn_WL_NOTE').text('');
     REPIMG_LIST(eqmRepKey);
+}
+
+// 가운데 공무작업일지 저장 안 한 수정 여부 (불러온 때의 내용과 비교)
+function WORKLOG_IS_CHANGED() {
+    return wlKey.wl != '' && WORKLOG_SNAP('wl') != wlSnap;
+}
+
+// 공무작업일지 현재 내용 (입력 영역 값, 작업자 사번, 사용 부품 행 데이터)
+function WORKLOG_SNAP(p) {
+    var gridEmp = p + '_grid_EMP';
+    var gridPart = p + '_grid_PART';
+    ItsGrid.Get(gridEmp).finishEditing();
+    ItsGrid.Get(gridPart).finishEditing();
+
+    var panel = new ItsMaria('EQM1001_R01', '');
+    panel.AddPanel(p + '_div1');
+    panel.AddPanel(p + '_div2');
+    panel.AddPanel(p + '_div3');
+    panel.AddPanel(p + '_div4');
+
+    var emp = [];
+    for (var i = 0; i < ItsGrid.Length(gridEmp); i++) {
+        emp.push(ItsGrid.GetValue(gridEmp, i, 'EMPCD') || '');
+    }
+
+    var part = [];
+    for (var j = 0; j < ItsGrid.Length(gridPart); j++) {
+        var row = $.extend({}, ItsGrid.Get(gridPart).rows[j].dataItem);
+        delete row.isRowCheck;
+        part.push(row);
+    }
+
+    return panel.ToString() + JSON.stringify(emp.filter(Boolean)) + JSON.stringify(part);
 }
 
 // 공무작업일지 상세·작업자·사용 부품 조회 및 바인딩
