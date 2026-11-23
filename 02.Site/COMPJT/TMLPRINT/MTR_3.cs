@@ -14,9 +14,14 @@ namespace TMLPRINT
     /// </summary>
     public partial class MTR_3 : XtraReport
     {
-        public MTR_3(DataTable dt)
+        // VS 리포트 디자이너가 열 수 있게 매개변수 없는 생성자를 둔다
+        public MTR_3()
         {
             InitializeComponent();
+        }
+
+        public MTR_3(DataTable dt) : this()
+        {
             this.DataSource = BuildSheets(dt);
         }
 

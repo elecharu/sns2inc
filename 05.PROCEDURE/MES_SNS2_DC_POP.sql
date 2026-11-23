@@ -1,4 +1,4 @@
-﻿CREATE DEFINER = 'root'@'%'
+CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.DC_POP(
 -- *****************************************************************************
 -- Comment: POPUP
@@ -215,9 +215,33 @@ ELSEIF $GPCD = 'CUSTCD_OSC_INFO' THEN
   SELECT B.CUSTCD AS CODE, B.CUSTNM AS NAME
     FROM MSTWARE AS A
     INNER JOIN MSTCUST AS B ON A.CUSTCD = B.CUSTCD
-    WHERE A.FACTORYCD = '07' 
+    WHERE A.FACTORYCD = '07'
       AND A.USEYN = 'Y'
       AND B.CUSTCD = $KEYWORD;
+
+-- *****************************************************************************
+-- 유상사급 외주처 : 유상사급 발주(MTRODR.ODRBC = MM100900)의 거래처 (TML1010_R06 유상사급 자재이동, 2026-11-23)
+ELSEIF $GPCD = 'CUSTCD_OSC2_HEAD' THEN
+
+  SELECT '거래처코드' AS CODE, '거래처명' AS NAME;
+  SELECT 100 AS CODE, 200 AS NAME;
+
+ELSEIF $GPCD = 'CUSTCD_OSC2_LIST' THEN
+
+  SELECT MSTCUST.CUSTCD AS CODE, MSTCUST.CUSTNM AS NAME
+    FROM MSTCUST
+    WHERE MSTCUST.USEYN = 'Y'
+      AND MSTCUST.CUSTCD IN (SELECT MTRODR.CUSTCD FROM MTRODR WHERE MTRODR.ODRBC = 'MM100900')
+      AND (MSTCUST.CUSTCD LIKE CONCAT('%', $KEYWORD, '%')
+       OR MSTCUST.CUSTNM LIKE CONCAT('%', $KEYWORD, '%')
+       OR MSTCUST.CUSTNMEN LIKE CONCAT('%', $KEYWORD, '%'))
+    ORDER BY MSTCUST.CUSTNM;
+
+ELSEIF $GPCD = 'CUSTCD_OSC2_INFO' THEN
+
+  SELECT MSTCUST.CUSTCD AS CODE, MSTCUST.CUSTNM AS NAME
+    FROM MSTCUST
+    WHERE MSTCUST.CUSTCD = $KEYWORD;   -- 코드 → 이름 표시 (외주처 로그인 PC 의 고정값도 이름이 나오게 발주 조건은 걸지 않음)
 
 -- *****************************************************************************
 ELSEIF $GPCD = 'CUSTITEM_HEAD' THEN

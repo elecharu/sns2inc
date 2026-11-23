@@ -1,0 +1,167 @@
+CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.IO_MOVELOT_TEST_DEL(
+-- *****************************************************************************
+-- Comment: 거래명세서 입고취소 때, IO_MOVELOT_TEST 로 시편창고에 옮긴 시편수량을 되돌림
+--          (시편창고 재고 차감 → 출발창고 재고 복원 → 시편 이동 출고·입고 이력 삭제)
+--          시편 이동 이력에는 거래명세서가 없어, LOT + 시편창고 + 이동구분(02, 025) + 수량 + 입고일자 로 찾는다
+--          시편을 이미 써서 시편창고 재고가 모자라거나 이동 이력을 못 찾으면 아무것도 바꾸지 않고 오류
+-- Create: 2026-11-23
+-- *****************************************************************************
+  IN $INVOICEKEY    VARCHAR(50)
+-- *****************************************************************************
+)
+PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+-- *****************************************************************************
+
+  DECLARE _$TESTWARE  VARCHAR(20) DEFAULT '04S132_N';   -- 2공장 시편창고
+  DECLARE _$INDATE    VARCHAR(10);
+  DECLARE _$LIST      MEDIUMTEXT;
+  DECLARE _$LOTKEY    VARCHAR(100);
+  DECLARE _$TESTQTY   DECIMAL(20, 8);
+  DECLARE _$ITEMID    VARCHAR(100);
+  DECLARE _$INKEY     VARCHAR(100);
+  DECLARE _$OUTKEY    VARCHAR(100);
+  DECLARE _$GROUPKEY  VARCHAR(100);
+  DECLARE _$FROMWARE  VARCHAR(20);
+  DECLARE _$CHKQTY    DECIMAL(20, 8);
+
+-- ****************************************************************************
+IF IFNULL(@ERRMSG, '') = '' THEN
+-- ****************************************************************************
+
+  SET _$LIST = IFNULL((SELECT GROUP_CONCAT(MTRCUST_INVOICE_DETAIL.LOTKEY ORDER BY MTRCUST_INVOICE_DETAIL.LOTKEY ASC SEPARATOR '»')
+                         FROM MTRCUST_INVOICE_DETAIL
+                        WHERE MTRCUST_INVOICE_DETAIL.INVOICEKEY = $INVOICEKEY
+                          AND IFNULL(MTRCUST_INVOICE_DETAIL.TESTQTY, 0) > 0), '');
+
+  IF _$LIST = '' THEN
+    LEAVE PROC;   -- 시편수량 없음
+  END IF;
+
+  SET _$INDATE = (SELECT MIN(MTRIN.INDATE) FROM MTRIN WHERE MTRIN.INVOICEKEY = $INVOICEKEY);
+
+  DROP TEMPORARY TABLE IF EXISTS TEMP_TESTDEL;
+  CREATE TEMPORARY TABLE TEMP_TESTDEL (
+    LOTKEY    VARCHAR(100) NOT NULL,
+    ITEMID    VARCHAR(100) NOT NULL,
+    TESTQTY   DECIMAL(20, 8) NOT NULL,
+    INKEY     VARCHAR(100) NOT NULL,
+    OUTKEY    VARCHAR(100) NOT NULL,
+    FROMWARE  VARCHAR(20)  NOT NULL,
+    PRIMARY KEY (LOTKEY)
+  );
+
+  -- 1. 검증 : LOT 마다 시편 이동 이력을 찾고, 시편창고 재고가 충분한지 확인 (아직 아무것도 바꾸지 않음)
+  WHILE LENGTH(IFNULL(_$LIST, '')) > 0 DO
+    CALL COMSPLIT(_$LIST, _$LOTKEY);
+
+    IF IFNULL(_$LOTKEY, '') <> '' THEN
+
+      SELECT MTRCUST_INVOICE_DETAIL.TESTQTY, MTRCUST_INVOICE_DETAIL.ITEMID
+        INTO _$TESTQTY, _$ITEMID
+        FROM MTRCUST_INVOICE_DETAIL
+       WHERE MTRCUST_INVOICE_DETAIL.INVOICEKEY = $INVOICEKEY
+         AND MTRCUST_INVOICE_DETAIL.LOTKEY = _$LOTKEY;
+
+      SET _$INKEY = NULL;
+      SET _$GROUPKEY = NULL;
+      SELECT COMINLOT.INKEY, COMIN.GROUPKEY
+        INTO _$INKEY, _$GROUPKEY
+        FROM COMINLOT
+       INNER JOIN COMIN ON COMIN.INKEY = COMINLOT.INKEY
+       WHERE COMINLOT.LOTKEY = _$LOTKEY
+         AND COMINLOT.WARECD = _$TESTWARE
+         AND COMINLOT.INTP IN ('02', '025')
+         AND COMINLOT.INQTY = _$TESTQTY
+         AND COMINLOT.INDATE = _$INDATE
+         AND IFNULL(COMIN.INVOICEKEY, '') = ''
+       ORDER BY COMINLOT.RTIME DESC
+       LIMIT 1;
+
+      SET _$OUTKEY = NULL;
+      SET _$FROMWARE = NULL;
+      IF _$INKEY IS NOT NULL THEN
+        SELECT COMOUTLOT.OUTKEY, COMOUTLOT.WARECD
+          INTO _$OUTKEY, _$FROMWARE
+          FROM COMOUTLOT
+         INNER JOIN COMOUT ON COMOUT.OUTKEY = COMOUTLOT.OUTKEY
+         WHERE COMOUT.GROUPKEY = _$GROUPKEY
+           AND COMOUTLOT.LOTKEY = _$LOTKEY
+           AND COMOUTLOT.OUTTP IN ('02', '025')
+           AND COMOUTLOT.OUTQTY = _$TESTQTY
+         LIMIT 1;
+      END IF;
+
+      IF _$INKEY IS NULL OR _$OUTKEY IS NULL THEN
+        CALL COMERR(CONCAT('시편 이동 이력을 찾을 수 없어 입고 취소할 수 없습니다.', '\n- 로트번호: ', _$LOTKEY));
+        LEAVE PROC;
+      END IF;
+
+      SET _$CHKQTY = IFNULL((SELECT COMLOT.LOTQTY FROM COMLOT WHERE COMLOT.LOTKEY = _$LOTKEY AND COMLOT.WARECD = _$TESTWARE), 0);
+
+      IF _$CHKQTY < _$TESTQTY THEN
+        CALL COMERR(CONCAT('시편 재고를 이미 사용해 입고 취소할 수 없습니다.', '\n- 로트번호: ', _$LOTKEY));
+        LEAVE PROC;
+      END IF;
+
+      INSERT INTO TEMP_TESTDEL (LOTKEY, ITEMID, TESTQTY, INKEY, OUTKEY, FROMWARE)
+      VALUES (_$LOTKEY, _$ITEMID, _$TESTQTY, _$INKEY, _$OUTKEY, _$FROMWARE);
+
+    END IF;
+  END WHILE;
+
+  -- 2. 되돌리기
+  SET _$LIST = IFNULL((SELECT GROUP_CONCAT(TEMP_TESTDEL.LOTKEY ORDER BY TEMP_TESTDEL.LOTKEY ASC SEPARATOR '»') FROM TEMP_TESTDEL), '');
+
+  WHILE LENGTH(IFNULL(_$LIST, '')) > 0 DO
+    CALL COMSPLIT(_$LIST, _$LOTKEY);
+
+    IF IFNULL(_$LOTKEY, '') <> '' THEN
+
+      SELECT TEMP_TESTDEL.TESTQTY, TEMP_TESTDEL.INKEY, TEMP_TESTDEL.OUTKEY, TEMP_TESTDEL.FROMWARE
+        INTO _$TESTQTY, _$INKEY, _$OUTKEY, _$FROMWARE
+        FROM TEMP_TESTDEL
+       WHERE TEMP_TESTDEL.LOTKEY = _$LOTKEY;
+
+      -- 시편창고 재고 차감 (시편 이동 때 새로 만든 재고면 지움)
+      UPDATE COMLOT
+         SET COMLOT.LOTQTY = COMLOT.LOTQTY - _$TESTQTY
+           , COMLOT.CRTQTY = COMLOT.CRTQTY - _$TESTQTY
+           , COMLOT.MTIME  = CALLTIME()
+           , COMLOT.MEMP   = CALLEMP()
+           , COMLOT.MPRG   = CALLPRG()
+       WHERE COMLOT.LOTKEY = _$LOTKEY
+         AND COMLOT.WARECD = _$TESTWARE;
+
+      DELETE FROM COMLOT
+       WHERE COMLOT.LOTKEY = _$LOTKEY
+         AND COMLOT.WARECD = _$TESTWARE
+         AND COMLOT.LOTQTY <= 0
+         AND COMLOT.CRTQTY <= 0;
+
+      -- 출발창고 재고 복원
+      UPDATE COMLOT
+         SET COMLOT.LOTQTY = COMLOT.LOTQTY + _$TESTQTY
+           , COMLOT.MTIME  = CALLTIME()
+           , COMLOT.MEMP   = CALLEMP()
+           , COMLOT.MPRG   = CALLPRG()
+       WHERE COMLOT.LOTKEY = _$LOTKEY
+         AND COMLOT.WARECD = _$FROMWARE;
+
+      -- 이동 이력 삭제 (같은 품목 합계 행은 수량만 빼고, 0 이 되면 지움)
+      DELETE FROM COMINLOT  WHERE COMINLOT.INKEY  = _$INKEY  AND COMINLOT.LOTKEY  = _$LOTKEY;
+      DELETE FROM COMOUTLOT WHERE COMOUTLOT.OUTKEY = _$OUTKEY AND COMOUTLOT.LOTKEY = _$LOTKEY;
+
+      UPDATE COMIN  SET COMIN.INQTY   = COMIN.INQTY   - _$TESTQTY WHERE COMIN.INKEY   = _$INKEY;
+      UPDATE COMOUT SET COMOUT.OUTQTY = COMOUT.OUTQTY - _$TESTQTY WHERE COMOUT.OUTKEY = _$OUTKEY;
+
+      DELETE FROM COMIN  WHERE COMIN.INKEY   = _$INKEY  AND COMIN.INQTY   <= 0;
+      DELETE FROM COMOUT WHERE COMOUT.OUTKEY = _$OUTKEY AND COMOUT.OUTQTY <= 0;
+
+    END IF;
+  END WHILE;
+
+  DROP TEMPORARY TABLE IF EXISTS TEMP_TESTDEL;
+
+-- ****************************************************************************
+END IF; END

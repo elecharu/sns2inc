@@ -1,0 +1,319 @@
+CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.TML1020_R08(
+-- *****************************************************************************
+-- Comment: 유상사급 자재반출 - 입고확인(TML1020_R07)이 끝난 자재이동 거래명세서번호/LOT번호 스캔 → 반출
+--          반출하면 입고확인(사내창고→자재투입창고 이동)·자재이동(거래명세서 05)·납품등록(거래명세서 01, 사내창고 입고)을 삭제하고
+--          ERP 는 반출 한 건(FAC2_ERP_IF_CSM_RETURN, 정의서 V1.3 시트 11)만 전송 (ERP 가 입고확인 이동·구매입고·납품을 지움). 반출 이력은 MTRCUST_MOVEOUT·MTRCUST_MOVEOUTD 에 남김
+--          반출수량은 입고확인 수량 전량이어야 함 (3건을 통째로 삭제하므로 일부 반출 불가)
+-- Create: 2026-11-12
+-- Modify: 2026-11-16: 반출 기록만 남기던 것을 입고확인·자재이동·납품등록 삭제 + ERP D 전송 + 반출번호·반출일자 이력으로 변경. PRINT_MOVEOUT(자재반출증 출력 데이터) 추가
+-- Modify: 2026-11-18: ERP D 전송(WORK_10 D, DLV D) → 반출 CSM_RETURN I 한 건으로 변경 (ERP 수신 정의서 V1.3)
+-- Modify: 2026-11-23: 납품등록이 거래명세서(01) 를 만들지 않으므로 반출 = 입고확인(이동)·사내창고 입고·납품 LOT·자재이동(거래명세서 05) 삭제
+-- *****************************************************************************
+  IN $MOVEDATE        VARCHAR(10),
+  IN $BARCODE         VARCHAR(100),
+  IN $INVOICEKEY_LIST MEDIUMTEXT,
+  IN $LOTKEY_LIST     MEDIUMTEXT,
+  IN $MOVEQTY_LIST    MEDIUMTEXT,
+  IN $MOVEOUTKEY      VARCHAR(20),
+-- *****************************************************************************
+  IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
+PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+-- SET @DEBUGLOGYN = 'Y';
+-- *****************************************************************************
+
+  DECLARE _$INVOICEKEY   VARCHAR(100);
+  DECLARE _$GROUPKEY     VARCHAR(100);
+  DECLARE _$LOTKEY       VARCHAR(100);
+  DECLARE _$QTY          DECIMAL(20, 8);
+  DECLARE _$MTRINKEY     VARCHAR(20);
+  DECLARE _$MTRINLIST    MEDIUMTEXT;
+  DECLARE _$MOVEOUTKEY   VARCHAR(20);
+  DECLARE _$CUSTCD       VARCHAR(20);
+  DECLARE _$CNT          INT DEFAULT 0;
+
+-- ****************************************************************************
+CASE $CALLTYPE
+
+-- ****************************************************************************
+WHEN 'SCAN_BARCODE' THEN -- 거래명세서번호 또는 LOT번호 스캔 → 입고확인이 끝난 자재이동 거래명세서의 LOT 목록
+
+  IF TRIM(IFNULL($BARCODE, '')) = '' THEN
+    CALL COMERR('거래명세서번호 또는 LOT번호를 스캔하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF EXISTS (SELECT 1
+               FROM MTRCUST_INVOICE_HEADER
+               WHERE MTRCUST_INVOICE_HEADER.INVOICEKEY = TRIM($BARCODE)
+                 AND MTRCUST_INVOICE_HEADER.INVOICETP = '05') THEN
+    SET _$INVOICEKEY = TRIM($BARCODE);
+  ELSE
+    SET _$INVOICEKEY = (SELECT MTRCUST_INVOICE_DETAIL.INVOICEKEY
+                          FROM MTRCUST_INVOICE_DETAIL
+                          INNER JOIN MTRCUST_INVOICE_HEADER ON MTRCUST_INVOICE_HEADER.INVOICEKEY = MTRCUST_INVOICE_DETAIL.INVOICEKEY
+                                                           AND MTRCUST_INVOICE_HEADER.INVOICETP = '05'
+                          WHERE MTRCUST_INVOICE_DETAIL.LOTKEY = TRIM($BARCODE)
+                          LIMIT 1);
+  END IF;
+
+  IF IFNULL(_$INVOICEKEY, '') = '' THEN
+    CALL COMERR(CONCAT('[', TRIM($BARCODE), '] 입고확인이 끝난 유상사급 거래명세서번호 또는 LOT번호가 아닙니다.'));
+    LEAVE PROC;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM MTRCUST_INVOICE_HEADER
+                  WHERE MTRCUST_INVOICE_HEADER.INVOICEKEY = _$INVOICEKEY AND IFNULL(MTRCUST_INVOICE_HEADER.MOVEGROUPKEY, '') <> '') THEN
+    CALL COMERR(CONCAT('입고확인이 끝난 거래명세서만 반출할 수 있습니다. (', _$INVOICEKEY, ')'));
+    LEAVE PROC;
+  END IF;
+
+  -- 자재투입창고 재고를 이미 썼으면 반출 불가
+  IF EXISTS (SELECT 1
+               FROM MTRCUST_INVOICE_DETAIL
+               LEFT JOIN COMLOT ON COMLOT.LOTKEY = MTRCUST_INVOICE_DETAIL.LOTKEY
+                               AND COMLOT.WARECD = '04S111_N'
+               WHERE MTRCUST_INVOICE_DETAIL.INVOICEKEY = _$INVOICEKEY
+                 AND IFNULL(COMLOT.LOTQTY, 0) < MTRCUST_INVOICE_DETAIL.LOTQTY) THEN
+    CALL COMERR(CONCAT('자재투입창고 재고가 입고확인 수량보다 적어 반출할 수 없습니다. (이미 사용됨)', '\n- 거래명세서: ', _$INVOICEKEY));
+    LEAVE PROC;
+  END IF;
+
+  SELECT
+    MTRCUST_INVOICE_DETAIL.INVOICEKEY,
+    GPCD('CUSTCD', MTRCUST_INVOICE_HEADER.CUSTCD_GIVER) AS OUTCUSTNM,
+    MSTITEM.ITEMCD,
+    MSTITEM.ITEMNM,
+    MSTITEM.ITEMSPEC,
+    IFNULL(MTRCUSTLOT.HEATNO, '') AS HEATNO,
+    MTRCUST_INVOICE_DETAIL.LOTKEY,
+    IFNULL(GPCD('DM150', MSTITEM.ITEMUNIT), '') AS UNITNM,
+    MTRCUST_INVOICE_DETAIL.LOTQTY AS MOVEQTY,   -- 반출수량 (수정 가능하나 입고확인 수량 전량이어야 반출됨)
+    '' AS REMARK
+  FROM MTRCUST_INVOICE_DETAIL
+  INNER JOIN MTRCUST_INVOICE_HEADER ON MTRCUST_INVOICE_HEADER.INVOICEKEY = MTRCUST_INVOICE_DETAIL.INVOICEKEY
+  INNER JOIN MSTITEM ON MSTITEM.ITEMID = MTRCUST_INVOICE_DETAIL.ITEMID
+  LEFT JOIN MTRCUSTLOT ON MTRCUSTLOT.LOTKEY = MTRCUST_INVOICE_DETAIL.LOTKEY
+  WHERE MTRCUST_INVOICE_DETAIL.INVOICEKEY = _$INVOICEKEY
+  ORDER BY MTRCUST_INVOICE_DETAIL.LOTKEY;
+
+-- ****************************************************************************
+WHEN 'ADD_MOVEOUT' THEN -- 반출 : 입고확인 → 자재이동 → 납품등록 3건 삭제, ERP 는 D 로 역순 전송, 반출 이력 저장
+
+  IF IFNULL($MOVEDATE, '') = '' THEN
+    CALL COMERR('반출일자를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($INVOICEKEY_LIST, '') = '' THEN
+    CALL COMERR('반출할 거래명세서번호 또는 LOT번호를 스캔하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($LOTKEY_LIST, '') = '' THEN
+    CALL COMERR('반출할 LOT 가 없습니다.');
+    LEAVE PROC;
+  END IF;
+
+  SET SESSION group_concat_max_len = 1000000;
+
+  -- 화면의 반출수량 (LOT 별)
+  DROP TEMPORARY TABLE IF EXISTS TEMP_OUT;
+  CREATE TEMPORARY TABLE TEMP_OUT (
+      LOTKEY VARCHAR(50) NOT NULL PRIMARY KEY,
+      QTY    DECIMAL(20, 8)
+  );
+
+  WHILE LENGTH(IFNULL($LOTKEY_LIST, '')) > 0 DO
+    CALL COMSPLIT($LOTKEY_LIST, _$LOTKEY);
+    CALL COMSPLIT($MOVEQTY_LIST, _$QTY);
+
+    IF IFNULL(_$LOTKEY, '') <> '' THEN
+      INSERT INTO TEMP_OUT (LOTKEY, QTY) VALUES (_$LOTKEY, IFNULL(_$QTY, 0));
+    END IF;
+  END WHILE;
+
+  -- 반출번호 (MO + 일자 + 일련번호 4자리)
+  SET _$MOVEOUTKEY = CONCAT('MO', DATE_FORMAT(NOW(), '%y%m%d'),
+                            LPAD(IFNULL((SELECT MAX(CAST(RIGHT(MTRCUST_MOVEOUT.MOVEOUTKEY, 4) AS UNSIGNED))
+                                           FROM MTRCUST_MOVEOUT
+                                           WHERE MTRCUST_MOVEOUT.MOVEOUTKEY LIKE CONCAT('MO', DATE_FORMAT(NOW(), '%y%m%d'), '%')), 0) + 1, 4, '0'));
+
+  WHILE LENGTH($INVOICEKEY_LIST) > 0 DO
+    CALL COMSPLIT($INVOICEKEY_LIST, _$INVOICEKEY);
+
+    IF IFNULL(_$INVOICEKEY, '') <> '' THEN
+
+      -- 1. 확인 ----------------------------------------------------------
+      IF NOT EXISTS (SELECT 1 FROM MTRCUST_INVOICE_HEADER WHERE INVOICEKEY = _$INVOICEKEY AND INVOICETP = '05') THEN
+        CALL COMERR(CONCAT('유상사급 자재이동 거래명세서가 아닙니다. (', _$INVOICEKEY, ')'));
+        LEAVE PROC;
+      END IF;
+
+      SET _$GROUPKEY = IFNULL((SELECT MTRCUST_INVOICE_HEADER.MOVEGROUPKEY FROM MTRCUST_INVOICE_HEADER WHERE INVOICEKEY = _$INVOICEKEY), '');
+
+      IF _$GROUPKEY = '' THEN
+        CALL COMERR(CONCAT('입고확인이 끝난 거래명세서만 반출할 수 있습니다. (', _$INVOICEKEY, ')'));
+        LEAVE PROC;
+      END IF;
+
+      -- 반출수량은 입고확인 수량 전량 (3건을 통째로 삭제하므로 일부 반출 불가)
+      IF EXISTS (SELECT 1
+                   FROM MTRCUST_INVOICE_DETAIL
+                   LEFT JOIN TEMP_OUT ON TEMP_OUT.LOTKEY = MTRCUST_INVOICE_DETAIL.LOTKEY
+                   WHERE MTRCUST_INVOICE_DETAIL.INVOICEKEY = _$INVOICEKEY
+                     AND (TEMP_OUT.LOTKEY IS NULL OR TEMP_OUT.QTY <> MTRCUST_INVOICE_DETAIL.LOTQTY)) THEN
+        CALL COMERR(CONCAT('반출수량은 입고확인 수량과 같아야 합니다. (일부 반출 불가)', '\n- 거래명세서: ', _$INVOICEKEY));
+        LEAVE PROC;
+      END IF;
+
+      -- 자재투입창고 재고를 이미 썼으면 반출 불가
+      IF EXISTS (SELECT 1
+                   FROM MTRCUST_INVOICE_DETAIL
+                   LEFT JOIN COMLOT ON COMLOT.LOTKEY = MTRCUST_INVOICE_DETAIL.LOTKEY
+                                   AND COMLOT.WARECD = '04S111_N'
+                   WHERE MTRCUST_INVOICE_DETAIL.INVOICEKEY = _$INVOICEKEY
+                     AND IFNULL(COMLOT.LOTQTY, 0) < MTRCUST_INVOICE_DETAIL.LOTQTY) THEN
+        CALL COMERR(CONCAT('자재투입창고 재고가 입고확인 수량보다 적어 반출할 수 없습니다. (이미 사용됨)', '\n- 거래명세서: ', _$INVOICEKEY));
+        LEAVE PROC;
+      END IF;
+
+      -- 2. 반출 이력 -----------------------------------------------------
+      IF NOT EXISTS (SELECT 1 FROM MTRCUST_MOVEOUT WHERE MOVEOUTKEY = _$MOVEOUTKEY) THEN
+        SET _$CUSTCD = (SELECT MTRCUST_INVOICE_HEADER.CUSTCD_GIVER FROM MTRCUST_INVOICE_HEADER WHERE INVOICEKEY = _$INVOICEKEY);
+
+        INSERT INTO MTRCUST_MOVEOUT (MOVEOUTKEY, MOVEOUTDATE, CUSTCD, EMPCD, RTIME, REMP, RPRG)
+        VALUES (_$MOVEOUTKEY, LEFT($MOVEDATE, 10), _$CUSTCD, CALLEMP(), CALLTIME(), CALLEMP(), CALLPRG());
+      END IF;
+
+      INSERT INTO MTRCUST_MOVEOUTD (MOVEOUTKEY, LOTKEY, ITEMID, MOVEOUTQTY, HEATNO, DLVINVOICEKEY, MOVEINVOICEKEY, RTIME, REMP, RPRG)
+      SELECT _$MOVEOUTKEY, MTRCUST_INVOICE_DETAIL.LOTKEY, MTRCUST_INVOICE_DETAIL.ITEMID, MTRCUST_INVOICE_DETAIL.LOTQTY,
+             IFNULL(MTRCUSTLOT.HEATNO, ''),
+             _$INVOICEKEY,   -- ERP 납품번호의 기준 거래명세서 = 이 자재이동 거래명세서 (납품등록은 거래명세서가 없음)
+             _$INVOICEKEY, CALLTIME(), CALLEMP(), CALLPRG()
+        FROM MTRCUST_INVOICE_DETAIL
+        LEFT JOIN MTRCUSTLOT ON MTRCUSTLOT.LOTKEY = MTRCUST_INVOICE_DETAIL.LOTKEY
+       WHERE MTRCUST_INVOICE_DETAIL.INVOICEKEY = _$INVOICEKEY;
+
+      -- 3. 입고확인 삭제 : ERP 반출(CSM_RETURN) I 한 건 전송 (ERP 가 이동·구매입고·납품을 지움) → 자재투입창고 → 사내창고 재고 원복 → 이동 이력 삭제
+      --    거래명세서(05)·납품(01)을 지우기 전에 보내야 DLV_NO·순번을 알 수 있음
+      CALL IO_ERP_INTERFACE('CSM_RETURN', _$INVOICEKEY, 'I');
+
+      IF IFNULL(@ERRMSG, '') <> '' THEN
+        LEAVE PROC;
+      END IF;
+
+      UPDATE COMLOT
+       INNER JOIN MTRCUST_INVOICE_DETAIL ON MTRCUST_INVOICE_DETAIL.LOTKEY = COMLOT.LOTKEY
+                                        AND MTRCUST_INVOICE_DETAIL.INVOICEKEY = _$INVOICEKEY
+         SET COMLOT.LOTQTY = COMLOT.LOTQTY - MTRCUST_INVOICE_DETAIL.LOTQTY
+           , COMLOT.CRTQTY = COMLOT.CRTQTY - MTRCUST_INVOICE_DETAIL.LOTQTY
+           , COMLOT.MTIME  = CALLTIME()
+           , COMLOT.MEMP   = CALLEMP()
+           , COMLOT.MPRG   = CALLPRG()
+       WHERE COMLOT.WARECD = '04S111_N';
+
+      -- 이 이동으로 새로 만들어진 자재투입창고 LOT (수량 0, 생성량 0) 는 삭제
+      DELETE FROM COMLOT
+       WHERE COMLOT.WARECD = '04S111_N'
+         AND COMLOT.LOTQTY = 0
+         AND COMLOT.CRTQTY = 0
+         AND COMLOT.LOTKEY IN (SELECT MTRCUST_INVOICE_DETAIL.LOTKEY FROM MTRCUST_INVOICE_DETAIL WHERE MTRCUST_INVOICE_DETAIL.INVOICEKEY = _$INVOICEKEY);
+
+      UPDATE COMLOT
+       INNER JOIN MTRCUST_INVOICE_DETAIL ON MTRCUST_INVOICE_DETAIL.LOTKEY = COMLOT.LOTKEY
+                                        AND MTRCUST_INVOICE_DETAIL.INVOICEKEY = _$INVOICEKEY
+         SET COMLOT.LOTQTY = COMLOT.LOTQTY + MTRCUST_INVOICE_DETAIL.LOTQTY
+           , COMLOT.MTIME  = CALLTIME()
+           , COMLOT.MEMP   = CALLEMP()
+           , COMLOT.MPRG   = CALLPRG()
+       WHERE COMLOT.WARECD = '04S100_N';
+
+      DELETE COMOUTLOT FROM COMOUTLOT
+       INNER JOIN COMOUT ON COMOUT.OUTKEY = COMOUTLOT.OUTKEY
+       WHERE COMOUT.GROUPKEY = _$GROUPKEY;
+
+      DELETE FROM COMOUT WHERE COMOUT.GROUPKEY = _$GROUPKEY;
+
+      DELETE COMINLOT FROM COMINLOT
+       INNER JOIN COMIN ON COMIN.INKEY = COMINLOT.INKEY
+       WHERE COMIN.GROUPKEY = _$GROUPKEY;
+
+      DELETE FROM COMIN WHERE COMIN.GROUPKEY = _$GROUPKEY;
+
+      -- 4. 사내창고 입고 취소 (입고확인 때 입고한 MTRIN) + 납품 LOT 삭제
+      --    ERP 는 위 CSM_RETURN 한 건으로 지우므로 IO_MTRINVOICE_DEL 의 DLV D 송신은 막음
+      SET _$MTRINLIST = IFNULL((SELECT GROUP_CONCAT(MTRIN.MTRINKEY ORDER BY MTRIN.MTRINKEY SEPARATOR '»')
+                                  FROM MTRIN WHERE MTRIN.INVOICEKEY = _$INVOICEKEY), '');
+
+      WHILE LENGTH(IFNULL(_$MTRINLIST, '')) > 0 DO
+        CALL COMSPLIT(_$MTRINLIST, _$MTRINKEY);
+
+        IF IFNULL(_$MTRINKEY, '') <> '' THEN
+          SET @ERP_SKIP_DLV_D = 'Y';   -- 이 호출 동안만 DLV D 송신 막음 (끝나면 바로 되돌림)
+          CALL IO_MTRINVOICE_DEL(_$MTRINKEY);
+          SET @ERP_SKIP_DLV_D = '';
+
+          IF IFNULL(@ERRMSG, '') <> '' THEN
+            LEAVE PROC;
+          END IF;
+        END IF;
+      END WHILE;
+
+      DELETE FROM MTRCUSTLOT
+       WHERE MTRCUSTLOT.LOTKEY IN (SELECT MTRCUST_INVOICE_DETAIL.LOTKEY
+                                     FROM MTRCUST_INVOICE_DETAIL
+                                    WHERE MTRCUST_INVOICE_DETAIL.INVOICEKEY = _$INVOICEKEY);
+
+      -- 5. 자재이동 삭제 (거래명세서 05)
+      DELETE FROM MTRCUST_INVOICE_DETAIL WHERE INVOICEKEY = _$INVOICEKEY;
+      DELETE FROM MTRCUST_INVOICE_HEADER WHERE INVOICEKEY = _$INVOICEKEY;
+
+      SET _$CNT = _$CNT + 1;
+    END IF;
+  END WHILE;
+
+  DROP TEMPORARY TABLE IF EXISTS TEMP_OUT;
+
+  SELECT _$MOVEOUTKEY AS MOVEOUTKEY, _$CNT AS CNT;
+
+-- ****************************************************************************
+WHEN 'PRINT_MOVEOUT' THEN -- 자재반출증(유상사급) 출력 데이터 (반출번호 기준, 반출 이력에서 조회 - 거래명세서는 이미 삭제됨)
+
+  IF IFNULL($MOVEOUTKEY, '') = '' THEN
+    CALL COMERR('반출번호가 없습니다.');
+    LEAVE PROC;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM MTRCUST_MOVEOUT WHERE MTRCUST_MOVEOUT.MOVEOUTKEY = $MOVEOUTKEY) THEN
+    CALL COMERR('존재하지 않는 반출번호입니다.');
+    LEAVE PROC;
+  END IF;
+
+  -- [0] 반출 헤더
+  SELECT
+    MTRCUST_MOVEOUT.MOVEOUTKEY,
+    MTRCUST_MOVEOUT.MOVEOUTDATE,
+    GPCD('CUSTCD', MTRCUST_MOVEOUT.CUSTCD) AS CUSTNM,
+    GPCD('EMPCD', MTRCUST_MOVEOUT.EMPCD) AS EMPNM,
+    FORMAT(IFNULL((SELECT SUM(MTRCUST_MOVEOUTD.MOVEOUTQTY) FROM MTRCUST_MOVEOUTD WHERE MTRCUST_MOVEOUTD.MOVEOUTKEY = $MOVEOUTKEY), 0), 0) AS SUMQTY
+  FROM MTRCUST_MOVEOUT
+  WHERE MTRCUST_MOVEOUT.MOVEOUTKEY = $MOVEOUTKEY;
+
+  -- [1] 반출 LOT 목록
+  SELECT
+    MSTITEM.ITEMCD,
+    MSTITEM.ITEMNM,
+    MSTITEM.ITEMSPEC AS SPEC,
+    MTRCUST_MOVEOUTD.HEATNO,
+    MTRCUST_MOVEOUTD.LOTKEY,
+    IFNULL(GPCD('DM150', MSTITEM.ITEMUNIT), '') AS UNITNM,
+    FORMAT(MTRCUST_MOVEOUTD.MOVEOUTQTY, 0) AS QTY,
+    MTRCUST_MOVEOUTD.MOVEOUTQTY AS QTYNUM
+  FROM MTRCUST_MOVEOUTD
+  INNER JOIN MSTITEM ON MSTITEM.ITEMID = MTRCUST_MOVEOUTD.ITEMID
+  WHERE MTRCUST_MOVEOUTD.MOVEOUTKEY = $MOVEOUTKEY
+  ORDER BY MSTITEM.ITEMCD, MTRCUST_MOVEOUTD.LOTKEY;
+
+-- ****************************************************************************
+END CASE; END

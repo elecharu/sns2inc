@@ -98,7 +98,7 @@ namespace TMLPRINT
                 sumTable.Rows.Add(sumRow);
                 sumTable.BackColor = Color.LightGray;
                 sumTable.Borders = DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top | DevExpress.XtraPrinting.BorderSide.Right;
-                sumTable.Font = new Font("Times New Roman", 9.75F, FontStyle.Bold);
+                sumTable.Font = new Font("맑은 고딕", 8.25F, FontStyle.Bold);
                 sumTable.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
                 sumTable.LocationFloat = new DevExpress.Utils.PointFloat(52.08333F, 0F);
                 sumTable.SizeF = new SizeF(700.0834F, 32.29167F);

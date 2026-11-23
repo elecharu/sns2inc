@@ -188,7 +188,7 @@
             this.xrTableCell10.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
             new DevExpress.XtraReports.UI.XRBinding("Text", null, "ITEMCD")});
             this.xrTableCell10.Dpi = 100F;
-            this.xrTableCell10.Font = new System.Drawing.Font("Times New Roman", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.xrTableCell10.Font = new System.Drawing.Font("맑은 고딕", 8F,System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.xrTableCell10.Name = "xrTableCell10";
             this.xrTableCell10.StylePriority.UseFont = false;
             this.xrTableCell10.Weight = 0.31993615165578926D;
@@ -198,7 +198,7 @@
             this.xrTableCell11.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
             new DevExpress.XtraReports.UI.XRBinding("Text", null, "ITEMNM")});
             this.xrTableCell11.Dpi = 100F;
-            this.xrTableCell11.Font = new System.Drawing.Font("Times New Roman", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.xrTableCell11.Font = new System.Drawing.Font("맑은 고딕", 8F,System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.xrTableCell11.Name = "xrTableCell11";
             this.xrTableCell11.StylePriority.UseFont = false;
             this.xrTableCell11.Weight = 0.4573835535400167D;
@@ -208,7 +208,7 @@
             this.xrTableCell12.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
             new DevExpress.XtraReports.UI.XRBinding("Text", null, "SPEC")});
             this.xrTableCell12.Dpi = 100F;
-            this.xrTableCell12.Font = new System.Drawing.Font("Times New Roman", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.xrTableCell12.Font = new System.Drawing.Font("맑은 고딕", 8F,System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.xrTableCell12.Name = "xrTableCell12";
             this.xrTableCell12.StylePriority.UseFont = false;
             this.xrTableCell12.Weight = 0.35496746148246322D;
@@ -229,7 +229,7 @@
             this.xrBarCode3.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
             new DevExpress.XtraReports.UI.XRBinding("Text", null, "LOTKEY")});
             this.xrBarCode3.Dpi = 100F;
-            this.xrBarCode3.Font = new System.Drawing.Font("Times New Roman", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.xrBarCode3.Font = new System.Drawing.Font("맑은 고딕", 6.75F,System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.xrBarCode3.LocationFloat = new DevExpress.Utils.PointFloat(10.00004F, 7.291635F);
             this.xrBarCode3.Name = "xrBarCode3";
             this.xrBarCode3.Padding = new DevExpress.XtraPrinting.PaddingInfo(10, 10, 0, 0, 100F);
@@ -246,7 +246,7 @@
             this.xrTableCell16.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
             new DevExpress.XtraReports.UI.XRBinding("Text", null, "QTY")});
             this.xrTableCell16.Dpi = 100F;
-            this.xrTableCell16.Font = new System.Drawing.Font("Times New Roman", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.xrTableCell16.Font = new System.Drawing.Font("맑은 고딕", 8F,System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.xrTableCell16.Name = "xrTableCell16";
             this.xrTableCell16.StylePriority.UseFont = false;
             this.xrTableCell16.Weight = 0.18094277859380875D;
@@ -256,7 +256,7 @@
             this.xrTableCell17.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
             new DevExpress.XtraReports.UI.XRBinding("Text", null, "TESTQTY")});
             this.xrTableCell17.Dpi = 100F;
-            this.xrTableCell17.Font = new System.Drawing.Font("Times New Roman", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.xrTableCell17.Font = new System.Drawing.Font("맑은 고딕", 8F,System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.xrTableCell17.Name = "xrTableCell17";
             this.xrTableCell17.StylePriority.UseFont = false;
             this.xrTableCell17.Weight = 0.17440393116790259D;
@@ -266,7 +266,7 @@
             this.xrTableCell18.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
             new DevExpress.XtraReports.UI.XRBinding("Text", null, "REMARK")});
             this.xrTableCell18.Dpi = 100F;
-            this.xrTableCell18.Font = new System.Drawing.Font("Times New Roman", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.xrTableCell18.Font = new System.Drawing.Font("맑은 고딕", 8F,System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.xrTableCell18.Name = "xrTableCell18";
             this.xrTableCell18.StylePriority.UseFont = false;
             this.xrTableCell18.Weight = 0.27030409038201031D;
@@ -863,7 +863,7 @@
             this.xrPictureBox1.LocationFloat = new DevExpress.Utils.PointFloat(52.08333F, 0F);
             this.xrPictureBox1.Name = "xrPictureBox1";
             this.xrPictureBox1.SizeF = new System.Drawing.SizeF(144.2377F, 53.12502F);
-            this.xrPictureBox1.Sizing = DevExpress.XtraPrinting.ImageSizeMode.ZoomImage;
+            this.xrPictureBox1.Sizing = DevExpress.XtraPrinting.ImageSizeMode.StretchImage;
             this.xrPictureBox1.StylePriority.UseBorders = false;
             // 
             // xrTable7
@@ -889,7 +889,7 @@
             // xrTableCell1
             // 
             this.xrTableCell1.Dpi = 100F;
-            this.xrTableCell1.Font = new System.Drawing.Font("Times New Roman", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.xrTableCell1.Font = new System.Drawing.Font("맑은 고딕", 15F,System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.xrTableCell1.Name = "xrTableCell1";
             this.xrTableCell1.StylePriority.UseFont = false;
             this.xrTableCell1.StylePriority.UseTextAlignment = false;
@@ -925,7 +925,7 @@
             | DevExpress.XtraPrinting.BorderSide.Right) 
             | DevExpress.XtraPrinting.BorderSide.Bottom)));
             this.xrTable8.Dpi = 100F;
-            this.xrTable8.Font = new System.Drawing.Font("Times New Roman", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.xrTable8.Font = new System.Drawing.Font("맑은 고딕", 8.25F,System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.xrTable8.LocationFloat = new DevExpress.Utils.PointFloat(52.08333F, 32.29167F);
             this.xrTable8.Name = "xrTable8";
             this.xrTable8.Rows.AddRange(new DevExpress.XtraReports.UI.XRTableRow[] {
@@ -951,7 +951,7 @@
             // 
             this.xrTableCell35.CanGrow = false;
             this.xrTableCell35.Dpi = 100F;
-            this.xrTableCell35.Font = new System.Drawing.Font("Times New Roman", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.xrTableCell35.Font = new System.Drawing.Font("맑은 고딕", 8F,System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.xrTableCell35.Name = "xrTableCell35";
             this.xrTableCell35.StylePriority.UseFont = false;
             this.xrTableCell35.Text = "거래명세서번호";
@@ -972,7 +972,7 @@
             this.xrBarCode1.AutoModule = true;
             this.xrBarCode1.Borders = DevExpress.XtraPrinting.BorderSide.None;
             this.xrBarCode1.Dpi = 100F;
-            this.xrBarCode1.Font = new System.Drawing.Font("Times New Roman", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.xrBarCode1.Font = new System.Drawing.Font("맑은 고딕", 6.75F,System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.xrBarCode1.LocationFloat = new DevExpress.Utils.PointFloat(9.99999F, 9.999974F);
             this.xrBarCode1.Name = "xrBarCode1";
             this.xrBarCode1.Padding = new DevExpress.XtraPrinting.PaddingInfo(10, 10, 0, 0, 100F);
@@ -1020,7 +1020,7 @@
             this.xrTable5.Borders = ((DevExpress.XtraPrinting.BorderSide)(((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top) 
             | DevExpress.XtraPrinting.BorderSide.Right)));
             this.xrTable5.Dpi = 100F;
-            this.xrTable5.Font = new System.Drawing.Font("Times New Roman", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.xrTable5.Font = new System.Drawing.Font("맑은 고딕", 8.25F,System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.xrTable5.LocationFloat = new DevExpress.Utils.PointFloat(52.08333F, 0F);
             this.xrTable5.Name = "xrTable5";
             this.xrTable5.Rows.AddRange(new DevExpress.XtraReports.UI.XRTableRow[] {
@@ -1071,6 +1071,7 @@
             this.BottomMargin,
             this.PageHeader,
             this.ReportFooter});
+            this.Font = new System.Drawing.Font("맑은 고딕", 8F);
             this.Margins = new System.Drawing.Printing.Margins(12, 59, 94, 88);
             this.PageHeight = 1169;
             this.PageWidth = 827;

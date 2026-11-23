@@ -6,6 +6,8 @@ PROCEDURE MES_SNS2.TML2010_R01(
 -- Modify: 2026-11-19 16:36 신정수 공정이동표 발행 팝업: 실적로트 조회(LIST_MOVE), 잔량 자재로트(LIST_REMAIN),
 --           PRINT_MOVE 에 $PRINTTP = 'REMAIN'(자재로트 현재고로 출력) 추가
 --         2026-11-19 17:40 신정수 소라벨(해외 수출) 출력 PRINT_LABEL (MAGNA / 일반), LIST_MOVE 라벨번호
+--         2026-11-23 투입창고: 투입로트 품목이 반제품(ITEMCG DM100150)이면 재공품창고(04S131_N), 아니면 자재투입창고(04S111_N)
+--           SCAN_LOT·ADD_INPUT 은 품목유형으로, DEL_INPUT 은 투입 목록(PRDLINESCAN.WARECD)으로, PRINT_MOVE 잔량은 두 창고에서 찾음
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),       -- 공정
@@ -70,7 +72,13 @@ WHEN 'SCAN_LOT' THEN  -- 투입로트 스캔
     LEAVE PROC;
   END IF;  
 
-  SET _$WARECD = '04S111_N'; -- 자재투입창고
+  -- 투입창고: 투입로트 품목이 반제품(DM100150)이면 재공품창고(04S131_N), 아니면 자재투입창고(04S111_N)  2026-11-23
+  SET _$WARECD = IF(IFNULL((SELECT MSTITEM.ITEMCG
+                              FROM COMLOT
+                              INNER JOIN MSTITEM
+                                ON MSTITEM.ITEMID = COMLOT.ITEMID
+                              WHERE COMLOT.LOTKEY = $SCANLOT
+                              LIMIT 1), '') = 'DM100150', '04S131_N', '04S111_N');
 
   IF NOT EXISTS (SELECT LOTKEY FROM COMLOT WHERE WARECD = _$WARECD AND LOTKEY = $SCANLOT) THEN
     CALL COMERR(CONCAT('해당 창고에 존재하지 않는 로트번호입니다.'
@@ -382,7 +390,13 @@ WHEN 'ADD_INPUT' THEN  -- 투입로트 등록
     LEAVE PROC;
   END IF;  
 
-  SET _$WARECD = '04S111_N'; -- 자재투입창고
+  -- 투입창고: 투입로트 품목이 반제품(DM100150)이면 재공품창고(04S131_N), 아니면 자재투입창고(04S111_N)  2026-11-23
+  SET _$WARECD = IF(IFNULL((SELECT MSTITEM.ITEMCG
+                              FROM COMLOT
+                              INNER JOIN MSTITEM
+                                ON MSTITEM.ITEMID = COMLOT.ITEMID
+                              WHERE COMLOT.LOTKEY = $SCANLOT
+                              LIMIT 1), '') = 'DM100150', '04S131_N', '04S111_N');
 
   IF NOT EXISTS (SELECT LOTKEY FROM COMLOT WHERE WARECD = _$WARECD AND LOTKEY = $SCANLOT) THEN
     CALL COMERR(CONCAT('해당 창고에 존재하지 않는 로트번호입니다.'
@@ -452,7 +466,14 @@ WHEN 'DEL_INPUT' THEN  -- 투입로트 삭제
     LEAVE PROC;
   END IF;
 
-  SET _$WARECD = '04S111_N'; -- 자재투입창고
+  -- 투입창고: 투입 목록(PRDLINESCAN)에 저장된 창고 (반제품 04S131_N / 그 외 04S111_N)  2026-11-23
+  SET _$WARECD = IFNULL((SELECT PRDLINESCAN.WARECD
+                           FROM PRDLINESCAN
+                           WHERE PRDLINESCAN.LINECD = $LINECD
+                             AND PRDLINESCAN.PRCCD = $PRCCD
+                             AND PRDLINESCAN.EQMCD = $EQMCD
+                             AND PRDLINESCAN.LOTKEY = $SCANLOT
+                           LIMIT 1), '04S111_N');
 
   IF NOT EXISTS (SELECT LOTKEY FROM PRDLINESCAN WHERE LINECD = $LINECD AND PRCCD = $PRCCD AND WARECD = _$WARECD AND LOTKEY = $SCANLOT) THEN
     CALL COMERR(CONCAT('투입되지 않은 로트번호입니다.'
@@ -1132,7 +1153,7 @@ WHEN 'LIST_REMAIN' THEN  -- 공정이동표 잔량발행: 실적로트가 사용
 
 -- ****************************************************************************
 -- 공정이동표 (작업완료 후 양품로트·불량로트 각 1장, 양식 TMLPRINT.PRD_1)
---   $PRINTTP = 'REMAIN' 이면 자재투입창고(04S111_N) 자재로트의 현재고로 출력 (공정이동표 발행 팝업의 잔량발행)
+--   $PRINTTP = 'REMAIN' 이면 자재투입창고(04S111_N)·재공품창고(04S131_N, 반제품) 자재로트의 현재고로 출력 (공정이동표 발행 팝업의 잔량발행)
 -- ****************************************************************************
 WHEN 'PRINT_MOVE' THEN  -- 실적로트 공정이동표
 
@@ -1142,8 +1163,8 @@ WHEN 'PRINT_MOVE' THEN  -- 실적로트 공정이동표
   END IF;
 
   IF $PRINTTP = 'REMAIN' THEN
-    IF NOT EXISTS (SELECT COMLOT.LOTKEY FROM COMLOT WHERE COMLOT.LOTKEY = $LOTKEY AND COMLOT.WARECD = '04S111_N') THEN
-      CALL COMERR(CONCAT('자재투입창고에 없는 로트번호입니다.', '\n- 로트번호: ', $LOTKEY));
+    IF NOT EXISTS (SELECT COMLOT.LOTKEY FROM COMLOT WHERE COMLOT.LOTKEY = $LOTKEY AND COMLOT.WARECD IN ('04S111_N', '04S131_N')) THEN
+      CALL COMERR(CONCAT('자재투입창고·재공품창고에 없는 로트번호입니다.', '\n- 로트번호: ', $LOTKEY));
       LEAVE PROC;
     END IF;
 
@@ -1183,7 +1204,8 @@ WHEN 'PRINT_MOVE' THEN  -- 실적로트 공정이동표
     LEFT JOIN MSTLINE_EQM
       ON MSTLINE_EQM.EQMCD = PRDRST.EQMCD
     WHERE COMLOT.LOTKEY = $LOTKEY
-      AND COMLOT.WARECD = '04S111_N'
+      AND COMLOT.WARECD IN ('04S111_N', '04S131_N')
+    ORDER BY COMLOT.LOTQTY DESC
     LIMIT 1
     ;
   ELSE

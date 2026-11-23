@@ -1,4 +1,4 @@
-﻿CREATE DEFINER = 'root'@'%'
+CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.IO_MTRINVOICE(
 -- *****************************************************************************
 -- Comment: 거래명세서 입고 등록
@@ -152,10 +152,10 @@ IF IFNULL(@ERRMSG, '') = '' THEN
     -- 재고이력
     INSERT INTO COMIN (
         INKEY, ITEMID, WARECD, INTP, INDATE, INQTY,
-        EMPCD, MTRINKEY, INVOICEKEY, RTIME, REMP, RPRG
+        EMPCD, MTRINKEY, RTIME, REMP, RPRG
     )
     SELECT _$INKEY, _$ITEMID, _$WARECD, _$INTP, _$INDATE, SUM(LOTQTY),
-           CALLEMP(), _$MTRINKEY, INVOICEKEY, CALLTIME(), CALLEMP(), CALLPRG()
+           CALLEMP(), _$MTRINKEY, CALLTIME(), CALLEMP(), CALLPRG()
       FROM MTRCUST_INVOICE_DETAIL
      WHERE INVOICEKEY = $INVOICEKEY
        AND ITEMID = _$ITEMID

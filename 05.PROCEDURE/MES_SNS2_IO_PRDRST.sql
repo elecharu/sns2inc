@@ -16,6 +16,7 @@ PROCEDURE MES_SNS2.IO_PRDRST(
 --         2026-11-06 실적로트 불량수량(PRDRSTLOT.BADQTY), 불량재고 입고(COMIN·COMINLOT·COMLOT)
 --         2026-11-11 ERP 인터페이스(PRDINS, PRDRST) 송신 추가
 --         2026-11-19 17:40 신정수 실적로트 라벨번호(PRDRSTLOT.LABELKEY, 소라벨) 저장: 품목 PARTNO·INITCD 가 있으면 GETLABELKEY
+--         2026-11-23 투입로트 창고 = 투입 목록(PRDLINESCAN.WARECD) 의 창고 (반제품 재공품창고 04S131_N / 그 외 자재투입창고 04S111_N)
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),      -- 공정
@@ -119,7 +120,7 @@ PROC: BEGIN
                        FROM MSTITEM
                        WHERE MSTITEM.ITEMID = $ITEMID);
 
-  SET _$WARECD = '04S111_N'; -- 자재투입창고
+  -- 투입로트 창고는 로트마다 투입 목록(PRDLINESCAN.WARECD)에서 정함 (반제품 04S131_N / 그 외 04S111_N, 없으면 04S111_N)  2026-11-23
 
   -- 1. 투입로트별 사용량 확인 (쓰기 전에 전부 확인)
   SET _$LOTKEY_LIST = $LOTKEY_LIST;
@@ -132,6 +133,14 @@ PROC: BEGIN
     SET _$USEQTY = CAST(IF(IFNULL(_$USEQTY_TXT, '') = '', '0', _$USEQTY_TXT) AS DECIMAL(20, 8));
 
     IF _$USEQTY > 0 THEN
+      SET _$WARECD = IFNULL((SELECT PRDLINESCAN.WARECD
+                               FROM PRDLINESCAN
+                               WHERE PRDLINESCAN.LINECD = $LINECD
+                                 AND PRDLINESCAN.PRCCD = $PRCCD
+                                 AND PRDLINESCAN.EQMCD = $EQMCD
+                                 AND PRDLINESCAN.LOTKEY = _$LOTKEY
+                               LIMIT 1), '04S111_N');
+
       IF NOT EXISTS (SELECT COMLOT.LOTKEY FROM COMLOT WHERE COMLOT.WARECD = _$WARECD AND COMLOT.LOTKEY = _$LOTKEY) THEN
         CALL COMERR(CONCAT('해당 창고에 존재하지 않는 로트번호입니다.'
                           , '\n- 창고: ', (SELECT MSTWARE.WARENM FROM MSTWARE WHERE MSTWARE.WARECD = _$WARECD)
@@ -374,6 +383,14 @@ PROC: BEGIN
     SET _$USEQTY = CAST(IF(IFNULL(_$USEQTY_TXT, '') = '', '0', _$USEQTY_TXT) AS DECIMAL(20, 8));
 
     IF _$USEQTY > 0 THEN
+      SET _$WARECD = IFNULL((SELECT PRDLINESCAN.WARECD
+                               FROM PRDLINESCAN
+                               WHERE PRDLINESCAN.LINECD = $LINECD
+                                 AND PRDLINESCAN.PRCCD = $PRCCD
+                                 AND PRDLINESCAN.EQMCD = $EQMCD
+                                 AND PRDLINESCAN.LOTKEY = _$LOTKEY
+                               LIMIT 1), '04S111_N');
+
       SET _$LOTQTY = (SELECT COMLOT.LOTQTY FROM COMLOT WHERE COMLOT.WARECD = _$WARECD AND COMLOT.LOTKEY = _$LOTKEY);
 
       INSERT INTO PRDRSTUSE (

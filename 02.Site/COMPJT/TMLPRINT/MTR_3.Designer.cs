@@ -2,56 +2,11 @@
 {
     partial class MTR_3
     {
-        private System.ComponentModel.IContainer components = null;
-        private DevExpress.XtraReports.UI.DetailBand Detail;
-        private DevExpress.XtraReports.UI.XRLabel lblTitle;
-        private DevExpress.XtraReports.UI.XRTable tblHead;
-        private DevExpress.XtraReports.UI.XRTableRow xrTableRow1;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell1;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell2;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell3;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell4;
-        private DevExpress.XtraReports.UI.XRTableRow xrTableRow2;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell5;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell6;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell7;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell8;
-        private DevExpress.XtraReports.UI.XRTableRow xrTableRow3;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell9;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell10;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell11;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell12;
-        private DevExpress.XtraReports.UI.XRTableRow xrTableRow4;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell13;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell14;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell15;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell16;
-        private DevExpress.XtraReports.UI.XRTableRow xrTableRow5;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell17;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell18;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell19;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell20;
-        private DevExpress.XtraReports.UI.XRBarCode barLot;
-        private DevExpress.XtraReports.UI.XRTable tblLot;
-        private DevExpress.XtraReports.UI.XRTableRow xrTableRow6;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell21;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell22;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell23;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell24;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell25;
-        private DevExpress.XtraReports.UI.XRTableRow xrTableRow7;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell26;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell27;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell28;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell29;
-        private DevExpress.XtraReports.UI.XRTableCell xrTableCell30;
-        private DevExpress.XtraReports.UI.XRLabel lblStamp;
-        private DevExpress.XtraReports.UI.TopMarginBand TopMargin;
-        private DevExpress.XtraReports.UI.BottomMarginBand BottomMargin;
-
         /// <summary>
-        /// 사용 중인 모든 리소스를 정리합니다.
+        /// // 2026-11-19 PRD_1(생산실적 공정이동표)·MTR_2 와 같은 양식 (A4 세로, 여백 50, 11pt 굵게). 외주입고 LOT 1개당 1장(양품·시편)
         /// </summary>
+        private System.ComponentModel.IContainer components = null;
+
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
@@ -63,364 +18,745 @@
 
         #region Designer generated code
 
-        /// <summary>
-        /// 디자이너 지원에 필요한 메서드입니다.
-        /// 이 메서드의 내용을 코드 편집기로 수정하지 마세요.
-        /// </summary>
         private void InitializeComponent()
         {
-            this.Detail = new DevExpress.XtraReports.UI.DetailBand();
-            this.lblTitle = new DevExpress.XtraReports.UI.XRLabel();
-            this.tblHead = new DevExpress.XtraReports.UI.XRTable();
-            this.xrTableRow1 = new DevExpress.XtraReports.UI.XRTableRow();
-            this.xrTableCell1 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell2 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell3 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell4 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableRow2 = new DevExpress.XtraReports.UI.XRTableRow();
-            this.xrTableCell5 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell6 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell7 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell8 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableRow3 = new DevExpress.XtraReports.UI.XRTableRow();
-            this.xrTableCell9 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell10 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell11 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell12 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableRow4 = new DevExpress.XtraReports.UI.XRTableRow();
-            this.xrTableCell13 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell14 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell15 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell16 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableRow5 = new DevExpress.XtraReports.UI.XRTableRow();
-            this.xrTableCell17 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell18 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell19 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell20 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.barLot = new DevExpress.XtraReports.UI.XRBarCode();
-            this.tblLot = new DevExpress.XtraReports.UI.XRTable();
-            this.xrTableRow6 = new DevExpress.XtraReports.UI.XRTableRow();
-            this.xrTableCell21 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell22 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell23 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell24 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell25 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableRow7 = new DevExpress.XtraReports.UI.XRTableRow();
-            this.xrTableCell26 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell27 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell28 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell29 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.xrTableCell30 = new DevExpress.XtraReports.UI.XRTableCell();
-            this.lblStamp = new DevExpress.XtraReports.UI.XRLabel();
+            DevExpress.XtraPrinting.BarCode.Code128Generator code128Generator1 = new DevExpress.XtraPrinting.BarCode.Code128Generator();
             this.TopMargin = new DevExpress.XtraReports.UI.TopMarginBand();
+            this.Detail = new DevExpress.XtraReports.UI.DetailBand();
+            this.lbl_TITLE = new DevExpress.XtraReports.UI.XRLabel();
+            this.bar_LOTKEY = new DevExpress.XtraReports.UI.XRBarCode();
+            this.tbl_HEAD = new DevExpress.XtraReports.UI.XRTable();
+            this.tbl_LOT = new DevExpress.XtraReports.UI.XRTable();
+            this.tbl_TRACE_HEAD = new DevExpress.XtraReports.UI.XRTable();
+            this.tbl_TRACE = new DevExpress.XtraReports.UI.XRTable();
             this.BottomMargin = new DevExpress.XtraReports.UI.BottomMarginBand();
-            ((System.ComponentModel.ISupportInitialize)(this.tblHead)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.tblLot)).BeginInit();
-            this.lblTitle.LocationF = new System.Drawing.PointF(0F, 150F);
-            this.lblTitle.SizeF = new System.Drawing.SizeF(707F, 85F);
-            this.lblTitle.Font = new System.Drawing.Font("맑은 고딕", 36F, System.Drawing.FontStyle.Bold);
-            this.lblTitle.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.lblTitle.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.lblTitle.BorderWidth = 1F;
-            this.lblTitle.Multiline = true;
-            this.lblTitle.CanGrow = false;
-            this.lblTitle.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "TITLE") });
-            this.xrTableCell1.Text = "품번";
-            this.xrTableCell1.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell1.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell1.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell1.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell1.Multiline = true;
-            this.xrTableCell1.CanGrow = false;
-            this.xrTableCell1.Weight = 100D;
-            this.xrTableCell2.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell2.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.xrTableCell2.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell2.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell2.Multiline = true;
-            this.xrTableCell2.CanGrow = false;
-            this.xrTableCell2.Weight = 270D;
-            this.xrTableCell2.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "ITEMCD") });
-            this.xrTableCell3.Text = "HEAT NO";
-            this.xrTableCell3.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell3.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell3.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell3.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell3.Multiline = true;
-            this.xrTableCell3.CanGrow = false;
-            this.xrTableCell3.Weight = 145D;
-            this.xrTableCell4.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell4.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.xrTableCell4.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell4.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell4.Multiline = true;
-            this.xrTableCell4.CanGrow = false;
-            this.xrTableCell4.Weight = 192D;
-            this.xrTableCell4.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "HEATNO") });
-            this.xrTableRow1.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] { this.xrTableCell1, this.xrTableCell2, this.xrTableCell3, this.xrTableCell4 });
-            this.xrTableRow1.Weight = 42D;
-            this.xrTableCell5.Text = "품명";
-            this.xrTableCell5.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell5.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell5.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell5.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell5.Multiline = true;
-            this.xrTableCell5.CanGrow = false;
-            this.xrTableCell5.Weight = 100D;
-            this.xrTableCell6.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell6.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.xrTableCell6.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell6.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell6.Multiline = true;
-            this.xrTableCell6.CanGrow = false;
-            this.xrTableCell6.Weight = 270D;
-            this.xrTableCell6.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "ITEMNM") });
-            this.xrTableCell7.Text = "열처리 LOTNO";
-            this.xrTableCell7.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell7.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell7.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell7.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell7.Multiline = true;
-            this.xrTableCell7.CanGrow = false;
-            this.xrTableCell7.Weight = 145D;
-            this.xrTableCell8.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell8.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.xrTableCell8.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell8.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell8.Multiline = true;
-            this.xrTableCell8.CanGrow = false;
-            this.xrTableCell8.Weight = 192D;
-            this.xrTableRow2.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] { this.xrTableCell5, this.xrTableCell6, this.xrTableCell7, this.xrTableCell8 });
-            this.xrTableRow2.Weight = 42D;
-            this.xrTableCell9.Text = "규격";
-            this.xrTableCell9.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell9.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell9.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell9.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell9.Multiline = true;
-            this.xrTableCell9.CanGrow = false;
-            this.xrTableCell9.Weight = 100D;
-            this.xrTableCell10.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell10.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.xrTableCell10.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell10.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell10.Multiline = true;
-            this.xrTableCell10.CanGrow = false;
-            this.xrTableCell10.Weight = 270D;
-            this.xrTableCell10.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "ITEMSPEC") });
-            this.xrTableCell11.Text = "입고일자";
-            this.xrTableCell11.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell11.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell11.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell11.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell11.Multiline = true;
-            this.xrTableCell11.CanGrow = false;
-            this.xrTableCell11.Weight = 145D;
-            this.xrTableCell12.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell12.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.xrTableCell12.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell12.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell12.Multiline = true;
-            this.xrTableCell12.CanGrow = false;
-            this.xrTableCell12.Weight = 192D;
-            this.xrTableCell12.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "INDATE") });
-            this.xrTableRow3.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] { this.xrTableCell9, this.xrTableCell10, this.xrTableCell11, this.xrTableCell12 });
-            this.xrTableRow3.Weight = 42D;
-            this.xrTableCell13.Text = "출고창고";
-            this.xrTableCell13.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell13.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell13.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell13.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell13.Multiline = true;
-            this.xrTableCell13.CanGrow = false;
-            this.xrTableCell13.Weight = 100D;
-            this.xrTableCell14.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell14.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.xrTableCell14.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell14.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell14.Multiline = true;
-            this.xrTableCell14.CanGrow = false;
-            this.xrTableCell14.Weight = 270D;
-            this.xrTableCell14.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "OUTWARENM") });
-            this.xrTableCell15.Text = "입고창고";
-            this.xrTableCell15.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell15.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell15.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell15.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell15.Multiline = true;
-            this.xrTableCell15.CanGrow = false;
-            this.xrTableCell15.Weight = 145D;
-            this.xrTableCell16.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell16.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.xrTableCell16.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell16.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell16.Multiline = true;
-            this.xrTableCell16.CanGrow = false;
-            this.xrTableCell16.Weight = 192D;
-            this.xrTableCell16.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "INWARENM") });
-            this.xrTableRow4.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] { this.xrTableCell13, this.xrTableCell14, this.xrTableCell15, this.xrTableCell16 });
-            this.xrTableRow4.Weight = 42D;
-            this.xrTableCell17.Text = "등록자";
-            this.xrTableCell17.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell17.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell17.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell17.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell17.Multiline = true;
-            this.xrTableCell17.CanGrow = false;
-            this.xrTableCell17.Weight = 100D;
-            this.xrTableCell18.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell18.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.xrTableCell18.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell18.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell18.Multiline = true;
-            this.xrTableCell18.CanGrow = false;
-            this.xrTableCell18.Weight = 270D;
-            this.xrTableCell18.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "EMPNM") });
-            this.xrTableCell19.Text = "등록일";
-            this.xrTableCell19.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell19.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell19.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell19.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell19.Multiline = true;
-            this.xrTableCell19.CanGrow = false;
-            this.xrTableCell19.Weight = 145D;
-            this.xrTableCell20.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell20.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
-            this.xrTableCell20.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell20.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell20.Multiline = true;
-            this.xrTableCell20.CanGrow = false;
-            this.xrTableCell20.Weight = 192D;
-            this.xrTableCell20.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "REGTIME") });
-            this.xrTableRow5.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] { this.xrTableCell17, this.xrTableCell18, this.xrTableCell19, this.xrTableCell20 });
-            this.xrTableRow5.Weight = 42D;
-            this.tblHead.Rows.AddRange(new DevExpress.XtraReports.UI.XRTableRow[] { this.xrTableRow1, this.xrTableRow2, this.xrTableRow3, this.xrTableRow4, this.xrTableRow5 });
-            this.tblHead.LocationF = new System.Drawing.PointF(0F, 270F);
-            this.tblHead.SizeF = new System.Drawing.SizeF(707F, 210F);
-            this.tblHead.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.tblHead.BorderWidth = 1F;
-            this.barLot.LocationF = new System.Drawing.PointF(178.5F, 500F);
-            this.barLot.SizeF = new System.Drawing.SizeF(350F, 100F);
-            this.barLot.Font = new System.Drawing.Font("맑은 고딕", 11F);
-            this.barLot.TextAlignment = DevExpress.XtraPrinting.TextAlignment.BottomCenter;
-            this.barLot.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.barLot.AutoModule = true;
-            this.barLot.Symbology = new DevExpress.XtraPrinting.BarCode.Code128Generator();
-            this.barLot.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "LOTKEY") });
-            this.xrTableCell21.Text = "LOT NO";
-            this.xrTableCell21.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell21.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell21.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell21.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell21.Multiline = true;
-            this.xrTableCell21.CanGrow = false;
-            this.xrTableCell21.Weight = 240D;
-            this.xrTableCell22.Text = "단위";
-            this.xrTableCell22.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell22.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell22.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell22.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell22.Multiline = true;
-            this.xrTableCell22.CanGrow = false;
-            this.xrTableCell22.Weight = 80D;
-            this.xrTableCell23.Text = "입고수량";
-            this.xrTableCell23.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell23.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell23.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell23.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell23.Multiline = true;
-            this.xrTableCell23.CanGrow = false;
-            this.xrTableCell23.Weight = 100D;
-            this.xrTableCell24.Text = "박스 내 수량";
-            this.xrTableCell24.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell24.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell24.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell24.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell24.Multiline = true;
-            this.xrTableCell24.CanGrow = false;
-            this.xrTableCell24.Weight = 130D;
-            this.xrTableCell25.Text = "비고";
-            this.xrTableCell25.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell25.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell25.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell25.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell25.Multiline = true;
-            this.xrTableCell25.CanGrow = false;
-            this.xrTableCell25.Weight = 157D;
-            this.xrTableRow6.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] { this.xrTableCell21, this.xrTableCell22, this.xrTableCell23, this.xrTableCell24, this.xrTableCell25 });
-            this.xrTableRow6.Weight = 42D;
-            this.xrTableCell26.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell26.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell26.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell26.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell26.Multiline = true;
-            this.xrTableCell26.CanGrow = false;
-            this.xrTableCell26.Weight = 240D;
-            this.xrTableCell26.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "LOTKEY") });
-            this.xrTableCell27.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell27.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell27.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell27.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell27.Multiline = true;
-            this.xrTableCell27.CanGrow = false;
-            this.xrTableCell27.Weight = 80D;
-            this.xrTableCell27.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "UNITNM") });
-            this.xrTableCell28.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell28.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell28.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell28.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell28.Multiline = true;
-            this.xrTableCell28.CanGrow = false;
-            this.xrTableCell28.Weight = 100D;
-            this.xrTableCell28.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "QTY") });
-            this.xrTableCell29.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell29.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell29.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell29.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell29.Multiline = true;
-            this.xrTableCell29.CanGrow = false;
-            this.xrTableCell29.Weight = 130D;
-            this.xrTableCell30.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
-            this.xrTableCell30.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
-            this.xrTableCell30.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.xrTableCell30.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 96F);
-            this.xrTableCell30.Multiline = true;
-            this.xrTableCell30.CanGrow = false;
-            this.xrTableCell30.Weight = 157D;
-            this.xrTableRow7.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] { this.xrTableCell26, this.xrTableCell27, this.xrTableCell28, this.xrTableCell29, this.xrTableCell30 });
-            this.xrTableRow7.Weight = 42D;
-            this.tblLot.Rows.AddRange(new DevExpress.XtraReports.UI.XRTableRow[] { this.xrTableRow6, this.xrTableRow7 });
-            this.tblLot.LocationF = new System.Drawing.PointF(0F, 620F);
-            this.tblLot.SizeF = new System.Drawing.SizeF(707F, 84F);
-            this.tblLot.Borders = DevExpress.XtraPrinting.BorderSide.All;
-            this.tblLot.BorderWidth = 1F;
-            this.lblStamp.LocationF = new System.Drawing.PointF(0F, 1000F);
-            this.lblStamp.SizeF = new System.Drawing.SizeF(707F, 30F);
-            this.lblStamp.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Bold);
-            this.lblStamp.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
-            this.lblStamp.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.lblStamp.BorderWidth = 1F;
-            this.lblStamp.Multiline = true;
-            this.lblStamp.CanGrow = false;
-            this.lblStamp.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] { new DevExpress.XtraReports.UI.XRBinding("Text", null, "STAMP") });
-            this.Detail.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] { this.lblTitle, this.tblHead, this.barLot, this.tblLot, this.lblStamp });
-            this.Detail.HeightF = 1060F;
-            this.Detail.PageBreak = DevExpress.XtraReports.UI.PageBreak.AfterBandExceptLastEntry;
+            this.tbl_HEAD_R1 = new DevExpress.XtraReports.UI.XRTableRow();
+            this.H_ITEMCD = new DevExpress.XtraReports.UI.XRTableCell();
+            this.C_ITEMCD = new DevExpress.XtraReports.UI.XRTableCell();
+            this.H_HEATNO = new DevExpress.XtraReports.UI.XRTableCell();
+            this.C_HEATNO = new DevExpress.XtraReports.UI.XRTableCell();
+            this.tbl_HEAD_R2 = new DevExpress.XtraReports.UI.XRTableRow();
+            this.H_ITEMNM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.C_ITEMNM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.H_INDATE = new DevExpress.XtraReports.UI.XRTableCell();
+            this.C_INDATE = new DevExpress.XtraReports.UI.XRTableCell();
+            this.tbl_HEAD_R3 = new DevExpress.XtraReports.UI.XRTableRow();
+            this.H_ITEMSPEC = new DevExpress.XtraReports.UI.XRTableCell();
+            this.C_ITEMSPEC = new DevExpress.XtraReports.UI.XRTableCell();
+            this.H_EMPNM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.C_EMPNM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.tbl_HEAD_R4 = new DevExpress.XtraReports.UI.XRTableRow();
+            this.H_OUTWARENM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.C_OUTWARENM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.H_INWARENM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.C_INWARENM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.tbl_LOT_R1 = new DevExpress.XtraReports.UI.XRTableRow();
+            this.H_LOTKEY = new DevExpress.XtraReports.UI.XRTableCell();
+            this.H_UNITNM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.H_QTY = new DevExpress.XtraReports.UI.XRTableCell();
+            this.H_REGTIME = new DevExpress.XtraReports.UI.XRTableCell();
+            this.tbl_LOT_R2 = new DevExpress.XtraReports.UI.XRTableRow();
+            this.C_LOTKEY = new DevExpress.XtraReports.UI.XRTableCell();
+            this.C_UNITNM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.C_QTY = new DevExpress.XtraReports.UI.XRTableCell();
+            this.C_REGTIME = new DevExpress.XtraReports.UI.XRTableCell();
+            this.tbl_TRACE_HEAD_R1 = new DevExpress.XtraReports.UI.XRTableRow();
+            this.H_NO = new DevExpress.XtraReports.UI.XRTableCell();
+            this.H_TRACE_ITEMCD = new DevExpress.XtraReports.UI.XRTableCell();
+            this.H_TRACE_OUTWARENM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.H_TRACE_INWARENM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.H_TRACE_LOTKEY = new DevExpress.XtraReports.UI.XRTableCell();
+            this.tbl_TRACE_R1 = new DevExpress.XtraReports.UI.XRTableRow();
+            this.D_NO = new DevExpress.XtraReports.UI.XRTableCell();
+            this.D_ITEMCD = new DevExpress.XtraReports.UI.XRTableCell();
+            this.D_OUTWARENM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.D_INWARENM = new DevExpress.XtraReports.UI.XRTableCell();
+            this.D_LOTKEY = new DevExpress.XtraReports.UI.XRTableCell();
+            ((System.ComponentModel.ISupportInitialize)(this.tbl_HEAD)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.tbl_LOT)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.tbl_TRACE_HEAD)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.tbl_TRACE)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this)).BeginInit();
+            //
+            // TopMargin
+            //
             this.TopMargin.HeightF = 50F;
+            this.TopMargin.Name = "TopMargin";
+            //
+            // Detail (LOT 1개 = 이동표 1장, LOT 마다 페이지 나눔)
+            //
+            this.Detail.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
+            this.lbl_TITLE,
+            this.tbl_HEAD,
+            this.bar_LOTKEY,
+            this.tbl_LOT,
+            this.tbl_TRACE_HEAD,
+            this.tbl_TRACE});
+            this.Detail.HeightF = 520F;
+            this.Detail.Name = "Detail";
+            this.Detail.PageBreak = DevExpress.XtraReports.UI.PageBreak.AfterBandExceptLastEntry;
+            //
+            // lbl_TITLE ("공 정 이 동 표 ( 재 고 )")
+            //
+            this.lbl_TITLE.Font = new System.Drawing.Font("맑은 고딕", 28F, System.Drawing.FontStyle.Bold);
+            this.lbl_TITLE.LocationFloat = new DevExpress.Utils.PointFloat(0F, 15F);
+            this.lbl_TITLE.Name = "lbl_TITLE";
+            this.lbl_TITLE.SizeF = new System.Drawing.SizeF(727F, 60F);
+            this.lbl_TITLE.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "TITLE")});
+            this.lbl_TITLE.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            //
+            // tbl_HEAD (품번·품명·규격·HEAT NO·발행자·발행일)
+            //
+            this.tbl_HEAD.Borders = DevExpress.XtraPrinting.BorderSide.All;
+            this.tbl_HEAD.LocationFloat = new DevExpress.Utils.PointFloat(0F, 95F);
+            this.tbl_HEAD.Name = "tbl_HEAD";
+            this.tbl_HEAD.Rows.AddRange(new DevExpress.XtraReports.UI.XRTableRow[] {
+            this.tbl_HEAD_R1,
+            this.tbl_HEAD_R2,
+            this.tbl_HEAD_R3,
+            this.tbl_HEAD_R4});
+            this.tbl_HEAD.SizeF = new System.Drawing.SizeF(727.0F, 144F);
+            //
+            // tbl_HEAD_R1
+            //
+            this.tbl_HEAD_R1.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
+            this.H_ITEMCD,
+            this.C_ITEMCD,
+            this.H_HEATNO,
+            this.C_HEATNO});
+            this.tbl_HEAD_R1.Name = "tbl_HEAD_R1";
+            this.tbl_HEAD_R1.Weight = 1D;
+            //
+            // H_ITEMCD
+            //
+            this.H_ITEMCD.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_ITEMCD.Name = "H_ITEMCD";
+            this.H_ITEMCD.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_ITEMCD.StylePriority.UseFont = false;
+            this.H_ITEMCD.StylePriority.UsePadding = false;
+            this.H_ITEMCD.StylePriority.UseTextAlignment = false;
+            this.H_ITEMCD.Text = "품번";
+            this.H_ITEMCD.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_ITEMCD.Weight = 100D;
+            //
+            // C_ITEMCD
+            //
+            this.C_ITEMCD.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "ITEMCD")});
+            this.C_ITEMCD.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.C_ITEMCD.Name = "C_ITEMCD";
+            this.C_ITEMCD.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.C_ITEMCD.StylePriority.UseFont = false;
+            this.C_ITEMCD.StylePriority.UsePadding = false;
+            this.C_ITEMCD.StylePriority.UseTextAlignment = false;
+            this.C_ITEMCD.Text = "";
+            this.C_ITEMCD.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_ITEMCD.Weight = 260D;
+            //
+            // H_HEATNO
+            //
+            this.H_HEATNO.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_HEATNO.Name = "H_HEATNO";
+            this.H_HEATNO.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_HEATNO.StylePriority.UseFont = false;
+            this.H_HEATNO.StylePriority.UsePadding = false;
+            this.H_HEATNO.StylePriority.UseTextAlignment = false;
+            this.H_HEATNO.Text = "HEAT NO";
+            this.H_HEATNO.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_HEATNO.Weight = 140D;
+            //
+            // C_HEATNO
+            //
+            this.C_HEATNO.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "HEATNO")});
+            this.C_HEATNO.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.C_HEATNO.Name = "C_HEATNO";
+            this.C_HEATNO.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.C_HEATNO.StylePriority.UseFont = false;
+            this.C_HEATNO.StylePriority.UsePadding = false;
+            this.C_HEATNO.StylePriority.UseTextAlignment = false;
+            this.C_HEATNO.Text = "";
+            this.C_HEATNO.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_HEATNO.Weight = 227D;
+            //
+            // tbl_HEAD_R2
+            //
+            this.tbl_HEAD_R2.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
+            this.H_ITEMNM,
+            this.C_ITEMNM,
+            this.H_INDATE,
+            this.C_INDATE});
+            this.tbl_HEAD_R2.Name = "tbl_HEAD_R2";
+            this.tbl_HEAD_R2.Weight = 1D;
+            //
+            // H_ITEMNM
+            //
+            this.H_ITEMNM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_ITEMNM.Name = "H_ITEMNM";
+            this.H_ITEMNM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_ITEMNM.StylePriority.UseFont = false;
+            this.H_ITEMNM.StylePriority.UsePadding = false;
+            this.H_ITEMNM.StylePriority.UseTextAlignment = false;
+            this.H_ITEMNM.Text = "품명";
+            this.H_ITEMNM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_ITEMNM.Weight = 100D;
+            //
+            // C_ITEMNM
+            //
+            this.C_ITEMNM.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "ITEMNM")});
+            this.C_ITEMNM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.C_ITEMNM.Name = "C_ITEMNM";
+            this.C_ITEMNM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.C_ITEMNM.StylePriority.UseFont = false;
+            this.C_ITEMNM.StylePriority.UsePadding = false;
+            this.C_ITEMNM.StylePriority.UseTextAlignment = false;
+            this.C_ITEMNM.Text = "";
+            this.C_ITEMNM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_ITEMNM.Weight = 260D;
+            //
+            // H_INDATE
+            //
+            this.H_INDATE.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_INDATE.Name = "H_INDATE";
+            this.H_INDATE.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_INDATE.StylePriority.UseFont = false;
+            this.H_INDATE.StylePriority.UsePadding = false;
+            this.H_INDATE.StylePriority.UseTextAlignment = false;
+            this.H_INDATE.Text = "입고일자";
+            this.H_INDATE.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_INDATE.Weight = 140D;
+            //
+            // C_INDATE
+            //
+            this.C_INDATE.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "INDATE")});
+            this.C_INDATE.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.C_INDATE.Name = "C_INDATE";
+            this.C_INDATE.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.C_INDATE.StylePriority.UseFont = false;
+            this.C_INDATE.StylePriority.UsePadding = false;
+            this.C_INDATE.StylePriority.UseTextAlignment = false;
+            this.C_INDATE.Text = "";
+            this.C_INDATE.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_INDATE.Weight = 227D;
+            //
+            // tbl_HEAD_R3
+            //
+            this.tbl_HEAD_R3.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
+            this.H_ITEMSPEC,
+            this.C_ITEMSPEC,
+            this.H_EMPNM,
+            this.C_EMPNM});
+            this.tbl_HEAD_R3.Name = "tbl_HEAD_R3";
+            this.tbl_HEAD_R3.Weight = 1D;
+            //
+            // H_ITEMSPEC
+            //
+            this.H_ITEMSPEC.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_ITEMSPEC.Name = "H_ITEMSPEC";
+            this.H_ITEMSPEC.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_ITEMSPEC.StylePriority.UseFont = false;
+            this.H_ITEMSPEC.StylePriority.UsePadding = false;
+            this.H_ITEMSPEC.StylePriority.UseTextAlignment = false;
+            this.H_ITEMSPEC.Text = "규격";
+            this.H_ITEMSPEC.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_ITEMSPEC.Weight = 100D;
+            //
+            // C_ITEMSPEC
+            //
+            this.C_ITEMSPEC.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "ITEMSPEC")});
+            this.C_ITEMSPEC.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.C_ITEMSPEC.Name = "C_ITEMSPEC";
+            this.C_ITEMSPEC.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.C_ITEMSPEC.StylePriority.UseFont = false;
+            this.C_ITEMSPEC.StylePriority.UsePadding = false;
+            this.C_ITEMSPEC.StylePriority.UseTextAlignment = false;
+            this.C_ITEMSPEC.Text = "";
+            this.C_ITEMSPEC.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_ITEMSPEC.Weight = 260D;
+            //
+            // H_EMPNM
+            //
+            this.H_EMPNM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_EMPNM.Name = "H_EMPNM";
+            this.H_EMPNM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_EMPNM.StylePriority.UseFont = false;
+            this.H_EMPNM.StylePriority.UsePadding = false;
+            this.H_EMPNM.StylePriority.UseTextAlignment = false;
+            this.H_EMPNM.Text = "등록자";
+            this.H_EMPNM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_EMPNM.Weight = 140D;
+            //
+            // C_EMPNM
+            //
+            this.C_EMPNM.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "EMPNM")});
+            this.C_EMPNM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.C_EMPNM.Name = "C_EMPNM";
+            this.C_EMPNM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.C_EMPNM.StylePriority.UseFont = false;
+            this.C_EMPNM.StylePriority.UsePadding = false;
+            this.C_EMPNM.StylePriority.UseTextAlignment = false;
+            this.C_EMPNM.Text = "";
+            this.C_EMPNM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_EMPNM.Weight = 227D;
+            //
+            // tbl_HEAD_R4
+            //
+            this.tbl_HEAD_R4.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
+            this.H_OUTWARENM,
+            this.C_OUTWARENM,
+            this.H_INWARENM,
+            this.C_INWARENM});
+            this.tbl_HEAD_R4.Name = "tbl_HEAD_R4";
+            this.tbl_HEAD_R4.Weight = 1D;
+            //
+            // H_OUTWARENM
+            //
+            this.H_OUTWARENM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_OUTWARENM.Name = "H_OUTWARENM";
+            this.H_OUTWARENM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_OUTWARENM.StylePriority.UseFont = false;
+            this.H_OUTWARENM.StylePriority.UsePadding = false;
+            this.H_OUTWARENM.StylePriority.UseTextAlignment = false;
+            this.H_OUTWARENM.Text = "출고창고";
+            this.H_OUTWARENM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_OUTWARENM.Weight = 100D;
+            //
+            // C_OUTWARENM
+            //
+            this.C_OUTWARENM.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "OUTWARENM")});
+            this.C_OUTWARENM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.C_OUTWARENM.Name = "C_OUTWARENM";
+            this.C_OUTWARENM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.C_OUTWARENM.StylePriority.UseFont = false;
+            this.C_OUTWARENM.StylePriority.UsePadding = false;
+            this.C_OUTWARENM.StylePriority.UseTextAlignment = false;
+            this.C_OUTWARENM.Text = "";
+            this.C_OUTWARENM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_OUTWARENM.Weight = 260D;
+            //
+            // H_INWARENM
+            //
+            this.H_INWARENM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_INWARENM.Name = "H_INWARENM";
+            this.H_INWARENM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_INWARENM.StylePriority.UseFont = false;
+            this.H_INWARENM.StylePriority.UsePadding = false;
+            this.H_INWARENM.StylePriority.UseTextAlignment = false;
+            this.H_INWARENM.Text = "입고창고";
+            this.H_INWARENM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_INWARENM.Weight = 140D;
+            //
+            // C_INWARENM
+            //
+            this.C_INWARENM.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "INWARENM")});
+            this.C_INWARENM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.C_INWARENM.Name = "C_INWARENM";
+            this.C_INWARENM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.C_INWARENM.StylePriority.UseFont = false;
+            this.C_INWARENM.StylePriority.UsePadding = false;
+            this.C_INWARENM.StylePriority.UseTextAlignment = false;
+            this.C_INWARENM.Text = "";
+            this.C_INWARENM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_INWARENM.Weight = 227D;
+            //
+            // bar_LOTKEY (LOT 바코드)
+            //
+            this.bar_LOTKEY.AutoModule = true;
+            this.bar_LOTKEY.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "LOTKEY")});
+            this.bar_LOTKEY.Font = new System.Drawing.Font("맑은 고딕", 9F);
+            this.bar_LOTKEY.LocationFloat = new DevExpress.Utils.PointFloat(213F, 254F);
+            this.bar_LOTKEY.Name = "bar_LOTKEY";
+            this.bar_LOTKEY.SizeF = new System.Drawing.SizeF(300F, 65F);
+            this.bar_LOTKEY.Symbology = code128Generator1;
+            this.bar_LOTKEY.TextAlignment = DevExpress.XtraPrinting.TextAlignment.BottomCenter;
+            //
+            // tbl_LOT (로트정보 : LOT NO, 단위, 입고수량, 등록일시)
+            //
+            this.tbl_LOT.Borders = DevExpress.XtraPrinting.BorderSide.All;
+            this.tbl_LOT.LocationFloat = new DevExpress.Utils.PointFloat(0F, 334F);
+            this.tbl_LOT.Name = "tbl_LOT";
+            this.tbl_LOT.Rows.AddRange(new DevExpress.XtraReports.UI.XRTableRow[] {
+            this.tbl_LOT_R1,
+            this.tbl_LOT_R2});
+            this.tbl_LOT.SizeF = new System.Drawing.SizeF(727.0F, 80F);
+            //
+            // tbl_LOT_R1
+            //
+            this.tbl_LOT_R1.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
+            this.H_LOTKEY,
+            this.H_UNITNM,
+            this.H_QTY,
+            this.H_REGTIME});
+            this.tbl_LOT_R1.Name = "tbl_LOT_R1";
+            this.tbl_LOT_R1.Weight = 1D;
+            //
+            // H_LOTKEY
+            //
+            this.H_LOTKEY.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_LOTKEY.Name = "H_LOTKEY";
+            this.H_LOTKEY.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_LOTKEY.StylePriority.UseFont = false;
+            this.H_LOTKEY.StylePriority.UsePadding = false;
+            this.H_LOTKEY.StylePriority.UseTextAlignment = false;
+            this.H_LOTKEY.Text = "LOT NO";
+            this.H_LOTKEY.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_LOTKEY.Weight = 267D;
+            //
+            // H_UNITNM
+            //
+            this.H_UNITNM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_UNITNM.Name = "H_UNITNM";
+            this.H_UNITNM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_UNITNM.StylePriority.UseFont = false;
+            this.H_UNITNM.StylePriority.UsePadding = false;
+            this.H_UNITNM.StylePriority.UseTextAlignment = false;
+            this.H_UNITNM.Text = "단위";
+            this.H_UNITNM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_UNITNM.Weight = 100D;
+            //
+            // H_QTY
+            //
+            this.H_QTY.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_QTY.Name = "H_QTY";
+            this.H_QTY.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_QTY.StylePriority.UseFont = false;
+            this.H_QTY.StylePriority.UsePadding = false;
+            this.H_QTY.StylePriority.UseTextAlignment = false;
+            this.H_QTY.Text = "입고수량";
+            this.H_QTY.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_QTY.Weight = 170D;
+            //
+            // H_REGTIME
+            //
+            this.H_REGTIME.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_REGTIME.Name = "H_REGTIME";
+            this.H_REGTIME.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_REGTIME.StylePriority.UseFont = false;
+            this.H_REGTIME.StylePriority.UsePadding = false;
+            this.H_REGTIME.StylePriority.UseTextAlignment = false;
+            this.H_REGTIME.Text = "등록일시";
+            this.H_REGTIME.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_REGTIME.Weight = 190D;
+            //
+            // tbl_LOT_R2
+            //
+            this.tbl_LOT_R2.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
+            this.C_LOTKEY,
+            this.C_UNITNM,
+            this.C_QTY,
+            this.C_REGTIME});
+            this.tbl_LOT_R2.Name = "tbl_LOT_R2";
+            this.tbl_LOT_R2.Weight = 1D;
+            //
+            // C_LOTKEY
+            //
+            this.C_LOTKEY.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "LOTKEY")});
+            this.C_LOTKEY.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.C_LOTKEY.Name = "C_LOTKEY";
+            this.C_LOTKEY.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.C_LOTKEY.StylePriority.UseFont = false;
+            this.C_LOTKEY.StylePriority.UsePadding = false;
+            this.C_LOTKEY.StylePriority.UseTextAlignment = false;
+            this.C_LOTKEY.Text = "";
+            this.C_LOTKEY.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.C_LOTKEY.Weight = 267D;
+            //
+            // C_UNITNM
+            //
+            this.C_UNITNM.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "UNITNM")});
+            this.C_UNITNM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.C_UNITNM.Name = "C_UNITNM";
+            this.C_UNITNM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.C_UNITNM.StylePriority.UseFont = false;
+            this.C_UNITNM.StylePriority.UsePadding = false;
+            this.C_UNITNM.StylePriority.UseTextAlignment = false;
+            this.C_UNITNM.Text = "";
+            this.C_UNITNM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.C_UNITNM.Weight = 100D;
+            //
+            // C_QTY
+            //
+            this.C_QTY.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "QTY")});
+            this.C_QTY.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.C_QTY.Name = "C_QTY";
+            this.C_QTY.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.C_QTY.StylePriority.UseFont = false;
+            this.C_QTY.StylePriority.UsePadding = false;
+            this.C_QTY.StylePriority.UseTextAlignment = false;
+            this.C_QTY.Text = "";
+            this.C_QTY.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.C_QTY.Weight = 170D;
+            //
+            // C_REGTIME
+            //
+            this.C_REGTIME.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "REGTIME")});
+            this.C_REGTIME.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.C_REGTIME.Name = "C_REGTIME";
+            this.C_REGTIME.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.C_REGTIME.StylePriority.UseFont = false;
+            this.C_REGTIME.StylePriority.UsePadding = false;
+            this.C_REGTIME.StylePriority.UseTextAlignment = false;
+            this.C_REGTIME.Text = "";
+            this.C_REGTIME.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.C_REGTIME.Weight = 190D;
+            //
+            // tbl_TRACE_HEAD (로트추적 머리 - PRD_1 과 같은 표)
+            //
+            this.tbl_TRACE_HEAD.Borders = DevExpress.XtraPrinting.BorderSide.All;
+            this.tbl_TRACE_HEAD.LocationFloat = new DevExpress.Utils.PointFloat(0F, 434F);
+            this.tbl_TRACE_HEAD.Name = "tbl_TRACE_HEAD";
+            this.tbl_TRACE_HEAD.Rows.AddRange(new DevExpress.XtraReports.UI.XRTableRow[] {
+            this.tbl_TRACE_HEAD_R1});
+            this.tbl_TRACE_HEAD.SizeF = new System.Drawing.SizeF(727.0F, 32F);
+            //
+            // tbl_TRACE_HEAD_R1
+            //
+            this.tbl_TRACE_HEAD_R1.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
+            this.H_NO,
+            this.H_TRACE_ITEMCD,
+            this.H_TRACE_OUTWARENM,
+            this.H_TRACE_INWARENM,
+            this.H_TRACE_LOTKEY});
+            this.tbl_TRACE_HEAD_R1.Name = "tbl_TRACE_HEAD_R1";
+            this.tbl_TRACE_HEAD_R1.Weight = 1D;
+            //
+            // H_NO
+            //
+            this.H_NO.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_NO.Name = "H_NO";
+            this.H_NO.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_NO.StylePriority.UseFont = false;
+            this.H_NO.StylePriority.UsePadding = false;
+            this.H_NO.StylePriority.UseTextAlignment = false;
+            this.H_NO.Text = "NO";
+            this.H_NO.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_NO.Weight = 55D;
+            //
+            // H_TRACE_ITEMCD
+            //
+            this.H_TRACE_ITEMCD.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_TRACE_ITEMCD.Name = "H_TRACE_ITEMCD";
+            this.H_TRACE_ITEMCD.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_TRACE_ITEMCD.StylePriority.UseFont = false;
+            this.H_TRACE_ITEMCD.StylePriority.UsePadding = false;
+            this.H_TRACE_ITEMCD.StylePriority.UseTextAlignment = false;
+            this.H_TRACE_ITEMCD.Text = "품번";
+            this.H_TRACE_ITEMCD.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_TRACE_ITEMCD.Weight = 210D;
+            //
+            // H_TRACE_OUTWARENM
+            //
+            this.H_TRACE_OUTWARENM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_TRACE_OUTWARENM.Name = "H_TRACE_OUTWARENM";
+            this.H_TRACE_OUTWARENM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_TRACE_OUTWARENM.StylePriority.UseFont = false;
+            this.H_TRACE_OUTWARENM.StylePriority.UsePadding = false;
+            this.H_TRACE_OUTWARENM.StylePriority.UseTextAlignment = false;
+            this.H_TRACE_OUTWARENM.Text = "출고창고";
+            this.H_TRACE_OUTWARENM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_TRACE_OUTWARENM.Weight = 150D;
+            //
+            // H_TRACE_INWARENM
+            //
+            this.H_TRACE_INWARENM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_TRACE_INWARENM.Name = "H_TRACE_INWARENM";
+            this.H_TRACE_INWARENM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_TRACE_INWARENM.StylePriority.UseFont = false;
+            this.H_TRACE_INWARENM.StylePriority.UsePadding = false;
+            this.H_TRACE_INWARENM.StylePriority.UseTextAlignment = false;
+            this.H_TRACE_INWARENM.Text = "입고창고";
+            this.H_TRACE_INWARENM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_TRACE_INWARENM.Weight = 130D;
+            //
+            // H_TRACE_LOTKEY
+            //
+            this.H_TRACE_LOTKEY.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.H_TRACE_LOTKEY.Name = "H_TRACE_LOTKEY";
+            this.H_TRACE_LOTKEY.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.H_TRACE_LOTKEY.StylePriority.UseFont = false;
+            this.H_TRACE_LOTKEY.StylePriority.UsePadding = false;
+            this.H_TRACE_LOTKEY.StylePriority.UseTextAlignment = false;
+            this.H_TRACE_LOTKEY.Text = "LOTNO";
+            this.H_TRACE_LOTKEY.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.H_TRACE_LOTKEY.Weight = 182D;
+            //
+            // tbl_TRACE (로트추적 줄 - 입고는 이 LOT 1줄: 출고창고 → 입고창고)
+            //
+            this.tbl_TRACE.Borders = ((DevExpress.XtraPrinting.BorderSide)(((DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Right)
+            | DevExpress.XtraPrinting.BorderSide.Bottom)));
+            this.tbl_TRACE.LocationFloat = new DevExpress.Utils.PointFloat(0F, 466F);
+            this.tbl_TRACE.Name = "tbl_TRACE";
+            this.tbl_TRACE.Rows.AddRange(new DevExpress.XtraReports.UI.XRTableRow[] {
+            this.tbl_TRACE_R1});
+            this.tbl_TRACE.SizeF = new System.Drawing.SizeF(727.0F, 32F);
+            //
+            // tbl_TRACE_R1
+            //
+            this.tbl_TRACE_R1.Cells.AddRange(new DevExpress.XtraReports.UI.XRTableCell[] {
+            this.D_NO,
+            this.D_ITEMCD,
+            this.D_OUTWARENM,
+            this.D_INWARENM,
+            this.D_LOTKEY});
+            this.tbl_TRACE_R1.Name = "tbl_TRACE_R1";
+            this.tbl_TRACE_R1.Weight = 1D;
+            //
+            // D_NO
+            //
+            this.D_NO.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.D_NO.Name = "D_NO";
+            this.D_NO.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.D_NO.StylePriority.UseFont = false;
+            this.D_NO.StylePriority.UsePadding = false;
+            this.D_NO.StylePriority.UseTextAlignment = false;
+            this.D_NO.Text = "1";
+            this.D_NO.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.D_NO.Weight = 55D;
+            //
+            // D_ITEMCD
+            //
+            this.D_ITEMCD.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "ITEMCD")});
+            this.D_ITEMCD.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.D_ITEMCD.Name = "D_ITEMCD";
+            this.D_ITEMCD.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.D_ITEMCD.StylePriority.UseFont = false;
+            this.D_ITEMCD.StylePriority.UsePadding = false;
+            this.D_ITEMCD.StylePriority.UseTextAlignment = false;
+            this.D_ITEMCD.Text = "";
+            this.D_ITEMCD.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.D_ITEMCD.Weight = 210D;
+            //
+            // D_OUTWARENM
+            //
+            this.D_OUTWARENM.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "OUTWARENM")});
+            this.D_OUTWARENM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.D_OUTWARENM.Name = "D_OUTWARENM";
+            this.D_OUTWARENM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.D_OUTWARENM.StylePriority.UseFont = false;
+            this.D_OUTWARENM.StylePriority.UsePadding = false;
+            this.D_OUTWARENM.StylePriority.UseTextAlignment = false;
+            this.D_OUTWARENM.Text = "";
+            this.D_OUTWARENM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.D_OUTWARENM.Weight = 150D;
+            //
+            // D_INWARENM
+            //
+            this.D_INWARENM.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "INWARENM")});
+            this.D_INWARENM.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.D_INWARENM.Name = "D_INWARENM";
+            this.D_INWARENM.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.D_INWARENM.StylePriority.UseFont = false;
+            this.D_INWARENM.StylePriority.UsePadding = false;
+            this.D_INWARENM.StylePriority.UseTextAlignment = false;
+            this.D_INWARENM.Text = "";
+            this.D_INWARENM.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.D_INWARENM.Weight = 130D;
+            //
+            // D_LOTKEY
+            //
+            this.D_LOTKEY.DataBindings.AddRange(new DevExpress.XtraReports.UI.XRBinding[] {
+            new DevExpress.XtraReports.UI.XRBinding("Text", null, "LOTKEY")});
+            this.D_LOTKEY.Font = new System.Drawing.Font("맑은 고딕", 11F, System.Drawing.FontStyle.Bold);
+            this.D_LOTKEY.Name = "D_LOTKEY";
+            this.D_LOTKEY.Padding = new DevExpress.XtraPrinting.PaddingInfo(8, 8, 0, 0, 100F);
+            this.D_LOTKEY.StylePriority.UseFont = false;
+            this.D_LOTKEY.StylePriority.UsePadding = false;
+            this.D_LOTKEY.StylePriority.UseTextAlignment = false;
+            this.D_LOTKEY.Text = "";
+            this.D_LOTKEY.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleCenter;
+            this.D_LOTKEY.Weight = 182D;
+            //
+            // BottomMargin
+            //
             this.BottomMargin.HeightF = 50F;
-
+            this.BottomMargin.Name = "BottomMargin";
+            //
             // MTR_3
-            this.Bands.AddRange(new DevExpress.XtraReports.UI.Band[] { this.Detail, this.TopMargin, this.BottomMargin });
+            //
+            this.Bands.AddRange(new DevExpress.XtraReports.UI.Band[] {
+            this.TopMargin,
+            this.Detail,
+            this.BottomMargin});
             this.Font = new System.Drawing.Font("맑은 고딕", 11F);
-            this.Margins = new System.Drawing.Printing.Margins(60, 60, 50, 50);
+            this.Margins = new System.Drawing.Printing.Margins(50, 50, 50, 50);
             this.PageHeight = 1169;
             this.PageWidth = 827;
             this.PaperKind = System.Drawing.Printing.PaperKind.A4;
             this.Version = "16.1";
-            ((System.ComponentModel.ISupportInitialize)(this.tblHead)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.tblLot)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.tbl_HEAD)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.tbl_LOT)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.tbl_TRACE_HEAD)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.tbl_TRACE)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this)).EndInit();
         }
 
         #endregion
+
+        private DevExpress.XtraReports.UI.TopMarginBand TopMargin;
+        private DevExpress.XtraReports.UI.DetailBand Detail;
+        private DevExpress.XtraReports.UI.XRLabel lbl_TITLE;
+        private DevExpress.XtraReports.UI.XRBarCode bar_LOTKEY;
+        private DevExpress.XtraReports.UI.XRTable tbl_HEAD;
+        private DevExpress.XtraReports.UI.XRTable tbl_LOT;
+        private DevExpress.XtraReports.UI.XRTable tbl_TRACE_HEAD;
+        private DevExpress.XtraReports.UI.XRTable tbl_TRACE;
+        private DevExpress.XtraReports.UI.BottomMarginBand BottomMargin;
+        private DevExpress.XtraReports.UI.XRTableRow tbl_HEAD_R1;
+        private DevExpress.XtraReports.UI.XRTableCell H_ITEMCD;
+        private DevExpress.XtraReports.UI.XRTableCell C_ITEMCD;
+        private DevExpress.XtraReports.UI.XRTableCell H_HEATNO;
+        private DevExpress.XtraReports.UI.XRTableCell C_HEATNO;
+        private DevExpress.XtraReports.UI.XRTableRow tbl_HEAD_R2;
+        private DevExpress.XtraReports.UI.XRTableCell H_ITEMNM;
+        private DevExpress.XtraReports.UI.XRTableCell C_ITEMNM;
+        private DevExpress.XtraReports.UI.XRTableCell H_INDATE;
+        private DevExpress.XtraReports.UI.XRTableCell C_INDATE;
+        private DevExpress.XtraReports.UI.XRTableRow tbl_HEAD_R3;
+        private DevExpress.XtraReports.UI.XRTableCell H_ITEMSPEC;
+        private DevExpress.XtraReports.UI.XRTableCell C_ITEMSPEC;
+        private DevExpress.XtraReports.UI.XRTableCell H_EMPNM;
+        private DevExpress.XtraReports.UI.XRTableCell C_EMPNM;
+        private DevExpress.XtraReports.UI.XRTableRow tbl_HEAD_R4;
+        private DevExpress.XtraReports.UI.XRTableCell H_OUTWARENM;
+        private DevExpress.XtraReports.UI.XRTableCell C_OUTWARENM;
+        private DevExpress.XtraReports.UI.XRTableCell H_INWARENM;
+        private DevExpress.XtraReports.UI.XRTableCell C_INWARENM;
+        private DevExpress.XtraReports.UI.XRTableRow tbl_LOT_R1;
+        private DevExpress.XtraReports.UI.XRTableCell H_LOTKEY;
+        private DevExpress.XtraReports.UI.XRTableCell H_UNITNM;
+        private DevExpress.XtraReports.UI.XRTableCell H_QTY;
+        private DevExpress.XtraReports.UI.XRTableCell H_REGTIME;
+        private DevExpress.XtraReports.UI.XRTableRow tbl_LOT_R2;
+        private DevExpress.XtraReports.UI.XRTableCell C_LOTKEY;
+        private DevExpress.XtraReports.UI.XRTableCell C_UNITNM;
+        private DevExpress.XtraReports.UI.XRTableCell C_QTY;
+        private DevExpress.XtraReports.UI.XRTableCell C_REGTIME;
+        private DevExpress.XtraReports.UI.XRTableRow tbl_TRACE_HEAD_R1;
+        private DevExpress.XtraReports.UI.XRTableCell H_NO;
+        private DevExpress.XtraReports.UI.XRTableCell H_TRACE_ITEMCD;
+        private DevExpress.XtraReports.UI.XRTableCell H_TRACE_OUTWARENM;
+        private DevExpress.XtraReports.UI.XRTableCell H_TRACE_INWARENM;
+        private DevExpress.XtraReports.UI.XRTableCell H_TRACE_LOTKEY;
+        private DevExpress.XtraReports.UI.XRTableRow tbl_TRACE_R1;
+        private DevExpress.XtraReports.UI.XRTableCell D_NO;
+        private DevExpress.XtraReports.UI.XRTableCell D_ITEMCD;
+        private DevExpress.XtraReports.UI.XRTableCell D_OUTWARENM;
+        private DevExpress.XtraReports.UI.XRTableCell D_INWARENM;
+        private DevExpress.XtraReports.UI.XRTableCell D_LOTKEY;
     }
 }

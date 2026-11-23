@@ -1,0 +1,182 @@
+CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.MST3001_R06(
+-- *****************************************************************************
+-- Comment: 외주처 소모품 수령확정 (불출증 OSCCONSUM_RELEASE_FORM 의 확정일자·확정자)
+--          수령(TML1030_R03)된 불출증만 확정. 확정되면 현장에서 수령수량 수정·수령삭제 불가
+-- Create:  2026-11-04 : 김영철
+-- Modify:  2026-11-05 : 김영철 SEL_RELEASE 색상 변경 (수령 전 = 색 없음, 수령 = 초록·흰 글씨, 확정 = 하늘색)
+-- *****************************************************************************
+  IN $SDATE               VARCHAR(100),
+  IN $EDATE               VARCHAR(100),
+  IN $EQMCD               VARCHAR(100),
+  IN $RELEASEKEY          VARCHAR(100),
+  IN $CONFIRMDATE         VARCHAR(100),
+  IN $EMPCD_CONFIRM       VARCHAR(100),
+  IN $RELEASEKEY_LIST     MEDIUMTEXT,
+-- *****************************************************************************
+  IN $CALLTYPE            VARCHAR(100)
+)
+PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+-- *****************************************************************************
+  DECLARE _$NOW          VARCHAR(19);
+  DECLARE _$KEY_LIST     MEDIUMTEXT;
+  DECLARE _$RELEASEKEY   VARCHAR(100);
+
+-- *****************************************************************************
+  CASE $CALLTYPE
+-- *****************************************************************************
+
+  WHEN 'SEL_RELEASE' THEN -- 불출증 헤더 조회 (불출일자 기간, 라인)
+
+    SELECT OSCCONSUM_RELEASE_FORM.RELEASEKEY,
+           OSCCONSUM_RELEASE_FORM.RELEASEDATE,
+           OSCCONSUM_RELEASE_FORM.EQMCD,
+           IFNULL(MSTLINE_EQM.EQMNM, OSCCONSUM_RELEASE_FORM.EQMCD) AS EQMNM,
+           IFNULL((SELECT SUM(OSCCONSUM_RELEASE_FORM_DETAIL.RELQTY)
+                     FROM OSCCONSUM_RELEASE_FORM_DETAIL
+                    WHERE OSCCONSUM_RELEASE_FORM_DETAIL.RELEASEKEY = OSCCONSUM_RELEASE_FORM.RELEASEKEY), 0) AS TOTQTY,
+           IFNULL(MSTEMP1.EMPNM, OSCCONSUM_RELEASE_FORM.EMPCD_RELEASE) AS EMPNM_RELEASE,
+           IFNULL(MSTEMP2.EMPNM, OSCCONSUM_RELEASE_FORM.EMPCD_RECIEVE) AS EMPNM_RECIEVE,
+           OSCCONSUM_RELEASE_FORM.RECIEVEDATE,
+           IFNULL(MSTEMP3.EMPNM, OSCCONSUM_RELEASE_FORM.EMPCD_CONFIRM) AS EMPNM_CONFIRM,
+           OSCCONSUM_RELEASE_FORM.CONFIRMDATE,
+           IF(OSCCONSUM_RELEASE_FORM.RECIEVEDATE = '', 'N', 'Y') AS RECIEVEYN,
+           IF(OSCCONSUM_RELEASE_FORM.CONFIRMDATE = '', 'N', 'Y') AS CONFIRMYN,
+           CASE  -- 수령 전 = 색 없음, 수령 = 초록(현장 [수령] 버튼 색), 확정 = 하늘색
+             WHEN OSCCONSUM_RELEASE_FORM.CONFIRMDATE <> '' THEN 'SKYBLUE'
+             WHEN OSCCONSUM_RELEASE_FORM.RECIEVEDATE <> '' THEN 'GREEN'
+             ELSE ''
+           END AS BACKGROUND,
+           IF(OSCCONSUM_RELEASE_FORM.CONFIRMDATE = '' AND OSCCONSUM_RELEASE_FORM.RECIEVEDATE <> '', 'WHITE', '') AS FOREGROUND
+    FROM OSCCONSUM_RELEASE_FORM
+    LEFT JOIN MSTLINE_EQM
+           ON MSTLINE_EQM.EQMCD = OSCCONSUM_RELEASE_FORM.EQMCD
+    LEFT JOIN MSTEMP AS MSTEMP1
+           ON MSTEMP1.EMPCD = OSCCONSUM_RELEASE_FORM.EMPCD_RELEASE
+    LEFT JOIN MSTEMP AS MSTEMP2
+           ON MSTEMP2.EMPCD = OSCCONSUM_RELEASE_FORM.EMPCD_RECIEVE
+    LEFT JOIN MSTEMP AS MSTEMP3
+           ON MSTEMP3.EMPCD = OSCCONSUM_RELEASE_FORM.EMPCD_CONFIRM
+    WHERE OSCCONSUM_RELEASE_FORM.RELEASEDATE BETWEEN $SDATE AND $EDATE
+      AND (IFNULL($EQMCD, '') = '' OR OSCCONSUM_RELEASE_FORM.EQMCD = $EQMCD)
+    ORDER BY OSCCONSUM_RELEASE_FORM.RELEASEDATE DESC,
+             OSCCONSUM_RELEASE_FORM.RELEASEKEY DESC;
+
+  -- *****************************************************************************
+
+  WHEN 'SEL_RELEASE_DETAIL' THEN -- 불출증 상세 조회
+
+    SELECT CAST(OSCCONSUM_RELEASE_FORM_DETAIL.ITEMID AS CHAR) AS ITEMID,
+           MSTITEM.ITEMCD,
+           MSTITEM.ITEMNM,
+           MSTITEM.ITEMSPEC,
+           OSCCONSUM_RELEASE_FORM_DETAIL.RELQTY,
+           OSCCONSUM_RELEASE_FORM_DETAIL.RECQTY
+    FROM OSCCONSUM_RELEASE_FORM_DETAIL
+    LEFT JOIN MSTITEM
+           ON MSTITEM.ITEMID = OSCCONSUM_RELEASE_FORM_DETAIL.ITEMID
+    WHERE OSCCONSUM_RELEASE_FORM_DETAIL.RELEASEKEY = IFNULL($RELEASEKEY, '')
+    ORDER BY MSTITEM.ITEMCD;
+
+  -- *****************************************************************************
+
+  WHEN 'CONFIRM' THEN -- 수령확정 (체크한 불출증, 수령된 것만, 이미 확정된 것은 불가)
+
+    IF IFNULL($RELEASEKEY_LIST, '') = '' THEN
+      CALL COMERR('수령확정할 불출증을 체크하십시오.');
+      LEAVE PROC;
+    END IF;
+
+    IF IFNULL($CONFIRMDATE, '') = '' THEN
+      CALL COMERR('확정일자를 입력하십시오.');
+      LEAVE PROC;
+    END IF;
+
+    IF IFNULL($EMPCD_CONFIRM, '') = '' THEN
+      CALL COMERR('확정자를 선택하십시오.');
+      LEAVE PROC;
+    END IF;
+
+    -- 먼저 전부 검사
+    SET _$KEY_LIST = $RELEASEKEY_LIST;
+    WHILE LENGTH(_$KEY_LIST) > 0 DO
+      CALL COMSPLIT(_$KEY_LIST, _$RELEASEKEY);
+
+      IF NOT EXISTS (SELECT 1 FROM OSCCONSUM_RELEASE_FORM
+                      WHERE OSCCONSUM_RELEASE_FORM.RELEASEKEY = _$RELEASEKEY) THEN
+        CALL COMERR(CONCAT('없는 불출증입니다.', '\n- 불출증: ', _$RELEASEKEY));
+        LEAVE PROC;
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM OSCCONSUM_RELEASE_FORM
+                  WHERE OSCCONSUM_RELEASE_FORM.RELEASEKEY = _$RELEASEKEY
+                    AND OSCCONSUM_RELEASE_FORM.RECIEVEDATE = '') THEN
+        CALL COMERR(CONCAT('수령 전 불출증은 확정할 수 없습니다.', '\n- 불출증: ', _$RELEASEKEY));
+        LEAVE PROC;
+      END IF;
+
+      IF EXISTS (SELECT 1 FROM OSCCONSUM_RELEASE_FORM
+                  WHERE OSCCONSUM_RELEASE_FORM.RELEASEKEY = _$RELEASEKEY
+                    AND OSCCONSUM_RELEASE_FORM.CONFIRMDATE <> '') THEN
+        CALL COMERR(CONCAT('이미 수령확정된 불출증입니다.', '\n- 불출증: ', _$RELEASEKEY));
+        LEAVE PROC;
+      END IF;
+    END WHILE;
+
+    SET _$NOW = CALLTIME();
+
+    SET _$KEY_LIST = $RELEASEKEY_LIST;
+    WHILE LENGTH(_$KEY_LIST) > 0 DO
+      CALL COMSPLIT(_$KEY_LIST, _$RELEASEKEY);
+
+      UPDATE OSCCONSUM_RELEASE_FORM
+      SET OSCCONSUM_RELEASE_FORM.CONFIRMDATE = $CONFIRMDATE,
+          OSCCONSUM_RELEASE_FORM.EMPCD_CONFIRM = $EMPCD_CONFIRM,
+          OSCCONSUM_RELEASE_FORM.MTIME = _$NOW,
+          OSCCONSUM_RELEASE_FORM.MEMP = CALLEMP(),
+          OSCCONSUM_RELEASE_FORM.MPRG = CALLPRG()
+      WHERE OSCCONSUM_RELEASE_FORM.RELEASEKEY = _$RELEASEKEY;
+    END WHILE;
+
+  -- *****************************************************************************
+
+  WHEN 'CANCEL_CONFIRM' THEN -- 확정취소 (체크한 불출증의 확정일자·확정자 비움)
+
+    IF IFNULL($RELEASEKEY_LIST, '') = '' THEN
+      CALL COMERR('확정취소할 불출증을 체크하십시오.');
+      LEAVE PROC;
+    END IF;
+
+    -- 먼저 전부 검사
+    SET _$KEY_LIST = $RELEASEKEY_LIST;
+    WHILE LENGTH(_$KEY_LIST) > 0 DO
+      CALL COMSPLIT(_$KEY_LIST, _$RELEASEKEY);
+
+      IF NOT EXISTS (SELECT 1 FROM OSCCONSUM_RELEASE_FORM
+                      WHERE OSCCONSUM_RELEASE_FORM.RELEASEKEY = _$RELEASEKEY
+                        AND OSCCONSUM_RELEASE_FORM.CONFIRMDATE <> '') THEN
+        CALL COMERR(CONCAT('수령확정되지 않은 불출증입니다.', '\n- 불출증: ', _$RELEASEKEY));
+        LEAVE PROC;
+      END IF;
+    END WHILE;
+
+    SET _$NOW = CALLTIME();
+
+    SET _$KEY_LIST = $RELEASEKEY_LIST;
+    WHILE LENGTH(_$KEY_LIST) > 0 DO
+      CALL COMSPLIT(_$KEY_LIST, _$RELEASEKEY);
+
+      UPDATE OSCCONSUM_RELEASE_FORM
+      SET OSCCONSUM_RELEASE_FORM.CONFIRMDATE = '',
+          OSCCONSUM_RELEASE_FORM.EMPCD_CONFIRM = '',
+          OSCCONSUM_RELEASE_FORM.MTIME = _$NOW,
+          OSCCONSUM_RELEASE_FORM.MEMP = CALLEMP(),
+          OSCCONSUM_RELEASE_FORM.MPRG = CALLPRG()
+      WHERE OSCCONSUM_RELEASE_FORM.RELEASEKEY = _$RELEASEKEY;
+    END WHILE;
+
+  -- *****************************************************************************
+
+  END CASE;
+
+END

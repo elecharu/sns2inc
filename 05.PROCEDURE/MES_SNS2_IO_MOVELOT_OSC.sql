@@ -1,4 +1,4 @@
-﻿CREATE DEFINER = 'root'@'%'
+CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.IO_MOVELOT_OSC(
 -- *****************************************************************************
 -- Comment: 외주간 재고 이동
@@ -75,11 +75,11 @@ IF IFNULL(@ERRMSG, '') = '' THEN
   END IF;
 
   -- INVOICETP -> 04 : 외주간 이동  	
-  -- OUTTP -> 022	창고이동(외주간이동) (2026-11-23 신정수)
-  -- INTP -> 022	창고이동(외주간이동) (2026-11-23 신정수)
+  -- OUTTP -> 83 : 무상사급 외주간 창고이동
+  -- INTP -> 83 : 무상사급 외주간 창고이동
   SET _$INVOICETP = '04';
-  SET _$OUTTP = '022';
-  SET _$INTP = '022';
+  SET _$OUTTP = '83';
+  SET _$INTP = '83';
 
   -- 거래명세서 헤더
   SET _$INVOICEKEY = GETKEY('INVOICEKEY');

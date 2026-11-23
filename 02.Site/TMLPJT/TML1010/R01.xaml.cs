@@ -26,12 +26,10 @@ namespace TML1010
     public partial class R01 : ITSLIB.ItsPageTml
     {
         ItsModelPanel MODEL_S1 = new ItsModelPanel();
-        ItsModelPanel MODEL_A1 = new ItsModelPanel();
         ItsModelPanel MODEL_A3 = new ItsModelPanel(); // 2026-11-09 정보입력 팝업
         ItsModelPanel MODEL_S3 = new ItsModelPanel(); // 2026-11-19 [납품내역삭제] 탭 조회조건
 
         ItsModelGrid MODEL_G1 = new ItsModelGrid();
-        ItsModelGrid MODEL_G2 = new ItsModelGrid();
         ItsModelGrid MODEL_G3 = new ItsModelGrid(); // 2026-11-09 BOX 단위 수량 x BOX 수량
         ItsModelGrid MODEL_G4 = new ItsModelGrid(); // 2026-11-10 납품등록 BOX 현황 ([등록] 전까지 화면에만)
         ItsModelGrid MODEL_G5 = new ItsModelGrid(); // 2026-11-19 [납품내역삭제] 납품 목록 (거래명세서 단위)
@@ -47,9 +45,6 @@ namespace TML1010
             MODEL_S1.DefaultValue("EDATE", DateTime.Now);
             MODEL_S1.InitData();
 
-            MODEL_A1.Binding(PANEL_A1);
-            MODEL_A1.InitData();
-
             MODEL_A3.Binding(PANEL_A3);
             MODEL_A3.InitData();
 
@@ -57,8 +52,6 @@ namespace TML1010
             MODEL_S3.InitData();
 
             MODEL_G1.Binding(GRID_G1);
-
-            MODEL_G2.Binding(GRID_G2);
 
             MODEL_G3.Binding(GRID_G3);
             MODEL_G3.EventValueChanged += MODEL_G3_EventValueChanged;
@@ -70,16 +63,6 @@ namespace TML1010
             MODEL_G4.Binding(GRID_G4);
 
             MODEL_G5.Binding(GRID_G5);
-        }
-
-        // 결과 팝업에서 고른 줄의 거래명세서 (등록 한 번에 발주별로 여러 장이 만들어질 수 있음)
-        private void SetSelectedInvoice()
-        {
-            int row = MODEL_G2.CurrentIndex;
-            if (row >= 0 && MODEL_G2.Columns.Contains("INVOICEKEY") && MODEL_G2.GetText(row, "INVOICEKEY") != "")
-            {
-                MODEL_A1.SetValue("INVOICEKEY", MODEL_G2.GetText(row, "INVOICEKEY"));
-            }
         }
 
         // BOX 현황에 이미 쌓아 둔 이 발주의 수량 합계
@@ -146,7 +129,6 @@ namespace TML1010
             }
             cb_CUSTCD3.ReadOnly = (ItsLocalInfo.TMLCUSTCD != "");
 
-            PANEL_A1.Close();
             PANEL_A3.Close();
         }
 
@@ -209,7 +191,7 @@ namespace TML1010
                     return;
                 }
 
-                ShowMessageBox(commandName, "거래명세서 [" + MODEL_G5.GetText(MODEL_G5.CurrentIndex, "INVOICEKEY") + "] 의 납품을 삭제하시겠습니까?\n(자재이동에 올라간 납품은 삭제할 수 없습니다.)");
+                ShowMessageBox(commandName, "납품로트번호 [" + MODEL_G5.GetText(MODEL_G5.CurrentIndex, "LOTKEY") + "] 의 납품을 삭제하시겠습니까?\n(자재이동에 올라간 납품은 삭제할 수 없습니다.)");
             }
             // 정보입력 팝업 열기 (발주 행의 [입력] 버튼)
             else if (commandName == "POP_INPUT")
@@ -354,99 +336,17 @@ namespace TML1010
                 return;
             }
 
-            // 라벨재발행
-            else if (commandName == "LABEL_REPRINT")
-            {
-                ItsMaria.Set("TML1010_R01", "LABEL_REPRINT");
-                ItsMaria.AddOne("LOTKEY", MODEL_G2.GetText(MODEL_G2.CurrentIndex, "LOTKEY"));
-                ItsMaria.AddOne("INWARE", MODEL_G2.GetText(MODEL_G2.CurrentIndex, "INWARE"));
-                DataSet ds = ItsMaria.Call();
-
-                if (ItsMaria.IsError)
-                {
-                    ShowMessageBox("", ItsMaria.ErrMessage);
-                    return;
-                }
-
-                // 라벨출력 필요
-                //ItsBarcode barcode = new ItsBarcode(ItsData.GetText(ds.Tables[0], 0, "LABELCD"));
-
-                //barcode.SetDataTable(ds.Tables[1]);
-                //barcode.PrinterName = ItsPrinter.DefaultPrintName;
-                //barcode.Print(false);
-            }
-            // 납품 취소
-            else if (commandName == "MTRCUST_INVOICE_CANCEL")
-            {
-                SetSelectedInvoice();
-                ShowMessageBox(commandName, "거래명세서 [" + MODEL_A1.GetText("INVOICEKEY") + "] 를 납품 취소 하시겠습니까??");
-                return;
-            }
-            // 거래명세표 출력 (재출력: 거래명세서 + 공정이동표(재고))
-            else if (commandName == "MTRCUST_INVOICE_PRINT")
-            {
-                SetSelectedInvoice();
-                if (MODEL_A1.GetText("INVOICEKEY") == "")
-                {
-                    ShowMessageBox("", "출력할 거래명세서가 없습니다.");
-                    return;
-                }
-
-                PrintInvoice(MODEL_A1.GetText("INVOICEKEY"));
-            }
-            else if (commandName == "POP_MTRCUSTLOT")
-            {
-                ItsMaria.Set("TML1010_R01", "LIST_MTRCUSTLOT");
-                ItsMaria.AddOne("MTRODRKEY", MODEL_G1.GetText(MODEL_G1.CurrentIndex, "MTRODRKEY"));
-                ItsMaria.AddOne("MTRODRSEQ", MODEL_G1.GetText(MODEL_G1.CurrentIndex, "MTRODRSEQ"));
-
-                DataSet ds = ItsMaria.Call();
-
-                if (ItsMaria.IsError)
-                {
-                    ShowMessageBox("", ItsMaria.ErrMessage);
-                    return;
-                }
-
-                MODEL_A1.SetValue("MTRODRKEY", ds.Tables[0].Rows[0]["MTRODRKEY"]);
-                MODEL_A1.SetValue("MTRODRSEQ", ds.Tables[0].Rows[0]["MTRODRSEQ"]);
-                MODEL_A1.SetValue("OUTDATE", ds.Tables[0].Rows[0]["PRDDATE"]);
-                MODEL_A1.SetValue("OUTCUSTCD", ds.Tables[0].Rows[0]["OUTCUSTCD"]);
-                MODEL_A1.SetValue("INCUSTCD", ds.Tables[0].Rows[0]["INCUSTCD"]);
-                MODEL_G2.SetData(ds.Tables[0]);
-
-                PANEL_A1.Show();
-            }
         }
 
         public override void EventMessageResult(string commandName)
         {
             base.EventMessageResult(commandName);
 
-            // 납품 취소
-            if (commandName == "MTRCUST_INVOICE_CANCEL")
-            {
-                ItsMaria.Set("TML1010_R01", "DEL_MTRCUSTLOT");
-
-                ItsMaria.AddModel(MODEL_A1);
-
-                DataSet ds = ItsMaria.Call();
-
-                if (ItsMaria.IsError)
-                {
-                    ShowMessageBox("", ItsMaria.ErrMessage);
-                    return;
-                }
-
-                PANEL_A1.Close();
-
-                EventCommand("LIST_MTRODR");
-            }
             // [납품내역삭제] 납품 삭제
-            else if (commandName == "DEL_DLV")
+            if (commandName == "DEL_DLV")
             {
-                ItsMaria.Set("TML1010_R01", "DEL_MTRCUSTLOT");
-                ItsMaria.AddOne("INVOICEKEY", MODEL_G5.GetText(MODEL_G5.CurrentIndex, "INVOICEKEY"));
+                ItsMaria.Set("TML1010_R01", "DEL_DLV_LOT");
+                ItsMaria.AddOne("LOTKEY", MODEL_G5.GetText(MODEL_G5.CurrentIndex, "LOTKEY"));
 
                 DataSet ds = ItsMaria.Call();
                 if (ItsMaria.IsError)
@@ -488,60 +388,24 @@ namespace TML1010
 
                 MODEL_G4.Clear();
 
-                // 결과 팝업 : 이번에 만든 거래명세서들의 LOT (재출력·납품 취소는 고른 줄의 거래명세서)
-                MODEL_A1.SetValue("INVOICEKEY", ds.Tables[0].Rows[0]["INVOICEKEY"]);
-                MODEL_A1.SetValue("OUTDATE", ds.Tables[0].Rows[0]["PRDDATE"]);
-                MODEL_A1.SetValue("OUTCUSTCD", ds.Tables[0].Rows[0]["OUTCUSTCD"]);
-                MODEL_A1.SetValue("INCUSTCD", ds.Tables[0].Rows[0]["INCUSTCD"]);
-                MODEL_G2.SetData(ds.Tables[0]);
+                // 2026-11-23 결과 팝업 없이, 등록한 LOT 마다 공정이동표(재고) 자동 출력 (거래명세서는 자재이동에서 발행)
+                PrintMoveSheet(ds.Tables[0]);
 
-                PANEL_A1.Show();
-
-                // 등록 직후 거래명세서마다 거래명세서 + 공정이동표(재고) 자동 출력
-                List<string> invoiceKeys = new List<string>();
-                foreach (DataRow row in ds.Tables[0].Rows)
-                {
-                    string key = row["INVOICEKEY"].ToString();
-                    if (!invoiceKeys.Contains(key)) invoiceKeys.Add(key);
-                }
-                foreach (string key in invoiceKeys)
-                {
-                    PrintInvoice(key);
-                }
+                EventCommand("LIST_MTRODR");   // 미납량 다시 조회
             }
         }
 
-        // 2026-11-16 납품등록은 거래명세서 없이 공정이동표(LOT 1개당 1장)만 출력 (거래명세서는 외주이동 등 이동 메뉴에서 발행)
-        // 확인창 없이 POP 에서 고른 프린터로 바로 인쇄. 양식은 COMPJT\TMLPRINT 의 MTR_2 (AAALIB\TMLPRINT.exe)
-        private void PrintInvoice(string invoiceKey)
+        // 공정이동표(LOT 1개당 1장, A4 세로) 출력. 확인창 없이 POP 에서 고른 프린터로 바로 인쇄. 양식은 COMPJT\TMLPRINT 의 MTR_2 (AAALIB\TMLPRINT.exe)
+        private void PrintMoveSheet(DataTable dt)
         {
-            ItsMaria.Set("TML1010_R01", "PRINT_INVOICE");
-            ItsMaria.AddOne("INVOICEKEY", invoiceKey);
-            DataSet ds = ItsMaria.Call();
-            if (ItsMaria.IsError)
-            {
-                ShowMessageBox("", ItsMaria.ErrMessage);
-                return;
-            }
-
             try
             {
-                TMLPRINT.MTR_2 rptMove = new TMLPRINT.MTR_2(ds.Tables[4]);
+                TMLPRINT.MTR_2 rptMove = new TMLPRINT.MTR_2(dt);
                 rptMove.PrintDirect(ItsPrinter.BarcodePrintName);
             }
             catch (Exception ex)
             {
                 ShowMessageBox("", "공정이동표 출력에 실패했습니다. 프린터를 확인해주세요.\n" + ex.Message);
-            }
-        }
-
-        public override void EventPopClose(string panelName)
-        {
-            base.EventPopClose(panelName);
-
-            if (panelName == "PANEL_A1")
-            {
-                EventCommand("LIST_MTRODR");
             }
         }
     }
