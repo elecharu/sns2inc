@@ -8,6 +8,7 @@ PROCEDURE MES_SNS2.TML1010_R06(
 -- Create: 2026-11-16
 -- Modify: 2026-11-19: 납품등록 때 입고하지 않으므로 사내창고 입고 여부·재고 확인 제거 (입고는 입고확인 TML1020_R07 에서)
 -- Modify: 2026-11-23: 납품등록이 거래명세서(01) 를 만들지 않으므로 납품 LOT(MTRCUSTLOT) 기준으로 스캔·거래명세서(05) 발행. 거래명세서는 여기서 처음 생김
+-- Modify: 2026-11-23: ERP 화면과 같게 출고창고(= 발주입고창고 MTRODR.INWARECD)·입고창고 표시. 첫 스캔 LOT 의 발주입고창고로 정하고 이후 스캔 LOT 는 같은 창고인지 확인
 -- *****************************************************************************
   IN $CUSTCD            VARCHAR(100),
   IN $MOVEDATE          VARCHAR(100),
@@ -16,6 +17,8 @@ PROCEDURE MES_SNS2.TML1010_R06(
   IN $SDATE             VARCHAR(100),
   IN $EDATE             VARCHAR(100),
   IN $LOTKEY_LIST       MEDIUMTEXT,
+  IN $OUTWARE           VARCHAR(100),   -- 출고창고 = 발주입고창고 (첫 스캔 LOT 의 MTRODR.INWARECD). 스캔 때는 이미 스캔한 LOT 의 창고
+  IN $INWARE            VARCHAR(100),   -- 입고창고 : 자재창고(원자재) → 자재투입창고, 상품창고 → 상품출하창고(유상사급)
 -- *****************************************************************************
   IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
@@ -59,6 +62,39 @@ WHEN 'SCAN_LOT' THEN -- LOT 바코드 스캔 : 로그인한 외주처가 납품�
     LEAVE PROC;
   END IF;
 
+  -- 발주입고창고 : 자재창고(원자재) / 상품창고만 자재이동 가능
+  IF NOT EXISTS (SELECT 1
+                   FROM MTRCUSTLOT
+                   INNER JOIN MTRODR ON MTRODR.MTRODRKEY = MTRCUSTLOT.MTRODRKEY
+                   WHERE MTRCUSTLOT.LOTKEY = $SCANLOT
+                     AND MTRODR.INWARECD IN ('04S100_N', '04S120_N')) THEN
+    CALL COMERR(CONCAT('자재이동할 수 없는 발주입고창고입니다. (자재창고·상품창고만 가능)'
+                      , '\n- 로트번호: ', $SCANLOT
+                      , '\n- 발주입고창고: ', IFNULL((SELECT MSTWARE.WARENM
+                                                        FROM MTRCUSTLOT
+                                                       INNER JOIN MTRODR ON MTRODR.MTRODRKEY = MTRCUSTLOT.MTRODRKEY
+                                                       INNER JOIN MSTWARE ON MSTWARE.WARECD = MTRODR.INWARECD
+                                                       WHERE MTRCUSTLOT.LOTKEY = $SCANLOT LIMIT 1), '')));
+    LEAVE PROC;
+  END IF;
+
+  -- 두 번째 스캔부터 : 이미 스캔한 LOT 와 발주입고창고가 같아야 함
+  IF IFNULL($OUTWARE, '') <> '' AND NOT EXISTS (SELECT 1
+                                                  FROM MTRCUSTLOT
+                                                  INNER JOIN MTRODR ON MTRODR.MTRODRKEY = MTRCUSTLOT.MTRODRKEY
+                                                  WHERE MTRCUSTLOT.LOTKEY = $SCANLOT
+                                                    AND MTRODR.INWARECD = $OUTWARE) THEN
+    CALL COMERR(CONCAT('이미 스캔한 LOT 와 발주입고창고가 다릅니다.'
+                      , '\n- 로트번호: ', $SCANLOT
+                      , '\n- 이 LOT 발주입고창고: ', IFNULL((SELECT MSTWARE.WARENM
+                                                              FROM MTRCUSTLOT
+                                                             INNER JOIN MTRODR ON MTRODR.MTRODRKEY = MTRCUSTLOT.MTRODRKEY
+                                                             INNER JOIN MSTWARE ON MSTWARE.WARECD = MTRODR.INWARECD
+                                                             WHERE MTRCUSTLOT.LOTKEY = $SCANLOT LIMIT 1), '')
+                      , '\n- 스캔한 LOT 발주입고창고: ', IFNULL((SELECT MSTWARE.WARENM FROM MSTWARE WHERE MSTWARE.WARECD = $OUTWARE), $OUTWARE)));
+    LEAVE PROC;
+  END IF;
+
   -- 이미 입고된 LOT (예전 방식으로 납품등록 때 입고된 것) 는 이동 불가
   IF EXISTS (SELECT 1 FROM MTRINLOT WHERE MTRINLOT.LOTKEY = $SCANLOT) THEN
     CALL COMERR(CONCAT('이미 입고된 LOT 입니다. (예전 방식으로 납품등록한 LOT)', '\n- 로트번호: ', $SCANLOT));
@@ -77,7 +113,9 @@ WHEN 'SCAN_LOT' THEN -- LOT 바코드 스캔 : 로그인한 외주처가 납품�
 
   SELECT
       MTRCUSTLOT.LOTKEY
-    , '04S100_N' AS WARECD
+    , MTRODR.INWARECD AS WARECD                                          -- 출고창고 = 발주입고창고
+    , IFNULL((SELECT MSTWARE.WARENM FROM MSTWARE WHERE MSTWARE.WARECD = MTRODR.INWARECD), '') AS WARENM
+    , CASE MTRODR.INWARECD WHEN '04S100_N' THEN '04S111_N' WHEN '04S120_N' THEN '04S140_N' ELSE '' END AS INWARECD   -- 입고창고
     , CAST(MSTITEM.ITEMID AS CHAR) AS ITEMID
     , MSTITEM.ITEMCD
     , MSTITEM.ITEMNM
@@ -88,6 +126,7 @@ WHEN 'SCAN_LOT' THEN -- LOT 바코드 스캔 : 로그인한 외주처가 납품�
     , MTRCUSTLOT.LOTQTY AS MOVEQTY   -- 이동량 = 납품 LOT 전량 (수정 불가)
     , '' AS REMARK
   FROM MTRCUSTLOT
+  INNER JOIN MTRODR ON MTRODR.MTRODRKEY = MTRCUSTLOT.MTRODRKEY
   INNER JOIN MSTITEM ON MSTITEM.ITEMID = MTRCUSTLOT.ITEMID
   WHERE MTRCUSTLOT.LOTKEY = $SCANLOT;
 
@@ -106,6 +145,16 @@ WHEN 'MOVE_LOT' THEN -- 자재이동 등록 : 스캔한 LOT 들로 거래명세�
 
   IF IFNULL($LOTKEY_LIST, '') = '' THEN
     CALL COMERR('이동할 LOT 를 스캔하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($OUTWARE, '') = '' THEN
+    CALL COMERR('출고창고(발주입고창고)가 없습니다. LOT 바코드를 스캔하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($INWARE, '') <> CASE $OUTWARE WHEN '04S100_N' THEN '04S111_N' WHEN '04S120_N' THEN '04S140_N' ELSE '' END THEN
+    CALL COMERR('출고창고에 맞는 입고창고가 아닙니다. (자재창고 → 자재투입창고, 상품창고 → 상품출하창고(유상사급))');
     LEAVE PROC;
   END IF;
 
@@ -140,6 +189,15 @@ WHEN 'MOVE_LOT' THEN -- 자재이동 등록 : 스캔한 LOT 들로 거래명세�
                        WHERE MTRCUSTLOT.LOTKEY = _$LOTKEY
                          AND MTRODR.ODRBC = 'MM100900') THEN
         CALL COMERR(CONCAT('유상사급 발주 납품 LOT 가 아닙니다.', '\n- 로트번호: ', _$LOTKEY));
+        LEAVE PROC;
+      END IF;
+
+      IF NOT EXISTS (SELECT 1
+                       FROM MTRCUSTLOT
+                       INNER JOIN MTRODR ON MTRODR.MTRODRKEY = MTRCUSTLOT.MTRODRKEY
+                       WHERE MTRCUSTLOT.LOTKEY = _$LOTKEY
+                         AND MTRODR.INWARECD = $OUTWARE) THEN
+        CALL COMERR(CONCAT('발주입고창고가 다른 LOT 입니다.', '\n- 로트번호: ', _$LOTKEY));
         LEAVE PROC;
       END IF;
 

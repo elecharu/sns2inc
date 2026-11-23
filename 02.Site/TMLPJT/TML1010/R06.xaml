@@ -14,30 +14,33 @@
     <Canvas Background="WhiteSmoke">
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
-            <its:WrapContent x:Name="PANEL_S1" Width="980" Height="62">
-                <its:Pop GPCD="CUSTCD_OSC2" Width="450" Label="외주처" Value="{Binding CUSTCD}" x:Name="cb_CUSTCD" ShowKeyPad="True" />
-                <its:Date Label="이동일자" LabelWidth="70" Width="230" Value="{Binding MOVEDATE}" Foreground="Green" FontWeight="Bold"/>
-                <UserControl Width="30"/>
-                <its:Combo GPCD="WARECD_HQ" LabelWidth="70" Width="330" Label="입고창고" Value="{Binding INWARE}" ReadOnly="True" x:Name="cb_INWARE" FontWeight="Bold"/>
-                <UserControl Width="30"/>
-                <its:Text x:Name="txt_BARCODE" Label="바코드 스캔" LabelWidth="90" Width="340" Value="{Binding SCANLOT}" KeyDown="Text_KeyDown"/>
-            </its:WrapContent>
-        </UserControl>
+                    <its:WrapContent x:Name="PANEL_S1" Width="980" Height="62">
+                        <its:Date Label="이동일자" LabelWidth="70" Width="230" Value="{Binding MOVEDATE}" Foreground="Green" FontWeight="Bold"/>
+                        <its:Combo GPCD="WARECD_MTRMOVE_OUT" LabelWidth="70" Width="330" Label="출고창고" Value="{Binding OUTWARE}" ReadOnly="True" x:Name="cb_OUTWARE" FontWeight="Bold"/>
+                        <its:Text x:Name="txt_BARCODE" Label="바코드 스캔" LabelWidth="90" Width="340" Value="{Binding SCANLOT}" KeyDown="Text_KeyDown"/>
+                        <UserControl Width="230"/>
+                        <its:Combo GPCD="WARECD_MTRMOVE_IN" LabelWidth="70" Width="330" Label="입고창고" Value="{Binding INWARE}" ReadOnly="True" x:Name="cb_INWARE" FontWeight="Bold"/>
+                        <UserControl Width="30"/>
+                        <its:Pop GPCD="CUSTCD_OSC2" Width="450" Label="외주처" Value="{Binding CUSTCD}" x:Name="cb_CUSTCD" ShowKeyPad="True" Visibility="Collapsed"/>
+                   </its:WrapContent>
+         </UserControl>
 
-        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="62">
+                <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="62">
             <its:Grid x:Name="GRID_G1" Width="860" Height="393">
                 <its:Grid.Columns>
                     <its:Column Width="55" Header="삭제" CellType="Button" ButtonText="삭제" CommandName="DEL_ROW"/>
-                    <its:Column Width="115" Header="품목코드" FieldName="ITEMCD"/>
-                    <its:Column Width="145" Header="품명" FieldName="ITEMNM"/>
-                    <its:Column Width="110" Header="규격" FieldName="ITEMSPEC"/>
-                    <its:Column Width="90" Header="HEAT NO" FieldName="HEATNO" ALGIN="Center"/>
-                    <its:Column Width="115" Header="LOT NO" FieldName="LOTKEY" ALGIN="Center"/>
-                    <its:Column Width="45" Header="단위" FieldName="UNITNM" ALGIN="Center"/>
-                    <its:Column Width="90" Header="이동량" FieldName="MOVEQTY" DecimalPoint="0"/>
-                    <its:Column Width="80" Header="비고" FieldName="REMARK" ReadOnly="False"/>
+                    <its:Column Width="105" Header="품목코드" FieldName="ITEMCD"/>
+                    <its:Column Width="115" Header="품명" FieldName="ITEMNM"/>
+                    <its:Column Width="90" Header="규격" FieldName="ITEMSPEC"/>
+                    <its:Column Width="80" Header="HEAT NO" FieldName="HEATNO" ALGIN="Center"/>
+                    <its:Column Width="105" Header="LOT NO" FieldName="LOTKEY" ALGIN="Center"/>
+                    <its:Column Width="40" Header="단위" FieldName="UNITNM" ALGIN="Center"/>
+                    <its:Column Width="80" Header="이동량" FieldName="MOVEQTY" DecimalPoint="0"/>
+                    <its:Column Width="100" Header="창고명" FieldName="WARENM"/>
+                    <its:Column Width="90" Header="비고" FieldName="REMARK" ReadOnly="False"/>
                     <its:Column Width="80" Header="품목ID" FieldName="ITEMID" Visible="False"/>
                     <its:Column Width="80" Header="창고" FieldName="WARECD" Visible="False"/>
+                    <its:Column Width="80" Header="입고창고" FieldName="INWARECD" Visible="False"/>
                     <its:Column Width="80" Header="재고유형" FieldName="LOTTP" Visible="False"/>
                 </its:Grid.Columns>
             </its:Grid>

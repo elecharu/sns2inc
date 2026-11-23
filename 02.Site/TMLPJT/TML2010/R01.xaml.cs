@@ -47,6 +47,7 @@ namespace TML2010
         ItsModelGrid MODEL_G10 = new ItsModelGrid(); //자주검사 검사항목
         ItsModelGrid MODEL_G11 = new ItsModelGrid(); //자주검사 검사값
         ItsModelGrid MODEL_G12 = new ItsModelGrid(); //공정이동표 발행 실적로트
+        ItsModelGrid MODEL_G13 = new ItsModelGrid(); //실적삭제 최근 실적
 
         private string chgLinecd = ""; //BOM 불일치 시 바꿀 작업장
         private string chgPrccd = "";  //BOM 불일치 시 바꿀 공정
@@ -103,6 +104,7 @@ namespace TML2010
             MODEL_G11.Binding(GRID_G11);
             MODEL_G11.EventValueChanged += MODEL_G11_EventValueChanged;
             MODEL_G12.Binding(GRID_G12);
+            MODEL_G13.Binding(GRID_G13);
 
             //공정이동표 발행 팝업 프린터 목록 (TMLMAIN 프린터 설정과 같은 방식)
             CMB_PRINT.ItemClear();
@@ -1336,6 +1338,43 @@ namespace TML2010
             {   // 공정이동표 발행 팝업 닫기
                 PANEL_A11.Close();
             }
+            else if (commandName == "POP_DELRST")
+            {   // 실적삭제 팝업 (작업장·공정·라인은 메인에서 선택한 값, 작업일 어제·오늘 실적)
+                if (MODEL_S1.GetText("LINECD") == "" || MODEL_S1.GetText("PRCCD") == "" || MODEL_S1.GetText("EQMCD") == "")
+                {
+                    ShowMessageBox("", "생산작업장, 생산공정, 생산라인을 선택하세요.");
+                    return;
+                }
+
+                if (!SearchDelRst()) return;
+                PANEL_A12.Show();
+            }
+            else if (commandName == "DEL_RST")
+            {   // 실적삭제 확인 (실제 삭제는 EventMessageResult)
+                if (MODEL_G13.Rows.Count == 0 || MODEL_G13.CurrentIndex < 0)
+                {
+                    ShowMessageBox("", "삭제할 실적을 선택하세요.");
+                    return;
+                }
+
+                ShowMessageBox(commandName, "실적로트 " + MODEL_G13.GetText(MODEL_G13.CurrentIndex, "LOTKEY") + " 의 생산실적을 삭제하시겠습니까?\n투입로트 재고가 되돌아가고, 실적로트(양품·불량) 재고는 지워집니다.");
+            }
+        }
+
+        // 실적삭제 팝업 최근 실적 조회. 실패하면 메시지 후 false
+        private bool SearchDelRst()
+        {
+            ItsMaria.Set("TML2010_R01", "LIST_RST");
+            ItsMaria.AddModel(MODEL_S1);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return false;
+            }
+
+            MODEL_G13.SetData(ds.Tables[0]);
+            return true;
         }
 
         // 공정이동표 발행 대상 행: 체크한 행(화면 순서대로), 체크한 행이 없으면 선택한 행
@@ -1404,6 +1443,23 @@ namespace TML2010
                 }
 
                 EventCommand("LIST_INPUT");
+            }
+            else if (commandName == "DEL_RST")
+            {   // 실적삭제 (실적로트를 아직 쓰지 않았을 때만, 프로시저가 확인)
+                string lotKey = MODEL_G13.GetText(MODEL_G13.CurrentIndex, "LOTKEY");
+
+                ItsMaria.Set("TML2010_R01", "DEL_RST");
+                ItsMaria.AddModel(MODEL_S1);
+                ItsMaria.AddOne("LOTKEY", lotKey);
+                ItsMaria.Call();
+                if (ItsMaria.IsError)
+                {
+                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    return;
+                }
+
+                SearchDelRst();
+                ShowMessageBox("", "생산실적이 삭제되었습니다.\n실적로트: " + lotKey);
             }
             else if (commandName == "DEL_CHK")
             {   // 일상점검 삭제

@@ -76,8 +76,8 @@ namespace TML1010
                 cb_CUSTCD.Visibility = Visibility.Visible;
             }
 
-            // 입고창고 : 사내창고 (납품등록 때 입고된 창고, 표시만)
-            cb_INWARE.Value = "04S100_N";
+            // 출고창고(= 발주입고창고)·입고창고는 첫 바코드 스캔 때 정해짐 (표시만)
+            ResetWare();
 
             MODEL_S1.SetValue("MOVEDATE", DateTime.Now.ToString("yyyy-MM-dd"));
             MODEL_S2.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-dd"));
@@ -88,6 +88,13 @@ namespace TML1010
 
             PANEL_A1.Close();
             txt_BARCODE.Focus();
+        }
+
+        // 출고창고·입고창고 비움 (스캔한 LOT 가 없을 때. 다음 첫 스캔 때 다시 정함)
+        private void ResetWare()
+        {
+            MODEL_S1.SetValue("OUTWARE", "");
+            MODEL_S1.SetValue("INWARE", "");
         }
 
         // ===== [거래명세서 발행]·[이동내역삭제] 탭 : 자재이동 거래명세서 조회 / 발행 / 삭제 (프로시저 TML1010_R06 LIST_INVOICE, DEL_MOVE_LOT) =====
@@ -193,12 +200,14 @@ namespace TML1010
             if (commandName == "DEL_ROW")
             {
                 MODEL_G1.DeleteCurrentModel();
+                if (MODEL_G1.Rows.Count == 0) ResetWare();
                 txt_BARCODE.Focus();
             }
             // 스캔 목록 비우기
             else if (commandName == "CLEAR_SCAN")
             {
                 MODEL_G1.Clear();
+                ResetWare();
                 MODEL_S1.SetValue("SCANLOT", "");
                 txt_BARCODE.Focus();
             }
@@ -218,6 +227,11 @@ namespace TML1010
                 if (MODEL_G1.Rows.Count == 0)
                 {
                     ShowMessageBox("", "이동할 LOT 바코드를 스캔하세요.");
+                    return;
+                }
+                if (MODEL_S1.GetText("OUTWARE") == "" || MODEL_S1.GetText("INWARE") == "")
+                {
+                    ShowMessageBox("", "출고창고·입고창고가 정해지지 않았습니다. LOT 바코드를 다시 스캔하세요.");
                     return;
                 }
 
@@ -271,6 +285,7 @@ namespace TML1010
 
                 PANEL_A1.Close();
                 MODEL_G1.Clear();
+                ResetWare();
                 txt_BARCODE.Focus();
             }
             // 등록
@@ -279,6 +294,8 @@ namespace TML1010
                 ItsMaria.Set("TML1010_R06", "MOVE_LOT");
                 ItsMaria.AddOne("MOVEDATE", MODEL_S1.GetValue("MOVEDATE"));
                 ItsMaria.AddOne("CUSTCD", MODEL_S1.GetValue("CUSTCD"));
+                ItsMaria.AddOne("OUTWARE", MODEL_S1.GetValue("OUTWARE"));
+                ItsMaria.AddOne("INWARE", MODEL_S1.GetValue("INWARE"));
 
                 for (int i = 0; i < MODEL_G1.Rows.Count; i++)
                 {
@@ -305,6 +322,7 @@ namespace TML1010
                 string invoiceKey = ItsData.GetText(ds.Tables[0], 0, "INVOICEKEY");
 
                 MODEL_G1.Clear();
+                ResetWare();
                 MODEL_S1.SetValue("SCANLOT", "");
 
                 // 등록 직후 거래명세서 출력
@@ -318,6 +336,7 @@ namespace TML1010
             if (fieldName == "CUSTCD" && inHouse && MODEL_G1.Rows.Count > 0)
             {
                 MODEL_G1.Clear();
+                ResetWare();
             }
         }
 
@@ -348,6 +367,7 @@ namespace TML1010
             ItsMaria.Set("TML1010_R06", "SCAN_LOT");
             ItsMaria.AddOne("CUSTCD", MODEL_S1.GetText("CUSTCD"));
             ItsMaria.AddOne("SCANLOT", lotKey);
+            ItsMaria.AddOne("OUTWARE", MODEL_G1.Rows.Count == 0 ? "" : MODEL_S1.GetText("OUTWARE"));   // 두 번째 스캔부터 이미 스캔한 LOT 의 발주입고창고와 같은지 프로시저에서 확인
             DataSet ds = ItsMaria.Call();
             if (ItsMaria.IsError)
             {
@@ -358,6 +378,9 @@ namespace TML1010
 
             if (MODEL_G1.Rows.Count == 0)
             {
+                // 첫 스캔 : 출고창고 = 이 LOT 의 발주입고창고(MTRODR.INWARECD), 입고창고는 출고창고에 따라 정해짐
+                MODEL_S1.SetValue("OUTWARE", ItsData.GetText(ds.Tables[0], 0, "WARECD"));
+                MODEL_S1.SetValue("INWARE", ItsData.GetText(ds.Tables[0], 0, "INWARECD"));
                 MODEL_G1.SetData(ds.Tables[0]);
             }
             else
@@ -399,6 +422,7 @@ namespace TML1010
             if (panelName == "PANEL_A1")
             {
                 MODEL_G1.Clear();
+                ResetWare();
                 txt_BARCODE.Focus();
             }
         }

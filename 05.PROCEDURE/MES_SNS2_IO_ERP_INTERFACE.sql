@@ -1,4 +1,4 @@
-CREATE DEFINER = 'root'@'%'
+﻿CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.IO_ERP_INTERFACE(
 -- *****************************************************************************
 -- Comment: ERP INTERFACE IO (2공장)  - 1공장 MES_SNS.IO_ERP_INTERFACE 와 같은 방식, 송신 테이블은 IF_MES_SNS_FAC2.FAC2_ERP_IF_*

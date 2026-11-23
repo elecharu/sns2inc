@@ -21,6 +21,7 @@
                 <its:Button Label="설비&#x0a;일상점검" Width="75" Height="60" SetFontSize="13" CommandName="POP_CHK" FontWeight="Bold"/>
                 <its:Button Label="자주검사&#x0a;등록" Width="75" Height="60" SetFontSize="13" CommandName="POP_PRCTEST" FontWeight="Bold"/>
                 <its:Button Label="공정&#x0a;이동표" Width="75" Height="60" SetFontSize="13" CommandName="POP_MOVE" FontWeight="Bold"/>
+                <its:Button Label="실적삭제" Width="75" Height="60" SetFontSize="13" CommandName="POP_DELRST" BackColor="RED" FontWeight="Bold"/>
             </its:WrapContent>
         </UserControl>
 
@@ -401,6 +402,28 @@
                     <its:Button Label="라벨발행" Width="115" Height="45" SetFontSize="16" CommandName="PRINT_LABEL" FontWeight="Bold" Margin="0,5,0,0" x:Name="BTN_LABELPRINT"/>
                     <its:Button Label="취    소" Width="115" Height="45" SetFontSize="16" CommandName="CLOSE_MOVE" BackColor="GRAY" FontWeight="Bold" Margin="0,40,0,0"/>
                 </StackPanel>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--실적삭제 팝업 (작업장·공정·라인은 메인 값, 작업일 어제·오늘 실적. 실적로트를 아직 쓰지 않은 실적만 삭제됨)-->
+        <UserControl x:Name="POPUP_A12" Style="{DynamicResource TML_POP}" Canvas.Left="88" Canvas.Top="60" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A12" Width="1000" Height="450">
+                <TextBlock Width="840" Height="40" FontSize="18" FontWeight="Bold" Padding="10,8,0,0" Text="실적삭제 (어제·오늘 실적, 실적로트를 쓰지 않은 실적만)"/>
+                <its:Button Label="삭    제" Width="150" Height="40" SetFontSize="18" CommandName="DEL_RST" BackColor="RED" FontWeight="Bold"/>
+                <its:Grid x:Name="GRID_G13" Width="995" Height="400">
+                    <its:Grid.Columns>
+                        <its:Column Width="90" Header="작업일" FieldName="WORKDATE" ALGIN="CENTER"/>
+                        <its:Column Width="50" Header="주야" FieldName="DNTPNM" ALGIN="CENTER"/>
+                        <its:Column Width="130" Header="등록일시" FieldName="RSTTIME" ALGIN="CENTER"/>
+                        <its:Column Width="120" Header="실적로트" FieldName="LOTKEY" ALGIN="CENTER"/>
+                        <its:Column Width="110" Header="품번" FieldName="ITEMCD"/>
+                        <its:Column Width="170" Header="품명" FieldName="ITEMNM"/>
+                        <its:Column Width="70" Header="생산수량" FieldName="PRODQTY" DecimalPoint="0"/>
+                        <its:Column Width="70" Header="양품수량" FieldName="GOODQTY" DecimalPoint="0"/>
+                        <its:Column Width="70" Header="불량수량" FieldName="BADQTY" DecimalPoint="0"/>
+                        <its:Column Width="80" Header="작업자" FieldName="EMPNM"/>
+                    </its:Grid.Columns>
+                </its:Grid>
             </its:WrapContent>
         </UserControl>
     </Canvas>

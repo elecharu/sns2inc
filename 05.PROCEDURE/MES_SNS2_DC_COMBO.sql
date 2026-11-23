@@ -483,6 +483,26 @@ PROC: BEGIN
       WHERE MSTWARE.USEYN = 'Y'
         AND MSTWARE.WARECD = '04S111_N'
       ORDER BY MSTWARE.WARECD;
+
+-- *****************************************************************************
+  ELSEIF $GPCD = 'WARECD_MTRMOVE_OUT' THEN -- 2026-11-23 유상사급 자재이동(TML1010_R06) 출고창고(= 발주입고창고) : 자재창고(원자재), 상품창고
+
+    SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
+      FROM MSTWARE
+      WHERE MSTWARE.USEYN = 'Y'
+        AND MSTWARE.WARECD IN ('04S100_N', '04S120_N')
+      ORDER BY MSTWARE.WARECD;
+
+-- *****************************************************************************
+  ELSEIF $GPCD = 'WARECD_MTRMOVE_IN' THEN -- 2026-11-23 유상사급 자재이동(TML1010_R06) 입고창고 : 자재투입창고, 상품출하창고(유상사급)
+
+    SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
+      FROM MSTWARE
+      WHERE MSTWARE.USEYN = 'Y'
+        AND MSTWARE.WARECD IN ('04S111_N', '04S140_N')
+      ORDER BY MSTWARE.WARECD;
+
+-- *****************************************************************************
   ELSEIF $GPCD = 'WARECD_GOOD' THEN
     
     SELECT MSTWARE.WARENM AS Label, MSTWARE.WARECD AS Value
