@@ -18,6 +18,25 @@
 
 ## 🕒 2026-11-24 (화) 작업 내역
 
+### 2. IO_COMCHK_CANCEL 재고실사 승인취소 로트 재고 원복을 현재고 기준 가감으로 변경
+- **수정 파일**: [05.Procedure/MES_SNS2_IO_COMCHK_CANCEL.sql](05.Procedure/MES_SNS2_IO_COMCHK_CANCEL.sql) ("1. COMLOT 원복"), [.agents/rules/priority_reference_verification.md](.agents/rules/priority_reference_verification.md) (4항)
+- **요청**: 승인취소 시 COMLOT 재고를 등록 당시 이전 재고(OLDQTY)로 덮어쓰지 않고 현재고 + 출고수량 / 현재고 − 입고수량으로 원복, 규칙 문서에 수량 원복 원칙 추가
+- **변경 전 문제**: `COMLOT.LOTQTY = COMOUTLOT.OLDQTY` / `= COMINLOT.OLDQTY`로 덮어써서, 승인 후 같은 로트·창고에 다른 경로로 재고 변동이 있으면 그 변동분이 지워짐
+- **작업 내용**
+  - 1. 실사출고 취소: COMOUT·COMOUTLOT을 로트·창고별 `SUM(OUTQTY)`로 묶은 뒤 `COMLOT.LOTQTY = COMLOT.LOTQTY + OUTQTY`
+  - 2. 실사입고 취소: COMIN·COMINLOT을 로트·창고별 `SUM(INQTY)`로 묶은 뒤 `COMLOT.LOTQTY = COMLOT.LOTQTY - INQTY`
+  - 3. 합산 이유: 다중 테이블 `UPDATE ... JOIN`은 같은 COMLOT 행을 한 번만 갱신하므로 같은 로트가 여러 행이면 일부만 가감됨. 현재 PK가 (OUTKEY·LOTKEY)/(INKEY·LOTKEY)이고 실DB에서 실사키당 COMOUT·COMIN 각 1건이라 중복은 없지만 방어적으로 집계
+  - 4. 수량 컬럼 확인: COMOUTLOT.OUTQTY, COMINLOT.INQTY (실DB 컬럼 정의, IO_COMCHK_CONFIRM INSERT 기준). 파일 안 다른 OLDQTY 원복 없음, 05.Procedure 전체에 `LOTQTY = …OLDQTY` 덮어쓰기 없음
+  - 5. 헤더 Modify 1행 추가, 규칙 문서에 "수량 원복은 현재고 + / − 수량, OLDQTY 덮어쓰기 금지, 여러 행이면 SUM 후 1회 반영" 추가
+- **검증 (실DB 읽기 SELECT)**
+  - 실DB 프로시저 본문 = 로컬 파일(수정 전) 동일
+  - 실사 입출고 실데이터(출고 4개 실사키 30행, 입고 1개 실사키 1행): 모두 승인 후 재고 변동 없어 변경 전·후 결과 동일 (예: 261113000002 II26L09-023 현재고 30, 입고 20 → 전 10·후 10, 261111000003 출고 18로트 합 현재고 0 → 후 1,640 = OLDQTY 합)
+  - 새 집계 서브쿼리 그대로 SELECT 실행: 로트·창고별 1행, 수량 일치
+  - 승인 후 변동 시나리오(SELECT 상수): 입고 10→30 후 출고 5 → 전 10·후 5(정답 5), 출고 100→0 후 입고 30 → 전 100·후 130(정답 130)
+  - 파일 형식 BOM 없음·CRLF 유지. 미확인: 프로시저 컴파일·실제 UPDATE 실행(실DB DDL·DML 금지, 로컬 MariaDB 없음)
+- **참고 (미수정)**: 출고 실사키 261111000002·261111000003·261112000002·261112000004는 COMCHK에 행이 없음(COMOUT만 남음)
+- **실DB 반영**: 사용자 프로시저 저장 필요 (파라미터 변경 없음)
+
 ### 1. EQM1001_R01 JS 워크플로우 과잉 안내 토스트 삭제
 - **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js)
 - **요청**: `EQM1001_R01.js` 내 실행 흐름에 영향 없는 과잉 안내 토스트(`NONAUTO` 자동 연결 안내 등)만 삭제 (`.aspx` 주석·UI 라벨 유지)
@@ -25,6 +44,18 @@
   - 1. `pop_REPSEL.onAddBtnClick` : `row.NONAUTO == 'Y'` 비가동 자동 연결 안내 토스트 삭제
   - 2. `ItsButton.EventDelete` : 삭제 확인창 취소 시 `삭제가 취소되었습니다.` 과잉 토스트 삭제
 - **검증**: `node --check` 구문 검사 통과(오류 0건), `EQM1001_R01.aspx` 원복 확인, `EQM1001_R01.js`·`WORK_HISTORY.md` 단일 UTF-8 with BOM + CRLF 확인
+
+## 🕒 2026-11-24 (화) 작업 내역
+
+### 1. PRD6001_S02 M1 T1 라인 수리이력 미표시 원인 확인 (소스 수정 없음)
+- **대상**: [05.Procedure/MES_SNS2_PRD6001_S02.sql](05.Procedure/MES_SNS2_PRD6001_S02.sql), 실DB MSTLINE_EQM·MSTEQM_MATCH·EQMREP
+- **요청**: 설비이력카드(I2C-002N·I2G-001N·I2S-001N·I2W-001N, 사용처 열후 T1)에는 수리 기록이 있는데 PRD6001_S02 조회 시 M1 T1 라인에 안 보이는 이유
+- **원인 (데이터, 실DB 읽기 SELECT)**
+  - 1. M1 라인 설비 I2M010_N-A0001_N (M1열후)T1, A0002_N (M1열후)T2 (1044)의 MSTLINE_EQM 사용여부가 N → 화면 대상 설비(사용여부 Y)에서 빠져 행 자체가 없음
+  - 2. 설비매칭(MSTEQM_MATCH)에 새 코드 매칭이 없음. 옛 코드로만 등록됨(I2M010-I2C-002 ↔ I2C-002, I2M010-I2G-001 ↔ I2G-001, I2M010-I2S-001 ↔ I2S-001, I2M010-I2W-001 ↔ I2W-001 등 끝에 N 없는 코드). 수리이력은 새 설비번호(I2C-002N 등)로 쌓여 연결되지 않음
+  - 3. 영향: 네 설비 2026년 수리 13건(I2C-002N 5, I2G-001N 5, I2S-001N 2, I2W-001N 1) 모두 미집계. 같은 이유로 I2G-009N·I2ROT-003N·I2W-017N(옛 매칭 I2M010-…)도 미집계. 설비이력카드는 설비번호로 바로 읽어 매칭과 무관하게 보임
+- **조치 필요 (사용자)**: M1 라인 설비 사용여부 Y 전환, MST1002_R05 설비매칭에서 M1 라인 설비 ↔ 새 설비번호(…N) 등록. 프로그램 수정 불필요
+- **정정**: 2026-11-23 #7의 미매칭 건수 중 I2C-002N은 6건이 아니라 5건 (미매칭 합계 18건은 원장 대조로 맞음)
 
 ## 🕒 2026-11-23 (월) 작업 내역
 
