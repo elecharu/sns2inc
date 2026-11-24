@@ -84,7 +84,7 @@
                             <Its:combo runat="server" Label="작업구분" ID="wl_cmb_WORKTP" Field="WORKTP" GPCD="@FM300" InputWidth="150" Required="true" />
                             <Its:newline runat="server" />
                             <Its:combo runat="server" Label="고장유형" ID="wl_cmb_FAILTP" Field="FAILTP" GPCD="@FM307" InputWidth="150" />
-                            <Its:combo runat="server" Label="고장부위" ID="wl_cmb_FAILPART" Field="FAILPART" GPCD="@SELECT TPNM, TPCD FROM COMTYPE WHERE GPCD = 'FM303' AND USEYN = 'Y' AND TPCD LIKE 'FM303I2%N' ORDER BY TPCD" InputWidth="150" />
+                            <Its:combo runat="server" Label="고장부위" ID="wl_cmb_FAILPART" Field="FAILPART" GPCD="@FAILPART_SORT" InputWidth="150" />
                             <Its:combo runat="server" Label="중단구분" ID="wl_cmb_STOPTP" Field="STOPTP" GPCD="@FM304" InputWidth="150" />
                         </div>
                     </Its:div>
@@ -188,7 +188,7 @@
                     <Its:combo runat="server" Label="작업구분" ID="pop1_cmb_WORKTP" Field="WORKTP" GPCD="@FM300" InputWidth="150" Required="true" />
                     <Its:newline runat="server" />
                     <Its:combo runat="server" Label="고장유형" ID="pop1_cmb_FAILTP" Field="FAILTP" GPCD="@FM307" InputWidth="150" />
-                    <Its:combo runat="server" Label="고장부위" ID="pop1_cmb_FAILPART" Field="FAILPART" GPCD="@SELECT TPNM, TPCD FROM COMTYPE WHERE GPCD = 'FM303' AND USEYN = 'Y' AND TPCD LIKE 'FM303I2%N' ORDER BY TPCD" InputWidth="150" />
+                    <Its:combo runat="server" Label="고장부위" ID="pop1_cmb_FAILPART" Field="FAILPART" GPCD="@FAILPART_SORT" InputWidth="150" />
                     <Its:combo runat="server" Label="중단구분" ID="pop1_cmb_STOPTP" Field="STOPTP" GPCD="@FM304" InputWidth="150" />
                 </div>
             </Its:div>

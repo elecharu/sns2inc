@@ -126,7 +126,7 @@ ItsButton.EventAdd = function () {
         return;
     }
     if (maria.store.Length() == 0) {
-        ItsMsg.Toast('조회기간(수리종료일)에 공무작업일지를 등록할 수리 기록이 없습니다.');
+        ItsMsg.Toast('조회기간(등록일자)에 공무작업일지를 등록할 수리 기록이 없습니다.');
         return;
     }
 
@@ -456,11 +456,12 @@ function WORKLOG_SNAP(p) {
     ItsGrid.Get(gridEmp).finishEditing();
     ItsGrid.Get(gridPart).finishEditing();
 
-    var panel = new ItsMaria('EQM1001_R01', '');
-    panel.AddPanel(p + '_div1');
-    panel.AddPanel(p + '_div2');
-    panel.AddPanel(p + '_div3');
-    panel.AddPanel(p + '_div4');
+    var panel = [
+        ItsPage.GetStore(p + '_div1'),
+        ItsPage.GetStore(p + '_div2'),
+        ItsPage.GetStore(p + '_div3'),
+        ItsPage.GetStore(p + '_div4')
+    ];
 
     var emp = [];
     for (var i = 0; i < ItsGrid.Length(gridEmp); i++) {
@@ -469,12 +470,12 @@ function WORKLOG_SNAP(p) {
 
     var part = [];
     for (var j = 0; j < ItsGrid.Length(gridPart); j++) {
-        var row = $.extend({}, ItsGrid.Get(gridPart).rows[j].dataItem);
+        var row = ItsGrid.GetRowData(gridPart, j);
         delete row.isRowCheck;
         part.push(row);
     }
 
-    return panel.ToString() + JSON.stringify(emp.filter(Boolean)) + JSON.stringify(part);
+    return JSON.stringify(panel) + JSON.stringify(emp.filter(Boolean)) + JSON.stringify(part);
 }
 
 // 공무작업일지 상세·작업자·사용 부품 조회 및 바인딩
@@ -499,23 +500,14 @@ function WORKLOG_LOAD(p, eqmRepKey) {
 
     wlKey[p] = eqmRepKey;
 
+    // [0] 수리 기록·작업일지 → 입력 영역에 Field 이름 기준으로 바인딩
     var r = maria.store.data[0];
-    ItsFind.SetValue(p + '_find_EQMCD', r.EQMCD, false);
-    ItsCombo.SetValue(p + '_cmb_WORKTP', r.WORKTP, false);
-    ItsCombo.SetValue(p + '_cmb_FAILTP', r.FAILTP, false);
-    ItsCombo.SetValue(p + '_cmb_FAILPART', r.FAILPART, false);
-    ItsCombo.SetValue(p + '_cmb_STOPTP', r.STOPTP, false);
-    ItsDate.SetValue(p + '_date_REPSDAY', r.REPSDAY, false);
-    ItsText.SetValue(p + '_txt_REPSTIME', r.REPSTIME, false);
-    ItsDate.SetValue(p + '_date_REPEDAY', r.REPEDAY, false);
-    ItsText.SetValue(p + '_txt_REPETIME', r.REPETIME, false);
-    WORKLOG_REPMIN(p);
-    WORKLOG_NON_SET(p, r);
-    ItsTextArea.SetValue(p + '_txtarea_MALFUNCTION', r.MALFUNCTION);
-    ItsTextArea.SetValue(p + '_txtarea_CAUSE', r.CAUSE);
-    ItsTextArea.SetValue(p + '_txtarea_HANDLE', r.HANDLE);
-    ItsTextArea.SetValue(p + '_txtarea_PREVENT', r.PREVENT);
+    ItsPage.SetStore(p + '_div1', r); // 1 기본정보: 설비코드(설비명은 찾기 컨트롤이 표시)·작업구분·고장유형·고장부위·중단구분
+    ItsPage.SetStore(p + '_div2', r); // 2 발생 및 조치 시간: 수리시작·종료·수리시간(분), 연결 비가동(발생·종료·정지시간·비가동명)
+    ItsPage.SetStore(p + '_div3', r); // 3~5 고장현상·원인분석·조치내역
+    ItsPage.SetStore(p + '_div4', r); // 7 특이사항 및 재발방지대책
 
+    // [1] 작업자, [2] 사용 자재·부품
     if (maria.storeExtend1.Length() > 0) {
         ItsGrid.SetStore(p + '_grid_EMP', maria.storeExtend1);
     }
@@ -533,40 +525,6 @@ function WORKLOG_INIT(p) {
     ItsPage.InitData(p + '_div4');
     ItsGrid.Clear(p + '_grid_EMP');
     ItsGrid.Clear(p + '_grid_PART');
-    ItsDate.SetValue(p + '_date_REPSDAY', '');
-    ItsDate.SetValue(p + '_date_REPEDAY', '');
-    ItsNum.SetValue(p + '_num_REPMIN', 0);
-    WORKLOG_NON_SET(p, {});
-}
-
-// 수리시간(분) 계산
-function WORKLOG_REPMIN(p) {
-    var sday = ItsDate.GetValue(p + '_date_REPSDAY');
-    var stime = ItsText.GetValue(p + '_txt_REPSTIME');
-    var eday = ItsDate.GetValue(p + '_date_REPEDAY');
-    var etime = ItsText.GetValue(p + '_txt_REPETIME');
-    var min = 0;
-
-    if (sday && stime && eday && etime) {
-        var s = new Date(sday + 'T' + stime + ':00');
-        var e = new Date(eday + 'T' + etime + ':00');
-        min = Math.round((e - s) / 60000);
-        if (isNaN(min) || min < 0) {
-            min = 0;
-        }
-    }
-    ItsNum.SetValue(p + '_num_REPMIN', min);
-}
-
-// 연결 비가동 정보 표시
-function WORKLOG_NON_SET(p, non) {
-    ItsText.SetValue(p + '_txt_PRDNONKEY', non.PRDNONKEY || '');
-    ItsText.SetValue(p + '_txt_NONINFO', non.NONINFO || '');
-    ItsDate.SetValue(p + '_date_NONSDAY', non.NONSDAY || '', false);
-    ItsText.SetValue(p + '_txt_NONSTIME', non.NONSTIME || '', false);
-    ItsDate.SetValue(p + '_date_NONEDAY', non.NONEDAY || '', false);
-    ItsText.SetValue(p + '_txt_NONETIME', non.NONETIME || '', false);
-    ItsNum.SetValue(p + '_num_STOPMIN', non.STOPMIN || 0);
 }
 
 // 공무작업일지 저장

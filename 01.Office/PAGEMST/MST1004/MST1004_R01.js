@@ -55,14 +55,13 @@ ItsPop.Event('pop1').onAddBtnClick = function () {
         return;
     }
 
-    if (lineVal() == '' && tpVal() == '' && g1Val() == '' && g2Val() == ''
-        && g3Val() == '' && (ItsFind.GetValue('find_FANO') || '') == '') {
-        ItsMsg.Alert('작업장, 설비구분, 설비분류, 설비번호 중 하나 이상 입력하세요.');
+    if ((ItsFind.GetValue('find_LINECD') || '') == '') {
+        ItsMsg.Alert('작업장을 선택하세요.');
         return;
     }
 
     // 3) 등록 여부 확인 → "예"를 눌렀을 때만 저장
-    ItsMsg.Confirm(empIds.length + '명의 사원을 선택한 설비에 등록하시겠습니까?', function () {
+    ItsMsg.Confirm(empIds.length + '명의 사원을 선택한 작업장에 등록하시겠습니까?', function () {
 
         var maria = new ItsMaria('MST1004_R01', 'INS_EQM_CALLEMP');
         maria.AddPanel('pdiv4');
@@ -193,96 +192,3 @@ ItsButton.Event('btn_SEARCH').onClick = function () {
 
     ItsGrid.SetStore('grid2', maria.store);
 }
-
-// ============================================================
-// 설비 조회조건 연쇄 처리
-// 작업장 → 설비구분 → 대분류 → 중분류 → 소분류 → 설비번호
-//
-// 상위 값이 바뀌면
-//   1) 그 아래 단계의 선택값을 모두 비우고
-//   2) 비워진 값 기준으로 REF를 다시 세팅하며 목록을 재조회한다.
-// ============================================================
-
-// ── 현재 값 읽기 (비어 있으면 '') ─────────────────────────────
-function lineVal() { return ItsFind.GetValue('find_LINECD') || ''; }
-function tpVal() { return ItsCombo.GetValue('cb_EQMTP') || ''; }
-function g1Val() { return ItsCombo.GetValue('cb_EQMGROUP1') || ''; }
-function g2Val() { return ItsCombo.GetValue('cb_EQMGROUP2') || ''; }
-function g3Val() { return ItsCombo.GetValue('cb_EQMGROUP3') || ''; }
-
-// ── 대상별 refresh : 현재 상위 값 전체를 읽어 REF에 세팅 ────────
-// 마지막 SetRef만 목록 재조회, 앞의 것은 false = 속성만 변경
-function refreshEqmtp() {
-    ItsCombo.SetRef01('cb_EQMTP', lineVal());
-}
-
-function refreshEqmGroup1() {
-    ItsCombo.SetRef01('cb_EQMGROUP1', lineVal(), false);
-    ItsCombo.SetRef02('cb_EQMGROUP1', tpVal());
-}
-
-function refreshEqmGroup2() {
-    ItsCombo.SetRef01('cb_EQMGROUP2', lineVal(), false);
-    ItsCombo.SetRef02('cb_EQMGROUP2', tpVal(), false);
-    ItsCombo.SetRef03('cb_EQMGROUP2', g1Val());
-}
-
-function refreshEqmGroup3() {
-    ItsCombo.SetRef01('cb_EQMGROUP3', lineVal(), false);
-    ItsCombo.SetRef02('cb_EQMGROUP3', tpVal(), false);
-    ItsCombo.SetRef03('cb_EQMGROUP3', g1Val(), false);
-    ItsCombo.SetRef04('cb_EQMGROUP3', g2Val());
-}
-
-function refreshFano() {
-    ItsFind.SetRef01('find_FANO', tpVal(), false);
-    ItsFind.SetRef02('find_FANO', g1Val(), false);
-    ItsFind.SetRef03('find_FANO', g2Val(), false);
-    ItsFind.SetRef04('find_FANO', g3Val(), false);
-    ItsFind.SetRef05('find_FANO', lineVal());
-}
-
-// ── 단계 정의 (위에서 아래 순서, 두 배열의 순서를 맞출 것) ──────
-var REFRESH_CHAIN = [
-    refreshEqmtp,       // 0 : 설비구분
-    refreshEqmGroup1,   // 1 : 대분류
-    refreshEqmGroup2,   // 2 : 중분류
-    refreshEqmGroup3,   // 3 : 소분류
-    refreshFano         // 4 : 설비번호
-];
-
-var CHAIN_CONTROLS = [
-    { api: ItsCombo, id: 'cb_EQMTP' },
-    { api: ItsCombo, id: 'cb_EQMGROUP1' },
-    { api: ItsCombo, id: 'cb_EQMGROUP2' },
-    { api: ItsCombo, id: 'cb_EQMGROUP3' },
-    { api: ItsFind, id: 'find_FANO' }
-];
-
-// ── 값 초기화 (onChanged 발생 X) ──────────────────────────────
-function clearValue(ctrl) {
-    if (typeof ctrl.api.SetValue === 'function') {
-        ctrl.api.SetValue(ctrl.id, '', false);
-    }
-}
-
-// ── index 단계부터 끝까지: 비우기 → REF 세팅/재조회 ─────────────
-function refreshFrom(index) {
-    var i;
-
-    // 1) 하위 값 먼저 전부 비움
-    for (i = index; i < CHAIN_CONTROLS.length; i++) {
-        clearValue(CHAIN_CONTROLS[i]);
-    }
-    // 2) 비워진 값 기준으로 REF 세팅 + 목록 재조회
-    for (i = index; i < REFRESH_CHAIN.length; i++) {
-        REFRESH_CHAIN[i]();
-    }
-}
-
-// ── 이벤트 연결 : 바뀐 컨트롤의 "아래 단계"부터 갱신 ─────────────
-ItsFind.Event('find_LINECD').onChanged = function () { refreshFrom(0); };
-ItsCombo.Event('cb_EQMTP').onChanged = function () { refreshFrom(1); };
-ItsCombo.Event('cb_EQMGROUP1').onChanged = function () { refreshFrom(2); };
-ItsCombo.Event('cb_EQMGROUP2').onChanged = function () { refreshFrom(3); };
-ItsCombo.Event('cb_EQMGROUP3').onChanged = function () { refreshFrom(4); };

@@ -350,7 +350,7 @@
                             </Border>
                             <TextBlock x:Name="txt_CALLEMP_EMPTY" FontSize="18" Foreground="#E53935" TextWrapping="Wrap"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"
-                                       Text="이 작업장에 배치된 생기팀 호출사원이 없습니다.&#10;기준정보(설비별 생기팀 호출사원)에서 먼저 등록하세요."/>
+                                       Text="이 작업장에 배치된 생기팀 호출사원이 없습니다.&#10;기준정보(작업장별 호출사원 정보)에서 먼저 등록하세요."/>
                         </Grid>
                     </StackPanel>
 

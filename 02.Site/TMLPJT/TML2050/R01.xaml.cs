@@ -849,7 +849,7 @@ namespace TML2050
             StyleButtonList(R_EQM_LIST, 17);
         }
 
-        //인원 후보: 작업장에 배치된 생기팀(작업장 설비의 MSTEQM_CALLEMP). 이 호출의 도착자는 기본 선택
+        //인원 후보: 작업장에 배치된 생기팀(MSTEQM_CALLEMP.EQMCD = 작업장). 이 호출의 도착자는 기본 선택
         private void LoadRepEmp()
         {
             ClearRepEmp("");
@@ -890,7 +890,7 @@ namespace TML2050
 
             if (dt.Rows.Count == 0)
             {
-                txt_REPEMP_EMPTY.Text = "이 작업장에 배치된 생기팀 사원이 없습니다. 기준정보(설비별 생기팀 호출사원)에서 먼저 등록하세요.";
+                txt_REPEMP_EMPTY.Text = "이 작업장에 배치된 생기팀 사원이 없습니다. 기준정보(작업장별 호출사원 정보)에서 먼저 등록하세요.";
                 txt_REPEMP_EMPTY.Visibility = Visibility.Visible;
             }
         }
@@ -1347,7 +1347,7 @@ namespace TML2050
             }
         }
 
-        //호출 대상: 작업장에 배치된 생기팀 전원 (작업장 설비의 MSTEQM_CALLEMP, 선택 없음)
+        //호출 대상: 작업장에 배치된 생기팀 전원 (MSTEQM_CALLEMP.EQMCD = 작업장, 선택 없음)
         private void LoadCallEmp()
         {
             callEmpCnt = 0;

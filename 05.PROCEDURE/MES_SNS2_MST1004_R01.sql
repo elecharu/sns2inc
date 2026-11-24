@@ -1,9 +1,10 @@
-﻿CREATE DEFINER = 'root'@'%'
+CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.MST1004_R01(
 -- *****************************************************************************
 -- Comment: 설비별 생기팀 호출사원 정보
 -- Create: 2026-10-20 17:51: 김영철
 -- Modify: 2026-10-27: 조회조건 공장·작업장·사원 추가 (LIST_EQM_CALLEMP)
+--         2026-11-24: 한성수 호출사원 작업장 기준 등록·조회로 변경
 -- *****************************************************************************
 
   IN $FACTORYCD       VARCHAR(10),       -- 공장
@@ -29,12 +30,8 @@ PROCEDURE MES_SNS2.MST1004_R01(
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 -- SET @DEBUGLOGYN = 'Y';
 
-  DECLARE _$FANO_LIST MEDIUMTEXT;
-
   DECLARE _$EMPCD     VARCHAR(100) DEFAULT '';
-  DECLARE _$FANO      VARCHAR(50)  DEFAULT '';
   DECLARE _$EQMCD     VARCHAR(50)  DEFAULT '';
-  DECLARE _$FANO_REST MEDIUMTEXT   DEFAULT '';
   DECLARE _$DELAYMIN_ARRIVE VARCHAR(100) DEFAULT '';
   DECLARE _$DELAYMIN_REPAIR VARCHAR(100) DEFAULT '';
 
@@ -44,31 +41,19 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   WHEN 'LIST_EQM_CALLEMP' THEN
 
     SELECT
-        EQMCD
-      , MSTEQM.LINECD
+        EQMCD -- 작업장코드
       , MSTLINE.LINENM
-      , GPCD('FM100', MSTEQM.EQMTP) AS EQMTP
-      , GPCD('FM113', MSTEQM.EQMGROUP1) AS EQMGROUP1
-      , GPCD('FM114', MSTEQM.EQMGROUP2) AS EQMGROUP2
-      , GPCD('FM115', MSTEQM.EQMGROUP3) AS EQMGROUP3
-      , MSTEQM.EQMNM
       , MSTEMP.EMPCD
       , MSTEMP.EMPNM
       , DELAYMIN_ARRIVE
       , DELAYMIN_REPAIR
       FROM MSTEQM_CALLEMP
       INNER JOIN MSTEMP ON MSTEQM_CALLEMP.EMPCD = MSTEMP.EMPCD
-      INNER JOIN MSTEQM ON MSTEQM_CALLEMP.EQMCD = MSTEQM.FANO
-      INNER JOIN MSTLINE ON MSTEQM.LINECD = MSTLINE.LINECD
-      WHERE (IFNULL($FACTORYCD, '') = '' OR MSTEQM.FACTORYCD = $FACTORYCD)
-        AND (IFNULL($LINECD, '') = '' OR MSTEQM.LINECD = $LINECD)
+      INNER JOIN MSTLINE ON MSTEQM_CALLEMP.EQMCD = MSTLINE.LINECD
+      WHERE (IFNULL($FACTORYCD, '') = '' OR MSTLINE.FACTORYCD = $FACTORYCD)
+        AND (IFNULL($LINECD, '') = '' OR MSTEQM_CALLEMP.EQMCD = $LINECD)
         AND (IFNULL($EMPCD, '') = '' OR MSTEQM_CALLEMP.EMPCD = $EMPCD)
-    ORDER BY MSTEQM.LINECD
-            , MSTEQM.EQMTP
-            , MSTEQM.EQMGROUP1
-            , MSTEQM.EQMGROUP2
-            , MSTEQM.EQMGROUP3
-            , MSTEQM_CALLEMP.EQMCD
+    ORDER BY MSTEQM_CALLEMP.EQMCD
             , MSTEMP.EMPCD;
 
 -- ****************************************************************************
@@ -93,25 +78,8 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       LEAVE PROC;
     END IF;
 
-    IF IFNULL($LINECD, '') = '' AND IFNULL($EQMTP, '') = ''
-      AND IFNULL($EQMGROUP1, '') = '' AND IFNULL($EQMGROUP2, '') = ''
-      AND IFNULL($EQMGROUP3, '') = '' AND IFNULL($FANO, '')      = '' THEN
-      CALL COMERR('작업장, 설비구분, 설비분류, 설비번호 중 하나 이상 입력하세요.');
-      LEAVE PROC;
-    END IF;
-
-    SET _$FANO_LIST = IFNULL((SELECT GROUP_CONCAT(DISTINCT FANO ORDER BY FANO ASC SEPARATOR '»')
-                              FROM MSTEQM
-                             WHERE USEYN = 'Y'
-                               AND (IFNULL($LINECD, '') = '' OR LINECD = $LINECD)
-                               AND (IFNULL($EQMTP, '') = '' OR EQMTP = $EQMTP)
-                               AND (IFNULL($EQMGROUP1, '') = '' OR EQMGROUP1 = $EQMGROUP1)
-                               AND (IFNULL($EQMGROUP2, '') = '' OR EQMGROUP2 = $EQMGROUP2)
-                               AND (IFNULL($EQMGROUP3, '') = '' OR EQMGROUP3 = $EQMGROUP3)
-                               AND (IFNULL($FANO, '') = '' OR FANO = $FANO)), '');
-
-    IF _$FANO_LIST = '' THEN
-      CALL COMERR('조건에 해당하는 설비가 없습니다.');
+    IF IFNULL($LINECD, '') = '' THEN
+      CALL COMERR('작업장을 선택하세요.');
       LEAVE PROC;
     END IF;
 
@@ -127,30 +95,25 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
         LEAVE PROC;
       END IF;
 
-      SET _$FANO_REST = _$FANO_LIST;
+      -- 중복 확인
+      IF EXISTS(
+        SELECT 1
+          FROM MSTEQM_CALLEMP
+         WHERE EQMCD = $LINECD
+           AND EMPCD = _$EMPCD) THEN
+        CALL COMERR(CONCAT('이미 등록된 호출사원입니다. ',
+          GPCD('EMPCD', _$EMPCD), '(', _$EMPCD, ') / 작업장 ', $LINECD));
+        LEAVE PROC;
+      END IF;
 
-      WHILE IFNULL(_$FANO_REST, '') <> '' DO
-        CALL COMSPLIT(_$FANO_REST, _$FANO);
-
-        -- 중복 확인
-        IF EXISTS(
-          SELECT 1
-            FROM MSTEQM_CALLEMP
-           WHERE EQMCD = _$FANO
-             AND EMPCD = _$EMPCD) THEN
-          CALL COMERR(CONCAT('이미 등록된 호출사원입니다. ',
-            GPCD('EMPCD', _$EMPCD), '(', _$EMPCD, ') / 설비 ', _$FANO));
-          LEAVE PROC;
-        END IF;
-
-        INSERT INTO MSTEQM_CALLEMP(
-          EQMCD, EMPCD, DELAYMIN_ARRIVE, DELAYMIN_REPAIR,
-          RTIME, REMP, RPRG)
-          VALUES(
-          _$FANO, _$EMPCD, IFNULL($DELAYMIN_ARRIVE, 0), IFNULL($DELAYMIN_REPAIR, 0),
-          CALLTIME(), CALLEMP(), CALLPRG()
-        );
-      END WHILE;
+      -- EQMCD에 작업장코드 저장
+      INSERT INTO MSTEQM_CALLEMP(
+        EQMCD, EMPCD, DELAYMIN_ARRIVE, DELAYMIN_REPAIR,
+        RTIME, REMP, RPRG)
+        VALUES(
+        $LINECD, _$EMPCD, IFNULL($DELAYMIN_ARRIVE, 0), IFNULL($DELAYMIN_REPAIR, 0),
+        CALLTIME(), CALLEMP(), CALLPRG()
+      );
     END WHILE;
 
 -- ****************************************************************************

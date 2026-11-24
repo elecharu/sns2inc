@@ -10,6 +10,7 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R01`(
 -- 			2026-11-19 					한성수	공무작업일지 등록·조회 추가 및 수리키 형식 변경
 -- 			2026-11-20 					한성수	공무작업일지 조회·삭제·출력 정비, 비가동 자동연결 및 미사용 분기 제거
 -- 			2026-11-23 					한성수	부품 선택(LIST_PART) 2공장 재고 등록 품목 기준으로 변경
+-- 			2026-11-24 					한성수	공무작업일지 수리시간 반환, 등록일자 기준 조회 및 작업자 중복 확인
 -- *****************************************************************************
   IN $SDATE            VARCHAR(10),     -- 조회 시작일자
   IN $EDATE            VARCHAR(10),     -- 조회 종료일자
@@ -81,10 +82,10 @@ WHEN 'LIST_EQMREP' THEN  -- 공무작업일지 목록 (작성된 일지만)
 
   SELECT
     EQMREP.EQMREPKEY,                    -- 설비수리키
-    IFNULL(MSTEQM.FACTORYCD, '') AS FACTORYCD, -- 공장
-    IFNULL(MSTEQM.LINECD, '')    AS LINECD,    -- 작업장
-    IFNULL(MSTEQM.EQMTP, '')     AS EQMTP,     -- 설비구분
-    IFNULL(MSTEQM.EQMGROUP1, '') AS EQMGROUP1, -- 설비대분류
+    MSTEQM.FACTORYCD,                    -- 공장
+    MSTEQM.LINECD,                       -- 작업장
+    MSTEQM.EQMTP,                        -- 설비구분
+    MSTEQM.EQMGROUP1,                    -- 설비대분류
     EQMREP.EQMCD,                        -- 설비코드
     MSTEQM.EQMNM,                        -- 설비명
     LEFT(EQMREP.REPSTIME, 10) AS REPSDAY,-- 수리시작일자
@@ -93,19 +94,14 @@ WHEN 'LIST_EQMREP' THEN  -- 공무작업일지 목록 (작성된 일지만)
     SUBSTRING(EQMREP.REPETIME, 12, 5) AS REPETIME,-- 수리종료시간
     IF(EQMREP.REPETIME = '', 0, TIMESTAMPDIFF(MINUTE, EQMREP.REPSTIME, EQMREP.REPETIME)) AS REPMIN -- 수리시간(분)
   FROM EQMREP
-  LEFT JOIN MSTEQM ON MSTEQM.FANO = EQMREP.EQMCD
-  LEFT JOIN (
-    SELECT DISTINCT EQMREPKEY
-    FROM EQMREP_EMP
-    WHERE EMPCD = $EMPCD
-  ) REPEMP ON REPEMP.EQMREPKEY = EQMREP.EQMREPKEY
+  INNER JOIN MSTEQM ON MSTEQM.FANO = EQMREP.EQMCD
   WHERE EQMREP.REGTIME BETWEEN CONCAT($SDATE, ' 00:00') AND CONCAT($EDATE, ' 23:59:59')
     AND MSTEQM.FACTORYCD = '07'
     AND ($LINECD = '' OR MSTEQM.LINECD = $LINECD)
     AND ($EQMTP = '' OR MSTEQM.EQMTP = $EQMTP)
     AND ($EQMGROUP1 = '' OR MSTEQM.EQMGROUP1 = $EQMGROUP1)
     AND EQMREP.EQMCD LIKE CONCAT('%', $EQMCD, '%')
-    AND ($EMPCD = '' OR REPEMP.EQMREPKEY IS NOT NULL)
+    AND ($EMPCD = '' OR EXISTS (SELECT 1 FROM EQMREP_EMP WHERE EQMREP_EMP.EQMREPKEY = EQMREP.EQMREPKEY AND EQMREP_EMP.EMPCD = $EMPCD))
     AND EQMREP.EQMREPTP = 'EQM01'
     AND EQMREP.WORKTP <> ''  -- 공무작업일지를 작성한 수리 기록만 (새 작성은 [추가] → LIST_REP_WAIT)
   ORDER BY EQMREP.REGTIME, EQMREP.EQMREPKEY;
@@ -129,7 +125,7 @@ WHEN 'LIST_PART' THEN  -- 공무작업일지 부품 선택 목록 (TML1010_R05·
   ORDER BY T.ITEMCD;
 
 -- *****************************************************************************
-WHEN 'LIST_REP_WAIT' THEN  -- 공무작업일지 등록할 수리 기록 (수리가 끝났고 작업일지 미작성, 수리종료일이 조회기간 안)
+WHEN 'LIST_REP_WAIT' THEN  -- 공무작업일지 등록할 수리 기록 (수리가 끝났고 작업일지 미작성, 등록일자가 조회기간 안 = 목록 LIST_EQMREP 와 같은 기준)
   SELECT
     R.EQMREPKEY,
     LEFT(R.REPSTIME, 16) AS REPSTIME,
@@ -150,7 +146,7 @@ WHEN 'LIST_REP_WAIT' THEN  -- 공무작업일지 등록할 수리 기록 (수리
     AND R.REPETIME <> ''
     AND R.WORKTP = ''
     AND M.FACTORYCD = '07'
-    AND LEFT(R.REPETIME, 10) BETWEEN $SDATE AND $EDATE
+    AND R.REGTIME BETWEEN CONCAT($SDATE, ' 00:00') AND CONCAT($EDATE, ' 23:59:59')
     AND ($LINECD = '' OR M.LINECD = $LINECD)
     AND ($EQMTP = '' OR M.EQMTP = $EQMTP)
     AND ($EQMGROUP1 = '' OR M.EQMGROUP1 = $EQMGROUP1)
@@ -186,6 +182,7 @@ WHEN 'GET_EQMREP_WORK' THEN  -- 공무작업일지 조회 (화면 가운데 공�
     SUBSTRING(R.REPSTIME, 12, 5) AS REPSTIME,
     LEFT(R.REPETIME, 10)        AS REPEDAY,
     SUBSTRING(R.REPETIME, 12, 5) AS REPETIME,
+    IF(R.REPETIME = '', 0, GREATEST(TIMESTAMPDIFF(MINUTE, R.REPSTIME, R.REPETIME), 0)) AS REPMIN, -- 수리시간(분), 종료가 시작보다 빠르면 0
     _$PRDNONKEY                 AS PRDNONKEY,
     IF(R.PRDNONKEY = '' AND _$PRDNONKEY <> '', 'Y', 'N') AS NONAUTO, -- 자동 연결값 (아직 저장 안 됨)
     IFNULL(NON.NONINFO, '')     AS NONINFO,
@@ -291,12 +288,18 @@ WHEN 'ADD_EQMREP_WORK' THEN  -- 공무작업일지 저장 = 수리 기록(태블
   END IF;
   SET _$EMPCD_LIST = $EMPCD_LIST;
   SET _$FIRSTEMP = '';
+  SET _$LIST1 = ',';  -- 확인한 작업자 (중복 확인용)
   WHILE LENGTH(_$EMPCD_LIST) > 0 DO
     CALL COMSPLIT(_$EMPCD_LIST, _$EMPCD);
     IF NOT EXISTS (SELECT 1 FROM MSTEMP WHERE EMPCD = _$EMPCD) THEN
       CALL COMERR('등록된 작업자를 선택하세요.');
       LEAVE PROC;
     END IF;
+    IF LOCATE(CONCAT(',', _$EMPCD, ','), _$LIST1) > 0 THEN
+      CALL COMERR(CONCAT('같은 작업자가 두 번 추가되어 있습니다.', '\n- 작업자: ', IFNULL((SELECT EMPNM FROM MSTEMP WHERE EMPCD = _$EMPCD), _$EMPCD)));
+      LEAVE PROC;
+    END IF;
+    SET _$LIST1 = CONCAT(_$LIST1, _$EMPCD, ',');
     IF _$FIRSTEMP = '' THEN SET _$FIRSTEMP = _$EMPCD; END IF;
   END WHILE;
 

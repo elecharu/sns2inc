@@ -1612,6 +1612,17 @@ PROC: BEGIN
       LIMIT 100;
 
 -- *****************************************************************************  
+   -- 2026-11-24 한성수 2공장 설비고장부위(FM303 중 FM303I2…N), 가나다순(한글 먼저, 영문 뒤) - EQM1001_R01 공무작업일지
+  ELSEIF $GPCD = 'FAILPART_SORT' THEN 
+
+    SELECT TPNM AS Label, TPCD AS Value
+      FROM COMTYPE
+      WHERE GPCD = 'FM303'
+        AND USEYN = 'Y'
+        AND TPCD LIKE 'FM303I2%N'
+      ORDER BY IF(TPNM >= '가', 0, 1), TPNM;
+
+-- *****************************************************************************
 
   ELSE -- 쿼리문 바로 실행
   

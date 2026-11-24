@@ -18,6 +18,71 @@
 
 ## 🕒 2026-11-24 (화) 작업 내역
 
+### 8. 프로시저 3건 상단 수정 이력 주석 간소화
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R01.sql](05.Procedure/MES_SNS2_EQM1001_R01.sql), [05.Procedure/MES_SNS2_MST1004_R01.sql](05.Procedure/MES_SNS2_MST1004_R01.sql), [05.Procedure/MES_SNS2_TML2050_R01.sql](05.Procedure/MES_SNS2_TML2050_R01.sql)
+- **요청**: 지정된 `Modify` 이력 주석(`EQM1001_R01` L13, `MST1004_R01` L7, `TML2050_R01` L23~26)을 핵심 기능만 담은 간결한 1행 주석으로 축약
+- **작업 내용**: 3개 프로시저 상단 이력 주석 축약 정리 (프로시저 본문 변경 없음)
+- **검증**: 3개 `.sql` UTF-8 무BOM + CRLF, `WORK_HISTORY.md` 단일 UTF-8 with BOM + CRLF 확인
+
+### 7. EQM1001_R01 공무작업일지 '고장부위' 콤보 가나다순 정렬
+- **수정 파일**: [05.Procedure/MES_SNS2_DC_COMBO.sql](05.Procedure/MES_SNS2_DC_COMBO.sql) (`FAILPART_SORT` 분기 신규), [01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R01.aspx) (`wl_cmb_FAILPART`·`pop1_cmb_FAILPART`)
+- **요청**: 등록 팝업·가운데 공무작업일지의 고장부위 목록이 코드 순이라 이름이 뒤섞여 찾기 어려움 → 목록 형식 안 중 '가나다순 (한글→영문)' 선택
+- **작업 내용**
+  - 1. 콤보 목록 공통 프로시저 DC_COMBO에 `FAILPART_SORT` 분기 추가: COMTYPE FM303 중 2공장(TPCD LIKE 'FM303I2%N') `ORDER BY IF(TPNM >= '가', 0, 1), TPNM` (한글 이름 가나다순, 영문으로 시작하는 항목은 뒤에 ABC순). 다른 화면도 `GPCD="@FAILPART_SORT"`로 사용 가능
+  - 2. 화면 고장부위 콤보 2곳: 직접 조회문(`@SELECT … ORDER BY TPCD`) → `GPCD="@FAILPART_SORT"`. 저장 값(TPCD)·대상(94건)은 그대로, `@` 빈 행 유지
+- **검증**: 실DB SELECT로 정렬 확인(각종 패킹 … 히터, ATC CHANGER ASS'Y … TRANSFORMER), 콤보 SQL 전달 프로시저(DC_COMBO) 파라미터 20000자·동적 실행 확인, `FAILPART_SORT`는 공통코드 그룹명(COMTYPEGP)과 겹치지 않음, 로컬 DC_COMBO 본문 = 실DB, 형식 유지(aspx BOM+CRLF, sql BOM 없음+CRLF). 미확인: 실제 화면
+- **참고**: '팁드레싱기'가 코드 2개(FM303I273N·FM303I290N)로 등록되어 목록에 두 번 나옴 (공통코드 데이터, 변경 안 함)
+- **실DB 반영 (사용자)**: DC_COMBO 프로시저 저장(파라미터 변경 없음) → 화면 배포 (화면만 먼저 나가면 고장부위 목록이 비어 보임)
+
+### 6. TML2050_R01 수리키 순번 2자리(01)로 복원
+- **수정 파일**: [05.Procedure/MES_SNS2_TML2050_R01.sql](05.Procedure/MES_SNS2_TML2050_R01.sql) (`ADD_REPAIR`, 상단 Modify)
+- **요청**: 수리키 순번 3자리(001) 부분을 최신 작업본인 2자리(01)로 교체, 3자리 부분 삭제
+- **원인**: 2026-11-20 커밋(e6e648e)의 2자리 작업본 이후, 3자리였던 실DB 본문 기준으로 로컬 파일을 맞추면서 `GREATEST(3, …)`와 11-19·11-20 Modify 줄이 빠짐
+- **작업 내용**: `LPAD(…, GREATEST(3, …))` → `GREATEST(2, …)`, 주석 '순번 2자리 01부터, 100건부터 3자리' 복원, Modify 11-19·11-20 줄 복원. 나머지 본문은 e6e648e와 같음(작업장 기준 호출사원 변경분만 차이)
+- **검증**: 변환식 실DB SELECT(000001 → 01, 000009 → 09, 000010 → 10, 000099 → 99, 000100 → 100), 파일에 `GREATEST(3` 0건, 형식 유지(BOM 없음·CRLF). 미확인: 프로시저 저장
+- **참고**: 이미 만들어진 수리키 6건(MT-2026-1119-001 ~ MT-2026-1124-002)은 3자리 그대로 (DB 데이터 변경 없음)
+- **실DB 반영 (사용자)**: TML2050_R01 프로시저 저장
+
+### 5. EQM1001_R01 공무작업일지 워크플로우 점검: 등록 대상 기간 기준 통일, 작업자 중복 저장 오류 방지, 목록 조회 정리
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R01.sql](05.Procedure/MES_SNS2_EQM1001_R01.sql) (`LIST_EQMREP`·`LIST_REP_WAIT`·`ADD_EQMREP_WORK`), [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js) ([추가] 안내 문구)
+- **점검 흐름**: 태블릿(TML2050) 수리시작 → 수리 기록(EQMREP, 등록일시 = 수리시작) → 수리종료 → [추가] 미작성 기록 선택 → 등록 팝업 저장(작업구분 기록) → 왼쪽 목록 → 가운데 수정·저장 → 삭제(미작성으로 되돌림 → [추가]에 다시 나옴) → 출력
+- **작업 내용**
+  - 1. [추가] 목록(`LIST_REP_WAIT`) 기간 기준 수리종료일 → 등록일자(REGTIME). 왼쪽 목록(`LIST_EQMREP`)·조회조건 라벨 '등록일자'와 같은 기준으로 맞춤. 기존엔 여러 날 걸친 수리(실DB 10-23 시작·11-02 종료 3건 등)를 [추가]에서 저장하면 왼쪽 목록에 안 나올 수 있었음. 안내 문구 '조회기간(등록일자)'
+  - 2. `ADD_EQMREP_WORK`: 작업자 목록에 같은 사번이 두 번이면 '같은 작업자가 두 번 추가되어 있습니다. - 작업자: 이름'으로 막음 (작업자 표 PK = 수리키+사번이라 기존엔 DB 키 중복 오류). 화면 사번 칸 직접 입력 시 중복 가능
+  - 3. `LIST_EQMREP`: WHERE의 공장 조건으로 이미 내부 조인과 같던 MSTEQM LEFT JOIN → INNER JOIN(IFNULL 제거), 작업자 조건 DISTINCT 하위쿼리 조인 → EXISTS
+- **검증 (실DB 읽기 SELECT)**: `LIST_EQMREP` 변경 전·후 결과 동일(전체 3건, 작업자 202507146 조건 2건 같은 키), 기본 기간(최근 7일) [추가] 목록 변경 전·후 동일(7건), 작업자 표 기존 중복 0건, `node --check` 정상, 형식 유지(BOM 없음·CRLF). 파라미터 변경 없음. 미확인: 프로시저 저장·실제 화면
+- **실DB 반영 (사용자)**: EQM1001_R01 프로시저 저장 → 화면 배포
+
+### 4. EQM1001_R01 공무작업일지 설비명 미표시 수정 및 일지 바인딩을 프로젝트 방식(ItsPage.SetStore)으로 정리
+- **수정 파일**: [05.Procedure/MES_SNS2_EQM1001_R01.sql](05.Procedure/MES_SNS2_EQM1001_R01.sql) (`GET_EQMREP_WORK`), [01.Office/PAGEEQM/EQM1001/EQM1001_R01.js](01.Office/PAGEEQM/EQM1001/EQM1001_R01.js) (`WORKLOG_LOAD`·`WORKLOG_INIT`·`WORKLOG_SNAP`)
+- **원인**: 설비코드를 `ItsFind.SetValue(..., false)`로 넣어 change 이벤트가 막힘. 찾기 컨트롤은 첫 조회에서 목록만 불러오고, change 때 다시 찾아 설비명을 채우는데 이 단계가 빠져 설비명 공백
+- **작업 내용**
+  - 1. `WORKLOG_LOAD`: 컨트롤별 SetValue 17줄 → `ItsPage.SetStore(p_div1~4, r)` Field 기준 바인딩 (설비명은 찾기 컨트롤이 직접 표시), 영역별 주석
+  - 2. `WORKLOG_REPMIN`(화면에서 수리시간 계산)·`WORKLOG_NON_SET`(비가동 값 7개 개별 설정) 삭제 → 수리시간은 프로시저 `REPMIN` 반환, 비가동은 SetStore로 바인딩
+  - 3. `WORKLOG_INIT`: `ItsPage.InitData`가 이미 기본값(날짜 '', 숫자 0)으로 돌리므로 중복 초기화 4줄 삭제
+  - 4. `WORKLOG_SNAP`: 빈 프로시저명 ItsMaria에 패널 담아 문자열화 → `ItsPage.GetStore`, 그리드 행 `rows[j].dataItem` → `ItsGrid.GetRowData`
+  - 5. `GET_EQMREP_WORK`: `REPMIN` 추가 (종료 전 0, 음수 0 — 기존 화면 계산과 같음). 직전 설비명(EQMNM) 반환·MSTEQM 조인은 원복
+- **검증**: 실DB 읽기 SELECT로 REPMIN 확인(최근 5건 1·0·8·9·9분, 형식 오류 0건, 음수 1건 → 0 처리), 패널 Field = 조회 컬럼명 일치(wl·pop1), `node --check` 정상, 형식 유지(BOM 없음·CRLF). 미확인: 프로시저 저장·실제 화면(설비명 표시, 수정 여부 비교)
+- **실DB 반영 (사용자)**: EQM1001_R01 프로시저 저장 → 화면 배포
+
+### 3. MST1004_R01 생기팀 호출사원을 작업장 기준으로 등록·조회, TML2050 생산기술팀 호출 연동
+- **수정 파일**: [05.Procedure/MES_SNS2_MST1004_R01.sql](05.Procedure/MES_SNS2_MST1004_R01.sql), [01.Office/PAGEMST/MST1004/MST1004_R01.js](01.Office/PAGEMST/MST1004/MST1004_R01.js)·[.aspx](01.Office/PAGEMST/MST1004/MST1004_R01.aspx), [05.Procedure/MES_SNS2_TML2050_R01.sql](05.Procedure/MES_SNS2_TML2050_R01.sql), [02.Site/TMLPJT/TML2050/R01.xaml.cs](02.Site/TMLPJT/TML2050/R01.xaml.cs)·[.xaml](02.Site/TMLPJT/TML2050/R01.xaml)
+- **요청**: 호출사원을 설비 단위가 아닌 작업장 단위로 관리. 테이블(MSTEQM_CALLEMP)·EQMCD 컬럼은 그대로 두고 작업장만 받아 처리
+- **작업 내용**
+  - 1. MSTEQM_CALLEMP.EQMCD에 설비번호 대신 작업장코드(LINECD) 저장. 테이블·프로시저 파라미터 변경 없음(SYSTEM_PARAMETERS 재등록 불필요)
+  - 2. MST1004_R01 `LIST_EQM_CALLEMP`: MSTEQM 조인 제거, EQMCD = MSTLINE.LINECD로 작업장명 조회, 조건 공장(MSTLINE.FACTORYCD)·작업장(EQMCD)·사원, 정렬 작업장·사원
+  - 3. MST1004_R01 `INS_EQM_CALLEMP`: 설비 조건·설비 목록 전개 제거, 작업장 필수, 중복 확인 작업장+사원, EQMCD = $LINECD로 등록. 수정·삭제는 기존대로 행의 EQMCD 사용
+  - 4. MST1004_R01 화면: 등록 팝업의 설비구분·설비대/중/소분류·설비번호와 연쇄 처리 js 삭제, 작업장 미선택 확인, 확인 문구 '선택한 작업장에 등록'
+  - 4-1. 등록 팝업 아래 빈 공간 제거: 팝업 높이 500 → 380, 사원 목록 영역 비율 50% → 70%, 높이를 줄여 사원 검색 줄이 목록과 붙던 문제로 검색 영역 비율 10% → 14% (검색 영역 약 50px 유지, 배치·컨트롤은 기존 그대로)
+  - 5. TML2050_R01 (로컬 파일이 실DB보다 이전 버전이라 실DB 본문 기준으로 맞춘 뒤 수정): `LIST_CALLEMP`·`ADD_CALL` 확인·`LIST_REPEMP`·`LIST_ARRVEMP`(화면 미호출)의 MSTEQM 경유 조인 제거 → `C.EQMCD = $LINECD`(호출은 `H.LINECD`). 파라미터 변경 없음. 안내 문구(프로시저 ADD_CALL·xaml·xaml.cs) '기준정보(설비별 생기팀 호출사원)' → '기준정보(작업장별 호출사원 정보)', 주석 정리
+  - 6. 사용하지 않게 된 파라미터($EQMTP·$EQMGROUP1~3·$FANO·$EQMCD)는 SYSTEM_PARAMETERS 재등록을 피하려고 그대로 둠
+- **검증 (실DB 읽기 SELECT)**
+  - 기존 12행 변환(EQMCD 설비번호 → 그 설비의 작업장) 시 키 충돌 0건, 설비 없는 행 0건, 설비번호와 같은 작업장코드 0건
+  - 변환 후 데이터로 TML 호출 대상·수리시작 인원·호출 가능 여부: 작업장 426곳 전·후 결과 모두 같음. MST1004 조회 12행(에스티로지스 4명, M1 3명, M2 4명, M3 1명)
+  - `node --check` 정상, 파일 형식 유지(js·aspx BOM+CRLF, TML2050_R01 sql LF → CRLF). 미확인: 프로시저 컴파일·실제 화면(팝업 높이)·TML 빌드·실행
+- **실DB 반영 (사용자)**: 기존 데이터 변환 UPDATE 1회 → MST1004_R01·TML2050_R01 프로시저 저장 → 화면 배포
+  - `UPDATE MSTEQM_CALLEMP INNER JOIN MSTEQM ON MSTEQM.FANO = MSTEQM_CALLEMP.EQMCD SET MSTEQM_CALLEMP.EQMCD = MSTEQM.LINECD;`
+
 ### 2. IO_COMCHK_CANCEL 재고실사 승인취소 로트 재고 원복을 현재고 기준 가감으로 변경
 - **수정 파일**: [05.Procedure/MES_SNS2_IO_COMCHK_CANCEL.sql](05.Procedure/MES_SNS2_IO_COMCHK_CANCEL.sql) ("1. COMLOT 원복"), [.agents/rules/priority_reference_verification.md](.agents/rules/priority_reference_verification.md) (4항)
 - **요청**: 승인취소 시 COMLOT 재고를 등록 당시 이전 재고(OLDQTY)로 덮어쓰지 않고 현재고 + 출고수량 / 현재고 − 입고수량으로 원복, 규칙 문서에 수량 원복 원칙 추가
