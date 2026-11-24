@@ -107,7 +107,23 @@ namespace TMLPRINT
             return s.Length > 10 ? s.Substring(0, 10) : s;
         }
 
-        // 확인창·미리보기 없이 지정한 프린터로 바로 인쇄
+        // 2026-11-23 출고부서용·공급받는자용 2부를 문서 하나로 합쳐 한 번에 인쇄 (인쇄작업 1개, 확인창·미리보기 없음)
+        public static void PrintDirect(DataSet ds, string printerName)
+        {
+            SAL_1 first = new SAL_1(ds, "출고부서용");
+            SAL_1 second = new SAL_1(ds, "공급받는자용");
+
+            first.ShowPrintMarginsWarning = false;
+            first.ShowPrintStatusDialog = false;
+            first.CreateDocument();
+            second.CreateDocument();
+            first.Pages.AddRange(second.Pages);
+
+            PrintToolBase tool = new PrintToolBase(first.PrintingSystem);
+            tool.Print(printerName);
+        }
+
+        // 확인창·미리보기 없이 지정한 프린터로 바로 인쇄 (한 부만)
         public void PrintDirect(string printerName)
         {
             this.ShowPrintMarginsWarning = false;

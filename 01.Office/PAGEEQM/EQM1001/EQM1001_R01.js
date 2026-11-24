@@ -167,8 +167,6 @@ ItsButton.EventDelete = function () {
         }
         ItsMsg.Toast(ItsMsg.CommonMsg.DeleteComplete());
         ItsButton.EventSearch();
-    }, function () {
-        ItsMsg.Toast('삭제가 취소되었습니다.');
     });
 };
 
@@ -225,12 +223,8 @@ ItsPop.Event('pop_REPSEL').onAddBtnClick = function () {
     }
 
     ItsPop.Close('pop_REPSEL');
-    var row = WORKLOG_LOAD('pop1', eqmRepKey);
-    if (!row) {
+    if (!WORKLOG_LOAD('pop1', eqmRepKey)) {
         return;
-    }
-    if (row.NONAUTO == 'Y') {
-        ItsMsg.Toast('수리시간과 겹친 생산라인 비가동을 자동으로 연결했습니다. 저장하면 반영됩니다.');
     }
     ItsPop.Open('pop1');
 };
@@ -436,8 +430,7 @@ WORKLOG_BIND_EVENTS('pop1');
 
 // 가운데 공무작업일지 및 수리 사진 로드
 function WORKLOG_PANEL_OPEN(eqmRepKey) {
-    var row = WORKLOG_LOAD('wl', eqmRepKey);
-    if (!row) {
+    if (!WORKLOG_LOAD('wl', eqmRepKey)) {
         wlSnap = '';
         $('#spn_WL_KEY').text('');
         $('#spn_WL_NOTE').text('왼쪽 목록에서 공무작업일지를 선택하세요.');

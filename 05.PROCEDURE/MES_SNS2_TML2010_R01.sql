@@ -1032,7 +1032,7 @@ WHEN 'LIST_MOVE' THEN  -- 공정이동표 발행: 작업장·공정의 생산일
 
 -- ****************************************************************************
 WHEN 'PRINT_LABEL' THEN  -- 소라벨(해외 수출) 출력 데이터: 실적로트 1건
-  -- 양식: 출력하는 달 이 품목의 수주 거래처가 MAGNA(9054740899)면 MAGNA 라벨(TMLPRINT.PRD_2),
+  -- 양식: 이 품목의 매출처 단가(MSTITEM_SDV, 거래종료 제외)에 MAGNA(9054740899)가 있으면 MAGNA 라벨(TMLPRINT.PRD_2),  (2026-11-23 당월 수주 SALODR → MSTITEM_SDV)
   --       아니고 품목 PARTNO·INITCD 가 둘 다 있으면 일반 라벨(TMLPRINT.PRD_3), 둘 다 아니면 오류
   -- 일반 라벨인데 라벨번호가 없으면(라벨번호 생기기 전 실적) 여기서 채번해 저장
   -- 결과: LABELTP(MAGNA/NORMAL), PARTNO, ITEMNM, CUSTADDR, LOTKEY, LOTQTY(양품수량), PRDRSTKEY, PRDDATE(작업일), LABELKEY
@@ -1054,13 +1054,11 @@ WHEN 'PRINT_LABEL' THEN  -- 소라벨(해외 수출) 출력 데이터: 실적로
                     WHERE PRDRSTLOT.LOTKEY = $LOTKEY
                     LIMIT 1);
 
-  IF EXISTS (SELECT SALODRD.ITEMID
-               FROM SALODR
-               INNER JOIN SALODRD
-                 ON SALODRD.SALODRKEY = SALODR.SALODRKEY
-               WHERE SALODRD.ITEMID = _$ITEMID
-                 AND SALODR.CUSTCD = '9054740899'  -- MAGNA
-                 AND LEFT(SALODR.ODRDATE, 7) = LEFT(GETDATE(), 7)) THEN
+  IF EXISTS (SELECT MSTITEM_SDV.ITEMID
+               FROM MSTITEM_SDV
+               WHERE MSTITEM_SDV.ITEMID = _$ITEMID
+                 AND MSTITEM_SDV.CUSTCD = '9054740899'  -- MAGNA
+                 AND IFNULL(MSTITEM_SDV.ENDYN, '') <> 'Y') THEN
     SET _$LABELTP = 'MAGNA';
   ELSEIF EXISTS (SELECT MSTITEM.ITEMID
                    FROM MSTITEM
@@ -1070,7 +1068,7 @@ WHEN 'PRINT_LABEL' THEN  -- 소라벨(해외 수출) 출력 데이터: 실적로
     SET _$LABELTP = 'NORMAL';
   ELSE
     CALL COMERR(CONCAT('소라벨 출력 대상 품목이 아닙니다.'
-                      , '\n(당월 MAGNA 수주가 없고, 품목의 PART NO·INITIAL 이 없습니다.)'
+                      , '\n(매출처 단가에 MAGNA 가 없고, 품목의 PART NO·INITIAL 이 없습니다.)'
                       , '\n- 품목코드: ', (SELECT MSTITEM.ITEMCD FROM MSTITEM WHERE MSTITEM.ITEMID = _$ITEMID)
                       , '\n- 로트번호: ', $LOTKEY
                       )

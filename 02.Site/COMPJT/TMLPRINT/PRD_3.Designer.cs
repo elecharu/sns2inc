@@ -53,15 +53,17 @@ namespace TMLPRINT
             //
             // TopMargin
             //
-            this.TopMargin.HeightF = 20F;
+            this.TopMargin.HeightF = 82F;
             this.TopMargin.Name = "TopMargin";
+            this.TopMargin.Dpi = 254F;
             //
             // Detail (라벨 1장, 단위 0.1mm)
             //
             this.Detail.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
             this.P_BORDER});
-            this.Detail.HeightF = 560F;
+            this.Detail.HeightF = 828F;
             this.Detail.Name = "Detail";
+            this.Detail.Dpi = 254F;
             //
             // P_BORDER (바깥 테두리)
             //
@@ -83,17 +85,20 @@ namespace TMLPRINT
             this.C_BAR_LABELKEY});
             this.P_BORDER.LocationFloat = new DevExpress.Utils.PointFloat(0F, 0F);
             this.P_BORDER.Name = "P_BORDER";
-            this.P_BORDER.SizeF = new System.Drawing.SizeF(960F, 560F);
+            this.P_BORDER.Dpi = 254F;
+            this.P_BORDER.SizeF = new System.Drawing.SizeF(1220F, 828F);
             this.P_BORDER.StylePriority.UseBorders = false;
             //
             // L_PARTNO
             //
             this.L_PARTNO.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.L_PARTNO.Font = new System.Drawing.Font("맑은 고딕", 8F);
-            this.L_PARTNO.LocationFloat = new DevExpress.Utils.PointFloat(10F, 5F);
+            this.L_PARTNO.Font = new System.Drawing.Font("맑은 고딕", 10.5F);
+            this.L_PARTNO.LocationFloat = new DevExpress.Utils.PointFloat(12.7F, 2.9F);
             this.L_PARTNO.Name = "L_PARTNO";
+            this.L_PARTNO.CanGrow = false;
+            this.L_PARTNO.Dpi = 254F;
             this.L_PARTNO.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 0, 0, 0, 254F);
-            this.L_PARTNO.SizeF = new System.Drawing.SizeF(200F, 35F);
+            this.L_PARTNO.SizeF = new System.Drawing.SizeF(317.7F, 51.8F);
             this.L_PARTNO.StylePriority.UseBorders = false;
             this.L_PARTNO.StylePriority.UseFont = false;
             this.L_PARTNO.StylePriority.UsePadding = false;
@@ -104,11 +109,14 @@ namespace TMLPRINT
             // C_PARTNO (A PART_NO)
             //
             this.C_PARTNO.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.C_PARTNO.Font = new System.Drawing.Font("맑은 고딕", 13F, System.Drawing.FontStyle.Bold);
-            this.C_PARTNO.LocationFloat = new DevExpress.Utils.PointFloat(30F, 38F);
+            this.C_PARTNO.Font = new System.Drawing.Font("맑은 고딕", 14F, System.Drawing.FontStyle.Bold);
+            this.C_PARTNO.LocationFloat = new DevExpress.Utils.PointFloat(50.9F, 66.5F);
             this.C_PARTNO.Name = "C_PARTNO";
+            this.C_PARTNO.CanGrow = false;
+            this.C_PARTNO.WordWrap = false;
+            this.C_PARTNO.Dpi = 254F;
             this.C_PARTNO.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 0, 0, 0, 254F);
-            this.C_PARTNO.SizeF = new System.Drawing.SizeF(590F, 55F);
+            this.C_PARTNO.SizeF = new System.Drawing.SizeF(762.5F, 69.5F);
             this.C_PARTNO.StylePriority.UseBorders = false;
             this.C_PARTNO.StylePriority.UseFont = false;
             this.C_PARTNO.StylePriority.UsePadding = false;
@@ -119,11 +127,12 @@ namespace TMLPRINT
             //
             this.C_BAR_PARTNO.AutoModule = true;
             this.C_BAR_PARTNO.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.C_BAR_PARTNO.Font = new System.Drawing.Font("맑은 고딕", 5.5F);
-            this.C_BAR_PARTNO.LocationFloat = new DevExpress.Utils.PointFloat(30F, 95F);
+            this.C_BAR_PARTNO.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.C_BAR_PARTNO.LocationFloat = new DevExpress.Utils.PointFloat(34.3F, 142F);
             this.C_BAR_PARTNO.Name = "C_BAR_PARTNO";
+            this.C_BAR_PARTNO.Dpi = 254F;
             this.C_BAR_PARTNO.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 0, 0, 0, 254F);
-            this.C_BAR_PARTNO.SizeF = new System.Drawing.SizeF(590F, 95F);
+            this.C_BAR_PARTNO.SizeF = new System.Drawing.SizeF(622.7F, 118.3F);
             this.C_BAR_PARTNO.StylePriority.UseBorders = false;
             this.C_BAR_PARTNO.StylePriority.UseFont = false;
             this.C_BAR_PARTNO.StylePriority.UsePadding = false;
@@ -134,12 +143,14 @@ namespace TMLPRINT
             // C_ITEMNM (B 품명)
             //
             this.C_ITEMNM.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.C_ITEMNM.Font = new System.Drawing.Font("맑은 고딕", 12F);
-            this.C_ITEMNM.LocationFloat = new DevExpress.Utils.PointFloat(630F, 10F);
+            this.C_ITEMNM.Font = new System.Drawing.Font("맑은 고딕", 13F);
+            this.C_ITEMNM.LocationFloat = new DevExpress.Utils.PointFloat(813.4F, 5.9F);
             this.C_ITEMNM.Multiline = true;
             this.C_ITEMNM.Name = "C_ITEMNM";
+            this.C_ITEMNM.CanGrow = false;
+            this.C_ITEMNM.Dpi = 254F;
             this.C_ITEMNM.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 10, 0, 0, 254F);
-            this.C_ITEMNM.SizeF = new System.Drawing.SizeF(330F, 120F);
+            this.C_ITEMNM.SizeF = new System.Drawing.SizeF(343.2F, 140.5F);
             this.C_ITEMNM.StylePriority.UseBorders = false;
             this.C_ITEMNM.StylePriority.UseFont = false;
             this.C_ITEMNM.StylePriority.UsePadding = false;
@@ -149,11 +160,14 @@ namespace TMLPRINT
             // L_SHIPTO
             //
             this.L_SHIPTO.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.L_SHIPTO.Font = new System.Drawing.Font("맑은 고딕", 11F);
-            this.L_SHIPTO.LocationFloat = new DevExpress.Utils.PointFloat(640F, 150F);
+            this.L_SHIPTO.Font = new System.Drawing.Font("맑은 고딕", 13F);
+            this.L_SHIPTO.LocationFloat = new DevExpress.Utils.PointFloat(702.7F, 168.5F);
             this.L_SHIPTO.Name = "L_SHIPTO";
+            this.L_SHIPTO.CanGrow = false;
+            this.L_SHIPTO.WordWrap = false;
+            this.L_SHIPTO.Dpi = 254F;
             this.L_SHIPTO.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 0, 0, 0, 254F);
-            this.L_SHIPTO.SizeF = new System.Drawing.SizeF(300F, 45F);
+            this.L_SHIPTO.SizeF = new System.Drawing.SizeF(381.3F, 68F);
             this.L_SHIPTO.StylePriority.UseBorders = false;
             this.L_SHIPTO.StylePriority.UseFont = false;
             this.L_SHIPTO.StylePriority.UsePadding = false;
@@ -164,12 +178,14 @@ namespace TMLPRINT
             // C_CUSTADDR (D 매출단가 거래처 주소 MSTCUST.CUSTADDR2)
             //
             this.C_CUSTADDR.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.C_CUSTADDR.Font = new System.Drawing.Font("맑은 고딕", 8.5F);
-            this.C_CUSTADDR.LocationFloat = new DevExpress.Utils.PointFloat(630F, 200F);
+            this.C_CUSTADDR.Font = new System.Drawing.Font("맑은 고딕", 11F);
+            this.C_CUSTADDR.LocationFloat = new DevExpress.Utils.PointFloat(702.7F, 258.8F);
             this.C_CUSTADDR.Multiline = true;
             this.C_CUSTADDR.Name = "C_CUSTADDR";
+            this.C_CUSTADDR.CanGrow = false;
+            this.C_CUSTADDR.Dpi = 254F;
             this.C_CUSTADDR.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 10, 0, 0, 254F);
-            this.C_CUSTADDR.SizeF = new System.Drawing.SizeF(330F, 130F);
+            this.C_CUSTADDR.SizeF = new System.Drawing.SizeF(419.3F, 147.8F);
             this.C_CUSTADDR.StylePriority.UseBorders = false;
             this.C_CUSTADDR.StylePriority.UseFont = false;
             this.C_CUSTADDR.StylePriority.UsePadding = false;
@@ -179,11 +195,14 @@ namespace TMLPRINT
             // L_QTY
             //
             this.L_QTY.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.L_QTY.Font = new System.Drawing.Font("맑은 고딕", 9F);
-            this.L_QTY.LocationFloat = new DevExpress.Utils.PointFloat(100F, 235F);
+            this.L_QTY.Font = new System.Drawing.Font("맑은 고딕", 12F);
+            this.L_QTY.LocationFloat = new DevExpress.Utils.PointFloat(76.3F, 297.2F);
             this.L_QTY.Name = "L_QTY";
+            this.L_QTY.CanGrow = false;
+            this.L_QTY.WordWrap = false;
+            this.L_QTY.Dpi = 254F;
             this.L_QTY.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 10, 0, 0, 254F);
-            this.L_QTY.SizeF = new System.Drawing.SizeF(170F, 50F);
+            this.L_QTY.SizeF = new System.Drawing.SizeF(197F, 59.2F);
             this.L_QTY.StylePriority.UseBorders = false;
             this.L_QTY.StylePriority.UseFont = false;
             this.L_QTY.StylePriority.UsePadding = false;
@@ -194,11 +213,14 @@ namespace TMLPRINT
             // C_QTY (E LOT 수량)
             //
             this.C_QTY.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.C_QTY.Font = new System.Drawing.Font("맑은 고딕", 13F, System.Drawing.FontStyle.Bold);
-            this.C_QTY.LocationFloat = new DevExpress.Utils.PointFloat(270F, 230F);
+            this.C_QTY.Font = new System.Drawing.Font("맑은 고딕", 14F, System.Drawing.FontStyle.Bold);
+            this.C_QTY.LocationFloat = new DevExpress.Utils.PointFloat(282.2F, 294.2F);
             this.C_QTY.Name = "C_QTY";
+            this.C_QTY.CanGrow = false;
+            this.C_QTY.WordWrap = false;
+            this.C_QTY.Dpi = 254F;
             this.C_QTY.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 0, 0, 0, 254F);
-            this.C_QTY.SizeF = new System.Drawing.SizeF(250F, 60F);
+            this.C_QTY.SizeF = new System.Drawing.SizeF(254.1F, 66.5F);
             this.C_QTY.StylePriority.UseBorders = false;
             this.C_QTY.StylePriority.UseFont = false;
             this.C_QTY.StylePriority.UsePadding = false;
@@ -209,11 +231,12 @@ namespace TMLPRINT
             //
             this.C_BAR_QTY.AutoModule = true;
             this.C_BAR_QTY.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.C_BAR_QTY.Font = new System.Drawing.Font("맑은 고딕", 5.5F);
-            this.C_BAR_QTY.LocationFloat = new DevExpress.Utils.PointFloat(150F, 295F);
+            this.C_BAR_QTY.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.C_BAR_QTY.LocationFloat = new DevExpress.Utils.PointFloat(185.6F, 400.7F);
             this.C_BAR_QTY.Name = "C_BAR_QTY";
+            this.C_BAR_QTY.Dpi = 254F;
             this.C_BAR_QTY.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 0, 0, 0, 254F);
-            this.C_BAR_QTY.SizeF = new System.Drawing.SizeF(350F, 90F);
+            this.C_BAR_QTY.SizeF = new System.Drawing.SizeF(324F, 110.9F);
             this.C_BAR_QTY.StylePriority.UseBorders = false;
             this.C_BAR_QTY.StylePriority.UseFont = false;
             this.C_BAR_QTY.StylePriority.UsePadding = false;
@@ -224,11 +247,14 @@ namespace TMLPRINT
             // L_SERIAL
             //
             this.L_SERIAL.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.L_SERIAL.Font = new System.Drawing.Font("맑은 고딕", 9F);
-            this.L_SERIAL.LocationFloat = new DevExpress.Utils.PointFloat(230F, 395F);
+            this.L_SERIAL.Font = new System.Drawing.Font("맑은 고딕", 12.5F);
+            this.L_SERIAL.LocationFloat = new DevExpress.Utils.PointFloat(152.5F, 575.2F);
             this.L_SERIAL.Name = "L_SERIAL";
+            this.L_SERIAL.CanGrow = false;
+            this.L_SERIAL.WordWrap = false;
+            this.L_SERIAL.Dpi = 254F;
             this.L_SERIAL.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 10, 0, 0, 254F);
-            this.L_SERIAL.SizeF = new System.Drawing.SizeF(160F, 60F);
+            this.L_SERIAL.SizeF = new System.Drawing.SizeF(181.8F, 62.1F);
             this.L_SERIAL.StylePriority.UseBorders = false;
             this.L_SERIAL.StylePriority.UseFont = false;
             this.L_SERIAL.StylePriority.UsePadding = false;
@@ -239,11 +265,14 @@ namespace TMLPRINT
             // C_LABELKEY (G 라벨번호)
             //
             this.C_LABELKEY.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.C_LABELKEY.Font = new System.Drawing.Font("맑은 고딕", 28F, System.Drawing.FontStyle.Bold);
-            this.C_LABELKEY.LocationFloat = new DevExpress.Utils.PointFloat(390F, 365F);
+            this.C_LABELKEY.Font = new System.Drawing.Font("맑은 고딕", 35F, System.Drawing.FontStyle.Bold);
+            this.C_LABELKEY.LocationFloat = new DevExpress.Utils.PointFloat(381.3F, 507.2F);
             this.C_LABELKEY.Name = "C_LABELKEY";
+            this.C_LABELKEY.CanGrow = false;
+            this.C_LABELKEY.WordWrap = false;
+            this.C_LABELKEY.Dpi = 254F;
             this.C_LABELKEY.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 0, 0, 0, 254F);
-            this.C_LABELKEY.SizeF = new System.Drawing.SizeF(565F, 115F);
+            this.C_LABELKEY.SizeF = new System.Drawing.SizeF(813.4F, 180.4F);
             this.C_LABELKEY.StylePriority.UseBorders = false;
             this.C_LABELKEY.StylePriority.UseFont = false;
             this.C_LABELKEY.StylePriority.UsePadding = false;
@@ -253,11 +282,13 @@ namespace TMLPRINT
             // L_DATEMFG
             //
             this.L_DATEMFG.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.L_DATEMFG.Font = new System.Drawing.Font("맑은 고딕", 8F);
-            this.L_DATEMFG.LocationFloat = new DevExpress.Utils.PointFloat(10F, 455F);
+            this.L_DATEMFG.Font = new System.Drawing.Font("맑은 고딕", 10.5F);
+            this.L_DATEMFG.LocationFloat = new DevExpress.Utils.PointFloat(12.7F, 687.5F);
             this.L_DATEMFG.Name = "L_DATEMFG";
+            this.L_DATEMFG.CanGrow = false;
+            this.L_DATEMFG.Dpi = 254F;
             this.L_DATEMFG.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 0, 0, 0, 254F);
-            this.L_DATEMFG.SizeF = new System.Drawing.SizeF(220F, 35F);
+            this.L_DATEMFG.SizeF = new System.Drawing.SizeF(317.7F, 51.8F);
             this.L_DATEMFG.StylePriority.UseBorders = false;
             this.L_DATEMFG.StylePriority.UseFont = false;
             this.L_DATEMFG.StylePriority.UsePadding = false;
@@ -268,11 +299,14 @@ namespace TMLPRINT
             // C_PRDDATE (H 생산실적 일자)
             //
             this.C_PRDDATE.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.C_PRDDATE.Font = new System.Drawing.Font("맑은 고딕", 16F, System.Drawing.FontStyle.Bold);
-            this.C_PRDDATE.LocationFloat = new DevExpress.Utils.PointFloat(10F, 490F);
+            this.C_PRDDATE.Font = new System.Drawing.Font("맑은 고딕", 19F, System.Drawing.FontStyle.Bold);
+            this.C_PRDDATE.LocationFloat = new DevExpress.Utils.PointFloat(12.7F, 722.9F);
             this.C_PRDDATE.Name = "C_PRDDATE";
+            this.C_PRDDATE.CanGrow = false;
+            this.C_PRDDATE.WordWrap = false;
+            this.C_PRDDATE.Dpi = 254F;
             this.C_PRDDATE.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 0, 0, 0, 254F);
-            this.C_PRDDATE.SizeF = new System.Drawing.SizeF(370F, 65F);
+            this.C_PRDDATE.SizeF = new System.Drawing.SizeF(432.1F, 103F);
             this.C_PRDDATE.StylePriority.UseBorders = false;
             this.C_PRDDATE.StylePriority.UseFont = false;
             this.C_PRDDATE.StylePriority.UsePadding = false;
@@ -283,11 +317,12 @@ namespace TMLPRINT
             //
             this.C_BAR_LABELKEY.AutoModule = true;
             this.C_BAR_LABELKEY.Borders = DevExpress.XtraPrinting.BorderSide.None;
-            this.C_BAR_LABELKEY.Font = new System.Drawing.Font("맑은 고딕", 5.5F);
-            this.C_BAR_LABELKEY.LocationFloat = new DevExpress.Utils.PointFloat(390F, 480F);
+            this.C_BAR_LABELKEY.Font = new System.Drawing.Font("맑은 고딕", 7F);
+            this.C_BAR_LABELKEY.LocationFloat = new DevExpress.Utils.PointFloat(466.4F, 695F);
             this.C_BAR_LABELKEY.Name = "C_BAR_LABELKEY";
+            this.C_BAR_LABELKEY.Dpi = 254F;
             this.C_BAR_LABELKEY.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 0, 0, 0, 254F);
-            this.C_BAR_LABELKEY.SizeF = new System.Drawing.SizeF(565F, 75F);
+            this.C_BAR_LABELKEY.SizeF = new System.Drawing.SizeF(653.2F, 118.3F);
             this.C_BAR_LABELKEY.StylePriority.UseBorders = false;
             this.C_BAR_LABELKEY.StylePriority.UseFont = false;
             this.C_BAR_LABELKEY.StylePriority.UsePadding = false;
@@ -297,19 +332,22 @@ namespace TMLPRINT
             //
             // BottomMargin
             //
-            this.BottomMargin.HeightF = 20F;
+            this.BottomMargin.HeightF = 82F;
             this.BottomMargin.Name = "BottomMargin";
+            this.BottomMargin.Dpi = 254F;
             //
-            // PRD_3 (100 x 60 mm, 단위 0.1mm)
+            // PRD_3 (용지 99.2 x 138.6 mm 가로 방향, 라벨 네모 122.0 x 82.8 mm 가운데, 단위 0.1mm)
             //
             this.Bands.AddRange(new DevExpress.XtraReports.UI.Band[] {
             this.TopMargin,
             this.Detail,
             this.BottomMargin});
-            this.Font = new System.Drawing.Font("맑은 고딕", 8F);
-            this.Margins = new System.Drawing.Printing.Margins(20, 20, 20, 20);
-            this.PageHeight = 600;
-            this.PageWidth = 1000;
+            this.Font = new System.Drawing.Font("맑은 고딕", 12F);
+            this.Dpi = 254F;
+            this.Margins = new System.Drawing.Printing.Margins(83, 83, 82, 82);
+            this.Landscape = true;   // 용지 99.2 x 138.6mm 를 눕혀서 씀 (2026-11-23)
+            this.PageHeight = 992;
+            this.PageWidth = 1386;
             this.PaperKind = System.Drawing.Printing.PaperKind.Custom;
             this.ReportUnit = DevExpress.XtraReports.UI.ReportUnit.TenthsOfAMillimeter;
             this.SnapGridSize = 10F;

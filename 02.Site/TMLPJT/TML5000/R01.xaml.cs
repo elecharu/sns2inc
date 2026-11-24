@@ -315,12 +315,8 @@ namespace TML5000
 
             try
             {
-                // 출고부서용·공급받는자용 2부 (같은 프린터로 연달아)
-                foreach (string copyName in new string[] { "출고부서용", "공급받는자용" })
-                {
-                    TMLPRINT.SAL_1 rpt = new TMLPRINT.SAL_1(ds, copyName);
-                    rpt.PrintDirect(ItsPrinter.BarcodePrintName);
-                }
+                // 출고부서용·공급받는자용 2부를 인쇄작업 하나로 한 번에 (2026-11-23)
+                TMLPRINT.SAL_1.PrintDirect(ds, ItsPrinter.BarcodePrintName);
             }
             catch (Exception ex)
             {

@@ -14,19 +14,18 @@
     <Canvas Background="WhiteSmoke">
 
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
-                    <its:WrapContent x:Name="PANEL_S1" Width="980" Height="62">
-                        <its:Date Label="이동일자" LabelWidth="70" Width="230" Value="{Binding MOVEDATE}" Foreground="Green" FontWeight="Bold"/>
+                    <its:WrapContent x:Name="PANEL_S1" Width="980" Height="85">
+                        <its:Pop GPCD="CUSTCD_OSC2" Width="450" Label="외주처" Value="{Binding CUSTCD}" x:Name="cb_CUSTCD" ShowKeyPad="True" />
                         <its:Combo GPCD="WARECD_MTRMOVE_OUT" LabelWidth="70" Width="330" Label="출고창고" Value="{Binding OUTWARE}" ReadOnly="True" x:Name="cb_OUTWARE" FontWeight="Bold"/>
-                        <its:Text x:Name="txt_BARCODE" Label="바코드 스캔" LabelWidth="90" Width="340" Value="{Binding SCANLOT}" KeyDown="Text_KeyDown"/>
-                        <UserControl Width="230"/>
+                        <its:Date Label="이동일자" LabelWidth="75" Width="230" Value="{Binding MOVEDATE}" Foreground="Green" FontWeight="Bold"/>
+                        <UserControl Width="220"/>
                         <its:Combo GPCD="WARECD_MTRMOVE_IN" LabelWidth="70" Width="330" Label="입고창고" Value="{Binding INWARE}" ReadOnly="True" x:Name="cb_INWARE" FontWeight="Bold"/>
-                        <UserControl Width="30"/>
-                        <its:Pop GPCD="CUSTCD_OSC2" Width="450" Label="외주처" Value="{Binding CUSTCD}" x:Name="cb_CUSTCD" ShowKeyPad="True" Visibility="Collapsed"/>
-                   </its:WrapContent>
+                        <its:Text x:Name="txt_BARCODE" Label="바코드 스캔" LabelWidth="75" Width="340" Value="{Binding SCANLOT}" KeyDown="Text_KeyDown"/>
+                    </its:WrapContent>
          </UserControl>
 
-                <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="62">
-            <its:Grid x:Name="GRID_G1" Width="860" Height="393">
+                <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="88">
+            <its:Grid x:Name="GRID_G1" Width="860" Height="366">
                 <its:Grid.Columns>
                     <its:Column Width="55" Header="삭제" CellType="Button" ButtonText="삭제" CommandName="DEL_ROW"/>
                     <its:Column Width="105" Header="품목코드" FieldName="ITEMCD"/>
@@ -47,7 +46,7 @@
         </UserControl>
 
         <!-- 오른쪽 버튼 영역 (등록 / 취소) -->
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="860" Canvas.Top="62" Width="120" Height="393">
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="860" Canvas.Top="60" Width="120" Height="393">
             <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
                 <its:Button Label="등 록" Width="100" Height="55" FontWeight="Bold" CommandName="MOVE_LOT" BackColor="Green"/>
                 <UserControl Height="10"/>

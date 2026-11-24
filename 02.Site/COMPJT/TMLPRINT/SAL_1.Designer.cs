@@ -224,11 +224,13 @@
             this.xrLabel1.SizeF = new System.Drawing.SizeF(557F, 80F);
             this.xrLabel1.Borders = DevExpress.XtraPrinting.BorderSide.Left | DevExpress.XtraPrinting.BorderSide.Top | DevExpress.XtraPrinting.BorderSide.Bottom;
             this.xrLabel1.BorderWidth = 0.96F;
+            // 2026-11-23 로고는 원본(143x51) 비율 그대로, 제목칸과 겹치지 않게 (겹치면 인쇄 때 로고가 잘림)
             this.picLogo.LocationF = new System.Drawing.PointF(12F, 14F);
-            this.picLogo.SizeF = new System.Drawing.SizeF(150F, 52F);
+            this.picLogo.SizeF = new System.Drawing.SizeF(146F, 52F);
             this.picLogo.Sizing = DevExpress.XtraPrinting.ImageSizeMode.ZoomImage;
-            this.xrLabel2.LocationF = new System.Drawing.PointF(150F, 0F);
-            this.xrLabel2.SizeF = new System.Drawing.SizeF(205F, 80F);
+            this.xrLabel2.LocationF = new System.Drawing.PointF(164F, 0F);
+            this.xrLabel2.SizeF = new System.Drawing.SizeF(191F, 80F);
+            this.xrLabel2.WordWrap = false;
             this.xrLabel2.Text = "거 래 명 세 서";
             this.xrLabel2.Font = new System.Drawing.Font("맑은 고딕", 20F, System.Drawing.FontStyle.Bold);
             this.xrLabel2.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;

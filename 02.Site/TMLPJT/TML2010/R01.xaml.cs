@@ -1267,7 +1267,7 @@ namespace TML2010
             }
             else if (commandName == "PRINT_LABEL" || commandName == "PRINT_LABEL_ROW")
             {   // 소라벨(해외 수출) 출력. 라벨출력(그리드 버튼) = 그 행, 라벨발행 = 체크한 행(없으면 선택한 행)
-                // 양식은 프로시저가 정함: MAGNA 수주면 PRD_2, 품목 PARTNO·INITCD 가 있으면 일반 PRD_3
+                // 양식은 프로시저가 정함: 매출처 단가(MSTITEM_SDV)에 MAGNA 가 있으면 PRD_2, 품목 PARTNO·INITCD 가 있으면 일반 PRD_3
                 List<int> rows = new List<int>();
                 if (commandName == "PRINT_LABEL_ROW")
                 {
@@ -1309,7 +1309,7 @@ namespace TML2010
                     MODEL_G12.SetValue(row, "LABELKEY", ItsData.GetText(ds.Tables[0], 0, "LABELKEY"));
                     MODEL_G12.SetChecked(row, isChecked);
 
-                    for (int i = 0; i < copies; i++)
+                    for (int i = 0; i < copies * 2; i++)   // 소라벨은 같은 라벨 2장씩 (발행매수 × 2, 2026-11-23)
                     {
                         if (ItsData.GetText(ds.Tables[0], 0, "LABELTP") == "MAGNA")
                         {
