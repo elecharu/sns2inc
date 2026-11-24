@@ -19,14 +19,37 @@ namespace XtraRpt
         }
 
         // 2026-11-05 [설비등급 평가표] 평가키 수신 및 평가 정보·평가항목·설비등급 기준 조회
+        // 2026-11-24 EQMGRADEEVALKEY_LIST(평가키 쉼표 구분) 여러 건은 평가표마다 새 페이지로 한 PDF 에 묶음 (단건은 EQMGRADEEVALKEY)
         public R01(Dictionary<string, string> param) : this()
         {
-            string evalKey = param.ContainsKey("EQMGRADEEVALKEY") ? param["EQMGRADEEVALKEY"] : "";
-            if (string.IsNullOrEmpty(evalKey))
+            string keyList = param.ContainsKey("EQMGRADEEVALKEY_LIST") ? param["EQMGRADEEVALKEY_LIST"] : "";
+            if (string.IsNullOrEmpty(keyList))
+            {
+                keyList = param.ContainsKey("EQMGRADEEVALKEY") ? param["EQMGRADEEVALKEY"] : "";
+            }
+            string[] evalKeys = (keyList ?? "").Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            if (evalKeys.Length == 0)
             {
                 throw new InvalidOperationException("평가이력을 선택해주세요.");
             }
 
+            // 첫 평가표는 이 리포트에, 나머지는 따로 만들어 페이지를 뒤에 붙인다
+            SET_DATA(evalKeys[0]);
+            if (evalKeys.Length == 1) return;
+
+            CreateDocument();
+            for (int i = 1; i < evalKeys.Length; i++)
+            {
+                R01 next = new R01();
+                next.SET_DATA(evalKeys[i]);
+                next.CreateDocument();
+                Pages.AddRange(next.Pages);
+            }
+        }
+
+        // 2026-11-24 평가표 1건 조회·바인딩 (평가 정보, 평가항목별 평가기준, 설비등급 기준)
+        private void SET_DATA(string evalKey)
+        {
             ItsMaria maria = new ItsMaria("MST1005_R01", "CALL_EVAL_RPT");
             maria.AddParam("EQMGRADEEVALKEY", evalKey);
             DataSet dataSet = maria.CallProc();
@@ -37,7 +60,7 @@ namespace XtraRpt
 
             if (dataSet == null || dataSet.Tables.Count < 3 || dataSet.Tables[0].Rows.Count == 0)
             {
-                throw new InvalidOperationException("출력할 평가이력이 없습니다.");
+                throw new InvalidOperationException("출력할 평가이력이 없습니다. (" + evalKey + ")");
             }
 
             DataRow evalHeader = dataSet.Tables[0].Rows[0];

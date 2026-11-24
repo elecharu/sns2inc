@@ -53,12 +53,12 @@ ItsPage.Load = function () {
     ]);
     // 2026-10-08 [설비별 점검계획 탭] 좌측 그리드 설비코드 옆 설비그룹코드 표시 및 설비그룹명 히든 선언
     ItsGrid.Create('grid1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        column.create('설비코드', 'FANO', { width: 80, align: 'center' }),
-        column.create('설비그룹', 'EQMGUBUN', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM116' }),
-        column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),
+        //column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),                
         column.create('작업장', 'LINECD', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'LINECD', readOnly: true }),
         column.create('공정', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
         column.create('라인', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
+        column.create('설비그룹', 'EQMGUBUN', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM116' }),        
+        column.create('설비코드', 'FANO', { width: 80, align: 'center' }),
         column.create('설비명', 'EQMNM', { width: 200 }),
         // 2026-11-16 [설비별 점검계획 탭] 승인 제거로 승인상태 컬럼 삭제
         column.create('REV', 'REVNM', { width: 100, align: 'center', readOnly: true }),
@@ -108,7 +108,7 @@ ItsPage.Load = function () {
 
     // 정기점검 주기관리 탭: 연간 계획 초기화
     ItsGrid.Create('grid9', { isCheckBoxGrid: true }, [
-        column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),
+        //column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),
         column.create('작업장', 'LINECD', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'LINECD', readOnly: true }),
         column.create('공정', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
         column.create('라인', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),

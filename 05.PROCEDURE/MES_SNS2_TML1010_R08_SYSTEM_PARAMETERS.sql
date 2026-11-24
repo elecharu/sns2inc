@@ -1,0 +1,22 @@
+-- *****************************************************************************
+-- Comment: TML1010_R08 현장터미널 설비부품 입고등록 호출 파라미터 재등록
+-- Create:  2026-11-24  한성수  발주조회·일괄 입고·일괄 취소 파라미터 변경 (14건 → 12건)
+-- *****************************************************************************
+-- R08 프로시저 전체 저장 후 아래 트랜잭션을 실행
+START TRANSACTION;
+DELETE FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'TML1010_R08';
+
+INSERT INTO MES_SNS2.SYSTEM_PARAMETERS
+SELECT * FROM information_schema.PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'TML1010_R08';
+COMMIT;
+
+-- 정상 12건: FACTORYCD 3번, CUSTCD 4번, MTRODRSEQ_LIST 8번, INQTY_LIST 9번, INOUTKEY_LIST 11번, CALLTYPE 12번
+SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
+FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'TML1010_R08'
+ORDER BY ORDINAL_POSITION;

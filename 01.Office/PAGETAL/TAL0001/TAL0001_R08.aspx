@@ -19,6 +19,10 @@
 <asp:Content ContentPlaceHolderID="CPH_BODY" runat="Server">
     <Its:div runat="server" Type="SplitTop" ID="div_TOP">
         <Its:combo runat="server" Label="조회년도" ID="cmb_SYEAR" GPCD="YEAR" REF01="-4" REF02="0" MarginLeft="10" MarginTop="10" InputWidth="120" />
+        <%-- 2026-11-24 작업장·공정·라인 콤보 (EQM1001_R04 와 같음), 선택하면 설비 find·설비 카드 필터 --%>
+        <Its:combo runat="server" Label="작업장" ID="cmb_LINECD" GPCD="*LINECD" REF01="07" MarginLeft="20" MarginTop="10" InputWidth="140" />
+        <Its:combo runat="server" Label="공정" ID="cmb_EQMTP" GPCD="*EQMTP" MarginLeft="20" MarginTop="10" InputWidth="120" />
+        <Its:combo runat="server" Label="라인" ID="cmb_EQMGROUP1" GPCD="*EQMGROUP1" MarginLeft="20" MarginTop="10" InputWidth="120" />
         <Its:find runat="server" Label="설비" ID="find_EQMCD" GPCD="EQMCD" MarginLeft="20" MarginTop="10" InputWidth="120" NameWidth="180" />
         <div id="MONTH_LIST"></div>
         <div id="EQM_LIST"></div>

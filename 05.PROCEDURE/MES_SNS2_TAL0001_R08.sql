@@ -6,6 +6,7 @@ PROCEDURE `MES_SNS2`.`TAL0001_R08`(
 -- Modify: 	2026-11-09 					한성수	계획·실적 점검자 사원명(PLANEMPNAME, EMPNM) 반환 추가
 -- 			2026-11-10 					한성수	월별 배정 점검자 연동, 실적 조회 쿼리 경량화 및 신규 특이사항 초기화
 -- 			2026-11-16 					한성수	점검계획 승인 제거에 따라 적용 REV를 승인본 대신 최신 정기점검 REV로 변경, 승인 실적 수정·삭제 차단
+-- 			2026-11-24 					한성수	월별 현황(LIST_CYCLE_EQMCD)에 작업장·공정·라인(LINECD, EQMTP, EQMGROUP1) 반환 추가 (화면 콤보 필터용)
 -- *****************************************************************************
   IN $SYEAR           VARCHAR(50),
   IN $YYYYMM          VARCHAR(50),
@@ -126,6 +127,8 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       GROUP BY PLAN_REV.PLANTP, PLAN_REV.PLANCD
     )
     SELECT MSTEQM.FANO AS EQMCD, MSTEQM.EQMNM, $SYEAR AS YEAR,
+           -- 화면 작업장·공정·라인 콤보 필터용
+           COALESCE(MSTEQM.LINECD, '') AS LINECD, COALESCE(MSTEQM.EQMTP, '') AS EQMTP, COALESCE(MSTEQM.EQMGROUP1, '') AS EQMGROUP1,
            CASE WHEN FIND_IN_SET('01', RST.RSTMM) THEN '점검완료'
                 WHEN YEAR_PLAN.MONTH_01 <> '' THEN '점검필요' ELSE '' END AS M01,
            CASE WHEN FIND_IN_SET('02', RST.RSTMM) THEN '점검완료'

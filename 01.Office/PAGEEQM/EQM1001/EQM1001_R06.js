@@ -8,8 +8,6 @@ var topYear, topMonth, topIssueData, topIssueImg;   // 보고 있는 TOP ISSUE �
 
 /* 페이지 접근 시 수행 */
 ItsPage.Load = function () {
-    ItsDateRange.SetInitValueFrom('date_SEARCH', ItsHelper.GetYearMonthDay().substr(0, 4) + '-01-01');
-
     // 본문 높이는 Load 뒤 MasterBase 의 resize 에서 정해지므로, 그 뒤에 차트 높이를 칸에 맞춘다
     $(window).resize(function () {
         setTimeout(function () {
@@ -64,8 +62,10 @@ ItsPage.Load = function () {
 
 /* 조회 (설비 고장율 / 호출건수 차트) */
 ItsButton.EventSearch = function () {
+    var period = SEARCH_PERIOD();
     var maria = new ItsMaria('EQM1001_R06', 'LIST_CHART');
-    maria.AddPanel('sdiv1');
+    maria.AddParam('SDATE', period.SDATE);
+    maria.AddParam('EDATE', period.EDATE);
     maria.CallProc();
     if (maria.isError) {
         maria.ShowErrMsg();
@@ -150,8 +150,10 @@ function TOPISSUE_OPEN(d) {
 
 /* TOP ISSUE 조회 (topYear 년 topMonth 달, 조회기간 안), 표 + 접힌 상세 */
 function TOPISSUE_SEARCH() {
+    var period = SEARCH_PERIOD();
     var maria = new ItsMaria('EQM1001_R06', 'LIST_TOPISSUE');
-    maria.AddPanel('sdiv1');
+    maria.AddParam('SDATE', period.SDATE);
+    maria.AddParam('EDATE', period.EDATE);
     maria.AddParam('SYEAR', topYear);
     maria.AddParam('SMONTH', String(topMonth));
     maria.CallProc();
@@ -225,9 +227,10 @@ function TOPISSUE_DETAIL(r, i) {
 
 /* 툴바 [인쇄] → 그래프 = 조회기간 그래프 + 기간 안 월별 TOP ISSUE 표·세부내용, TOP ISSUE = 그 해 1년 그래프 + 그 달 표·세부내용 */
 ItsButton.EventPrint = function () {
+    var period = SEARCH_PERIOD();
     var rpt = new ItsXtraRpt('EQM1001_R0602');
-    rpt.AddParam('SDATE', ItsDateRange.GetValueFrom('date_SEARCH'));
-    rpt.AddParam('EDATE', ItsDateRange.GetValueTo('date_SEARCH'));
+    rpt.AddParam('SDATE', period.SDATE);
+    rpt.AddParam('EDATE', period.EDATE);
     if ($('#div_TOPISSUE').is(':visible')) {
         if (topIssueData == undefined || topIssueData.length == 0) {
             ItsMsg.Alert(topYear + '년 ' + topMonth + '월 설비 수리 이력이 없습니다.');
@@ -326,6 +329,17 @@ ItsFileManager.Event('pop1_file_IMG').onUpload = function (id, fileKey) {
     ItsFileManager.Clear(id);
     POP_IMGLIST();
 };
+
+/* 2026-11-24 조회년월 → 조회기간 (그 해 1월 1일 ~ 그 달 말일), 년월이 비면 빈값 (프로시저에서 안내) */
+function SEARCH_PERIOD() {
+    var ym = (ItsMonth.GetValue('mon_SMONTH') || '').replace(/[^0-9]/g, '');
+    if (ym.length < 6) {
+        return { SDATE: '', EDATE: '' };
+    }
+    var y = ym.substr(0, 4), m = ym.substr(4, 2);
+    var lastDay = new Date(parseInt(y, 10), parseInt(m, 10), 0).getDate();
+    return { SDATE: y + '-01-01', EDATE: y + '-' + m + '-' + (lastDay < 10 ? '0' : '') + lastDay };
+}
 
 /* 막대 색상: 해당 계열 막대만 행별 연도 색상, 나머지는 계열 기본 색상 */
 function BAR_COLOR(id, barColors) {

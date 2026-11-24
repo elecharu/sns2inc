@@ -6,7 +6,8 @@ var EVAL_EDIT = true;
 /* 페이지 로드 시 수행 */
 ItsPage.Load = function () {
     // 설비목록 그리드 (MST1002_R06과 같은 방식 : 작업장·공정·라인·설비그룹 같은 값 셀 병합, ItsGrid 공통 allowMerging)
-    ItsGrid.Create('grid1', { isCheckBoxGrid: false, allowMerging: 'Cells' }, [
+    // 2026-11-24 기간 전체출력 대상 설비 선택용 체크박스
+    ItsGrid.Create('grid1', { isCheckBoxGrid: true, allowMerging: 'Cells' }, [
         column.create('작업장', 'LINENM', { width: 90, align: 'center', allowMerging: true }),
         column.create('공정', 'EQMTP', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', allowMerging: true }),
         column.create('라인', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', allowMerging: true }),
@@ -17,8 +18,8 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
-    // 평가이력 그리드
-    ItsGrid.Create('grid2', { isCheckBoxGrid: false }, [
+    // 평가이력 그리드 (2026-11-24 선택 출력용 체크박스)
+    ItsGrid.Create('grid2', { isCheckBoxGrid: true }, [
         column.create('평가키', 'EQMGRADEEVALKEY', { width: 100, hidden: true }),
         column.create('평가자코드', 'EMPCD', { width: 100, hidden: true }),
         column.create('비고', 'REMARK', { width: 100, hidden: true }),
@@ -195,6 +196,70 @@ ItsGrid.Event('grid2').onButtonClick = function (rowIndex, field) {
         });
     }
 };
+
+// 2026-11-24 [설비목록 영역] 기간 전체출력 : 체크한 설비들의 조회일자 내 평가표를 설비목록 순서대로 한 번에 출력
+ItsButton.Event('btn_PRINT_ALL').onClick = function () {
+    ItsGrid.Get('grid1').finishEditing();
+
+    var fanos = [];
+    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+        if (ItsGrid.IsChecked('grid1', i)) {
+            fanos.push(ItsGrid.GetValue('grid1', i, 'FANO'));
+        }
+    }
+    if (fanos.length == 0) {
+        ItsMsg.Alert('출력할 설비를 체크하세요.');
+        return;
+    }
+
+    // 설비마다 평가이력 조회(평가이력 그리드와 같은 조건)로 평가키 수집
+    var keys = [];
+    for (var j = 0; j < fanos.length; j++) {
+        var maria = new ItsMaria('MST1005_R01', 'LIST_EVAL');
+        maria.AddPanel('sdiv1');
+        maria.AddParam('FANO', fanos[j]);
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+        for (var k = 0; k < maria.store.Length(); k++) {
+            keys.push(maria.store.data[k]['EQMGRADEEVALKEY']);
+        }
+    }
+    if (keys.length == 0) {
+        ItsMsg.Alert('체크한 설비의 조회일자 내 평가이력이 없습니다.');
+        return;
+    }
+    PRINT_EVAL(keys);
+};
+
+// 2026-11-24 [평가이력 영역] 선택 출력 : 평가이력 그리드에서 체크한 평가표를 한 번에 출력
+ItsButton.Event('btn_PRINT_CHK').onClick = function () {
+    ItsGrid.Get('grid2').finishEditing();
+
+    var keys = [];
+    for (var i = 0; i < ItsGrid.Length('grid2'); i++) {
+        if (ItsGrid.IsChecked('grid2', i)) {
+            keys.push(ItsGrid.GetValue('grid2', i, 'EQMGRADEEVALKEY'));
+        }
+    }
+    if (keys.length == 0) {
+        ItsMsg.Alert('출력할 평가이력을 체크하세요.');
+        return;
+    }
+    PRINT_EVAL(keys);
+};
+
+// 2026-11-24 평가표 여러 건 출력 (평가표마다 새 페이지, PDF 하나)
+function PRINT_EVAL(keys) {
+    var rpt = new ItsXtraRpt('MST1005_R01');
+    rpt.AddParam('EQMGRADEEVALKEY_LIST', keys.join(','));
+    rpt.CallPop();
+    if (rpt.isError) {
+        ItsMsg.Alert(rpt.errMessage);
+    }
+}
 
 // 2026-11-05 [평가 팝업] 평가 팝업 열기 (평가항목별 점수·설비등급 기준 조회)
 function OPEN_EVAL(data, isEdit) {

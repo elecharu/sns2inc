@@ -1,5 +1,5 @@
-CREATE DEFINER=`root`@`%` 
-PROCEDURE `MES_SNS2`.`EQM1001_R04`(
+﻿CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.EQM1001_R04(
 -- *****************************************************************************
 -- Comment: 설비 정기점검 등록 
 -- Create: 	2025-06-27  	생성 			이대규
@@ -282,7 +282,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
                      YEAR_PLAN.MONTH_07, YEAR_PLAN.MONTH_08, YEAR_PLAN.MONTH_09, YEAR_PLAN.MONTH_10, YEAR_PLAN.MONTH_11, YEAR_PLAN.MONTH_12) <> ''
           )
       AND (MSTEQM.FANO LIKE CONCAT('%', $EQMCD, '%') OR MSTEQM.EQMNM LIKE CONCAT('%', $EQMCD, '%'))
-    ORDER BY MSTEQM.FANO;
+    ORDER BY LINECD, EQMTP, EQMGROUP1, MSTEQM.FANO;
 
   -- *****************************************************************************
 

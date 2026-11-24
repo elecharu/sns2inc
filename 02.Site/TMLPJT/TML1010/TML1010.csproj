@@ -122,6 +122,9 @@
     <Compile Include="R03.xaml.cs">
       <DependentUpon>R03.xaml</DependentUpon>
     </Compile>
+    <Compile Include="R09.xaml.cs">
+      <DependentUpon>R09.xaml</DependentUpon>
+    </Compile>
     <Compile Include="S01.xaml.cs">
       <DependentUpon>S01.xaml</DependentUpon>
     </Compile>
@@ -186,6 +189,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="R03.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="R09.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

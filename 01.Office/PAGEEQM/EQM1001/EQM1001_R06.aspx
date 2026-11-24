@@ -55,7 +55,8 @@
 <%-- SEARCH PANEL --%>
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
-        <Its:dateRange runat="server" Label="조회기간" ID="date_SEARCH" FieldFrom="SDATE" FieldTo="EDATE" />
+        <%-- 2026-11-24 조회기간 → 조회년월 (그 해 1월 1일 ~ 그 달 말일로 조회) --%>
+        <Its:month runat="server" Label="조회년월" ID="mon_SMONTH" Field="SEARCHYM" />
     </Its:div>
 </asp:Content>
 

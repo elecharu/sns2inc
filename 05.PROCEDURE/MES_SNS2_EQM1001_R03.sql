@@ -1,4 +1,5 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R03`(
+﻿CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.EQM1001_R03(
 -- *****************************************************************************
 -- Comment: 설비점검계획 
 -- Create: 	2025-06-27  	생성 			이대규
@@ -447,7 +448,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       AND ($EQMGROUP1 = '' OR MSTEQM.EQMGROUP1 = $EQMGROUP1)
       AND (COALESCE($EQMGRP, '') = '' OR MSTEQM.EQMGUBUN LIKE CONCAT('%', $EQMGRP, '%'))
       AND (COALESCE($FANO, '') = '' OR MSTEQM.FANO LIKE CONCAT('%', $FANO, '%') OR MSTEQM.EQMNM LIKE CONCAT('%', $FANO, '%'))
-    ORDER BY MSTEQM.FANO;
+    ORDER BY LINECD, EQMTP, EQMGROUP1, EQMGUBUN, MSTEQM.FANO;
 
   -- *****************************************************************************
 
@@ -944,7 +945,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       AND ($EQMTP = '' OR MSTEQM.EQMTP = $EQMTP)
       AND ($EQMGROUP1 = '' OR MSTEQM.EQMGROUP1 = $EQMGROUP1)
       AND (MSTEQM.FANO LIKE CONCAT('%', $FANO, '%') OR MSTEQM.EQMNM LIKE CONCAT('%', $FANO, '%'))
-    ORDER BY MSTEQM.FANO;
+    ORDER BY LINECD, EQMTP, EQMGROUP1, MSTEQM.FANO;
 
   -- *****************************************************************************
 

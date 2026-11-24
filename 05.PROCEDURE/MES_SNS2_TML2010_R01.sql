@@ -9,6 +9,8 @@ PROCEDURE MES_SNS2.TML2010_R01(
 --         2026-11-23 투입창고: 투입로트 품목이 반제품(ITEMCG DM100150)이면 재공품창고(04S131_N), 아니면 자재투입창고(04S111_N)
 --           SCAN_LOT·ADD_INPUT 은 품목유형으로, DEL_INPUT 은 투입 목록(PRDLINESCAN.WARECD)으로, PRINT_MOVE 잔량은 두 창고에서 찾음
 --         2026-11-23 실적삭제: LIST_RST(최근 실적 어제·오늘), DEL_RST(실적로트 미사용일 때 IO_PRDRST 되돌림 + ERP D 송신)
+--         2026-11-24 비가동 탭(LIST_INPUT 5번, LIST_NON): 당일(작업일) 비가동만. 작업일 야간 종료시간(PP161102N.REF02)부터
+--           다음날 그 시각 전까지 시작한 것 + 진행 중(종료시간 없음)인 것
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),       -- 공정
@@ -44,6 +46,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$WARECD VARCHAR(100);
   DECLARE _$ITEMID INT(11);
   DECLARE _$PDATE VARCHAR(10);
+  DECLARE _$NIGHTEND VARCHAR(5);   -- 야간 종료시간 (PP161102N.REF02, 작업일 경계)
   DECLARE _$EMPCD VARCHAR(100);
   DECLARE _$PRDNONKEY VARCHAR(20);
   DECLARE _$LVL INT;
@@ -282,7 +285,8 @@ WHEN 'LIST_INPUT' THEN  -- 투입로트 조회, 생산품 조회
   ;
 
   -- 계획일자: 자정 이후 야간(00:00 ~ 야간 종료시간 PP161102N.REF02)이면 어제, 아니면 오늘
-  IF SUBSTRING(CALLTIME(), 12, 5) < (SELECT COMTYPE.REF02 FROM COMTYPE WHERE COMTYPE.GPCD = 'PP161' AND COMTYPE.TPCD = 'PP161102N') THEN
+  SET _$NIGHTEND = (SELECT COMTYPE.REF02 FROM COMTYPE WHERE COMTYPE.GPCD = 'PP161' AND COMTYPE.TPCD = 'PP161102N');
+  IF SUBSTRING(CALLTIME(), 12, 5) < _$NIGHTEND THEN
     SET _$PDATE = DATE_FORMAT(DATE_SUB(GETDATE(), INTERVAL 1 DAY), '%Y-%m-%d');
   ELSE
     SET _$PDATE = GETDATE();
@@ -358,6 +362,7 @@ WHEN 'LIST_INPUT' THEN  -- 투입로트 조회, 생산품 조회
   ;
 
   -- 5. 라인 비가동 목록 (이번 작업분: 작업완료 전이라 작업키가 빈 것, LIST_NON 과 같음)
+  --    2026-11-24 당일(작업일 _$PDATE) 시작분 + 진행 중인 것만
   SELECT
       IFNULL(GPCD('PP409', MSTNON.NONGROUPCD1), '') AS NONTPNM
     , IFNULL(MSTNON.NONNM, '') AS NONNM
@@ -370,6 +375,9 @@ WHEN 'LIST_INPUT' THEN  -- 투입로트 조회, 생산품 조회
    AND MSTNON.NONCD = PRDRSTNON.NONCD
   WHERE PRDRSTNON.EQMCD = $EQMCD
     AND PRDRSTNON.PRDWORKKEY = ''
+    AND (PRDRSTNON.NONETIME = ''
+         OR (PRDRSTNON.NONSTIME >= CONCAT(_$PDATE, ' ', _$NIGHTEND)
+             AND PRDRSTNON.NONSTIME < CONCAT(DATE_FORMAT(DATE_ADD(_$PDATE, INTERVAL 1 DAY), '%Y-%m-%d'), ' ', _$NIGHTEND)))
   ORDER BY PRDRSTNON.NONSTIME
   ;
 
@@ -801,6 +809,14 @@ WHEN 'CHK_NON' THEN  -- 라인에 진행 중(종료 안 된) 비가동 확인
 -- ****************************************************************************
 WHEN 'LIST_NON' THEN  -- 라인 비가동 목록 (비가동 시작·종료 후 비가동 탭 갱신, LIST_INPUT 5번과 같음)
 
+  -- 2026-11-24 작업일: 자정 이후 야간(00:00 ~ 야간 종료시간 PP161102N.REF02)이면 어제, 아니면 오늘 (LIST_INPUT 계획일자와 같음)
+  SET _$NIGHTEND = (SELECT COMTYPE.REF02 FROM COMTYPE WHERE COMTYPE.GPCD = 'PP161' AND COMTYPE.TPCD = 'PP161102N');
+  IF SUBSTRING(CALLTIME(), 12, 5) < _$NIGHTEND THEN
+    SET _$PDATE = DATE_FORMAT(DATE_SUB(GETDATE(), INTERVAL 1 DAY), '%Y-%m-%d');
+  ELSE
+    SET _$PDATE = GETDATE();
+  END IF;
+
   SELECT
       IFNULL(GPCD('PP409', MSTNON.NONGROUPCD1), '') AS NONTPNM
     , IFNULL(MSTNON.NONNM, '') AS NONNM
@@ -813,6 +829,9 @@ WHEN 'LIST_NON' THEN  -- 라인 비가동 목록 (비가동 시작·종료 후 �
    AND MSTNON.NONCD = PRDRSTNON.NONCD
   WHERE PRDRSTNON.EQMCD = $EQMCD
     AND PRDRSTNON.PRDWORKKEY = ''
+    AND (PRDRSTNON.NONETIME = ''
+         OR (PRDRSTNON.NONSTIME >= CONCAT(_$PDATE, ' ', _$NIGHTEND)
+             AND PRDRSTNON.NONSTIME < CONCAT(DATE_FORMAT(DATE_ADD(_$PDATE, INTERVAL 1 DAY), '%Y-%m-%d'), ' ', _$NIGHTEND)))
   ORDER BY PRDRSTNON.NONSTIME
   ;
 

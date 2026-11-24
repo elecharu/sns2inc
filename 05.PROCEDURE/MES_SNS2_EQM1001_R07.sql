@@ -1,9 +1,10 @@
-CREATE DEFINER=`root`@`%`
-PROCEDURE `MES_SNS2`.`EQM1001_R07`(
+CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.EQM1001_R07(
 -- *****************************************************************************
 -- Comment: 설비 예방보전 점검등록 (수시 점검, 항목은 설비의 최신 정기점검 계획 REV, 실적은 CHKRSTEQM CHKTP '03')
 -- Create: 	2026-11-16  	생성 			한성수	설비 목록 조회 (TAL0001_R05와 같은 조건)
 -- Modify: 	2026-11-17 					한성수	예방보전 점검(CHKTP '03') 수시 등록·수정·삭제, 점검항목은 정기점검 계획(설비그룹·설비 최신 REV) 항목 사용, 등록·수정 처리 R04 방식으로 단순화, 같은 날 승인 전 이력 중복 등록 차단(점검 등록 클릭 시 포함)
+-- Modify: 	2026-11-24 					한성수	설비 목록 조회조건 설비($EQMCD) 추가, 정기점검 계획(설비·설비그룹 CHKTP '02' 항목) 유무 PLANYN 추가
 -- *****************************************************************************
   IN $SDATE          VARCHAR(10),     -- 조회 시작일자 (점검일자)
   IN $EDATE          VARCHAR(10),     -- 조회 종료일자 (점검일자)
@@ -94,7 +95,14 @@ WHEN 'LIST_EQMCD' THEN -- 설비 목록 (2공장 사용 설비, 작업장·공�
          IFNULL(MSTEQM.LINECD, '')    AS LINECD,
          IFNULL(MSTEQM.EQMTP, '')     AS EQMTP,
          IFNULL(MSTEQM.EQMGROUP1, '') AS EQMGROUP1,
-         COALESCE(PM.LASTDAY, '')     AS LASTDAY
+         COALESCE(PM.LASTDAY, '')     AS LASTDAY,
+         IF(EXISTS (SELECT 1
+                    FROM MSTEQMREV_HEADER PLAN_REV
+                    INNER JOIN MSTEQMREV_DETAIL PLAN_ITEM ON PLAN_ITEM.REVCD = PLAN_REV.REVCD
+                    WHERE PLAN_REV.CHKTP = '02'
+                      AND ((PLAN_REV.PLANTP = 'E' AND PLAN_REV.PLANCD = MSTEQM.FANO)
+                        OR (PLAN_REV.PLANTP = 'G' AND PLAN_REV.PLANCD = MSTEQM.EQMGUBUN))
+                    LIMIT 1), 'Y', 'N') AS PLANYN
   FROM MSTEQM
   LEFT JOIN (
     SELECT EQMCD,
@@ -108,7 +116,8 @@ WHEN 'LIST_EQMCD' THEN -- 설비 목록 (2공장 사용 설비, 작업장·공�
     AND ($LINECD = '' OR MSTEQM.LINECD = $LINECD)
     AND ($EQMTP = '' OR MSTEQM.EQMTP = $EQMTP)
     AND ($EQMGROUP1 = '' OR MSTEQM.EQMGROUP1 = $EQMGROUP1)
-  ORDER BY MSTEQM.FANO;
+    AND (COALESCE($EQMCD, '') = '' OR MSTEQM.FANO = $EQMCD)
+  ORDER BY LINECD, EQMTP, EQMGROUP1, MSTEQM.FANO;
 
 -- *****************************************************************************
 WHEN 'LIST_CHKRST' THEN -- 선택 설비의 예방보전 이력 (점검일자 기간, 최신순, 항목 수·NG 수·승인)

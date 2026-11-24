@@ -3,12 +3,13 @@
 // 설비 목록·예방보전 이력·점검항목 그리드
 ItsPage.Load = function () {
     ItsGrid.Create('grid1', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        column.create('설비번호', 'EQMCD', { width: 110, align: 'center', readOnly: true }),
-        column.create('설비명', 'EQMNM', { width: 170, readOnly: true }),
-        column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),
         column.create('작업장', 'LINECD', { width: 110, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'LINECD', readOnly: true }),
         column.create('공정', 'EQMTP', { width: 90, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM100', readOnly: true }),
         column.create('라인', 'EQMGROUP1', { width: 90, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
+        column.create('설비번호', 'EQMCD', { width: 110, align: 'center', readOnly: true }),
+        column.create('설비명', 'EQMNM', { width: 170, readOnly: true }),
+        column.create('정기점검 계획', 'PLANYN', { width: 90, columnType: enumColumnTypes.check, readOnly: true }),
+        //column.create('공장', 'FACTORYCD', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FACTORYCD', readOnly: true }),
     ]);
 
     ItsGrid.Create('grid2', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
@@ -78,7 +79,8 @@ ItsButton.EventSearch = function () {
         maria.ShowErrMsg();
         return;
     }
-    ItsGrid.SetStore('grid1', maria.store);
+
+
     ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
     CLEAR_PM();
 };

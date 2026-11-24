@@ -149,9 +149,17 @@ function RENDER_EQM() {
     var html = '';
     var hasSelected = false;
 
+    // 2026-11-24 작업장·공정·라인 콤보 필터
+    var lineCd = ItsCombo.GetValue('cmb_LINECD') || '';
+    var eqmTp = ItsCombo.GetValue('cmb_EQMTP') || '';
+    var eqmGroup1 = ItsCombo.GetValue('cmb_EQMGROUP1') || '';
+
     CYCLE_DATA.forEach(function (row) {
         var status = row['M' + SEL_MONTH];
         if (status == '') {
+            return;
+        }
+        if ((lineCd != '' && row.LINECD != lineCd) || (eqmTp != '' && row.EQMTP != eqmTp) || (eqmGroup1 != '' && row.EQMGROUP1 != eqmGroup1)) {
             return;
         }
         if (row.EQMCD == SEL_EQMCD) {
@@ -184,6 +192,46 @@ ItsCombo.Event('cmb_SYEAR').onChanged = function (value, oldValue) {
 ItsFind.Event('find_EQMCD').onChanged = function (value, oldValue) {
     SEARCH_CYCLE();
 };
+
+// 2026-11-24 작업장 변경 시 공정·라인 콤보를 그 작업장 기준으로 변경 (EQM1001_R04 와 같음), 설비 find·카드 필터
+ItsCombo.Event('cmb_LINECD').onChanged = function (value, oldValue) {
+    ItsCombo.SetRef01('cmb_EQMTP', ItsCombo.GetValue('cmb_LINECD'));
+    ItsCombo.SetValue('cmb_EQMTP', '', false);
+
+    ItsCombo.SetRef01('cmb_EQMGROUP1', ItsCombo.GetValue('cmb_LINECD'), false);
+    ItsCombo.SetRef02('cmb_EQMGROUP1', '');
+    ItsCombo.SetValue('cmb_EQMGROUP1', '', false);
+
+    APPLY_EQM_FILTER();
+};
+
+// 2026-11-24 공정 변경 시 라인 콤보를 그 공정 기준으로 변경, 설비 find·카드 필터
+ItsCombo.Event('cmb_EQMTP').onChanged = function (value, oldValue) {
+    ItsCombo.SetRef02('cmb_EQMGROUP1', ItsCombo.GetValue('cmb_EQMTP'));
+    ItsCombo.SetValue('cmb_EQMGROUP1', '', false);
+
+    APPLY_EQM_FILTER();
+};
+
+// 2026-11-24 라인 변경 시 설비 find·카드 필터
+ItsCombo.Event('cmb_EQMGROUP1').onChanged = function (value, oldValue) {
+    APPLY_EQM_FILTER();
+};
+
+// 2026-11-24 설비 find 목록을 작업장(REF05)·공정(REF01)·라인(REF02)으로 거르고, 선택 설비는 비우고, 설비 카드를 다시 그림
+// ItsFind.SetRef0N 은 매번 change 이벤트를 일으켜 find onChanged(월별 현황 조회)가 여러 번 불리므로 REF 속성만 바꾼다
+function APPLY_EQM_FILTER() {
+    var $find = $('input#find_EQMCD');
+    $find.attr('data-ref01', ItsCombo.GetValue('cmb_EQMTP') || '');
+    $find.attr('data-ref02', ItsCombo.GetValue('cmb_EQMGROUP1') || '');
+    $find.attr('data-ref05', ItsCombo.GetValue('cmb_LINECD') || '');
+
+    if (ItsFind.GetValue('find_EQMCD')) {
+        ItsFind.SetValue('find_EQMCD', '');   // onChanged 에서 다시 조회
+    } else {
+        RENDER_EQM();
+    }
+}
 
 // 월 탭 클릭 이벤트
 $(document).on('click', '#MONTH_LIST .month-btn', function () {

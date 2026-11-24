@@ -1,5 +1,5 @@
-CREATE DEFINER=`root`@`%`
-PROCEDURE `MES_SNS2`.`PRD6001_S02`(
+﻿CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.PRD6001_S02(
 -- *****************************************************************************
 -- Comment: MTBF (설비별 월 부하시간·고장시간·고장건수·고장율·MTBF·MTTR, 2공장)
 --          설비     = 2공장(MSTLINE.FACTORYCD 07) 작업장의 사용 설비(MSTLINE_EQM.USEYN Y) 전체 + 종합

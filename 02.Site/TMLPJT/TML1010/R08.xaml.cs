@@ -4,22 +4,19 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using ITSLIB;
+using DevExpress.Xpf.Grid;
 
 namespace TML1010
 {
-    // 현장터미널 설비부품 입고등록
+    // 현장터미널 설비부품 입고등록 (태블릿용 탭: [입고등록] 발주 선택 후 품목별 입고수량 입력 / [입고취소] 입고 이력 취소·라벨 재발행)
     public partial class R08 : ITSLIB.ItsPageTml
     {
         ItsModelPanel MODEL_S1 = new ItsModelPanel();
-        ItsModelPanel MODEL_ODR_S = new ItsModelPanel();
-        ItsModelPanel MODEL_IN_INFO = new ItsModelPanel();
         ItsModelPanel MODEL_A2 = new ItsModelPanel();
-        ItsModelPanel MODEL_A1 = new ItsModelPanel();
+        ItsModelPanel MODEL_S2 = new ItsModelPanel();
         ItsModelGrid MODEL_G1 = new ItsModelGrid();
         ItsModelGrid MODEL_G2 = new ItsModelGrid();
-        ItsModelGrid MODEL_ODR = new ItsModelGrid();
-
-        private bool filterLoading = false;
+        ItsModelGrid MODEL_G3 = new ItsModelGrid();
 
         public R08()
         {
@@ -36,45 +33,47 @@ namespace TML1010
 
             MODEL_S1.Binding(PANEL_S1);
             MODEL_S1.InitData();
-            MODEL_S1.EventValueChanged += MODEL_S1_EventValueChanged;
-
-            MODEL_ODR_S.Binding(PANEL_ODR);
-            MODEL_ODR_S.InitData();
-
-            MODEL_IN_INFO.Binding(PANEL_IN_INFO);
-            MODEL_IN_INFO.InitData();
 
             MODEL_A2.Binding(PANEL_A2);
-            MODEL_A2.FieldType("ITEMID", ItsEnums.FieldTypes.String);
             MODEL_A2.FieldType("MTRODRKEY", ItsEnums.FieldTypes.String);
-            MODEL_A2.FieldType("MTRODRSEQ", ItsEnums.FieldTypes.String);
             MODEL_A2.InitData();
 
-            MODEL_A1.Binding(PANEL_A1);
-            MODEL_A1.FieldType("ITEMID", ItsEnums.FieldTypes.String);
-            MODEL_A1.InitData();
+            MODEL_S2.Binding(PANEL_S2);
+            MODEL_S2.InitData();
 
             MODEL_G1.Binding(GRID_G1);
             MODEL_G2.Binding(GRID_G2);
-            MODEL_ODR.Binding(GRID_ODR);
+            MODEL_G3.Binding(GRID_G3);
+
+            // 태블릿용 그리드 표시: 컬럼을 그리드 폭에 맞춤(가로 스크롤 없음), 행 머리 칸 숨김, 행 높이 키움
+            foreach (TableView view in new TableView[] { GRID_G1.View as TableView, GRID_G2.View as TableView, GRID_G3.View as TableView })
+            {
+                view.AutoWidth = true;
+                view.ShowIndicator = false;
+                view.RowMinHeight = 40;
+            }
         }
 
         public override void EventPageLoaded()
         {
             base.EventPageLoaded();
 
-            PANEL_A2.Close();
-            PANEL_A1.Close();
+            MODEL_S1.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));
+            MODEL_S1.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+            MODEL_S1.SetValue("FACTORYCD", "07");
 
-            MODEL_ODR_S.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-01"));
-            MODEL_ODR_S.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
-            MODEL_A1.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-dd"));
-            MODEL_A1.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+            MODEL_A2.SetValue("INDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+            MODEL_A2.SetValue("INTP", "IN_01");
+            MODEL_A2.SetValue("EMPCD", (ItsMemberShip.EMPCD ?? "").Trim());
+
+            MODEL_S2.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+            MODEL_S2.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+            MODEL_S2.SetValue("FACTORYCD", "07");
 
             try
             {
-                LoadSearchFilter();
-                EventCommand("SEARCH_EQMPARTS");
+                EventCommand("SEARCH_MTRODR");
+                EventCommand("SEARCH_IN_EQMPARTS");
             }
             catch
             {
@@ -82,265 +81,165 @@ namespace TML1010
             }
         }
 
-        // 조회 조건 중요도등급·로케이션 목록
-        private void LoadSearchFilter()
+        // 발주 목록 재조회 후 선택했던 발주가 남아 있으면 다시 선택
+        private void ReloadMtrodr()
         {
-            filterLoading = true;
+            string odrKey = MODEL_A2.GetText("MTRODRKEY");
+            EventCommand("SEARCH_MTRODR");
+            if (ItsMaria.IsError || string.IsNullOrEmpty(odrKey)) return;
 
-            ItsMaria.Set("TML1010_R08", "LIST_GRADE");
-            DataSet dsGrade = ItsMaria.Call();
-            if (!ItsMaria.IsError)
+            for (int i = 0; i < MODEL_G1.ModelCount; i++)
             {
-                cmb_S_GRADE.ItemClear();
-                cmb_S_GRADE.AddItem(dsGrade.Tables[0], "전체");
+                if (MODEL_G1.GetText(i, "MTRODRKEY") == odrKey)
+                {
+                    MODEL_G1.SetBackColor(i, "YELLOW");
+                    MODEL_A2.SetValue("MTRODRKEY", odrKey);
+                    EventCommand("SEARCH_MTRODRD");
+                    return;
+                }
             }
-
-            ItsMaria.Set("TML1010_R08", "LIST_LOCA");
-            DataSet dsLoca = ItsMaria.Call();
-            if (!ItsMaria.IsError)
-            {
-                cmb_S_LOCACD.ItemClear();
-                cmb_S_LOCACD.AddItem(dsLoca.Tables[0], "전체");
-            }
-
-            MODEL_S1.SetValue("GRADE", "");
-            MODEL_S1.SetValue("LOCACD", "");
-            filterLoading = false;
         }
 
-        // 조회 조건 중요도등급·로케이션 변경 시 바로 재조회
-        private void MODEL_S1_EventValueChanged(string fieldName)
+        // 입고 이력 체크 건수
+        private int CheckedCount()
         {
-            if (filterLoading) return;
-            if (fieldName != "GRADE" && fieldName != "LOCACD") return;
-
-            EventCommand("SEARCH_EQMPARTS");
+            int cnt = 0;
+            for (int i = 0; i < MODEL_G3.ModelCount; i++)
+            {
+                if (MODEL_G3.IsChecked(i)) cnt++;
+            }
+            return cnt;
         }
 
-        // 팝업 타이틀바 색상 설정
-        private void SetPopColor(UserControl pop)
+        // 체크한 입고 이력 키 목록 추가
+        private void AddCheckedInoutKey()
         {
-            pop.ApplyTemplate();
-            DockPanel title = (DockPanel)pop.Template.FindName("TML_POP_TITLEBAR", pop);
-            if (title.Background == Brushes.SteelBlue) return;
-
-            title.Background = Brushes.SteelBlue;
-            Canvas close = ItsElement.FindChild<Canvas>(title)[0];
-            Style style = new Style(typeof(Canvas), close.Style);
-            style.Setters.Add(new Setter(Panel.BackgroundProperty, Brushes.Transparent));
-            close.Style = style;
-            ItsElement.FindParent<Border>(title).BorderBrush = Brushes.SteelBlue;
+            for (int i = 0; i < MODEL_G3.ModelCount; i++)
+            {
+                if (!MODEL_G3.IsChecked(i)) continue;
+                ItsMaria.AddList("INOUTKEY_LIST", MODEL_G3.GetText(i, "INOUTKEY"));
+            }
         }
 
         public override void EventCommand(string commandName)
         {
             base.EventCommand(commandName);
 
-            // 설비부품 현재고 조회
-            if (commandName == "SEARCH_EQMPARTS")
+            // [입고등록] 발주 조회 (발주일자·공장·거래처)
+            if (commandName == "SEARCH_MTRODR")
             {
-                ItsMaria.Set("TML1010_R08", "LIST_EQMPARTS");
-                ItsMaria.AddOne("GRADE", MODEL_S1.GetText("GRADE"));
-                ItsMaria.AddOne("LOCACD", MODEL_S1.GetText("LOCACD"));
+                MODEL_A2.SetValue("MTRODRKEY", "");
+                MODEL_G1.Clear();
+                MODEL_G2.Clear();
 
-                try
+                ItsMaria.Set("TML1010_R08", "LIST_MTRODR");
+                ItsMaria.AddModel(MODEL_S1);
+
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
                 {
-                    DataSet ds = ItsMaria.Call();
-                    if (ItsMaria.IsError)
-                    {
-                        ShowMessageBox("", "설비부품 조회 오류: " + ItsMaria.ErrMessage);
-                        return;
-                    }
-
-                    if (ds != null && ds.Tables.Count > 0)
-                    {
-                        MODEL_G1.SetData(ds.Tables[0]);
-                    }
-                    else
-                    {
-                        MODEL_G1.Clear();
-                    }
+                    ShowMessageBox("", "발주 조회 오류: " + ItsMaria.ErrMessage);
+                    return;
                 }
-                catch (Exception ex)
+                MODEL_G1.SetData(ds.Tables[0]);
+                for (int i = 0; i < MODEL_G1.ModelCount; i++)
                 {
-                    ShowMessageBox("", "조회 중 시스템 오류: " + ex.Message);
+                    MODEL_G1.SetBackColor(i, "WHITE");
                 }
             }
-            // 설비부품 입고등록 팝업 오픈
-            else if (commandName == "POP_IN_EQMPARTS")
+            // [입고등록] 입고할 발주 선택·해제
+            else if (commandName == "SEL_ODR")
             {
                 if (MODEL_G1.ModelCount <= 0 || MODEL_G1.CurrentIndex < 0)
                 {
                     return;
                 }
 
-                int rowIdx = MODEL_G1.CurrentIndex;
-                string itemCd = MODEL_G1.GetText(rowIdx, "ITEMCD");
-                string itemNm = MODEL_G1.GetText(rowIdx, "ITEMNM");
-                string itemId = MODEL_G1.GetText(rowIdx, "ITEMID");
-
-                MODEL_IN_INFO.SetValue("ITEMCD", itemCd);
-                MODEL_IN_INFO.SetValue("ITEMNM", itemNm);
-                MODEL_IN_INFO.SetValue("ITEMSPEC", MODEL_G1.GetText(rowIdx, "ITEMSPEC"));
-
-                MODEL_A2.InitData();
-                MODEL_A2.SetValue("ITEMID", itemId);
-                MODEL_A2.SetValue("INDATE", DateTime.Now.ToString("yyyy-MM-dd"));
-                MODEL_A2.SetValue("INTP", "IN_01");
-                MODEL_A2.SetValue("EMPCD", (ItsMemberShip.EMPCD ?? "").Trim());
-
-                EventCommand("SEARCH_ODR_EQMPARTS");
-                if (ItsMaria.IsError) return;
-                PANEL_A2.Show();
-                SetPopColor(POP_IN);
+                int odrIdx = MODEL_G1.CurrentIndex;
+                if (MODEL_G1.GetText(odrIdx, "BACKGROUND") == "WHITE")
+                {
+                    for (int i = 0; i < MODEL_G1.ModelCount; i++)
+                    {
+                        if (MODEL_G1.GetText(i, "BACKGROUND") == "YELLOW")
+                        {
+                            MODEL_G1.SetBackColor(i, "WHITE");
+                        }
+                    }
+                    MODEL_G1.SetBackColor(odrIdx, "YELLOW");
+                    MODEL_A2.SetValue("MTRODRKEY", MODEL_G1.GetText(odrIdx, "MTRODRKEY"));
+                    EventCommand("SEARCH_MTRODRD");
+                }
+                else
+                {
+                    MODEL_G1.SetBackColor(odrIdx, "WHITE");
+                    MODEL_A2.SetValue("MTRODRKEY", "");
+                    MODEL_G2.Clear();
+                }
             }
-            // 발주일자·거래처별 선택 부품 발주 조회
-            else if (commandName == "SEARCH_ODR_EQMPARTS")
+            // [입고등록] 선택 발주 품목 조회 (입고수량 기본값 = 미입고량)
+            else if (commandName == "SEARCH_MTRODRD")
             {
-                MODEL_A2.SetValue("MTRODRKEY", "");
-                MODEL_A2.SetValue("MTRODRSEQ", "");
-                MODEL_A2.SetValue("INQTY", 0);
-                MODEL_ODR.Clear();
+                ItsMaria.Set("TML1010_R08", "LIST_MTRODRD");
+                ItsMaria.AddOne("MTRODRKEY", MODEL_A2.GetText("MTRODRKEY"));
 
-                ItsMaria.Set("TML1010_R08", "LIST_ODR_EQMPARTS");
-                ItsMaria.AddModel(MODEL_ODR_S);
-                ItsMaria.AddOne("ITEMID", MODEL_A2.GetValue("ITEMID"));
-
-                DataSet dsOdr = ItsMaria.Call();
+                DataSet ds = ItsMaria.Call();
                 if (ItsMaria.IsError)
                 {
                     ShowMessageBox("", ItsMaria.ErrMessage);
                     return;
                 }
-                MODEL_ODR.SetData(dsOdr.Tables[0]);
-                for (int i = 0; i < MODEL_ODR.ModelCount; i++)
-                {
-                    MODEL_ODR.SetBackColor(i, "WHITE");
-                }
+                MODEL_G2.SetData(ds.Tables[0]);
             }
-            // 입고 대상 발주 행 선택·해제
-            else if (commandName == "SEL_ODR")
-            {
-                if (MODEL_ODR.ModelCount <= 0 || MODEL_ODR.CurrentIndex < 0)
-                {
-                    return;
-                }
-
-                int odrIdx = MODEL_ODR.CurrentIndex;
-                if (MODEL_ODR.GetText(odrIdx, "BACKGROUND") == "WHITE")
-                {
-                    for (int i = 0; i < MODEL_ODR.ModelCount; i++)
-                    {
-                        if (MODEL_ODR.GetText(i, "BACKGROUND") == "YELLOW")
-                        {
-                            MODEL_ODR.SetBackColor(i, "WHITE");
-                        }
-                    }
-                    MODEL_ODR.SetBackColor(odrIdx, "YELLOW");
-                    MODEL_A2.SetValue("MTRODRKEY", MODEL_ODR.GetText(odrIdx, "MTRODRKEY"));
-                    MODEL_A2.SetValue("MTRODRSEQ", MODEL_ODR.GetText(odrIdx, "MTRODRSEQ"));
-                    MODEL_A2.SetValue("INQTY", MODEL_ODR.GetDecimal(odrIdx, "REMAINQTY"));
-                }
-                else
-                {
-                    MODEL_ODR.SetBackColor(odrIdx, "WHITE");
-                    MODEL_A2.SetValue("MTRODRKEY", "");
-                    MODEL_A2.SetValue("MTRODRSEQ", "");
-                    MODEL_A2.SetValue("INQTY", 0);
-                }
-            }
-            // 설비부품 입고등록 확인
+            // [입고등록] 설비부품 입고등록 확인
             else if (commandName == "IN_EQMPARTS")
             {
-                string odrKey = (MODEL_A2.GetValue("MTRODRKEY") ?? "").ToString();
-                if (string.IsNullOrEmpty(odrKey))
+                if (MODEL_G2.ModelCount <= 0)
                 {
                     ShowMessageBox("", "입고할 발주를 선택해주세요.");
                     return;
                 }
 
-                decimal inQty = MODEL_A2.GetDecimal("INQTY");
-                if (inQty <= 0)
-                {
-                    ShowMessageBox("", "입고수량을 0보다 크게 입력해주십시오.");
-                    return;
-                }
-
-                string inDate = (MODEL_A2.GetValue("INDATE") ?? "").ToString();
-                if (string.IsNullOrEmpty(inDate))
-                {
-                    ShowMessageBox("", "입고일자를 입력해주십시오.");
-                    return;
-                }
-
                 ShowMessageBox("IN_EQMPARTS", "설비부품을 입고하시겠습니까?");
             }
-            // 설비부품 입고이력 팝업 오픈
-            else if (commandName == "POP_EQM_IN")
-            {
-                if (MODEL_G1.ModelCount <= 0 || MODEL_G1.CurrentIndex < 0)
-                {
-                    return;
-                }
-
-                int rowIdx = MODEL_G1.CurrentIndex;
-                MODEL_A1.SetValue("ITEMID", MODEL_G1.GetText(rowIdx, "ITEMID"));
-
-                EventCommand("SEARCH_IN_EQMPARTS");
-                if (ItsMaria.IsError) return;
-                PANEL_A1.Show();
-                SetPopColor(POP_IN_HIS);
-            }
-            // 설비부품 입고이력 조회
+            // [입고취소] 입고 이력 조회 (입고일자·공장·거래처)
             else if (commandName == "SEARCH_IN_EQMPARTS")
             {
                 ItsMaria.Set("TML1010_R08", "LIST_IN_EQMPARTS");
-                ItsMaria.AddModel(MODEL_A1);
+                ItsMaria.AddModel(MODEL_S2);
 
-                try
+                DataSet ds = ItsMaria.Call();
+                if (ItsMaria.IsError)
                 {
-                    DataSet ds = ItsMaria.Call();
-                    if (ItsMaria.IsError)
-                    {
-                        ShowMessageBox("", ItsMaria.ErrMessage);
-                        return;
-                    }
-                    if (ds != null && ds.Tables.Count > 0)
-                    {
-                        MODEL_G2.SetData(ds.Tables[0]);
-                    }
-                    else
-                    {
-                        MODEL_G2.Clear();
-                    }
+                    ShowMessageBox("", "이력 조회 오류: " + ItsMaria.ErrMessage);
+                    return;
                 }
-                catch (Exception ex)
-                {
-                    ShowMessageBox("", "이력 조회 중 오류: " + ex.Message);
-                }
+                MODEL_G3.SetData(ds.Tables[0]);
             }
-            // 설비부품 입고취소 확인
+            // [입고취소] 체크한 입고 이력 입고취소 확인
             else if (commandName == "CANCEL_IN_EQMPARTS")
             {
-                if (MODEL_G2.ModelCount <= 0 || MODEL_G2.CurrentIndex < 0)
+                int cnt = CheckedCount();
+                if (cnt == 0)
                 {
+                    ShowMessageBox("", "입고 취소할 이력을 체크해주세요.");
                     return;
                 }
 
-                ShowMessageBox("CANCEL_IN_EQMPARTS", "입고를 취소하시겠습니까?");
+                ShowMessageBox("CANCEL_IN_EQMPARTS", "체크한 입고 이력 " + cnt + "건의 입고를 취소하시겠습니까?");
             }
-            // 라벨출력 버튼 클릭
-            else if (commandName == "POP_PRINT_LABEL")
+            // [입고취소] 체크한 입고 이력 라벨 재발행
+            else if (commandName == "LABEL_REPRINT")
             {
-                if (MODEL_G1.ModelCount <= 0 || MODEL_G1.CurrentIndex < 0)
+                if (CheckedCount() == 0)
                 {
+                    ShowMessageBox("", "라벨을 재발행할 이력을 체크해주세요.");
                     return;
                 }
 
                 try
                 {
                     ItsMaria.Set("TML1010_R08", "LABEL_REPRINT");
-                    ItsMaria.AddOne("ITEMID", MODEL_G1.GetText(MODEL_G1.CurrentIndex, "ITEMID"));
+                    AddCheckedInoutKey();
                     DataSet ds = ItsMaria.Call();
                     if (ItsMaria.IsError)
                     {
@@ -380,11 +279,16 @@ namespace TML1010
         {
             base.EventMessageResult(commandName);
 
-            // 설비부품 입고 저장 및 라벨 출력
+            // 선택 발주 품목별 입고수량 저장 및 라벨 출력
             if (commandName == "IN_EQMPARTS")
             {
                 ItsMaria.Set("TML1010_R08", "IN_EQMPARTS");
                 ItsMaria.AddModel(MODEL_A2);
+                for (int i = 0; i < MODEL_G2.ModelCount; i++)
+                {
+                    ItsMaria.AddList("MTRODRSEQ_LIST", MODEL_G2.GetText(i, "MTRODRSEQ"));
+                    ItsMaria.AddList("INQTY_LIST", MODEL_G2.GetDecimal(i, "INQTY"));
+                }
 
                 DataSet ds = ItsMaria.Call();
                 if (ItsMaria.IsError)
@@ -393,8 +297,8 @@ namespace TML1010
                     return;
                 }
 
-                PANEL_A2.Close();
-                EventCommand("SEARCH_EQMPARTS");
+                ReloadMtrodr();
+                EventCommand("SEARCH_IN_EQMPARTS");
 
                 try
                 {
@@ -405,11 +309,11 @@ namespace TML1010
                     ShowMessageBox("", "입고는 완료되었습니다. 라벨 출력을 확인해주세요.");
                 }
             }
-            // 설비부품 입고취소 저장
+            // 체크한 입고 이력 입고취소 저장
             else if (commandName == "CANCEL_IN_EQMPARTS")
             {
                 ItsMaria.Set("TML1010_R08", "CANCEL_IN_EQMPARTS");
-                ItsMaria.AddOne("INOUTKEY", MODEL_G2.GetText(MODEL_G2.CurrentIndex, "INOUTKEY"));
+                AddCheckedInoutKey();
 
                 ItsMaria.Call();
                 if (ItsMaria.IsError)
@@ -418,8 +322,8 @@ namespace TML1010
                     return;
                 }
 
-                EventCommand("SEARCH_EQMPARTS");
                 EventCommand("SEARCH_IN_EQMPARTS");
+                ReloadMtrodr();
             }
         }
     }

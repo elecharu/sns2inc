@@ -19,6 +19,7 @@ namespace XtraRpt
     /// 그래프 페이지 (R0601 차트, LIST_CHART) + 우측 하단 확인란 (일자·성명·서명)은 항상 첫 페이지
     /// SMONTH 있으면 그 해 1년 그래프 → 그 달 TOP ISSUE 표·세부내용 (조회기간 안 수리)
     /// SMONTH 없이 조회기간(SDATE~EDATE)만 오면 기간 그래프 → 기간 안 월별 TOP ISSUE 표·세부내용 (수리 이력 있는 달만)
+    /// 2026-11-24 화면 조회조건이 조회년월(그 해 1월 1일 ~ 그 달 말일)로 바뀌어, 그래프 인쇄의 TOP ISSUE 는 종료일자(EDATE)의 달만 출력 (수리 이력 없으면 그래프만)
     /// </summary>
     public partial class R0602 : XtraReport
     {
@@ -63,20 +64,20 @@ namespace XtraRpt
             }
             else
             {
-                // 그래프 화면 인쇄: 그래프 → 기간 안 월별 표·세부내용 (수리 이력 있는 달만)
-                if (sdate == "" || edate == "")
+                // 그래프 화면 인쇄: 그래프 → 조회년월(종료일자의 달) 표·세부내용 (수리 이력 있을 때만)
+                if (sdate == "" || edate == "" || edate.Length < 7)
                 {
-                    throw new InvalidOperationException("조회기간을 선택하세요.");
+                    throw new InvalidOperationException("조회년월을 선택하세요.");
                 }
                 DataTable chart = CALL_CHART(year, sdate, edate);
                 DRAW_GRAPH_PAGE(chart, sdate + " ~ " + edate);
-                foreach (DataRow r in chart.Rows)
+
+                string topYear = edate.Substring(0, 4);
+                string topMonth = edate.Substring(5, 2);
+                DataSet ds = CALL_TOPISSUE(topYear, topMonth, sdate, edate);
+                if (ds.Tables[0].Rows.Count > 0)
                 {
-                    string ym = TEXT(r, "YM");
-                    if (ym.Length < 7) continue;
-                    DataSet ds = CALL_TOPISSUE(ym.Substring(0, 4), ym.Substring(5, 2), sdate, edate);
-                    if (ds.Tables[0].Rows.Count == 0) continue;
-                    DRAW(ds.Tables[0], ds.Tables[1], MONTH_TEXT(ym.Substring(0, 4), ym.Substring(5, 2)));
+                    DRAW(ds.Tables[0], ds.Tables[1], MONTH_TEXT(topYear, topMonth));
                 }
             }
 

@@ -19,8 +19,10 @@
 <%-- BODY --%>
 <asp:Content ContentPlaceHolderID="CPH_BODY" runat="Server">
     <Its:div runat="server" Type="SplitLeft" LeftWidthPc="45">
-        <Its:div runat="server" Type="SplitTop" TopHeightPc="3">
+        <Its:div runat="server" Type="SplitTop" >
             <Its:label runat="server" Text="■ 설비목록" Bold="true" Margin="3px 0px 0px 10px" />
+            <%-- 2026-11-24 체크한 설비들의 조회일자 내 평가표 전체 출력 --%>
+            <Its:button runat="server" Label="기간 전체출력" ID="btn_PRINT_ALL" BackColor="CustomButton2" MarginTop="4" MarginRight="10" Float="right" />
         </Its:div>
 
         <Its:split runat="server" Type="Horizon" Resizeable="false" />
@@ -33,10 +35,12 @@
     <Its:split runat="server" Type="Vertical" />
 
     <Its:div runat="server" Type="SplitRight">
-        <Its:div runat="server" Type="SplitTop" TopHeightPc="3">
+        <Its:div runat="server" Type="SplitTop">
             <Its:label runat="server" Text="■ 평가이력" Bold="true" Margin="3px 0px 0px 10px" />
             <Its:button runat="server" Label="신규평가" ID="btn_NEW_EVAL" BackColor="CustomButton2" MarginTop="4" MarginLeft="50" />
             <Its:button runat="server" Label="승인" ID="btn_APRV" BackColor="CustomButton" MarginTop="4" MarginLeft="4" />
+            <%-- 2026-11-24 평가이력 그리드에서 체크한 평가표 출력 --%>
+            <Its:button runat="server" Label="선택 출력" ID="btn_PRINT_CHK" BackColor="CustomButton2" MarginTop="4" MarginRight="10" Float="right" />
         </Its:div>
 
         <Its:split runat="server" Type="Horizon" Resizeable="false" />
