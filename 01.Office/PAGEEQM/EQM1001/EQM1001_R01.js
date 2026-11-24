@@ -39,12 +39,15 @@ ItsPage.Load = function () {
         column.create('고장현상(호출이유)', 'MALFUNCTION', { width: 160, readOnly: true })
     ]);
 
+    // 부품 출고이력 (수리시작일 ~ 수리종료일에 수리 설비로 출고된 부품)
     ItsGrid.Create('grid_PART', { isCheckBoxGrid: true }, [
+        column.create('출고일자', 'INOUTDATE', { width: 100, align: 'center', readOnly: true }),
         column.create('품목코드', 'ITEMCD', { width: 150, readOnly: true }),
-        column.create('품목명', 'ITEMNM', { width: 240, readOnly: true }),
-        column.create('규격', 'ITEMSPEC', { width: 240, readOnly: true }),
+        column.create('품목명', 'ITEMNM', { width: 220, readOnly: true }),
+        column.create('규격', 'ITEMSPEC', { width: 200, readOnly: true }),
+        column.create('출고수량', 'INOUTQTY', { width: 85, columnType: enumColumnTypes.number, decimalPrecision: 2, readOnly: true }),
         column.create('단위', 'ITEMUNIT', { width: 60, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'DM150', readOnly: true }),
-        column.create('현재고', 'LOTQTY', { width: 85, columnType: enumColumnTypes.number, decimalPrecision: 2, readOnly: true }),
+        column.create('비고', 'REMARK', { width: 160, readOnly: true }),
         column.split()
     ]);
 
@@ -266,28 +269,30 @@ ItsPop.Event('pop_PART').onAddBtnClick = function () {
     var gridPart = partTarget + '_grid_PART';
     ItsGrid.Get(gridPart).finishEditing();
 
+    // 이미 추가된 출고 (출고키 기준)
     var added = {};
     for (var j = 0; j < ItsGrid.Length(gridPart); j++) {
-        if (ItsGrid.GetValue(gridPart, j, 'PARTTP') == 'PART') {
-            added[ItsGrid.GetValue(gridPart, j, 'ITEMID')] = true;
+        if (ItsGrid.GetValue(gridPart, j, 'PARTTP') == 'OUT') {
+            added[ItsGrid.GetValue(gridPart, j, 'INOUTKEY')] = true;
         }
     }
 
+    // 출고 부품 추가: 수량 = 출고수량 (출고 행은 비고만 수정)
     var addCnt = 0;
     for (var i = 0; i < arrPartAll.length; i++) {
         var r = arrPartAll[i];
-        if (partChecked[r.ITEMID] != true || added[r.ITEMID] == true) {
+        if (partChecked[r.INOUTKEY] != true || added[r.INOUTKEY] == true) {
             continue;
         }
         ItsGrid.AddRow(gridPart, ItsGrid.Length(gridPart), {
             isRowCheck: false,
-            PARTTP: 'PART',
-            INOUTKEY: '',
+            PARTTP: 'OUT',
+            INOUTKEY: r.INOUTKEY,
             ITEMID: r.ITEMID,
-            INOUTDATE: '',
+            INOUTDATE: r.INOUTDATE,
             PARTNM: r.ITEMNM,
             PARTSPEC: r.ITEMSPEC,
-            PARTQTY: '',
+            PARTQTY: r.INOUTQTY,
             PARTUNIT: r.ITEMUNIT,
             REMARK: ''
         });
@@ -329,15 +334,17 @@ function WORKLOG_BIND_EVENTS(p) {
     var partEditChecked = false;
     var empEditChecked = false;
 
+    // 부품 선택: 수리시작일 ~ 수리종료일에 수리 설비로 출고된 부품 출고이력
     ItsButton.Event(p + '_btn_PART').onClick = function () {
         var maria = new ItsMaria('EQM1001_R01', 'LIST_PART');
+        maria.AddParam('EQMREPKEY', wlKey[p]);
         maria.CallProc();
         if (maria.isError) {
             maria.ShowErrMsg();
             return;
         }
         if (maria.store.Length() == 0) {
-            ItsMsg.Alert('등록된 설비부품이 없습니다.');
+            ItsMsg.Alert('수리기간(수리시작일 ~ 종료일)에 이 설비로 출고된 부품이 없습니다.');
             return;
         }
 
@@ -605,14 +612,14 @@ function WORKLOG_CHECKED_KEYS() {
     return arrKey;
 }
 
-// 부품 선택 그리드 현재 체크 상태 보관
+// 부품 선택 그리드 현재 체크 상태 보관 (출고키 기준)
 function PART_KEEP_CHECKED() {
     for (var i = 0; i < ItsGrid.Length('grid_PART'); i++) {
-        var itemId = ItsGrid.GetValue('grid_PART', i, 'ITEMID');
+        var inoutKey = ItsGrid.GetValue('grid_PART', i, 'INOUTKEY');
         if (ItsGrid.IsChecked('grid_PART', i)) {
-            partChecked[itemId] = true;
+            partChecked[inoutKey] = true;
         } else {
-            delete partChecked[itemId];
+            delete partChecked[inoutKey];
         }
     }
 }
@@ -636,7 +643,7 @@ function PART_FILTER() {
         }
         if (isMatch) {
             var row = $.extend({}, r);
-            row.isRowCheck = partChecked[r.ITEMID] == true;
+            row.isRowCheck = partChecked[r.INOUTKEY] == true;
             arrRow.push(row);
         }
     }

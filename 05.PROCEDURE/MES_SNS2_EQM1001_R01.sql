@@ -11,6 +11,7 @@ CREATE DEFINER=`root`@`%` PROCEDURE `MES_SNS2`.`EQM1001_R01`(
 -- 			2026-11-20 					한성수	공무작업일지 조회·삭제·출력 정비, 비가동 자동연결 및 미사용 분기 제거
 -- 			2026-11-23 					한성수	부품 선택(LIST_PART) 2공장 재고 등록 품목 기준으로 변경
 -- 			2026-11-24 					한성수	공무작업일지 수리시간 반환, 등록일자 기준 조회 및 작업자 중복 확인
+-- 			2026-11-24 					한성수	부품 선택(LIST_PART) 수리시작일 ~ 종료일에 수리 설비로 출고된 부품 출고이력 기준으로 변경
 -- *****************************************************************************
   IN $SDATE            VARCHAR(10),     -- 조회 시작일자
   IN $EDATE            VARCHAR(10),     -- 조회 종료일자
@@ -107,22 +108,25 @@ WHEN 'LIST_EQMREP' THEN  -- 공무작업일지 목록 (작성된 일지만)
   ORDER BY EQMREP.REGTIME, EQMREP.EQMREPKEY;
 
 -- *****************************************************************************
-WHEN 'LIST_PART' THEN  -- 공무작업일지 부품 선택 목록 (TML1010_R05·R08 설비부품 재고 목록과 같은 기준: 법인 60, 품목구분 DM100700, 2공장 07 재고 등록 품목, 재고 0 포함)
+WHEN 'LIST_PART' THEN  -- 공무작업일지 부품 선택 목록 = 부품 출고이력 (수리시작일 ~ 수리종료일에 수리 설비로 출고된 설비부품 출고, INOUT_EQMPARTS OUT)
   SELECT
-    CAST(T.ITEMID AS CHAR) AS ITEMID,
-    T.ITEMCD,
-    T.ITEMNM,
+    I.INOUTKEY,                           -- 출고키
+    I.INOUTDATE,                          -- 출고일자
+    I.ITEMID,
+    IFNULL(T.ITEMCD, '') AS ITEMCD,
+    IFNULL(T.ITEMNM, '') AS ITEMNM,
     IFNULL(T.ITEMSPEC, '') AS ITEMSPEC,
-    IFNULL(T.ITEMUNIT, '') AS ITEMUNIT,  -- 단위 (공통코드 DM150)
-    E.LOTQTY                             -- 현재고
-  FROM MSTITEM AS T
-  INNER JOIN MSTITEM_EQMPARTS AS E
-    ON E.ITEMID = T.ITEMID
-   AND E.FACTORYCD = '07'
-  WHERE T.COMPANYCD = '60'
-    AND T.ITEMCG = 'DM100700'
-    AND T.ENDYN = 'N'
-  ORDER BY T.ITEMCD;
+    IFNULL(T.ITEMUNIT, '') AS ITEMUNIT,   -- 단위 (공통코드 DM150)
+    I.INOUTQTY,                           -- 출고수량
+    I.REMARK                              -- 출고 비고
+  FROM EQMREP AS R
+  INNER JOIN INOUT_EQMPARTS AS I
+    ON I.INOROUT = 'OUT'
+   AND I.EQMCD = R.EQMCD
+   AND I.INOUTDATE BETWEEN LEFT(R.REPSTIME, 10) AND IF(R.REPETIME = '', LEFT(R.REPSTIME, 10), LEFT(R.REPETIME, 10))  -- 수리시작일 ~ 수리종료일
+  LEFT JOIN MSTITEM AS T ON T.ITEMID = I.ITEMID
+  WHERE R.EQMREPKEY = $EQMREPKEY
+  ORDER BY I.INOUTKEY;
 
 -- *****************************************************************************
 WHEN 'LIST_REP_WAIT' THEN  -- 공무작업일지 등록할 수리 기록 (수리가 끝났고 작업일지 미작성, 등록일자가 조회기간 안 = 목록 LIST_EQMREP 와 같은 기준)
