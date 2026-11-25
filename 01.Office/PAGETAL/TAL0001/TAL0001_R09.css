@@ -16,3 +16,8 @@
     font-weight: bold;
     color: #4682B4 !important;
 }
+
+/* 출고 등록 창은 공통 팝업 위쪽 여백을 빼고 화면 가운데에 둠 (저장·취소 버튼 잘림 방지) */
+.ui-dialog[aria-describedby="pop_OUT"] {
+    margin-top: 0px;
+}

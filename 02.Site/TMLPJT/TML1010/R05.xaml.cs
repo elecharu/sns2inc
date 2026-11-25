@@ -123,22 +123,48 @@ namespace TML1010
             EventCommand("SEARCH_EQMPARTS");
         }
 
-        // 출고 팝업 라인 선택 시 해당 라인 설비 목록으로 변경
+        // 출고 팝업 작업장·라인 선택 시 하위 목록 변경
         private void MODEL_A3_EventValueChanged(string fieldName)
         {
-            if (fieldName != "EQMGROUP1") return;
-
-            LoadEqmList(MODEL_A3.GetText("EQMGROUP1"));
+            if (fieldName == "LINECD")
+            {
+                LoadGroup1List(MODEL_A3.GetText("LINECD"));
+            }
+            else if (fieldName == "EQMGROUP1")
+            {
+                LoadEqmList(MODEL_A3.GetText("LINECD"), MODEL_A3.GetText("EQMGROUP1"));
+            }
         }
 
-        // 라인별 INC 2공장 사용 설비 목록 조회
-        private void LoadEqmList(string eqmGroup1)
+        // 작업장별 라인 목록 (작업장 미선택 시 빈 목록)
+        private void LoadGroup1List(string lineCd)
+        {
+            cmb_EQMGROUP1.ItemClear();
+            MODEL_A3.SetValue("EQMGROUP1", "");
+            LoadEqmList("", "");
+            if (lineCd == "") return;
+
+            ItsMaria.Set("TML1010_R05", "LIST_EQMGROUP1");
+            ItsMaria.AddOne("LINECD", lineCd);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            cmb_EQMGROUP1.AddItem(ds.Tables[0], " ");
+        }
+
+        // 작업장·라인별 설비 목록
+        private void LoadEqmList(string lineCd, string eqmGroup1)
         {
             cmb_EQMCD.ItemClear();
             MODEL_A3.SetValue("EQMCD", "");
-            if (eqmGroup1 == "") return;
+            if (lineCd == "" || eqmGroup1 == "") return;
 
             ItsMaria.Set("TML1010_R05", "LIST_EQMCD");
+            ItsMaria.AddOne("LINECD", lineCd);
             ItsMaria.AddOne("EQMGROUP1", eqmGroup1);
             DataSet ds = ItsMaria.Call();
             if (ItsMaria.IsError)
@@ -161,7 +187,7 @@ namespace TML1010
             MODEL_A3.SetValue("OUTDATE", DateTime.Now.ToString("yyyy-MM-dd"));
             MODEL_A3.SetValue("OUTTP", "OUT_01");
             MODEL_A3.SetValue("EMPCD", (ItsMemberShip.EMPCD ?? "").Trim());
-            LoadEqmList("");
+            LoadGroup1List("");
 
             PANEL_A3.Show();
             SetPopColor(POP_OUT);

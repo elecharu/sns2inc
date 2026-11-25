@@ -72,8 +72,8 @@
         </UserControl>
 
         <!-- 출고 등록 팝업 -->
-        <UserControl x:Name="POP_OUT" Canvas.Left="170" Canvas.Top="55"
-                     Style="{DynamicResource TML_POP}" Width="640" Height="470" Visibility="Collapsed">
+        <UserControl x:Name="POP_OUT" Canvas.Left="170" Canvas.Top="30"
+                     Style="{DynamicResource TML_POP}" Width="640" Height="522" Visibility="Collapsed">
             <its:WrapContent x:Name="PANEL_A3" Background="WhiteSmoke" Width="604" Margin="18">
                 <Grid Width="604">
                     <Grid.Resources>
@@ -87,6 +87,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="84" />
                         <RowDefinition Height="16" />
+                        <RowDefinition Height="52" />
                         <RowDefinition Height="52" />
                         <RowDefinition Height="52" />
                         <RowDefinition Height="52" />
@@ -110,12 +111,13 @@
 
                     <its:Date Grid.Row="2" Grid.Column="0" Label="출고일자" LabelWidth="60" Width="210" HorizontalAlignment="Left" VerticalAlignment="Top" Value="{Binding OUTDATE}" LayoutTransform="{StaticResource TABLET_SCALE}" />
                     <its:Combo Grid.Row="2" Grid.Column="2" x:Name="cmb_OUTTP" Label="출고구분" LabelWidth="60" Width="210" HorizontalAlignment="Left" VerticalAlignment="Top" Value="{Binding OUTTP}" GPCD="INOUTTP_EQMPARTS" REF01="OUT" LayoutTransform="{StaticResource TABLET_SCALE}" />
-                    <its:Combo Grid.Row="3" Grid.Column="0" x:Name="cmb_EQMGROUP1" Label="라인" LabelWidth="60" Width="210" HorizontalAlignment="Left" VerticalAlignment="Top" Value="{Binding EQMGROUP1}" GPCD="@EQMGROUP1" LayoutTransform="{StaticResource TABLET_SCALE}" />
-                    <its:Number Grid.Row="3" Grid.Column="2" Label="출고수량" LabelWidth="60" Width="210" HorizontalAlignment="Left" VerticalAlignment="Top" Value="{Binding OUTQTY}" ShowKeyPad="True" DecimalPoint="0" LayoutTransform="{StaticResource TABLET_SCALE}" />
+                    <its:Combo Grid.Row="3" Grid.Column="0" x:Name="cmb_LINECD" Label="작업장" LabelWidth="60" Width="210" HorizontalAlignment="Left" VerticalAlignment="Top" Value="{Binding LINECD}" REF01="07" GPCD="@LINECD" LayoutTransform="{StaticResource TABLET_SCALE}" />
+                    <its:Combo Grid.Row="3" Grid.Column="2" x:Name="cmb_EQMGROUP1" Label="라인" LabelWidth="60" Width="210" HorizontalAlignment="Left" VerticalAlignment="Top" Value="{Binding EQMGROUP1}" LayoutTransform="{StaticResource TABLET_SCALE}" />
                     <its:Combo Grid.Row="4" Grid.ColumnSpan="3" x:Name="cmb_EQMCD" Label="설비" LabelWidth="60" Width="431" HorizontalAlignment="Left" VerticalAlignment="Top" Value="{Binding EQMCD}" LayoutTransform="{StaticResource TABLET_SCALE}" />
-                    <its:Pop Grid.Row="5" Grid.ColumnSpan="3" x:Name="pop_OUT_EMP" Label="출고자" LabelWidth="60" Width="431" HorizontalAlignment="Left" VerticalAlignment="Top" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True" LayoutTransform="{StaticResource TABLET_SCALE}" />
+                    <its:Number Grid.Row="5" Grid.Column="0" Label="출고수량" LabelWidth="60" Width="210" HorizontalAlignment="Left" VerticalAlignment="Top" Value="{Binding OUTQTY}" ShowKeyPad="True" DecimalPoint="0" LayoutTransform="{StaticResource TABLET_SCALE}" />
+                    <its:Pop Grid.Row="6" Grid.ColumnSpan="3" x:Name="pop_OUT_EMP" Label="출고자" LabelWidth="60" Width="431" HorizontalAlignment="Left" VerticalAlignment="Top" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True" LayoutTransform="{StaticResource TABLET_SCALE}" />
 
-                    <DockPanel Grid.Row="7" Grid.ColumnSpan="3">
+                    <DockPanel Grid.Row="8" Grid.ColumnSpan="3">
                         <its:Button DockPanel.Dock="Left" Width="180" Height="56" Label="닫 기" CommandName="CLOSE_POP_OUT" BackColor="Gray" SetFontSize="18" />
                         <its:Button Width="408" Height="56" HorizontalAlignment="Right" Label="출고 등록" CommandName="OUT_EQMPARTS" BackColor="Orange" SetFontSize="20" />
                     </DockPanel>

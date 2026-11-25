@@ -119,7 +119,7 @@ ItsGrid.Event('grid1').onButtonClick = function (rowIndex, field) {
     }
 };
 
-// 설비부품 출고등록 팝업 오픈 (초기화 시 라인 콤보 변경 이벤트로 설비 목록도 비워짐)
+// 설비부품 출고등록 팝업 오픈 (초기화 시 작업장 콤보 변경 이벤트로 라인·설비 목록도 비워짐)
 function OPEN_OUT_POP(rowIndex) {
     ItsPage.InitData('pdiv_OUT');
     ItsText.SetValue('pop_txt_ITEMID', ItsGrid.GetValue('grid1', rowIndex, 'ITEMID'));
@@ -132,15 +132,48 @@ function OPEN_OUT_POP(rowIndex) {
     ItsPop.Open('pop_OUT');
 }
 
-// 라인별 INC 2공장 사용 설비 목록 (라인 미선택 시 빈 목록)
-function LOAD_EQMCD(eqmGroup1) {
-    ItsCombo.SetValue('pop_cmb_EQMCD', '', false);
-    ItsCombo.SetGpcd('pop_cmb_EQMCD', "@SELECT CONCAT(FANO, '  ', EQMNM), FANO FROM MSTEQM WHERE FACTORYCD = '07' AND USEYN = 'Y' AND EQMGROUP1 = '" + eqmGroup1 + "' ORDER BY FANO");
+// 프로시저 목록으로 콤보 채우기 (첫 줄 빈 값)
+function SET_COMBO_LIST(id, callType, params) {
+    var labels = [''];
+    var values = [''];
+    if (callType != '') {
+        var maria = new ItsMaria('TAL0001_R09', callType);
+        for (var key in params) {
+            maria.AddParam(key, params[key]);
+        }
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+        } else {
+            for (var i = 0; i < maria.store.data.length; i++) {
+                labels.push(String(maria.store.data[i].Label).replace(/'/g, "''"));
+                values.push(String(maria.store.data[i].Value).replace(/'/g, "''"));
+            }
+        }
+    }
+    ItsCombo.SetValue(id, '', false);
+    ItsCombo.SetListByArr(id, labels, values);
 }
 
-// 출고 팝업 라인 선택 시 해당 라인 설비 목록으로 변경
+// 작업장별 라인 목록 (작업장 미선택 시 빈 목록)
+function LOAD_EQMGROUP1(lineCd) {
+    SET_COMBO_LIST('pop_cmb_EQMGROUP1', lineCd == '' ? '' : 'LIST_EQMGROUP1', { LINECD: lineCd });
+    LOAD_EQMCD(lineCd, '');
+}
+
+// 작업장·라인별 설비 목록 (작업장·라인 미선택 시 빈 목록)
+function LOAD_EQMCD(lineCd, eqmGroup1) {
+    SET_COMBO_LIST('pop_cmb_EQMCD', lineCd == '' || eqmGroup1 == '' ? '' : 'LIST_EQMCD', { LINECD: lineCd, EQMGROUP1: eqmGroup1 });
+}
+
+// 출고 팝업 작업장 선택 시 라인 목록 변경
+ItsCombo.Event('pop_cmb_LINECD').onChanged = function (value, oldValue) {
+    LOAD_EQMGROUP1(value);
+};
+
+// 출고 팝업 라인 선택 시 설비 목록 변경
 ItsCombo.Event('pop_cmb_EQMGROUP1').onChanged = function (value, oldValue) {
-    LOAD_EQMCD(value);
+    LOAD_EQMCD(ItsCombo.GetValue('pop_cmb_LINECD'), value);
 };
 
 // 출고 등록 후 재고 재조회

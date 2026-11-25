@@ -102,6 +102,12 @@ namespace TML2050
 
             MODEL_H1.Binding(GRID_H1);
 
+            // 2026-11-25 수리시작 팝업 버튼 목록: 가로 스크롤 없이 줄바꿈
+            FitButtonList(R_EQMTP_LIST);
+            FitButtonList(R_GROUP1_LIST);
+            FitButtonList(R_EQM_LIST);
+            FitButtonList(REPEMP_LIST);
+
             timer = new DispatcherTimer();
             timer.Interval = TimeSpan.FromSeconds(1);
             timer.Tick += Timer_Tick;
@@ -731,13 +737,13 @@ namespace TML2050
                     //라인 호출: 그 라인 설비 중에서 수리할 설비 선택
                     repLineKey = repCallKey;
                     REP_EQM.Visibility = Visibility.Visible;
-                    REPEMP_LIST.Height = 64; //설비 선택 영역이 있어 남는 높이만
+                    REPEMP_LIST.Height = 62; //설비 선택 영역(2줄)이 있어 남는 높이 1줄
                     LoadRepEqm(ItsData.GetText(callTable, sel, "EQMTP"), ItsData.GetText(callTable, sel, "EQMGROUP1"));
                 }
                 else
                 {
                     REP_EQM.Visibility = Visibility.Collapsed;
-                    REPEMP_LIST.Height = 150; //설비 선택 영역이 없으므로 인원 영역을 2줄 높이로
+                    REPEMP_LIST.Height = 200; //설비 선택 영역이 없으므로 인원 영역을 3줄 높이로
                     repEqmcd = eqmcd;
                     repEqmNmDic[eqmcd] = ItsData.GetText(callTable, sel, "EQMNM");
                     LoadRepEmp();
@@ -751,7 +757,7 @@ namespace TML2050
                 REP_SUMMARY.Visibility = Visibility.Collapsed;
                 REP_FILTER.Visibility = Visibility.Visible;
                 REP_EQM.Visibility = Visibility.Visible;
-                REPEMP_LIST.Height = 80; //설비구분·라인·설비 선택 아래 남는 높이
+                REPEMP_LIST.Height = 60; //설비구분·라인·설비 선택 아래 남는 높이 1줄
 
                 ItsMaria.Set("TML2050_R01", "LIST_EQMTP");
                 ItsMaria.AddOne("LINECD", MODEL_S1.GetValue("LINECD"));
@@ -827,8 +833,8 @@ namespace TML2050
                 return;
             }
 
-            R_EQM_LIST.ButtonWidth = "190";
-            R_EQM_LIST.ButtonHeight = "60";
+            R_EQM_LIST.ButtonWidth = "222";
+            R_EQM_LIST.ButtonHeight = "58";
             R_EQM_LIST.ButtonBackColor = COLOR_EQM;
             R_EQM_LIST.ButtonSelectBackColor = COLOR_EQM_SELECT;
 
@@ -865,8 +871,8 @@ namespace TML2050
                 return;
             }
 
-            REPEMP_LIST.ButtonWidth = "180";
-            REPEMP_LIST.ButtonHeight = "58";
+            REPEMP_LIST.ButtonWidth = "176";
+            REPEMP_LIST.ButtonHeight = "56";
             REPEMP_LIST.ButtonBackColor = COLOR_FILTER;
             REPEMP_LIST.ButtonSelectBackColor = COLOR_FILTER_SELECT;
 
@@ -1505,6 +1511,16 @@ namespace TML2050
         }
 
         //ButtonList 안 버튼 글자 크기/글꼴 (AddButton 으로 만든 버튼은 10pt Roboto 로 고정)
+        // 버튼 목록 가로 스크롤 끄고 세로 스크롤바 폭만큼 버튼 영역을 줄여 줄바꿈 (공통 ButtonList 는 그대로)
+        private void FitButtonList(ButtonList list)
+        {
+            ScrollViewer sv = list.Content as ScrollViewer;
+            if (sv != null) sv.HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled;
+
+            WrapPanel panel = list.FindName("PANEL_BTNLIST") as WrapPanel;
+            if (panel != null) panel.Width = list.Width - SystemParameters.VerticalScrollBarWidth - 2;
+        }
+
         private void StyleButtonList(ButtonList list, double fontSize)
         {
             WrapPanel panel = list.FindName("PANEL_BTNLIST") as WrapPanel;

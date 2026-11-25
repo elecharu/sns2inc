@@ -17,6 +17,7 @@ PROCEDURE MES_SNS2.IO_ERP_INTERFACE(
 -- Modify: 2026-11-18 : ERP 수신 정의서 V1.3 반영 - DLV 에 PO_BC 추가, 무상사급 구매(MM100910) 입고확인은 PUR 로 송신(DLV_INV: 납품등록만 따로 송신),
 --                      유상사급 자재입고확인 CSM(2CM + 이동 GROUPKEY), 유상사급 자재반출 CSM_RETURN 추가. 반출 중 납품 삭제 DLV D 는 송신 안 함(@ERP_SKIP_DLV_D)
 -- Modify: 2026-11-23 : 유상사급 납품등록이 거래명세서를 만들지 않으므로 DLV(입고 때 송신)·CSM·CSM_RETURN 의 납품번호를 자재이동 거래명세서(05) 기준(2MES + 거래명세서번호)으로 변경
+-- Modify: 2026-11-24 : 마감 확인 누락 보완 - DLV_INV(납품일자), CSM_RETURN(반출일자)
 -- *****************************************************************************
   IN $INTERFACENAME VARCHAR(20),  -- INTERFACE 호출명
   IN $KEY           VARCHAR(100), -- KEY
@@ -147,6 +148,14 @@ WHEN $INTERFACENAME = 'DLV_INV' THEN -- 무상사급 구매(MM100910) 납품등�
     LEAVE PROC;
   END IF;
 
+  -- ERP 마감 확인 (납품일자)
+  SET _$MAGAMDT = (SELECT LEFT(INVOICEDATE, 10) FROM MTRCUST_INVOICE_HEADER WHERE INVOICEKEY = $KEY);
+
+  IF EXISTS (SELECT 1 FROM MSTMAGAM_PRD WHERE MSTMAGAM_PRD.BDVCD = '71' AND MSTMAGAM_PRD.EDT = _$MAGAMDT) THEN
+    CALL COMERR(CONCAT('ERP에서 마감된 일자 입니다. (', _$MAGAMDT, ')'));
+    LEAVE PROC;
+  END IF;
+
   INSERT INTO IF_MES_SNS_FAC2.FAC2_ERP_IF_DLV (
     FACTORYCD, DLV_NO, DLV_SQ, DLV_DT, INDATE,
     ITEMID, ITEMUNIT, LOTKEY, LOTQTY,
@@ -226,6 +235,17 @@ WHEN $INTERFACENAME = 'CSM_RETURN' THEN -- 유상사급 자재반출 (반출 한
   SET _$RTNKEY = (SELECT CONCAT('2MES', MIN(MO.MOVEOUTKEY)) FROM MTRCUST_MOVEOUTD AS MO WHERE MO.MOVEINVOICEKEY = $KEY);
 
   IF IFNULL(_$RTNKEY, '') = '' THEN
+    LEAVE PROC;
+  END IF;
+
+  -- ERP 마감 확인 (반출일자)
+  SET _$MAGAMDT = (SELECT MIN(LEFT(MH.MOVEOUTDATE, 10))
+                     FROM MTRCUST_MOVEOUTD AS MO
+                    INNER JOIN MTRCUST_MOVEOUT AS MH ON MH.MOVEOUTKEY = MO.MOVEOUTKEY
+                    WHERE MO.MOVEINVOICEKEY = $KEY);
+
+  IF EXISTS (SELECT 1 FROM MSTMAGAM_PRD WHERE MSTMAGAM_PRD.BDVCD = '71' AND MSTMAGAM_PRD.EDT = _$MAGAMDT) THEN
+    CALL COMERR(CONCAT('ERP에서 마감된 일자 입니다. (', _$MAGAMDT, ')'));
     LEAVE PROC;
   END IF;
 

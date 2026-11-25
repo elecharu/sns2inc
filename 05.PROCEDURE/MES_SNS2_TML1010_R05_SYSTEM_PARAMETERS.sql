@@ -1,0 +1,22 @@
+-- *****************************************************************************
+-- Comment: TML1010_R05 현장터미널 설비부품 출고등록 호출 파라미터 재등록
+-- Create:  2026-11-25  한성수  출고 팝업 작업장 조건 LINECD 추가 (13건 → 14건)
+-- *****************************************************************************
+-- R05 프로시저 전체 저장 후 아래 트랜잭션을 실행
+START TRANSACTION;
+DELETE FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'TML1010_R05';
+
+INSERT INTO MES_SNS2.SYSTEM_PARAMETERS
+SELECT * FROM information_schema.PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'TML1010_R05';
+COMMIT;
+
+-- 정상 14건: EMPCD 7번, LINECD 8번, EQMGROUP1 9번, EQMCD 10번, INOUTKEY 11번, LOCACD 12번, GRADE 13번, CALLTYPE 14번
+SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
+FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'TML1010_R05'
+ORDER BY ORDINAL_POSITION;

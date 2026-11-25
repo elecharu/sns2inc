@@ -2,7 +2,7 @@
 
 > **문서 목적**: 본 문서는 에이전트 대화 세션 전환이나 브라우저/UI 세션 변경과 무관하게, 지금까지 진행된 작업 내역을 누락 없이 영구 보존하고 이후 작업을 지속적으로 이어서 추적·관리하기 위한 공식 작업 기록 대장입니다.  
 > **최초 작성일**: 2026-09-18  
-> **최종 갱신일**: 2026-11-24
+> **최종 갱신일**: 2026-11-25
 > **인코딩 표준**: UTF-8 with BOM (CRLF)
 
 ---
@@ -13,6 +13,80 @@
 2. **주석 및 네이밍 표준**: 소스코드에는 `// YYYY-MM-DD 기능설명` 표준을 준수하며, 본 문서에는 원인 분석, 설계 의도, 수정 파일 링크를 명시합니다.
 3. **컴파일 및 빌드 검증**: 소스 수정 후에는 반드시 컴파일 빌드 무결성(MSBuild 등)을 확인하고 그 결과를 기재합니다.
 4. **대화 기록 및 불러오기 연계**: 모든 사용자 요청 및 작업 결과는 본 문서에 실시간 동기화되어, 새 세션이나 나중에 작업 재개 시 "불러오기"를 통해 이전 맥락을 100% 이어받습니다.
+
+---
+
+## 🕒 2026-11-25 (수) 작업 내역
+
+### 7. 출고등록 화면(TAL0001_R09·TML1010_R05) 오늘 변경분 코드 정리
+- **수정 파일**: [TAL0001_R09.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx), [TAL0001_R09.css](01.Office/PAGETAL/TAL0001/TAL0001_R09.css), [TAL0001_R09.js](01.Office/PAGETAL/TAL0001/TAL0001_R09.js), [R05.xaml](02.Site/TMLPJT/TML1010/R05.xaml), [R05.xaml.cs](02.Site/TMLPJT/TML1010/R05.xaml.cs) (TAL0001_R09.aspx.cs 는 오늘 변경 없음)
+- **요청**: 오늘 작업분을 프로젝트 코드 형식에 맞게, 불필요한 부분·툴팁·CSS 정리
+- **작업 내용**: 기존 주석 형식(날짜 없는 짧은 기능 설명)에 맞춰 긴 설명·날짜 주석 축약·삭제(aspx·xaml 설명 주석 삭제, js·cs·css 주석 축약), 중복 처리 삭제(태블릿 팝업 오픈의 `LOAD_EQMGROUP1('')` — 초기화 시 작업장 변경 이벤트로 처리, 현장 팝업 오픈의 `LINECD` 빈 값 설정 — InitData 로 처리). 툴팁 없음, CSS 는 1200x800 저장·취소 버튼 위치 규칙만 남김(기능 유지)
+- **검증**: `node --check` 정상, MSBuild 15.0 TML1010 컴파일 오류 0, AAABIN 은 실행 중인 TML1010 점유로 복사 실패. 형식 유지(aspx·css·js BOM·CRLF, xaml·cs BOM 없음·CRLF). 미확인: 실제 화면
+
+### 6. TML1010_R08 발주상태 조회조건 제거 (1번·5번-4 되돌림)
+- **수정 파일**: [05.Procedure/MES_SNS2_TML1010_R08.sql](05.Procedure/MES_SNS2_TML1010_R08.sql), [05.Procedure/MES_SNS2_TML1010_R08_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_TML1010_R08_SYSTEM_PARAMETERS.sql), [02.Site/TMLPJT/TML1010/R08.xaml](02.Site/TMLPJT/TML1010/R08.xaml), [02.Site/TMLPJT/TML1010/R08.xaml.cs](02.Site/TMLPJT/TML1010/R08.xaml.cs)
+- **요청**: 오늘 넣은 '발주' 상태 조회조건을 모두 빼고 발주확정·발주승인 건만 조회·처리
+- **작업 내용**: 네 파일의 커밋 대비 차이가 1번 변경(`$MTRODRSTT`, `LIST_ODRSTT`, 발주상태 필터·콤보, 입고 오류 문구, 재등록 13건)뿐인 것을 확인하고 커밋 상태(11-24 버전)로 되돌림 → 발주 목록·품목·입고 모두 MM110200 발주확정·MM110201 발주승인만, 파라미터 12건(실DB 등록 12건과 같아 재등록 불필요), 조회조건 공장 190·거래처 320 원래 폭
+- **검증**: 되돌린 파일 형식(BOM 없음·CRLF) 확인, MSBuild 15.0 TML1010 컴파일 오류 0, `02.Site/AAABIN/TML1010.exe`는 실행 중이라 복사 실패(AAABIN 은 5번 빌드 = 발주상태 콤보 있는 화면, 프로시저에 `LIST_ODRSTT` 없으면 콤보만 비어 있음)
+- **반영 (사용자)**: TML1010_R08 프로시저를 이 파일로 저장(이미 12건 버전이면 그대로), TML1010 종료 후 재빌드
+
+### 5. 출고 작업장·라인·설비 목록과 R08 발주상태 조건을 프로시저로 정리
+- **수정 파일**: [05.Procedure/MES_SNS2_TML1010_R05.sql](05.Procedure/MES_SNS2_TML1010_R05.sql), [05.Procedure/MES_SNS2_TAL0001_R09.sql](05.Procedure/MES_SNS2_TAL0001_R09.sql), [05.Procedure/MES_SNS2_TML1010_R08.sql](05.Procedure/MES_SNS2_TML1010_R08.sql), [02.Site/TMLPJT/TML1010/R05.xaml.cs](02.Site/TMLPJT/TML1010/R05.xaml.cs), [01.Office/PAGETAL/TAL0001/TAL0001_R09.js](01.Office/PAGETAL/TAL0001/TAL0001_R09.js), 재등록 스크립트 [R05](05.Procedure/MES_SNS2_TML1010_R05_SYSTEM_PARAMETERS.sql)(신규)·[R09](05.Procedure/MES_SNS2_TAL0001_R09_SYSTEM_PARAMETERS.sql)·[R08](05.Procedure/MES_SNS2_TML1010_R08_SYSTEM_PARAMETERS.sql)
+- **요청**: 3번(작업장 → 라인 → 설비)이 화면 조회문으로 되어 있어 프로시저 변경이 없었음, R08 발주상태 조건(1번)은 커밋된 프로시저에서 빠져 화면과 어긋남 → 둘 다 프로시저로
+- **작업 내용**
+  - 1. R05·R09 프로시저: `$LINECD` 파라미터 추가(`$EMPCD` 다음), `LIST_EQMGROUP1`(작업장별 2공장 사용 설비 라인) 추가, `LIST_EQMCD`(작업장·라인별 설비)를 R05는 작업장 조건 추가·R09는 신규. 작업장 목록은 기존 공통 콤보 `@LINECD`(REF01 07) 그대로
+  - 2. 현장 R05 화면: 라인·설비 목록을 `ItsMaria.Query` 조회문 → 프로시저 `LIST_EQMGROUP1`·`LIST_EQMCD` 호출
+  - 3. 태블릿 R09 화면: `@SELECT` 조회문 → 프로시저 호출 결과를 공통 `ItsCombo.SetListByArr` 로 채우는 `SET_COMBO_LIST` (첫 줄 빈 값, 작은따옴표 이스케이프)
+  - 4. R08: 1번 프로시저 변경(`$MTRODRSTT`, `LIST_ODRSTT`, 발주상태 필터, 입고 오류 문구) 다시 적용, 재등록 스크립트 13건
+  - 5. 파라미터: R05 13 → 14건, R09 14 → 15건, R08 12 → 13건 (실DB 현재 등록 R05 13·R09 14·R08 12 확인)
+- **검증**: 새 분기 조회문 실DB 읽기 SELECT 정상(M3 라인 T1~T4, M3 T1 설비 10대), `node --check` TAL0001_R09.js 정상, MSBuild 15.0 TML1010 빌드 성공·`02.Site/AAABIN/TML1010.exe` 반영(md5 일치, 11:31). 형식 유지(sql BOM 없음·CRLF, cs BOM 없음·CRLF, js BOM·CRLF). 미확인: 프로시저 저장, 실제 화면
+- **주의**: AAABIN TML1010.exe 는 새 분기(R05 `LIST_EQMGROUP1`·`LIST_EQMCD` 작업장 조건, R08 `LIST_ODRSTT`)를 호출하므로 프로시저 저장·재등록 전에는 출고 팝업 라인 목록·R08 발주상태 콤보가 오류/빈 목록
+- **실DB 반영 (사용자)**: TML1010_R05·TAL0001_R09·TML1010_R08 프로시저 저장 → 각 `_SYSTEM_PARAMETERS.sql` 실행(14·15·13건) → Office 배포(TAL0001_R09.js, Ctrl+F5)
+
+### 4. 태블릿 설비부품 출고등록(TAL0001_R09) 팝업 저장·취소 버튼 잘림 수정 (1200x800)
+- **수정 파일**: [01.Office/PAGETAL/TAL0001/TAL0001_R09.css](01.Office/PAGETAL/TAL0001/TAL0001_R09.css)
+- **요청**: 1200x800 해상도에서 출고등록 팝업의 저장·취소 버튼이 화면 아래로 내려가 안 보임
+- **원인**: 공통 팝업 CSS(`ItsPop.css`) `.ui-dialog { margin-top: 100px }` 가 화면 가운데에 놓인 팝업을 100px 더 내림. 3번에서 작업장 줄이 늘어 팝업 높이(약 680)가 커져 800 높이 화면에서 아래 버튼 줄이 잘림 (화면 캡처 기준 팝업 위 170 → 아래 약 850)
+- **작업 내용**: 이 페이지 CSS에서 출고등록 팝업(`.ui-dialog[aria-describedby="pop_OUT"]`, jQuery UI 1.12.1)만 위쪽 여백 0 → 화면 세로 가운데 배치 (800 기준 위 약 60 ~ 아래 약 740). 공통 CSS·다른 팝업(출고 이력·로케이션) 변경 없음, 입력칸 간격 그대로
+- **검증**: CSS 형식 유지(BOM·CRLF). 미확인: 실제 태블릿 화면 (위치는 캡처 기준 계산)
+- **반영 (사용자)**: Office 배포 후 태블릿 새로고침(Ctrl+F5, css 캐시)
+
+### 3. 설비부품 출고등록 작업장 → 라인 → 설비 선택 (현장 TML1010_R05, 태블릿 TAL0001_R09)
+- **수정 파일**: [02.Site/TMLPJT/TML1010/R05.xaml](02.Site/TMLPJT/TML1010/R05.xaml), [02.Site/TMLPJT/TML1010/R05.xaml.cs](02.Site/TMLPJT/TML1010/R05.xaml.cs), [01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx](01.Office/PAGETAL/TAL0001/TAL0001_R09.aspx), [01.Office/PAGETAL/TAL0001/TAL0001_R09.js](01.Office/PAGETAL/TAL0001/TAL0001_R09.js)
+- **요청**: 출고등록에 라인·설비만 있어 모든 작업장의 라인·설비가 보임 → 작업장 > 라인 > 설비 순서로 선택 (태블릿·현장 둘 다)
+- **작업 내용**
+  - 1. 출고 팝업에 작업장 콤보 추가: 공통 콤보 `@LINECD` REF01 07 (2공장 사내 작업장, TML2050 작업장 선택과 같은 기준)
+  - 2. 라인: 작업장의 2공장 사용 설비 라인(`MSTEQM.EQMGROUP1`)만, 작업장 미선택 시 빈 목록. 설비: 작업장 + 라인 설비(FANO)만 (예: T1 라인 142대 → M2 작업장 T1 7대)
+  - 3. 목록 조회는 태블릿에서 이미 쓰던 화면 조회 방식(`@SELECT`, 현장은 `ItsMaria.Query`)으로 두 화면 같은 조건. 프로시저·파라미터 변경 없음 (저장 시 넘어가는 작업장 값은 COMCALLC 가 등록 파라미터만 쓰므로 무시, 출고 이력에는 기존처럼 라인·설비 저장)
+  - 4. 현장 R05 팝업: 작업장 | 라인 / 설비 / 출고수량 / 출고자 순으로 한 줄 추가 (높이 470 → 522, 위치 55 → 30)
+  - 5. 현장 R05 프로시저 `LIST_EQMCD`(라인별 설비)는 화면에서 더 이상 호출하지 않음 (프로시저는 그대로 둠)
+- **검증**: 작업장·라인·설비 조회문 실DB 읽기 SELECT 정상(작업장 24개, M2 라인 T1~T4, M2 T1 설비 7대), `node --check` TAL0001_R09.js 정상, MSBuild 15.0 TML1010 컴파일 오류 0(`obj/Debug` 10:55), `02.Site/AAABIN/TML1010.exe`는 실행 중(PID 31452)이라 복사 실패. 형식 유지(R05 xaml·cs BOM 없음·CRLF, aspx·js BOM·CRLF). 미확인: 실제 화면
+- **반영 (사용자)**: TML1010 종료 후 재빌드, Office 배포 (DB 반영 없음)
+
+### 2. TML2050 수리시작 팝업 설비·인원 목록 높이·줄바꿈 개선
+- **수정 파일**: [02.Site/TMLPJT/TML2050/R01.xaml](02.Site/TMLPJT/TML2050/R01.xaml), [02.Site/TMLPJT/TML2050/R01.xaml.cs](02.Site/TMLPJT/TML2050/R01.xaml.cs)
+- **요청**: 라인 전체 호출 후 수리시작 팝업에서 설비·인원이 한 줄 + 가로 스크롤이라 불편 → 높이를 늘리는 등 개선
+- **원인**: 공통 ButtonList 는 버튼 영역(WrapPanel) 폭 = 목록 폭이라 세로 스크롤바가 생기면 가로 스크롤바도 생기고, 설비 목록 높이 68·인원 64 로 한 줄만 보임
+- **작업 내용**
+  - 1. 팝업 820x420 → 940x440 (위치 78,16 → 18,6, 제목 46·버튼 줄 66), 호출 요약 줄 높이 30 → 26
+  - 2. 설비 목록 높이 68 → 120 (버튼 222x58, 한 줄 4개 x 2줄), 인원 목록 64 → 62 (버튼 176x56, 한 줄 5개). 설비가 없는 호출은 인원 3줄(200), 직접 수리는 설비구분·라인 아래 인원 1줄(60). 설비구분·라인 목록 폭 688 → 812
+  - 3. 화면 코드 `FitButtonList`: 수리시작 팝업 4개 목록의 가로 스크롤 끄고 버튼 영역을 세로 스크롤바 폭만큼 줄여 줄바꿈 (공통 ButtonList 변경 없음)
+  - 4. 수리종료 팝업은 변경 없음
+- **검증**: MSBuild 15.0 TML2050 컴파일 오류 0(`obj/Debug` 10:55), `02.Site/AAABIN/TML2050.exe`는 실행 중(PID 6352)이라 복사 실패. 형식 유지(BOM 없음·CRLF). 미확인: 실제 화면(현장터미널 단독 실행 불가)
+- **반영 (사용자)**: TML2050 종료 후 재빌드
+
+### 1. TML1010_R08 발주조회 조회조건에 발주상태(발주·발주승인·발주확정) 추가
+- **수정 파일**: [02.Site/TMLPJT/TML1010/R08.xaml](02.Site/TMLPJT/TML1010/R08.xaml), [02.Site/TMLPJT/TML1010/R08.xaml.cs](02.Site/TMLPJT/TML1010/R08.xaml.cs), [05.Procedure/MES_SNS2_TML1010_R08.sql](05.Procedure/MES_SNS2_TML1010_R08.sql) (`LIST_ODRSTT` 신규, `LIST_MTRODR`·`LIST_MTRODRD`·`IN_EQMPARTS`), [05.Procedure/MES_SNS2_TML1010_R08_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_TML1010_R08_SYSTEM_PARAMETERS.sql)
+- **요청**: "조회조건을 발주 / 발주승인 / 발주확정 이렇게 3개로 하자, 일단은" (다른 세션 경유 전달)
+- **작업 내용**
+  - 1. 상태 코드 실DB 확인: COMTYPE MM110 — MM110100 발주, MM110201 발주승인, MM110200 발주확정
+  - 2. 프로시저: `$MTRODRSTT` 파라미터 추가, `LIST_ODRSTT` (콤보 목록 3개, 발주·발주승인·발주확정 순), 발주 목록·발주 품목 상태 조건을 3개 상태 + 선택 상태(빈 값이면 3개 전부)로 변경. 입고 저장 검증은 발주확정·발주승인만 유지하고 오류 문구를 '발주확정·발주승인 품목만 입고할 수 있습니다. (품목코드)'로 변경
+  - 3. 화면: [입고등록] 조회조건에 발주상태 콤보(선택지 3개만, '전체' 없음, 기본 발주승인), 선택 상태를 발주 목록·발주 품목 조회에 전달. 한 줄에 맞추려고 공장 칸 190 → 170, 거래처 칸 320 → 260
+  - 4. 판단: 12번(11-24)에서 사용자가 입고 대상을 발주확정·발주승인으로 정했으므로 '발주' 상태는 조회만 되고 입고 등록 시 프로시저에서 거절
+  - 5. 파라미터 12건 → 13건 → SYSTEM_PARAMETERS 재등록 스크립트 갱신
+- **검증**: 콤보 목록·발주 상태 필터 조회문 실DB 읽기 SELECT 정상(07 공장 '발주' 선택 시 TEST-R08-2 1건). MSBuild 15.0 컴파일 오류 0(`obj/Debug/TML1010.exe` 11-25 10:06), `02.Site/AAABIN/TML1010.exe`는 실행 중인 TML1010(PID 49300) 점유로 복사 실패. 형식 유지(sql·xaml·cs BOM 없음·CRLF). 미확인: 프로시저 저장, 실제 화면
+- **실DB 반영 (사용자)**: TML1010_R08 프로시저 저장 → `MES_SNS2_TML1010_R08_SYSTEM_PARAMETERS.sql` 실행(13건) → TML1010 종료 후 재빌드
 
 ---
 

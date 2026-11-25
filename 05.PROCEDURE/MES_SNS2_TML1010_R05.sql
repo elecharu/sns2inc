@@ -7,6 +7,7 @@ PROCEDURE `MES_SNS2`.`TML1010_R05`(
 --          2026-10-19                한성수  INC 2공장(07) 고정, 파라미터 15건 최적화, ENDYN 표준화, 라벨 반환데이터 통일
 --          2026-11-17                한성수  설비부품 출고등록 전용 전환 (입고 기능 TML1010_R08 분리 및 미사용 파라미터 제거)
 --          2026-11-18                한성수  출고 이력 출고취소 추가 (이력 삭제 및 재고 복원), 출고 라인·설비 저장 및 라인별 설비 목록 추가, 출고 이력 라인·설비 표시, 설비부품 로케이션 지정·해제 추가, 재고 조회 중요도등급·로케이션 조건 추가, 출고 이력 설비부품코드 표시, 불필요 JOIN·NULL 처리·중복 조회 정리
+--          2026-11-25                한성수  출고 팝업 작업장 → 라인 → 설비 선택 (작업장별 라인 목록 추가, 설비 목록 작업장 조건)
 -- *****************************************************************************
   IN $SDATE       VARCHAR(10),
   IN $EDATE       VARCHAR(10),
@@ -15,6 +16,7 @@ PROCEDURE `MES_SNS2`.`TML1010_R05`(
   IN $OUTTP       VARCHAR(100),
   IN $OUTQTY      DECIMAL(20, 8),
   IN $EMPCD       VARCHAR(100),
+  IN $LINECD      VARCHAR(100),
   IN $EQMGROUP1   VARCHAR(100),
   IN $EQMCD       VARCHAR(100),
   IN $INOUTKEY    VARCHAR(100),
@@ -94,12 +96,26 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 
 -- *****************************************************************************
 
-  WHEN 'LIST_EQMCD' THEN -- 출고 팝업 라인별 설비 목록
+  WHEN 'LIST_EQMGROUP1' THEN -- 출고 팝업 작업장별 라인 목록
+
+    SELECT GPCD('FM113', MSTEQM.EQMGROUP1) AS Label, MSTEQM.EQMGROUP1 AS Value
+    FROM MSTEQM
+    WHERE MSTEQM.FACTORYCD = '07'
+      AND MSTEQM.USEYN = 'Y'
+      AND MSTEQM.LINECD = $LINECD
+      AND MSTEQM.EQMGROUP1 <> ''
+    GROUP BY MSTEQM.EQMGROUP1
+    ORDER BY MSTEQM.EQMGROUP1;
+
+-- *****************************************************************************
+
+  WHEN 'LIST_EQMCD' THEN -- 출고 팝업 작업장·라인별 설비 목록
 
     SELECT CONCAT(MSTEQM.FANO, '  ', MSTEQM.EQMNM) AS Label, MSTEQM.FANO AS Value
     FROM MSTEQM
     WHERE MSTEQM.FACTORYCD = '07'
       AND MSTEQM.USEYN = 'Y'
+      AND MSTEQM.LINECD = $LINECD
       AND MSTEQM.EQMGROUP1 = $EQMGROUP1
     ORDER BY MSTEQM.FANO;
 

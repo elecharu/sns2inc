@@ -5,6 +5,7 @@ PROCEDURE `MES_SNS2`.`TAL0001_R09`(
 -- Create: 	2026-11-10  	생성 			한성수	TML1010_R05(현장터미널 설비부품 입출고)의 재고조회·출고등록·출고 이력·라벨출력을 태블릿 전용으로 생성 (입고 제외)
 -- Modify:  2026-11-20                한성수  TML1010_R05와 같은 워크플로우로 변경 (재고 조회 중요도등급·로케이션 조건, 출고 라인·설비 저장, 출고 이력 라인·설비·설비부품코드 표시, 출고취소(이력 삭제 및 재고 복원), 로케이션 지정·해제 추가, 출고 이력 기간 미입력 허용, 화면 확인 대신 프로시저에서 지정 로케이션 없음 확인)
 --          2026-11-23                한성수  불필요 코드 정리 (출고자 확인을 출고 분기로 이동, 품목ID 문자 변환 제거)
+--          2026-11-25                한성수  출고 팝업 작업장 → 라인 → 설비 선택 (작업장별 라인·설비 목록 추가)
 -- *****************************************************************************
   IN $SDATE           VARCHAR(10),
   IN $EDATE           VARCHAR(10),
@@ -13,6 +14,7 @@ PROCEDURE `MES_SNS2`.`TAL0001_R09`(
   IN $OUTTP           VARCHAR(100),
   IN $OUTQTY          DECIMAL(20, 8),
   IN $EMPCD           VARCHAR(100),
+  IN $LINECD          VARCHAR(100),
   IN $EQMGROUP1       VARCHAR(100),
   IN $EQMCD           VARCHAR(100),
   IN $INOUTKEY        VARCHAR(100),
@@ -69,6 +71,31 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       AND ($GRADE = '' OR MSTITEM_EQMPARTS.GRADE = $GRADE)
       AND ($LOCACD = '' OR MSTITEM_EQMPARTS.LOCACD = $LOCACD)
     ORDER BY MSTITEM.ITEMCD, MSTITEM.ITEMID;
+
+  -- *****************************************************************************
+
+  WHEN 'LIST_EQMGROUP1' THEN -- 출고 팝업 작업장별 라인 목록
+
+    SELECT GPCD('FM113', MSTEQM.EQMGROUP1) AS Label, MSTEQM.EQMGROUP1 AS Value
+    FROM MSTEQM
+    WHERE MSTEQM.FACTORYCD = '07'
+      AND MSTEQM.USEYN = 'Y'
+      AND MSTEQM.LINECD = $LINECD
+      AND MSTEQM.EQMGROUP1 <> ''
+    GROUP BY MSTEQM.EQMGROUP1
+    ORDER BY MSTEQM.EQMGROUP1;
+
+  -- *****************************************************************************
+
+  WHEN 'LIST_EQMCD' THEN -- 출고 팝업 작업장·라인별 설비 목록
+
+    SELECT CONCAT(MSTEQM.FANO, '  ', MSTEQM.EQMNM) AS Label, MSTEQM.FANO AS Value
+    FROM MSTEQM
+    WHERE MSTEQM.FACTORYCD = '07'
+      AND MSTEQM.USEYN = 'Y'
+      AND MSTEQM.LINECD = $LINECD
+      AND MSTEQM.EQMGROUP1 = $EQMGROUP1
+    ORDER BY MSTEQM.FANO;
 
   -- *****************************************************************************
 

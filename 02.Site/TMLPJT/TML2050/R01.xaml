@@ -90,14 +90,15 @@
 
         <!--수리시작 팝업
             호출 기준: 선택한 호출 카드의 설비로 수리 (라인 호출이면 그 라인 설비 중에서 선택)
-            직접 수리: 선택한 카드 없이 작업장 설비구분 → 라인 → 설비 선택-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="78" Canvas.Top="16">
-            <its:WrapContent x:Name="PANEL_A4" Width="820" Height="420" Background="#FAFAFA">
-                <Grid Width="820" Height="420">
+            직접 수리: 선택한 카드 없이 작업장 설비구분 → 라인 → 설비 선택
+            2026-11-25 팝업 820x420 → 940x440, 설비 목록 2줄(4개씩)·인원 1줄(5개씩) 보이게, 가로 스크롤 대신 줄바꿈-->
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="18" Canvas.Top="6">
+            <its:WrapContent x:Name="PANEL_A4" Width="940" Height="440" Background="#FAFAFA">
+                <Grid Width="940" Height="440">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="50"/>
+                        <RowDefinition Height="46"/>
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="70"/>
+                        <RowDefinition Height="66"/>
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0" Margin="20 0 20 0">
                         <TextBlock x:Name="txt_REP_TITLE" Text="수리시작" FontSize="26" FontWeight="Bold" Foreground="#263238" VerticalAlignment="Center"/>
@@ -106,7 +107,7 @@
 
                     <StackPanel Grid.Row="1" Margin="16 0 16 0">
                         <!--호출 기준: 호출 내용 요약-->
-                        <Border x:Name="REP_SUMMARY" Background="#FFFFFF" BorderBrush="#CFD8DC" BorderThickness="1" CornerRadius="8" Padding="18 6" Margin="0 2 0 8">
+                        <Border x:Name="REP_SUMMARY" Background="#FFFFFF" BorderBrush="#CFD8DC" BorderThickness="1" CornerRadius="8" Padding="18 4" Margin="0 0 0 6">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="86"/>
@@ -115,9 +116,9 @@
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
-                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="26"/>
+                                    <RowDefinition Height="26"/>
+                                    <RowDefinition Height="26"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Grid.Row="0" Grid.Column="0" Text="설비" FontSize="16" Foreground="#78909C" VerticalAlignment="Center"/>
                                 <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="3" x:Name="txt_REP_EQM" FontSize="19" FontWeight="Bold" Foreground="#263238" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
@@ -134,23 +135,23 @@
                         <StackPanel x:Name="REP_FILTER">
                             <DockPanel Height="48">
                                 <TextBlock Text="설비구분" Width="96" FontSize="18" FontWeight="Bold" Foreground="#263238" VerticalAlignment="Center"/>
-                                <its:ButtonList x:Name="R_EQMTP_LIST" PanelWidth="688" Height="48"/>
+                                <its:ButtonList x:Name="R_EQMTP_LIST" PanelWidth="812" Height="48"/>
                             </DockPanel>
                             <DockPanel Height="48">
                                 <TextBlock Text="라인" Width="96" FontSize="18" FontWeight="Bold" Foreground="#263238" VerticalAlignment="Center"/>
-                                <its:ButtonList x:Name="R_GROUP1_LIST" PanelWidth="688" Height="48"/>
+                                <its:ButtonList x:Name="R_GROUP1_LIST" PanelWidth="812" Height="48"/>
                             </DockPanel>
                         </StackPanel>
 
                         <!--수리할 설비 (직접 수리, 라인 호출)-->
                         <StackPanel x:Name="REP_EQM">
                             <TextBlock Text="수리할 설비 (빨간색 = 수리 중)" FontSize="16" Foreground="#546E7A" Margin="2 2 0 2"/>
-                            <its:ButtonList x:Name="R_EQM_LIST" PanelWidth="788" Height="68"/>
+                            <its:ButtonList x:Name="R_EQM_LIST" PanelWidth="908" Height="120"/>
                         </StackPanel>
 
                         <TextBlock Text="인원 (작업장에 배치된 생기팀 · 여러 명 선택 가능, 첫 번째 선택자가 대표 · 도착도 함께 등록)" FontSize="16" Foreground="#546E7A" Margin="2 4 0 2"/>
                         <Grid>
-                            <its:ButtonList x:Name="REPEMP_LIST" PanelWidth="788" Height="64"/>
+                            <its:ButtonList x:Name="REPEMP_LIST" PanelWidth="908" Height="62"/>
                             <TextBlock x:Name="txt_REPEMP_EMPTY" FontSize="18" Foreground="#78909C" TextWrapping="Wrap" Visibility="Collapsed"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
                         </Grid>

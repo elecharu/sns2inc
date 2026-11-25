@@ -45,7 +45,9 @@
             <Its:newline runat="server" />
             <Its:combo runat="server" Label="출고구분" ID="pop_cmb_OUTTP" Field="OUTTP" GPCD="INOUTTP_EQMPARTS" REF01="OUT" LabelWidth="90" InputWidth="361" MarginTop="10" />
             <Its:newline runat="server" />
-            <Its:combo runat="server" Label="라인" ID="pop_cmb_EQMGROUP1" Field="EQMGROUP1" GPCD="@EQMGROUP1" LabelWidth="90" InputWidth="361" MarginTop="10" />
+            <Its:combo runat="server" Label="작업장" ID="pop_cmb_LINECD" Field="LINECD" GPCD="@LINECD" REF01="07" LabelWidth="90" InputWidth="361" MarginTop="10" />
+            <Its:newline runat="server" />
+            <Its:combo runat="server" Label="라인" ID="pop_cmb_EQMGROUP1" Field="EQMGROUP1" LabelWidth="90" InputWidth="361" MarginTop="10" />
             <Its:newline runat="server" />
             <Its:combo runat="server" Label="설비" ID="pop_cmb_EQMCD" Field="EQMCD" LabelWidth="90" InputWidth="361" MarginTop="10" />
             <Its:newline runat="server" />
