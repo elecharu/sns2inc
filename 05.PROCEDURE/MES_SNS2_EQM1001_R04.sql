@@ -11,6 +11,7 @@ PROCEDURE MES_SNS2.EQM1001_R04(
 -- 			2026-11-13 					한성수	점검자명 표시, 점검일자 검증 제거 및 계획월 이동·중복 차단
 -- 			2026-11-16 					한성수	설비 분류·공장 필터 추가 및 최신 정기점검 REV 적용, 승인 실적 수정·삭제 차단, 점검월 이동 시 등급별 주기 검증
 -- 			2026-11-17 					한성수	점검일자 검증을 없는 날짜(2026-02-30 등)까지 막도록 변경
+-- 			2026-11-25 					한성수	점검월로 계획월 이동 삭제, 설비등급·점검주기 조회 및 주기 횟수 초과 등록 차단
 -- *****************************************************************************
   IN $SYEAR           VARCHAR(50),
   IN $YYYYMM          VARCHAR(50),
@@ -49,7 +50,6 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$CHKVALUE     VARCHAR(1000);
   DECLARE _$REMARK       VARCHAR(1000);
   DECLARE _$PLANEMP      VARCHAR(1000);
-  DECLARE _$TGTEMP       VARCHAR(1000);
   DECLARE _$PLANEMPCD    VARCHAR(20);
   DECLARE _$ITEMCNT      INT;
   DECLARE _$ROWCNT       INT DEFAULT 0;
@@ -59,8 +59,6 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$CHKCYCLE     VARCHAR(10);
   DECLARE _$CHKCNT       INT;
   DECLARE _$CHKYEAR      INT;
-  DECLARE _$NEWCNT       INT;
-  DECLARE _$OLDCNT       INT;
   DECLARE _$PREVCNT      INT;
   DECLARE _$NEXTCNT      INT;
 
@@ -157,24 +155,54 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     END IF;
   END IF;
 
-  -- 점검월에 다른 실적이나 기존 계획이 있으면 등록·수정 불가
+  -- 점검월에 다른 실적이 있으면 등록·수정 불가
   IF $CALLTYPE IN ('ADD_CHKRSTEQM', 'SAVE_CHKRSTEQM') THEN
     IF EXISTS (SELECT 1 FROM CHKRSTEQM WHERE EQMCD = $EQMCD AND CHKTP = '02' AND LEFT(BASEDATE, 7) = _$CHKYM AND CHKRSTKEY <> COALESCE(_$CHKRSTKEY, '') LIMIT 1) THEN
       CALL COMERR('해당 월에 이미 등록된 정기점검이 있습니다. 화면을 다시 조회해주세요.');
       LEAVE PROC;
     END IF;
 
-    IF _$CHKYM <> $YYYYMM THEN
-      SET _$TGTEMP = (SELECT ELT(CAST(RIGHT(_$CHKYM, 2) AS UNSIGNED),
-                                 MONTH_01, MONTH_02, MONTH_03, MONTH_04, MONTH_05, MONTH_06,
-                                 MONTH_07, MONTH_08, MONTH_09, MONTH_10, MONTH_11, MONTH_12)
-                      FROM CHKPLANEQM_YEARPLAN
-                      WHERE EQMCD = $EQMCD AND CHKTP = '02' AND YEAR = LEFT(_$CHKYM, 4)
-                      LIMIT 1 FOR UPDATE);
+    -- 설비등급 점검주기(R03 주기관리와 같은 문구 해석) 횟수를 넘는 실적 차단 (수정은 점검년도가 바뀔 때만 확인)
+    IF $CALLTYPE = 'ADD_CHKRSTEQM'
+       OR NOT EXISTS (SELECT 1 FROM CHKRSTEQM WHERE CHKRSTKEY = _$CHKRSTKEY AND LEFT(BASEDATE, 4) = LEFT($BASEDATE, 4) LIMIT 1) THEN
+      SET _$GRADENM = (SELECT GPCD('FM110', EQMGRADE) FROM MSTEQM WHERE FANO = $EQMCD LIMIT 1);
+      SET _$CHKCYCLE = (
+        SELECT MSTEQM_GRADEREV_SCORE.CHKCYCLE2
+        FROM MSTEQM
+        INNER JOIN MSTEQM_GRADEREV_SCORE
+          ON MSTEQM_GRADEREV_SCORE.REVCD = (SELECT REVCD FROM MSTEQM_GRADEREV WHERE USEYN = 'Y' LIMIT 1)
+         AND MSTEQM_GRADEREV_SCORE.EQMGRADE = MSTEQM.EQMGRADE
+        WHERE MSTEQM.FANO = $EQMCD
+        LIMIT 1
+      );
 
-      IF TRIM(COALESCE(_$TGTEMP, '')) <> '' THEN
-        CALL COMERR('변경하려는 월에 이미 정기점검 계획이 있습니다.');
-        LEAVE PROC;
+      IF _$CHKCYCLE REGEXP '(년|연)' AND _$CHKCYCLE REGEXP '[0-9]+ *회' THEN
+        SET _$CHKCNT  = CAST(REGEXP_REPLACE(REGEXP_SUBSTR(_$CHKCYCLE, '[0-9]+ *회'), '[^0-9]', '') AS SIGNED);
+        SET _$CHKYEAR = IFNULL(CAST(NULLIF(REGEXP_REPLACE(REGEXP_SUBSTR(_$CHKCYCLE, '[0-9]+ *(년|연)'), '[^0-9]', ''), '') AS SIGNED), 1);
+      END IF;
+
+      IF _$CHKCNT > 0 AND _$CHKYEAR > 0 THEN
+        SET _$TGTYEAR = CAST(LEFT($BASEDATE, 4) AS SIGNED);
+
+        -- 점검년도 기준 앞쪽·뒤쪽 주기 안 다른 실적 수
+        SET _$PREVCNT = (
+          SELECT COUNT(*)
+          FROM CHKRSTEQM
+          WHERE EQMCD = $EQMCD AND CHKTP = '02' AND CHKRSTKEY <> COALESCE(_$CHKRSTKEY, '')
+            AND LEFT(BASEDATE, 4) + 0 BETWEEN _$TGTYEAR - (_$CHKYEAR - 1) AND _$TGTYEAR
+        );
+        SET _$NEXTCNT = (
+          SELECT COUNT(*)
+          FROM CHKRSTEQM
+          WHERE EQMCD = $EQMCD AND CHKTP = '02' AND CHKRSTKEY <> COALESCE(_$CHKRSTKEY, '')
+            AND LEFT(BASEDATE, 4) + 0 BETWEEN _$TGTYEAR AND _$TGTYEAR + (_$CHKYEAR - 1)
+        );
+
+        IF _$PREVCNT >= _$CHKCNT OR _$NEXTCNT >= _$CHKCNT THEN
+          CALL COMERR(CONCAT('[', $EQMCD, '] ', IFNULL(_$GRADENM, ''), '등급(', _$CHKCYCLE, ')은 ',
+                             IF(_$CHKYEAR > 1, CONCAT(_$CHKYEAR, '년에 '), '한 해에 '), _$CHKCNT, '회까지 점검할 수 있습니다.'));
+          LEAVE PROC;
+        END IF;
       END IF;
     END IF;
   END IF;
@@ -204,7 +232,12 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
            IFNULL(MSTEQM.LINECD, '')    AS LINECD,
            IFNULL(MSTEQM.EQMTP, '')     AS EQMTP,
            IFNULL(MSTEQM.EQMGROUP1, '') AS EQMGROUP1,
-           MSTEQM.FANO AS EQMCD, MSTEQM.EQMNM, $SYEAR AS YEAR,
+           MSTEQM.FANO AS EQMCD, MSTEQM.EQMNM,
+           CASE WHEN LENGTH(MSTEQM.EQMGRADE) > 0 THEN
+             COALESCE(NULLIF(GPCD('FM110', MSTEQM.EQMGRADE), ''), MSTEQM.EQMGRADE)
+           ELSE MSTEQM.EQMGRADE END AS EQMGRADENM,
+           IFNULL(GRADE_SCORE.CHKCYCLE2, '') AS CHKCYCLE2,
+           $SYEAR AS YEAR,
            CASE WHEN RST.EMP01 IS NOT NULL THEN CONCAT('점검완료\n(', RST.EMP01, ')')
                 WHEN YEAR_PLAN.MONTH_01 <> '' THEN CONCAT('점검필요\n(', COALESCE(EMP01.EMPNM, YEAR_PLAN.MONTH_01), ')') ELSE '' END AS M01,
            CASE WHEN RST.EMP02 IS NOT NULL THEN CONCAT('점검완료\n(', RST.EMP02, ')')
@@ -270,6 +303,10 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     ) RST ON RST.EQMCD = MSTEQM.FANO
     LEFT JOIN LATEST_PLAN GRP_PLAN ON GRP_PLAN.PLANTP = 'G' AND GRP_PLAN.PLANCD = MSTEQM.EQMGUBUN
     LEFT JOIN LATEST_PLAN EQM_PLAN ON EQM_PLAN.PLANTP = 'E' AND EQM_PLAN.PLANCD = MSTEQM.FANO
+    -- 설비등급별 점검주기 (설비등급기준 관리 사용중 리비전)
+    LEFT JOIN MSTEQM_GRADEREV_SCORE GRADE_SCORE
+      ON GRADE_SCORE.REVCD = (SELECT REVCD FROM MSTEQM_GRADEREV WHERE USEYN = 'Y' LIMIT 1)
+     AND GRADE_SCORE.EQMGRADE = MSTEQM.EQMGRADE
     WHERE MSTEQM.USEYN = 'Y'
       AND ($FACTORYCD = '' OR MSTEQM.FACTORYCD = $FACTORYCD)
       AND ($LINECD = '' OR MSTEQM.LINECD = $LINECD)
@@ -468,107 +505,4 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   -- *****************************************************************************
 
   END CASE;
-
-  -- 점검월이 계획월과 다르면 주기관리 계획을 점검월로 이동
-  IF $CALLTYPE IN ('ADD_CHKRSTEQM', 'SAVE_CHKRSTEQM') AND _$CHKYM <> $YYYYMM THEN
-    -- 이동 전 점검월 년도의 배정 월 수 (주기 검증용)
-    SET _$TGTYEAR = CAST(LEFT(_$CHKYM, 4) AS SIGNED);
-    SET _$OLDCNT = IFNULL((
-      SELECT (MONTH_01 <> '') + (MONTH_02 <> '') + (MONTH_03 <> '') + (MONTH_04 <> '') + (MONTH_05 <> '') + (MONTH_06 <> '') +
-             (MONTH_07 <> '') + (MONTH_08 <> '') + (MONTH_09 <> '') + (MONTH_10 <> '') + (MONTH_11 <> '') + (MONTH_12 <> '')
-      FROM CHKPLANEQM_YEARPLAN
-      WHERE EQMCD = $EQMCD AND CHKTP = '02' AND YEAR = LEFT(_$CHKYM, 4)
-    ), 0);
-
-    IF NOT EXISTS (SELECT 1 FROM CHKPLANEQM_YEARPLAN WHERE EQMCD = $EQMCD AND CHKTP = '02' AND YEAR = LEFT(_$CHKYM, 4)) THEN
-      INSERT INTO CHKPLANEQM_YEARPLAN (
-        EQMCD, CHKTP, YEAR,
-        MONTH_01, MONTH_02, MONTH_03, MONTH_04, MONTH_05, MONTH_06,
-        MONTH_07, MONTH_08, MONTH_09, MONTH_10, MONTH_11, MONTH_12,
-        REMARK, RTIME, REMP, RPRG
-      ) VALUES (
-        $EQMCD, '02', LEFT(_$CHKYM, 4),
-        '', '', '', '', '', '', '', '', '', '', '', '',
-        '', CALLTIME(), CALLEMP(), CALLPRG()
-      );
-    END IF;
-
-    UPDATE CHKPLANEQM_YEARPLAN
-    SET MONTH_01 = CASE CONCAT(YEAR, '-01') WHEN _$CHKYM THEN $EMPCD WHEN $YYYYMM THEN '' ELSE MONTH_01 END,
-        MONTH_02 = CASE CONCAT(YEAR, '-02') WHEN _$CHKYM THEN $EMPCD WHEN $YYYYMM THEN '' ELSE MONTH_02 END,
-        MONTH_03 = CASE CONCAT(YEAR, '-03') WHEN _$CHKYM THEN $EMPCD WHEN $YYYYMM THEN '' ELSE MONTH_03 END,
-        MONTH_04 = CASE CONCAT(YEAR, '-04') WHEN _$CHKYM THEN $EMPCD WHEN $YYYYMM THEN '' ELSE MONTH_04 END,
-        MONTH_05 = CASE CONCAT(YEAR, '-05') WHEN _$CHKYM THEN $EMPCD WHEN $YYYYMM THEN '' ELSE MONTH_05 END,
-        MONTH_06 = CASE CONCAT(YEAR, '-06') WHEN _$CHKYM THEN $EMPCD WHEN $YYYYMM THEN '' ELSE MONTH_06 END,
-        MONTH_07 = CASE CONCAT(YEAR, '-07') WHEN _$CHKYM THEN $EMPCD WHEN $YYYYMM THEN '' ELSE MONTH_07 END,
-        MONTH_08 = CASE CONCAT(YEAR, '-08') WHEN _$CHKYM THEN $EMPCD WHEN $YYYYMM THEN '' ELSE MONTH_08 END,
-        MONTH_09 = CASE CONCAT(YEAR, '-09') WHEN _$CHKYM THEN $EMPCD WHEN $YYYYMM THEN '' ELSE MONTH_09 END,
-        MONTH_10 = CASE CONCAT(YEAR, '-10') WHEN _$CHKYM THEN $EMPCD WHEN $YYYYMM THEN '' ELSE MONTH_10 END,
-        MONTH_11 = CASE CONCAT(YEAR, '-11') WHEN _$CHKYM THEN $EMPCD WHEN $YYYYMM THEN '' ELSE MONTH_11 END,
-        MONTH_12 = CASE CONCAT(YEAR, '-12') WHEN _$CHKYM THEN $EMPCD WHEN $YYYYMM THEN '' ELSE MONTH_12 END,
-        MTIME    = CALLTIME(),
-        MEMP     = CALLEMP(),
-        MPRG     = CALLPRG()
-    WHERE EQMCD = $EQMCD
-      AND CHKTP = '02'
-      AND YEAR IN (LEFT($YYYYMM, 4), LEFT(_$CHKYM, 4));
-
-    -- 년도가 바뀌어 비게 된 기존 계획 행 정리
-    DELETE FROM CHKPLANEQM_YEARPLAN
-    WHERE EQMCD = $EQMCD AND CHKTP = '02' AND YEAR = LEFT($YYYYMM, 4) AND REMARK = ''
-      AND CONCAT(MONTH_01, MONTH_02, MONTH_03, MONTH_04, MONTH_05, MONTH_06,
-                 MONTH_07, MONTH_08, MONTH_09, MONTH_10, MONTH_11, MONTH_12) = '';
-
-    -- 설비등급 점검주기(R03 주기관리와 같은 문구 해석·기준) 초과 차단: 옮긴 년도 배정 월 수가 늘어날 때만 검사, 오류 시 전체 취소
-    SET _$NEWCNT = IFNULL((
-      SELECT (MONTH_01 <> '') + (MONTH_02 <> '') + (MONTH_03 <> '') + (MONTH_04 <> '') + (MONTH_05 <> '') + (MONTH_06 <> '') +
-             (MONTH_07 <> '') + (MONTH_08 <> '') + (MONTH_09 <> '') + (MONTH_10 <> '') + (MONTH_11 <> '') + (MONTH_12 <> '')
-      FROM CHKPLANEQM_YEARPLAN
-      WHERE EQMCD = $EQMCD AND CHKTP = '02' AND YEAR = LEFT(_$CHKYM, 4)
-    ), 0);
-
-    IF _$NEWCNT > _$OLDCNT THEN
-      SET _$GRADENM = (SELECT GPCD('FM110', EQMGRADE) FROM MSTEQM WHERE FANO = $EQMCD LIMIT 1);
-      SET _$CHKCYCLE = (
-        SELECT MSTEQM_GRADEREV_SCORE.CHKCYCLE2
-        FROM MSTEQM
-        INNER JOIN MSTEQM_GRADEREV_SCORE
-          ON MSTEQM_GRADEREV_SCORE.REVCD = (SELECT REVCD FROM MSTEQM_GRADEREV WHERE USEYN = 'Y' LIMIT 1)
-         AND MSTEQM_GRADEREV_SCORE.EQMGRADE = MSTEQM.EQMGRADE
-        WHERE MSTEQM.FANO = $EQMCD
-        LIMIT 1
-      );
-
-      IF _$CHKCYCLE REGEXP '(년|연)' AND _$CHKCYCLE REGEXP '[0-9]+ *회' THEN
-        SET _$CHKCNT  = CAST(REGEXP_REPLACE(REGEXP_SUBSTR(_$CHKCYCLE, '[0-9]+ *회'), '[^0-9]', '') AS SIGNED);
-        SET _$CHKYEAR = IFNULL(CAST(NULLIF(REGEXP_REPLACE(REGEXP_SUBSTR(_$CHKCYCLE, '[0-9]+ *(년|연)'), '[^0-9]', ''), '') AS SIGNED), 1);
-      END IF;
-
-      IF _$CHKCNT > 0 AND _$CHKYEAR > 0 THEN
-        SET _$PREVCNT = IFNULL((
-          SELECT SUM((MONTH_01 <> '') + (MONTH_02 <> '') + (MONTH_03 <> '') + (MONTH_04 <> '') + (MONTH_05 <> '') + (MONTH_06 <> '') +
-                     (MONTH_07 <> '') + (MONTH_08 <> '') + (MONTH_09 <> '') + (MONTH_10 <> '') + (MONTH_11 <> '') + (MONTH_12 <> ''))
-          FROM CHKPLANEQM_YEARPLAN
-          WHERE EQMCD = $EQMCD AND CHKTP = '02'
-            AND YEAR + 0 BETWEEN _$TGTYEAR - (_$CHKYEAR - 1) AND _$TGTYEAR - 1
-        ), 0);
-        SET _$NEXTCNT = IFNULL((
-          SELECT SUM((MONTH_01 <> '') + (MONTH_02 <> '') + (MONTH_03 <> '') + (MONTH_04 <> '') + (MONTH_05 <> '') + (MONTH_06 <> '') +
-                     (MONTH_07 <> '') + (MONTH_08 <> '') + (MONTH_09 <> '') + (MONTH_10 <> '') + (MONTH_11 <> '') + (MONTH_12 <> ''))
-          FROM CHKPLANEQM_YEARPLAN
-          WHERE EQMCD = $EQMCD AND CHKTP = '02'
-            AND YEAR + 0 BETWEEN _$TGTYEAR + 1 AND _$TGTYEAR + (_$CHKYEAR - 1)
-        ), 0);
-
-        IF _$PREVCNT + _$NEWCNT > _$CHKCNT OR _$NEWCNT + _$NEXTCNT > _$CHKCNT THEN
-          CALL COMERR(CONCAT('[', $EQMCD, '] ', IFNULL(_$GRADENM, ''), '등급(', _$CHKCYCLE, ')은 ',
-                             IF(_$CHKYEAR > 1, CONCAT(_$CHKYEAR, '년에 '), '한 해에 '), _$CHKCNT, '회까지 점검할 수 있어 ',
-                             _$TGTYEAR, '년 ', CAST(RIGHT(_$CHKYM, 2) AS UNSIGNED), '월로 점검월을 옮길 수 없습니다. (옮기면 ',
-                             _$TGTYEAR, '년 ', _$NEWCNT, '회',
-                             IF(_$PREVCNT + _$NEXTCNT > 0, CONCAT(', 주기 안 다른 년도 ', _$PREVCNT + _$NEXTCNT, '회'), ''), ')'));
-          LEAVE PROC;
-        END IF;
-      END IF;
-    END IF;
-  END IF;
 END

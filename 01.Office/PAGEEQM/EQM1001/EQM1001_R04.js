@@ -10,6 +10,8 @@ ItsPage.Load = function () {
         column.create('라인', 'EQMGROUP1', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FM113', readOnly: true }),
         column.create('설비코드', 'EQMCD', { width: 100, align: 'center' }),
         column.create('설비명', 'EQMNM', { width: 250 }),
+        column.create('설비등급', 'EQMGRADENM', { width: 90, align: 'center', readOnly: true }),
+        column.create('점검주기', 'CHKCYCLE2', { width: 100, align: 'center', readOnly: true }),
         column.create('년도', 'YEAR', { width: 80, align: 'center' }),
 
         column.create('1월', 'M01', { width: 105, align: 'center', readOnly: true, multiLine: true }),

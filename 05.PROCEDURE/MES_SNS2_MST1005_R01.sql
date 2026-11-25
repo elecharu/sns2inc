@@ -5,6 +5,7 @@ PROCEDURE `MES_SNS2`.`MST1005_R01`(
 -- Create: 	2026-11-05  	생성 			한성수
 -- Modify: 	2026-11-05 					한성수	설비 목록·평가이력 조회, 자동 점수·등급 판정, 평가 등록·승인, 점수기준 비고 추가, 평가표 출력
 -- Modify: 	2026-11-06 					한성수	승인 대기 평가이력이 있으면 신규 평가 차단, 평가·승인일자 오늘 이후 및 최종 승인 평가일자 이전 평가 차단, 평가 승인 시 비고(REMARK) 갱신 반영
+-- Modify: 	2026-11-25 					한성수	신규 평가 기본 점수(대체 설비 유무 2점, 작업환경 및 안전 영향 5점) 표시
 -- *****************************************************************************
   IN $SDATE             VARCHAR(10),   -- 조회 시작일자
   IN $EDATE             VARCHAR(10),   -- 조회 종료일자
@@ -180,7 +181,16 @@ CASE $CALLTYPE
     LEFT JOIN MSTEQM_GRADEREV_D2 AS SCORE_D2
       ON SCORE_D2.REVCD = MSTEQM_GRADEREV_D.REVCD
      AND SCORE_D2.GMCD = MSTEQM_GRADEREV_D.GMCD
-     AND SCORE_D2.SCORE = IF(MSTEQM_GRADEREV_D.CALCTP = '' OR _$APRVTIME <> '', EQMGRADEEVAL_D.SCORE, AUTO_D2.SCORE)
+     AND SCORE_D2.SCORE = IF(MSTEQM_GRADEREV_D.CALCTP = '' OR _$APRVTIME <> '',
+                             -- 신규 평가 기본 점수 : 고장 발생시 대체 설비 유무 2점, 작업환경 및 안전에 미치는 영향 5점
+                             COALESCE(EQMGRADEEVAL_D.SCORE,
+                                      CASE WHEN $EQMGRADEEVALKEY = '' THEN
+                                        CASE REPLACE(MSTEQM_GRADEREV_D.GMNM, ' ', '')
+                                          WHEN '고장발생시대체설비유무' THEN 2
+                                          WHEN '작업환경및안전에미치는영향' THEN 5
+                                        END
+                                      END),
+                             AUTO_D2.SCORE)
     WHERE MSTEQM_GRADEREV_D.REVCD = _$REVCD
     ORDER BY MSTEQM_GRADEREV_D.SORTNO, MSTEQM_GRADEREV_D.GMCD;
 
