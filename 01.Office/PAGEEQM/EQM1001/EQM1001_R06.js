@@ -9,15 +9,7 @@ var topYear, topMonth, topIssueData, topIssueImg;   // 보고 있는 TOP ISSUE �
 /* 페이지 접근 시 수행 */
 ItsPage.Load = function () {
     // 본문 높이는 Load 뒤 MasterBase 의 resize 에서 정해지므로, 그 뒤에 차트 높이를 칸에 맞춘다
-    $(window).resize(function () {
-        setTimeout(function () {
-            if (chart1 == undefined) {
-                return;
-            }
-            chart1.resize({ height: $('#chart1').height() });
-            chart2.resize({ height: $('#chart2').height() });
-        }, 10);
-    });
+    $(window).resize(CHART_RESIZE);
 
     // TOP ISSUE 표 클릭 → 바로 아래 상세(원인 및 예방) 펼치기/접기
     $('#div_TOPLIST').on('click', '.topissue-table', function () {
@@ -62,6 +54,9 @@ ItsPage.Load = function () {
 
 /* 조회 (설비 고장율 / 호출건수 차트) */
 ItsButton.EventSearch = function () {
+    topYear = undefined;
+    topMonth = undefined;
+
     var period = SEARCH_PERIOD();
     var maria = new ItsMaria('EQM1001_R06', 'LIST_CHART');
     maria.AddParam('SDATE', period.SDATE);
@@ -134,6 +129,16 @@ ItsButton.EventSearch = function () {
         legend: { contents: { bindto: '#chart2_legend', template: CHART_LEGEND } },
         grid: { y: { show: true } }
     });
+
+    // TOP ISSUE 탭을 보고 있으면 탭은 그대로 두고 조회년월 달로 다시 조회
+    if (ItsTab.GetIndex('tab1') == 1) {
+        TOPISSUE_SEARCH_YM();
+    }
+};
+
+// 조회년월 변경 시 그 년월 기준으로 다시 조회
+ItsMonth.Event('mon_SMONTH').onChanged = function () {
+    ItsButton.EventSearch();
 };
 
 /* 월 막대 클릭 → 그 달(조회기간 안) 설비 고장 TOP ISSUE (비가동시간 상위 5개 설비) */
@@ -145,7 +150,42 @@ function TOPISSUE_OPEN(d) {
     topYear = ym.substr(0, 4);
     topMonth = parseInt(ym.substr(5, 2), 10);
     TOPISSUE_SEARCH();
-    $('#div_TOPISSUE').scrollTop(0).show();
+    $('#div_TOPISSUE').scrollTop(0);
+    ItsTab.Select('tab1', 1);
+}
+
+// 탭 전환 시 그래프 탭은 차트 크기를 칸에 맞추고, TOP ISSUE 탭은 본 달이 없으면 조회년월 달을 조회
+ItsTab.Event('tab1').onTabChanged = function (newPanel) {
+    if (newPanel == 0) {
+        CHART_RESIZE();
+        return;
+    }
+    if (topYear == undefined) {
+        TOPISSUE_SEARCH_YM();
+    }
+};
+
+// 조회년월 달의 TOP ISSUE 조회
+function TOPISSUE_SEARCH_YM() {
+    var ym = (ItsMonth.GetValue('mon_SMONTH') || '').replace(/[^0-9]/g, '');
+    if (ym.length < 6) {
+        return;
+    }
+    topYear = ym.substr(0, 4);
+    topMonth = parseInt(ym.substr(4, 2), 10);
+    TOPISSUE_SEARCH();
+    $('#div_TOPISSUE').scrollTop(0);
+}
+
+// 차트 높이를 칸에 맞춤 (본문·탭 높이가 정해진 뒤 실행)
+function CHART_RESIZE() {
+    setTimeout(function () {
+        if (chart1 == undefined) {
+            return;
+        }
+        chart1.resize({ height: $('#chart1').height() });
+        chart2.resize({ height: $('#chart2').height() });
+    }, 10);
 }
 
 /* TOP ISSUE 조회 (topYear 년 topMonth 달, 조회기간 안), 표 + 접힌 상세 */
@@ -231,7 +271,7 @@ ItsButton.EventPrint = function () {
     var rpt = new ItsXtraRpt('EQM1001_R0602');
     rpt.AddParam('SDATE', period.SDATE);
     rpt.AddParam('EDATE', period.EDATE);
-    if ($('#div_TOPISSUE').is(':visible')) {
+    if (ItsTab.GetIndex('tab1') == 1 && topYear != undefined) {
         if (topIssueData == undefined || topIssueData.length == 0) {
             ItsMsg.Alert(topYear + '년 ' + topMonth + '월 설비 수리 이력이 없습니다.');
             return;
@@ -243,11 +283,6 @@ ItsButton.EventPrint = function () {
     if (rpt.isError) {
         ItsMsg.Alert(rpt.errMessage);
     }
-};
-
-/* TOP ISSUE → 그래프로 돌아가기 */
-ItsButton.Event('btn_BACK').onClick = function () {
-    $('#div_TOPISSUE').hide();
 };
 
 /* 팝업 사진 목록 (설비 + 년월) */

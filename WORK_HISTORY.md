@@ -18,6 +18,19 @@
 
 ## 🕒 2026-11-25 (수) 작업 내역
 
+### 17. EQM1001_R06 년 설비고장율 현황 그래프 / 월별 TOP ISSUE 탭 구분
+- **수정 파일**: [01.Office/PAGEEQM/EQM1001/EQM1001_R06.aspx](01.Office/PAGEEQM/EQM1001/EQM1001_R06.aspx)·[.js](01.Office/PAGEEQM/EQM1001/EQM1001_R06.js)
+- **요청**: 막대 클릭 시 상세(TOP ISSUE)가 그래프 위에 덮어 나오던 방식을 탭으로 구분 → 목업 A안(그래프 / TOP ISSUE 2개 탭), 목업 오른쪽 영역(월 칩 등)은 제외
+- **작업 내용**
+  - 1. aspx: 공통 탭(`Its:tab` tab1, EQM1001_R05와 같은 방식)으로 '고장율·호출건수' 탭(기존 두 차트 그대로)과 '월별 TOP ISSUE' 탭(기존 TOP ISSUE 제목·표·상세 그대로) 구성. 덮어쓰기용 스타일(`#MAIN_BODY` relative, `#div_TOPISSUE` absolute·숨김)을 탭 안 스크롤 영역으로 변경, '◀ 그래프로' 버튼 삭제
+  - 2. js: 월 막대 클릭 → 그 달 TOP ISSUE 조회 후 TOP ISSUE 탭 선택, '그래프로' 버튼 이벤트 삭제. 탭 전환 이벤트(`ItsTab.Event('tab1').onTabChanged`)에서 그래프 탭은 차트 크기를 칸에 맞추고(기존 창 크기 변경 처리를 `CHART_RESIZE`로 묶어 같이 사용), TOP ISSUE 탭을 막대 클릭 없이 열면 조회년월 달을 조회
+  - 3. 조회 시 그래프 탭으로 돌아가고 보던 달을 초기화. 인쇄는 TOP ISSUE 탭에서 본 달이 있으면 그 달, 아니면 그래프 기준 (기존 동작 기준을 탭 기준으로 변경)
+  - 4. 프로시저·레포트 변경 없음
+- **검증**: `node --check` 정상, aspx·js 단일 BOM·CRLF 유지, 삭제한 `btn_BACK` 참조 없음. 미확인: 실제 화면(탭 전환 시 차트 크기·TOP ISSUE 스크롤)
+- **반영 (사용자)**: Office 배포 후 Ctrl+F5
+- **추가 요청**: 조회년월을 바꾸면 그 년월 기준으로 바로 조회 → js `ItsMonth.Event('mon_SMONTH').onChanged`에서 `ItsButton.EventSearch()` 실행 (그래프 탭으로 돌아가 1월 ~ 선택 월 기준 재조회). `node --check` 정상, BOM·CRLF 유지. 미확인: 실제 화면
+- **추가 요청**: 조회(조회년월 변경 포함) 시 탭 초기화 없이 보던 탭 유지 → `EventSearch`의 그래프 탭 선택 삭제, TOP ISSUE 탭을 보고 있으면 차트 재조회 후 조회년월 달 TOP ISSUE를 다시 조회(`TOPISSUE_SEARCH_YM`으로 탭 전환 시 처리와 묶음). 그래프 탭으로 돌아갈 때 차트 크기는 탭 전환 이벤트에서 칸에 맞춤. `node --check` 정상, BOM·CRLF 유지. 미확인: 실제 화면(TOP ISSUE 탭에서 조회 후 그래프 탭 전환 시 차트 크기)
+
 ### 16. MST3001_S01 설비별 사용부품 조회 화면 신규
 - **신규 파일**: [01.Office/PAGEMST/MST3001/MST3001_S01.aspx](01.Office/PAGEMST/MST3001/MST3001_S01.aspx)·[.aspx.cs](01.Office/PAGEMST/MST3001/MST3001_S01.aspx.cs)·[.js](01.Office/PAGEMST/MST3001/MST3001_S01.js), [05.Procedure/MES_SNS2_MST3001_S01.sql](05.Procedure/MES_SNS2_MST3001_S01.sql), [05.Procedure/MES_SNS2_MST3001_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST3001_S01_SYSTEM_PARAMETERS.sql)
 - **요청**: 설비별 사용부품 조회(신규) — 설비리스트 조회 후 설비 선택 시 해당 설비에 사용된 설비부품 집계 조회. 프로그램 MST3001_S01 / 설비별 사용부품 조회 (실DB SYSPRG·소스 폴더 미사용 확인)

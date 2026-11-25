@@ -20,8 +20,7 @@
         #chart1 .bb-target-NONRATE .bb-line, #chart1 .bb-target-GOALRATE .bb-line, #chart2 .bb-target-AVGREPMIN .bb-line { stroke-dasharray: 4 3; }
         #chart1 .bb-target-GOALRATE .bb-circle { fill: #fff !important; }
         #chart1 .bb-bar, #chart2 .bb-bar { cursor: pointer; }
-        #MAIN_BODY { position: relative; }
-        #div_TOPISSUE { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 10; overflow-y: auto; padding: 10px 20px; background: #fff; }
+        #div_TOPISSUE { height: 100%; overflow-y: auto; padding: 10px 20px; background: #fff; box-sizing: border-box; }
         .topissue-title { display: inline-block; margin: 6px 0 4px 0; font-size: 22px; }
         .topissue-table { width: 100%; margin-top: 18px; border-collapse: collapse; font-size: 13px; }
         .topissue-table th, .topissue-table td { padding: 6px; border: 1px solid #bbb; text-align: center; }
@@ -62,30 +61,34 @@
 
 <%-- BODY --%>
 <asp:Content ContentPlaceHolderID="CPH_BODY" runat="Server">
-    <%-- 설비 고장율 (비가동시간 + 점유율) --%>
-    <Its:div runat="server" Type="SplitTop" TopHeightPc="50">
-        <div class="chart-box">
-            <div id="chart1_legend" class="chart-legend"></div>
-            <div id="chart1" style="height: 100%;"></div>
-        </div>
-    </Its:div>
+    <Its:tab runat="server" ID="tab1">
+        <Its:div runat="server" Type="SplitSingle" TabTitle="고장율·호출건수">
+            <%-- 설비 고장율 (비가동시간 + 점유율) --%>
+            <Its:div runat="server" Type="SplitTop" TopHeightPc="50">
+                <div class="chart-box">
+                    <div id="chart1_legend" class="chart-legend"></div>
+                    <div id="chart1" style="height: 100%;"></div>
+                </div>
+            </Its:div>
 
-    <Its:split runat="server" Type="Horizon" />
+            <Its:split runat="server" Type="Horizon" />
 
-    <%-- 설비 호출건수 (호출건수 + 평균수리시간) --%>
-    <Its:div runat="server" Type="SplitDown">
-        <div class="chart-box">
-            <div id="chart2_legend" class="chart-legend"></div>
-            <div id="chart2" style="height: 100%;"></div>
-        </div>
-    </Its:div>
+            <%-- 설비 호출건수 (호출건수 + 평균수리시간) --%>
+            <Its:div runat="server" Type="SplitDown">
+                <div class="chart-box">
+                    <div id="chart2_legend" class="chart-legend"></div>
+                    <div id="chart2" style="height: 100%;"></div>
+                </div>
+            </Its:div>
+        </Its:div>
 
-    <%-- 설비 고장 TOP ISSUE (월 막대 클릭 시 차트 위에 표시) --%>
-    <div id="div_TOPISSUE">
-        <span id="lbl_TOPISSUE" class="topissue-title"></span>
-        <Its:button runat="server" Label="◀ 그래프로" ID="btn_BACK" Width="100" Float="right" MarginTop="6" BackColor="CustomButton2" />
-        <div id="div_TOPLIST"></div>
-    </div>
+        <Its:div runat="server" Type="SplitSingle" TabTitle="월별 TOP ISSUE">
+            <div id="div_TOPISSUE">
+                <span id="lbl_TOPISSUE" class="topissue-title"></span>
+                <div id="div_TOPLIST"></div>
+            </div>
+        </Its:div>
+    </Its:tab>
 </asp:Content>
 
 <%-- POP --%>
