@@ -4,19 +4,20 @@
 ItsPage.Load = function () {
     
     /* 그리드 생성 */
-    ItsGrid.Create('grid1', { isCheckBoxGrid: true, allowMerging: 'Cells', groupField: 'LINENM' }, [
+    ItsGrid.Create('grid1', { isCheckBoxGrid: true, allowSorting: false, allowMerging: 'Cells', groupField: 'LINENM' }, [
         column.create("사원코드", "EMPCD", { width: 100, align: 'center' }),
         column.create("사원명", "EMPNM", { width: 100, align: 'center' }),
         column.create("호출도착 지연시간(분)", "DELAYMIN_ARRIVE", { width: 150, align: 'center', columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
         column.create("수리종료 지연시간(분)", "DELAYMIN_REPAIR", { width: 150, align: 'center', columnType: enumColumnTypes.number, decimalPrecision: 0, readOnly: false }),
     ]);
 
-    ItsGrid.Create('grid2', { isCheckBoxGrid: true }, [
-        column.create("사원ID", "EMPCD", { width: 100, align: 'center', hidden: true }),
+    ItsGrid.Create('grid2', { isCheckBoxGrid: true, allowSorting: false }, [
         column.create("사원코드", "EMPCD", { width: 100, align: 'center', hidden: true }),
         column.create("사원명", "EMPNM", { width: 100, align: 'center' }),
         column.create("부서명", "DEPTCD", { width: 100, align: 'center' }),
     ]);
+
+    ItsButton.EventSearch();
 };
 
 /* 조회 */

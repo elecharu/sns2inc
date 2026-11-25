@@ -5,6 +5,7 @@ PROCEDURE MES_SNS2.MST1004_R01(
 -- Create: 2026-10-20 17:51: 김영철
 -- Modify: 2026-10-27: 조회조건 공장·작업장·사원 추가 (LIST_EQM_CALLEMP)
 --         2026-11-24: 한성수 호출사원 작업장 기준 등록·조회로 변경
+--         2026-11-25: 한성수 이미 등록된 호출사원 안내를 한 번에 모아서 표시, 등록 팝업 사원 목록 사원코드 순 정렬
 -- *****************************************************************************
 
   IN $FACTORYCD       VARCHAR(10),       -- 공장
@@ -34,6 +35,8 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$EQMCD     VARCHAR(50)  DEFAULT '';
   DECLARE _$DELAYMIN_ARRIVE VARCHAR(100) DEFAULT '';
   DECLARE _$DELAYMIN_REPAIR VARCHAR(100) DEFAULT '';
+  DECLARE _$CHK_LIST  MEDIUMTEXT   DEFAULT '';
+  DECLARE _$DUPNM     VARCHAR(2000) DEFAULT '';
 
 -- *****************************************************************************
   CASE $CALLTYPE
@@ -68,7 +71,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       WHERE EMPCD LIKE CONCAT('%', $EMPCD, '%')
         AND EMPID <> ''
         AND MSTEMP.DEPTCD = '44F30'
-      ORDER BY EMPNM, MSTDEPT.DEPTNM;
+      ORDER BY EMPCD;
 
 -- ****************************************************************************
   WHEN 'INS_EQM_CALLEMP' THEN
@@ -83,9 +86,10 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       LEAVE PROC;
     END IF;
 
-    -- 바깥 루프 : 사원
-    WHILE IFNULL($EMPCD_LIST, '') <> '' DO
-      CALL COMSPLIT($EMPCD_LIST, _$EMPCD);
+    -- 사원 확인 및 이미 등록된 사원 모으기 (한 번에 안내)
+    SET _$CHK_LIST = $EMPCD_LIST;
+    WHILE IFNULL(_$CHK_LIST, '') <> '' DO
+      CALL COMSPLIT(_$CHK_LIST, _$EMPCD);
 
       -- 사원코드 조회
       SET _$EMPCD = IFNULL((SELECT EMPCD FROM MSTEMP WHERE EMPCD = _$EMPCD), '');
@@ -101,10 +105,18 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
           FROM MSTEQM_CALLEMP
          WHERE EQMCD = $LINECD
            AND EMPCD = _$EMPCD) THEN
-        CALL COMERR(CONCAT('이미 등록된 호출사원입니다. ',
-          GPCD('EMPCD', _$EMPCD), '(', _$EMPCD, ') / 작업장 ', $LINECD));
-        LEAVE PROC;
+        SET _$DUPNM = CONCAT(_$DUPNM, IF(_$DUPNM = '', '', ', '), GPCD('EMPCD', _$EMPCD));
       END IF;
+    END WHILE;
+
+    IF _$DUPNM <> '' THEN
+      CALL COMERR(CONCAT('이미 등록된 호출사원입니다. (', _$DUPNM, ')'));
+      LEAVE PROC;
+    END IF;
+
+    -- 바깥 루프 : 사원
+    WHILE IFNULL($EMPCD_LIST, '') <> '' DO
+      CALL COMSPLIT($EMPCD_LIST, _$EMPCD);
 
       -- EQMCD에 작업장코드 저장
       INSERT INTO MSTEQM_CALLEMP(
