@@ -183,8 +183,10 @@
                                     <TextBlock Text="메뉴" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </UserControl>
-                            <!-- 2026-11-16 메뉴 목록·타일 설정을 DB 에서 다시 읽기 (열린 화면은 닫힘) -->
-                            <UserControl x:Name="MENU_REFRESH" Style="{DynamicResource TML_MENU}" MouseUp="MENU_REFRESH_MouseUp">
+                            <!-- 2026-11-16 메뉴 목록·타일 설정을 DB 에서 다시 읽기 (열린 화면은 닫힘)
+                                 2026-11-25 메뉴 목록만 새로 읽는 버튼이라 타일 메뉴(PANEL_HOME)가 보일 때만 표시 -->
+                            <UserControl x:Name="MENU_REFRESH" Style="{DynamicResource TML_MENU}" MouseUp="MENU_REFRESH_MouseUp"
+                                         Visibility="{Binding Visibility, ElementName=PANEL_HOME}">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="5.5" VerticalAlignment="Center" Margin="0 0 2 0"/>
                                     <TextBlock Text="새로고침" VerticalAlignment="Center"/>

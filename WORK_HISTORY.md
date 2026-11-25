@@ -18,6 +18,51 @@
 
 ## 🕒 2026-11-25 (수) 작업 내역
 
+### 16. MST3001_S01 설비별 사용부품 조회 화면 신규
+- **신규 파일**: [01.Office/PAGEMST/MST3001/MST3001_S01.aspx](01.Office/PAGEMST/MST3001/MST3001_S01.aspx)·[.aspx.cs](01.Office/PAGEMST/MST3001/MST3001_S01.aspx.cs)·[.js](01.Office/PAGEMST/MST3001/MST3001_S01.js), [05.Procedure/MES_SNS2_MST3001_S01.sql](05.Procedure/MES_SNS2_MST3001_S01.sql), [05.Procedure/MES_SNS2_MST3001_S01_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST3001_S01_SYSTEM_PARAMETERS.sql)
+- **요청**: 설비별 사용부품 조회(신규) — 설비리스트 조회 후 설비 선택 시 해당 설비에 사용된 설비부품 집계 조회. 프로그램 MST3001_S01 / 설비별 사용부품 조회 (실DB SYSPRG·소스 폴더 미사용 확인)
+- **작업 내용**
+  - 1. 조회조건: 공장(INC 2공장 07 고정, MST1005_S02와 같은 방식), 출고일자(기본 1년 전 ~ 오늘, MST1005_R01과 같은 방식), 작업장·공정·라인(MST1005_R01과 같은 연동 콤보)
+  - 2. 좌측 '■ 설비목록'(작업장·공정·라인·설비그룹 콤보 셀 병합, 설비코드·설비명 — MST1005_S02와 같은 컬럼), 우측 '■ 사용부품'(품목코드·품명·규격·단위 DM150 콤보·출고횟수·출고수량, 출고횟수·출고수량 합계 줄 — 공통 isSubTotalGrid + groupType sum)
+  - 3. 프로시저 `LIST_EQM`: MSTEQM 사용 Y·공장·작업장·공정·라인 조건. `LIST_PARTS`: INOUT_EQMPARTS 출고(OUT) 중 선택 설비(EQMCD = FANO)·출고일자 기간을 품목별 COUNT·SUM으로 먼저 집계 후 MSTITEM 품목정보 연결 (출고취소는 이력 삭제 방식이라 남은 출고만 합산)
+  - 4. 파라미터 9건 SYSTEM_PARAMETERS 등록 스크립트 작성 (파라미터 길이는 MSTEQM 컬럼 정의와 같음)
+- **검증 (실DB 읽기 SELECT)**: LIST_EQM 254대(MST1005_S02 합계와 같음), 작업장 M3 30대. LIST_PARTS(2025-11-25 ~ 2026-11-25) I2A-001N skid rail 1회 500, I2C-004N 1회 50 = 실제 출고 이력과 같음, 출고 없는 I2B-002N 0행. `node --check` 정상, aspx·cs·js 단일 BOM·CRLF, sql BOM 없음·CRLF. 미확인: 프로시저 저장·실제 화면(프로그램·메뉴 미등록)
+- **참고**: 현재 설비를 지정한 설비부품 출고는 2건뿐 (나머지 출고 8건은 설비 미지정)
+- **추가 요청**: 조회조건에 설비그룹·설비코드 입력 추가 → aspx `설비그룹` 콤보(Field EQMGRP, GPCD *FM116 — EQM1001_R03과 같은 방식)·`설비` 찾기(Field EQMCD, GPCD EQMCD — EQM1001_R04와 같은 방식), 프로시저 `$EQMGRP`(EQMGUBUN 일치)·`$EQMCD`(설비코드 부분 일치) 파라미터와 `LIST_EQM` 조건 추가, SYSTEM_PARAMETERS 9건 → 11건. 실DB 읽기 SELECT: 조건 없음 254, 설비그룹 FM116I2200 4대(직접 COUNT 4와 같음), 설비코드 'I2C-0' 61대, 'I2A-001N' 1대. 형식 유지(aspx BOM·CRLF, sql BOM 없음·CRLF)
+- **추가 요청**: 조회조건 공장 삭제, 설비그룹·설비를 작업장 앞에 배치 → aspx 조회조건 순서 출고일자·설비그룹·설비·작업장·공정·라인, 공장 콤보 삭제. 공장 값이 넘어오지 않으므로 프로시저 `$FACTORYCD` 파라미터 삭제 후 `LIST_EQM`은 INC 2공장(07) 고정 (MST1005_R01과 같은 방식), SYSTEM_PARAMETERS 11건 → 10건. 실DB 읽기 SELECT 조건 없음 254대 동일, 형식 유지
+- **실DB 반영 (사용자)**: MST3001_S01 프로시저 저장 → SYSTEM_PARAMETERS 스크립트 실행(9건) → 프로그램 MST3001_S01 등록·메뉴(설비부품) 배치 → Office 배포
+
+### 15. MST1005_S02 설비등급별 설비 조회 정보 컬럼 추가
+- **수정 파일**: [05.Procedure/MES_SNS2_MST1005_S02.sql](05.Procedure/MES_SNS2_MST1005_S02.sql), [01.Office/PAGEMST/MST1005/MST1005_S02.js](01.Office/PAGEMST/MST1005/MST1005_S02.js)·[.aspx](01.Office/PAGEMST/MST1005/MST1005_S02.aspx)
+- **요청**: 화면이 휑함 → 제안 1(좌측 등급 기준 정보·합계, 비율 컬럼은 제외)·2(우측 설비 정보) 적용
+- **작업 내용**
+  - 1. 좌측 설비등급 그리드: 점수기준(SCORENM)·관리구분(MNGNM)·점검주기(CHKCYCLE2) 추가 (설비등급기준 사용중 리비전 MSTEQM_GRADEREV_SCORE), 설비대수 합계 줄(공통 isSubTotalGrid + groupType sum, EQM1001_R01과 같은 방식), 좌측 폭 20% → 40%
+  - 2. `LIST_GRADE`: 사용 설비 등급별 COUNT를 먼저 집계한 뒤 등급 기준·FM110 정렬순번 연결 (행 수 그대로)
+  - 3. 우측 설비목록: 설비상태(EQMSTT, FM111 콤보)·설치일자(SETDATE 날짜 10자리)·최근 평가일자·평가점수(설비별 승인된 마지막 EQMGRADEEVAL, 평가일자·평가키 역순 1건) 추가, 설비명 폭 250 → 200
+  - 4. 파라미터 변경 없음 (SYSTEM_PARAMETERS 3건 그대로)
+- **검증 (실DB 읽기 SELECT)**: LIST_GRADE A 20점 이상·우수·2년/1회 136대, B 20~15점·유지관리·년 1회 점검 92대, C 15~10점·준중점관리·년 2회 점검 25대, 등급 없음 1대(기준 빈칸). LIST_EQM A 136행(평가 있는 설비 1대 I2B-002N 2026-11-11 20점)·B 92행(I2AOC-01N 2026-11-25 19점), 설치일자 날짜만 표시. `node --check` 정상, aspx·js 단일 BOM·CRLF, sql BOM 없음·CRLF. 미확인: 프로시저 저장·실제 화면
+- **참고**: 현재 승인된 설비등급 평가가 있는 설비는 2대뿐이라 최근 평가일자·평가점수는 대부분 빈칸
+- **추가 요청**: 좌측 그리드 등급 빈칸 행을 '등급없음'으로 표시 → js grid1 formatItem에서 설비등급 값이 빈 행의 등급 칸 글자만 '등급없음'으로 표시 (EQM1001_R04 formatItem과 같은 방식, 데이터·프로시저 변경 없음, 선택 시 등급 없는 설비 조회 그대로). `node --check` 정상, BOM·CRLF 유지. 미확인: 실제 화면
+- **추가 요청**: 우측 최근 평가일자·평가점수 컬럼 삭제 → js 2개 컬럼, 프로시저 `LIST_EQM`의 최근 승인 평가(EQMGRADEEVAL) 연결·반환 삭제, Modify 줄 정리. 실DB 읽기 SELECT A 136행 동일, `node --check` 정상, 형식 유지
+- **분석 (설비상태 '폐기'가 보이는 이유, 변경 없음)**: 설비상태 FM111 = FM111100 정상·FM111200 수리중·FM111300 고장·FM111400 폐기·FM111500 유휴·FM111600 임시. 공장 07 설비는 ERP 인터페이스(RPRG 'IF')로 들어오며 전부 USEYN 'Y'(N 0건)라, 사용여부 기준(MST1005_R01·EQM1001_R04와 같은 조건) 조회에 폐기 16대(폐기일자 있음 14대)·유휴 3대·임시 19대가 함께 포함됨 (정상 216대). 사용자 결정: 그대로 둠
+- **확인 (SNS INC 2공장(60) 필터)**: MSTFACTORY 07 = INC 2공장(법인 60). 조회는 처음부터 FACTORYCD '07'만이라 254대 모두 2공장 설비 (변경 없음). 작업장(LINECD) 빈 설비 18대 있음
+- **추가 요청**: 설비등급기준에 있는 D·E 등급도 설비가 없어도 표시 → `LIST_GRADE`를 설비등급기준 사용중 리비전의 등급 + 설비에 있는 등급(등급 없음 포함) 목록 기준으로 바꾸고 설비 없는 등급은 0대 (WITH 집계 후 UNION, FM110 정렬순번, 등급 없음 맨 아래). 실DB 읽기 SELECT: A 136·B 91·C 26·D 0·E 0·등급없음 1 = 254. 형식 유지(BOM 없음·CRLF), 파라미터 변경 없음
+- **추가 요청**: 화면 위 조회조건에 공장을 SNS INC 2공장으로 표시하고 그 조건으로 필터링 (작업장 빈 설비는 그대로) → aspx 조회조건 `공장` 콤보(GPCD FACTORYCD, Value 07, ReadOnly — PRD1001_R01과 같은 방식, 표시명은 MSTFACTORY 'INC 2공장'), js `LIST_GRADE`·`LIST_EQM` 호출에 `AddPanel('sdiv1')`, 프로시저 `$FACTORYCD` 파라미터 추가 후 하드코딩 '07' 대신 사용. SYSTEM_PARAMETERS 스크립트 3건 → 4건(FACTORYCD 1번). 실DB 읽기 SELECT(공장 07) 결과 변경 전과 같음, `node --check` 정상, 형식 유지. 미확인: 프로시저 저장·실제 화면
+- **실DB 반영 (사용자)**: MST1005_S02 프로시저 저장 (14번과 함께) → Office 배포
+
+### 14. MST1005_S02 설비등급별 설비 조회 화면 신규
+- **신규 파일**: [01.Office/PAGEMST/MST1005/MST1005_S02.aspx](01.Office/PAGEMST/MST1005/MST1005_S02.aspx)·[.aspx.cs](01.Office/PAGEMST/MST1005/MST1005_S02.aspx.cs)·[.js](01.Office/PAGEMST/MST1005/MST1005_S02.js), [05.Procedure/MES_SNS2_MST1005_S02.sql](05.Procedure/MES_SNS2_MST1005_S02.sql), [05.Procedure/MES_SNS2_MST1005_S02_SYSTEM_PARAMETERS.sql](05.Procedure/MES_SNS2_MST1005_S02_SYSTEM_PARAMETERS.sql)
+- **요청**: 등급별 설비조회(신규) — 설비등급별 설비대수 집계(예: A급 60대), 등급 선택 시 우측 그리드에 해당 등급 설비 목록. 조회 전용
+- **프로그램**: MST1005_S02 / 설비등급별 설비 조회 (MST1005_S01은 기존 '설비등급기준 관리'로 등록되어 있어 다음 번호 사용, 실DB SYSPRG·소스 폴더에 미사용 확인)
+- **작업 내용**
+  - 1. 화면: MST1005_S01과 같은 구성(조회조건 없음, 좌 20% / 우 분할, ■ 라벨 + 그리드). 좌측 '■ 설비등급' 그리드(설비등급 FM110 콤보·설비대수), 우측 '■ 설비목록' 그리드(작업장 LINECD·공정 FM100·라인 FM113·설비그룹 FM116 콤보 셀 병합, 설비코드·설비명 — MST1005_R01 설비목록과 같은 컬럼)
+  - 2. js: 조회 버튼 `LIST_GRADE` → grid1, grid1 행 선택 시 `LIST_EQM`(선택 등급) → grid2
+  - 3. 프로시저: 대상은 MST1005_R01 설비목록과 같은 기준(MSTEQM 사용 Y·공장 07). `LIST_GRADE` 등급별 COUNT, 정렬 FM110 정렬순번(등급 없는 설비는 맨 아래), `LIST_EQM` 선택 등급 설비 작업장·공정·라인·설비코드 순
+  - 4. 파라미터 3건(EQMGRADE·CALLTYPE·KEYWORD) SYSTEM_PARAMETERS 등록 스크립트 작성
+- **검증 (실DB 읽기 SELECT)**: LIST_GRADE A 136·B 92·C 25·등급 없음 1 = 합계 254 = 사용 설비 전체 254, LIST_EQM A 136행·등급 없음 1행 일치. `node --check` 정상, aspx·cs·js 단일 BOM·CRLF, sql BOM 없음·CRLF. 미확인: 프로시저 저장·실제 화면(프로그램·메뉴 미등록)
+- **참고**: 설비 0대인 등급(D·E)은 목록에 나오지 않음, 등급이 비어 있는 설비 1대는 등급명 없이 맨 아래 행으로 표시
+- **실DB 반영 (사용자)**: MST1005_S02 프로시저 저장 → SYSTEM_PARAMETERS 스크립트 실행(3건) → 프로그램 MST1005_S02 등록·메뉴 배치 → Office 배포
+
 ### 13. MST1005_R01 신규 평가 기본 점수 (대체 설비 유무 2점, 작업환경 및 안전 영향 5점)
 - **수정 파일**: [05.Procedure/MES_SNS2_MST1005_R01.sql](05.Procedure/MES_SNS2_MST1005_R01.sql) (`LIST_EVAL_D`)
 - **요청**: 신규평가를 처음 열면 '고장발생시 대체설비 유무' 2점, '작업환경 및 안전에 미치는 영향' 5점이 선택된 상태로 표시되고, 저장하면 그 값으로 저장

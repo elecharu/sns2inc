@@ -1,0 +1,22 @@
+-- *****************************************************************************
+-- Comment: MST1005_S02 설비등급별 설비 조회 호출 파라미터 등록
+-- Create:  2026-11-25  한성수  신규 프로시저, 공장 조건 FACTORYCD 포함 (4건)
+-- *****************************************************************************
+-- MST1005_S02 프로시저 저장 후 아래 트랜잭션을 실행
+START TRANSACTION;
+DELETE FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'MST1005_S02';
+
+INSERT INTO MES_SNS2.SYSTEM_PARAMETERS
+SELECT * FROM information_schema.PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'MST1005_S02';
+COMMIT;
+
+-- 정상 4건: FACTORYCD 1번, EQMGRADE 2번, CALLTYPE 3번, KEYWORD 4번
+SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
+FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'MST1005_S02'
+ORDER BY ORDINAL_POSITION;

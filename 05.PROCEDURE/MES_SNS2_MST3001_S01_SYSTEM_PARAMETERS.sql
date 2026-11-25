@@ -1,0 +1,22 @@
+-- *****************************************************************************
+-- Comment: MST3001_S01 설비별 사용부품 조회 호출 파라미터 등록
+-- Create:  2026-11-25  한성수  신규 프로시저, 조회조건 설비그룹 EQMGRP·설비코드 EQMCD 포함 (10건)
+-- *****************************************************************************
+-- MST3001_S01 프로시저 저장 후 아래 트랜잭션을 실행
+START TRANSACTION;
+DELETE FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'MST3001_S01';
+
+INSERT INTO MES_SNS2.SYSTEM_PARAMETERS
+SELECT * FROM information_schema.PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'MST3001_S01';
+COMMIT;
+
+-- 정상 10건: SDATE 1번, EDATE 2번, LINECD 3번, EQMTP 4번, EQMGROUP1 5번, EQMGRP 6번, EQMCD 7번, FANO 8번, CALLTYPE 9번, KEYWORD 10번
+SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
+FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'MST3001_S01'
+ORDER BY ORDINAL_POSITION;
