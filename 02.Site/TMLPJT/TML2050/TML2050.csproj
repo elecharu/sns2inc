@@ -105,6 +105,7 @@
     <Compile Include="R01.xaml.cs">
       <DependentUpon>R01.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DoorayMessenger.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

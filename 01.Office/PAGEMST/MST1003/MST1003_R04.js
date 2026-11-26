@@ -11,7 +11,7 @@ ItsPage.Load = function () {
         column.create("대분류", "ITEM_LVL1", { width: 100, align: 'center'/*, columnType: enumColumnTypes.combo, gpcd: 'P100'*/ }),
         column.create("중분류", "ITEM_LVL2", { width: 100, align: 'center'/*, columnType: enumColumnTypes.combo, gpcd: 'P110'*/ }),
         column.create("소분류", "ITEM_LVL3", { width: 100, align: 'center'/*, columnType: enumColumnTypes.combo, gpcd: 'P120'*/ }),
-        column.create("세분류", "ITEM_LVL4", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'PP310' }),
+        column.create("공정분류", "ITEM_LVL4", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'PP310' }),
         column.create("품목ID", "ITEMID", { width: 100, align: 'center' }),
         column.create("품목코드", "ITEMCD", { width: 100, align: 'center', backColor: enumColor.greenLight2 }),
         column.create("품명", "ITEMNM", { width: 100 }),

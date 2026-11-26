@@ -34,7 +34,7 @@ namespace TMLPRINT
 
             InitializeComponent();
 
-            picLogo.Image = LoadLogo();
+            picLogo.Image = RptKit.FitImage(LoadLogo(), picLogo.WidthF, picLogo.HeightF);  // 2026-11-26 화면 배율 PC 에서 로고 잘림 방지
 
             // 유상사급 출하는 제목 아래에 (유상사급) 표시 (Tables[3] SUBTITLE, 고객사 출하는 빈값)
             xrLabel3.Text = "(" + copyName + ")";

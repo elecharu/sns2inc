@@ -11,6 +11,8 @@ PROCEDURE MES_SNS2.TML2010_R01(
 --         2026-11-23 실적삭제: LIST_RST(최근 실적 어제·오늘), DEL_RST(실적로트 미사용일 때 IO_PRDRST 되돌림 + ERP D 송신)
 --         2026-11-24 비가동 탭(LIST_INPUT 5번, LIST_NON): 당일(작업일) 비가동만. 작업일 야간 종료시간(PP161102N.REF02)부터
 --           다음날 그 시각 전까지 시작한 것 + 진행 중(종료시간 없음)인 것
+--         2026-11-26 LIST_INPUT 0번(투입로트)에 BOMRATE(생산품 1개당 투입량) 추가 - 조립공정 양품수량 계산용
+--         2026-11-26 SCAN_LOT: 조립공정은 라인 생산품이 있으면 그 BOM 에 없는 자재 스캔 막음, 생산품 목록도 그 품목만
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),       -- 공정
@@ -45,6 +47,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 -- SET @DEBUGLOGYN = 'Y';
   DECLARE _$WARECD VARCHAR(100);
   DECLARE _$ITEMID INT(11);
+  DECLARE _$LINEITEMID INT(11);    -- 조립공정 스캔: 라인에 이미 정해진 생산품 (없으면 NULL)
   DECLARE _$PDATE VARCHAR(10);
   DECLARE _$NIGHTEND VARCHAR(5);   -- 야간 종료시간 (PP161102N.REF02, 작업일 경계)
   DECLARE _$EMPCD VARCHAR(100);
@@ -122,6 +125,38 @@ WHEN 'SCAN_LOT' THEN  -- 투입로트 스캔
   WHERE COMLOT.WARECD = _$WARECD
     AND COMLOT.LOTKEY = $SCANLOT
   LIMIT 1;
+
+  -- 조립공정: 라인에 생산품이 정해져 있으면(투입로트가 있으면) 그 생산품 BOM 에 없는 자재는 스캔 못 함  2026-11-26
+  --           생산품 목록도 지금 생산품 하나만 돌려줌 (스캔으로 생산품이 바뀌지 않게)
+  IF $PRCCD = 'I2M2000_N' THEN
+    SET _$LINEITEMID = (SELECT PRDLINEITEM.ITEMID
+                          FROM PRDLINEITEM
+                          WHERE PRDLINEITEM.LINECD = $LINECD
+                            AND PRDLINEITEM.PRCCD = $PRCCD
+                            AND PRDLINEITEM.EQMCD = $EQMCD
+                            AND EXISTS (SELECT 1
+                                          FROM PRDLINESCAN
+                                          WHERE PRDLINESCAN.LINECD = $LINECD
+                                            AND PRDLINESCAN.PRCCD = $PRCCD
+                                            AND PRDLINESCAN.EQMCD = $EQMCD)
+                          LIMIT 1);
+
+    IF _$LINEITEMID IS NOT NULL
+       AND NOT EXISTS (SELECT 1
+                         FROM MSTBOM
+                         WHERE MSTBOM.MITEMID = _$LINEITEMID
+                           AND MSTBOM.CITEMID = _$ITEMID
+                           AND MSTBOM.USEYN = 'Y'
+                           AND (MSTBOM.USETODT IS NULL OR MSTBOM.USETODT = '' OR LEFT(MSTBOM.USETODT, 4) = '9999')) THEN
+      CALL COMERR(CONCAT('조립품 BOM 에 없는 자재입니다.'
+                        , '\n- 생산품목: ', (SELECT CONCAT(MSTITEM.ITEMCD, ' ', MSTITEM.ITEMNM) FROM MSTITEM WHERE MSTITEM.ITEMID = _$LINEITEMID)
+                        , '\n- 스캔품목: ', (SELECT CONCAT(MSTITEM.ITEMCD, ' ', MSTITEM.ITEMNM) FROM MSTITEM WHERE MSTITEM.ITEMID = _$ITEMID)
+                        , '\n- 로트번호: ', $SCANLOT
+                        )
+                 );
+      LEAVE PROC;
+    END IF;
+  END IF;
 
   -- 1. BOM으로 모품목 찾기
   IF NOT EXISTS (SELECT MSTBOM.MITEMID
@@ -233,8 +268,9 @@ WHEN 'SCAN_LOT' THEN  -- 투입로트 스캔
     WHERE MSTBOM.CITEMID = _$ITEMID
       AND MSTBOM.USEYN = 'Y'
       AND (MSTBOM.USETODT IS NULL OR MSTBOM.USETODT = '' OR LEFT(MSTBOM.USETODT, 4) = '9999')
-      AND MSTROUT_MATCH.BASEYN = 'Y'   
+      AND MSTROUT_MATCH.BASEYN = 'Y'
       AND MSTROUT.USEYN = 'Y'
+      AND (_$LINEITEMID IS NULL OR MSTITEM.ITEMID = _$LINEITEMID)  -- 2026-11-26 조립: 라인 생산품이 있으면 그 품목만
     GROUP BY MSTITEM.ITEMID
     ORDER BY MSTITEM.ITEMCD
     ;
@@ -270,6 +306,17 @@ WHEN 'LIST_INPUT' THEN  -- 투입로트 조회, 생산품 조회
     , COMLOT.LOTQTY
     , COMLOT.WARECD
     , MSTWARE.WARENM
+    -- 2026-11-26 생산품 1개당 투입량 (BOM CUSAGE / MUSAGE, 없으면 1). 조립공정 양품수량 계산용 (화면 CalcGoodQty)
+    , IFNULL((SELECT MAX(IFNULL(NULLIF(MSTBOM.CUSAGE, 0), 1) / IFNULL(NULLIF(MSTBOM.MUSAGE, 0), 1))
+                FROM PRDLINEITEM
+                INNER JOIN MSTBOM
+                  ON MSTBOM.MITEMID = PRDLINEITEM.ITEMID
+                WHERE PRDLINEITEM.LINECD = $LINECD
+                  AND PRDLINEITEM.PRCCD = $PRCCD
+                  AND PRDLINEITEM.EQMCD = $EQMCD
+                  AND MSTBOM.CITEMID = COMLOT.ITEMID  -- 바깥 쿼리 열은 ON 이 아니라 WHERE 에서 (MariaDB 는 ON 절에서 못 찾음)
+                  AND MSTBOM.USEYN = 'Y'
+                  AND (MSTBOM.USETODT IS NULL OR MSTBOM.USETODT = '' OR LEFT(MSTBOM.USETODT, 4) = '9999')), 1) AS BOMRATE
   FROM PRDLINESCAN
   INNER JOIN COMLOT
     ON COMLOT.WARECD = PRDLINESCAN.WARECD

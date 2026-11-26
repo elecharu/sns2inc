@@ -130,7 +130,7 @@ WHEN 'LIST_MONTHPLAN' THEN  -- 월생산계획 조회
               , MSTITEM.ITEMSPEC  
               , SALODRD.SALUP
               , ITEM_FAC.UPH
-              , IFNULL(MEI_ITEM.COUNT_LINE, 0) AS COUNT_LINE
+              , IFNULL(ITEMLINE.COUNT_LINE, 0) AS COUNT_LINE
               , _$WORKHOURS_SMONTH AS WORKHOURS
               , IFNULL(COMLOT_ITEM.SUMQTY, 0) AS SUMQTY
               , IFNULL(ITEM_FAC.SAFEQTY, 0) AS SAFEQTY
@@ -170,12 +170,12 @@ WHEN 'LIST_MONTHPLAN' THEN  -- 월생산계획 조회
               ON COMLOT_ITEM.ITEMID = MSTITEM.ITEMID
             LEFT JOIN (
                         SELECT
-                            MEI.ITEMID
-                          , COUNT(MEI.EQMCD) AS COUNT_LINE
-                        FROM MSTLINE_EQM_ITEM AS MEI     
-                        GROUP BY MEI.ITEMID
-                      ) AS MEI_ITEM -- 제품별 생산라인수 
-              ON MEI_ITEM.ITEMID = SALODRD.ITEMID
+                            MSTEQM_STD.ITEMID
+                          , COUNT(DISTINCT MSTEQM_STD.EQMCD) AS COUNT_LINE
+                        FROM MSTEQM_STD     
+                        GROUP BY MSTEQM_STD.ITEMID
+                      ) AS ITEMLINE -- 제품별 생산라인수 
+              ON ITEMLINE.ITEMID = SALODRD.ITEMID
             WHERE LEFT(SALODR.ODRDATE, 7) = $SMONTH
               AND ITEM_FAC.FACTORYCD = $FACTORYCD -- 수주품목이 2공장
               AND MSTITEM.ITEMCG = 'DM100100' -- 제품

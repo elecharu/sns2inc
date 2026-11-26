@@ -3,7 +3,7 @@ PROCEDURE MES_SNS2.TQM1002_R01(
 -- *****************************************************************************
 -- Comment: 출하검사 등록 - 주간출하계획(SALOUTPLAN_W)을 골라 그 품목의 출하검사 기준(STDTP = 'OUTTEST')으로 검사
 --          ) 출하계획 1건 = 검사 1건: TQMRST.SALOUTPLANKEY = SALOUTPLAN_W.SALOUTPLANKEY (2026-11-13 사용자 결정)
---          ) 검사항목 줄마다 측정치 X1~X5 와 판정 (TQMRSTKND.STDVALCHK ~ STDVALCHK5, JUDGE)
+--          ) 검사항목 줄마다 측정치 X1~X10 (시료수만큼) 와 판정 (TQMRSTKND.STDVALCHK ~ STDVALCHK10, JUDGE)
 --          ) LIST      : 주간출하계획 (출하일자 기간, 구분, 거래처, 품목) + 검사상태 (미검사 / 검사중 / 합격 / 불합격)
 --          ) LIST_STD  : 결과셋 1 = 검사 헤더 (검사일자·검사자, 검사 전이면 빈값)
 --                        결과셋 2 = 검사항목 + 측정치·판정. 검사한 계획이면 그 검사의 리비전, 아니면 품목의 사용중인 출하검사 리비전
@@ -21,7 +21,9 @@ PROCEDURE MES_SNS2.TQM1002_R01(
 --         2026-11-13 승인(APPROVE) 추가, LIST 에 승인자·승인일시 (사용자 지시)
 --         2026-11-13 승인취소(APPROVE_CANCEL) 추가, 승인된 검사 수정(SAVE_RST) 막음 (사용자 지시)
 --         2026-11-16 검사성적서 출력(PRINT) 추가, 비고란 수량(QTY_TXT) 추가
--- *****************************************************************************
+--         2026-11-26 김영철 LIST_STD 검사항목에 시료수(SAMPLESIZE) 추가 (시료수만큼만 측정치 입력칸 사용)
+--         2026-11-26 김영철 측정치 X1~X5 → X1~X10 확장 (SAVE_RST·LIST_STD·PRINT), PRINT 에 시료수(SAMPLESIZE) 추가 (사용자 지시)
+--         2026-11-26 김영철 APPROVE 종합판정이 불합격(FINALJUDGE = 'N')이면 승인 차단. LIST·LIST_STD·PRINT 에 적용 리비전(REVNUM, 개정일) 추가 (사용자 지시)-- *****************************************************************************
   IN $SDATE VARCHAR(10),              -- 출하일자 시작 (LIST)
   IN $EDATE VARCHAR(10),              -- 출하일자 끝
   IN $OUTPLANTP VARCHAR(10),          -- 구분 (EXP 수출 / DOM 내수, '' 전체)
@@ -40,6 +42,11 @@ PROCEDURE MES_SNS2.TQM1002_R01(
   IN $X3_LIST MEDIUMTEXT,             -- 측정치 X3 목록
   IN $X4_LIST MEDIUMTEXT,             -- 측정치 X4 목록
   IN $X5_LIST MEDIUMTEXT,             -- 측정치 X5 목록
+  IN $X6_LIST MEDIUMTEXT,             -- 측정치 X6 목록
+   IN $X7_LIST MEDIUMTEXT,             -- 측정치 X7 목록
+   IN $X8_LIST MEDIUMTEXT,             -- 측정치 X8 목록
+   IN $X9_LIST MEDIUMTEXT,             -- 측정치 X9 목록
+   IN $X10_LIST MEDIUMTEXT,             -- 측정치 X10 목록
   IN $JUDGE_LIST MEDIUMTEXT,          -- 판정 목록 (Y 합격, N 불합격)
   IN $APRVEMP VARCHAR(20),            -- 승인자 (APPROVE)
   IN $SALOUTPLANKEY_LIST MEDIUMTEXT,  -- 승인할 출하계획키 목록 (APPROVE)
@@ -59,6 +66,11 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$X3_LIST MEDIUMTEXT;
   DECLARE _$X4_LIST MEDIUMTEXT;
   DECLARE _$X5_LIST MEDIUMTEXT;
+  DECLARE _$X6_LIST MEDIUMTEXT;
+  DECLARE _$X7_LIST MEDIUMTEXT;
+  DECLARE _$X8_LIST MEDIUMTEXT;
+  DECLARE _$X9_LIST MEDIUMTEXT;
+  DECLARE _$X10_LIST MEDIUMTEXT;
   DECLARE _$JUDGE_LIST MEDIUMTEXT;
   DECLARE _$STDCD VARCHAR(100);
   DECLARE _$STDPART VARCHAR(100);
@@ -69,6 +81,11 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$X3 VARCHAR(100);
   DECLARE _$X4 VARCHAR(100);
   DECLARE _$X5 VARCHAR(100);
+  DECLARE _$X6 VARCHAR(100);
+  DECLARE _$X7 VARCHAR(100);
+  DECLARE _$X8 VARCHAR(100);
+  DECLARE _$X9 VARCHAR(100);
+  DECLARE _$X10 VARCHAR(100);
   DECLARE _$JUDGE VARCHAR(10);
   DECLARE _$SALOUTPLANKEY_LIST MEDIUMTEXT;
   DECLARE _$SALOUTPLANKEY VARCHAR(100);
@@ -124,6 +141,18 @@ WHEN 'LIST' THEN  -- 주간출하계획 + 검사상태 (grid1)
     , IFNULL(MSTEMP2.EMPNM, IFNULL(TQMRST.APRVEMP, '')) AS APRVEMPNM
     , IFNULL(LEFT(TQMRST.APRVTIME, 16), '') AS APRVTIME
     , IFNULL(TQMRST.TQMRSTKEY, '') AS TQMRSTKEY
+    , IFNULL((SELECT MSTRPTREV_HEADER.REVNUM
+                FROM MSTRPTREV_HEADER
+                WHERE MSTRPTREV_HEADER.REVCD = IFNULL(TQMRST.REVCD,
+                      (SELECT REVH.REVCD
+                         FROM MSTRPTREV_ITEM AS REVI
+                         INNER JOIN MSTRPTREV_HEADER AS REVH
+                           ON REVH.REVCD = REVI.REVCD
+                         WHERE REVI.ITEMID = SALOUTPLAN_W.ITEMID
+                           AND REVH.STDTP = 'OUTTEST'
+                           AND REVH.USEYN = 'Y'
+                         ORDER BY REVH.REVNUM DESC
+                         LIMIT 1))), '') AS REVNUM   -- 적용 리비전 (검사 전이면 사용중인 최신 리비전)
     , CASE WHEN TQMRST.FINALJUDGE = 'Y' THEN 'LIGHTCYAN'
            WHEN TQMRST.FINALJUDGE = 'N' THEN 'PINK'
       ELSE ''
@@ -175,6 +204,8 @@ WHEN 'LIST_STD' THEN  -- 검사 헤더 + 검사항목·측정치 (출하계획 �
       _$TQMRSTKEY AS TQMRSTKEY
     , IFNULL(LEFT(TQMRST.TQMDATE, 10), '') AS TQMDATE
     , IFNULL(TQMRST.EMPCD, '') AS EMPCD
+    , IFNULL((SELECT MSTRPTREV_HEADER.REVNUM FROM MSTRPTREV_HEADER WHERE MSTRPTREV_HEADER.REVCD = _$REVCD), '') AS REVNUM   -- 적용 리비전
+    , IFNULL((SELECT LEFT(MSTRPTREV_HEADER.REGDATE, 10) FROM MSTRPTREV_HEADER WHERE MSTRPTREV_HEADER.REVCD = _$REVCD), '') AS REVDATE   -- 개정일
   FROM (SELECT 1 AS ONEROW) AS ONEROW
   LEFT JOIN TQMRST
     ON TQMRST.TQMRSTKEY = _$TQMRSTKEY;
@@ -195,6 +226,11 @@ WHEN 'LIST_STD' THEN  -- 검사 헤더 + 검사항목·측정치 (출하계획 �
     , IFNULL(TQMRSTKND.STDVALCHK3, '') AS X3
     , IFNULL(TQMRSTKND.STDVALCHK4, '') AS X4
     , IFNULL(TQMRSTKND.STDVALCHK5, '') AS X5
+    , IFNULL(TQMRSTKND.STDVALCHK6, '') AS X6
+    , IFNULL(TQMRSTKND.STDVALCHK7, '') AS X7
+    , IFNULL(TQMRSTKND.STDVALCHK8, '') AS X8
+    , IFNULL(TQMRSTKND.STDVALCHK9, '') AS X9
+    , IFNULL(TQMRSTKND.STDVALCHK10, '') AS X10
     , IFNULL(TQMRSTKND.JUDGE, '') AS JUDGE
     , MSTRPTREV_DETAIL.REVCD
     , MSTRPTREV_DETAIL.STDCD
@@ -204,6 +240,7 @@ WHEN 'LIST_STD' THEN  -- 검사 헤더 + 검사항목·측정치 (출하계획 �
     , MSTRPTREV_DETAIL.STDRANGE
     , MSTRPTREV_DETAIL.STDMINUS
     , MSTRPTREV_DETAIL.STDPLUS
+    , MSTRPTREV_DETAIL.SAMPLESIZE  -- 시료수 (검사기준 관리 TQC1001_R02 에서 정한 값, 화면이 측정치 입력칸 수를 정하는 데 씀)
   FROM MSTRPTREV_DETAIL
   LEFT JOIN TQMRSTKND
     ON TQMRSTKND.TQMRSTKEY = _$TQMRSTKEY
@@ -292,6 +329,11 @@ WHEN 'SAVE_RST' THEN  -- 판정한 검사항목 전체의 측정치·판정 저�
   SET _$X3_LIST = $X3_LIST;
   SET _$X4_LIST = $X4_LIST;
   SET _$X5_LIST = $X5_LIST;
+  SET _$X6_LIST = $X6_LIST;
+  SET _$X7_LIST = $X7_LIST;
+  SET _$X8_LIST = $X8_LIST;
+  SET _$X9_LIST = $X9_LIST;
+  SET _$X10_LIST = $X10_LIST;
   SET _$JUDGE_LIST = $JUDGE_LIST;
 
   WHILE LENGTH(_$STDCD_LIST) > 0 DO
@@ -304,6 +346,11 @@ WHEN 'SAVE_RST' THEN  -- 판정한 검사항목 전체의 측정치·판정 저�
     CALL COMSPLIT(_$X3_LIST, _$X3);
     CALL COMSPLIT(_$X4_LIST, _$X4);
     CALL COMSPLIT(_$X5_LIST, _$X5);
+    CALL COMSPLIT(_$X6_LIST, _$X6);
+    CALL COMSPLIT(_$X7_LIST, _$X7);
+    CALL COMSPLIT(_$X8_LIST, _$X8);
+    CALL COMSPLIT(_$X9_LIST, _$X9);
+    CALL COMSPLIT(_$X10_LIST, _$X10);
     CALL COMSPLIT(_$JUDGE_LIST, _$JUDGE);
 
     IF EXISTS (SELECT TQMRSTKND.TQMRSTKEY
@@ -319,6 +366,11 @@ WHEN 'SAVE_RST' THEN  -- 판정한 검사항목 전체의 측정치·판정 저�
           , STDVALCHK3 = IFNULL(_$X3, '')
           , STDVALCHK4 = IFNULL(_$X4, '')
           , STDVALCHK5 = IFNULL(_$X5, '')
+          , STDVALCHK6 = IFNULL(_$X6, '')
+          , STDVALCHK7 = IFNULL(_$X7, '')
+          , STDVALCHK8 = IFNULL(_$X8, '')
+          , STDVALCHK9 = IFNULL(_$X9, '')
+          , STDVALCHK10 = IFNULL(_$X10, '')
           , JUDGE = _$JUDGE
           , MTIME = CALLTIME()
           , MEMP = CALLEMP()
@@ -340,6 +392,11 @@ WHEN 'SAVE_RST' THEN  -- 판정한 검사항목 전체의 측정치·판정 저�
         , STDVALCHK3
         , STDVALCHK4
         , STDVALCHK5
+        , STDVALCHK6
+        , STDVALCHK7
+        , STDVALCHK8
+        , STDVALCHK9
+        , STDVALCHK10
         , JUDGE
         , RTIME, REMP, RPRG)
       VALUES (
@@ -353,6 +410,11 @@ WHEN 'SAVE_RST' THEN  -- 판정한 검사항목 전체의 측정치·판정 저�
         , IFNULL(_$X3, '')
         , IFNULL(_$X4, '')
         , IFNULL(_$X5, '')
+        , IFNULL(_$X6, '')
+        , IFNULL(_$X7, '')
+        , IFNULL(_$X8, '')
+        , IFNULL(_$X9, '')
+        , IFNULL(_$X10, '')
         , _$JUDGE
         , CALLTIME(), CALLEMP(), CALLPRG()
       );
@@ -413,6 +475,11 @@ WHEN 'APPROVE' THEN  -- 체크한 출하계획들의 검사 승인 (승인 버�
 
     IF _$TQMRSTKEY = '' THEN
       CALL COMERR(CONCAT('검사하지 않은 출하계획은 승인할 수 없습니다.\n- 품번: ', _$ITEMCD));
+      LEAVE PROC;
+    END IF;
+
+    IF IFNULL((SELECT TQMRST.FINALJUDGE FROM TQMRST WHERE TQMRST.TQMRSTKEY = _$TQMRSTKEY), '') = 'N' THEN
+      CALL COMERR(CONCAT('불합격인 출하검사는 승인할 수 없습니다.\n- 품번: ', _$ITEMCD));
       LEAVE PROC;
     END IF;
 
@@ -501,6 +568,7 @@ WHEN 'PRINT' THEN  -- 검사성적서(갑지) 출력 (리포트 TQM1002.exe R01,
     , IFNULL(MSTEMP2.EMPNM, TQMRST.APRVEMP) AS APRVEMPNM
     , TQMRST.FINALJUDGE
     , IFNULL(CONCAT('수량 ', FORMAT(SALOUTPLAN_W.PLANQTY, 0), 'EA'), '') AS QTY_TXT   -- 비고란 수량 (출하계획 출하수량)
+    , IFNULL((SELECT CONCAT('Rev.', MSTRPTREV_HEADER.REVNUM) FROM MSTRPTREV_HEADER WHERE MSTRPTREV_HEADER.REVCD = TQMRST.REVCD), '') AS REVNUM_TXT   -- 적용 리비전 (그 검사의 리비전)
   FROM TQMRST
   LEFT JOIN SALOUTPLAN_W
     ON SALOUTPLAN_W.SALOUTPLANKEY = TQMRST.SALOUTPLANKEY
@@ -523,6 +591,12 @@ WHEN 'PRINT' THEN  -- 검사성적서(갑지) 출력 (리포트 TQM1002.exe R01,
     , IFNULL(TQMRSTKND.STDVALCHK3, '') AS X3
     , IFNULL(TQMRSTKND.STDVALCHK4, '') AS X4
     , IFNULL(TQMRSTKND.STDVALCHK5, '') AS X5
+    , IFNULL(TQMRSTKND.STDVALCHK6, '') AS X6
+    , IFNULL(TQMRSTKND.STDVALCHK7, '') AS X7
+    , IFNULL(TQMRSTKND.STDVALCHK8, '') AS X8
+    , IFNULL(TQMRSTKND.STDVALCHK9, '') AS X9
+    , IFNULL(TQMRSTKND.STDVALCHK10, '') AS X10
+    , MSTRPTREV_DETAIL.SAMPLESIZE  -- 시료수 (성적서 측정치 칸 수를 정하는 데 씀)
     , CASE TQMRSTKND.JUDGE WHEN 'Y' THEN 'OK' WHEN 'N' THEN 'NG' ELSE '' END AS JUDGE
   FROM TQMRST
   INNER JOIN MSTRPTREV_DETAIL

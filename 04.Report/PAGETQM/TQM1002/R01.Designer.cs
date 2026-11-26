@@ -32,6 +32,7 @@
             this.Detail = new DevExpress.XtraReports.UI.DetailBand();
             this.L_TITLE = new DevExpress.XtraReports.UI.XRLabel();
             this.C_TQMDATE_TXT = new DevExpress.XtraReports.UI.XRLabel();
+            this.C_REVNUM_TXT = new DevExpress.XtraReports.UI.XRLabel();
             this.L_APRVITEM = new DevExpress.XtraReports.UI.XRLabel();
             this.L_APRVITEM_V = new DevExpress.XtraReports.UI.XRLabel();
             this.L_H1_1 = new DevExpress.XtraReports.UI.XRLabel();
@@ -562,6 +563,7 @@
             this.ReportHeader.Controls.AddRange(new DevExpress.XtraReports.UI.XRControl[] {
             this.L_TITLE,
             this.C_TQMDATE_TXT,
+            this.C_REVNUM_TXT,
             this.L_APRVITEM,
             this.L_APRVITEM_V,
             this.L_H1_1,
@@ -1110,6 +1112,20 @@
             this.C_TQMDATE_TXT.Text = "";
             this.C_TQMDATE_TXT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleRight;
             this.C_TQMDATE_TXT.WordWrap = false;
+            // 
+            // C_REVNUM_TXT
+            // 
+            this.C_REVNUM_TXT.CanGrow = false;
+            this.C_REVNUM_TXT.Dpi = 100F;
+            this.C_REVNUM_TXT.Font = new System.Drawing.Font("맑은 고딕", 9F);
+            this.C_REVNUM_TXT.LocationFloat = new DevExpress.Utils.PointFloat(0F, 44F);
+            this.C_REVNUM_TXT.Multiline = true;
+            this.C_REVNUM_TXT.Name = "C_REVNUM_TXT";
+            this.C_REVNUM_TXT.Padding = new DevExpress.XtraPrinting.PaddingInfo(2, 2, 0, 0, 100F);
+            this.C_REVNUM_TXT.SizeF = new System.Drawing.SizeF(200F, 18F);
+            this.C_REVNUM_TXT.Text = "";
+            this.C_REVNUM_TXT.TextAlignment = DevExpress.XtraPrinting.TextAlignment.MiddleLeft;
+            this.C_REVNUM_TXT.WordWrap = false;
             // 
             // L_APRVITEM
             // 
@@ -9659,6 +9675,7 @@
         private DevExpress.XtraReports.UI.DetailBand Detail;
         private DevExpress.XtraReports.UI.XRLabel L_TITLE;
         private DevExpress.XtraReports.UI.XRLabel C_TQMDATE_TXT;
+        private DevExpress.XtraReports.UI.XRLabel C_REVNUM_TXT;
         private DevExpress.XtraReports.UI.XRLabel L_APRVITEM;
         private DevExpress.XtraReports.UI.XRLabel L_APRVITEM_V;
         private DevExpress.XtraReports.UI.XRLabel L_H1_1;

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace XtraRpt
 {
@@ -11,9 +8,14 @@ namespace XtraRpt
     {
         static void Main(string[] args)
         {
-
             try
             {
+                if (args.Length < 2)
+                {
+                    Console.WriteLine("ERROR: Invalid arguments. Usage: PRD6001 <ReportType> <FileName> [ParamString] [FileType]");
+                    return;
+                }
+
                 string prg = args[0];
                 string fileName = args[1];
                 string paramStr = args.Length > 2 ? args[2] : "";
@@ -37,18 +39,32 @@ namespace XtraRpt
                     }
                 }
 
-                // Console.WriteLine("DEBUG: paramStr=" + paramStr + " | keys=" + string.Join(",", param.Keys));
+                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
 
                 Assembly assembly = Assembly.GetExecutingAssembly();
                 Type t = assembly.GetType("XtraRpt." + prg);
+
+                // 2026-11-26 이 프로젝트를 다시 만들 때 S03(설비 작업일지, PRINT_WORKLOG) 소스가 없었다.
+                //            예전 PRD6001.exe 를 PRD6001_S03.dll 로 같은 폴더에 두고, 여기 없는 리포트는 그 파일에서 찾는다.
+                //            S03 소스를 이 프로젝트에 넣으면 이 부분과 PRD6001_S03.dll 은 지워도 된다.
+                if (t == null)
+                {
+                    string oldFile = System.IO.Path.Combine(baseDir, "PRD6001_S03.dll");
+                    if (System.IO.File.Exists(oldFile))
+                    {
+                        Assembly oldAssembly = Assembly.Load(System.IO.File.ReadAllBytes(oldFile));
+                        t = oldAssembly.GetType("XtraRpt." + prg);
+                    }
+                }
+
                 if (t == null)
                 {
                     Console.WriteLine("ERROR: Report type " + prg + " not found.");
                     return;
                 }
-                Object obj = Activator.CreateInstance(t, param);
 
-                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                object obj = Activator.CreateInstance(t, param);
+
                 string tempDir = System.IO.Path.Combine(baseDir, "tempFiles");
                 if (!System.IO.Directory.Exists(tempDir))
                 {
@@ -69,15 +85,9 @@ namespace XtraRpt
                         xr.ExportOptions.Pdf.PasswordSecurityOptions.OpenPassword = param["PW"];
                     }
                 }
-                catch
-                {
+                catch { }
 
-                }
-
-                // Get its HTML export options.
                 DevExpress.XtraPrinting.HtmlExportOptions htmlOptions = xr.ExportOptions.Html;
-
-                // Set HTML-specific export options.
                 htmlOptions.CharacterSet = "UTF-8";
                 htmlOptions.TableLayout = false;
                 htmlOptions.RemoveSecondarySymbols = false;
@@ -91,8 +101,6 @@ namespace XtraRpt
                 Exception ex = e.InnerException != null ? e.InnerException : e;
                 Console.WriteLine("ERROR:" + ex.Message);
             }
-            
-            return;
         }
     }
 }

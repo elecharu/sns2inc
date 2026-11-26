@@ -32,6 +32,7 @@
             <Its:button runat="server" Label="승인취소" ID="btn_APPROVE_CANCEL" Width="80" BackColor="CustomButton3" MarginLeft="10" />
             <%-- 체크한 출하계획의 검사성적서 (검사 1건에 1장, 리포트 TQM1002.exe R01) --%>
             <Its:button runat="server" Label="성적서 출력" ID="btn_PRINT_RST" Width="100" BackColor="CustomButton2" MarginLeft="20" />
+            <Its:button runat="server" Label="성적서 엑셀" ID="btn_PRINT_XLS" Width="100" BackColor="CustomButton2" MarginLeft="4" />
         </Its:div>
         <Its:split runat="server" Type="Horizon" Resizeable="false" />
         <Its:div runat="server" Type="SplitDown">
@@ -47,6 +48,7 @@
             <Its:label runat="server" Text="■ 출하검사" Bold="true" Margin="3px 0px 0px 10px" />
             <Its:text runat="server" Label="품번" ID="txt_ITEMCD" InputWidth="150" ReadOnly="true" />
             <Its:text runat="server" Label="품명" ID="txt_ITEMNM" InputWidth="200" ReadOnly="true" />
+            <Its:text runat="server" Label="적용 리비전" ID="txt_REV" InputWidth="190" ReadOnly="true" />
             <Its:date runat="server" Label="검사일자" ID="date_TQMDATE" Field="TQMDATE" />
             <%-- 검사자: 품질팀(44C10) --%>
             <Its:find runat="server" Label="검사자" ID="find_EMPCD" Field="EMPCD" REF01="44C10" GPCD="EMPCD" InputWidth="80" NameWidth="100" />

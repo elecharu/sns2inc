@@ -3,7 +3,9 @@ PROCEDURE MES_SNS2.TQC1001_R02(
 -- *****************************************************************************
 -- Comment: 검사표준 관리 
 -- Create: 2026-10-19 김영철
--- Modify: 
+-- Modify: 2026-11-25 김영철 리비전 개정일(REGDATE)·작성자(REVEMPNM)·개정사유(REVREASON) 저장 - RENEW_REV 자동 채움, LIST_RPTREV 조회, UPDATE_REV(수정 저장) 추가
+-- Modify: 2026-11-25 김영철 검사항목별 이미지(여러 장) - LIST_DETAIL_IMAGE / ADD_DETAIL_IMAGE / DEL_DETAIL_IMAGE 추가 (MSTRPTREV_DETAIL_IMAGE), 리비전 갱신 시 이미지 복사, 항목·리비전 삭제 시 이미지 삭제, 항목 조회에 IMGCNT 추가
+-- Modify: 2026-11-26 김영철 UPDATE_MSTRPTREV_DETAIL 시료수는 1~10 정수만 저장 (출하검사 측정치 X1~X10)
 -- *****************************************************************************
 
   IN $STDTP             VARCHAR(100), -- 검사구분
@@ -34,7 +36,12 @@ PROCEDURE MES_SNS2.TQC1001_R02(
   IN $SORTNO_LIST       MEDIUMTEXT,
   IN $SAMPLESIZE_LIST   MEDIUMTEXT,
 
-  IN $REGDATE           VARCHAR(50), -- 등록일자 추가 부분
+  IN $REGDATE           VARCHAR(50), -- 개정일 (리비전 저장 UPDATE_REV)
+  IN $REVEMPNM          VARCHAR(50),   -- 작성자 (리비전 저장 UPDATE_REV)
+  IN $REVREASON         VARCHAR(1000), -- 개정사유 (리비전 저장 UPDATE_REV)
+  IN $STDPART           VARCHAR(100),  -- 세부항목 (항목 이미지)
+  IN $PRCDETAIL         VARCHAR(100),  -- 세부공정 (항목 이미지)
+  IN $IMGNO             VARCHAR(20),   -- 이미지 순번 (항목 이미지 삭제)
   IN $REVNUM            VARCHAR(20),
   IN $SDATE             VARCHAR(50),
   IN $EDATE             VARCHAR(50),
@@ -140,7 +147,10 @@ WHEN 'LIST_RPTREV' THEN -- 품목의 검사리비전 조회  (gird3)
     MSTRPTREV_HEADER.REVCD,
     MSTRPTREV_HEADER.REVNUM,
     MSTRPTREV_HEADER.USEYN,
-    MSTRPTREV_HEADER.STDTP
+    MSTRPTREV_HEADER.STDTP,
+    MSTRPTREV_HEADER.REGDATE,    -- 개정일
+    MSTRPTREV_HEADER.REVEMPNM,   -- 작성자
+    MSTRPTREV_HEADER.REVREASON   -- 개정사유
   FROM MSTRPTREV_HEADER
   JOIN MSTRPTREV_ITEM ON MSTRPTREV_ITEM.REVCD = MSTRPTREV_HEADER.REVCD
   WHERE MSTRPTREV_HEADER.STDTP = $STDTP
@@ -175,7 +185,12 @@ WHEN 'LIST_MSTRPTREV_DETAIL' THEN -- 검사표준 리비전 디테일정보 조�
     STDJUDGE,            -- 판정기준
     SAMPLESIZE,          -- 시료수
     REMARK,              -- 비고
-    SORTNO
+    SORTNO,
+    (SELECT COUNT(*) FROM MSTRPTREV_DETAIL_IMAGE AS IMG
+      WHERE IMG.REVCD = MSTRPTREV_DETAIL.REVCD
+        AND IMG.STDCD = MSTRPTREV_DETAIL.STDCD
+        AND IMG.STDPART = MSTRPTREV_DETAIL.STDPART
+        AND IMG.PRCDETAIL = MSTRPTREV_DETAIL.PRCDETAIL) AS IMGCNT   -- 이미지 장수
   FROM MSTRPTREV_DETAIL
   WHERE REVCD = $REVCD
   ORDER BY SORTNO;
@@ -208,6 +223,7 @@ WHEN 'DEL_REV' THEN -- 검사표준 리비전 헤더정보 삭제 (리비전 삭
   DELETE FROM MSTRPTREV_DETAIL WHERE REVCD = $REVCD;
   DELETE FROM MSTRPTREV_ITEM   WHERE REVCD = $REVCD;
   DELETE FROM MSTRPTREV_IMAGE   WHERE REVCD = $REVCD;
+  DELETE FROM MSTRPTREV_DETAIL_IMAGE WHERE REVCD = $REVCD;
 
   IF NOT EXISTS (SELECT MSTRPTREV_HEADER.REVCD 
                    FROM MSTRPTREV_ITEM INNER JOIN MSTRPTREV_HEADER ON MSTRPTREV_HEADER.REVCD = MSTRPTREV_ITEM.REVCD
@@ -278,6 +294,8 @@ WHEN 'RENEW_REV' THEN -- 리비전 갱신  (리비전 갱신 버튼)
     , USEYN
     , ORGDATE
     , REGDATE
+    , REVEMPNM
+    , REVREASON
     , RTIME, REMP, RPRG)
   VALUES (
       _$REVCD
@@ -286,6 +304,8 @@ WHEN 'RENEW_REV' THEN -- 리비전 갱신  (리비전 갱신 버튼)
     , 'Y'
     , IFNULL(_$ORGDATE, '')
     , GETDATE()
+    , IFNULL(NULLIF(GPCD('EMPCD', CALLEMP()), ''), CALLEMP())   -- 작성자 : 로그인 사용자 (화면에서 수정 가능)
+    , ''                                                         -- 개정사유 : 화면에서 입력
     , CALLTIME(), CALLEMP(), CALLPRG()
   );
 
@@ -313,12 +333,43 @@ WHEN 'RENEW_REV' THEN -- 리비전 갱신  (리비전 갱신 버튼)
               SORTNO, SAMPLESIZE, IMGFILEKEY, REMARK,
               CALLTIME(), CALLEMP(), CALLPRG()
          FROM MSTRPTREV_DETAIL
-        WHERE REVCD = $OLDREVCD;     
+        WHERE REVCD = $OLDREVCD;
+
+  -- 검사항목 이미지 복사 (같은 파일을 새 리비전도 가리킴)
+  INSERT INTO MSTRPTREV_DETAIL_IMAGE (
+              REVCD, STDCD, STDPART, PRCDETAIL, NO, IMAGEKEY, REMARK,
+              RTIME, REMP, RPRG)
+       SELECT _$REVCD, STDCD, STDPART, PRCDETAIL, NO, IMAGEKEY, REMARK,
+              CALLTIME(), CALLEMP(), CALLPRG()
+         FROM MSTRPTREV_DETAIL_IMAGE
+        WHERE REVCD = $OLDREVCD;
 
   -- 리비전코드 리턴 
   SELECT _$REVCD AS REVCD;
 
--- -- * *************************************************************************** 
+-- * ***************************************************************************
+WHEN 'UPDATE_REV' THEN -- 리비전 개정일·작성자·개정사유 저장 (리비전 저장 버튼, 검사이력이 있어도 수정 가능)
+
+  IF IFNULL($REVCD, '') = '' THEN
+    CALL COMERR('리비전을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($REGDATE, '') = '' THEN
+    CALL COMERR('개정일을 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  UPDATE MSTRPTREV_HEADER
+     SET REGDATE   = LEFT($REGDATE, 10)
+       , REVEMPNM  = IFNULL($REVEMPNM, '')
+       , REVREASON = IFNULL($REVREASON, '')
+       , MTIME = CALLTIME()
+       , MEMP  = CALLEMP()
+       , MPRG  = CALLPRG()
+   WHERE REVCD = $REVCD;
+
+-- -- * ***************************************************************************
 WHEN 'LIST_STD' THEN -- 검사항목 조회  (추가(팝업) 버튼)
 
   IF $STDTP = '' THEN
@@ -391,6 +442,12 @@ WHEN 'UPDATE_MSTRPTREV_DETAIL' THEN -- 검사표준 리비전 디테일 저장 (
 
     IF _$STDCHKTP = '' THEN
       CALL COMERR('검사항목을 선택하세요.');
+      LEAVE PROC;
+    END IF;
+
+    -- 시료수는 1~10 의 정수 (출하검사 등록 측정치 X1~X10)
+    IF IFNULL(_$SAMPLESIZE, '') <> '' AND (CAST(_$SAMPLESIZE AS DECIMAL(20, 8)) < 1 OR CAST(_$SAMPLESIZE AS DECIMAL(20, 8)) > 10 OR CAST(_$SAMPLESIZE AS DECIMAL(20, 8)) <> FLOOR(CAST(_$SAMPLESIZE AS DECIMAL(20, 8)))) THEN
+      CALL COMERR('시료수는 1~10 사이의 정수만 입력할 수 있습니다.');
       LEAVE PROC;
     END IF;
 
@@ -510,9 +567,73 @@ WHEN 'DELETE_MSTRPTREV_DETAIL' THEN -- 검사표준 리비전 디테일 삭제 (
       AND STDPART = _$STDPART
       AND PRCDETAIL = _$PRCDETAIL;
 
+    DELETE FROM MSTRPTREV_DETAIL_IMAGE
+    WHERE REVCD = $REVCD
+      AND STDCD = _$STDCD
+      AND STDPART = _$STDPART
+      AND PRCDETAIL = _$PRCDETAIL;
+
   END WHILE;
 
--- -- * *************************************************************************** 
+-- * ***************************************************************************
+WHEN 'LIST_DETAIL_IMAGE' THEN -- 검사항목 이미지 조회 (이미지 팝업)
+
+  SELECT
+      NO
+    , IMAGEKEY AS FILEKEY
+    , FILENAME(IMAGEKEY) AS FILENAME
+    , FILEURL(IMAGEKEY) AS FILEURL
+    , REMARK
+  FROM MSTRPTREV_DETAIL_IMAGE
+  WHERE REVCD = $REVCD
+    AND STDCD = $STDCD
+    AND STDPART = IFNULL($STDPART, '')
+    AND PRCDETAIL = IFNULL($PRCDETAIL, '')
+  ORDER BY NO;
+
+-- * ***************************************************************************
+WHEN 'ADD_DETAIL_IMAGE' THEN -- 검사항목 이미지 추가 (파일 업로드 후 등록)
+
+  IF IFNULL($FILEKEY, '') = '' THEN
+    CALL COMERR('업로드된 파일이 없습니다.');
+    LEAVE PROC;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM MSTRPTREV_DETAIL
+                  WHERE REVCD = $REVCD AND STDCD = $STDCD
+                    AND STDPART = IFNULL($STDPART, '') AND PRCDETAIL = IFNULL($PRCDETAIL, '')) THEN
+    CALL COMERR('저장된 검사항목이 아닙니다.\n먼저 검사항목을 저장한 뒤 이미지를 등록하세요.');
+    LEAVE PROC;
+  END IF;
+
+  INSERT INTO MSTRPTREV_DETAIL_IMAGE (
+      REVCD, STDCD, STDPART, PRCDETAIL, NO, IMAGEKEY, REMARK
+    , RTIME, REMP, RPRG)
+  VALUES (
+      $REVCD, $STDCD, IFNULL($STDPART, ''), IFNULL($PRCDETAIL, '')
+    , IFNULL((SELECT MAX(IMG.NO) FROM MSTRPTREV_DETAIL_IMAGE AS IMG
+               WHERE IMG.REVCD = $REVCD AND IMG.STDCD = $STDCD
+                 AND IMG.STDPART = IFNULL($STDPART, '') AND IMG.PRCDETAIL = IFNULL($PRCDETAIL, '')), 0) + 1
+    , $FILEKEY, ''
+    , CALLTIME(), CALLEMP(), CALLPRG()
+  );
+
+-- * ***************************************************************************
+WHEN 'DEL_DETAIL_IMAGE' THEN -- 검사항목 이미지 삭제 (선택한 1장)
+
+  IF IFNULL($IMGNO, '') = '' THEN
+    CALL COMERR('삭제할 이미지를 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  DELETE FROM MSTRPTREV_DETAIL_IMAGE
+  WHERE REVCD = $REVCD
+    AND STDCD = $STDCD
+    AND STDPART = IFNULL($STDPART, '')
+    AND PRCDETAIL = IFNULL($PRCDETAIL, '')
+    AND NO = $IMGNO;
+
+-- -- * ***************************************************************************
 WHEN 'LIST_MSTITEM_COPY' THEN -- 품목 조회 (복사(팝업) 버튼)
 
   IF $STDTP = '' THEN

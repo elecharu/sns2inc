@@ -1436,9 +1436,39 @@ namespace TML2050
             txt_REASON_EMPTY.Visibility = dt.Rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        //두레이 문자 전송 (추후 연결)
+        //두레이 메신저 알림: 지정한 사람(공통코드 DOORAY/CALL_NOTICE)에게 호출 내용 전송 (실패해도 호출 등록에는 영향 없음)
         private void SendCallNotice(string eqmcallkey)
         {
+            try
+            {
+                ItsMaria.Set("TML2050_R01", "LIST_NOTICE");
+                DataTable dt = ItsMaria.Call().Tables[0];
+                if (ItsMaria.IsError || dt.Rows.Count == 0) return;
+
+                string userCode = ItsData.GetText(dt, 0, "USERCODE");
+                string token = ItsData.GetText(dt, 0, "TOKEN");
+                string text = "[생산기술팀 호출] " + GetLineNm(MODEL_S1.GetText("LINECD"))
+                            + " - " + GetEqmText()
+                            + " - " + GetReasonText()
+                            + " - " + DateTime.Now.ToString("HH:mm");
+
+                System.Threading.ThreadPool.QueueUserWorkItem(delegate
+                {
+                    try
+                    {
+                        string memberId = DoorayMessenger.FindMemberId(token, userCode);
+                        if (memberId != "") DoorayMessenger.SendDirect(token, memberId, text);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine("두레이 알림 실패: " + ex.Message);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("두레이 알림 실패: " + ex.Message);
+            }
         }
 
         private void ClearEqmList()

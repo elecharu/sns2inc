@@ -1,4 +1,4 @@
-﻿CREATE DEFINER = 'root'@'%'
+CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.TML5000_R01(
 -- *****************************************************************************
 -- Comment: 출하등록 (현장) - 2공장 수주 선택(다중) → 출고창고 선택 후 LOT 바코드 스캔 → 출하량·비고 수정 → 등록
@@ -13,6 +13,7 @@ PROCEDURE MES_SNS2.TML5000_R01(
 --         - LIST_SALOUT  : INVOICEKEY 열 추가 (없는 예전 출하는 빈값), 출하번호 조회조건은 INVOICEKEY 로 찾음
 --         - DEL_SALOUT   : SALINVOICE·SALINVOICED 도 삭제
 --         - PRINT_SALOUT : [3] 에 INVOICEKEY 추가
+--         2026-11-26 : PRINT_SALOUT [2] 품목 줄을 품목 + 로트수량으로 묶어 1줄 (수량 = 합계, BOX = 로트수량, BOX 수량 = LOT 갯수)
 -- *****************************************************************************
   IN $SDATE           VARCHAR(10),    -- 납기일자 시작 (LIST_SALOUT : 출하일자 시작)
   IN $EDATE           VARCHAR(10),    -- 납기일자 끝 (LIST_SALOUT : 출하일자 끝)
@@ -488,20 +489,22 @@ WHEN 'PRINT_SALOUT' THEN -- 거래명세서 (출고부서용) : 출하번호(SAL
   WHERE IFNULL(NULLIF(SALOUT.SALOUTGROUPKEY, ''), SALOUT.SALOUTKEY) = $SALOUTGROUPKEY
   GROUP BY SALOUT.CUSTCD;
 
-  -- [2] 품목 (LOT 1개 = 1줄)
+  -- [2] 품목 (2026-11-26 품목 + 로트수량이 같은 LOT 끼리 1줄)
+  --     수량 = LOT 수량 합계, BOX = 로트수량, BOX 수량(BOXNM) = LOT 갯수, 비고 = LOT 비고를 중복 없이 이어 붙임
   SELECT
       MSTITEM.ITEMCD AS ITEMCD
     , MSTITEM.ITEMNM AS ITEMNM
     , MSTITEM.ITEMSPEC AS ITEMSPEC
-    , FORMAT(SALOUTLOT.LOTQTY, 0) AS OUTQTY
-    , '' AS BOX
-    , '' AS BOXNM
-    , IFNULL(SALOUTLOT.REMARK, '') AS REMARK
+    , FORMAT(SUM(SALOUTLOT.LOTQTY), 0) AS OUTQTY
+    , FORMAT(SALOUTLOT.LOTQTY, 0) AS BOX
+    , FORMAT(COUNT(*), 0) AS BOXNM
+    , IFNULL(GROUP_CONCAT(DISTINCT NULLIF(SALOUTLOT.REMARK, '') ORDER BY SALOUTLOT.REMARK SEPARATOR ', '), '') AS REMARK
   FROM SALOUT
   INNER JOIN SALOUTLOT ON SALOUTLOT.SALOUTKEY = SALOUT.SALOUTKEY
   INNER JOIN MSTITEM ON MSTITEM.ITEMID = SALOUT.ITEMID
   WHERE IFNULL(NULLIF(SALOUT.SALOUTGROUPKEY, ''), SALOUT.SALOUTKEY) = $SALOUTGROUPKEY
-  ORDER BY SALOUT.SALOUTKEY, SALOUTLOT.LOTKEY;
+  GROUP BY MSTITEM.ITEMID, MSTITEM.ITEMCD, MSTITEM.ITEMNM, MSTITEM.ITEMSPEC, SALOUTLOT.LOTQTY
+  ORDER BY MIN(SALOUT.SALOUTKEY), SALOUTLOT.LOTQTY DESC;
 
   -- [3] 총 수량·출하번호 (명세서에 보이는 출하번호 = INVOICEKEY, 없는 예전 출하는 빈값)
   SELECT

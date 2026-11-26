@@ -28,7 +28,7 @@ namespace TMLPRINT
             lblTitle.Text = title;
             lblTitle.Font = new Font(RptKit.FONT, titleSize);
             lblSub.Text = sub;
-            picLogo.Image = RptKit.Logo();
+            picLogo.Image = RptKit.FitImage(RptKit.Logo(), picLogo.WidthF, picLogo.HeightF);  // 2026-11-26 화면 배율 PC 에서 로고 잘림 방지
 
             tblNo.Rows[0].Cells[1].Text = S(hd, "MOVEDATE");
             tblNo.Rows[1].Cells[1].Text = S(hd, "MOVENO");

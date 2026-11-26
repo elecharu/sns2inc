@@ -226,8 +226,9 @@
             this.xrLabel1.BorderWidth = 0.96F;
             // 2026-11-23 로고는 원본(143x51) 비율 그대로, 제목칸과 겹치지 않게 (겹치면 인쇄 때 로고가 잘림)
             this.picLogo.LocationF = new System.Drawing.PointF(12F, 14F);
-            this.picLogo.SizeF = new System.Drawing.SizeF(146F, 52F);
-            this.picLogo.Sizing = DevExpress.XtraPrinting.ImageSizeMode.ZoomImage;
+            // 2026-11-26 다른 거래명세서(MTR_1_DOC)처럼 칸에 꽉 채워 그림. 칸 비율 = 로고 원본(143×51) 비율이라 늘어나지 않음
+            this.picLogo.SizeF = new System.Drawing.SizeF(146F, 52.07F);
+            this.picLogo.Sizing = DevExpress.XtraPrinting.ImageSizeMode.StretchImage;
             this.xrLabel2.LocationF = new System.Drawing.PointF(164F, 0F);
             this.xrLabel2.SizeF = new System.Drawing.SizeF(191F, 80F);
             this.xrLabel2.WordWrap = false;

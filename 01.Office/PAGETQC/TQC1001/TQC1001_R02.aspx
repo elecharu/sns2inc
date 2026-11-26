@@ -3,6 +3,7 @@
 
 <%-- HEAD --%>
 <asp:Content ContentPlaceHolderID="CPH_HEAD" runat="Server">
+    <script src="https://unpkg.com/xlsx@0.11.18/dist/xlsx.full.min.js"></script>    <%-- XLSX, XLS 엑셀 파일 읽기 --%>
     <script type="text/javascript" src="TQC1001_R02.js?ver=<%= BasePage.srcVersion %>"></script>
 </asp:Content>
 
@@ -37,6 +38,7 @@
                 <Its:label runat="server" Text="■ 리비전" Bold="true" Margin="3px 0px 0px 10px" />
                 <Its:button runat="server" Label="리비전 추가" ID="btn_ADD_REV" BackColor="CustomButton2" MarginTop="4" MarginLeft="4" Hidden="true" />
                 <Its:button runat="server" Label="리비전 갱신" ID="btn_RENEW_REV" BackColor="CustomButton" MarginTop="4" MarginLeft="4" />
+                <Its:button runat="server" Label="리비전 저장" ID="btn_SAVE_REV" BackColor="CustomButton2" MarginTop="4" MarginLeft="4" />
                 <Its:button runat="server" Label="리비전 삭제" ID="btn_DEL_REV" BackColor="CustomButton3" MarginTop="4" MarginLeft="4" />
             </Its:div>
 
@@ -55,7 +57,10 @@
             <Its:label runat="server" Text="■ 검사항목 리스트" Bold="true" Margin="3px 0px 0px 10px" />
             <Its:button runat="server" Label="복사(팝업)" ID="btn_COPY_POP" BackColor="CustomButton2" MarginTop="4" MarginLeft="50" Hidden="true" />
             <Its:button runat="server" Label="추가(팝업)" ID="btn_ADD_POP" BackColor="CustomButton2" MarginTop="4" Hidden="true" />
-            <Its:button runat="server" Label="저장" ID="btn_SAVE_DETAIL" BackColor="CustomButton" MarginTop="4" Hidden="true" />
+            <Its:button runat="server" Label="엑셀 양식" ID="btn_XLS_TEMPLATE" BackColor="CustomButton2" MarginTop="4" />
+        <Its:button runat="server" Label="엑셀 올리기" ID="btn_XLS_UPLOAD" BackColor="CustomButton2" MarginTop="4" Hidden="true" />
+        <input type="file" id="file_XLS" accept=".xlsx,.xls" style="display:none;" />
+        <Its:button runat="server" Label="저장" ID="btn_SAVE_DETAIL" BackColor="CustomButton" MarginTop="4" Hidden="true" />
             <Its:button runat="server" Label="삭제" ID="btn_DEL_DETAIL" BackColor="CustomButton3" MarginTop="4" Hidden="true" />
         </Its:div>
 
@@ -81,6 +86,30 @@
 
         <Its:div runat="server" Type="SplitDown">
             <Its:grid runat="server" ID="grid_STD" />
+        </Its:div>
+    </Its:pop>
+
+    <%-- 검사항목 이미지 팝업 (항목당 여러 장) --%>
+    <Its:pop runat="server" ID="pop_IMG" Type="common" Title="검사항목 이미지" Width="900" Height="520">
+        <Its:div runat="server" Type="SplitTop" TopHeightPc="14" ID="Div3">
+            <Its:text runat="server" Label="검사항목" ID="txt_STDNM_IMG" ReadOnly="true" LabelWidth="70" InputWidth="200" />
+            <Its:fileManager runat="server" StyleType="simple" FileType="image" ID="file_DTLIMG" bindImageId="img_DTLIMG" />
+            <Its:button runat="server" Label="업로드(추가)" BackColor="CustomButton2" ID="btn_DTLIMG_ADD" MarginLeft="10" />
+            <Its:button runat="server" Label="선택 삭제" BackColor="CustomButton3" ID="btn_DTLIMG_DEL" MarginLeft="4" />
+        </Its:div>
+
+        <Its:split runat="server" Type="Horizon" Resizeable="false" />
+
+        <Its:div runat="server" Type="SplitDown">
+            <Its:div runat="server" Type="SplitLeft" LeftWidthPc="45">
+                <Its:grid runat="server" ID="grid_IMG" />
+            </Its:div>
+
+            <Its:split runat="server" Type="Vertical" Resizeable="false" />
+
+            <Its:div runat="server" Type="SplitRight">
+                <Its:img runat="server" ID="img_DTLIMG" Height="330" Width="420" />
+            </Its:div>
         </Its:div>
     </Its:pop>
 

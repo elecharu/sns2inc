@@ -1,11 +1,11 @@
 ﻿/* TQM1002_R01: 품질관리 ▶ 출하검사 등록 */
 /* 주간출하계획(PRD1001_R04 에서 올린 SALOUTPLAN_W)을 고르면 그 품목의 출하검사 기준으로 검사항목이 나온다. */
-/* 검사항목 줄마다 측정치 X1~X5 와 판정을 입력하고 [저장]으로 한꺼번에 저장한다 (2026-11-13 사용자 지시, 성적서 양식과 같은 모양). */
+/* 검사항목 줄마다 측정치 X1~X10(시료수만큼) 와 판정을 입력하고 [저장]으로 한꺼번에 저장한다 (2026-11-13 사용자 지시, 성적서 양식과 같은 모양). */
 /* 측정검사 자동 합불 기준은 자주검사 등록 TAL2001_R01 과 같다. 출하계획 1건 = 검사 1건 */
 
 /// <reference path="../../Script/reference.js" />
 
-var X_FIELDS = ['X1', 'X2', 'X3', 'X4', 'X5'];   // 측정치 칸 (TQMRSTKND.STDVALCHK ~ STDVALCHK5)
+var X_FIELDS = ['X1', 'X2', 'X3', 'X4', 'X5', 'X6', 'X7', 'X8', 'X9', 'X10'];   // 측정치 칸 (TQMRSTKND.STDVALCHK ~ STDVALCHK10), 시료수 최대 10
 
 /* 페이지 로드 시 수행 */
 ItsPage.Load = function () {
@@ -17,6 +17,7 @@ ItsPage.Load = function () {
         column.create('고객', 'ENDCUSTNM', { width: 120 }),
         column.create('품번', 'ITEMCD', { width: 130 }),
         column.create('품명', 'ITEMNM', { width: 180 }),
+        column.create('리비전', 'REVNUM', { width: 60, align: 'center' }),   // 적용 리비전 (검사 전이면 사용중인 최신)
         column.create('출하수량', 'PLANQTY', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.create('검사상태', 'INSPSTT', { width: 70, align: 'center' }),   // 미검사 / 검사중 / 합격 / 불합격
         column.create('검사일자', 'TQMDATE', { width: 85, align: 'center' }),
@@ -40,7 +41,12 @@ ItsPage.Load = function () {
             column.create('X2', 'X2', { width: 70, align: 'center', readOnly: false }),
             column.create('X3', 'X3', { width: 70, align: 'center', readOnly: false }),
             column.create('X4', 'X4', { width: 70, align: 'center', readOnly: false }),
-            column.create('X5', 'X5', { width: 70, align: 'center', readOnly: false })
+            column.create('X5', 'X5', { width: 70, align: 'center', readOnly: false }),
+            column.create('X6', 'X6', { width: 70, align: 'center', readOnly: false }),
+            column.create('X7', 'X7', { width: 70, align: 'center', readOnly: false }),
+            column.create('X8', 'X8', { width: 70, align: 'center', readOnly: false }),
+            column.create('X9', 'X9', { width: 70, align: 'center', readOnly: false }),
+            column.create('X10', 'X10', { width: 70, align: 'center', readOnly: false })
         ]),
         // 판정: 측정검사(02)는 측정치로 자동, 그 밖의 항목은 직접 고른다 (기본 합격)
         column.create('판정', 'JUDGE', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: "SELECT '합격' AS Label, 'Y' AS Value UNION ALL SELECT '불합격', 'N'", readOnly: false }),
@@ -51,10 +57,11 @@ ItsPage.Load = function () {
         column.create('범위', 'STDRANGE', { width: 100, hidden: true }),
         column.create('오차(-)', 'STDMINUS', { width: 100, hidden: true }),
         column.create('오차(+)', 'STDPLUS', { width: 100, hidden: true }),
+        column.create('시료수', 'SAMPLESIZE', { width: 60, hidden: true }),   // 검사기준 관리의 시료수 → 측정치 입력칸 수
         column.split()
     ]);
 
-    // 측정치 엔터: X1 → X2 → … → X5 → 다음 줄 X1 (ItsGrid 는 keyActionEnter 'None' 이라 직접 처리, TAL2001_R01 과 같은 방식)
+    // 측정치 엔터: X1 → X2 → … → 시료수 칸 → 다음 줄 X1 (ItsGrid 는 keyActionEnter 'None' 이라 직접 처리, TAL2001_R01 과 같은 방식)
     var grid2 = ItsGrid.Get('grid2');
     grid2.addEventListener(grid2.hostElement, 'keydown', function (e) {
         if (e.keyCode != 13 || grid2.selection.row < 0 || grid2.selection.col < 0)
@@ -69,11 +76,31 @@ ItsPage.Load = function () {
         e.stopPropagation();
         grid2.finishEditing(false);   // 입력값 확정 (onChanged 자동 합불 판정)
 
-        if (x + 1 < X_FIELDS.length)
+        if (x + 1 < SAMPLE_COUNT(row))   // 시료수까지만 (그 뒤 칸은 막힘)
             EDIT_GRID2(row, X_FIELDS[x + 1]);
         else if (row + 1 < ItsGrid.Length('grid2'))
             EDIT_GRID2(row + 1, X_FIELDS[0]);
     }, true);
+
+    // 검사방법이 육안(01)인 줄은 측정치 칸을 OK/NG 선택으로 (2026-11-25 사용자 지시). 그 줄을 편집하는 동안만 칸에 선택목록(dataMap)을 걸고, 끝나면 뺀다
+    var OKNG_MAP = new wijmo.grid.DataMap(['OK', 'NG']);
+    grid2.beginningEdit.addHandler(function (s, e) {
+        var col = s.columns[e.col];
+        var xi = X_FIELDS.indexOf(col.binding);
+        if (xi == -1)
+            return;
+        if (xi >= SAMPLE_COUNT(e.row)) {   // 시료수보다 뒤 칸은 입력 불가
+            e.cancel = true;
+            return;
+        }
+        col.isRequired = false;   // 빈칸으로 되돌릴 수 있게
+        col.dataMap = ItsGrid.GetValue('grid2', e.row, 'STDCHKTP') == '01' ? OKNG_MAP : null;
+    });
+    grid2.cellEditEnded.addHandler(function (s, e) {
+        var col = s.columns[e.col];
+        if (X_FIELDS.indexOf(col.binding) > -1)
+            col.dataMap = null;
+    });
 
     ItsDateRange.SetValueFrom('dr_DATE', ItsHelper.AddDay(-7, ItsHelper.GetYearMonthDay()));
     ItsDateRange.SetValueTo('dr_DATE', ItsHelper.AddDay(7, ItsHelper.GetYearMonthDay()));
@@ -107,6 +134,10 @@ ItsButton.Event('btn_APPROVE').onClick = function () {
     var cnt = 0;
     for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
         if (!ItsGrid.IsChecked('grid1', i)) continue;
+        if (ItsGrid.GetValue('grid1', i, 'INSPSTT') == '불합격') {   // 불합격 검사는 승인할 수 없다 (프로시저도 막는다)
+            ItsMsg.Alert('불합격인 출하검사는 승인할 수 없습니다.\n- 품번: ' + ItsGrid.GetValue('grid1', i, 'ITEMCD'));
+            return;
+        }
         maria.AddList('SALOUTPLANKEY_LIST', ItsGrid.GetValue('grid1', i, 'SALOUTPLANKEY'));
         cnt++;
     }
@@ -150,9 +181,37 @@ ItsButton.Event('btn_APPROVE_CANCEL').onClick = function () {
 
 /* 성적서 출력: 체크한 출하계획 중 검사한 것만 검사 1건에 1장 (리포트 TQM1002.exe R01). SALOUTPLANKEYS = 출하계획키 쉼표 구분 */
 ItsButton.Event('btn_PRINT_RST').onClick = function () {
+    var keys = GET_PRINT_KEYS();
+    if (keys.length == 0) return;
+
+    var rpt = new ItsXtraRpt('TQM1002_R01');
+    rpt.AddParam('SALOUTPLANKEYS', keys.join(','));
+    rpt.CallPop();
+    if (rpt.isError) {
+        ItsMsg.Alert(rpt.errMessage);
+    }
+};
+
+/* 성적서 엑셀: 출력과 같은 성적서를 엑셀 파일로 받는다 (검사 1건 = 시트 1장). 리포트 TQM1002.exe 가 fileType xlsx 로 만든다 */
+ItsButton.Event('btn_PRINT_XLS').onClick = function () {
+    var keys = GET_PRINT_KEYS();
+    if (keys.length == 0) return;
+
+    var rpt = new ItsXtraRpt('TQM1002_R01');
+    rpt.AddParam('SALOUTPLANKEYS', keys.join(','));
+    rpt.CallExcel('none');   // 뷰어 없이 파일만 만든다 (rpt.path = 엑셀 주소)
+    if (rpt.isError) {
+        ItsMsg.Alert(rpt.errMessage);
+        return;
+    }
+    location.href = rpt.path;
+};
+
+/* 체크한 출하계획 중 검사한 것의 출하계획키 (없으면 안내 후 빈 배열) */
+function GET_PRINT_KEYS() {
     if (!ItsGrid.HasChecked('grid1')) {
         ItsMsg.Alert('성적서를 출력할 출하계획을 체크하세요.');
-        return;
+        return [];
     }
 
     var keys = [];
@@ -163,21 +222,15 @@ ItsButton.Event('btn_PRINT_RST').onClick = function () {
 
     if (keys.length == 0) {
         ItsMsg.Alert('체크한 출하계획 중 검사한 것이 없습니다.');
-        return;
     }
-
-    var rpt = new ItsXtraRpt('TQM1002_R01');
-    rpt.AddParam('SALOUTPLANKEYS', keys.join(','));
-    rpt.CallPop();
-    if (rpt.isError) {
-        ItsMsg.Alert(rpt.errMessage);
-    }
-};
+    return keys;
+}
 
 /* 조회: 주간출하계획 (첫 줄이 선택되면서 onSelect 가 검사항목을 불러온다) */
 ItsButton.EventSearch = function () {
     ItsText.SetValue('txt_ITEMCD', '');
     ItsText.SetValue('txt_ITEMNM', '');
+    ItsText.SetValue('txt_REV', '');
     ItsGrid.Clear('grid2');
 
     var maria = new ItsMaria('TQM1002_R01', 'LIST');
@@ -216,6 +269,7 @@ ItsGrid.Event('grid1').onSelect = function (rowIndex) {
 
     // 검사 헤더 (검사 전이면 오늘·로그인 사원)
     var HEAD = maria.store.data[0];
+    ItsText.SetValue('txt_REV', HEAD.REVNUM == '' ? '' : 'Rev.' + HEAD.REVNUM + (HEAD.REVDATE == '' ? '' : ' (개정일 ' + HEAD.REVDATE + ')'));   // 이 검사에 적용되는 리비전
     if (HEAD.TQMRSTKEY == '') {
         ItsDate.SetValue('date_TQMDATE', ItsHelper.GetYearMonthDay());
         ItsFind.SetValue('find_EMPCD', ItsPage.EMPCD);
@@ -234,6 +288,35 @@ ItsGrid.Event('grid1').onSelect = function (rowIndex) {
             if (ItsGrid.GetValue('grid2', i, 'JUDGE') == '' && ItsGrid.GetValue('grid2', i, 'STDCHKTP') != '02')
                 ItsGrid.SetValue('grid2', i, 'JUDGE', 'Y');
             JUDGE_ROW(i, false);
+        }
+    });
+
+    APPLY_SAMPLE();
+};
+/**********************************************************************************************************************************************************************/
+// 시료수 (검사기준 관리에서 정한 SAMPLESIZE) → 측정치 입력칸 수
+
+// 그 줄의 측정치 칸 수: 시료수를 1~10 으로 (비었거나 0 이하면 1, X1~X10 이 최대라 10 초과는 10)
+SAMPLE_COUNT = function (row) {
+    var n = parseInt(ItsGrid.GetValue('grid2', row, 'SAMPLESIZE'), 10);
+    if (isNaN(n) || n < 1) return 1;
+    return Math.min(n, X_FIELDS.length);
+};
+
+// 모든 줄 중 가장 큰 시료수까지만 X 칸을 보이고, 줄마다 시료수 뒤 칸은 회색으로 막는다 (SetStore 뒤에 호출)
+APPLY_SAMPLE = function () {
+    var grid2 = ItsGrid.Get('grid2');
+    var max = 1;
+    for (var i = 0; i < ItsGrid.Length('grid2'); i++)
+        max = Math.max(max, SAMPLE_COUNT(i));
+
+    for (var x = 0; x < X_FIELDS.length; x++)
+        grid2.columns.getColumn(X_FIELDS[x]).visible = x < max;
+
+    grid2.deferUpdate(function () {
+        for (var i = 0; i < ItsGrid.Length('grid2'); i++) {
+            for (var x = SAMPLE_COUNT(i); x < X_FIELDS.length; x++)
+                ItsGrid.SetCellBackColor('grid2', i, X_FIELDS[x], '#E5E5E5');
         }
     });
 };
@@ -279,6 +362,23 @@ JUDGE_ROW = function (row, setJudge) {
 
         if (setJudge)
             ItsGrid.SetValue('grid2', row, 'JUDGE', hasNg ? 'N' : (hasValue ? 'Y' : ''));
+    }
+    // 육안검사(01): 측정치 칸은 OK/NG, NG 가 하나라도 있으면 불합격, OK 만 있으면 합격, 값이 없으면 빈칸 (NG 칸은 빨간 글자)
+    else if (ItsGrid.GetValue('grid2', row, 'STDCHKTP') == '01') {
+        var hasOk = false, hasNgEye = false;
+        for (var x = 0; x < X_FIELDS.length; x++) {
+            var EYE = String(ItsGrid.GetValue('grid2', row, X_FIELDS[x]) == null ? '' : ItsGrid.GetValue('grid2', row, X_FIELDS[x])).trim().toUpperCase();
+            if (EYE != 'OK' && EYE != 'NG') {
+                if (EYE != '') ItsGrid.SetValue('grid2', row, X_FIELDS[x], '');   // OK/NG 외 값은 지움
+                ItsGrid.SetCellForeColor('grid2', row, X_FIELDS[x], '');
+                continue;
+            }
+            if (EYE == 'OK') hasOk = true; else hasNgEye = true;
+            ItsGrid.SetCellForeColor('grid2', row, X_FIELDS[x], EYE == 'NG' ? '#FF0000' : '');
+        }
+
+        if (setJudge && (hasOk || hasNgEye))
+            ItsGrid.SetValue('grid2', row, 'JUDGE', hasNgEye ? 'N' : 'Y');
     }
 
     ItsGrid.SetCellForeColor('grid2', row, 'JUDGE', ItsGrid.GetValue('grid2', row, 'JUDGE') == 'N' ? '#FF0000' : '');

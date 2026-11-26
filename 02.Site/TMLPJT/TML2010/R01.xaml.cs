@@ -181,16 +181,32 @@ namespace TML2010
         }
 
         //양품수량 = 투입로트 사용량 합계 - 불량수량 (0 이하면 빈칸)
+        // 2026-11-26 조립공정(I2M2000_N)은 투입자재가 2가지 이상일 수 있어 자품목 1개 기준 :
+        //            자품목별 사용량 합계 / BOM투입량(BOMRATE) 중 첫 번째 자품목 값 (작업완료 때 IO_PRDRST 가 모두 같은지 확인)
         private void CalcGoodQty()
         {
             decimal sumqty = 0;
+            Dictionary<string, decimal> itemQty = new Dictionary<string, decimal>();   // 자품목ID → 사용량 합계 / BOM투입량
+            List<string> itemOrder = new List<string>();
             for (int i = 0; i < MODEL_G1.Rows.Count; i++)
             {
                 decimal useqty;
                 if (decimal.TryParse(MODEL_G1.GetText(i, "USEQTY"), out useqty))
                 {
                     sumqty += useqty;
+
+                    string itemId = MODEL_G1.GetText(i, "ITEMID");
+                    // 프로시저 반영 전(BOMRATE 열 없음)이면 1 (GetValue 는 없는 열이면 메시지창을 띄움)
+                    decimal rate = MODEL_G1.Columns.Contains("BOMRATE") ? MODEL_G1.GetDecimal(i, "BOMRATE") : 1;
+                    if (rate <= 0) rate = 1;
+                    if (!itemQty.ContainsKey(itemId)) { itemQty[itemId] = 0; itemOrder.Add(itemId); }
+                    itemQty[itemId] += useqty / rate;
                 }
+            }
+
+            if (MODEL_S1.GetText("PRCCD") == "I2M2000_N" && itemOrder.Count > 0)
+            {
+                sumqty = Math.Round(itemQty[itemOrder[0]], 4);
             }
 
             decimal badqty;

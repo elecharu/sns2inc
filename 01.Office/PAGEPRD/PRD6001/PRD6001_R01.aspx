@@ -33,7 +33,9 @@
             <Its:text runat="server" Label="점검명" Field="CHKKNDNM" InputWidth="517" />
             <Its:newline runat="server" />
             <Its:combo runat="server" Label="점검방법" Field="CHKMTH" GPCD="CHKMTH" />
+            <%-- 2026-11-26 점검주기 숨김
             <Its:combo runat="server" Label="점검주기" Field="CHKCYCLE" GPCD="CHKCYCLE" />
+            --%>
             <Its:combo runat="server" Label="점검값구분" Field="CHKVALTP" GPCD="CHKVALTP" />
 
             <Its:check runat="server" Label="사용여부" Field="USEYN" MarginLeft="35" />

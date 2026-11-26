@@ -220,12 +220,7 @@ ItsButton.EventSave = function () {
         ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete(SAVECNT));
         ItsGrid.Setkey('grid1', 'LOTKEY', ItsGrid.GetValue('grid1', LOTROW, 'LOTKEY'));
         ItsButton.EventSearch();
-
-        // 저장한 판정의 공정이동표 출력
-        var JUDGEKEYS = maria.store.GetValue(0, 'JUDGEKEYS');
-        ItsMsg.Confirm('공정이동표를 출력하시겠습니까?', function () {
-            PrintMove(JUDGEKEYS);
-        });
+        // 공정이동표는 저장할 때 묻지 않고, 필요하면 [공정이동표 출력] 버튼으로 출력한다 (2026-11-26 사용자 지시)
     });
 };
 
@@ -322,12 +317,7 @@ ItsPop.Event('pop1').onAddBtnClick = function () {
         ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete(LOTCNT));
         ItsPop.Close('pop1');
         ItsButton.EventSearch();
-
-        // 일괄판정한 판정의 공정이동표 출력 (로트마다 1장)
-        var JUDGEKEYS = maria.store.GetValue(0, 'JUDGEKEYS');
-        ItsMsg.Confirm('공정이동표를 출력하시겠습니까?', function () {
-            PrintMove(JUDGEKEYS);
-        });
+        // 공정이동표는 일괄판정할 때도 묻지 않고, 필요하면 [공정이동표 출력] 버튼으로 출력한다 (2026-11-26 사용자 지시)
     });
 };
 

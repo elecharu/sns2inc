@@ -110,6 +110,25 @@ namespace TMLPRINT
             }
         }
 
+        // 2026-11-26 그림 칸에 넣을 그림을 칸 크기(1/100 inch)의 600 DPI 그림으로 미리 만든다 (비율 유지, 칸 가운데, 남는 곳은 투명)
+        // 화면 배율(예 150%)을 쓰는 PC 의 현장프로그램(WPF)에서 인쇄하면 DevExpress 16.1 이 작은 그림을 배율만큼 크게 그려
+        // 칸 밖이 잘린다 (ZoomImage·StretchImage 모두). 칸 크기와 같은 고해상도 그림이면 배율과 상관없이 칸에 맞게 나온다
+        public static Image FitImage(Image src, float boxW, float boxH)
+        {
+            if (src == null) return null;
+            Bitmap bmp = new Bitmap((int)Math.Round(boxW * 6), (int)Math.Round(boxH * 6));
+            float scale = Math.Min((float)bmp.Width / src.Width, (float)bmp.Height / src.Height);
+            float w = src.Width * scale;
+            float h = src.Height * scale;
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                g.DrawImage(src, (bmp.Width - w) / 2F, (bmp.Height - h) / 2F, w, h);
+            }
+            bmp.SetResolution(600, 600);
+            return bmp;
+        }
+
         // 확인창·미리보기 없이 지정한 프린터로 바로 인쇄
         public static void PrintDirect(XtraReport report, string printerName)
         {

@@ -8,7 +8,8 @@ ItsPage.Load = function () {
         column.create('점검명', 'CHKKNDNM', { width: 300, readOnly: false }),
 
         column.create('점검방법', 'CHKMTH', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKMTH', readOnly: false }),
-        column.create('점검주기', 'CHKCYCLE', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKCYCLE', readOnly: false }),
+        // 2026-11-26 점검주기 숨김 (저장 때는 조회한 값을 그대로 보냄 - EventSave 의 CHKCYCLE_LIST)
+        //column.create('점검주기', 'CHKCYCLE', { width: 100, columnType: enumColumnTypes.combo, gpcd: 'CHKCYCLE', readOnly: false }),
         column.create('점검값구분', 'CHKVALTP', { width: 90, columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP', readOnly: false }),
         column.create('사용여부', 'USEYN', { width: 80, columnType: enumColumnTypes.check, readOnly: false }),
         column.create('비고', 'REMARK', { width: 150, readOnly: false }),

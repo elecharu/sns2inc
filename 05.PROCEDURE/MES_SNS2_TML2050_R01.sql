@@ -24,6 +24,7 @@ PROCEDURE MES_SNS2.TML2050_R01(
 --         2026-11-19 한성수 호출·수리 인원 작업장 기준 변경 및 수리키 형식 변경
 --         2026-11-20 한성수 수리키 순번 2자리(01) 시작
 --         2026-11-24 한성수 호출사원 작업장 기준 조회로 변경
+--         2026-11-25 호출 알림(LIST_NOTICE) 추가 - 호출 등록 후 두레이 메신저로 지정한 사람에게 전송
 -- *****************************************************************************
   IN $CALLTYPE VARCHAR(50),
   IN $LINECD VARCHAR(100),
@@ -713,6 +714,17 @@ WHEN 'LIST_HISTORY' THEN -- 이력조회 (호출 설비 단위 + 직접 수리, 
       AND ($EQMCD = '' OR R.EQMCD = $EQMCD)
   ) AS X
   ORDER BY IF(X.CALLTIME = '', X.REPSTIME, X.CALLTIME) DESC, X.EQMCD;
+
+-- ****************************************************************************
+WHEN 'LIST_NOTICE' THEN -- 호출 알림(두레이 메신저) 받는 사람. 공통코드 DOORAY / CALL_NOTICE : REF01 = 받는 사람 이메일 계정, REF02 = API 토큰
+
+  SELECT A.REF01 AS USERCODE, A.REF02 AS TOKEN
+    FROM COMTYPE AS A
+   WHERE A.GPCD = 'DOORAY'
+     AND A.TPCD = 'CALL_NOTICE'
+     AND A.USEYN = 'Y'
+     AND IFNULL(A.REF01, '') <> ''
+     AND IFNULL(A.REF02, '') <> '';
 
 -- ****************************************************************************
 END CASE;

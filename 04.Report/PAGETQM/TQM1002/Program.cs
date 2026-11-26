@@ -78,6 +78,17 @@ namespace XtraRpt
                 htmlOptions.RemoveSecondarySymbols = false;
                 htmlOptions.Title = fileName;
 
+                // 2026-11-26 엑셀 변환: 웹이 4번째 인자로 fileType 을 넘긴다. xlsx 면 엑셀(검사 1건 = 시트 1장), 아니면 기존대로 PDF+HTML
+                string fileType = args.Length > 3 ? args[3].ToLower() : "pdf";
+                if (fileType == "xlsx")
+                {
+                    DevExpress.XtraPrinting.XlsxExportOptions xlsxOptions = new DevExpress.XtraPrinting.XlsxExportOptions();
+                    xlsxOptions.ExportMode = DevExpress.XtraPrinting.XlsxExportMode.SingleFilePageByPage;
+                    xlsxOptions.TextExportMode = DevExpress.XtraPrinting.TextExportMode.Value;
+                    xr.ExportToXlsx(System.IO.Path.Combine(tempDir, fileName + ".xlsx"), xlsxOptions);
+                    return;
+                }
+
                 xr.ExportToPdf(System.IO.Path.Combine(tempDir, fileName + ".pdf"));
                 xr.ExportToHtml(System.IO.Path.Combine(tempDir, fileName + ".html"));
             }

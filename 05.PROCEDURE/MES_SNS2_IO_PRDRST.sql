@@ -17,6 +17,8 @@ PROCEDURE MES_SNS2.IO_PRDRST(
 --         2026-11-11 ERP 인터페이스(PRDINS, PRDRST) 송신 추가
 --         2026-11-19 17:40 신정수 실적로트 라벨번호(PRDRSTLOT.LABELKEY, 소라벨) 저장: 품목 PARTNO·INITCD 가 있으면 GETLABELKEY
 --         2026-11-23 투입로트 창고 = 투입 목록(PRDLINESCAN.WARECD) 의 창고 (반제품 재공품창고 04S131_N / 그 외 자재투입창고 04S111_N)
+--         2026-11-26 조립공정(I2M2000_N): 생산품 BOM 자품목이 모두 투입됐는지, 자품목별 사용량 합계 / BOM투입량이 모두 같은지 확인.
+--           생산수량 = 그 값 (자품목 1개 기준, 다른 공정은 지금처럼 사용량 합계)
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),      -- 공정
@@ -55,6 +57,13 @@ PROC: BEGIN
   DECLARE _$USEITEMID VARCHAR(100);
   DECLARE _$RSTLOTKEY VARCHAR(100);
   DECLARE _$LABELKEY VARCHAR(20);
+  DECLARE _$BASEITEMID INT;            -- 조립 체크: 기준 자품목 (BOM 첫 번째)
+  DECLARE _$BASEQTY DECIMAL(20, 8);    -- 조립 체크: 기준 자품목의 생산품 기준 수량 (사용량 합계 / BOM투입량)
+  DECLARE _$DIFFITEMID INT;            -- 조립 체크: 기준과 수량이 다른 자품목
+  DECLARE _$BASERATE DECIMAL(20, 8);   -- 조립 체크 메시지: 기준 자품목 BOM투입량
+  DECLARE _$BASEUSE DECIMAL(20, 8);    -- 조립 체크 메시지: 기준 자품목 입력수량
+  DECLARE _$DIFFRATE DECIMAL(20, 8);   -- 조립 체크 메시지: 다른 자품목 BOM투입량
+  DECLARE _$DIFFUSE DECIMAL(20, 8);    -- 조립 체크 메시지: 다른 자품목 입력수량
 -- *****************************************************************************
 
   -- 0. 입력 확인
@@ -127,6 +136,10 @@ PROC: BEGIN
   SET _$USEQTY_LIST = $USEQTY_LIST;
   SET _$PRODQTY = 0;
 
+  -- 투입로트 품목별 사용량 (조립공정 체크용)  2026-11-26
+  DROP TABLE IF EXISTS TEMP_PRDRST_USE;
+  CREATE TEMPORARY TABLE TEMP_PRDRST_USE (ITEMID INT NOT NULL, USEQTY DECIMAL(20, 8) NOT NULL);
+
   WHILE LENGTH(_$LOTKEY_LIST) > 0 DO
     CALL COMSPLIT(_$LOTKEY_LIST, _$LOTKEY);
     CALL COMSPLIT(_$USEQTY_LIST, _$USEQTY_TXT);
@@ -171,12 +184,104 @@ PROC: BEGIN
       END IF;
 
       SET _$PRODQTY = _$PRODQTY + _$USEQTY;
+
+      INSERT INTO TEMP_PRDRST_USE (ITEMID, USEQTY)
+      SELECT COMLOT.ITEMID, _$USEQTY
+      FROM COMLOT
+      WHERE COMLOT.WARECD = _$WARECD
+        AND COMLOT.LOTKEY = _$LOTKEY
+      LIMIT 1;
     END IF;
   END WHILE;
 
   IF _$PRODQTY = 0 THEN
     CALL COMERR('투입로트의 사용량을 입력하세요.');
     LEAVE PROC;
+  END IF;
+
+  -- 조립공정: 투입자재가 2가지 이상일 수 있음 → 생산품 BOM 자품목이 모두 투입됐는지, 자품목별 사용량이 맞는지 확인  2026-11-26
+  IF $PRCCD = 'I2M2000_N' THEN
+    -- 생산품 BOM 자품목 (같은 자품목이 여러 줄이면 한 줄로). RATE = 생산품 1개당 투입량 (CUSAGE / MUSAGE, 비거나 0이면 1)
+    DROP TABLE IF EXISTS TEMP_PRDRST_BOM;
+    CREATE TEMPORARY TABLE TEMP_PRDRST_BOM (ITEMID INT NOT NULL, SEQ INT, RATE DECIMAL(20, 8) NOT NULL, USEQTY DECIMAL(20, 8) NOT NULL, NORMQTY DECIMAL(20, 8) NOT NULL);
+
+    INSERT INTO TEMP_PRDRST_BOM (ITEMID, SEQ, RATE, USEQTY, NORMQTY)
+    SELECT
+        MSTBOM.CITEMID
+      , MIN(IFNULL(MSTBOM.PRCSEQ, 0))
+      , MAX(IFNULL(NULLIF(MSTBOM.CUSAGE, 0), 1) / IFNULL(NULLIF(MSTBOM.MUSAGE, 0), 1))
+      , 0
+      , 0
+    FROM MSTBOM
+    WHERE MSTBOM.MITEMID = $ITEMID
+      AND MSTBOM.USEYN = 'Y'
+      AND (MSTBOM.USETODT IS NULL OR MSTBOM.USETODT = '' OR LEFT(MSTBOM.USETODT, 4) = '9999')
+    GROUP BY MSTBOM.CITEMID;
+
+    UPDATE TEMP_PRDRST_BOM
+    SET USEQTY = IFNULL((SELECT SUM(TEMP_PRDRST_USE.USEQTY) FROM TEMP_PRDRST_USE WHERE TEMP_PRDRST_USE.ITEMID = TEMP_PRDRST_BOM.ITEMID), 0);
+
+    UPDATE TEMP_PRDRST_BOM
+    SET NORMQTY = ROUND(USEQTY / RATE, 4);
+
+    -- 1) 투입 안 된 자재 (사용량 있는 투입로트가 없는 자품목)
+    SET _$DIFFITEMID = (SELECT TEMP_PRDRST_BOM.ITEMID
+                          FROM TEMP_PRDRST_BOM
+                          INNER JOIN MSTITEM
+                            ON MSTITEM.ITEMID = TEMP_PRDRST_BOM.ITEMID
+                          WHERE TEMP_PRDRST_BOM.USEQTY = 0
+                          ORDER BY TEMP_PRDRST_BOM.SEQ, MSTITEM.ITEMCD
+                          LIMIT 1);
+
+    IF _$DIFFITEMID IS NOT NULL THEN
+      CALL COMERR(CONCAT('품목코드 : ', (SELECT MSTITEM.ITEMCD FROM MSTITEM WHERE MSTITEM.ITEMID = _$DIFFITEMID)
+                        , '\n품 목 명 : ', (SELECT MSTITEM.ITEMNM FROM MSTITEM WHERE MSTITEM.ITEMID = _$DIFFITEMID)
+                        , '\n\n해당 품목코드를 투입해주세요'
+                        )
+                 );
+      LEAVE PROC;
+    END IF;
+
+    -- 2) 자품목별 사용량 합계 / BOM투입량 이 모두 같은지 (기준 = BOM 첫 번째 자품목)
+    SELECT TEMP_PRDRST_BOM.ITEMID, TEMP_PRDRST_BOM.NORMQTY, TEMP_PRDRST_BOM.RATE, TEMP_PRDRST_BOM.USEQTY
+    INTO _$BASEITEMID, _$BASEQTY, _$BASERATE, _$BASEUSE
+    FROM TEMP_PRDRST_BOM
+    INNER JOIN MSTITEM
+      ON MSTITEM.ITEMID = TEMP_PRDRST_BOM.ITEMID
+    ORDER BY TEMP_PRDRST_BOM.SEQ, MSTITEM.ITEMCD
+    LIMIT 1;
+
+    SET _$DIFFITEMID = (SELECT TEMP_PRDRST_BOM.ITEMID
+                          FROM TEMP_PRDRST_BOM
+                          INNER JOIN MSTITEM
+                            ON MSTITEM.ITEMID = TEMP_PRDRST_BOM.ITEMID
+                          WHERE TEMP_PRDRST_BOM.NORMQTY <> _$BASEQTY
+                          ORDER BY TEMP_PRDRST_BOM.SEQ, MSTITEM.ITEMCD
+                          LIMIT 1);
+
+    IF _$DIFFITEMID IS NOT NULL THEN
+      -- 임시테이블은 한 쿼리에서 두 번 열 수 없어서 값을 따로 읽음
+      SELECT TEMP_PRDRST_BOM.RATE, TEMP_PRDRST_BOM.USEQTY
+      INTO _$DIFFRATE, _$DIFFUSE
+      FROM TEMP_PRDRST_BOM
+      WHERE TEMP_PRDRST_BOM.ITEMID = _$DIFFITEMID;
+
+      CALL COMERR(CONCAT('기준코드 : ', (SELECT MSTITEM.ITEMCD FROM MSTITEM WHERE MSTITEM.ITEMID = _$BASEITEMID)
+                        , ' (BOM투입량 : ', TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(_$BASERATE AS CHAR)))
+                        , ', 입력수량 : ', FORMAT(_$BASEUSE, 0), ')'
+                        , '\n품목코드 : ', (SELECT MSTITEM.ITEMCD FROM MSTITEM WHERE MSTITEM.ITEMID = _$DIFFITEMID)
+                        , ' (BOM투입량 : ', TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(_$DIFFRATE AS CHAR)))
+                        , ', 입력수량 : ', FORMAT(_$DIFFUSE, 0), ')'
+                        , '\n\n품목코드 : ', (SELECT MSTITEM.ITEMCD FROM MSTITEM WHERE MSTITEM.ITEMID = _$DIFFITEMID), '의 입력수량을 확인해주세요'
+                        )
+                 );
+      LEAVE PROC;
+    END IF;
+
+    -- 생산수량 = 자품목 1개 기준 (생산품 기준 수량). BOM 이 없으면 지금처럼 사용량 합계
+    IF _$BASEQTY IS NOT NULL THEN
+      SET _$PRODQTY = _$BASEQTY;
+    END IF;
   END IF;
 
   -- 불량수량 = 라인 불량 합계, 양품수량 = 생산수량 - 불량수량
