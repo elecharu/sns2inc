@@ -25,6 +25,16 @@ ItsButton.EventSearch = function () {
     }
 };
 
+// 툴바 [인쇄] → 지금 탭 그래프 출력 (연간 고장 목표대비 달성 S0501, 설비별 고장현황 S0502, 설비별 고장부위 현황 S0503, 조회조건 그대로)
+ItsButton.EventPrint = function () {
+    var rpt = new ItsXtraRpt('EQM1001_S050' + (ItsTab.GetIndex('tab1') + 1));
+    rpt.AddPanel('sdiv1');
+    rpt.CallPop();
+    if (rpt.isError) {
+        ItsMsg.Alert(rpt.errMessage);
+    }
+};
+
 // 작업장 변경시 공정·라인 콤보를 그 작업장 기준으로 변경
 ItsCombo.Event('cmb_LINECD').onChanged = function () {
     ItsCombo.SetRef01('cmb_EQMTP', ItsCombo.GetValue('cmb_LINECD'));
@@ -41,9 +51,18 @@ ItsCombo.Event('cmb_EQMTP').onChanged = function () {
     ItsCombo.SetValue('cmb_EQMGROUP1', '', false);
 };
 
-// 차트 탭으로 돌아오면 차트 크기를 칸에 맞춤, 조회년도는 연간 탭·조회기간은 설비별 고장현황·부품별 현황 탭에서만 표시
+// 탭 바꾸면 그 탭 바로 조회 (작업장·공정·라인을 다 골랐을 때만), 차트 크기를 칸에 맞춤, 조회년도는 연간 탭·조회기간은 설비별 고장현황·부품별 현황 탭에서만 표시
 ItsTab.Event('tab1').onTabChanged = function (newPanel) {
     SHOW_PERIOD(newPanel);
+    if (ItsCombo.GetValue('cmb_LINECD') && ItsCombo.GetValue('cmb_EQMTP') && ItsCombo.GetValue('cmb_EQMGROUP1')) {
+        if (newPanel == 0) {
+            SEARCH_CHART();
+        } else if (newPanel == 1) {
+            SEARCH_EQM_FAIL();
+        } else if (newPanel == 2) {
+            SEARCH_EQM_PART();
+        }
+    }
     if (newPanel == 0 || newPanel == 1) {
         CHART_RESIZE();
     }

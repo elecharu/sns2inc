@@ -18,6 +18,36 @@
 
 ## 🕒 2026-11-27 (금) 작업 내역
 
+### 6. EQM1001_S05 탭 바꾸면 자동 조회 + 인쇄 글자 뭉개짐·라벨 겹침 수정
+- **요청**: 탭 누를 때마다 자동 조회, 인쇄물 글자가 약간 뭉개짐, 일부 라벨이 선과 겹침
+- **원인 (뭉개짐)**: DevExpress 16.1 PDF 내보내기가 XRChart 를 96dpi 그림(1064x685)으로 넣음 — 이미지 형식(Metafile/Bitmap)·컨트롤 Dpi 를 바꿔도 같음(시험 확인)
+- **수정 (출력물)**
+  - `S0501.PRINT_CHART`: 차트를 3배 크기·3배 글꼴·선 굵기로 그림을 만들어(약 288dpi, 3194x2059) 같은 자리 그림 상자(`pic_RATE`·`pic_PART`, Designer 추가)에 줄여 넣고 차트는 숨김. 차트를 키울 때 밴드 높이도 따라 커지는 것은 원래 높이로 되돌림 (탭3 한 페이지 6개 유지)
+  - 라벨: 점유율·시간 라벨에 흰 반투명 바탕(선이 지나가도 글자가 읽힘), 막대 라벨 안쪽 간격, 원 그래프 바깥 라벨끼리 간격. 축 눈금은 8칸 안팎의 보기 좋은 간격(1·2·2.5·5 x 10^n)
+  - S0501·S0502 생성자 끝에 `PRINT_CHART`, S0503 은 원 그래프 행마다 `pic_PART.BeforePrint` 에서 채운 뒤 `PRINT_CHART`
+- **화면**: [EQM1001_S05.js](01.Office/PAGEEQM/EQM1001/EQM1001_S05.js) `onTabChanged` — 작업장·공정·라인을 다 골랐으면 바뀐 탭 조회(SEARCH_CHART / SEARCH_EQM_FAIL / SEARCH_EQM_PART), 안 골랐으면 조회 안 함(탭마다 오류 알림 방지)
+- **빌드·배포**: Rebuild Release 오류 0(경고는 기존 R0602 1건), exe → 04.Report/bin·01.Office/Reports (MD5 일치). 인코딩 유지
+- **검증**: DB 없이 빌드 exe 로 실DB 복사본 결과 PDF 생성 — 탭1·2 그림 3194x2059, 글자 선명, 10월 '3hr'·'0.7%' 등 선과 겹치던 라벨 읽힘, 탭3 6개 1페이지·라벨 겹침 없음. `node --check` 정상. 미확인: 웹에서 실제 인쇄·탭 자동 조회, VS 디자이너 열기
+
+### 5. 출력물 'ERROR:Unable to connect to any of the specified MySQL hosts.' 해결 (출력물 DB 설정 파일 형식)
+- **요청**: 인쇄 시 위 오류 → 관련 설정 파일의 기존 값은 주석 처리하고 아래에 로컬 환경에 맞는 값으로 설정
+- **원인**: 출력물 라이브러리(ItsLibRpt)는 `ITS_CONFIG_MARIA.xml`을 줄 단위로 읽어 `--addr:` 등이 있는 줄 전체에서 그 이름만 지운 값을 씀. 두 설정 파일이 `--addr --port --user --password`를 한 줄에 써서 서버 주소가 `211.43.15.98 --port:… --user:…` 통째로 읽히고 포트·사용자·비밀번호가 비어 접속 실패 (EQM1001 출력물 전체 공통, 이번 S05 출력물 코드와 무관)
+- **수정 (Git 추적 제외 파일, 로컬만)**: `01.Office/Reports/ITS_CONFIG_MARIA.xml`(BOM 없음 유지), `04.Report/bin/ITS_CONFIG_MARIA.xml`(BOM 유지) — 기존 줄 앞에 `# ` 주석, 아래에 한 줄에 한 값(`--addr`·`--port`·`--user`·`--password`(기존 암호화 값 그대로)·`--dbname`). 값은 지금 로컬에서 접속되는 DB와 같음(diagnose_db.ps1 과 같은 서버·포트·사용자·DB, 비밀번호 복호화 값 일치 확인). 원본은 스크래치 m10/backup_cfg 백업
+- **검증**: 출력물 exe 와 같은 방식으로 라이브러리를 불러 읽은 값 확인 + 그 접속으로 `SELECT 1` → 두 폴더 모두 서버·포트·사용자·DB 정상, 결과 1 (기존 형식은 같은 방법으로 접속 실패 재현). `#` 주석 줄은 읽어도 아래 줄 값으로 덮여 영향 없음. 미확인: 웹에서 실제 인쇄
+
+### 4. EQM1001_S05 설비고장율 현황 인쇄 (지금 탭 그래프 출력)
+- **요청**: EQM1001_S05 인쇄 버튼 활성화, EQM1001_R06 처럼 그래프를 출력물로, 탭 3개 중 지금 탭 기준 출력
+- **구조 (R06 과 같음)**: 화면 `new ItsXtraRpt('EQM1001_S050' + (탭+1))` + `AddPanel('sdiv1')`(조회년도·조회기간·작업장·공정·라인) → `EQM1001.exe S0501~S0503` → 출력물이 화면과 같은 프로시저 조회(`EQM1001_S05` LIST_CHART·LIST_EQM_FAIL·LIST_EQM_PART)를 다시 호출해 DevExpress 차트로 그림
+- **신규 출력물** ([04.Report/PAGEEQM/EQM1001](04.Report/PAGEEQM/EQM1001), 3개 파일 세트·단일 BOM·CRLF, `EQM1001.csproj` 등록, A4 가로)
+  - [S0501](04.Report/PAGEEQM/EQM1001/S0501.cs) 연간 고장 목표대비 달성: 제목 + 차트 1개 (목표·평균·1~12월 막대, 점유율 빨강 점선, 목표 파랑 점선). 화면 js 와 같은 규칙 — 목표 점유율 없으면 0.75%, 목표 막대 = 년 목표 비가동시간(없으면 월 평균 가동시간 × 목표 점유율), 막대 색(목표 회색·평균 노랑·이번 달 주황), 0hr 라벨 생략, 오른쪽 축을 가동시간 기준으로 왼쪽 축에 맞춤, 점유율 라벨 목표 초과 빨강·이하 파랑(16.1 은 점별 라벨 색이 없어 라벨 전용 점 계열 2개로 표시). 차트 공통 `SET_CHART`·조회 `CALL_S05`·`NUM/TEXT/PARAM`
+  - [S0502](04.Report/PAGEEQM/EQM1001/S0502.cs) 설비별 고장 현황: 총 라인 + 설비별 막대, 목표 = 총 라인 라인 목표·설비 설비 목표(→ 라인 → 0.75%), 제목에 조회기간. `S0501.SET_CHART` 사용
+  - [S0503](04.Report/PAGEEQM/EQM1001/S0503.cs) 설비별 고장부위 현황: Detail 1행 = 원 그래프 1개(총 라인 → 이력 있는 설비), Detail 3단(가로 3개 × 2줄 = 페이지당 6개), 행마다 `BeforePrint`에서 그 원 그래프 채움, 조각 라벨 '부위명, 비중%'(5% 미만 생략, 비중은 프로시저 값), 범례 부위명, 같은 부위 같은 색(화면 색), 이력 없으면 '조회기간에 고장부위 이력이 없습니다.'
+- **프로시저**: 변경 없음 — 화면이 쓰는 조회를 출력물도 그대로 호출해 같은 숫자 보장 (R06 R0601·R0602 도 화면 LIST_CHART 재사용). 조회조건 오류(작업장·공정·라인, 조회기간)도 프로시저 문구 그대로 화면 알림
+- **인쇄 버튼**: 툴바 버튼은 SYSAUTPRG.PRINTYN 으로 표시(R06 ALL 권한 Y, S05 전부 N 확인) → [05.Procedure/MES_SNS2_EQM1001_S05_PRINT_AUTH.sql](05.Procedure/MES_SNS2_EQM1001_S05_PRINT_AUTH.sql) (S05 ALL 권한 인쇄 Y, BOM 없음·CRLF)
+- **화면**: [01.Office/PAGEEQM/EQM1001/EQM1001_S05.js](01.Office/PAGEEQM/EQM1001/EQM1001_S05.js) `ItsButton.EventPrint` 추가 (단일 BOM·CRLF 유지)
+- **빌드·배포**: MSBuild 15.0 Rebuild Release 오류 0 (경고는 기존 R0602 `TAG_H` 1건), `bin/Release/EQM1001.exe` → `04.Report/bin`·`01.Office/Reports` 복사 (MD5 일치, 이전 exe 는 스크래치 m10/backup_exe 백업)
+- **검증**: 출력물 exe 를 격리 DB 에 연결해 실행하려 했으나 WSL 중계 포트 열기가 권한 판단으로 막혀 중단. 대신 빌드된 EQM1001.exe 를 불러 실DB 복사본 프로시저 결과(m08)를 넣고 PDF 생성 → M16 열전 T1 탭1·탭2·탭3(원 6개 1페이지), M2 열전 T1·M1 열후 T1(가동 없음) 정상 렌더링, 값·색·라벨 화면과 같음. 미확인: VS 디자이너 열기, 웹에서 실제 인쇄(프로시저 호출 포함)
+
 ### 3. TML1010_R08 'ItsModelPanel -> SetPopInfo GPCD is empty' 오류 제거 + 재발 방지 규칙
 - **요청**: TML1010_R08 실행 시 위 메시지 창 발생 → 발생 부분 제거, 다시 안 생기게 규칙 추가
 - **원인**: 공통 `ITSLIB.Pop`은 자기 `Loaded`에서 바인딩 필드명(`FieldName`)을 잡음. R08 `EventPageLoaded()`(페이지 `Loaded` 안에서 호출, 자식 Pop `Loaded`보다 먼저)에서 입고자 Pop에 바인딩된 `EMPCD` 기본값(로그인 사원)을 넣어 `textCode_TextChanged` → `ItsModelPanel.SetPopInfo("")` → 등록 안 된 빈 필드명이라 메시지. 다른 화면(TML1010_R05·TML1030_R01)은 버튼 동작에서 넣어 문제 없음

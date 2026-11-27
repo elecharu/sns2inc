@@ -238,6 +238,24 @@
     <Compile Include="R0602.Designer.cs">
       <DependentUpon>R0602.cs</DependentUpon>
     </Compile>
+    <Compile Include="S0501.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="S0501.Designer.cs">
+      <DependentUpon>S0501.cs</DependentUpon>
+    </Compile>
+    <Compile Include="S0502.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="S0502.Designer.cs">
+      <DependentUpon>S0502.cs</DependentUpon>
+    </Compile>
+    <Compile Include="S0503.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="S0503.Designer.cs">
+      <DependentUpon>S0503.cs</DependentUpon>
+    </Compile>
     <Compile Include="S04A.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -279,6 +297,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="S04A.resx">
       <DependentUpon>S04A.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="S0501.resx">
+      <DependentUpon>S0501.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="S0502.resx">
+      <DependentUpon>S0502.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="S0503.resx">
+      <DependentUpon>S0503.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
