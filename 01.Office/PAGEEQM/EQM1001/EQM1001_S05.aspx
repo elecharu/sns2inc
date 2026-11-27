@@ -14,7 +14,8 @@
         .chart-box .bb-target-NONRATE .bb-line, .chart-box .bb-target-GOALRATE .bb-line { stroke-dasharray: 4 3; }
         .chart-box .bb-target-GOALRATE .bb-circle { fill: #fff !important; }
         .chart-box .bb-texts-NONHR text { fill: #000 !important; font-weight: bold; }
-        .chart-box .bb-bar { stroke: #7F7F7F !important; stroke-width: 1px; }
+        .chart-box .bb-bar { stroke: #7F7F7F !important; stroke-width: 1px; cursor: pointer; }
+        #chart1 .bb-bar-0 { cursor: default; }
         .chart-box { position: relative; height: 100%; }
         .chart-legend { position: absolute; top: 34px; right: 70px; z-index: 1; padding: 3px 6px; border: 1px solid #999; background: #fff; font-size: 13px; white-space: nowrap; }
         .chart-legend > span { display: inline-flex; align-items: center; margin: 0 8px; cursor: default !important; }

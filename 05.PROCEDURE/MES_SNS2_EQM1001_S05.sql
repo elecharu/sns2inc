@@ -5,13 +5,14 @@ PROCEDURE `MES_SNS2`.`EQM1001_S05`(
 -- Create: 	2026-11-25  	생성 			한성수
 -- Modify: 	2026-11-25 					한성수	라인 연간 고장 목표대비 달성(호출 수리시간 / 매칭 생산라인 작업시간, 겹치는 작업시간 1회)
 -- 			2026-11-26 					한성수	차트 축 기준용 월 가동시간(WORKHR) 반환, 평균을 가동시간 있는 달 기준으로 변경, 설비별 고장 현황(LIST_EQM_FAIL)·설비별 고장부위 현황(LIST_EQM_PART) 추가, 설비고장율 목표관리(MST1006_R01) 라인 목표 점유율·목표 비가동시간과 설비별 목표 점유율(없으면 라인 목표) 반환, 설비별 고장현황·고장부위 현황은 조회기간(시작일~종료일)으로 조회(목표는 시작일 년도, 제목은 년도 없이), 표시 시간(hr)은 소수점 아래 버림 정수, 탭1 월 값은 집계 마지막 월까지만, 조인·계산식 SELECT 컬럼 한 줄씩 정리, 설비별 고장부위 현황은 고장부위 이력 있는 설비만
+-- 			2026-11-27 					한성수	설비별 고장 현황(LIST_EQM_FAIL) 설비번호(FANO) 반환 (막대 클릭 수리 이력 연동), 조건문·변수 선언 뒤에 필터 설명 주석, 탭1 월별 비가동·가동 넣기 UPDATE 3번 → 1번, 수리종료 중복 조건 제거, 파라미터·분기 주석을 화면 탭 기준으로 정리
 -- *****************************************************************************
-  IN $SYEAR             VARCHAR(4),    -- 조회년도
+  IN $SYEAR             VARCHAR(4),    -- 조회년도 (탭1 연간 고장 목표대비 달성)
   IN $LINECD            VARCHAR(10),   -- 작업장
   IN $EQMTP             VARCHAR(10),   -- 공정(설비구분)
   IN $EQMGROUP1         VARCHAR(10),   -- 라인(설비대분류)
-  IN $SDATE             VARCHAR(10),   -- 조회기간 시작일 (설비별 고장현황·고장부위 현황)
-  IN $EDATE             VARCHAR(10),   -- 조회기간 종료일 (설비별 고장현황·고장부위 현황)
+  IN $SDATE             VARCHAR(10),   -- 조회기간 시작일 (탭2 설비별 고장현황·탭3 설비별 고장부위 현황)
+  IN $EDATE             VARCHAR(10),   -- 조회기간 종료일 (탭2 설비별 고장현황·탭3 설비별 고장부위 현황)
 
 -- *****************************************************************************
   IN $CALLTYPE          VARCHAR(50),
@@ -19,12 +20,12 @@ PROCEDURE `MES_SNS2`.`EQM1001_S05`(
 )
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 -- *****************************************************************************
-  DECLARE _$NOWYM       VARCHAR(7);
+  DECLARE _$NOWYM       VARCHAR(7);     -- 현재 년월 (YYYY-MM)
   DECLARE _$LASTMM      INT;            -- 집계 마지막 월 (지난 해 12월, 올해 이번 달)
   DECLARE _$LINETITLE   VARCHAR(200);   -- 작업장 공정 라인 이름
-  DECLARE _$SUMNON      DECIMAL(20, 2);
-  DECLARE _$SUMWORK     DECIMAL(20, 2);
-  DECLARE _$MMCNT       INT;
+  DECLARE _$SUMNON      DECIMAL(20, 2); -- 비가동 합계(분) (탭1 평균, 탭2 총 라인, 탭3 고장부위 합계)
+  DECLARE _$SUMWORK     DECIMAL(20, 2); -- 가동 합계(분) (탭1 평균, 탭2 라인 총가동)
+  DECLARE _$MMCNT       INT;            -- 탭1 평균 대상 월 수 (가동시간 있는 달)
   DECLARE _$GOALRATE    DECIMAL(5, 2);  -- 라인 목표 점유율 (목표 없으면 NULL)
   DECLARE _$GOALHR      DECIMAL(10, 1); -- 라인 목표 비가동시간 (목표 없으면 NULL)
   DECLARE _$FROMDATE    VARCHAR(10);    -- 집계 시작일 (탭1 조회년도 1월 1일, 탭2·3 조회기간 시작일)
@@ -35,7 +36,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   -- 차트 공통: 집계 기간(탭1 조회년도, 탭2·3 조회기간)·라인 확인, 선택 라인 설비, 라인 가동시간(점유율 차트만)
   IF $CALLTYPE IN ('LIST_CHART', 'LIST_EQM_FAIL', 'LIST_EQM_PART') THEN
     IF $CALLTYPE = 'LIST_CHART' THEN
-      IF IFNULL($SYEAR, '') NOT REGEXP '^[0-9]{4}$' THEN
+      IF IFNULL($SYEAR, '') NOT REGEXP '^[0-9]{4}$' THEN  -- 조회년도가 4자리 숫자가 아니면 오류
         CALL COMERR('조회년도를 선택하세요.');
         LEAVE PROC;
       END IF;
@@ -43,12 +44,12 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       SET _$FROMDATE = CONCAT($SYEAR, '-01-01');
       SET _$TODATE = CONCAT($SYEAR, '-12-31');
     ELSE
-      IF IFNULL($SDATE, '') NOT REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' OR IFNULL($EDATE, '') NOT REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN
+      IF IFNULL($SDATE, '') NOT REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' OR IFNULL($EDATE, '') NOT REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN  -- 조회기간 시작일·종료일이 날짜 형식이 아니면 오류
         CALL COMERR('조회기간을 선택하세요.');
         LEAVE PROC;
       END IF;
 
-      IF $SDATE > $EDATE THEN
+      IF $SDATE > $EDATE THEN  -- 시작일이 종료일보다 늦으면 오류
         CALL COMERR('조회기간 시작일이 종료일보다 늦습니다.');
         LEAVE PROC;
       END IF;
@@ -57,7 +58,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       SET _$TODATE = $EDATE;
     END IF;
 
-    IF IFNULL($LINECD, '') = '' OR IFNULL($EQMTP, '') = '' OR IFNULL($EQMGROUP1, '') = '' THEN
+    IF IFNULL($LINECD, '') = '' OR IFNULL($EQMTP, '') = '' OR IFNULL($EQMGROUP1, '') = '' THEN  -- 작업장·공정·라인 중 하나라도 없으면 오류
       CALL COMERR('작업장·공정·라인을 선택하세요.');
       LEAVE PROC;
     END IF;
@@ -77,11 +78,11 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     INSERT INTO TMP_EQM (FANO)
     SELECT FANO
     FROM MSTEQM
-    WHERE FACTORYCD = '07'
-      AND USEYN = 'Y'
-      AND LINECD = $LINECD
-      AND EQMTP = $EQMTP
-      AND EQMGROUP1 = $EQMGROUP1;
+    WHERE FACTORYCD = '07'  -- 2공장 설비
+      AND USEYN = 'Y'  -- 사용 설비
+      AND LINECD = $LINECD  -- 선택 작업장
+      AND EQMTP = $EQMTP  -- 선택 공정(설비구분)
+      AND EQMGROUP1 = $EQMGROUP1;  -- 선택 라인(설비대분류)
   END IF;
 
   IF $CALLTYPE IN ('LIST_CHART', 'LIST_EQM_FAIL') THEN
@@ -89,10 +90,10 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
     SELECT MAX(GOALRATE), MAX(GOALHR)
       INTO _$GOALRATE, _$GOALHR
     FROM MSTEQM_FAILGOAL_LINE
-    WHERE SYEAR = _$GOALYEAR
-      AND LINECD = $LINECD
-      AND EQMTP = $EQMTP
-      AND EQMGROUP1 = $EQMGROUP1;
+    WHERE SYEAR = _$GOALYEAR  -- 목표 년도
+      AND LINECD = $LINECD  -- 선택 작업장
+      AND EQMTP = $EQMTP  -- 선택 공정(설비구분)
+      AND EQMGROUP1 = $EQMGROUP1;  -- 선택 라인(설비대분류)
 
     -- 라인 월별 가동(분): 선택 라인 설비에 매칭된 생산라인(MSTEQM_MATCH)의 집계 기간 작업시작~작업종료, 같은 생산라인에서 겹치는 작업시간은 한 번만, 작업일자 월 기준
     DROP TEMPORARY TABLE IF EXISTS TMP_WORK;
@@ -133,12 +134,12 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
             SELECT MSTEQM_MATCH.EQMCD
             FROM MSTEQM_MATCH
             INNER JOIN TMP_EQM
-              ON TMP_EQM.FANO = MSTEQM_MATCH.FANO
+              ON TMP_EQM.FANO = MSTEQM_MATCH.FANO  -- 선택 라인 설비에 매칭된 생산라인만
             GROUP BY MSTEQM_MATCH.EQMCD
           ) PRD_LINE
-            ON PRD_LINE.EQMCD = PRDWORK.EQMCD
-          WHERE PRDWORK.WORKDATE BETWEEN _$FROMDATE AND _$TODATE
-            AND PRDWORK.WORKETIME > PRDWORK.WORKSTIME
+            ON PRD_LINE.EQMCD = PRDWORK.EQMCD  -- 매칭 생산라인의 작업만
+          WHERE PRDWORK.WORKDATE BETWEEN _$FROMDATE AND _$TODATE  -- 작업일자가 집계 기간 안
+            AND PRDWORK.WORKETIME > PRDWORK.WORKSTIME  -- 작업종료가 작업시작보다 뒤인 작업만 (미종료·잘못된 시간 제외)
         ) WORK_ORD
       ) WORK_GRP
       GROUP BY WORK_GRP.EQMCD, WORK_GRP.GRPNO
@@ -150,7 +151,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 CASE $CALLTYPE
 -- *****************************************************************************
 
-  WHEN 'LIST_CHART' THEN -- 라인 연간 고장 목표대비 달성 (비가동 = 호출 수리시작~수리종료, 가동 = 매칭 생산라인 작업시작~작업종료)
+  WHEN 'LIST_CHART' THEN -- 탭1 연간 고장 목표대비 달성, 출력물 S0501 (비가동 = 호출 수리시작~수리종료, 가동 = 매칭 생산라인 작업시작~작업종료)
 
     SET _$NOWYM = LEFT(CALLTIME(), 7);
     SET _$LASTMM = CASE WHEN $SYEAR < LEFT(_$NOWYM, 4) THEN 12
@@ -173,39 +174,28 @@ CASE $CALLTYPE
       (2, 1, '1월'), (3, 2, '2월'), (4, 3, '3월'), (5, 4, '4월'), (6, 5, '5월'), (7, 6, '6월'),
       (8, 7, '7월'), (9, 8, '8월'), (10, 9, '9월'), (11, 10, '10월'), (12, 11, '11월'), (13, 12, '12월');
 
+    -- 월별 비가동(분) = 선택 라인 설비의 호출 수리 중 수리종료된 건(수리시작 월 기준), 월별 가동(분) = 라인 월별 가동시간, 없으면 0
     UPDATE TMP_MONTH
-    SET NONMIN = 0, WORKMIN = 0
-    WHERE SORTNO >= 2
-      AND MM <= _$LASTMM;
-
-    -- 월별 비가동(분): 선택 라인 설비의 호출 수리 중 수리종료된 건, 수리시작 월 기준
-    UPDATE TMP_MONTH
-    INNER JOIN (
+    LEFT JOIN (
       SELECT MONTH(EQMREP.REPSTIME) AS MM,
              SUM(TIMESTAMPDIFF(MINUTE, EQMREP.REPSTIME, EQMREP.REPETIME)) AS NONMIN
       FROM EQMREP
       INNER JOIN TMP_EQM
-        ON TMP_EQM.FANO = EQMREP.EQMCD
-      WHERE EQMREP.EQMREPTP = 'EQM01'
-        AND EQMREP.EQMCALLKEY <> ''
-        AND EQMREP.REPETIME <> ''
-        AND EQMREP.REPETIME >= EQMREP.REPSTIME
-        AND EQMREP.REPSTIME >= _$FROMDATE
-        AND EQMREP.REPSTIME < _$NEXTDATE
+        ON TMP_EQM.FANO = EQMREP.EQMCD  -- 선택 라인 설비의 수리만
+      WHERE EQMREP.EQMREPTP = 'EQM01'  -- 설비 수리
+        AND EQMREP.EQMCALLKEY <> ''  -- 호출로 시작된 수리
+        AND EQMREP.REPETIME >= EQMREP.REPSTIME  -- 수리종료된 건 (수리종료가 비었거나 수리시작보다 앞이면 제외)
+        AND EQMREP.REPSTIME >= _$FROMDATE  -- 수리시작일이 집계 시작일부터
+        AND EQMREP.REPSTIME < _$NEXTDATE  -- 수리시작일이 집계 종료일까지
       GROUP BY MONTH(EQMREP.REPSTIME)
     ) NON_SUM
-      ON NON_SUM.MM = TMP_MONTH.MM
-    SET TMP_MONTH.NONMIN = NON_SUM.NONMIN
-    WHERE TMP_MONTH.SORTNO >= 2
-      AND TMP_MONTH.MM <= _$LASTMM;
-
-    -- 월별 가동(분): 라인 월별 가동시간
-    UPDATE TMP_MONTH
-    INNER JOIN TMP_WORK
-      ON TMP_WORK.MM = TMP_MONTH.MM
-    SET TMP_MONTH.WORKMIN = TMP_WORK.WORKMIN
-    WHERE TMP_MONTH.SORTNO >= 2
-      AND TMP_MONTH.MM <= _$LASTMM;
+      ON NON_SUM.MM = TMP_MONTH.MM  -- 같은 월
+    LEFT JOIN TMP_WORK
+      ON TMP_WORK.MM = TMP_MONTH.MM  -- 같은 월
+    SET TMP_MONTH.NONMIN = IFNULL(NON_SUM.NONMIN, 0),
+        TMP_MONTH.WORKMIN = IFNULL(TMP_WORK.WORKMIN, 0)
+    WHERE TMP_MONTH.SORTNO >= 2  -- 월 행만 (목표·평균 제외)
+      AND TMP_MONTH.MM <= _$LASTMM;  -- 집계 마지막 월까지 (이후 달은 빈 값)
 
     -- 평균: 가동시간이 있는 달의 월 평균 (점유율 = 그 달들의 합계 비가동 / 합계 가동)
     SELECT SUM(NONMIN),
@@ -213,13 +203,13 @@ CASE $CALLTYPE
            COUNT(*)
       INTO _$SUMNON, _$SUMWORK, _$MMCNT
     FROM TMP_MONTH
-    WHERE SORTNO >= 2
-      AND WORKMIN > 0;
+    WHERE SORTNO >= 2  -- 월 행만
+      AND WORKMIN > 0;  -- 가동시간 있는 달만 (평균 대상)
 
     UPDATE TMP_MONTH
     SET NONMIN  = IF(_$MMCNT > 0, _$SUMNON / _$MMCNT, NULL),
         WORKMIN = IF(_$MMCNT > 0, _$SUMWORK / _$MMCNT, NULL)
-    WHERE SORTNO = 1;
+    WHERE SORTNO = 1;  -- 평균 행
 
     SELECT GUBUN,
            CAST(TRUNCATE(NONMIN / 60, 0) AS SIGNED) AS NONHR,
@@ -237,7 +227,7 @@ CASE $CALLTYPE
 
 -- *****************************************************************************
 
-  WHEN 'LIST_EQM_FAIL' THEN -- 라인 설비별 고장 현황 (설비 = 공무작업일지 작성 수리, 총 라인 = 호출 수리, 점유율 = 조회기간 라인 총가동시간 대비)
+  WHEN 'LIST_EQM_FAIL' THEN -- 탭2 설비별 고장 현황, 출력물 S0502 (설비 = 공무작업일지 작성 수리, 총 라인 = 호출 수리, 점유율 = 조회기간 라인 총가동시간 대비)
 
     SET _$SUMWORK = (SELECT SUM(WORKMIN) FROM TMP_WORK);
 
@@ -246,16 +236,16 @@ CASE $CALLTYPE
       INTO _$SUMNON
     FROM EQMREP
     INNER JOIN TMP_EQM
-      ON TMP_EQM.FANO = EQMREP.EQMCD
-    WHERE EQMREP.EQMREPTP = 'EQM01'
-      AND EQMREP.EQMCALLKEY <> ''
-      AND EQMREP.REPETIME <> ''
-      AND EQMREP.REPETIME >= EQMREP.REPSTIME
-      AND EQMREP.REPSTIME >= _$FROMDATE
-      AND EQMREP.REPSTIME < _$NEXTDATE;
+      ON TMP_EQM.FANO = EQMREP.EQMCD  -- 선택 라인 설비의 수리만
+    WHERE EQMREP.EQMREPTP = 'EQM01'  -- 설비 수리
+      AND EQMREP.EQMCALLKEY <> ''  -- 호출로 시작된 수리
+      AND EQMREP.REPETIME >= EQMREP.REPSTIME  -- 수리종료된 건 (수리종료가 비었거나 수리시작보다 앞이면 제외)
+      AND EQMREP.REPSTIME >= _$FROMDATE  -- 수리시작일이 집계 시작일부터
+      AND EQMREP.REPSTIME < _$NEXTDATE;  -- 수리시작일이 집계 종료일까지
 
     -- 설비별 비가동(분): 공무작업일지를 작성한 수리(EQMREP.WORKTP 있음) 중 수리종료된 건, 총 라인 값은 행마다 같이 반환
-    SELECT CONCAT(MSTEQM.EQMNM, CHAR(10), MSTEQM.FANO) AS GUBUN,
+    SELECT MSTEQM.FANO,
+           CONCAT(MSTEQM.EQMNM, CHAR(10), MSTEQM.FANO) AS GUBUN,
            CAST(TRUNCATE(IFNULL(EQM_SUM.NONMIN, 0) / 60, 0) AS SIGNED) AS NONHR,
            CAST(IF(_$SUMWORK > 0, ROUND(IFNULL(EQM_SUM.NONMIN, 0) / _$SUMWORK * 100, 2), NULL) AS DOUBLE) AS NONRATE,
            CAST(TRUNCATE(_$SUMNON / 60, 0) AS SIGNED) AS LINENONHR,
@@ -270,24 +260,23 @@ CASE $CALLTYPE
              SUM(TIMESTAMPDIFF(MINUTE, EQMREP.REPSTIME, EQMREP.REPETIME)) AS NONMIN
       FROM EQMREP
       INNER JOIN TMP_EQM
-        ON TMP_EQM.FANO = EQMREP.EQMCD
-      WHERE EQMREP.EQMREPTP = 'EQM01'
-        AND EQMREP.WORKTP <> ''
-        AND EQMREP.REPETIME <> ''
-        AND EQMREP.REPETIME >= EQMREP.REPSTIME
-        AND EQMREP.REPSTIME >= _$FROMDATE
-        AND EQMREP.REPSTIME < _$NEXTDATE
+        ON TMP_EQM.FANO = EQMREP.EQMCD  -- 선택 라인 설비의 수리만
+      WHERE EQMREP.EQMREPTP = 'EQM01'  -- 설비 수리
+        AND EQMREP.WORKTP <> ''  -- 공무작업일지를 작성한 수리
+        AND EQMREP.REPETIME >= EQMREP.REPSTIME  -- 수리종료된 건 (수리종료가 비었거나 수리시작보다 앞이면 제외)
+        AND EQMREP.REPSTIME >= _$FROMDATE  -- 수리시작일이 집계 시작일부터
+        AND EQMREP.REPSTIME < _$NEXTDATE  -- 수리시작일이 집계 종료일까지
       GROUP BY EQMREP.EQMCD
     ) EQM_SUM
-      ON EQM_SUM.EQMCD = MSTEQM.FANO
+      ON EQM_SUM.EQMCD = MSTEQM.FANO  -- 설비별 수리시간 (없으면 0)
     LEFT JOIN MSTEQM_FAILGOAL
-      ON MSTEQM_FAILGOAL.SYEAR = _$GOALYEAR
-     AND MSTEQM_FAILGOAL.FANO = MSTEQM.FANO
-    WHERE MSTEQM.FACTORYCD = '07'
-      AND MSTEQM.USEYN = 'Y'
-      AND MSTEQM.LINECD = $LINECD
-      AND MSTEQM.EQMTP = $EQMTP
-      AND MSTEQM.EQMGROUP1 = $EQMGROUP1
+      ON MSTEQM_FAILGOAL.SYEAR = _$GOALYEAR  -- 목표 년도 설비 목표
+     AND MSTEQM_FAILGOAL.FANO = MSTEQM.FANO  -- 같은 설비 (없으면 라인 목표)
+    WHERE MSTEQM.FACTORYCD = '07'  -- 2공장 설비
+      AND MSTEQM.USEYN = 'Y'  -- 사용 설비
+      AND MSTEQM.LINECD = $LINECD  -- 선택 작업장
+      AND MSTEQM.EQMTP = $EQMTP  -- 선택 공정(설비구분)
+      AND MSTEQM.EQMGROUP1 = $EQMGROUP1  -- 선택 라인(설비대분류)
     ORDER BY MSTEQM.FANO;
 
     DROP TEMPORARY TABLE IF EXISTS TMP_WORK;
@@ -295,7 +284,7 @@ CASE $CALLTYPE
 
 -- *****************************************************************************
 
-  WHEN 'LIST_EQM_PART' THEN -- 라인·설비별 고장부위 현황 (공무작업일지 작성 수리의 고장부위별 수리시간, 비중 = 라인 또는 설비 고장시간 대비)
+  WHEN 'LIST_EQM_PART' THEN -- 탭3 설비별 고장부위 현황, 출력물 S0503 (공무작업일지 작성 수리의 고장부위별 수리시간, 비중 = 라인 또는 설비 고장시간 대비)
 
     -- 설비·고장부위별 수리시간(분): 공무작업일지를 작성한 수리(EQMREP.WORKTP 있음) 중 수리종료된 건, 고장부위 없으면 ''
     DROP TEMPORARY TABLE IF EXISTS TMP_PART;
@@ -312,13 +301,12 @@ CASE $CALLTYPE
            SUM(TIMESTAMPDIFF(MINUTE, EQMREP.REPSTIME, EQMREP.REPETIME))
     FROM EQMREP
     INNER JOIN TMP_EQM
-      ON TMP_EQM.FANO = EQMREP.EQMCD
-    WHERE EQMREP.EQMREPTP = 'EQM01'
-      AND EQMREP.WORKTP <> ''
-      AND EQMREP.REPETIME <> ''
-      AND EQMREP.REPETIME >= EQMREP.REPSTIME
-      AND EQMREP.REPSTIME >= _$FROMDATE
-      AND EQMREP.REPSTIME < _$NEXTDATE
+      ON TMP_EQM.FANO = EQMREP.EQMCD  -- 선택 라인 설비의 수리만
+    WHERE EQMREP.EQMREPTP = 'EQM01'  -- 설비 수리
+      AND EQMREP.WORKTP <> ''  -- 공무작업일지를 작성한 수리
+      AND EQMREP.REPETIME >= EQMREP.REPSTIME  -- 수리종료된 건 (수리종료가 비었거나 수리시작보다 앞이면 제외)
+      AND EQMREP.REPSTIME >= _$FROMDATE  -- 수리시작일이 집계 시작일부터
+      AND EQMREP.REPSTIME < _$NEXTDATE  -- 수리시작일이 집계 종료일까지
     GROUP BY EQMREP.EQMCD, EQMREP.FAILPART;
 
     SET _$SUMNON = (SELECT SUM(PARTMIN) FROM TMP_PART);
@@ -331,7 +319,7 @@ CASE $CALLTYPE
            CAST(ROUND(SUM(PARTMIN) / _$SUMNON * 100, 1) AS DOUBLE) AS PARTRATE,
            CAST(TRUNCATE(_$SUMNON / 60, 0) AS SIGNED) AS TOTHR
     FROM TMP_PART
-    WHERE PARTMIN > 0
+    WHERE PARTMIN > 0  -- 수리시간 있는 고장부위만
     GROUP BY FAILPART
     ORDER BY FAILPART = '', FAILPART;
 
@@ -352,14 +340,14 @@ CASE $CALLTYPE
              PARTMIN,
              SUM(PARTMIN) OVER (PARTITION BY FANO) AS EQMMIN
       FROM TMP_PART
-      WHERE PARTMIN > 0
+      WHERE PARTMIN > 0  -- 수리시간 있는 고장부위만
     ) PART_SUM
-      ON PART_SUM.FANO = MSTEQM.FANO
-    WHERE MSTEQM.FACTORYCD = '07'
-      AND MSTEQM.USEYN = 'Y'
-      AND MSTEQM.LINECD = $LINECD
-      AND MSTEQM.EQMTP = $EQMTP
-      AND MSTEQM.EQMGROUP1 = $EQMGROUP1
+      ON PART_SUM.FANO = MSTEQM.FANO  -- 고장부위 이력 있는 설비만
+    WHERE MSTEQM.FACTORYCD = '07'  -- 2공장 설비
+      AND MSTEQM.USEYN = 'Y'  -- 사용 설비
+      AND MSTEQM.LINECD = $LINECD  -- 선택 작업장
+      AND MSTEQM.EQMTP = $EQMTP  -- 선택 공정(설비구분)
+      AND MSTEQM.EQMGROUP1 = $EQMGROUP1  -- 선택 라인(설비대분류)
     ORDER BY MSTEQM.FANO, PART_SUM.FAILPART = '', PART_SUM.FAILPART;
 
     DROP TEMPORARY TABLE IF EXISTS TMP_PART;

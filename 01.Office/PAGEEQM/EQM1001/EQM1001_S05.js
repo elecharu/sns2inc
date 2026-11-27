@@ -1,6 +1,8 @@
 ﻿/// <reference path="../../Script/reference.js" />
 
 var chart1, chart2;
+var chartRows = [], failRows = [];   // 탭1·탭2 차트 조회 결과 (막대 클릭 시 사용)
+var chartParam, failParam;           // 탭1·탭2 조회 당시 조회조건 (막대 클릭 시 설비 비가동 조회로 넘김)
 var GOAL_RATE = 0.75;   // 설비고장율 목표관리(MST1006_R01)에 목표가 없을 때 기본 목표 점유율
 var PART_COLORS = ['#E6B8B7', '#E4DFEC', '#DAEEF3', '#FDE9D9', '#C5D9F1', '#F2DCDB', '#EBF1DE', '#FCD5B4', '#B7DEE8', '#CCC0DA', '#D8E4BC', '#FFE699'];   // 고장부위 원 그래프 색상
 
@@ -106,6 +108,9 @@ function SEARCH_CHART() {
     var goalRate = first['GOALRATE'] != null ? first['GOALRATE'] : GOAL_RATE;   // 라인 목표 점유율
     var today = ItsHelper.GetYearMonthDay();
     var syear = (ItsCombo.GetValue('cmb_SYEAR') || '').substr(0, 4);
+    chartRows = rows;
+    chartParam = SEARCH_PARAM();
+    chartParam.SYEAR = syear;
     var curMM = syear < today.substr(0, 4) ? 12 : (syear == today.substr(0, 4) ? Number(today.substr(5, 2)) : 0);   // 현재 월 (지난 해는 12월)
     var categories = [], nonHr = ['NONHR'], nonRate = ['NONRATE'], barColors = [], goalRates = [];
     var maxHr = first['GOALHR'] || 0, maxRate = goalRate, sumWork = 0, cntWork = 0;
@@ -131,7 +136,44 @@ function SEARCH_CHART() {
         nonRate[1] = goalRate;
     }
 
-    chart1 = DRAW_CHART('chart1', first['TITLE'] || '', categories, nonHr, nonRate, barColors, range, goalRates);
+    chart1 = DRAW_CHART('chart1', first['TITLE'] || '', categories, nonHr, nonRate, barColors, range, goalRates, CHART_CLICK);
+}
+
+// 탭1 막대 클릭 → 설비 비가동 조회(EQM1001_S03)에서 그 달(평균은 조회년도 전체) 라인 호출 수리 이력 조회 (목표·집계 안 된 달 제외)
+function CHART_CLICK(d) {
+    var row = chartRows[d.index];
+    if (d.index == 0 || row == undefined || (d.index >= 2 && row['NONHR'] == null)) {
+        return;
+    }
+
+    var param = $.extend({}, chartParam, { SDATE: chartParam.SYEAR + '-01-01', EDATE: chartParam.SYEAR + '-12-31', FANO: '' });
+    if (d.index >= 2) {
+        param.SDATE = chartParam.SYEAR + '-' + ('0' + (d.index - 1)).slice(-2) + '-01';
+        param.EDATE = ItsHelper.AddDay(-1, ItsHelper.AddMonth(1, param.SDATE));
+    }
+    delete param.SYEAR;
+    ItsPage.Jump('EQM1001_S03', param);
+}
+
+// 탭2 막대 클릭 → 설비 비가동 조회(EQM1001_S03)에서 조회기간 수리 이력 조회 (총 라인 = 라인 호출 수리, 설비 = 그 설비 공무작업일지 수리)
+function EQM_FAIL_CLICK(d) {
+    var row = failRows[d.index - 1];
+    if (d.index > 0 && row == undefined) {
+        return;
+    }
+
+    ItsPage.Jump('EQM1001_S03', $.extend({}, failParam, { FANO: d.index == 0 ? '' : row['FANO'] }));
+}
+
+// 조회 당시 작업장·공정·라인·조회기간
+function SEARCH_PARAM() {
+    return {
+        LINECD: ItsCombo.GetValue('cmb_LINECD'),
+        EQMTP: ItsCombo.GetValue('cmb_EQMTP'),
+        EQMGROUP1: ItsCombo.GetValue('cmb_EQMGROUP1'),
+        SDATE: ItsDateRange.GetValueFrom('dr_PERIOD'),
+        EDATE: ItsDateRange.GetValueTo('dr_PERIOD')
+    };
 }
 
 // 선택 라인의 설비별 비가동시간·점유율 차트 조회 (총 라인 고장시간, 설비별, 조회기간)
@@ -147,6 +189,8 @@ function SEARCH_EQM_FAIL() {
     var rows = maria.store.data;
     var first = rows.length > 0 ? rows[0] : {};
     var lineGoal = first['LINEGOALRATE'] != null ? first['LINEGOALRATE'] : GOAL_RATE;   // 총 라인은 라인 목표, 설비는 설비 목표(없으면 라인 목표)
+    failRows = rows;
+    failParam = SEARCH_PARAM();
     var categories = ['총 라인 고장 시간'], nonHr = ['NONHR', first['LINENONHR']], nonRate = ['NONRATE', first['LINENONRATE']], barColors = ['#E6B8B7'], goalRates = [lineGoal];
     var maxHr = first['LINENONHR'] || 0, maxRate = Math.max(lineGoal, first['LINENONRATE'] || 0);
     rows.forEach(function (d) {
@@ -161,7 +205,7 @@ function SEARCH_EQM_FAIL() {
     });
     var range = CHART_RANGE(maxHr, maxRate, first['WORKHR'] || 0, lineGoal);
 
-    chart2 = DRAW_CHART('chart2', first['TITLE'] || '', categories, nonHr, nonRate, barColors, range, goalRates);
+    chart2 = DRAW_CHART('chart2', first['TITLE'] || '', categories, nonHr, nonRate, barColors, range, goalRates, EQM_FAIL_CLICK);
 }
 
 // 선택 라인의 고장부위별 수리시간 원 그래프 조회 (총 라인 + 설비별)
@@ -316,8 +360,8 @@ function CHART_RANGE(maxHr, maxRate, workHr, goalRate) {
     return { yMax: yMax, y2Max: yMax * ratePerHr, goalHr: goalRate / ratePerHr };
 }
 
-// 비가동시간 막대 + 점유율·목표 선 차트 (탭1·탭2 공통, goalRates = 막대별 목표 점유율)
-function DRAW_CHART(chartId, title, categories, nonHr, nonRate, barColors, range, goalRates) {
+// 비가동시간 막대 + 점유율·목표 선 차트 (탭1·탭2 공통, goalRates = 막대별 목표 점유율, onClick = 막대 클릭 처리)
+function DRAW_CHART(chartId, title, categories, nonHr, nonRate, barColors, range, goalRates, onClick) {
     var goalRate = ['GOALRATE'].concat(goalRates);
 
     return bb.generate({
@@ -340,7 +384,8 @@ function DRAW_CHART(chartId, title, categories, nonHr, nonRate, barColors, range
                     NONRATE: function (v) { return v == null ? '' : v + '%'; },
                     GOALRATE: function () { return ''; }
                 }
-            }
+            },
+            onclick: onClick
         },
         line: { connectNull: true },
         tooltip: {
