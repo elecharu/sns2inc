@@ -33,6 +33,8 @@
             <%-- 체크한 출하계획의 검사성적서 (검사 1건에 1장, 리포트 TQM1002.exe R01) --%>
             <Its:button runat="server" Label="성적서 출력" ID="btn_PRINT_RST" Width="100" BackColor="CustomButton2" MarginLeft="20" />
             <Its:button runat="server" Label="성적서 엑셀" ID="btn_PRINT_XLS" Width="100" BackColor="CustomButton2" MarginLeft="4" />
+            <%-- 고객사별 엑셀 양식 등록·관리 (등록한 양식이 있는 거래처는 그 양식으로 출력) --%>
+            <Its:button runat="server" Label="양식 관리" ID="btn_FORM" Width="90" BackColor="CustomButton2" MarginLeft="20" />
         </Its:div>
         <Its:split runat="server" Type="Horizon" Resizeable="false" />
         <Its:div runat="server" Type="SplitDown">
@@ -63,4 +65,36 @@
             <Its:grid runat="server" ID="grid2" />
         </Its:div>
     </Its:div>
+</asp:Content>
+
+<%-- POP --%>
+<asp:Content ContentPlaceHolderID="CPH_POP" runat="server">
+    <%-- 출하성적서 고객사별 엑셀 양식 관리 --%>
+    <Its:pop runat="server" ID="pop_FORM" Type="common" Title="출하성적서 양식 관리" Width="1100" Height="640">
+        <Its:div runat="server" Type="SplitTop" TopHeightPc="44" ID="pdiv_FORM">
+            <Its:text runat="server" Label="양식명" ID="txt_FORM_NM" InputWidth="220" />
+            <Its:find runat="server" Label="거래처" ID="find_FORM_CUST" REF01="60" GPCD="CUSTCD_COMPANY" />
+            <Its:newline runat="server" />
+            <Its:find runat="server" Label="고객" ID="find_FORM_ENDCUST" REF01="60" GPCD="CUSTCD_COMPANY" />
+            <Its:find runat="server" Label="품목" ID="find_FORM_ITEM" GPCD="ITEMID" />
+            <Its:newline runat="server" />
+            <Its:text runat="server" Label="시트명" ID="txt_FORM_SHEET" InputWidth="160" />
+            <Its:check runat="server" Label="거래처 기본 양식" ID="chk_FORM_DEFAULT" Value="N" MarginLeft="20" />
+            <Its:check runat="server" Label="사용" ID="chk_FORM_USE" Value="Y" MarginLeft="20" />
+            <Its:newline runat="server" />
+            <Its:text runat="server" Label="현재 파일" ID="txt_FORM_FILE" InputWidth="320" ReadOnly="true" />
+            <Its:fileManager runat="server" ID="fm_FORM" FileType="basic" MarginLeft="10" />
+            <Its:newline runat="server" />
+            <Its:button runat="server" Label="신규" ID="btn_FORM_NEW" Width="80" BackColor="CustomButton2" MarginLeft="10" />
+            <Its:button runat="server" Label="저장" ID="btn_FORM_SAVE" Width="80" BackColor="CustomButton" MarginLeft="4" />
+            <Its:button runat="server" Label="삭제" ID="btn_FORM_DEL" Width="80" BackColor="CustomButton3" MarginLeft="4" />
+            <Its:button runat="server" Label="표시어 안내" ID="btn_FORM_HELP" Width="100" BackColor="CustomButton2" MarginLeft="20" />
+        </Its:div>
+
+        <Its:split runat="server" Type="Horizon" Resizeable="false" />
+
+        <Its:div runat="server" Type="SplitDown">
+            <Its:grid runat="server" ID="grid_FORM" />
+        </Its:div>
+    </Its:pop>
 </asp:Content>

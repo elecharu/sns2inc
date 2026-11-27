@@ -7,38 +7,49 @@
       xmlns:dxdo="http://schemas.devexpress.com/winfx/2008/xaml/docking"
       xmlns:local="clr-namespace:TML2040"
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
-      Width="980" Height="480">
+      Width="1176" Height="576">
     <Canvas Background="Silver">
+        <!--2026-11-27 라인 버튼 목록 조회조건: 작업장·공정 선택 → [라인 조회] → 아래에 라인 버튼 → 라인을 골라 비가동 등록-->
         <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
-            <its:ButtonList x:Name="EQM_LIST" PanelWidth="980" Height="105"/>
-        </UserControl>
-
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="105">
-            <its:WrapContent x:Name="PANEL_B1" Width="980" Height="40">
-                <UserControl Width="800" Height="3"/>
-                <its:Button Label="비가동조회" Width="150" Height="35" FontSize="15" CommandName="SEARCH_WORK" BackColor="BLACK"/>
-                <its:Button Label="비가동추가" Width="150" Height="35" FontSize="15" CommandName="ADD" BackColor="SEAGREEN" Visibility="Collapsed"/>
-                <its:Button Label="비가동수정" Width="150" Height="35" FontSize="15" CommandName="UPDATE" BackColor="BLUE"/>
-                <its:Button Label="삭  제" Width="150" Height="35" CommandName="DELETE" FontSize="15" BackColor="IndianRed"/>
-                <its:Button Label="고장내용 / 수리내역상세" CommandName="ERR" FontSize="15" Width="200" Height="35" BackColor="PURPLE"/>
+            <its:WrapContent x:Name="PANEL_B3" Width="980" Height="40">
+                <its:Combo Label="작업장" LabelWidth="60" Width="260" GPCD="LINECD" Value="{Binding LINECD}" REF01="07"/>
+                <its:Combo Label="공정" LabelWidth="45" Width="260" GPCD="PRCCD_LINE" Value="{Binding PRCCD}"/>
+                <its:Button Label="라인 조회" Width="150" Height="35" FontSize="15" CommandName="SEARCH_LINE" BackColor="BLACK"/>
             </its:WrapContent>
         </UserControl>
 
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="142">
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="40">
+            <its:ButtonList x:Name="EQM_LIST" PanelWidth="980" Height="105"/>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="145">
+            <its:WrapContent x:Name="PANEL_B1" Width="980" Height="40">
+                
+                <its:Button Label="비가동조회" Width="150" Height="35" FontSize="15" CommandName="SEARCH_WORK" BackColor="BLACK"/>
+                <its:Button Label="비가동추가" Width="150" Height="35" FontSize="15" CommandName="ADD" BackColor="SEAGREEN" Visibility="Collapsed"/>
+                <its:Button Label="비가동수정" Width="150" Height="35" FontSize="15" CommandName="UPDATE"/>
+                <its:Button Label="삭  제" Width="150" Height="35" CommandName="DELETE" FontSize="15" BackColor="IndianRed"/>
+                <its:Button Label="문제점 / 조치사항" CommandName="ERR" FontSize="15" Width="200" Height="35" BackColor="PURPLE"/>   <!--2026-11-27 명칭 변경 (고장내용 → 문제점, 수리내역상세 → 조치사항)-->
+            </its:WrapContent>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="182">
             <its:WrapContent x:Name="PANEL_B2" Width="980" Height="40">
-                <UserControl Width="800" Height="3"/>
-                <its:Date Label="조회 일자" Value="{Binding DATE}"/>
+                <!--2026-11-27 비가동 이력 조회기간 (시작~종료, 비가동 시작시간 기준)-->
+                
+                <its:Date Label="조회기간" Value="{Binding SDATE}"/>
+                <TextBlock Text="~" FontSize="16" Margin="4,8,4,0"/>
+                <its:Date HidenLabel="Y" Value="{Binding EDATE}"/>
             </its:WrapContent>
         </UserControl>
 
         <!--비가동 이력 그리드-->
-        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="175">
+        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="215">
             <Grid>
-                <its:Grid x:Name="GRID_G1" Width="980" Height="305">
+                <its:Grid x:Name="GRID_G1" Width="980" Height="360">
                     <!--<its:Column Width="50" Header="선택" IsRowCheck="True"/>-->
                     <its:Column Width="90" Header="설비코드" FieldName="EQMCD" Visible="False"/>
-                    <its:Column Width="120" Header="설비명" FieldName="EQMNM"/>
-                    <its:Column Width="120" Header="상세설비명" FieldName="FANONM"/>
+                    <its:Column Width="120" Header="라인" FieldName="EQMNM"/>                    
                     <its:Column Width="130" Header="시작시간" FieldName="NONSTIME" ALGIN="CENTER"/>
                     <its:Column Width="130" Header="종료시간" FieldName="NONETIME" ALGIN="CENTER"/>
                     <its:Column Width="80" Header="비가동시간" FieldName="NONTIME" ALGIN="CENTER"/>
@@ -46,15 +57,15 @@
                     <its:Column Width="85" Header="비가동명" FieldName="NONNM"/>
                     <its:Column Width="100" Header="작업키" FieldName="PRDWORKKEY" Visible="False"/>
                     <its:Column Width="80" Header="비가동유형" FieldName="NONTP"/>
-                    <its:Column Width="100" Header="고장내용" FieldName="PROBLEM"/>
-                    <its:Column Width="100" Header="수리내역상세" FieldName="SOLUTION"/>
+                    <its:Column Width="100" Header="문제점" FieldName="PROBLEM"/>
+                    <its:Column Width="100" Header="조치사항" FieldName="SOLUTION"/>
                     <its:Column Width="100" Header="비가동키" FieldName="PRDNONKEY"/>
                 </its:Grid>
             </Grid>
         </UserControl>
 
         <!--비가동 유형선택 팝업-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="288" Canvas.Top="1" >
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="288" Canvas.Top="1" Visibility="Collapsed">
             <its:WrapContent x:Name="PANEL_A1" Width="400" Height="450">
                 <its:Text Label="비가동키" Value="{Binding PRDNONKEY}" Visibility="Collapsed"/>
                 <its:Date Label="시작시간" Value="{Binding NONSDAY}" ReadOnly="True"/>
@@ -70,7 +81,7 @@
         </UserControl>
 
         <!--비가동 시작종료-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="188" Canvas.Top="1" >
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="188" Canvas.Top="1" Visibility="Collapsed">
             <its:WrapContent x:Name="PANEL_A3" Width="600" Height="450">
                 <UserControl Width="3000" Height="3"/>
                 <its:Date Label="시작시간" Value="{Binding NONSDAY}"  />
@@ -90,14 +101,14 @@
             </its:WrapContent>
         </UserControl>
 
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="238" Canvas.Top="101">
+        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="238" Canvas.Top="101" Visibility="Collapsed">
             <its:WrapContent x:Name="PANEL_A4" Width="500" Height="250">
                 <UserControl Width="5000" Height="5"/>
                 <UserControl Width="10"/>
-                <Label Content="고장내용" Width="230" HorizontalContentAlignment="Center" HorizontalAlignment="Left"
+                <Label Content="문제점" Width="230" HorizontalContentAlignment="Center" HorizontalAlignment="Left"
                        FontSize="20" Foreground="Red" FontWeight="Heavy"/>
                 <UserControl Width="10"/>
-                <Label Content="수리내역상세" Width="250" HorizontalContentAlignment="Center" HorizontalAlignment="Right"
+                <Label Content="조치사항" Width="250" HorizontalContentAlignment="Center" HorizontalAlignment="Right"
                        FontSize="20" Foreground="Purple" FontWeight="Heavy"/>
                 <UserControl Width="5000"/>
                 <UserControl Width="10"/>

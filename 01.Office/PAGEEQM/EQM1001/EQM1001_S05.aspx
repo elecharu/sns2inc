@@ -20,7 +20,7 @@
         .chart-legend > span { display: inline-flex; align-items: center; margin: 0 8px; cursor: default !important; }
         .chart-legend svg { margin-right: 6px; }
         .part-box { height: 100%; overflow-y: auto; padding: 6px 10px; box-sizing: border-box; }
-        .part-title { margin: 4px 0 10px 0; text-align: center; font-size: 16px; font-weight: bold; }
+        .part-title { margin: 4px 0 22px 0; text-align: center; font-size: 16px; font-weight: bold; }
         .part-list { display: flex; flex-wrap: wrap; gap: 10px; }
         .part-item { width: 380px; }
         .part-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 10px; min-height: 22px; font-size: 12px; }
@@ -29,6 +29,7 @@
         .part-chart { height: 300px; }
         .part-chart .bb-chart-arc path { stroke: #7F7F7F !important; stroke-width: 1px; }
         .part-chart .bb-chart-arc text { fill: #000 !important; font-size: 12px; font-weight: bold; }
+        .part-chart .part-label { fill: #000 !important; font-size: 12px; font-weight: bold; pointer-events: none; }
         .part-name { text-align: center; font-size: 13px; font-weight: bold; white-space: pre-line; }
     </style>
 </asp:Content>
@@ -37,6 +38,7 @@
 <asp:Content ContentPlaceHolderID="CPH_SEARCH" runat="Server">
     <Its:div runat="server" Type="SearchPanel" ID="sdiv1">
         <Its:combo runat="server" Label="조회년도" ID="cmb_SYEAR" Field="SYEAR" GPCD="YEAR" REF01="-4" REF02="0" />
+        <Its:dateRange runat="server" Label="조회기간" ID="dr_PERIOD" FieldFrom="SDATE" FieldTo="EDATE" />
         <Its:combo runat="server" Label="작업장" Field="LINECD" ID="cmb_LINECD" REF01="07" GPCD="@LINECD" />
         <Its:combo runat="server" Label="공정" Field="EQMTP" ID="cmb_EQMTP" GPCD="@EQMTP" />
         <Its:combo runat="server" Label="라인" Field="EQMGROUP1" ID="cmb_EQMGROUP1" GPCD="@EQMGROUP1" />

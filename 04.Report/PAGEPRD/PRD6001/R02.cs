@@ -49,20 +49,42 @@ namespace XtraRpt
                 throw new InvalidOperationException("출력할 일상점검 항목이 없습니다.");
             }
 
-            DataRow head = ds.Tables[0].Rows[0];
+            FillSheet(ds.Tables[0].Rows[0], ds.Tables[1], ds.Tables[2], "", false);
+        }
+
+        // 2026-11-26 점검표 한 장 채우기 (PRD6001_S01 점검표 출력도 이 양식·이 함수를 씀)
+        //   head = 머리글 1행, items = 점검항목(SEQ, CHKLOCNM, CHKKNDNM, CHKSTD, CHKCYCLENM [, D01~D31, N01~N31]), photos = 위치사진(SEQ, FILEPATH)
+        //   month = 제목 '( 11 )월' 에 넣을 월 (빈값이면 빈칸), fillDays = 1~31일 칸에 결과(Dnn) 채움, Nnn = 'Y' 면 빨간 글씨
+        internal void FillSheet(DataRow head, DataTable itemSource, DataTable photos, string month, bool fillDays)
+        {
             cell_H_FANO.Text = Value(head, "FANO");
             cell_H_EQMNM.Text = Value(head, "EQMNM");
             cell_H_LINENM.Text = Value(head, "LINENM");
             cell_H_ITEMNM.Text = ItemText(Value(head, "ITEMNM_LIST"));
             cell_T_Date.Text = "제정일자 : " + DateText(Value(head, "FIRSTDATE"))
                 + "\r\n개정일자(개정번호) : " + DateText(Value(head, "REVDATE")) + " (REV." + Value(head, "REVNUM") + ")";
+            if (!string.IsNullOrEmpty(month))
+            {
+                cell_T_Title.Text = "(  " + month + "  )월 점검표";
+            }
 
             // 점검항목 : 순번은 동그라미 숫자 (위치사진 번호와 같음), 모자라면 빈 줄
-            DataTable items = ds.Tables[1].Copy();
+            DataTable items = itemSource.Copy();
             items.Columns.Add("SEQTXT", typeof(string));
             foreach (DataRow r in items.Rows)
             {
                 r["SEQTXT"] = Circle(Value(r, "SEQ"));
+                if (fillDays)
+                {
+                    for (int d = 1; d <= 31; d++)
+                    {
+                        string col = "D" + d.ToString("00");
+                        if (items.Columns.Contains(col))
+                        {
+                            r[col] = Value(r, col).Replace("/", "\n");   // 같은 날 여러 번은 위아래로
+                        }
+                    }
+                }
             }
             while (items.Rows.Count < MIN_ROWS)
             {
@@ -70,7 +92,32 @@ namespace XtraRpt
             }
             this.DataSource = items;
 
-            BindPhotos(ds.Tables[2]);
+            if (fillDays)
+            {
+                BindDays();
+            }
+
+            BindPhotos(photos);
+        }
+
+        // 1~31일 칸에 결과 연결 (작은 글씨, NG 는 빨간색)
+        private void BindDays()
+        {
+            for (int d = 1; d <= 31; d++)
+            {
+                XRTableCell cell = FindControl("cell_D_D" + d.ToString("00"), true) as XRTableCell;
+                if (cell == null) continue;
+                string dayCol = "D" + d.ToString("00");
+                string ngCol = "N" + d.ToString("00");
+                cell.DataBindings.Add(new XRBinding("Text", null, dayCol));
+                cell.Font = new Font("맑은 고딕", 5.5F);
+                cell.Padding = new DevExpress.XtraPrinting.PaddingInfo(0, 0, 0, 0, 100F);
+                cell.BeforePrint += (s, e) =>
+                {
+                    XRTableCell c = (XRTableCell)s;
+                    c.ForeColor = Convert.ToString(GetCurrentColumnValue(ngCol)) == "Y" ? Color.Red : Color.Black;
+                };
+            }
         }
 
         // 위치사진 8칸에 순서대로 (사진마다 그 항목 번호), 남는 칸은 빈 틀

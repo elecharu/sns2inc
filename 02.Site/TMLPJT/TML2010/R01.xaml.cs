@@ -45,7 +45,6 @@ namespace TML2010
         ItsModelGrid MODEL_G8 = new ItsModelGrid(); //일상점검 실적 항목
         ItsModelGrid MODEL_G9 = new ItsModelGrid(); //일상점검 등록·수정 항목
         ItsModelGrid MODEL_G10 = new ItsModelGrid(); //자주검사 검사항목
-        ItsModelGrid MODEL_G11 = new ItsModelGrid(); //자주검사 검사값
         ItsModelGrid MODEL_G12 = new ItsModelGrid(); //공정이동표 발행 실적로트
         ItsModelGrid MODEL_G13 = new ItsModelGrid(); //실적삭제 최근 실적
 
@@ -99,10 +98,29 @@ namespace TML2010
             MODEL_G7.EventRowChanged += MODEL_G7_EventRowChanged;
             MODEL_G8.Binding(GRID_G8);
             MODEL_G9.Binding(GRID_G9);
+            // 2026-11-26 일상점검 점검값 그리드에서 바로 입력 (숫자: 숫자패드, OK/NG: 누를 때마다 OK → NG → 빈칸)
+            MODEL_G9.EventValueChanged += MODEL_G9_EventValueChanged;
+            (GRID_G9.View as TableView).ShowingEditor += GRID_G9_ShowingEditor;
+            GRID_G9.PreviewMouseLeftButtonUp += GRID_G9_PreviewMouseLeftButtonUp;
+            this.PreviewKeyDown += KeyPad_PreviewKeyDown;   // 숫자 입력 팝업 키보드 입력
+
+            // 숫자 입력 팝업 끌어서 옮기기 (터치·마우스)
+            KEY_DRAG.TouchDown += KeyDrag_TouchDown;
+            KEY_DRAG.TouchMove += KeyDrag_TouchMove;
+            KEY_DRAG.TouchUp += KeyDrag_TouchUp;
+            KEY_DRAG.MouseLeftButtonDown += KeyDrag_MouseDown;
+            KEY_DRAG.MouseMove += KeyDrag_MouseMove;
+            KEY_DRAG.MouseLeftButtonUp += KeyDrag_MouseUp;
+            KEY_ZOOMIN.Click += (s, e) => KeyZoom(0.1);    // 숫자 입력 팝업 크기 조절
+            KEY_ZOOMOUT.Click += (s, e) => KeyZoom(-0.1);
             MODEL_G10.Binding(GRID_G10);
-            MODEL_G10.EventRowChanged += MODEL_G10_EventRowChanged;
-            MODEL_G11.Binding(GRID_G11);
-            MODEL_G11.EventValueChanged += MODEL_G11_EventValueChanged;
+            MODEL_G10.EventValueChanged += MODEL_G10_EventValueChanged;           // 자주검사 검사값 입력 → 판정
+            (GRID_G10.View as TableView).ShowingEditor += GRID_G10_ShowingEditor;  // 입력 못 하는 칸 막기
+            GRID_G10.PreviewMouseLeftButtonUp += GRID_G10_PreviewMouseLeftButtonUp; // 육안 판정 칸 누르기
+
+            // L/R 유무 항목의 L·R 두 줄은 항목 정보·판정 칸을 세로로 합쳐 보여줌 (2026-11-26)
+            // 병합 설정은 그리드 Loaded 때 저장된 레이아웃 복원(LoadGridStyle)으로 되돌아가므로 조회할 때마다 다시 켠다 (PrcApplyMerge)
+            (GRID_G10.View as TableView).CellMerge += GRID_G10_CellMerge;
             MODEL_G12.Binding(GRID_G12);
             MODEL_G13.Binding(GRID_G13);
 
@@ -317,6 +335,89 @@ namespace TML2010
             }
 
             MODEL_G8.SetData(ds.Tables[0]);
+            JudgeAll(MODEL_G8);
+        }
+
+        // 2026-11-26 일상점검 자동판정 (화면 표시만, 저장하지 않음. TAL0001_R05 와 같은 규칙)
+        //   수치 항목: 계획 판정범위(MINVAL~MAXVAL) 안이면 합격, 밖이면 불합격 / OK·NG: OK 합격, NG 불합격
+        //   점검값이 없거나 판정범위가 없는 항목은 빈칸, 불합격 줄은 빨간 글씨
+        private static string JudgeText(string val, string stdtp, string min, string max)
+        {
+            val = (val ?? "").Trim();
+            if (val == "") return "";
+            if (val.ToUpper() == "OK") return "합격";
+            if (val.ToUpper() == "NG") return "불합격";
+
+            decimal v, lo, hi;
+            if (stdtp != "RANGE" || !decimal.TryParse(val, out v)) return "";
+            if (decimal.TryParse(min, out lo) && v < lo) return "불합격";
+            if (decimal.TryParse(max, out hi) && v > hi) return "불합격";
+            return "합격";
+        }
+
+        private void JudgeRow(ItsModelGrid model, int row)
+        {
+            if (row < 0 || !model.Columns.Contains("JUDGE")) return;
+            // 프로시저 반영 전(판정범위 열 없음)이면 OK/NG 만 판정 (없는 열을 읽으면 메시지창이 뜸)
+            bool hasRange = model.Columns.Contains("STDTP") && model.Columns.Contains("MINVAL") && model.Columns.Contains("MAXVAL");
+            string judge = JudgeText(model.GetText(row, "CHKVALUE"),
+                                     hasRange ? model.GetText(row, "STDTP") : "",
+                                     hasRange ? model.GetText(row, "MINVAL") : "",
+                                     hasRange ? model.GetText(row, "MAXVAL") : "");
+            model.SetValue(row, "JUDGE", judge);
+            model.SetForeColor(row, judge == "불합격" ? Colors.Red : Colors.Black);
+        }
+
+        //===== 일상점검 점검값 그리드 입력 (2026-11-26) =====
+        private bool _chkJudging = false;
+
+        //숫자 점검값 입력 → 판정
+        private void MODEL_G9_EventValueChanged(int rowIndex, string fieldName)
+        {
+            if (_chkJudging || fieldName != "CHKVALUE" || rowIndex < 0) return;
+            _chkJudging = true;
+            JudgeRow(MODEL_G9, rowIndex);
+            _chkJudging = false;
+        }
+
+        //OK/NG 항목(점검값구분 01 아님)은 점검값 칸 글자 입력 막기 (누르면 OK/NG 바뀜)
+        private void GRID_G9_ShowingEditor(object sender, ShowingEditorEventArgs e)
+        {
+            if (e.Column == null || e.Column.FieldName != "CHKVALUE") return;
+            DataRowView drv = GRID_G9.GetRow(e.RowHandle) as DataRowView;
+            if (drv == null || drv["CHKVALTP"].ToString() != "01") e.Cancel = true;
+        }
+
+        //점검값 칸을 누르면 입력 팝업(POPUP_A13): 숫자 항목은 숫자, OK/NG 항목은 OK·NG 버튼 (2026-11-26)
+        private void GRID_G9_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            TableViewHitInfo hit = (GRID_G9.View as TableView).CalcHitInfo(e.OriginalSource as DependencyObject);
+            if (!hit.InRowCell || hit.Column == null || hit.Column.FieldName != "CHKVALUE") return;
+
+            DataRowView drv = GRID_G9.GetRow(hit.RowHandle) as DataRowView;
+            if (drv == null) return;
+            int row = MODEL_G9.Rows.IndexOf(drv.Row);
+            if (row >= 0) KeyPadOpen("CHK", row, "CHKVALUE");
+        }
+
+        //OK/NG 항목 새 점검은 OK 를 미리 넣음 (값이 비어 있는 것만, 2026-11-26)
+        private void ChkDefaultOk()
+        {
+            _chkJudging = true;
+            for (int i = 0; i < MODEL_G9.Rows.Count; i++)
+            {
+                if (MODEL_G9.GetText(i, "CHKVALTP") != "01" && MODEL_G9.GetText(i, "CHKVALUE").Trim() == "")
+                    MODEL_G9.SetValue(i, "CHKVALUE", "OK");
+            }
+            _chkJudging = false;
+        }
+
+        private void JudgeAll(ItsModelGrid model)
+        {
+            for (int i = 0; i < model.Rows.Count; i++)
+            {
+                JudgeRow(model, i);
+            }
         }
 
         //자주검사 합격·불합격은 하나만 체크
@@ -332,113 +433,517 @@ namespace TML2010
             }
         }
 
-        //자주검사 검사항목 선택 → 시료수만큼 검사값 행 (이 검사일시에 저장된 항목이면 저장된 검사값과 합불)
-        private void MODEL_G10_EventRowChanged(int rowIndex)
+        //===== 자주검사 그리드 하나 입력 (2026-11-26, TAL2001_R01 과 같음) =====
+        // 검사항목 한 줄(ROWTP L), L/R 유무 항목은 바로 아래 R 줄(ROWTP R). 시료 칸 X01~X10
+        private const int PRC_MAXSAMPLE = 10;
+
+        // L·R 두 줄을 세로로 합치는 칸 (검사항목 ~ 시료수, 판정)
+        private static readonly string[] PRC_MERGE_FIELDS = { "STDNM", "STDPART", "STDCHKTP", "STDJUDGE", "STDCYCLE", "CYCLEINFO", "SAMPLESIZE", "JUDGENM" };
+
+        //병합 켜기: 그리드 뷰 + 합칠 칸만 (나머지 칸은 끔)
+        //DevExpress 는 여러 칸 선택(SelectionMode Cell/Row) 이면 병합을 끈다. ITSLIB.Grid 기본이 MultiSelectMode.Cell 이라 이 그리드만 None 으로
+        private void PrcApplyMerge()
         {
-            MODEL_G11.InitData();
-            MODEL_A10.SetValue("OK", false);
-            MODEL_A10.SetValue("NG", false);
-            if (rowIndex < 0)
+            TableView view = GRID_G10.View as TableView;
+            if (view == null) return;
+            GRID_G10.SelectionMode = MultiSelectMode.None;
+            view.AllowCellMerge = true;
+            foreach (GridColumn col in GRID_G10.Columns)
             {
+                col.AllowCellMerge = Array.IndexOf(PRC_MERGE_FIELDS, col.FieldName) >= 0;
+            }
+        }
+
+        //같은 항목의 L 줄·R 줄만 합침 (값이 같아도 다른 항목끼리는 안 합침)
+        private void GRID_G10_CellMerge(object sender, CellMergeEventArgs e)
+        {
+            DataRowView r1 = GRID_G10.GetRow(e.RowHandle1) as DataRowView;
+            DataRowView r2 = GRID_G10.GetRow(e.RowHandle2) as DataRowView;
+            e.Merge = r1 != null && r2 != null
+                && r1["ROWTP"].ToString() == "L" && r2["ROWTP"].ToString() == "R"
+                && r1["STDCD"].ToString() == r2["STDCD"].ToString()
+                && r1["STDPART"].ToString() == r2["STDPART"].ToString()
+                && r1["PRCDETAIL"].ToString() == r2["PRCDETAIL"].ToString();
+            e.Handled = true;
+        }
+
+        private static string XCol(int no)
+        {
+            return "X" + no.ToString("00");
+        }
+
+        // 시료 칸 번호 (X01 → 1, 시료 칸이 아니면 0)
+        private static int XNo(string field)
+        {
+            if (field == null || field.Length != 3 || field[0] != 'X') return 0;
+            int no;
+            return int.TryParse(field.Substring(1), out no) ? no : 0;
+        }
+
+        // 항목의 L 줄 번호 (R 줄이면 바로 위)
+        private int PrcLRow(int row)
+        {
+            return MODEL_G10.GetText(row, "ROWTP") == "R" ? row - 1 : row;
+        }
+
+        // 그 줄 항목의 시료수
+        private int PrcSample(int row)
+        {
+            return Math.Min((int)MODEL_G10.GetDecimal(PrcLRow(row), "SAMPLESIZE"), PRC_MAXSAMPLE);
+        }
+
+        // 값을 넣을 수 있는 칸: 시료수 안 시료 칸 (측정은 숫자패드, 육안은 눌러서 OK/NG)
+        private bool PrcCanInput(int row, string field)
+        {
+            int no = XNo(field);
+            if (no == 0 || row < 0 || row >= MODEL_G10.Rows.Count) return false;
+            return no <= PrcSample(row);
+        }
+
+        // 글자로 입력하는 칸: 측정검사(02) 항목의 시료 칸
+        private bool PrcCanEdit(int row, string field)
+        {
+            return PrcCanInput(row, field) && MODEL_G10.GetText(PrcLRow(row), "STDCHKTP") == "02";
+        }
+
+        // 검사값이 판정범위 안인지. 범위 코드(STDRANGE): 01 최대, 02 최소, 03 이상, 04 이내, 05 =, 06 ~ (경계값 포함 합격)
+        // 육안(측정 아님)은 OK 합격, NG 불합격 (2026-11-26 시료마다 OK/NG)
+        private bool PrcIsOk(int lrow, string text)
+        {
+            if (MODEL_G10.GetText(lrow, "STDCHKTP") != "02") return text.Trim().ToUpper() == "OK";
+            decimal v, stdval, stdminus, stdplus;
+            if (!decimal.TryParse(text, out v)) return false;
+            decimal.TryParse(MODEL_G10.GetText(lrow, "STDVAL"), out stdval);
+            decimal.TryParse(MODEL_G10.GetText(lrow, "STDMINUS"), out stdminus);
+            decimal.TryParse(MODEL_G10.GetText(lrow, "STDPLUS"), out stdplus);
+            string stdrange = MODEL_G10.GetText(lrow, "STDRANGE");
+
+            if (stdrange == "01" || stdrange == "04") return v <= stdval;
+            if (stdrange == "02" || stdrange == "03") return v >= stdval;
+            if (stdrange == "05") return v == stdval;
+            if (stdrange == "06") return v >= stdval + stdminus && v <= stdval + stdplus;
+            return true;
+        }
+
+        // 판정 표시 (L 줄에만), 불합격이면 그 항목 줄(L·R) 빨간 글자
+        private bool _prcJudging = false;
+        private void PrcSetJudge(int lrow, string judge)
+        {
+            _prcJudging = true;
+            MODEL_G10.SetValue(lrow, "JUDGE", judge);
+            MODEL_G10.SetValue(lrow, "JUDGENM", judge == "Y" ? "합격" : (judge == "N" ? "불합격" : ""));
+            MODEL_G10.SetForeColor(lrow, judge == "N" ? Colors.Red : Colors.Black);
+            if (MODEL_G10.GetText(lrow, "LRYN") == "Y" && lrow + 1 < MODEL_G10.Rows.Count && MODEL_G10.GetText(lrow + 1, "ROWTP") == "R")
+            {   // R 줄도 같은 판정 (합쳐진 판정 칸이 R 줄 값을 보여줌)
+                MODEL_G10.SetValue(lrow + 1, "JUDGE", judge);
+                MODEL_G10.SetValue(lrow + 1, "JUDGENM", judge == "Y" ? "합격" : (judge == "N" ? "불합격" : ""));
+                MODEL_G10.SetForeColor(lrow + 1, judge == "N" ? Colors.Red : Colors.Black);
+            }
+            _prcJudging = false;
+        }
+
+        // 자동 판정 (측정·육안): 하나라도 벗어나면(육안은 NG) 불합격, 모든 칸(L/R 항목은 L·R 다)이 차고 다 맞으면 합격, 아니면 빈칸
+        private void PrcJudgeItem(int lrow)
+        {
+            if (lrow < 0) return;
+
+            List<int> lines = new List<int> { lrow };
+            if (MODEL_G10.GetText(lrow, "LRYN") == "Y" && lrow + 1 < MODEL_G10.Rows.Count) lines.Add(lrow + 1);
+
+            int n = PrcSample(lrow);
+            bool hasNg = false, allEntered = true;
+            foreach (int r in lines)
+            {
+                for (int x = 1; x <= n; x++)
+                {
+                    string v = MODEL_G10.GetText(r, XCol(x)).Trim();
+                    if (v == "") allEntered = false;
+                    else if (!PrcIsOk(lrow, v)) hasNg = true;
+                }
+            }
+            PrcSetJudge(lrow, hasNg ? "N" : (allEntered && n > 0 ? "Y" : ""));
+        }
+
+        //자주검사 검사값 입력 → 그 항목 판정
+        private void MODEL_G10_EventValueChanged(int rowIndex, string fieldName)
+        {
+            if (_prcJudging || XNo(fieldName) == 0 || rowIndex < 0) return;
+            PrcJudgeItem(PrcLRow(rowIndex));
+        }
+
+        //입력 못 하는 칸(측정 아님, 시료수 넘는 칸)은 편집 막기
+        private void GRID_G10_ShowingEditor(object sender, ShowingEditorEventArgs e)
+        {
+            if (XNo(e.Column.FieldName) == 0) return;   // 시료 칸이 아니면 원래 설정(ReadOnly)대로
+            DataRowView drv = GRID_G10.GetRow(e.RowHandle) as DataRowView;
+            int row = drv == null ? -1 : MODEL_G10.Rows.IndexOf(drv.Row);
+            if (!PrcCanEdit(row, e.Column.FieldName)) e.Cancel = true;
+        }
+
+        //===== 숫자 입력 팝업 POPUP_A13 (2026-11-26) =====
+        // 자주검사 시료 칸(PRC, GRID_G10)·일상점검 숫자 점검값(CHK, GRID_G9) 공용. 누르는 대로 칸에 바로 들어감
+        // [다음]/Enter: 같은 줄 다음 시료 → 마지막이면 다음 줄 첫 입력 칸. 더 없으면 닫기
+        private string _keyTarget = "";   // PRC / CHK
+        private int _keyRow = -1;
+        private string _keyField = "";
+        private bool _keyIsOkNg = false;   // 지금 칸이 OK/NG 항목인지 (숫자 키는 안 먹고 OK·NG 버튼만)
+
+        //입력 그리드 정렬 끄기: 머리글을 눌러 정렬된 상태면 값을 넣는 순간 줄이 정렬 위치로 옮겨 감 (2026-11-26)
+        //저장된 그리드 레이아웃에 정렬이 남아 있을 수 있어서 조회할 때마다 정렬도 지운다
+        private void NoSort(ITSLIB.Grid grid)
+        {
+            try
+            {
+                TableView view = grid.View as TableView;
+                if (view != null)
+                {
+                    view.AllowSorting = false;
+                    view.ImmediateUpdateRowPosition = false;
+                }
+                grid.ClearSorting();
+            }
+            catch { }
+        }
+
+        private void KeyPadOpen(string target, int row, string field)
+        {
+            _keyTarget = target;
+            _keyRow = row;
+            _keyField = field;
+
+            ItsModelGrid model = target == "PRC" ? MODEL_G10 : MODEL_G9;
+            ITSLIB.Grid grid = target == "PRC" ? GRID_G10 : GRID_G9;
+
+            _keyIsOkNg = target == "PRC" ? MODEL_G10.GetText(PrcLRow(row), "STDCHKTP") != "02"
+                                         : MODEL_G9.GetText(row, "CHKVALTP") != "01";
+
+            if (target == "PRC")
+            {
+                int lrow = PrcLRow(row);
+                string part = MODEL_G10.GetText(lrow, "STDPART").Trim();
+                string side = MODEL_G10.GetText(row, "SIDE");
+                // 검사항목 · 세부항목 · L/R · 시료번호 (세부항목·L/R 은 있을 때만)
+                TXT_KEYTITLE.Text = MODEL_G10.GetText(lrow, "STDNM") + (part != "" ? " · " + part : "")
+                                  + (side != "" ? " · " + side : "") + " · X" + XNo(field);
+            }
+            else
+            {
+                string std = MODEL_G9.GetText(row, "CHKSTD").Trim();
+                TXT_KEYTITLE.Text = MODEL_G9.GetText(row, "CHKKNDNM") + (std != "" ? " · " + std : "");   // 점검기준 없으면 점검명만
+            }
+            TXT_KEYVAL.Text = model.GetText(row, field);
+
+            // 입력 중인 칸 표시: 그 줄·칸에 포커스
+            try
+            {
+                model.SelectRow(row);
+                grid.CurrentColumn = grid.Columns[field];
+            }
+            catch { }
+
+            if (POPUP_A13.Visibility != Visibility.Visible) PANEL_A13.Show();
+            KeyDragHookTitleBar();   // 상단바 끌어서 옮기기
+        }
+
+        private void KeyPadPress(string key)
+        {
+            if (_keyRow < 0 || _keyField == "") return;
+            ItsModelGrid model = _keyTarget == "PRC" ? MODEL_G10 : MODEL_G9;
+            if (_keyRow >= model.Rows.Count) { PANEL_A13.Close(); return; }
+
+            if (key == "ENTER") { KeyPadNext(); return; }
+
+            // OK/NG 항목: OK·NG 버튼은 값 넣고 바로 다음 칸, 지움·← 는 빈칸. 숫자 키는 무시
+            // 숫자 항목: OK·NG 버튼 무시
+            if (key == "OK" || key == "NG")
+            {
+                if (!_keyIsOkNg) return;
+                TXT_KEYVAL.Text = key;
+                model.SetValue(_keyRow, _keyField, key);   // EventValueChanged 가 판정
+                KeyPadNext();
+                return;
+            }
+            if (_keyIsOkNg)
+            {
+                if (key != "CLEAR" && key != "BACK") return;
+                TXT_KEYVAL.Text = "";
+                model.SetValue(_keyRow, _keyField, "");
                 return;
             }
 
-            // 측정검사(02)가 아니면 합격을 기본으로 체크 (측정은 검사값 입력으로 자동 판정)
-            if (MODEL_G10.GetText(rowIndex, "STDCHKTP") != "02")
-            {
-                MODEL_A10.SetValue("OK", true);
-            }
+            string v = TXT_KEYVAL.Text ?? "";
+            if (key.Length == 1 && char.IsDigit(key[0])) v += key;
+            else if (key == "DOT") { if (!v.Contains(".")) v += (v == "" || v == "-" ? "0." : "."); }
+            else if (key == "MINUS") { v = v.StartsWith("-") ? v.Substring(1) : "-" + v; }
+            else if (key == "BACK") { if (v.Length > 0) v = v.Substring(0, v.Length - 1); }
+            else if (key == "CLEAR") v = "";
+            else return;
 
-            bool isSaved = MODEL_G10.GetText(rowIndex, "TQMRSTKEY") != "";
-            if (isSaved)
+            TXT_KEYVAL.Text = v;
+            model.SetValue(_keyRow, _keyField, v);   // EventValueChanged 가 판정
+        }
+
+        private void KeyPadNext()
+        {
+            if (_keyTarget == "PRC")
             {
-                ItsMaria.Set("TAL2001_R01", "LIST_VALUE");
-                ItsMaria.AddOne("TQMRSTKEY", MODEL_G10.GetText(rowIndex, "TQMRSTKEY"));
-                ItsMaria.AddOne("PRCCD", MODEL_A10.GetText("PRCCD"));
-                ItsMaria.AddOne("STDCD", MODEL_G10.GetText(rowIndex, "STDCD"));
-                ItsMaria.AddOne("STDPART", MODEL_G10.GetText(rowIndex, "STDPART"));
-                ItsMaria.AddOne("PRCDETAIL", MODEL_G10.GetText(rowIndex, "PRCDETAIL"));
-                DataSet ds = ItsMaria.Call();
-                if (ItsMaria.IsError)
+                // 측정·OK/NG 모두 입력 칸 (2026-11-26 OK/NG 도 키패드로)
+                int no = XNo(_keyField);
+                if (no < PrcSample(_keyRow) && PrcCanInput(_keyRow, XCol(no + 1)))
                 {
-                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    KeyPadOpen("PRC", _keyRow, XCol(no + 1));
                     return;
                 }
-
-                MODEL_G11.SetData(ds.Tables[0]);
-            }
-
-            // 시료수만큼 행 (저장된 검사값 뒤에 빈 행, L·R 둘 다 빈 행은 저장하지 않으므로)
-            int samplesize = (int)MODEL_G10.GetDecimal(rowIndex, "SAMPLESIZE");
-            for (int i = MODEL_G11.Rows.Count; i < samplesize; i++)
-            {
-                MODEL_G11.AddRow();
-            }
-
-            if (isSaved)
-            {
-                JudgePrcTest(rowIndex);
-                MODEL_A10.SetValue("OK", MODEL_G10.GetText(rowIndex, "JUDGE") == "Y");
-                MODEL_A10.SetValue("NG", MODEL_G10.GetText(rowIndex, "JUDGE") == "N");
-            }
-        }
-
-        //자주검사 검사값 입력 → 합불 판정
-        private void MODEL_G11_EventValueChanged(int rowIndex, string fieldName)
-        {
-            if (fieldName == "VALUE" || fieldName == "VALUE2")
-            {
-                JudgePrcTest(MODEL_G10.CurrentIndex);
-            }
-        }
-
-        //측정검사(02) 검사값을 판정범위로 합불 판정: 벗어난 행은 빨간 글자, 행별 판정, 합격·불합격 체크 자동 설정 (TAL2001_R01 JUDGE_GRID2 와 같음)
-        private void JudgePrcTest(int stdRow)
-        {
-            if (stdRow < 0 || MODEL_G10.GetText(stdRow, "STDCHKTP") != "02")
-            {
-                return;
-            }
-
-            string stdrange = MODEL_G10.GetText(stdRow, "STDRANGE");
-            decimal stdval, stdminus, stdplus;
-            decimal.TryParse(MODEL_G10.GetText(stdRow, "STDVAL"), out stdval);
-            decimal.TryParse(MODEL_G10.GetText(stdRow, "STDMINUS"), out stdminus);
-            decimal.TryParse(MODEL_G10.GetText(stdRow, "STDPLUS"), out stdplus);
-
-            bool hasNg = false;
-            bool allEntered = true;
-            for (int i = 0; i < MODEL_G11.Rows.Count; i++)
-            {
-                string value = MODEL_G11.GetText(i, "VALUE").Trim();
-                string value2 = MODEL_G11.GetText(i, "VALUE2").Trim();
-                if (value == "" && value2 == "") allEntered = false;
-
-                // 범위 코드(STDRANGE): 01 최대, 02 최소, 03 이상, 04 이내, 05 =, 06 ~ (경계값 포함 합격)
-                bool rowNg = false;
-                foreach (string text in new string[] { value, value2 })
+                for (int r = _keyRow + 1; r < MODEL_G10.Rows.Count; r++)
                 {
-                    if (text == "") continue;
-
-                    decimal v;
-                    bool ok;
-                    if (!decimal.TryParse(text, out v)) ok = false;
-                    else if (stdrange == "01" || stdrange == "04") ok = v <= stdval;
-                    else if (stdrange == "02" || stdrange == "03") ok = v >= stdval;
-                    else if (stdrange == "05") ok = v == stdval;
-                    else if (stdrange == "06") ok = v >= stdval + stdminus && v <= stdval + stdplus;
-                    else ok = true;
-
-                    if (!ok) rowNg = true;
+                    if (PrcCanInput(r, XCol(1)))
+                    {
+                        KeyPadOpen("PRC", r, XCol(1));
+                        return;
+                    }
                 }
+            }
+            else
+            {
+                if (_keyRow + 1 < MODEL_G9.Rows.Count)   // 숫자·OK/NG 모두 다음 줄
+                {
+                    KeyPadOpen("CHK", _keyRow + 1, "CHKVALUE");
+                    return;
+                }
+            }
+            PANEL_A13.Close();   // 마지막 칸
+        }
 
-                if (rowNg) hasNg = true;
-                MODEL_G11.SetValue(i, "JUDGE", value == "" && value2 == "" ? "" : (rowNg ? "불합격" : "합격"));
-                MODEL_G11.SetForeColor(i, rowNg ? Colors.Red : Colors.Black);
+        //----- 숫자 입력 팝업 끌어서 옮기기 (2026-11-26) -----
+        // 손잡이 줄(KEY_DRAG)을 손가락·마우스로 끌면 POPUP_A13 의 Canvas.Left/Top 을 바꾼다. 화면(Canvas) 밖으로는 못 나감
+        // 터치는 Touch 이벤트로 처리하고 e.Handled 로 마우스 승격을 막는다 (같은 끌기가 두 번 처리되지 않게)
+        private bool _keyDragging = false;
+        private Point _keyDragStart;
+        private double _keyDragLeft, _keyDragTop;
+
+        private void KeyDragBegin(Point p)
+        {
+            _keyDragging = true;
+            _keyDragStart = p;
+            _keyDragLeft = Canvas.GetLeft(POPUP_A13);
+            _keyDragTop = Canvas.GetTop(POPUP_A13);
+            if (double.IsNaN(_keyDragLeft)) _keyDragLeft = 0;
+            if (double.IsNaN(_keyDragTop)) _keyDragTop = 0;
+        }
+
+        private void KeyDragTo(Point p)
+        {
+            if (!_keyDragging) return;
+            Canvas canvas = POPUP_A13.Parent as Canvas;
+            double left = _keyDragLeft + (p.X - _keyDragStart.X);
+            double top = _keyDragTop + (p.Y - _keyDragStart.Y);
+            if (canvas != null && canvas.ActualWidth > 0)
+            {
+                left = Math.Max(0, Math.Min(left, canvas.ActualWidth - POPUP_A13.ActualWidth * _keyScale));   // 크기 조절 배율 반영
+                top = Math.Max(0, Math.Min(top, canvas.ActualHeight - POPUP_A13.ActualHeight * _keyScale));
+            }
+            Canvas.SetLeft(POPUP_A13, left);
+            Canvas.SetTop(POPUP_A13, top);
+        }
+
+        //크기 조절: 팝업 전체를 배율로 키우고 줄임 (0.7 ~ 1.6배). 커진 만큼 화면 밖으로 나가면 안쪽으로 당김
+        private double _keyScale = 1.0;
+        private void KeyZoom(double step)
+        {
+            _keyScale = Math.Round(Math.Max(0.7, Math.Min(1.6, _keyScale + step)), 1);
+            POPUP_A13.LayoutTransform = new ScaleTransform(_keyScale, _keyScale);
+            POPUP_A13.UpdateLayout();
+
+            Canvas canvas = POPUP_A13.Parent as Canvas;
+            if (canvas == null || canvas.ActualWidth <= 0) return;
+            double w = POPUP_A13.ActualWidth * _keyScale, h = POPUP_A13.ActualHeight * _keyScale;
+            double left = Canvas.GetLeft(POPUP_A13), top = Canvas.GetTop(POPUP_A13);
+            if (double.IsNaN(left)) left = 0;
+            if (double.IsNaN(top)) top = 0;
+            Canvas.SetLeft(POPUP_A13, Math.Max(0, Math.Min(left, canvas.ActualWidth - w)));
+            Canvas.SetTop(POPUP_A13, Math.Max(0, Math.Min(top, canvas.ActualHeight - h)));
+        }
+
+        //끌기 손잡이(sender) 안의 버튼(－/＋)이나 닫기(✕, 상단바의 Canvas)를 누른 것이면 끌기 시작 안 함
+        private static bool IsOnControl(object source, object stopAt)
+        {
+            DependencyObject d = source as DependencyObject;
+            while (d != null && d != stopAt)
+            {
+                if (d is System.Windows.Controls.Primitives.ButtonBase || d is Canvas) return true;
+                d = (d is Visual || d is System.Windows.Media.Media3D.Visual3D) ? VisualTreeHelper.GetParent(d) : LogicalTreeHelper.GetParent(d);
+            }
+            return false;
+        }
+
+        //팝업 상단바(TML_POP 템플릿의 TML_POP_TITLEBAR)도 끌기 손잡이로 쓴다 (처음 열 때 한 번 연결)
+        private bool _keyTitleHooked = false;
+        private void KeyDragHookTitleBar()
+        {
+            if (_keyTitleHooked) return;
+            POPUP_A13.ApplyTemplate();
+            UIElement bar = POPUP_A13.Template == null ? null : POPUP_A13.Template.FindName("TML_POP_TITLEBAR", POPUP_A13) as UIElement;
+            if (bar == null) return;
+            bar.TouchDown += KeyDrag_TouchDown;
+            bar.TouchMove += KeyDrag_TouchMove;
+            bar.TouchUp += KeyDrag_TouchUp;
+            bar.MouseLeftButtonDown += KeyDrag_MouseDown;
+            bar.MouseMove += KeyDrag_MouseMove;
+            bar.MouseLeftButtonUp += KeyDrag_MouseUp;
+            _keyTitleHooked = true;
+        }
+
+        private void KeyDrag_TouchDown(object sender, TouchEventArgs e)
+        {
+            if (IsOnControl(e.OriginalSource, sender)) return;
+            KeyDragBegin(e.GetTouchPoint(POPUP_A13.Parent as IInputElement).Position);
+            e.TouchDevice.Capture(sender as IInputElement);
+            e.Handled = true;
+        }
+
+        private void KeyDrag_TouchMove(object sender, TouchEventArgs e)
+        {
+            if (e.TouchDevice.Captured != sender) return;
+            KeyDragTo(e.GetTouchPoint(POPUP_A13.Parent as IInputElement).Position);
+            e.Handled = true;
+        }
+
+        private void KeyDrag_TouchUp(object sender, TouchEventArgs e)
+        {
+            if (e.TouchDevice.Captured != sender) return;
+            _keyDragging = false;
+            (sender as UIElement).ReleaseTouchCapture(e.TouchDevice);
+            e.Handled = true;
+        }
+
+        private void KeyDrag_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.StylusDevice != null) return;   // 터치에서 승격된 마우스 이벤트는 무시 (Touch 이벤트가 처리)
+            if (IsOnControl(e.OriginalSource, sender)) return;
+            KeyDragBegin(e.GetPosition(POPUP_A13.Parent as IInputElement));
+            (sender as UIElement).CaptureMouse();
+            e.Handled = true;
+        }
+
+        private void KeyDrag_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.StylusDevice != null || !(sender as UIElement).IsMouseCaptured) return;
+            KeyDragTo(e.GetPosition(POPUP_A13.Parent as IInputElement));
+        }
+
+        private void KeyDrag_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (e.StylusDevice != null || !(sender as UIElement).IsMouseCaptured) return;
+            _keyDragging = false;
+            (sender as UIElement).ReleaseMouseCapture();
+            e.Handled = true;
+        }
+
+        //키보드로도 입력 (숫자, ., -, Backspace, Delete, Enter, Esc)
+        private void KeyPad_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (POPUP_A13.Visibility != Visibility.Visible) return;
+
+            string key = null;
+            if (e.Key >= Key.D0 && e.Key <= Key.D9) key = ((int)(e.Key - Key.D0)).ToString();
+            else if (e.Key >= Key.NumPad0 && e.Key <= Key.NumPad9) key = ((int)(e.Key - Key.NumPad0)).ToString();
+            else if (e.Key == Key.Decimal || e.Key == Key.OemPeriod) key = "DOT";
+            else if (e.Key == Key.Subtract || e.Key == Key.OemMinus) key = "MINUS";
+            else if (e.Key == Key.Back) key = "BACK";
+            else if (e.Key == Key.Delete) key = "CLEAR";
+            else if (e.Key == Key.Enter) key = "ENTER";
+            else if (e.Key == Key.O) key = "OK";   // OK/NG 항목: O = OK, N = NG
+            else if (e.Key == Key.N) key = "NG";
+            else if (e.Key == Key.Escape) { PANEL_A13.Close(); e.Handled = true; return; }
+
+            if (key == null) return;
+            KeyPadPress(key);
+            e.Handled = true;
+        }
+
+        //시료 칸을 누르면 입력 팝업(POPUP_A13): 측정 항목은 숫자, 육안 항목은 OK·NG 버튼 (판정 자동)
+        private void GRID_G10_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            TableViewHitInfo hit = (GRID_G10.View as TableView).CalcHitInfo(e.OriginalSource as DependencyObject);
+            if (!hit.InRowCell || hit.Column == null || XNo(hit.Column.FieldName) == 0) return;
+
+            DataRowView drv = GRID_G10.GetRow(hit.RowHandle) as DataRowView;
+            if (drv == null) return;
+            int row = MODEL_G10.Rows.IndexOf(drv.Row);
+            string field = hit.Column.FieldName;
+            if (!PrcCanInput(row, field)) return;
+
+            KeyPadOpen("PRC", row, field);
+        }
+
+        //조회 결과(검사항목·저장된 검사값) → 그리드 줄 (항목 1건 = L 줄, L/R 유무 항목은 + R 줄)
+        private void PrcBindRows(DataTable std, DataTable values)
+        {
+            DataTable dt = std.Clone();
+            foreach (DataColumn c in dt.Columns) c.DataType = typeof(string);
+            foreach (string name in new string[] { "ROWTP", "SIDE" })
+                if (!dt.Columns.Contains(name)) dt.Columns.Add(name, typeof(string));
+            for (int x = 1; x <= PRC_MAXSAMPLE; x++)
+                if (!dt.Columns.Contains(XCol(x))) dt.Columns.Add(XCol(x), typeof(string));
+
+            int maxSample = 0;
+            foreach (DataRow s in std.Rows)
+            {
+                string key = s["STDCD"] + "|" + s["STDPART"] + "|" + s["PRCDETAIL"];
+                List<DataRow> saved = new List<DataRow>();   // 저장 순서 = 시료 순서
+                foreach (DataRow v in values.Rows)
+                {
+                    if (v["STDCD"] + "|" + v["STDPART"] + "|" + v["PRCDETAIL"] == key) saved.Add(v);
+                }
+                bool isLR = s["LRYN"].ToString() == "Y";
+
+                decimal ss;
+                decimal.TryParse(s["SAMPLESIZE"].ToString(), out ss);
+                maxSample = Math.Max(maxSample, Math.Min((int)ss, PRC_MAXSAMPLE));   // 육안 항목도 시료마다 OK/NG
+
+                // 2026-11-26 육안(OK/NG) 항목인데 이 검사일시에 저장한 값이 없으면 시료 칸에 OK 를 미리 넣음
+                bool okDefault = s["STDCHKTP"].ToString() != "02" && saved.Count == 0 && s["TQMRSTKEY"].ToString() == "";
+                int nOk = Math.Min((int)ss, PRC_MAXSAMPLE);
+
+                DataRow L = dt.NewRow();
+                foreach (DataColumn c in std.Columns) L[c.ColumnName] = s[c].ToString();
+                L["ROWTP"] = "L";
+                L["SIDE"] = isLR ? "L" : "";
+                for (int x = 1; x <= PRC_MAXSAMPLE; x++) L[XCol(x)] = okDefault ? (x <= nOk ? "OK" : "") : (x <= saved.Count ? saved[x - 1]["VALUE"].ToString() : "");
+                dt.Rows.Add(L);
+
+                if (isLR)
+                {
+                    DataRow R = dt.NewRow();
+                    foreach (DataColumn c in std.Columns) R[c.ColumnName] = s[c].ToString();
+                    // 항목 정보는 L 줄과 같게 둔다: 합쳐진 칸(PRC_MERGE_FIELDS)이 R 줄 값을 보여주므로 비우면 빈칸으로 보임
+                    R["ROWTP"] = "R";
+                    R["SIDE"] = "R";
+                    for (int x = 1; x <= PRC_MAXSAMPLE; x++) R[XCol(x)] = okDefault ? (x <= nOk ? "OK" : "") : (x <= saved.Count ? saved[x - 1]["VALUE2"].ToString() : "");
+                    dt.Rows.Add(R);
+                }
             }
 
-            MODEL_A10.SetValue("NG", hasNg);
-            MODEL_A10.SetValue("OK", !hasNg && allEntered);
+            if (POPUP_A13.Visibility == Visibility.Visible) PANEL_A13.Close();   // 줄이 바뀌므로 숫자 입력 팝업 닫기
+            NoSort(GRID_G10);   // L·R 줄 순서·병합이 깨지지 않게 정렬 끄기
+            PrcApplyMerge();
+            _prcJudging = true;
+            MODEL_G10.SetData(dt);
+            for (int i = 0; i < MODEL_G10.Rows.Count; i++)
+            {
+                if (MODEL_G10.GetText(i, "ROWTP") != "L") continue;
+                if (MODEL_G10.GetText(i, "STDCHKTP") != "02" && MODEL_G10.GetText(i, "TQMRSTKEY") == "")
+                    PrcJudgeItem(i);   // OK 를 미리 넣은 육안 항목 판정 (합격)
+                else if (MODEL_G10.GetText(i, "JUDGE") == "N")
+                    PrcSetJudge(i, "N");   // 불합격 항목 빨간 글자
+            }
+            _prcJudging = false;
+
+            // 시료 칸은 가장 큰 시료수까지만 보임
+            for (int x = 1; x <= PRC_MAXSAMPLE; x++)
+            {
+                GRID_G10.Columns[XCol(x)].Visible = x <= Math.Max(maxSample, 1);
+            }
         }
 
         //비가동 탭 목록 (LIST_INPUT 은 입력 중인 사용량을 지우므로 따로 조회)
@@ -481,6 +986,12 @@ namespace TML2010
         public override void EventCommand(string commandName)
         {
             base.EventCommand(commandName);
+
+            if (commandName.StartsWith("KEY_"))
+            {   // 숫자 입력 팝업(POPUP_A13) 버튼
+                KeyPadPress(commandName.Substring(4));
+                return;
+            }
 
             if (commandName == "SCAN_LOT")
             {
@@ -800,6 +1311,14 @@ namespace TML2010
                 }
 
                 PANEL_A5.Show();
+
+                // 2026-11-26 설비 버튼 글자 크게·굵게 (ButtonList 기본 글자가 작아 잘 안 보임)
+                FANO_LIST.UpdateLayout();
+                foreach (ITSLIB.Button fanoBtn in ItsElement.FindChild<ITSLIB.Button>(FANO_LIST))
+                {
+                    fanoBtn.SetFontSize = 17;
+                    fanoBtn.FontWeight = FontWeights.Bold;
+                }
             }
             else if (commandName == "POP_PRCTEST")
             {   // 자주검사 등록 팝업 (작업장·공정·라인은 메인에서 선택한 값)
@@ -819,7 +1338,6 @@ namespace TML2010
                 MODEL_A10.SetValue("TQMDATE", DateTime.Now.ToString("yyyy-MM-dd"));
                 MODEL_A10.SetValue("TQMTIME", DateTime.Now.ToString("HH:mm"));
                 MODEL_G10.InitData();
-                MODEL_G11.InitData();
 
                 // 검사항목 조회가 오류(생산품·자주검사 기준 없음 등)면 메시지만 띄우고 팝업은 열지 않음
                 EventCommand("SEARCH_STD");
@@ -831,7 +1349,7 @@ namespace TML2010
                 PANEL_A10.Show();
             }
             else if (commandName == "SEARCH_STD")
-            {   // 라인 생산품, 사용중인 자주검사 리비전의 검사항목 (검사일자·시간의 검사이력 포함)
+            {   // 라인 생산품, 사용중인 자주검사 리비전 검사항목 중 이번 검사주기에 할 항목 + 이 검사일시에 저장한 검사값
                 string tqmtime = MODEL_A10.GetText("TQMTIME");
 
                 MODEL_A10.SetValue("ITEMID", "");
@@ -839,7 +1357,6 @@ namespace TML2010
                 MODEL_A10.SetValue("ITEMNM", "");
                 MODEL_A10.SetValue("ITEMSPEC", "");
                 MODEL_G10.InitData();
-                MODEL_G11.InitData();
 
                 ItsMaria.Set("TAL2001_R01", "LIST_STD");
                 ItsMaria.AddOne("LINECD", MODEL_A10.GetText("LINECD"));
@@ -858,67 +1375,89 @@ namespace TML2010
                 MODEL_A10.SetValue("ITEMCD", ItsData.GetText(ds.Tables[0], 0, "ITEMCD"));
                 MODEL_A10.SetValue("ITEMNM", ItsData.GetText(ds.Tables[0], 0, "ITEMNM"));
                 MODEL_A10.SetValue("ITEMSPEC", ItsData.GetText(ds.Tables[0], 0, "ITEMSPEC"));
+                MODEL_A10.SetValue("REVNUM", ds.Tables[0].Columns.Contains("REVNUM") ? ItsData.GetText(ds.Tables[0], 0, "REVNUM") : "");   // 2026-11-26 자주검사 리비전번호
 
-                MODEL_G10.SetData(ds.Tables[1]);
-                (GRID_G10.View as TableView).BestFitColumns();
-                for (int i = 0; i < MODEL_G10.Rows.Count; i++)
-                {
-                    if (MODEL_G10.GetText(i, "JUDGE") == "N") MODEL_G10.SetForeColor(i, Colors.Red);   // 불합격 항목은 빨간 글자
-                }
-                MODEL_G10_EventRowChanged(MODEL_G10.CurrentIndex);
+                PrcBindRows(ds.Tables[1], ds.Tables.Count > 2 ? ds.Tables[2] : ds.Tables[1].Clone());
             }
             else if (commandName == "SAVE_PRCTEST")
-            {   // 선택한 검사항목의 검사결과(합불)와 검사값 저장
-                if (MODEL_G10.Rows.Count == 0 || MODEL_G10.CurrentIndex < 0)
-                {
-                    ShowMessageBox("", "검사항목을 선택하세요.");
-                    return;
-                }
-
-                int stdRow = MODEL_G10.CurrentIndex;
-                string judge = MODEL_A10.GetBool("OK") ? "Y" : (MODEL_A10.GetBool("NG") ? "N" : "");
+            {   // 입력한 항목 전체 저장 (시료 칸에 값을 하나라도 넣은 항목, 육안은 OK/NG). 항목마다 SAVE_RST
+                (GRID_G10.View as TableView).PostEditor();   // 입력 중인 칸 확정
                 string tqmtime = MODEL_A10.GetText("TQMTIME");
 
-                ItsMaria.Set("TAL2001_R01", "SAVE_RST");
-                ItsMaria.AddOne("LINECD", MODEL_A10.GetText("LINECD"));
-                ItsMaria.AddOne("PRCCD", MODEL_A10.GetText("PRCCD"));
-                ItsMaria.AddOne("EQMCD", MODEL_A10.GetText("EQMCD"));
-                ItsMaria.AddOne("ITEMID", MODEL_A10.GetText("ITEMID"));
-                ItsMaria.AddOne("TQMDATE", MODEL_A10.GetText("TQMDATE"));
-                ItsMaria.AddOne("TQMTIME", tqmtime.Length > 5 ? tqmtime.Substring(0, 5) : tqmtime);
-                ItsMaria.AddOne("EMPCD", MODEL_A10.GetText("EMPCD"));
-                ItsMaria.AddOne("REVCD", MODEL_G10.GetText(stdRow, "REVCD"));
-                ItsMaria.AddOne("STDCD", MODEL_G10.GetText(stdRow, "STDCD"));
-                ItsMaria.AddOne("STDPART", MODEL_G10.GetText(stdRow, "STDPART"));
-                ItsMaria.AddOne("PRCDETAIL", MODEL_G10.GetText(stdRow, "PRCDETAIL"));
-                ItsMaria.AddOne("SAMPLESIZE", ((int)MODEL_G10.GetDecimal(stdRow, "SAMPLESIZE")).ToString());
-                ItsMaria.AddOne("JUDGE", judge);
-                for (int i = 0; i < MODEL_G11.Rows.Count; i++)
+                List<int> targets = new List<int>();
+                for (int r = 0; r < MODEL_G10.Rows.Count; r++)
                 {
-                    ItsMaria.AddList("SEQ_LIST", (i + 1).ToString());
-                    ItsMaria.AddList("VALUE_LIST", MODEL_G11.GetText(i, "VALUE"));
-                    ItsMaria.AddList("VALUE2_LIST", MODEL_G11.GetText(i, "VALUE2"));
+                    if (MODEL_G10.GetText(r, "ROWTP") != "L") continue;
+
+                    // 측정·육안 모두 시료마다 값 (육안은 OK/NG, 2026-11-26)
+                    bool isLR = MODEL_G10.GetText(r, "LRYN") == "Y" && r + 1 < MODEL_G10.Rows.Count;
+                    int n = PrcSample(r);
+                    bool any = false, empty = false;
+                    for (int x = 1; x <= n; x++)
+                    {
+                        string vl = MODEL_G10.GetText(r, XCol(x)).Trim();
+                        string vr = isLR ? MODEL_G10.GetText(r + 1, XCol(x)).Trim() : "";
+                        if (vl != "" || vr != "") any = true;
+                        if (vl == "" || (isLR && vr == "")) empty = true;
+                    }
+                    if (!any) continue;   // 입력 안 한 항목은 저장 안 함
+
+                    if (empty)
+                    {
+                        string part = MODEL_G10.GetText(r, "STDPART");
+                        ShowMessageBox("", (MODEL_G10.GetText(r, "STDCHKTP") == "02" ? "검사값을" : "OK/NG 를") + " 시료수만큼 모두 입력하세요." + (isLR ? " (L·R 둘 다)" : "")
+                            + "\n - 검사항목 : " + MODEL_G10.GetText(r, "STDNM") + (part != "" ? " / " + part : ""));
+                        MODEL_G10.SelectRow(r);
+                        return;
+                    }
+                    PrcJudgeItem(r);
+                    targets.Add(r);
                 }
-                DataSet ds = ItsMaria.Call();
-                if (ItsMaria.IsError)
+
+                if (targets.Count == 0)
                 {
-                    ShowMessageBox("", ItsMaria.ErrMessage);
+                    ShowMessageBox("", "저장할 검사 결과가 없습니다.");
                     return;
                 }
 
-                // 저장한 검사항목 결과를 검사항목 줄에 표시
-                MODEL_G10.SetValue(stdRow, "TQMRSTKEY", ItsData.GetText(ds.Tables[0], 0, "TQMRSTKEY"));
-                MODEL_G10.SetValue(stdRow, "MINVAL", ItsData.GetText(ds.Tables[0], 0, "MINVAL"));
-                MODEL_G10.SetValue(stdRow, "MAXVAL", ItsData.GetText(ds.Tables[0], 0, "MAXVAL"));
-                MODEL_G10.SetValue(stdRow, "AVG", ItsData.GetText(ds.Tables[0], 0, "AVG"));
-                MODEL_G10.SetValue(stdRow, "JUDGE", ItsData.GetText(ds.Tables[0], 0, "JUDGE"));
-                MODEL_G10.SetValue(stdRow, "JUDGENM", ItsData.GetText(ds.Tables[0], 0, "JUDGENM"));
-                MODEL_G10.SetForeColor(stdRow, ItsData.GetText(ds.Tables[0], 0, "JUDGE") == "N" ? Colors.Red : Colors.Black);
+                for (int t = 0; t < targets.Count; t++)
+                {
+                    int stdRow = targets[t];
+                    bool isLR = MODEL_G10.GetText(stdRow, "LRYN") == "Y";
 
-                // 다음 검사항목 선택 (마지막 항목이면 첫 항목)
-                int nextRow = stdRow + 1 < MODEL_G10.Rows.Count ? stdRow + 1 : 0;
-                MODEL_G10.SelectRow(nextRow);
-                MODEL_G10_EventRowChanged(nextRow);
+                    ItsMaria.Set("TAL2001_R01", "SAVE_RST");
+                    ItsMaria.AddOne("LINECD", MODEL_A10.GetText("LINECD"));
+                    ItsMaria.AddOne("PRCCD", MODEL_A10.GetText("PRCCD"));
+                    ItsMaria.AddOne("EQMCD", MODEL_A10.GetText("EQMCD"));
+                    ItsMaria.AddOne("ITEMID", MODEL_A10.GetText("ITEMID"));
+                    ItsMaria.AddOne("TQMDATE", MODEL_A10.GetText("TQMDATE"));
+                    ItsMaria.AddOne("TQMTIME", tqmtime.Length > 5 ? tqmtime.Substring(0, 5) : tqmtime);
+                    ItsMaria.AddOne("EMPCD", MODEL_A10.GetText("EMPCD"));
+                    ItsMaria.AddOne("REVCD", MODEL_G10.GetText(stdRow, "REVCD"));
+                    ItsMaria.AddOne("STDCD", MODEL_G10.GetText(stdRow, "STDCD"));
+                    ItsMaria.AddOne("STDPART", MODEL_G10.GetText(stdRow, "STDPART"));
+                    ItsMaria.AddOne("PRCDETAIL", MODEL_G10.GetText(stdRow, "PRCDETAIL"));
+                    ItsMaria.AddOne("SAMPLESIZE", ((int)MODEL_G10.GetDecimal(stdRow, "SAMPLESIZE")).ToString());
+                    ItsMaria.AddOne("JUDGE", MODEL_G10.GetText(stdRow, "JUDGE"));
+                    int ns = PrcSample(stdRow);
+                    for (int x = 1; x <= ns; x++)
+                    {
+                        ItsMaria.AddList("SEQ_LIST", x.ToString());
+                        ItsMaria.AddList("VALUE_LIST", MODEL_G10.GetText(stdRow, XCol(x)).Trim());
+                        ItsMaria.AddList("VALUE2_LIST", isLR ? MODEL_G10.GetText(stdRow + 1, XCol(x)).Trim() : "");
+                    }
+                    ItsMaria.Call();
+                    if (ItsMaria.IsError)
+                    {
+                        ShowMessageBox("", "[" + MODEL_G10.GetText(stdRow, "STDNM") + "] 저장 중 오류\n" + ItsMaria.ErrMessage
+                            + (t > 0 ? "\n\n앞의 " + t + "개 항목은 저장되었습니다." : ""));
+                        EventCommand("SEARCH_STD");
+                        return;
+                    }
+                }
+
+                ShowMessageBox("", targets.Count + "개 검사항목을 저장했습니다.");
+                EventCommand("SEARCH_STD");   // 이 검사일시에 저장한 항목·검사값을 다시 보여줌
             }
             else if (commandName == "FANO_LIST" || commandName == "SEARCH_CHK")
             {   // 설비 선택·조회 → 일상점검 실적 목록
@@ -965,7 +1504,12 @@ namespace TML2010
                 MODEL_A6.SetValue("DATE", DateTime.Now.ToString("yyyy-MM-dd"));
                 MODEL_A6.SetValue("BASETIME", DateTime.Now.ToString("HH:mm"));
                 MODEL_A6.SetValue("CHKRSTKEY", "");
+                if (POPUP_A13.Visibility == Visibility.Visible) PANEL_A13.Close();   // 줄이 바뀌므로 숫자 입력 팝업 닫기
+                NoSort(GRID_G9);   // 값을 넣을 때 줄이 정렬 위치로 옮겨 가지 않게
                 MODEL_G9.SetData(ds.Tables[0]);
+                ChkDefaultOk();    // 새 점검: OK/NG 항목은 OK 미리 입력
+                JudgeAll(MODEL_G9);
+                MODEL_A6.SetValue("REVTEXT", ds.Tables[0].Columns.Contains("REVTEXT") ? ItsData.GetText(ds.Tables[0], 0, "REVTEXT") : "");   // 2026-11-26 계획 리비전번호
                 PANEL_A6.Show();
             }
             else if (commandName == "POP_CHKEDIT")
@@ -992,7 +1536,11 @@ namespace TML2010
                 MODEL_A6.SetValue("BASETIME", ItsData.GetText(ds.Tables[0], 0, "TIME"));
                 MODEL_A6.SetValue("EMPCD", ItsData.GetText(ds.Tables[0], 0, "EMPCD"));
                 MODEL_A6.SetValue("CHKRSTKEY", chkrstkey);
+                MODEL_A6.SetValue("REVTEXT", ds.Tables[0].Columns.Contains("REVTEXT") ? ItsData.GetText(ds.Tables[0], 0, "REVTEXT") : "");   // 2026-11-26 계획 리비전번호
+                if (POPUP_A13.Visibility == Visibility.Visible) PANEL_A13.Close();   // 줄이 바뀌므로 숫자 입력 팝업 닫기
+                NoSort(GRID_G9);   // 값을 넣을 때 줄이 정렬 위치로 옮겨 가지 않게
                 MODEL_G9.SetData(ds.Tables[0]);
+                JudgeAll(MODEL_G9);
                 PANEL_A6.Show();
             }
             else if (commandName == "INPUT_CHKVAL")
@@ -1011,11 +1559,13 @@ namespace TML2010
             else if (commandName == "SET_CHKVAL")
             {   // 숫자 점검값 반영
                 MODEL_G9.SetValue(MODEL_G9.CurrentIndex, "CHKVALUE", MODEL_A7.GetText("CHKVALUE"));
+                JudgeRow(MODEL_G9, MODEL_G9.CurrentIndex);
                 PANEL_A7.Close();
             }
             else if (commandName == "CHKVAL_OK" || commandName == "CHKVAL_NG")
             {   // OK/NG 점검값 반영
                 MODEL_G9.SetValue(MODEL_G9.CurrentIndex, "CHKVALUE", commandName == "CHKVAL_OK" ? "OK" : "NG");
+                JudgeRow(MODEL_G9, MODEL_G9.CurrentIndex);
                 PANEL_A8.Close();
             }
             else if (commandName == "SAVE_CHK")

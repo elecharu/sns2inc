@@ -1,0 +1,22 @@
+-- *****************************************************************************
+-- Comment: MST1006_R01 설비고장율 목표관리 호출 파라미터 등록
+-- Create:  2026-11-26  한성수  신규 프로시저 (9건)
+-- *****************************************************************************
+-- MST1006_R01 프로시저 저장 후 아래 트랜잭션을 실행
+START TRANSACTION;
+DELETE FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'MST1006_R01';
+
+INSERT INTO MES_SNS2.SYSTEM_PARAMETERS
+SELECT * FROM information_schema.PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'MST1006_R01';
+COMMIT;
+
+-- 정상 9건: SYEAR 1번, LINECD 2번, EQMTP 3번, EQMGROUP1 4번, FANO 5번, GOALRATE 6번, GOALHR 7번, CALLTYPE 8번, KEYWORD 9번
+SELECT ORDINAL_POSITION, PARAMETER_NAME, DATA_TYPE
+FROM MES_SNS2.SYSTEM_PARAMETERS
+WHERE SPECIFIC_SCHEMA = 'MES_SNS2'
+  AND SPECIFIC_NAME = 'MST1006_R01'
+ORDER BY ORDINAL_POSITION;

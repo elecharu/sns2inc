@@ -32,7 +32,7 @@ ItsPage.Load = function () {
         column.create('검사규격', 'STDJUDGE', { width: 150 }),
         column.create('검사주기', 'STDCYCLENM', { width: 80, align: 'center' }),
         column.create('검사게이지', 'STDMACHINENM', { width: 100, align: 'center' }),
-        column.create('시료', 'SAMPLENO', { width: 45, align: 'center' })
+        column.create('시료', 'SAMPLENO', { width: 55, align: 'center' })   // L/R 유무 항목은 '1 L' / '1 R' (2026-11-26)
     ];
     for (var i = 1; i <= TQM_MAXSEQ; i++) {
         var no = (i < 10 ? '0' : '') + i;

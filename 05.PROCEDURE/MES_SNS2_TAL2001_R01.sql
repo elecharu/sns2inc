@@ -1,4 +1,4 @@
-﻿CREATE DEFINER = 'root'@'%'
+CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.TAL2001_R01(
 -- *****************************************************************************
 -- Comment: 자주검사 등록 (태블릿)
@@ -6,6 +6,12 @@ PROCEDURE MES_SNS2.TAL2001_R01(
 -- Modify: 2026-11-02 검사결과 저장(SAVE_RST) 추가
 -- Modify: 2026-11-02 검사일시 검사이력 조회(LIST_STD 결과값, LIST_VALUE) 추가
 -- Modify: 2026-11-02 이미 저장된 검사항목은 수정(SAVE_RST)
+-- Modify: 2026-11-26 LIST_STD 검사주기(STDCYCLE)별로 이번 주기에 검사한 항목은 숨김 (TML2010 자주검사 팝업도 같이 적용)
+--                    1회/1hr(4) 정시 1시간, 1회/2hr(2) 근무조 시작부터 2시간, 1회/shift(5) 근무조, 3회/shift(1) 근무조 3번, 1회/1일(6) 작업일
+--                    공구교환(7)·시업시(8)·그 밖은 항상 표시. 이 검사일시에 저장한 항목은 수정할 수 있게 항상 표시
+--                    L/R 유무(LRYN), 검사값(결과셋 2) 추가 (태블릿 그리드 하나 입력)
+--                    0. 생산품 결과에 자주검사 리비전번호 REVNUM 추가 (화면 표시)
+--                    진행(CYCLEINFO) 모든 주기: 근무조(1회/1일은 작업일) 안 횟수 / 해야 할 횟수 (1hr = 근무조 시간 수, 2hr = 그 절반, 3회/shift = 3, 1회 = 1)
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),      -- 공정
@@ -37,6 +43,20 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$SEQ VARCHAR(20);
   DECLARE _$VALUE VARCHAR(100);
   DECLARE _$VALUE2 VARCHAR(100);
+  DECLARE _$DAYST VARCHAR(5);        -- 주간 시작 (PP161100N.REF01)
+  DECLARE _$NIGHTST VARCHAR(5);      -- 야간 시작 (PP161102N.REF01)
+  DECLARE _$CHKTIME DATETIME;        -- 화면 검사일시
+  DECLARE _$WORKDATE DATE;           -- 작업일
+  DECLARE _$SHIFTST VARCHAR(19);     -- 근무조 시작·끝
+  DECLARE _$SHIFTED VARCHAR(19);
+  DECLARE _$DAYSTART VARCHAR(19);    -- 작업일 시작·끝
+  DECLARE _$DAYEND VARCHAR(19);
+  DECLARE _$HOURST VARCHAR(19);      -- 정시 1시간 시작·끝
+  DECLARE _$HOURED VARCHAR(19);
+  DECLARE _$HOUR2ST VARCHAR(19);     -- 근무조 시작부터 2시간 칸 시작·끝
+  DECLARE _$HOUR2ED VARCHAR(19);
+  DECLARE _$NIGHTED VARCHAR(5);      -- 야간 종료 (PP161102N.REF02)
+  DECLARE _$SHIFTHRS INT DEFAULT 0;  -- 근무조 시간 수 (1회/1hr 진행 분모)
 -- *****************************************************************************
 CASE $CALLTYPE
 -- ****************************************************************************
@@ -102,17 +122,65 @@ WHEN 'LIST_STD' THEN  -- 라인 생산품, 현재 사용중인 자주검사 리�
                                LIMIT 1), '');
   END IF;
 
+  -- 2026-11-26 검사주기 기간 (화면 검사일시 기준. 검사시간이 HH:mm 이 아니면 주기 확인 안 함)
+  -- 근무조: 주간 = 주간시작~야간시작, 야간 = 야간시작~다음날 주간시작 (주간시작 전 새벽은 전날 작업일의 야간)
+  SET _$CHKTIME = NULL;
+  IF $TQMDATE <> '' AND $TQMTIME REGEXP '^([01][0-9]|2[0-3]):[0-5][0-9]$' THEN
+    SET _$CHKTIME = STR_TO_DATE(CONCAT($TQMDATE, ' ', $TQMTIME, ':00'), '%Y-%m-%d %H:%i:%s');
+    SET _$DAYST = IFNULL(NULLIF((SELECT COMTYPE.REF01 FROM COMTYPE WHERE COMTYPE.GPCD = 'PP161' AND COMTYPE.TPCD = 'PP161100N'), ''), '06:00');
+    SET _$NIGHTST = IFNULL(NULLIF((SELECT COMTYPE.REF01 FROM COMTYPE WHERE COMTYPE.GPCD = 'PP161' AND COMTYPE.TPCD = 'PP161102N'), ''), '16:00');
+
+    SET _$WORKDATE = IF($TQMTIME < _$DAYST, DATE_SUB(DATE($TQMDATE), INTERVAL 1 DAY), DATE($TQMDATE));
+
+    SET _$DAYSTART = CONCAT(DATE_FORMAT(_$WORKDATE, '%Y-%m-%d'), ' ', _$DAYST, ':00');
+    SET _$DAYEND = CONCAT(DATE_FORMAT(DATE_ADD(_$WORKDATE, INTERVAL 1 DAY), '%Y-%m-%d'), ' ', _$DAYST, ':00');
+
+    IF $TQMTIME >= _$DAYST AND $TQMTIME < _$NIGHTST THEN
+      SET _$SHIFTST = _$DAYSTART;
+      SET _$SHIFTED = CONCAT(DATE_FORMAT(_$WORKDATE, '%Y-%m-%d'), ' ', _$NIGHTST, ':00');
+    ELSE
+      SET _$SHIFTST = CONCAT(DATE_FORMAT(_$WORKDATE, '%Y-%m-%d'), ' ', _$NIGHTST, ':00');
+      SET _$SHIFTED = _$DAYEND;
+    END IF;
+
+    SET _$HOURST = DATE_FORMAT(_$CHKTIME, '%Y-%m-%d %H:00:00');
+    SET _$HOURED = DATE_FORMAT(DATE_ADD(_$CHKTIME, INTERVAL 1 HOUR), '%Y-%m-%d %H:00:00');
+
+    SET _$HOUR2ST = DATE_FORMAT(DATE_ADD(STR_TO_DATE(_$SHIFTST, '%Y-%m-%d %H:%i:%s')
+                                       , INTERVAL FLOOR(TIMESTAMPDIFF(MINUTE, STR_TO_DATE(_$SHIFTST, '%Y-%m-%d %H:%i:%s'), _$CHKTIME) / 120) * 120 MINUTE)
+                              , '%Y-%m-%d %H:%i:%s');
+    SET _$HOUR2ED = DATE_FORMAT(DATE_ADD(STR_TO_DATE(_$HOUR2ST, '%Y-%m-%d %H:%i:%s'), INTERVAL 120 MINUTE), '%Y-%m-%d %H:%i:%s');
+
+    -- 근무조 시간 수: 주간 = 주간시작~야간시작, 야간 = 야간시작~야간종료(PP161102N.REF02) (2026-11-26 진행 표시)
+    SET _$NIGHTED = IFNULL(NULLIF((SELECT COMTYPE.REF02 FROM COMTYPE WHERE COMTYPE.GPCD = 'PP161' AND COMTYPE.TPCD = 'PP161102N'), ''), '02:00');
+    IF $TQMTIME >= _$DAYST AND $TQMTIME < _$NIGHTST THEN
+      SET _$SHIFTHRS = FLOOR(MOD(TIME_TO_SEC(CONCAT(_$NIGHTST, ':00')) - TIME_TO_SEC(CONCAT(_$DAYST, ':00')) + 86400, 86400) / 3600);
+    ELSE
+      SET _$SHIFTHRS = FLOOR(MOD(TIME_TO_SEC(CONCAT(_$NIGHTED, ':00')) - TIME_TO_SEC(CONCAT(_$NIGHTST, ':00')) + 86400, 86400) / 3600);
+    END IF;
+  END IF;
+
   -- 0. 생산품
   SELECT
       CAST(MSTITEM.ITEMID AS CHAR) AS ITEMID
     , MSTITEM.ITEMCD
     , MSTITEM.ITEMNM
     , MSTITEM.ITEMSPEC
+    , IFNULL((SELECT CAST(MSTRPTREV_HEADER.REVNUM AS SIGNED) FROM MSTRPTREV_HEADER WHERE MSTRPTREV_HEADER.REVCD = _$REVCD), '') AS REVNUM   -- 2026-11-26 자주검사 리비전번호 (화면 표시)
   FROM MSTITEM
   WHERE MSTITEM.ITEMID = _$ITEMID
   ;
 
   -- 1. 검사항목 (사용중인 자주검사 리비전)
+  --    2026-11-26 이번 주기에 이미 검사한 항목은 숨김 (아래 바깥 WHERE). DONECNT = 이 검사일시를 뺀 이번 주기 검사 횟수
+  SELECT A.*
+       , CASE WHEN _$CHKTIME IS NULL THEN ''
+              WHEN A.STDCYCLE = '4' THEN CONCAT(A.PERIODCNT, '/', _$SHIFTHRS)           -- 1회/1hr: 근무조 안 횟수 / 근무조 시간 수
+              WHEN A.STDCYCLE = '2' THEN CONCAT(A.PERIODCNT, '/', FLOOR(_$SHIFTHRS / 2)) -- 1회/2hr
+              WHEN A.STDCYCLE = '1' THEN CONCAT(A.PERIODCNT, '/3')                        -- 3회/shift
+              WHEN A.STDCYCLE IN ('5', '6') THEN CONCAT(A.PERIODCNT, '/1')                -- 1회/shift, 1회/1일(작업일)
+         ELSE '' END AS CYCLEINFO   -- 진행 (2026-11-26 모든 주기, 공구교환·시업시 제외)
+  FROM (
   SELECT
       MSTRPTREV_DETAIL.SORTNO
     , MSTRPTREV_DETAIL.STDNM
@@ -139,6 +207,34 @@ WHEN 'LIST_STD' THEN  -- 라인 생산품, 현재 사용중인 자주검사 리�
     , IFNULL(TQMRSTKND.JUDGE, '') AS JUDGE
     , CASE TQMRSTKND.JUDGE WHEN 'Y' THEN '합격' WHEN 'N' THEN '불합격' ELSE '' END AS JUDGENM
     , IFNULL(TQMRSTKND.TQMRSTKEY, '') AS TQMRSTKEY
+    , MSTRPTREV_DETAIL.LRYN       -- L/R 유무 (Y 면 검사값 L·R 둘 다)
+    , CASE WHEN _$CHKTIME IS NULL THEN 0
+           ELSE (SELECT COUNT(*)
+                   FROM TQMRSTKND K
+                   INNER JOIN TQMRST H
+                     ON H.TQMRSTKEY = K.TQMRSTKEY
+                  WHERE H.LINECD = $EQMCD
+                    AND H.FIXTIME <> _$FIXTIME
+                    AND H.FIXTIME >= CASE MSTRPTREV_DETAIL.STDCYCLE WHEN '4' THEN _$HOURST WHEN '2' THEN _$HOUR2ST WHEN '6' THEN _$DAYSTART ELSE _$SHIFTST END
+                    AND H.FIXTIME <  CASE MSTRPTREV_DETAIL.STDCYCLE WHEN '4' THEN _$HOURED WHEN '2' THEN _$HOUR2ED WHEN '6' THEN _$DAYEND ELSE _$SHIFTED END
+                    AND K.STDCD = MSTRPTREV_DETAIL.STDCD
+                    AND K.PRCCD = $PRCCD
+                    AND K.STDPART = MSTRPTREV_DETAIL.STDPART
+                    AND K.PRCDETAIL = MSTRPTREV_DETAIL.PRCDETAIL)
+      END AS DONECNT
+    , CASE WHEN _$CHKTIME IS NULL THEN 0
+           ELSE (SELECT COUNT(*)
+                   FROM TQMRSTKND K
+                   INNER JOIN TQMRST H
+                     ON H.TQMRSTKEY = K.TQMRSTKEY
+                  WHERE H.LINECD = $EQMCD
+                    AND H.FIXTIME >= IF(MSTRPTREV_DETAIL.STDCYCLE = '6', _$DAYSTART, _$SHIFTST)
+                    AND H.FIXTIME <  IF(MSTRPTREV_DETAIL.STDCYCLE = '6', _$DAYEND, _$SHIFTED)
+                    AND K.STDCD = MSTRPTREV_DETAIL.STDCD
+                    AND K.PRCCD = $PRCCD
+                    AND K.STDPART = MSTRPTREV_DETAIL.STDPART
+                    AND K.PRCDETAIL = MSTRPTREV_DETAIL.PRCDETAIL)
+      END AS PERIODCNT   -- 진행 표시용: 근무조(1회/1일은 작업일) 안 검사 횟수 (이 검사일시 포함)
   FROM MSTRPTREV_DETAIL
   LEFT JOIN TQMRSTKND
     ON TQMRSTKND.TQMRSTKEY = _$TQMRSTKEY
@@ -147,7 +243,25 @@ WHEN 'LIST_STD' THEN  -- 라인 생산품, 현재 사용중인 자주검사 리�
    AND TQMRSTKND.STDPART = MSTRPTREV_DETAIL.STDPART
    AND TQMRSTKND.PRCDETAIL = MSTRPTREV_DETAIL.PRCDETAIL
   WHERE MSTRPTREV_DETAIL.REVCD = _$REVCD
-  ORDER BY MSTRPTREV_DETAIL.SORTNO
+  ) A
+  WHERE A.TQMRSTKEY <> ''                                        -- 이 검사일시에 저장한 항목은 수정할 수 있게 표시
+     OR (A.STDCYCLE IN ('4', '2', '5', '6') AND A.DONECNT = 0)  -- 1회/1hr·1회/2hr·1회/shift·1회/1일: 이번 주기에 안 했으면
+     OR (A.STDCYCLE = '1' AND A.DONECNT < 3)                    -- 3회/shift: 근무조에 3번 안 했으면
+     OR A.STDCYCLE NOT IN ('4', '2', '5', '6', '1')             -- 공구교환(7)·시업시(8)·그 밖: 항상
+  ORDER BY A.SORTNO
+  ;
+
+  -- 2. 이 검사일시에 저장한 검사값 (태블릿 그리드에 시료 순서대로 채움, 2026-11-26)
+  SELECT
+      TQMRST_VALUE.STDCD
+    , TQMRST_VALUE.STDPART
+    , TQMRST_VALUE.PRCDETAIL
+    , TQMRST_VALUE.VALUE
+    , TQMRST_VALUE.VALUE2
+  FROM TQMRST_VALUE
+  WHERE TQMRST_VALUE.TQMRSTKEY = _$TQMRSTKEY
+    AND TQMRST_VALUE.PRCCD = $PRCCD
+  ORDER BY TQMRST_VALUE.STDCD, TQMRST_VALUE.STDPART, TQMRST_VALUE.PRCDETAIL, TQMRST_VALUE.VALUEKEY
   ;
 
 -- ****************************************************************************

@@ -62,3 +62,11 @@ trigger: always_on
   ```
 - **프로시저 쿼리 단순화 연계**:
   - 화면 그리드에서 `enumColumnTypes.combo`로 자동 매핑되므로, 프로시저 SELECT 절에서도 불필요하게 `COMTYPE`을 중복 조인하여 명칭을 가져오는 잉여 로직을 제거하고 원본 식별코드만 간결하게 반환합니다.
+
+### 7. 현장터미널(TML, WPF) 공통 Pop 값 넣는 시점 (`ItsModelPanel -> SetPopInfo GPCD is empty` 방지)
+- **원인**: 공통 `ITSLIB.Pop`은 자기 `Loaded` 이벤트에서 바인딩 필드명(`FieldName`)을 잡습니다. 그 전에 Pop에 바인딩된 필드에 값을 넣으면(`MODEL_xx.SetValue("EMPCD", ...)` 등) 코드 입력 처리(`textCode_TextChanged` → `ItsModelPanel.SetPopInfo`)가 빈 필드명으로 실행되어 `ItsModelPanel -> SetPopInfo GPCD is empty` 메시지 창이 뜹니다. `REF01~05`를 그 전에 바꿔도 `SetRef01~05 GPCD is empty`가 뜹니다.
+- **금지**: 화면 생성자, `EventPageLoaded()`(페이지 `Loaded` 안에서 호출되어 자식 Pop의 `Loaded`보다 먼저 실행됨)에서 Pop에 바인딩된 필드 값이나 Pop `REF01~05`를 바로 넣지 않습니다.
+- **허용**:
+  - 버튼·행 선택 등 사용자 동작 처리(`EventCommand` 등)에서 넣기 (화면이 이미 로드됨, TML1010_R05·TML1030_R01 방식)
+  - 로드 직후 기본값이 꼭 필요하면 Pop에 `x:Name`을 주고, `FieldName`이 비어 있으면 그 Pop의 `Loaded`에 처리기를 걸어 Pop 로드 뒤에 넣기 (TML1010_R08 입고자 기본값 방식)
+- 공통 `ItsPop.xaml.cs`·`ItsModelPanel.cs`는 고치지 않고 화면에서 시점만 맞춥니다 (공통 컴포넌트 보호 규칙).

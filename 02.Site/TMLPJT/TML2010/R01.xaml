@@ -222,12 +222,15 @@
                 </its:Grid>
                 <its:Grid x:Name="GRID_G8" Width="745" Height="280">
                     <its:Grid.Columns>
-                        <its:Column Width="150" Header="점검명" FieldName="CHKKNDNM"/>
-                        <its:Column Width="110" Header="점검항목" FieldName="CHKLOC" GPCD="CHKLOC"/>
-                        <its:Column Width="110" Header="점검방법" FieldName="CHKMTH" GPCD="CHKMTH"/>
-                        <its:Column Width="100" Header="점검값" FieldName="CHKVALUE" ALGIN="CENTER"/>
-                        <its:Column Width="90" Header="점검주기" FieldName="CHKCYCLE" GPCD="CHKCYCLE"/>
-                        <its:Column Width="160" Header="비고" FieldName="REMARK"/>
+                        <!--2026-11-26 점검기준(점검주기 왼쪽)·판정(점검값 오른쪽, 자동판정 화면 표시만) 추가-->
+                        <its:Column Width="120" Header="점검명" FieldName="CHKKNDNM"/>
+                        <its:Column Width="90" Header="점검항목" FieldName="CHKLOC" GPCD="CHKLOC"/>
+                        <its:Column Width="90" Header="점검방법" FieldName="CHKMTH" GPCD="CHKMTH"/>
+                        <its:Column Width="80" Header="점검값" FieldName="CHKVALUE" ALGIN="CENTER"/>
+                        <its:Column Width="60" Header="판정" FieldName="JUDGE" ALGIN="CENTER"/>
+                        <its:Column Width="100" Header="점검기준" FieldName="CHKSTD" ALGIN="CENTER"/>
+                        <its:Column Width="80" Header="점검주기" FieldName="CHKCYCLE" GPCD="CHKCYCLE"/>
+                        <its:Column Width="120" Header="비고" FieldName="REMARK"/>
                     </its:Grid.Columns>
                 </its:Grid>
             </its:WrapContent>
@@ -248,23 +251,35 @@
                 <its:Date Label="검사일자" LabelWidth="80" Width="220" Value="{Binding TQMDATE}"/>
                 <its:Time HidenLabel="Y" Width="90" Value="{Binding TQMTIME}" ShowKeyPad="True" KeyDown="TIME_TQMTIME_KeyDown"/>
                 <its:Pop Label="검사자" LabelWidth="80" Width="300" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True"/>
-                <UserControl Width="30" Height="5"/>
+                <its:Text Label="리비전" LabelWidth="60" Width="120" Value="{Binding REVNUM}" ReadOnly="True"/>   <!--2026-11-26 자주검사 기준 리비전번호-->
+                <UserControl Width="20" Height="5"/>
                 <its:Button Label="검사항목 조회" Width="120" Height="35" SetFontSize="14" CommandName="SEARCH_STD" FontWeight="Bold"/>
-                <its:Grid x:Name="GRID_G10" Width="900" Height="400">
+                <UserControl Width="20" Height="5"/>
+                <its:Button Label="저    장" Width="150" Height="35" SetFontSize="18" CommandName="SAVE_PRCTEST" FontWeight="Bold"/>
+                <!--2026-11-26 그리드 하나로 입력 (TAL2001_R01 과 같음): 검사항목 한 줄, 시료 X1~X10 가로, L/R 유무 항목은 L·R 두 줄
+                    측정은 검사값으로 자동 판정, 육안은 판정 칸을 눌러 합격 → 불합격 → 빈칸. 저장은 입력한 항목 전체-->
+                <its:Grid x:Name="GRID_G10" Width="1176" Height="400">
                     <its:Grid.Columns>
-                        <its:Column Width="130" Header="검사항목" FieldName="STDNM"/>
-                        <its:Column Width="90" Header="세부항목" FieldName="STDPART" ALGIN="CENTER"/>
-                        <its:Column Width="80" Header="세부공정" FieldName="PRCDETAIL" GPCD="PRCDETAIL" ALGIN="CENTER"/>
-                        <its:Column Width="50" Header="특성" FieldName="FEATURE" ALGIN="CENTER"/>
-                        <its:Column Width="80" Header="검사방법" FieldName="STDCHKTP" GPCD="STDCHKTP"/>
-                        <its:Column Width="130" Header="검사규격" FieldName="STDJUDGE"/>
-                        <its:Column Width="80" Header="검사주기" FieldName="STDCYCLE" GPCD="STDCYCLE"/>
-                        <its:Column Width="90" Header="검사게이지" FieldName="STDMACHINE" GPCD="STDMACHINE"/>
-                        <its:Column Width="55" Header="시료수" FieldName="SAMPLESIZE" DecimalPoint="0"/>
-                        <its:Column Width="70" Header="최소값" FieldName="MINVAL" ALGIN="RIGHT"/>
-                        <its:Column Width="70" Header="최대값" FieldName="MAXVAL" ALGIN="RIGHT"/>
-                        <its:Column Width="70" Header="평균" FieldName="AVG" ALGIN="RIGHT"/>
-                        <its:Column Width="70" Header="판정" FieldName="JUDGENM" ALGIN="CENTER"/>
+                        <its:Column Width="120" Header="검사항목" FieldName="STDNM"/>
+                        <its:Column Width="80" Header="세부항목" FieldName="STDPART" ALGIN="CENTER"/>
+                        <its:Column Width="75" Header="검사방법" FieldName="STDCHKTP" GPCD="STDCHKTP"/>
+                        <its:Column Width="120" Header="검사규격" FieldName="STDJUDGE"/>
+                        <its:Column Width="75" Header="검사주기" FieldName="STDCYCLE" GPCD="STDCYCLE"/>
+                        <its:Column Width="45" Header="진행" FieldName="CYCLEINFO" ALGIN="CENTER"/>
+                        <its:Column Width="50" Header="시료수" FieldName="SAMPLESIZE" DecimalPoint="0"/>
+                        <its:Column Width="40" Header="L/R" FieldName="SIDE" ALGIN="CENTER"/>
+                        <its:Column Width="58" Header="X1" FieldName="X01" ALGIN="RIGHT"/>
+                        <its:Column Width="58" Header="X2" FieldName="X02" ALGIN="RIGHT"/>
+                        <its:Column Width="58" Header="X3" FieldName="X03" ALGIN="RIGHT"/>
+                        <its:Column Width="58" Header="X4" FieldName="X04" ALGIN="RIGHT"/>
+                        <its:Column Width="58" Header="X5" FieldName="X05" ALGIN="RIGHT"/>
+                        <its:Column Width="58" Header="X6" FieldName="X06" ALGIN="RIGHT"/>
+                        <its:Column Width="58" Header="X7" FieldName="X07" ALGIN="RIGHT"/>
+                        <its:Column Width="58" Header="X8" FieldName="X08" ALGIN="RIGHT"/>
+                        <its:Column Width="58" Header="X9" FieldName="X09" ALGIN="RIGHT"/>
+                        <its:Column Width="58" Header="X10" FieldName="X10" ALGIN="RIGHT"/>
+                        <its:Column Width="65" Header="판정" FieldName="JUDGENM" ALGIN="CENTER"/>
+                        <its:Column Width="60" Header="세부공정" FieldName="PRCDETAIL" Visible="False"/>
                         <its:Column Width="60" Header="합불" FieldName="JUDGE" Visible="False"/>
                         <its:Column Width="60" Header="검사키" FieldName="TQMRSTKEY" Visible="False"/>
                         <its:Column Width="60" Header="리비전" FieldName="REVCD" Visible="False"/>
@@ -273,24 +288,10 @@
                         <its:Column Width="60" Header="범위" FieldName="STDRANGE" Visible="False"/>
                         <its:Column Width="60" Header="오차(-)" FieldName="STDMINUS" Visible="False"/>
                         <its:Column Width="60" Header="오차(+)" FieldName="STDPLUS" Visible="False"/>
+                        <its:Column Width="60" Header="L/R 유무" FieldName="LRYN" Visible="False"/>
+                        <its:Column Width="60" Header="줄구분" FieldName="ROWTP" Visible="False"/>
                     </its:Grid.Columns>
                 </its:Grid>
-                <StackPanel Width="270" Height="400">
-                    <its:Grid x:Name="GRID_G11" Width="270" Height="310">
-                        <its:Grid.Columns>
-                            <its:Column Width="80" Header="검사값(L)" FieldName="VALUE" ReadOnly="False"  ShowKeyPad="true"/>
-                            <its:Column Width="80" Header="검사값(R)" FieldName="VALUE2" ReadOnly="False" ShowKeyPad="true"/>
-                            <its:Column Width="60" Header="판정" FieldName="JUDGE" ALGIN="CENTER"/>
-                            <its:Column Width="60" Header="검사값키" FieldName="VALUEKEY" Visible="False"/>
-                        </its:Grid.Columns>
-                    </its:Grid>
-                    <WrapPanel Margin="0,8,0,0">
-                        <UserControl Width="50" Height="5"/>
-                        <its:Check Label="합격" Value="{Binding OK}" Width="110"/>
-                        <its:Check Label="불합격" Value="{Binding NG}" Width="110"/>
-                    </WrapPanel>
-                    <its:Button Label="저    장" Width="150" Height="40" SetFontSize="18" CommandName="SAVE_PRCTEST" FontWeight="Bold" Margin="0,8,0,0"/>
-                </StackPanel>
             </its:WrapContent>
         </UserControl>
 
@@ -301,20 +302,25 @@
                 <its:Date Label="점검일자" LabelWidth="70" Width="200" Value="{Binding BASEDATE}"/>
                 <its:Date Label="등록일자" LabelWidth="70" Width="200" Value="{Binding DATE}"/>
                 <its:Time HidenLabel="Y" Width="90" Value="{Binding BASETIME}"/>
-                <its:Pop Label="점검자" LabelWidth="60" Width="280" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True"/>
-                <its:Button Label="저    장" Width="150" Height="40" SetFontSize="18" CommandName="SAVE_CHK" BackColor="DARKORANGE" FontWeight="Bold"/>
+                <its:Pop Label="점검자" LabelWidth="60" Width="230" GPCD="EMPCD" Value="{Binding EMPCD}" ShowKeyPad="True"/>
+                <its:Text Label="리비전" LabelWidth="55" Width="120" Value="{Binding REVTEXT}" ReadOnly="True"/>   <!--2026-11-26 일상점검 계획 리비전번호 (그룹 있으면 '(그룹 n)')-->
+                <its:Button Label="저    장" Width="150" Height="40" SetFontSize="18" CommandName="SAVE_CHK" FontWeight="Bold"/>
                 <its:Text Label="점검키" Value="{Binding CHKRSTKEY}" Visibility="Collapsed"/>
                 <its:Grid x:Name="GRID_G9" Width="995" Height="420">
                     <its:Grid.Columns>
-                        <its:Column Width="50" Header="순번" FieldName="SORTNO" ALGIN="CENTER"/>
+                        <!--2026-11-26 순번 열 삭제, 점검기준(점검주기 왼쪽)·판정(점검값 오른쪽, 자동판정 화면 표시만) 추가-->
+                        <!--<its:Column Width="50" Header="순번" FieldName="SORTNO" ALGIN="CENTER"/>-->
                         <its:Column Width="150" Header="점검명" FieldName="CHKKNDNM"/>
-                        <its:Column Width="110" Header="점검항목" FieldName="CHKLOC" GPCD="CHKLOC"/>
-                        <its:Column Width="110" Header="점검방법" FieldName="CHKMTH" GPCD="CHKMTH"/>
-                        <its:Column Width="90" Header="점검값구분" FieldName="CHKVALTP" GPCD="CHKVALTP"/>
+                        <its:Column Width="100" Header="점검항목" FieldName="CHKLOC" GPCD="CHKLOC"/>
+                        <its:Column Width="100" Header="점검방법" FieldName="CHKMTH" GPCD="CHKMTH"/>
+                        <its:Column Width="85" Header="점검값구분" FieldName="CHKVALTP" GPCD="CHKVALTP"/>
+                        <its:Column Width="110" Header="점검기준" FieldName="CHKSTD" ALGIN="CENTER"/>
                         <its:Column Width="80" Header="점검주기" FieldName="CHKCYCLE" GPCD="CHKCYCLE"/>
-                        <its:Column Width="100" Header="점검값" FieldName="CHKVALUE" ALGIN="CENTER"/>
-                        <its:Column Width="60" Header="입력" CellType="Button" ButtonText="입력" CommandName="INPUT_CHKVAL"/>
-                        <its:Column Width="210" Header="비고" FieldName="REMARK" ReadOnly="False"/>
+                        <!--2026-11-26 점검값은 그리드에서 바로 입력: 숫자 항목은 칸을 누르면 숫자 입력 팝업(POPUP_A13), OK/NG 항목은 칸을 누를 때마다 OK → NG → 빈칸 ([입력] 버튼·입력 팝업 안 씀)-->
+                        <its:Column Width="110" Header="점검값" FieldName="CHKVALUE" ALGIN="CENTER"/>
+                        <its:Column Width="60" Header="판정" FieldName="JUDGE" ALGIN="CENTER"/>
+                        <!--<its:Column Width="60" Header="입력" CellType="Button" ButtonText="입력" CommandName="INPUT_CHKVAL"/>-->
+                        <its:Column Width="160" Header="비고" FieldName="REMARK" ReadOnly="False"/>
                         <its:Column Width="60" Header="계획구분" FieldName="PLANTP" Visible="False"/>
                         <its:Column Width="60" Header="점검코드" FieldName="CHKKNDCD" Visible="False"/>
                         <its:Column Width="60" Header="설비리비전" FieldName="REVCD" Visible="False"/>
@@ -424,6 +430,49 @@
                         <its:Column Width="80" Header="작업자" FieldName="EMPNM"/>
                     </its:Grid.Columns>
                 </its:Grid>
+            </its:WrapContent>
+        </UserControl>
+
+        <!--2026-11-26 숫자 입력 팝업 (자주검사 시료 칸, 일상점검 숫자 점검값). 누르는 대로 칸에 바로 들어감
+            [다음]/Enter: 같은 줄 다음 시료 → 마지막 시료면 다음 줄 첫 입력 칸 (입력 못 하는 칸·OK/NG 칸은 건너뜀)-->
+        <UserControl x:Name="POPUP_A13" Style="{DynamicResource TML_POP}" Canvas.Left="830" Canvas.Top="205" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A13" Width="340" Height="410">
+                <!--2026-11-26 이 줄을 손가락(또는 마우스)으로 끌면 팝업 위치를 옮김 (KEY_DRAG)-->
+                <Border x:Name="KEY_DRAG" Width="330" Height="30" Background="#E6F1FB" Cursor="SizeAll">
+                    <DockPanel>
+                        <!--크기 조절 (－ 작게 / ＋ 크게)-->
+                        <Button x:Name="KEY_ZOOMIN" DockPanel.Dock="Right" Width="40" Height="28" Margin="2,1,4,1" Padding="0"
+                                BorderBrush="#185FA5" BorderThickness="2">
+                            <TextBlock Text="+" FontSize="22" FontWeight="Bold" Margin="0,-5,0,0" Foreground="#0C447C"/>
+                        </Button>
+                        <Button x:Name="KEY_ZOOMOUT" DockPanel.Dock="Right" Width="40" Height="28" Margin="2,1,2,1" Padding="0"
+                                BorderBrush="#185FA5" BorderThickness="2">
+                            <TextBlock Text="−" FontSize="22" FontWeight="Bold" Margin="0,-5,0,0" Foreground="#0C447C"/>
+                        </Button>
+                        <TextBlock DockPanel.Dock="Right" Text="✥" FontSize="16" Foreground="#185FA5" Padding="0,4,6,0"/>
+                        <TextBlock x:Name="TXT_KEYTITLE" FontSize="16" FontWeight="Bold" Padding="8,5,0,0" TextTrimming="CharacterEllipsis"/>
+                    </DockPanel>
+                </Border>
+                <TextBox x:Name="TXT_KEYVAL" Width="320" Height="54" Margin="5,0,5,6" FontSize="30" FontWeight="Bold" IsReadOnly="True"
+                         TextAlignment="Right" VerticalContentAlignment="Center" Padding="0,0,8,0" Focusable="False"/>
+                <its:Button Label="7" Width="80" Height="60" SetFontSize="24" CommandName="KEY_7" FontWeight="Bold"/>
+                <its:Button Label="8" Width="80" Height="60" SetFontSize="24" CommandName="KEY_8" FontWeight="Bold"/>
+                <its:Button Label="9" Width="80" Height="60" SetFontSize="24" CommandName="KEY_9" FontWeight="Bold"/>
+                <its:Button Label="←" Width="80" Height="60" SetFontSize="24" CommandName="KEY_BACK" FontWeight="Bold" BackColor="GRAY"/>
+                <its:Button Label="4" Width="80" Height="60" SetFontSize="24" CommandName="KEY_4" FontWeight="Bold"/>
+                <its:Button Label="5" Width="80" Height="60" SetFontSize="24" CommandName="KEY_5" FontWeight="Bold"/>
+                <its:Button Label="6" Width="80" Height="60" SetFontSize="24" CommandName="KEY_6" FontWeight="Bold"/>
+                <its:Button Label="지움" Width="80" Height="60" SetFontSize="20" CommandName="KEY_CLEAR" FontWeight="Bold" BackColor="GRAY"/>
+                <its:Button Label="1" Width="80" Height="60" SetFontSize="24" CommandName="KEY_1" FontWeight="Bold"/>
+                <its:Button Label="2" Width="80" Height="60" SetFontSize="24" CommandName="KEY_2" FontWeight="Bold"/>
+                <its:Button Label="3" Width="80" Height="60" SetFontSize="24" CommandName="KEY_3" FontWeight="Bold"/>
+                <its:Button Label="-" Width="80" Height="60" SetFontSize="24" CommandName="KEY_MINUS" FontWeight="Bold"/>
+                <its:Button Label="0" Width="80" Height="60" SetFontSize="24" CommandName="KEY_0" FontWeight="Bold"/>
+                <its:Button Label="." Width="80" Height="60" SetFontSize="24" CommandName="KEY_DOT" FontWeight="Bold"/>
+                <its:Button Label="다음 ▶" Width="160" Height="60" SetFontSize="22" CommandName="KEY_ENTER" FontWeight="Bold" BackColor="DARKORANGE"/>
+                <!--2026-11-26 OK/NG 항목 입력 (누르면 값 넣고 다음 칸으로). 숫자 항목에서는 동작 안 함-->
+                <its:Button Label="OK" Width="160" Height="60" SetFontSize="24" CommandName="KEY_OK" FontWeight="Bold" BackColor="GREEN"/>
+                <its:Button Label="NG" Width="160" Height="60" SetFontSize="24" CommandName="KEY_NG" FontWeight="Bold" BackColor="RED"/>
             </its:WrapContent>
         </UserControl>
     </Canvas>

@@ -22,14 +22,15 @@
 
 <%-- BODY --%>
 <asp:Content ContentPlaceHolderID="CPH_BODY" Runat="Server">
-    <Its:div runat="server" Type="SplitLeft" LeftWidthPc="55">
+    <%-- 위: 불량재고 / 아래: 판정 이력 (2026-11-26 좌우 → 상하) --%>
+    <Its:div runat="server" Type="SplitTop" TopHeightPc="50">
         <Its:grid runat="server" ID="grid1" />
     </Its:div>
 
-    <Its:split runat="server" Type="Vertical" />
+    <Its:split runat="server" Type="Horizon" />
 
-    <Its:div runat="server" Type="SplitRight">
-        <Its:div runat="server" Type="SplitTop">
+    <Its:div runat="server" Type="SplitDown">
+        <Its:div runat="server" Type="SplitTop" TopHeightPc="5">
             <Its:button runat="server" Label="공정이동표 출력" ID="btn_PRINT_MOVE" BackColor="CustomButton2" />
         </Its:div>
         <Its:split runat="server" Type="Horizon" Resizeable="false" />

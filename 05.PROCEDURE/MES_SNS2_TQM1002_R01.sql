@@ -23,7 +23,9 @@ PROCEDURE MES_SNS2.TQM1002_R01(
 --         2026-11-16 검사성적서 출력(PRINT) 추가, 비고란 수량(QTY_TXT) 추가
 --         2026-11-26 김영철 LIST_STD 검사항목에 시료수(SAMPLESIZE) 추가 (시료수만큼만 측정치 입력칸 사용)
 --         2026-11-26 김영철 측정치 X1~X5 → X1~X10 확장 (SAVE_RST·LIST_STD·PRINT), PRINT 에 시료수(SAMPLESIZE) 추가 (사용자 지시)
---         2026-11-26 김영철 APPROVE 종합판정이 불합격(FINALJUDGE = 'N')이면 승인 차단. LIST·LIST_STD·PRINT 에 적용 리비전(REVNUM, 개정일) 추가 (사용자 지시)-- *****************************************************************************
+--         2026-11-26 김영철 APPROVE 종합판정이 불합격(FINALJUDGE = 'N')이면 승인 차단. LIST·LIST_STD·PRINT 에 적용 리비전(REVNUM, 개정일) 추가 (사용자 지시)
+--         2026-11-26 김영철 출하성적서 고객사별 엑셀 양식: 양식 관리(LIST_FORM·SAVE_FORM·DELETE_FORM)·계획별 양식 선택(SET_PLANFORM)·출력용 양식 조회(FORM_INFO) 추가, LIST 에 양식(FORMKEY·FORMNM)·거래처·고객, PRINT 에 거래처·고객·출하일자 추가 (사용자 지시)
+-- *****************************************************************************
   IN $SDATE VARCHAR(10),              -- 출하일자 시작 (LIST)
   IN $EDATE VARCHAR(10),              -- 출하일자 끝
   IN $OUTPLANTP VARCHAR(10),          -- 구분 (EXP 수출 / DOM 내수, '' 전체)
@@ -50,6 +52,14 @@ PROCEDURE MES_SNS2.TQM1002_R01(
   IN $JUDGE_LIST MEDIUMTEXT,          -- 판정 목록 (Y 합격, N 불합격)
   IN $APRVEMP VARCHAR(20),            -- 승인자 (APPROVE)
   IN $SALOUTPLANKEY_LIST MEDIUMTEXT,  -- 승인할 출하계획키 목록 (APPROVE)
+  IN $FORMKEY VARCHAR(20),            -- 성적서 양식키 (SAVE_FORM·DELETE_FORM·SET_PLANFORM)
+  IN $FORMNM VARCHAR(100),            -- 양식명 (SAVE_FORM)
+  IN $ENDCUSTCD VARCHAR(100),         -- 양식 적용 고객 (SAVE_FORM, 비우면 조건 없음)
+  IN $DEFAULTYN VARCHAR(1),           -- 거래처 기본 양식 여부 (SAVE_FORM)
+  IN $USEYN VARCHAR(1),               -- 양식 사용여부 (SAVE_FORM)
+  IN $FILEKEY VARCHAR(100),           -- 양식 엑셀 파일키 (SAVE_FORM)
+  IN $SHEETNAME VARCHAR(100),         -- 채울 시트명 (SAVE_FORM, 비우면 첫 시트)
+  IN $FORMREMARK VARCHAR(1000),       -- 양식 비고 (SAVE_FORM)
 -- *****************************************************************************
   IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
@@ -90,6 +100,7 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$SALOUTPLANKEY_LIST MEDIUMTEXT;
   DECLARE _$SALOUTPLANKEY VARCHAR(100);
   DECLARE _$ITEMCD VARCHAR(100);
+  DECLARE _$NEWFORMKEY VARCHAR(20);
 -- *****************************************************************************
   IF $CALLTYPE IN ('LIST_STD', 'SAVE_RST', 'PRINT') THEN
     SET _$ITEMID = IFNULL((SELECT SALOUTPLAN_W.ITEMID
@@ -153,7 +164,10 @@ WHEN 'LIST' THEN  -- 주간출하계획 + 검사상태 (grid1)
                            AND REVH.USEYN = 'Y'
                          ORDER BY REVH.REVNUM DESC
                          LIMIT 1))), '') AS REVNUM   -- 적용 리비전 (검사 전이면 사용중인 최신 리비전)
-    , CASE WHEN TQMRST.FINALJUDGE = 'Y' THEN 'LIGHTCYAN'
+    , SALOUTPLAN_W.CUSTCD
+    , SALOUTPLAN_W.ENDCUSTCD
+    , IFNULL(RFX.FORMKEY, '') AS FORMKEY   -- 이 계획에 적용되는 성적서 양식 (작업자가 고른 것, 없으면 거래처·고객·품목 규칙)
+    , IFNULL(RFX.FORMNM, '') AS FORMNM    , CASE WHEN TQMRST.FINALJUDGE = 'Y' THEN 'LIGHTCYAN'
            WHEN TQMRST.FINALJUDGE = 'N' THEN 'PINK'
       ELSE ''
       END AS BACKGROUND
@@ -170,6 +184,21 @@ WHEN 'LIST' THEN  -- 주간출하계획 + 검사상태 (grid1)
     ON MSTEMP.EMPCD = TQMRST.EMPCD
   LEFT JOIN MSTEMP AS MSTEMP2
     ON MSTEMP2.EMPCD = TQMRST.APRVEMP
+  LEFT JOIN MSTRPTFORM AS RFX
+    ON RFX.FORMKEY = (SELECT RF.FORMKEY
+                        FROM MSTRPTFORM AS RF
+                        WHERE RF.USEYN = 'Y'
+                          AND (RF.FORMKEY = SALOUTPLAN_W.RPTFORMKEY
+                               OR (SALOUTPLAN_W.RPTFORMKEY = ''
+                                   AND (RF.ITEMID = 0 OR RF.ITEMID = SALOUTPLAN_W.ITEMID)
+                                   AND (RF.ENDCUSTCD = '' OR RF.ENDCUSTCD = SALOUTPLAN_W.ENDCUSTCD)
+                                   AND (RF.CUSTCD = '' OR RF.CUSTCD = SALOUTPLAN_W.CUSTCD)
+                                   AND (RF.ITEMID <> 0 OR RF.ENDCUSTCD <> '' OR RF.CUSTCD <> '')))
+                        ORDER BY (RF.FORMKEY = SALOUTPLAN_W.RPTFORMKEY) DESC
+                               , (RF.ITEMID <> 0) * 4 + (RF.ENDCUSTCD <> '') * 2 + (RF.CUSTCD <> '') DESC
+                               , (RF.DEFAULTYN = 'Y') DESC
+                               , RF.FORMKEY
+                        LIMIT 1)
   WHERE SALOUTPLAN_W.OUTDATE BETWEEN $SDATE AND $EDATE
     AND (IFNULL($OUTPLANTP, '') = '' OR SALOUTPLAN_W.OUTPLANTP = $OUTPLANTP)
     AND (IFNULL($CUSTCD, '') = '' OR SALOUTPLAN_W.CUSTCD = $CUSTCD OR SALOUTPLAN_W.ENDCUSTCD = $CUSTCD)
@@ -569,9 +598,16 @@ WHEN 'PRINT' THEN  -- 검사성적서(갑지) 출력 (리포트 TQM1002.exe R01,
     , TQMRST.FINALJUDGE
     , IFNULL(CONCAT('수량 ', FORMAT(SALOUTPLAN_W.PLANQTY, 0), 'EA'), '') AS QTY_TXT   -- 비고란 수량 (출하계획 출하수량)
     , IFNULL((SELECT CONCAT('Rev.', MSTRPTREV_HEADER.REVNUM) FROM MSTRPTREV_HEADER WHERE MSTRPTREV_HEADER.REVCD = TQMRST.REVCD), '') AS REVNUM_TXT   -- 적용 리비전 (그 검사의 리비전)
+    , IFNULL(PC1.CUSTNM, '') AS CUSTNM         -- 거래처 (엑셀 양식 표시어 {거래처})
+    , IFNULL(PC2.CUSTNM, '') AS ENDCUSTNM      -- 고객 ({고객})
+    , IFNULL(SALOUTPLAN_W.OUTDATE, '') AS OUTDATE   -- 출하계획일자 ({출하일자})
   FROM TQMRST
   LEFT JOIN SALOUTPLAN_W
     ON SALOUTPLAN_W.SALOUTPLANKEY = TQMRST.SALOUTPLANKEY
+  LEFT JOIN MSTCUST AS PC1
+    ON PC1.CUSTCD = SALOUTPLAN_W.CUSTCD
+  LEFT JOIN MSTCUST AS PC2
+    ON PC2.CUSTCD = SALOUTPLAN_W.ENDCUSTCD
   LEFT JOIN MSTITEM
     ON MSTITEM.ITEMID = TQMRST.ITEMID
   LEFT JOIN MSTEMP
@@ -609,6 +645,165 @@ WHEN 'PRINT' THEN  -- 검사성적서(갑지) 출력 (리포트 TQM1002.exe R01,
    AND TQMRSTKND.PRCDETAIL = MSTRPTREV_DETAIL.PRCDETAIL
   WHERE TQMRST.TQMRSTKEY = _$TQMRSTKEY
   ORDER BY MSTRPTREV_DETAIL.SORTNO;
+
+-- ****************************************************************************
+WHEN 'LIST_FORM' THEN  -- 성적서 양식 목록 (양식 관리 팝업)
+
+  SELECT
+      RF.FORMKEY
+    , RF.FORMNM
+    , RF.CUSTCD
+    , IFNULL(MSTCUST1.CUSTNM, '') AS CUSTNM
+    , RF.ENDCUSTCD
+    , IFNULL(MSTCUST2.CUSTNM, '') AS ENDCUSTNM
+    , IF(RF.ITEMID = 0, '', CAST(RF.ITEMID AS CHAR)) AS ITEMID
+    , IFNULL(MSTITEM.ITEMCD, '') AS ITEMCD
+    , RF.DEFAULTYN
+    , RF.USEYN
+    , RF.FILEKEY
+    , IFNULL(COMFILE.FILENAME, '') AS FILENAME
+    , RF.SHEETNAME
+    , RF.REMARK
+  FROM MSTRPTFORM AS RF
+  LEFT JOIN MSTCUST AS MSTCUST1
+    ON MSTCUST1.CUSTCD = RF.CUSTCD
+  LEFT JOIN MSTCUST AS MSTCUST2
+    ON MSTCUST2.CUSTCD = RF.ENDCUSTCD
+  LEFT JOIN MSTITEM
+    ON MSTITEM.ITEMID = RF.ITEMID
+  LEFT JOIN COMFILE
+    ON COMFILE.FILEKEY = RF.FILEKEY
+  ORDER BY RF.USEYN DESC, MSTCUST1.CUSTNM, RF.FORMNM;
+
+-- ****************************************************************************
+WHEN 'SAVE_FORM' THEN  -- 성적서 양식 저장 (양식키가 없으면 새로 등록, 있으면 수정)
+
+  IF IFNULL($FORMNM, '') = '' THEN
+    CALL COMERR('양식명을 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($CUSTCD, '') = '' AND IFNULL($ENDCUSTCD, '') = '' AND IFNULL($ITEMID, '') = '' THEN
+    CALL COMERR('적용 대상(거래처, 고객, 품목 중 하나 이상)을 입력하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($FILEKEY, '') = '' THEN
+    CALL COMERR('양식 엑셀 파일을 올리세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF NOT EXISTS (SELECT COMFILE.FILEKEY FROM COMFILE WHERE COMFILE.FILEKEY = $FILEKEY) THEN
+    CALL COMERR('올린 양식 파일을 찾을 수 없습니다. 파일을 다시 올리세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($FORMKEY, '') = '' THEN
+    SET _$NEWFORMKEY = CONCAT('F', LPAD(IFNULL((SELECT MAX(CAST(SUBSTRING(MSTRPTFORM.FORMKEY, 2) AS UNSIGNED)) FROM MSTRPTFORM), 0) + 1, 4, '0'));
+
+    INSERT INTO MSTRPTFORM (FORMKEY, FORMNM, CUSTCD, ENDCUSTCD, ITEMID, DEFAULTYN, USEYN, FILEKEY, SHEETNAME, REMARK, RTIME, REMP, RPRG)
+    VALUES (_$NEWFORMKEY, $FORMNM, IFNULL($CUSTCD, ''), IFNULL($ENDCUSTCD, ''), IFNULL(CAST(NULLIF($ITEMID, '') AS SIGNED), 0),
+            IF($DEFAULTYN = 'Y', 'Y', 'N'), IF($USEYN = 'N', 'N', 'Y'), $FILEKEY, IFNULL($SHEETNAME, ''), IFNULL($FORMREMARK, ''),
+            CALLTIME(), CALLEMP(), CALLPRG());
+  ELSE
+    IF NOT EXISTS (SELECT MSTRPTFORM.FORMKEY FROM MSTRPTFORM WHERE MSTRPTFORM.FORMKEY = $FORMKEY) THEN
+      CALL COMERR('수정할 양식을 찾을 수 없습니다.');
+      LEAVE PROC;
+    END IF;
+
+    SET _$NEWFORMKEY = $FORMKEY;
+
+    UPDATE MSTRPTFORM
+      SET FORMNM = $FORMNM
+        , CUSTCD = IFNULL($CUSTCD, '')
+        , ENDCUSTCD = IFNULL($ENDCUSTCD, '')
+        , ITEMID = IFNULL(CAST(NULLIF($ITEMID, '') AS SIGNED), 0)
+        , DEFAULTYN = IF($DEFAULTYN = 'Y', 'Y', 'N')
+        , USEYN = IF($USEYN = 'N', 'N', 'Y')
+        , FILEKEY = $FILEKEY
+        , SHEETNAME = IFNULL($SHEETNAME, '')
+        , REMARK = IFNULL($FORMREMARK, '')
+        , MTIME = CALLTIME()
+        , MEMP = CALLEMP()
+        , MPRG = CALLPRG()
+      WHERE MSTRPTFORM.FORMKEY = _$NEWFORMKEY;
+  END IF;
+
+  -- 거래처 기본 양식은 거래처마다 하나만
+  IF $DEFAULTYN = 'Y' AND IFNULL($CUSTCD, '') <> '' THEN
+    UPDATE MSTRPTFORM
+      SET DEFAULTYN = 'N'
+        , MTIME = CALLTIME()
+        , MEMP = CALLEMP()
+        , MPRG = CALLPRG()
+      WHERE MSTRPTFORM.CUSTCD = $CUSTCD
+        AND MSTRPTFORM.FORMKEY <> _$NEWFORMKEY
+        AND MSTRPTFORM.DEFAULTYN = 'Y';
+  END IF;
+
+  SELECT _$NEWFORMKEY AS FORMKEY;
+
+-- ****************************************************************************
+WHEN 'DELETE_FORM' THEN  -- 성적서 양식 삭제 (계획에서 고른 양식은 자동 선택으로 되돌림)
+
+  IF IFNULL($FORMKEY, '') = '' THEN
+    CALL COMERR('삭제할 양식을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  UPDATE SALOUTPLAN_W
+    SET RPTFORMKEY = ''
+    WHERE SALOUTPLAN_W.RPTFORMKEY = $FORMKEY;
+
+  DELETE FROM MSTRPTFORM
+    WHERE MSTRPTFORM.FORMKEY = $FORMKEY;
+
+-- ****************************************************************************
+WHEN 'SET_PLANFORM' THEN  -- 출하계획에 성적서 양식 지정 (양식키가 비면 자동 선택으로)
+
+  IF IFNULL($SALOUTPLANKEY, '') = '' THEN
+    CALL COMERR('출하계획을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($FORMKEY, '') <> '' AND NOT EXISTS (SELECT MSTRPTFORM.FORMKEY FROM MSTRPTFORM WHERE MSTRPTFORM.FORMKEY = $FORMKEY) THEN
+    CALL COMERR('선택한 양식을 찾을 수 없습니다.');
+    LEAVE PROC;
+  END IF;
+
+  UPDATE SALOUTPLAN_W
+    SET RPTFORMKEY = IFNULL($FORMKEY, '')
+      , MTIME = CALLTIME()
+      , MEMP = CALLEMP()
+      , MPRG = CALLPRG()
+    WHERE SALOUTPLAN_W.SALOUTPLANKEY = $SALOUTPLANKEY;
+
+-- ****************************************************************************
+WHEN 'FORM_INFO' THEN  -- 출력용: 이 출하계획에 적용되는 엑셀 양식 (없으면 FORMKEY 빈값 → 기본 양식으로 출력). 리포트 TQM1002.exe 가 호출
+  SELECT
+      IFNULL(RFX.FORMKEY, '') AS FORMKEY
+    , IFNULL(RFX.FORMNM, '') AS FORMNM
+    , IFNULL(COMFILE.FILEPATH, '') AS FILEPATH
+    , IFNULL(RFX.SHEETNAME, '') AS SHEETNAME
+  FROM SALOUTPLAN_W
+  LEFT JOIN MSTRPTFORM AS RFX
+    ON RFX.FORMKEY = (SELECT RF.FORMKEY
+                        FROM MSTRPTFORM AS RF
+                        WHERE RF.USEYN = 'Y'
+                          AND (RF.FORMKEY = SALOUTPLAN_W.RPTFORMKEY
+                               OR (SALOUTPLAN_W.RPTFORMKEY = ''
+                                   AND (RF.ITEMID = 0 OR RF.ITEMID = SALOUTPLAN_W.ITEMID)
+                                   AND (RF.ENDCUSTCD = '' OR RF.ENDCUSTCD = SALOUTPLAN_W.ENDCUSTCD)
+                                   AND (RF.CUSTCD = '' OR RF.CUSTCD = SALOUTPLAN_W.CUSTCD)
+                                   AND (RF.ITEMID <> 0 OR RF.ENDCUSTCD <> '' OR RF.CUSTCD <> '')))
+                        ORDER BY (RF.FORMKEY = SALOUTPLAN_W.RPTFORMKEY) DESC
+                               , (RF.ITEMID <> 0) * 4 + (RF.ENDCUSTCD <> '') * 2 + (RF.CUSTCD <> '') DESC
+                               , (RF.DEFAULTYN = 'Y') DESC
+                               , RF.FORMKEY
+                        LIMIT 1)
+  LEFT JOIN COMFILE
+    ON COMFILE.FILEKEY = RFX.FILEKEY
+  WHERE SALOUTPLAN_W.SALOUTPLANKEY = IFNULL($SALOUTPLANKEY, '');
 
 -- ****************************************************************************
 END CASE;

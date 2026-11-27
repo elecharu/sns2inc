@@ -43,6 +43,7 @@ ItsPage.Load = function () {
         column.create("측정기기", "STDMACHINE", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'STDMACHINE', readOnly: false, align: 'center'}),
         column.create("측정부위", "STDPOINT", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'STDPOINT', readOnly: false, align: 'center' }),
         column.create("검사주기", "STDCYCLE", { width: 100, columnType: enumColumnTypes.combo, gpcd: 'STDCYCLE', readOnly: false, align: 'center' }),
+        column.create('L/R 유무', 'LRYN', { width: 70, columnType: enumColumnTypes.check, readOnly: false }),   // 2026-11-26 자주검사만 표시. 체크 = 검사값 Left·Right 둘 다 입력
         column.band('판정기준', {}, [
             column.create('기준값', 'STDVAL', { width: 60, columnType: enumColumnTypes.number, decimalPrecision: 3, readOnly: false }),
             column.create("단위", "STDUNIT", { width: 60, columnType: enumColumnTypes.combo, gpcd: 'STDUNIT', align: 'center' }),
@@ -54,7 +55,7 @@ ItsPage.Load = function () {
             column.create('판정기준', 'STDJUDGE', { width: 300, readOnly: false, multiLine: true }),
         ]),
 
-        column.create('시료수', 'SAMPLESIZE', { width: 60, columnType: enumColumnTypes.number, decimalPrecision: 2, readOnly: false }),
+        column.create('시료수', 'SAMPLESIZE', { width: 60, columnType: enumColumnTypes.number, decimalPrecision: 2, readOnly: false }),        
         column.create('정렬순서', 'SORTNO', { width: 70, readOnly: false, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.create('비고', 'REMARK', { width: 100, readOnly: false }),
         column.create('이미지', 'POP_IMG', { width: 70, columnType: enumColumnTypes.button, iconCls: 'fa-image' }),     // 이미지 팝업
@@ -226,8 +227,12 @@ ItsGrid.Event('grid3').onSelect = function (rowIndex) {
         return;
     }
 
-    ItsGrid.SetStore('grid4', maria.store);
+    ItsGrid.SetStore('grid4', maria.store.YnToBool('LRYN'));
     _calcLimitAll();
+
+    // 2026-11-26 L/R 유무 열은 자주검사(PRCTEST)일 때만 보인다
+    var _stdtp = ItsGrid.GetValue('grid1', ItsGrid.GetCurrentIndex('grid1'), 'STDTP');
+    ItsGrid.Get('grid4').columns[ItsGrid.$colIndex('grid4', 'LRYN')].visible = (_stdtp == 'PRCTEST');
 };
 
 /*********************************************************************************************************************************************************************************/
@@ -499,6 +504,7 @@ ItsButton.Event('btn_SAVE_DETAIL').onClick = function () {
                 maria2.AddList('SORTNO_LIST', ItsGrid.GetValue('grid4', i, 'SORTNO'));
 
                 maria2.AddList('SAMPLESIZE_LIST', ItsGrid.GetValue('grid4', i, 'SAMPLESIZE'));
+                maria2.AddList('LRYN_LIST', ItsGrid.GetValue('grid4', i, 'LRYN', false) == 'Y' ? 'Y' : 'N');   // 2026-11-26 L/R 유무
             }
         }
         maria2.CallProc();

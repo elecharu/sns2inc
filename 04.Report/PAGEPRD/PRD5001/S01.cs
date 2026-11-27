@@ -9,6 +9,7 @@
 //   Tables[1] 검사 회차 (SEQNO, HHMM ...)
 //   Tables[2] 검사항목 × 시료 줄 (PRCDETAILNM, STDNM, FEATURE, STDJUDGE, STDCYCLENM, STDMACHINENM, SAMPLENO, T01~T30, N01~N30)
 //             항목 정보는 시료 1번 줄에만 있다. N = 'Y' 면 그 회차 그 항목 불합격 (빨간 글자)
+// 2026-11-26 L/R 유무 항목은 시료마다 L·R 두 줄 (SAMPLENO '1 L' / '1 R'). 항목 시작은 ROWSEQ = 1 로 판단
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -90,7 +91,7 @@ namespace XtraRpt
             List<DataRow> item = new List<DataRow>();
             foreach (DataRow r in ds.Tables[2].Rows)
             {
-                if (Value(r, "SAMPLENO") == "1" && item.Count > 0)
+                if (IsItemStart(r) && item.Count > 0)
                 {
                     AddItem(rowPages, ref page, item);
                     item = new List<DataRow>();
@@ -179,7 +180,7 @@ namespace XtraRpt
             {
                 DataRow r = rows[i];
                 string row = "C_R" + (i + 1).ToString("00") + "_";
-                bool itemStart = i == 0 || Value(r, "SAMPLENO") == "1";
+                bool itemStart = i == 0 || IsItemStart(r);
 
                 itemPrc[i] = itemStart ? Value(r, "PRCDETAILNM") : itemPrc[i - 1];
                 SetCell(row + "NO", Value(r, "SAMPLENO"));
@@ -202,7 +203,7 @@ namespace XtraRpt
                     continue;
                 }
                 int span = 1;
-                while (i + span < rows.Count && Value(rows[i + span], "SAMPLENO") != "1")
+                while (i + span < rows.Count && !IsItemStart(rows[i + span]))
                 {
                     span++;
                 }
@@ -245,6 +246,16 @@ namespace XtraRpt
                     below.Visible = false;
                 }
             }
+        }
+
+        /// 검사항목의 첫 줄인지 (ROWSEQ = 1. 예전 프로시저처럼 ROWSEQ 가 없으면 SAMPLENO = 1). null(빈 줄)은 아님
+        private static bool IsItemStart(DataRow row)
+        {
+            if (row == null)
+            {
+                return false;
+            }
+            return row.Table.Columns.Contains("ROWSEQ") ? Value(row, "ROWSEQ") == "1" : Value(row, "SAMPLENO") == "1";
         }
 
         /// 검사항목 칸 글자: 검사항목_세부항목 (세부항목이 없으면 검사항목만)

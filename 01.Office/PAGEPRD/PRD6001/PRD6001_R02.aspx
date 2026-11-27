@@ -90,26 +90,39 @@
         </Its:div>
     </Its:pop>
 
-    <Its:pop runat="server" ID="pop_EQM02_COPY" Title="일상점검항목 복사" Width="1200" Height="500">    
-        <Its:div runat="server" Type="SplitTop" TopHeightPc="90">
-            <Its:div runat="server" Type="SplitLeft" LeftWidthPc="30"> 
-                <Its:grid runat="server" ID="grid7" />   
-            </Its:div>
-        
-            <Its:split runat="server" Type="Vertical" Resizeable="false" />
-            
-            <Its:div runat="server" Type="SplitRight">
-                <Its:grid runat="server" ID="grid8" />   
-            </Its:div> 
+    <%-- 2026-11-26 복사 원본 조회조건(작업장·공정·라인·설비) + [조회] 버튼, 열이 다 보이게 팝업 크기 1200x500 → 1500x620 --%>
+    <Its:pop runat="server" ID="pop_EQM02_COPY" Title="일상점검항목 복사" Width="1500" Height="620">
+        <Its:div runat="server" Type="SplitTop" ID="pdiv_COPY">
+            <Its:combo runat="server" Label="작업장" Field="LINECD" ID="pop_COPY_cmb_LINECD" REF01="07" GPCD="*LINECD" MarginLeft="10" MarginTop="6" MarginBottom="10" LabelWidth="50" InputWidth="100" />
+            <Its:combo runat="server" Label="공정" Field="EQMTP" ID="pop_COPY_cmb_EQMTP" GPCD="*EQMTP" MarginLeft="15" MarginTop="6" LabelWidth="40" InputWidth="80" />
+            <Its:combo runat="server" Label="라인" Field="EQMGROUP1" ID="pop_COPY_cmb_EQMGROUP1" GPCD="*EQMGROUP1" MarginLeft="15" MarginTop="6" LabelWidth="40" InputWidth="80" />
+            <Its:text runat="server" Label="설비" Field="FANO" ID="pop_COPY_txt_FANO" MarginLeft="15" MarginTop="6" LabelWidth="38" InputWidth="150" />
+            <Its:button runat="server" Label="조회" ID="pop_COPY_btn_SEARCH" Width="80" MarginLeft="15" MarginTop="6" BackColor="CustomButton2" />
         </Its:div>
 
         <Its:split runat="server" Type="Horizon" Resizeable="false" />
 
-        <Its:div runat="server" Type="SplitDown" BackColor="GrayLight2">
-            <Its:button runat="server" Label="저장" ID="btn_COPY_EQM02" Width="100" MarginTop="5" MarginLeft="500" Height="30"/>
-            <Its:button runat="server" Label="취소" ID="btn_CANCEL_COPY_EQM02" Width="100" MarginTop="5" MarginLeft="20" Height="30"/>
+        <Its:div runat="server" Type="SplitDown">
+            <Its:div runat="server" Type="SplitTop" TopHeightPc="90">
+                <Its:div runat="server" Type="SplitLeft" LeftWidthPc="37">
+                    <Its:grid runat="server" ID="grid7" />
+                </Its:div>
+
+                <Its:split runat="server" Type="Vertical" Resizeable="false" />
+
+                <Its:div runat="server" Type="SplitRight">
+                    <Its:grid runat="server" ID="grid8" />
+                </Its:div>
+            </Its:div>
+
+            <Its:split runat="server" Type="Horizon" Resizeable="false" />
+
+            <Its:div runat="server" Type="SplitDown" BackColor="GrayLight2">
+                <Its:button runat="server" Label="저장" ID="btn_COPY_EQM02" Width="100" MarginTop="5" MarginLeft="640" Height="30"/>
+                <Its:button runat="server" Label="취소" ID="btn_CANCEL_COPY_EQM02" Width="100" MarginTop="5" MarginLeft="20" Height="30"/>
+            </Its:div>
         </Its:div>
-    </Its:pop>    
+    </Its:pop>
 
     <%-- 2026-11-26 설비그룹 일상점검 복사 팝업 삭제 (설비그룹 탭 삭제) --%>
 

@@ -53,9 +53,12 @@ ItsPage.Load = function () {
         column.split()
     ]);
 
-    // 설비 복사 팝업: 복사 원본 설비
+    // 설비 복사 팝업: 복사 원본 설비 (2026-11-26 작업장·공정·라인 열 추가, 팝업 안에서 열이 다 보이게 폭 조정)
     ItsGrid.Create('grid7', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        column.create('설비코드', 'PLANCD', { width: 100, align: 'center' }),
+        column.create('작업장', 'LINENM', { width: 70, align: 'center' }),
+        column.create('공정', 'EQMTPNM', { width: 55, align: 'center' }),
+        column.create('라인', 'EQMGROUP1NM', { width: 50, align: 'center' }),
+        column.create('설비코드', 'PLANCD', { width: 90, align: 'center' }),
         column.create('설비명', 'PLANNM', { width: 150 }),
         column.create('일상점검 건수', 'ITEMCNT', { width: 80, columnType: enumColumnTypes.number, decimalPrecision: 0 }),
         column.split()
@@ -64,9 +67,9 @@ ItsPage.Load = function () {
     // 설비 복사 팝업: 복사 원본 일상점검 항목
     ItsGrid.Create('grid8', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
         column.create('점검코드', 'CHKKNDCD', { width: 70, align: 'center' }),
-        column.create('점검명', 'CHKKNDNM', { width: 250 }),
-        column.create('점검항목', 'CHKLOCNM', { width: 110, align: 'center' }),
-        column.create('점검방법', 'CHKMTHNM', { width: 90, align: 'center' }),
+        column.create('점검명', 'CHKKNDNM', { width: 220 }),
+        column.create('점검항목', 'CHKLOCNM', { width: 100, align: 'center' }),
+        column.create('점검방법', 'CHKMTHNM', { width: 80, align: 'center' }),
         column.create('점검값구분', 'CHKVALTPNM', { width: 80, align: 'center' }),
         column.create('점검기준', 'CHKSTD', { width: 130 }),
         column.create('점검주기', 'CHKCYCLE', { width: 80, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKCYCLE', readOnly: true }),
@@ -387,19 +390,54 @@ ItsButton.Event('bdiv3_btn_COPY').onClick = function () {
         return;
     }
 
+    // 2026-11-26 팝업 조회조건은 메인 화면 조회조건으로 시작 (작업장 → 공정 → 라인 순서로 넣어야 콤보 목록이 맞음)
+    ItsCombo.SetValue('pop_COPY_cmb_LINECD', ItsCombo.GetValue('cmb_LINECD'));
+    ItsCombo.SetValue('pop_COPY_cmb_EQMTP', ItsCombo.GetValue('cmb_EQMTP'));
+    ItsCombo.SetValue('pop_COPY_cmb_EQMGROUP1', ItsCombo.GetValue('cmb_EQMGROUP1'));
+    ItsText.SetValue('pop_COPY_txt_FANO', '');
+
+    ItsPop.Open('pop_EQM02_COPY');
+    COPY_SEARCH();
+};
+
+// 2026-11-26 복사 팝업 [조회]
+ItsButton.Event('pop_COPY_btn_SEARCH').onClick = function () {
+    COPY_SEARCH();
+};
+
+// 복사 원본 설비 조회 (팝업 조회조건: 작업장·공정·라인·설비)
+function COPY_SEARCH() {
+    ItsGrid.Clear('grid7');
     ItsGrid.Clear('grid8');
 
     var maria = new ItsMaria('PRD6001_R02', 'LIST_COPY_PLAN');
+    maria.AddPanel('pdiv_COPY');
     maria.AddParam('PLANTP', 'E');
-    maria.AddParam('PLANCD', FANO);
+    maria.AddParam('PLANCD', CUR_FANO());
     maria.CallProc();
     if (maria.isError) {
         maria.ShowErrMsg();
         return;
     }
 
-    ItsPop.Open('pop_EQM02_COPY');
     ItsGrid.SetStore('grid7', maria.store);
+    ItsMsg.Toast(ItsMsg.CommonMsg.SearchComplete(maria.store.Length()));
+}
+
+// 복사 팝업 작업장 변경 → 공정·라인 목록을 그 작업장 기준으로 (메인 조회조건과 같은 연동)
+ItsCombo.Event('pop_COPY_cmb_LINECD').onChanged = function (value, oldValue) {
+    ItsCombo.SetRef01('pop_COPY_cmb_EQMTP', ItsCombo.GetValue('pop_COPY_cmb_LINECD'));
+    ItsCombo.SetValue('pop_COPY_cmb_EQMTP', '', false);
+
+    ItsCombo.SetRef01('pop_COPY_cmb_EQMGROUP1', ItsCombo.GetValue('pop_COPY_cmb_LINECD'), false);
+    ItsCombo.SetRef02('pop_COPY_cmb_EQMGROUP1', '');
+    ItsCombo.SetValue('pop_COPY_cmb_EQMGROUP1', '', false);
+};
+
+// 복사 팝업 공정 변경 → 라인 목록을 그 공정 기준으로
+ItsCombo.Event('pop_COPY_cmb_EQMTP').onChanged = function (value, oldValue) {
+    ItsCombo.SetRef02('pop_COPY_cmb_EQMGROUP1', ItsCombo.GetValue('pop_COPY_cmb_EQMTP'));
+    ItsCombo.SetValue('pop_COPY_cmb_EQMGROUP1', '', false);
 };
 
 // 복사 원본 설비 선택 시 일상점검 항목 조회

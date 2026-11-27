@@ -113,6 +113,9 @@
     <Compile Include="R02.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="S01.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="R02.Designer.cs">
       <DependentUpon>R02.cs</DependentUpon>
     </Compile>

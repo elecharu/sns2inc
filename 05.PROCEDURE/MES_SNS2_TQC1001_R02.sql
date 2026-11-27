@@ -6,6 +6,7 @@ PROCEDURE MES_SNS2.TQC1001_R02(
 -- Modify: 2026-11-25 김영철 리비전 개정일(REGDATE)·작성자(REVEMPNM)·개정사유(REVREASON) 저장 - RENEW_REV 자동 채움, LIST_RPTREV 조회, UPDATE_REV(수정 저장) 추가
 -- Modify: 2026-11-25 김영철 검사항목별 이미지(여러 장) - LIST_DETAIL_IMAGE / ADD_DETAIL_IMAGE / DEL_DETAIL_IMAGE 추가 (MSTRPTREV_DETAIL_IMAGE), 리비전 갱신 시 이미지 복사, 항목·리비전 삭제 시 이미지 삭제, 항목 조회에 IMGCNT 추가
 -- Modify: 2026-11-26 김영철 UPDATE_MSTRPTREV_DETAIL 시료수는 1~10 정수만 저장 (출하검사 측정치 X1~X10)
+-- Modify: 2026-11-26 자주검사 L/R 유무(MSTRPTREV_DETAIL.LRYN) 조회·저장, 리비전 갱신 시 복사. $LRYN_LIST 파라미터 추가
 -- *****************************************************************************
 
   IN $STDTP             VARCHAR(100), -- 검사구분
@@ -35,6 +36,7 @@ PROCEDURE MES_SNS2.TQC1001_R02(
   IN $REMARK_LIST       MEDIUMTEXT,
   IN $SORTNO_LIST       MEDIUMTEXT,
   IN $SAMPLESIZE_LIST   MEDIUMTEXT,
+  IN $LRYN_LIST         MEDIUMTEXT,   -- L/R 유무 (Y/N, 자주검사) 2026-11-26
 
   IN $REGDATE           VARCHAR(50), -- 개정일 (리비전 저장 UPDATE_REV)
   IN $REVEMPNM          VARCHAR(50),   -- 작성자 (리비전 저장 UPDATE_REV)
@@ -72,6 +74,7 @@ PROC:  BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$REMARK VARCHAR(100);
   DECLARE _$SORTNO VARCHAR(100);
   DECLARE _$SAMPLESIZE VARCHAR(100);
+  DECLARE _$LRYN VARCHAR(10);
   DECLARE _$PRCDETAIL VARCHAR(100);
   DECLARE _$FEATURE VARCHAR(100);
 
@@ -103,7 +106,7 @@ WHEN 'LIST_MSTITEM' THEN -- 품목 조회 (grid2 조회)
   SELECT 
     LIST_ITEM.EXISTSYN,
     LIST_ITEM.ITEMCG,
-    LIST_ITEM.ITEMID,
+    CAST(LIST_ITEM.ITEMID AS CHAR) AS ITEMID,
     LIST_ITEM.ITEMCD,
     LIST_ITEM.ITEMNM
   FROM (
@@ -184,6 +187,7 @@ WHEN 'LIST_MSTRPTREV_DETAIL' THEN -- 검사표준 리비전 디테일정보 조�
     STDPLUS,             -- 오차(+)
     STDJUDGE,            -- 판정기준
     SAMPLESIZE,          -- 시료수
+    LRYN,                -- L/R 유무 (자주검사) 2026-11-26
     REMARK,              -- 비고
     SORTNO,
     (SELECT COUNT(*) FROM MSTRPTREV_DETAIL_IMAGE AS IMG
@@ -324,13 +328,13 @@ WHEN 'RENEW_REV' THEN -- 리비전 갱신  (리비전 갱신 버튼)
               STDPART, PRCDETAIL, FEATURE,
               STDMACHINE, STDPOINT, STDCYCLE, STDVAL, STDRANGE,
               STDMINUS, STDPLUS, STDUNIT, STDJUDGE, NO,
-              SORTNO, SAMPLESIZE, IMGFILEKEY, REMARK,
+              SORTNO, SAMPLESIZE, LRYN, IMGFILEKEY, REMARK,
               RTIME, REMP, RPRG)
        SELECT _$REVCD, STDCD, STDNM, STDCHKTP,
               STDPART, PRCDETAIL, FEATURE,
               STDMACHINE, STDPOINT, STDCYCLE, STDVAL, STDRANGE,
               STDMINUS, STDPLUS, STDUNIT, STDJUDGE, NO,
-              SORTNO, SAMPLESIZE, IMGFILEKEY, REMARK,
+              SORTNO, SAMPLESIZE, LRYN, IMGFILEKEY, REMARK,
               CALLTIME(), CALLEMP(), CALLPRG()
          FROM MSTRPTREV_DETAIL
         WHERE REVCD = $OLDREVCD;
@@ -439,6 +443,8 @@ WHEN 'UPDATE_MSTRPTREV_DETAIL' THEN -- 검사표준 리비전 디테일 저장 (
     CALL COMSPLIT($REMARK_LIST, _$REMARK);
     CALL COMSPLIT($SORTNO_LIST, _$SORTNO);
     CALL COMSPLIT($SAMPLESIZE_LIST, _$SAMPLESIZE);
+    CALL COMSPLIT($LRYN_LIST, _$LRYN);
+    SET _$LRYN = IF(IFNULL(_$LRYN, '') = 'Y', 'Y', 'N');   -- 2026-11-26 L/R 유무 (안 넘어오면 N)
 
     IF _$STDCHKTP = '' THEN
       CALL COMERR('검사항목을 선택하세요.');
@@ -478,6 +484,7 @@ WHEN 'UPDATE_MSTRPTREV_DETAIL' THEN -- 검사표준 리비전 디테일 저장 (
       , REMARK = _$REMARK
       , SORTNO = _$SORTNO
       , SAMPLESIZE = IF(_$SAMPLESIZE = '', 0, _$SAMPLESIZE)
+      , LRYN = _$LRYN
       , MTIME = CALLTIME()
       , MEMP = CALLEMP()
       , MPRG = CALLPRG()
@@ -508,6 +515,7 @@ WHEN 'UPDATE_MSTRPTREV_DETAIL' THEN -- 검사표준 리비전 디테일 저장 (
         , REMARK
         , SORTNO
         , SAMPLESIZE
+        , LRYN
         , RTIME, REMP, RPRG
       )
       VALUES (
@@ -530,6 +538,7 @@ WHEN 'UPDATE_MSTRPTREV_DETAIL' THEN -- 검사표준 리비전 디테일 저장 (
         , _$REMARK
         , _$SORTNO
         , IF(_$SAMPLESIZE = '', 0, _$SAMPLESIZE)
+        , _$LRYN
         , CALLTIME(), CALLEMP(), CALLPRG()
       );
 

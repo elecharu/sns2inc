@@ -25,6 +25,7 @@
         <Its:text runat="server" Label="품목코드" ID="txt_ITEMCD" Field="ITEMCD" ReadOnly="true" MarginLeft="10" MarginTop="10" MarginBottom="10" InputWidth="259" />
         <Its:text runat="server" Label="품목명" ID="txt_ITEMNM" Field="ITEMNM" ReadOnly="true" MarginLeft="20" MarginTop="10" MarginBottom="10" InputWidth="259" />
         <Its:text runat="server" Label="규격" ID="txt_ITEMSPEC" Field="ITEMSPEC" ReadOnly="true" MarginLeft="20" MarginTop="10" MarginBottom="10" InputWidth="259" />
+        <Its:text runat="server" Label="리비전" ID="txt_REVNUM" Field="REVNUM" ReadOnly="true" MarginLeft="20" MarginTop="10" MarginBottom="10" InputWidth="60" />   <%-- 2026-11-26 자주검사 기준 리비전번호 --%>
         <Its:text runat="server" Label="품목ID" ID="txt_ITEMID" Field="ITEMID" ReadOnly="true" Hidden="true" />
     </Its:div>
     <Its:split runat="server" Type="Horizon" Resizeable="false" />
@@ -33,23 +34,13 @@
             <Its:date runat="server" Label="검사일자" ID="date_TQMDATE" Field="TQMDATE" MarginTop="10" MarginBottom="10" />
             <Its:text runat="server" Label="검사시간" ID="txt_TQMTIME" Field="TQMTIME" Type="hhmm" InputWidth="20" HiddenLabel="true" MarginTop="10" MarginBottom="10" />
             <Its:find runat="server" Label="검사자" ID="find_EMPCD" Field="EMPCD" GPCD="EMPCD" REF01="44F20" MarginTop="10" MarginBottom="10" InputWidth="100" NameWidth="100" />
+            <%-- 2026-11-26 그리드 하나로 입력: 오른쪽 검사값 그리드·합격/불합격 체크를 없애고 저장 버튼을 여기로 (입력한 항목 전체 저장) --%>
+            <Its:button runat="server" Label="저    장" ID="btn_SAVE" MarginLeft="60" MarginTop="5" MarginBottom="5" Width="150" Height="45" />
         </Its:div>
         <Its:split runat="server" Type="Horizon" Resizeable="false" />
         <Its:div runat="server" Type="SplitDown">
-            <Its:div runat="server" Type="SplitLeft" LeftWidthPc="80">
+            <Its:div runat="server" Type="SplitSingle">
                 <Its:grid runat="server" ID="grid1" />
-            </Its:div>
-            <Its:split runat="server" Type="Vertical" />
-            <Its:div runat="server" Type="SplitRight">
-                <Its:div runat="server" Type="SplitTop" TopHeightPc="73">
-                    <Its:grid runat="server" ID="grid2" />
-                </Its:div>
-                <Its:split runat="server" Type="Horizon" Resizeable="false" />
-                <Its:div runat="server" Type="SplitDown" ID="div3">
-                    <Its:check runat="server" Label="합격" Field="OK" ID="check_OK" Value="false" MarginLeft="40" MarginTop="10" />
-                    <Its:check runat="server" Label="불합격" Field="NG" ID="check_NG" Value="false" MarginLeft="20" MarginTop="10" />
-                    <Its:button runat="server" Label="저    장" ID="btn_SAVE" MarginLeft="60" MarginTop="20" Width="150" Height="45" />
-                </Its:div>
             </Its:div>
         </Its:div>
     </Its:div>

@@ -15,6 +15,7 @@ PROCEDURE MES_SNS2.PRD6001_R02(
 --                                - 점검항목 위치사진(MSTEQMREV_DETAIL_IMG): LIST_ITEMIMG, ADD_ITEMIMG, DEL_ITEMIMG, 새 REV 만들 때 같이 복사
 --                                $CHKKNDCD, $FILEKEY, $CHKCYCLE_LIST, $CHKSTD_LIST, $STDTP_LIST, $MINVAL_LIST, $MAXVAL_LIST 파라미터 추가
 --                                - PRINT_CHKSHEET: 설비 일상점검표 출력 데이터 (리포트 PRD6001_R02)
+--                                - LIST_COPY_PLAN: 작업장·공정·라인 표시, 조회조건(작업장·공정·라인·설비) 추가
 -- *****************************************************************************
   IN $PLANTP        CHAR(1),          -- 계획구분 (G: 설비그룹, E: 설비)
   IN $PLANCD        VARCHAR(50),      -- 설비그룹코드 또는 설비코드
@@ -222,6 +223,9 @@ WHEN 'LIST_COPY_PLAN' THEN  -- 복사 원본 목록 (최신 REV 에 점검항목
   SELECT
       MSTEQMREV_HEADER.PLANCD
     , IF($PLANTP = 'G', COMTYPE.TPNM, MSTEQM.EQMNM) AS PLANNM
+    , IFNULL(MSTLINE.LINENM, '') AS LINENM                         -- 2026-11-26 작업장·공정·라인
+    , IFNULL(GPCD('FM100', MSTEQM.EQMTP), '') AS EQMTPNM
+    , IFNULL(GPCD('FM113', MSTEQM.EQMGROUP1), '') AS EQMGROUP1NM
     , COUNT(*) AS ITEMCNT
   FROM MSTEQMREV_HEADER
   INNER JOIN MSTEQMREV_DETAIL
@@ -232,9 +236,16 @@ WHEN 'LIST_COPY_PLAN' THEN  -- 복사 원본 목록 (최신 REV 에 점검항목
   LEFT JOIN MSTEQM
     ON MSTEQM.FANO = MSTEQMREV_HEADER.PLANCD
    AND MSTEQM.FACTORYCD = '07'
+  LEFT JOIN MSTLINE
+    ON MSTLINE.LINECD = MSTEQM.LINECD
   WHERE MSTEQMREV_HEADER.CHKTP = '01'
     AND MSTEQMREV_HEADER.PLANTP = $PLANTP
     AND MSTEQMREV_HEADER.PLANCD <> $PLANCD
+    -- 2026-11-26 복사 팝업 조회조건 (빈 값이면 전체)
+    AND (IFNULL($LINECD, '') = '' OR MSTEQM.LINECD = $LINECD)
+    AND (IFNULL($EQMTP, '') = '' OR MSTEQM.EQMTP = $EQMTP)
+    AND (IFNULL($EQMGROUP1, '') = '' OR MSTEQM.EQMGROUP1 = $EQMGROUP1)
+    AND (IFNULL($FANO, '') = '' OR MSTEQM.FANO LIKE CONCAT('%', $FANO, '%') OR MSTEQM.EQMNM LIKE CONCAT('%', $FANO, '%'))
     AND MSTEQMREV_HEADER.REVNUM = (
                                     SELECT MAX(MSTEQMREV_HEADER2.REVNUM)
                                     FROM MSTEQMREV_HEADER AS MSTEQMREV_HEADER2
@@ -243,8 +254,8 @@ WHEN 'LIST_COPY_PLAN' THEN  -- 복사 원본 목록 (최신 REV 에 점검항목
                                       AND MSTEQMREV_HEADER2.PLANCD = MSTEQMREV_HEADER.PLANCD
                                   )
     AND IF($PLANTP = 'G', COMTYPE.USEYN, MSTEQM.USEYN) = 'Y'
-  GROUP BY MSTEQMREV_HEADER.PLANCD, COMTYPE.TPNM, MSTEQM.EQMNM
-  ORDER BY MSTEQMREV_HEADER.PLANCD
+  GROUP BY MSTEQMREV_HEADER.PLANCD, COMTYPE.TPNM, MSTEQM.EQMNM, MSTLINE.LINENM, MSTEQM.EQMTP, MSTEQM.EQMGROUP1, MSTEQM.LINECD
+  ORDER BY MSTEQM.LINECD, MSTEQM.EQMTP, MSTEQM.EQMGROUP1, MSTEQMREV_HEADER.PLANCD
   ;
 
 -- ****************************************************************************

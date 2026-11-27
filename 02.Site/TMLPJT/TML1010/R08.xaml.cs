@@ -64,7 +64,16 @@ namespace TML1010
 
             MODEL_A2.SetValue("INDATE", DateTime.Now.ToString("yyyy-MM-dd"));
             MODEL_A2.SetValue("INTP", "IN_01");
-            MODEL_A2.SetValue("EMPCD", (ItsMemberShip.EMPCD ?? "").Trim());
+
+            // 입고자 기본값 = 로그인 사원. 공통 Pop 은 자기 Loaded 에서 필드명을 잡으므로 그 전에 값을 넣으면 'SetPopInfo GPCD is empty' 오류 → Pop 로드 뒤에 넣음
+            if (pop_IN_EMP.FieldName != "")
+            {
+                SetDefaultInEmp(null, null);
+            }
+            else
+            {
+                pop_IN_EMP.Loaded += SetDefaultInEmp;
+            }
 
             MODEL_S2.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-dd"));
             MODEL_S2.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
@@ -79,6 +88,13 @@ namespace TML1010
             {
                 // 화면 확인용 안전 처리
             }
+        }
+
+        // 입고자 기본값(로그인 사원) 넣기
+        private void SetDefaultInEmp(object sender, RoutedEventArgs e)
+        {
+            pop_IN_EMP.Loaded -= SetDefaultInEmp;
+            MODEL_A2.SetValue("EMPCD", (ItsMemberShip.EMPCD ?? "").Trim());
         }
 
         // 발주 목록 재조회 후 선택했던 발주가 남아 있으면 다시 선택

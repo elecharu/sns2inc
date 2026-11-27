@@ -29,7 +29,8 @@ namespace TML2040
         ItsModelPanel MODEL_A3 = new ItsModelPanel(); //비가동시작/종료
 
         ItsModelPanel MODEL_B1 = new ItsModelPanel(); //컨트롤패널
-        ItsModelPanel MODEL_B2 = new ItsModelPanel(); //조회일자
+        ItsModelPanel MODEL_B2 = new ItsModelPanel(); //조회기간 (비가동 이력)
+        ItsModelPanel MODEL_B3 = new ItsModelPanel(); //라인 조회조건 (작업장·공정) 2026-11-27
 
         ItsModelPanel MODEL_C1 = new ItsModelPanel(); //금형교체등록창
         ItsModelPanel MODEL_C2 = new ItsModelPanel(); //금형교체수정창
@@ -58,7 +59,12 @@ namespace TML2040
             MODEL_B1.InitData();
             MODEL_B2.Binding(PANEL_B2);
             MODEL_B2.InitData();
+            MODEL_B2.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-dd"));   // 조회기간 기본값: 오늘~오늘
+            MODEL_B2.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
             MODEL_B2.EventValueChanged += MODEL_B2_EventValueChanged;
+            MODEL_B3.Binding(PANEL_B3);
+            MODEL_B3.InitData();
+            MODEL_B3.EventValueChanged += MODEL_B3_EventValueChanged;
 
             //MODEL_C1.Binding(PANEL_C1);
             //MODEL_C1.InitData();
@@ -77,9 +83,47 @@ namespace TML2040
             timer.Start();
         }
 
+        // 조회기간을 바꾸면 선택한 라인의 비가동 이력을 다시 조회
         private void MODEL_B2_EventValueChanged(string fieldName)
         {
             EventCommand("EQM_LIST");
+        }
+
+        // 2026-11-27 작업장을 바꾸면 공정 콤보를 그 작업장 공정으로 좁힘 (라인 목록은 [라인 조회] 버튼으로)
+        private void MODEL_B3_EventValueChanged(string fieldName)
+        {
+            if (fieldName == "LINECD")
+            {
+                MODEL_B3.SetRef01("PRCCD", MODEL_B3.GetText("LINECD"));
+            }
+        }
+
+        // 2026-11-27 생산라인 버튼 목록 (작업장·공정 조건, 비우면 전체). 첫 라인을 골라 비가동 이력 조회
+        private void LoadLineList()
+        {
+            ItsMaria.Set("TML2040_R01", "LIST_LINE");
+            ItsMaria.AddOne("LINECD", MODEL_B3.GetText("LINECD"));
+            ItsMaria.AddOne("PRCCD", MODEL_B3.GetText("PRCCD"));
+            ItsMaria.AddOne("EQMCD", "");
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            DataTable dt = ds.Tables[0];
+            MODEL_G1.InitData();
+            EQM_LIST.Clear();
+            EQM_LIST.ButtonHeight = "50";
+            for (int i = 0; i < dt.Rows.Count; i++)
+            {
+                EQM_LIST.AddButton(ItsData.GetText(dt, i, "EQMNM") + "\n" + ItsData.GetText(dt, i, "PRCNM"), ItsData.GetText(dt, i, "EQMCD"));
+            }
+            if (dt.Rows.Count > 0)
+            {
+                EQM_LIST.Value = ItsData.GetText(dt, 0, "EQMCD");
+            }
         }
 
         private void Timer_Tick(object sender, EventArgs e)
@@ -112,25 +156,7 @@ namespace TML2040
             //PANEL_C1.Close();
             //PANEL_C3.Close();
 
-            ItsMaria.Set("TML2040_R01", "LIST_EQM");
-            ItsMaria.AddOne("TMLCD", ItsLocalInfo.TMLCD);
-            DataTable dt = ItsMaria.Call().Tables[0];
-            if (ItsMaria.IsError)
-            {
-                ShowMessageBox("", ItsMaria.ErrMessage);
-                return;
-            }
-            EQM_LIST.Clear();
-            EQM_LIST.ButtonHeight = "50";
-
-            for (int i = 0; i < dt.Rows.Count; i++)
-            {
-                EQM_LIST.AddButton(ItsData.GetText(dt, i, "EQMNO") + "\n" + ItsData.GetText(dt, i, "EQMNM"), ItsData.GetText(dt, i, "EQMCD"));
-            }
-            if (ItsData.GetText(dt, 0, "EQMCD") != null)
-            {
-                EQM_LIST.Value = ItsData.GetText(dt, 0, "EQMCD");
-            }
+            LoadLineList();   // 2026-11-27 생산라인 버튼 목록 (예전: LIST_EQM 비가동 이력이 있는 라인만)
         }
 
         private void NoncdButton(ButtonList button, ButtonList mbutton)
@@ -181,11 +207,17 @@ namespace TML2040
         {
             base.EventCommand(commandName);
 
-            if (commandName == "EQM_LIST")
+            if (commandName == "SEARCH_LINE")
+            {   // 2026-11-27 [라인 조회]: 작업장·공정의 라인 버튼 목록
+                GRID_G1.Clear();
+                LoadLineList();
+            }
+            else if (commandName == "EQM_LIST")
             {
                 ItsMaria.Set("TML2040_R01", "LIST_PRDRSTNON");
                 ItsMaria.AddOne("EQMCD", EQM_LIST.Value);
-                ItsMaria.AddOne("DATE", MODEL_B2.GetValue("DATE"));
+                ItsMaria.AddOne("SDATE", MODEL_B2.GetText("SDATE"));   // 2026-11-27 조회기간 (예전: 조회일자 DATE 하루)
+                ItsMaria.AddOne("EDATE", MODEL_B2.GetText("EDATE"));
                 DataSet ds = ItsMaria.Call();
                 if (ItsMaria.IsError)
                 {
@@ -230,27 +262,7 @@ namespace TML2040
 
             else if (commandName == "SEARCH_WORK")
             {
-                GRID_G1.Clear();
-
-                ItsMaria.Set("TML2040_R01", "LIST_EQM");
-                ItsMaria.AddOne("TMLCD", ItsLocalInfo.TMLCD);
-                DataTable dt = ItsMaria.Call().Tables[0];
-                if (ItsMaria.IsError)
-                {
-                    ShowMessageBox("", ItsMaria.ErrMessage);
-                    return;
-                }
-                EQM_LIST.Clear();
-                EQM_LIST.ButtonHeight = "50";
-
-                for (int i = 0; i < dt.Rows.Count; i++)
-                {
-                    EQM_LIST.AddButton(ItsData.GetText(dt, i, "EQMNO") + "\n" + ItsData.GetText(dt, i, "EQMNM"), ItsData.GetText(dt, i, "EQMCD"));
-                }
-                if (ItsData.GetText(dt, 0, "EQMCD") != null)
-                {
-                    EQM_LIST.Value = ItsData.GetText(dt, 0, "EQMCD");
-                }
+                EventCommand("EQM_LIST");   // 2026-11-27 [비가동조회]: 선택한 라인의 조회기간 비가동 이력 (라인 목록은 [라인 조회])
             }
             else if (commandName == "START/END")
             {

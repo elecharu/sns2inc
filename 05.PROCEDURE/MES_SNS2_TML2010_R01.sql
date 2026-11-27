@@ -13,6 +13,11 @@ PROCEDURE MES_SNS2.TML2010_R01(
 --           다음날 그 시각 전까지 시작한 것 + 진행 중(종료시간 없음)인 것
 --         2026-11-26 LIST_INPUT 0번(투입로트)에 BOMRATE(생산품 1개당 투입량) 추가 - 조립공정 양품수량 계산용
 --         2026-11-26 SCAN_LOT: 조립공정은 라인 생산품이 있으면 그 BOM 에 없는 자재 스캔 막음, 생산품 목록도 그 품목만
+--         2026-11-26 WORK_DONE: 라인 설비(MSTEQM_MATCH)의 승인된 일상점검 계획 항목 중 이번 작업(작업시작일·주야구분)에
+--           점검주기상 등록해야 하는데 이력이 없으면 작업완료 막음 (01 1회/Shift 작업조, 03 1회/Day 작업일, 02 1회/Week 월~일 주)
+--         2026-11-26 WORK_DONE: 생산품의 사용중인 자주검사 리비전 항목 중 이번 작업에 검사주기상 해야 할 횟수보다 적으면 작업완료 막음
+--           5 1회/shift·1 3회/shift = 작업조 1·3번, 6 1회/1일 = 작업일 1번, 4 1회/1hr = 작업시간(시간) 번, 2 1회/2hr = 작업시간÷2 번 (최소 1)
+--           시업시(8)·공구교환(7)·그 밖은 확인 안 함
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),       -- 공정
@@ -60,6 +65,19 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$PRDINSKEY VARCHAR(100);
   DECLARE _$GOODWARE VARCHAR(100);
   DECLARE _$BADWARE VARCHAR(100);
+  DECLARE _$DAYSTART VARCHAR(5);     -- 2026-11-26 작업완료 일상점검 확인: 주간 시작 (PP161100N.REF01)
+  DECLARE _$NIGHTSTART VARCHAR(5);   -- 야간 시작 (PP161102N.REF01)
+  DECLARE _$CHKWD VARCHAR(10);       -- 이번 작업의 작업일 (작업시작일)
+  DECLARE _$CHKSHIFT CHAR(1);        -- 이번 작업의 작업조 (D 주간 / N 야간, 주야구분)
+  DECLARE _$CHKYW INT;               -- 이번 작업일의 주 (월~일)
+  DECLARE _$CHKMISSCNT INT;          -- 등록 안 된 점검항목 수
+  DECLARE _$CHKMISS MEDIUMTEXT;      -- 등록 안 된 점검항목 목록 (메시지용)
+  DECLARE _$PRCREVCD VARCHAR(100);   -- 2026-11-26 작업완료 자주검사 확인: 생산품의 사용중인 자주검사 리비전
+  DECLARE _$PRCSHIFTST VARCHAR(19);  -- 이번 작업조 시작·끝 (yyyy-MM-dd HH:mm:ss)
+  DECLARE _$PRCSHIFTED VARCHAR(19);
+  DECLARE _$PRCDAYST VARCHAR(19);    -- 이번 작업일 시작·끝
+  DECLARE _$PRCDAYED VARCHAR(19);
+  DECLARE _$PRCHRS INT;              -- 작업시간 (시간, 최소 1)
 -- *****************************************************************************
 CASE $CALLTYPE
 -- ****************************************************************************
@@ -563,6 +581,13 @@ WHEN 'DEL_INPUT' THEN  -- 투입로트 삭제
     WHERE PRDLINEITEM.LINECD = $LINECD
       AND PRDLINEITEM.PRCCD = $PRCCD
       AND PRDLINEITEM.EQMCD = $EQMCD;
+
+    -- 2026-11-26 라인 작업자도 삭제 (사용자 요청: 투입 자재가 없는데 작업자만 남지 않게)
+    DELETE
+    FROM PRDLINEEMP
+    WHERE PRDLINEEMP.LINECD = $LINECD
+      AND PRDLINEEMP.PRCCD = $PRCCD
+      AND PRDLINEEMP.EQMCD = $EQMCD;
   END IF;
 -- ****************************************************************************
 WHEN 'SET_LINEITEM' THEN  -- 생산품 선택
@@ -685,6 +710,152 @@ WHEN 'SAVE_LINEEMP' THEN  -- 라인 작업자 저장 (체크한 사원으로 교
   END WHILE;
 -- ****************************************************************************
 WHEN 'WORK_DONE' THEN  -- 작업완료 (작업지시·작업이력·생산실적·자재출고·실적로트 입고)
+
+  -- 2026-11-26 설비 일상점검 등록 확인
+  --   대상: 이 라인에 매칭된 설비(MSTEQM_MATCH) 중 승인된 일상점검 계획(설비 E / 설비그룹 G, 최신 승인 REV)이 있는 설비의 점검항목
+  --   이번 작업 = 작업시작일 + 주야구분. 점검주기 01 1회/Shift = 그 작업일·작업조, 03 1회/Day = 그 작업일, 02 1회/Week = 그 주(월~일)
+  --   등록 이력의 작업일·작업조는 등록일시(CHKTIME)로 계산 (주간 시작~야간 시작 전 = 주간, 야간 시작 이후 = 야간, 자정~주간 시작 전 = 전날 야간)
+  --   점검주기가 비었거나 그 밖의 값인 항목은 확인 안 함
+  IF IFNULL($WORKSDAY, '') <> '' AND IFNULL($EQMCD, '') <> '' THEN
+    SET _$DAYSTART   = IFNULL((SELECT COMTYPE.REF01 FROM COMTYPE WHERE COMTYPE.GPCD = 'PP161' AND COMTYPE.TPCD = 'PP161100N' LIMIT 1), '06:00');
+    SET _$NIGHTSTART = IFNULL((SELECT COMTYPE.REF01 FROM COMTYPE WHERE COMTYPE.GPCD = 'PP161' AND COMTYPE.TPCD = 'PP161102N' LIMIT 1), '16:00');
+    SET _$CHKWD      = $WORKSDAY;
+    SET _$CHKSHIFT   = IF($DNTP = 'PP161102N', 'N', 'D');
+    SET _$CHKYW      = YEARWEEK(_$CHKWD, 3);
+
+    SELECT COUNT(*)
+         , GROUP_CONCAT(CONCAT('- ', MISS.FANO, ' ', MISS.EQMNM, ' : ', MISS.CHKKNDNM, ' (', MISS.CHKCYCLENM, ')')
+                        ORDER BY MISS.FANO, MISS.PLANTP DESC, MISS.SORTNO, MISS.CHKKNDCD SEPARATOR '\n')
+      INTO _$CHKMISSCNT, _$CHKMISS
+    FROM (
+          SELECT
+              MSTEQM.FANO
+            , MSTEQM.EQMNM
+            , MSTEQMREV_HEADER.PLANTP
+            , MSTEQMREV_DETAIL.CHKKNDCD
+            , MSTEQMREV_DETAIL.CHKKNDNM
+            , MSTEQMREV_DETAIL.SORTNO
+            , COALESCE(NULLIF(GPCD('CHKCYCLE', MSTEQMREV_DETAIL.CHKCYCLE), ''), MSTEQMREV_DETAIL.CHKCYCLE) AS CHKCYCLENM
+          FROM MSTEQM_MATCH
+          INNER JOIN MSTEQM
+            ON MSTEQM.FANO = MSTEQM_MATCH.FANO
+           AND MSTEQM.FACTORYCD = '07'
+           AND MSTEQM.USEYN = 'Y'
+          INNER JOIN MSTEQMREV_HEADER
+            ON MSTEQMREV_HEADER.CHKTP = '01'
+           AND MSTEQMREV_HEADER.APRVSTT = 'A'
+           AND (   (MSTEQMREV_HEADER.PLANTP = 'E' AND MSTEQMREV_HEADER.PLANCD = MSTEQM.FANO)
+                OR (MSTEQMREV_HEADER.PLANTP = 'G' AND MSTEQMREV_HEADER.PLANCD = MSTEQM.EQMGUBUN))
+           AND MSTEQMREV_HEADER.REVNUM = (SELECT MAX(APRV_H.REVNUM)
+                                            FROM MSTEQMREV_HEADER AS APRV_H
+                                            WHERE APRV_H.CHKTP = '01'
+                                              AND APRV_H.APRVSTT = 'A'
+                                              AND APRV_H.PLANTP = MSTEQMREV_HEADER.PLANTP
+                                              AND APRV_H.PLANCD = MSTEQMREV_HEADER.PLANCD)
+          INNER JOIN MSTEQMREV_DETAIL
+            ON MSTEQMREV_DETAIL.REVCD = MSTEQMREV_HEADER.REVCD
+           AND MSTEQMREV_DETAIL.CHKCYCLE IN ('01', '02', '03')
+          WHERE MSTEQM_MATCH.EQMCD = $EQMCD
+            AND NOT EXISTS (SELECT 1
+                              FROM CHKRSTEQM AS DONE_H
+                              INNER JOIN CHKRSTEQMKND AS DONE_K
+                                ON DONE_K.CHKRSTKEY = DONE_H.CHKRSTKEY
+                              WHERE DONE_H.EQMCD = MSTEQM.FANO
+                                AND DONE_H.CHKTP = '01'
+                                AND DONE_H.CHKTIME >= DATE_FORMAT(DATE_SUB(_$CHKWD, INTERVAL 8 DAY), '%Y-%m-%d')
+                                AND DONE_K.PLANTP = MSTEQMREV_HEADER.PLANTP
+                                AND DONE_K.CHKKNDCD = MSTEQMREV_DETAIL.CHKKNDCD
+                                AND TRIM(DONE_K.CHKVALUE) <> ''
+                                AND (   (MSTEQMREV_DETAIL.CHKCYCLE = '01'
+                                         AND IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(DONE_H.CHKTIME, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(DONE_H.CHKTIME, 10)) = _$CHKWD
+                                         AND IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) >= _$DAYSTART AND SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$NIGHTSTART, 'D', 'N') = _$CHKSHIFT)
+                                     OR (MSTEQMREV_DETAIL.CHKCYCLE = '03'
+                                         AND IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(DONE_H.CHKTIME, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(DONE_H.CHKTIME, 10)) = _$CHKWD)
+                                     OR (MSTEQMREV_DETAIL.CHKCYCLE = '02'
+                                         AND YEARWEEK(IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(DONE_H.CHKTIME, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(DONE_H.CHKTIME, 10)), 3) = _$CHKYW)))
+         ) AS MISS;
+
+    IF IFNULL(_$CHKMISSCNT, 0) > 0 THEN
+      CALL COMERR(CONCAT('설비 일상점검을 먼저 등록하세요. (작업일 ', _$CHKWD, ' ', IF(_$CHKSHIFT = 'N', '야간', '주간'), ')'
+                        , '\n', SUBSTRING_INDEX(_$CHKMISS, '\n', 10)
+                        , IF(_$CHKMISSCNT > 10, CONCAT('\n외 ', _$CHKMISSCNT - 10, '건'), '')));
+      LEAVE PROC;
+    END IF;
+
+    -- 2026-11-26 자주검사 등록 확인 (자주검사 등록 TAL2001_R01 / 이 화면 자주검사 팝업과 같은 기록 TQMRST·TQMRSTKND)
+    --   대상: 생산품의 사용중인 자주검사 리비전(PRCTEST, USEYN = Y, 최신 REVNUM) 항목. 리비전이 없으면 확인 안 함
+    --   이번 작업조·작업일은 위 일상점검과 같은 기준 (작업시작일 + 주야구분)
+    --   이 라인(TQMRST.LINECD = 라인)에서 그 항목을 검사한 횟수가 해야 할 횟수보다 적으면 막음
+    SET _$PRCREVCD = IFNULL((SELECT MSTRPTREV_HEADER.REVCD
+                               FROM MSTRPTREV_ITEM
+                               INNER JOIN MSTRPTREV_HEADER
+                                 ON MSTRPTREV_HEADER.REVCD = MSTRPTREV_ITEM.REVCD
+                              WHERE MSTRPTREV_ITEM.ITEMID = $ITEMID
+                                AND MSTRPTREV_HEADER.STDTP = 'PRCTEST'
+                                AND MSTRPTREV_HEADER.USEYN = 'Y'
+                              ORDER BY MSTRPTREV_HEADER.REVNUM DESC
+                              LIMIT 1), '');
+
+    IF _$PRCREVCD <> '' THEN
+      SET _$PRCDAYST = CONCAT(_$CHKWD, ' ', _$DAYSTART, ':00');
+      SET _$PRCDAYED = CONCAT(DATE_FORMAT(DATE_ADD(_$CHKWD, INTERVAL 1 DAY), '%Y-%m-%d'), ' ', _$DAYSTART, ':00');
+      IF _$CHKSHIFT = 'D' THEN
+        SET _$PRCSHIFTST = _$PRCDAYST;
+        SET _$PRCSHIFTED = CONCAT(_$CHKWD, ' ', _$NIGHTSTART, ':00');
+      ELSE
+        SET _$PRCSHIFTST = CONCAT(_$CHKWD, ' ', _$NIGHTSTART, ':00');
+        SET _$PRCSHIFTED = _$PRCDAYED;
+      END IF;
+
+      -- 작업시간 (작업시작~작업종료, 시간 단위 버림, 최소 1)
+      SET _$PRCHRS = GREATEST(1, IFNULL(FLOOR(TIMESTAMPDIFF(MINUTE
+                         , STR_TO_DATE(CONCAT($WORKSDAY, ' ', LEFT($WORKSTIME, 5)), '%Y-%m-%d %H:%i')
+                         , STR_TO_DATE(CONCAT($WORKEDAY, ' ', LEFT($WORKETIME, 5)), '%Y-%m-%d %H:%i')) / 60), 1));
+
+      SELECT COUNT(*)
+           , GROUP_CONCAT(CONCAT('- ', NEED.STDNM, IF(NEED.STDPART <> '', CONCAT(' ', NEED.STDPART), '')
+                                , ' (', NEED.STDCYCLENM, ' ', NEED.DONECNT, '/', NEED.NEEDCNT, ')')
+                          ORDER BY NEED.SORTNO, NEED.STDCD SEPARATOR '\n')
+        INTO _$CHKMISSCNT, _$CHKMISS
+      FROM (
+            SELECT
+                MSTRPTREV_DETAIL.STDCD
+              , MSTRPTREV_DETAIL.STDNM
+              , MSTRPTREV_DETAIL.STDPART
+              , MSTRPTREV_DETAIL.SORTNO
+              , COALESCE(NULLIF(GPCD('STDCYCLE', MSTRPTREV_DETAIL.STDCYCLE), ''), MSTRPTREV_DETAIL.STDCYCLE) AS STDCYCLENM
+              , CASE MSTRPTREV_DETAIL.STDCYCLE
+                  WHEN '5' THEN 1                               -- 1회/shift
+                  WHEN '1' THEN 3                               -- 3회/shift
+                  WHEN '6' THEN 1                               -- 1회/1일
+                  WHEN '4' THEN _$PRCHRS                        -- 1회/1hr
+                  WHEN '2' THEN GREATEST(1, FLOOR(_$PRCHRS / 2)) -- 1회/2hr
+                ELSE 0 END AS NEEDCNT
+              , (SELECT COUNT(*)
+                   FROM TQMRSTKND K
+                   INNER JOIN TQMRST H
+                     ON H.TQMRSTKEY = K.TQMRSTKEY
+                  WHERE H.LINECD = $EQMCD
+                    AND H.FIXTIME >= IF(MSTRPTREV_DETAIL.STDCYCLE = '6', _$PRCDAYST, _$PRCSHIFTST)
+                    AND H.FIXTIME <  IF(MSTRPTREV_DETAIL.STDCYCLE = '6', _$PRCDAYED, _$PRCSHIFTED)
+                    AND K.STDCD = MSTRPTREV_DETAIL.STDCD
+                    AND K.PRCCD = $PRCCD
+                    AND K.STDPART = MSTRPTREV_DETAIL.STDPART
+                    AND K.PRCDETAIL = MSTRPTREV_DETAIL.PRCDETAIL) AS DONECNT
+            FROM MSTRPTREV_DETAIL
+            WHERE MSTRPTREV_DETAIL.REVCD = _$PRCREVCD
+              AND MSTRPTREV_DETAIL.STDCYCLE IN ('5', '1', '6', '4', '2')
+           ) AS NEED
+      WHERE NEED.DONECNT < NEED.NEEDCNT;
+
+      IF IFNULL(_$CHKMISSCNT, 0) > 0 THEN
+        CALL COMERR(CONCAT('자주검사를 먼저 등록하세요. (작업일 ', _$CHKWD, ' ', IF(_$CHKSHIFT = 'N', '야간', '주간'), ', 검사횟수 한 횟수/해야 할 횟수)'
+                          , '\n', SUBSTRING_INDEX(_$CHKMISS, '\n', 10)
+                          , IF(_$CHKMISSCNT > 10, CONCAT('\n외 ', _$CHKMISSCNT - 10, '건'), '')));
+        LEAVE PROC;
+      END IF;
+    END IF;
+  END IF;
 
   CALL IO_PRDRST($LINECD, $PRCCD, $EQMCD, $ITEMID, $DNTP
                 , $WORKSDAY, $WORKSTIME, $WORKEDAY, $WORKETIME

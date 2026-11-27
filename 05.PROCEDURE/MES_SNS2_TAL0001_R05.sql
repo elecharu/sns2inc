@@ -1,11 +1,16 @@
-﻿CREATE DEFINER = 'root'@'%'
+CREATE DEFINER = 'root'@'%'
 PROCEDURE MES_SNS2.TAL0001_R05(
 -- *****************************************************************************
 -- Comment: 설비 일상점검 등록 (태블릿)
 -- Create: 2026-05-12 : 이대규
 -- Modify: 2026-10-23 11:30:      2공장 기준으로 재작성 (설비=MSTEQM.FANO·FACTORYCD '07', 점검항목=일상점검 계획 최신 승인 REV, 작업장·라인 조회조건 추가)
+-- Modify: 2026-11-26 LIST_PLAN_ITEM·LIST_CHKRSTEQM_EDIT 에 계획 리비전번호 REVTEXT 추가 (설비 REV, 설비그룹 REV 있으면 '(그룹 n)')
 --         2026-10-23 11:50:      라인 조회조건 제거 (작업장만 사용, LIST_LINEEQM·$LINEEQMCD 삭제)
 --         2026-10-23 15:24:      공정(EQMTP)·라인(EQMGROUP1) 조회조건 추가 (DC_COMBO EQMTP·EQMGROUP1 콤보 기준)
+--         2026-11-26:            점검항목 조회(LIST_PLAN_ITEM, LIST_CHKRSTEQMKND, LIST_CHKRSTEQM_EDIT)에 점검기준(CHKSTD)·판정범위(STDTP, MINVAL, MAXVAL) 추가
+--                                (화면에서 점검값 입력 즉시 자동판정, 판정은 저장하지 않음). 실적 조회의 점검주기는 기준정보 → 그 점검에 쓴 계획 REV
+--         2026-11-26:            LIST_PLAN_ITEM: 점검주기별로 이번 기간에 이미 등록한 항목은 뺌 (01 1회/Shift 작업조, 03 1회/Day 작업일, 02 1회/Week 월~일 주)
+--                                ADD_CHKRSTEQM: 계획 전체 항목을 다 입력해야 하던 검사 → 1개 이상
 -- *****************************************************************************
   IN $LINECD          VARCHAR(20),      -- 조회조건 작업장
   IN $EQMTP           VARCHAR(50),      -- 조회조건 공정 (MSTEQM.EQMTP, FM100)
@@ -44,6 +49,13 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$CHKRSTKEY  VARCHAR(20);
   DECLARE _$ITEMCNT    INT;
   DECLARE _$ROWCNT     INT DEFAULT 0;
+
+  DECLARE _$DAYSTART   VARCHAR(5);    -- 2026-11-26 주간 시작 (PP161100N.REF01)
+  DECLARE _$NIGHTSTART VARCHAR(5);    -- 2026-11-26 야간 시작 (PP161102N.REF01)
+  DECLARE _$NOW        VARCHAR(19);
+  DECLARE _$NOWWD      VARCHAR(10);   -- 지금의 작업일
+  DECLARE _$NOWSHIFT   CHAR(1);       -- 지금의 작업조 (D 주간 / N 야간)
+  DECLARE _$NOWYW      INT;           -- 지금 작업일의 주 (월~일, YEARWEEK mode 3)
 -- ****************************************************************************
 CASE $CALLTYPE
 -- ****************************************************************************
@@ -87,12 +99,20 @@ WHEN 'LIST_CHKRSTEQMKND' THEN  -- 일상점검 실적 항목
     , CHKRSTEQMKND.CHKMTH
     , CHKRSTEQMKND.CHKVALTP
     , CHKRSTEQMKND.CHKVALUE
-    , MSTCHKKND.CHKCYCLE
+    -- 2026-11-26 점검주기·점검기준·판정범위는 그 점검에 쓴 계획 REV 에서 (전에는 점검주기를 기준정보 MSTCHKKND 에서)
+    , IFNULL(PLAN_D.CHKCYCLE, '') AS CHKCYCLE
+    , IFNULL(PLAN_D.CHKSTD, '') AS CHKSTD
+    , IFNULL(PLAN_D.STDTP, '') AS STDTP
+    , IFNULL(TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(PLAN_D.MINVAL AS CHAR))), '') AS MINVAL
+    , IFNULL(TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(PLAN_D.MAXVAL AS CHAR))), '') AS MAXVAL
     , CHKRSTEQMKND.REMARK
     , CHKRSTEQMKND.SORTNO
   FROM CHKRSTEQMKND
-  LEFT JOIN MSTCHKKND
-    ON MSTCHKKND.CHKKNDCD = CHKRSTEQMKND.CHKKNDCD
+  INNER JOIN CHKRSTEQM
+    ON CHKRSTEQM.CHKRSTKEY = CHKRSTEQMKND.CHKRSTKEY
+  LEFT JOIN MSTEQMREV_DETAIL AS PLAN_D
+    ON PLAN_D.REVCD = IF(CHKRSTEQMKND.PLANTP = 'G', CHKRSTEQM.GRPREVCD, CHKRSTEQM.REVCD)
+   AND PLAN_D.CHKKNDCD = CHKRSTEQMKND.CHKKNDCD
   WHERE CHKRSTEQMKND.CHKRSTKEY = $CHKRSTKEY
   ORDER BY (CHKRSTEQMKND.PLANTP = 'G') DESC, CHKRSTEQMKND.SORTNO, CHKRSTEQMKND.CHKKNDCD
   ;
@@ -122,22 +142,83 @@ WHEN 'LIST_PLAN_ITEM' THEN  -- 점검 등록 팝업: 설비그룹·설비의 최
     LEAVE PROC;
   END IF;
 
+  -- 2026-11-26 점검주기별로 이번 기간에 이미 점검값을 등록한 항목은 뺌
+  --   01 1회/Shift = 같은 작업일 + 같은 작업조 / 03 1회/Day = 같은 작업일 / 02 1회/Week = 같은 주(월~일) / 그 밖의 값·빈값 = 항상 표시
+  --   작업조: 주간 시작(06:00)~야간 시작(16:00) 전 = 그날 주간, 야간 시작 이후 = 그날 야간, 자정~주간 시작 전 = 전날 야간 (공통코드 PP161)
+  --   이력 시간은 실적 등록일시(CHKRSTEQM.CHKTIME)
+  SET _$DAYSTART   = IFNULL((SELECT COMTYPE.REF01 FROM COMTYPE WHERE COMTYPE.GPCD = 'PP161' AND COMTYPE.TPCD = 'PP161100N' LIMIT 1), '06:00');
+  SET _$NIGHTSTART = IFNULL((SELECT COMTYPE.REF01 FROM COMTYPE WHERE COMTYPE.GPCD = 'PP161' AND COMTYPE.TPCD = 'PP161102N' LIMIT 1), '16:00');
+  SET _$NOW        = CALLTIME();
+  SET _$NOWWD      = IF(SUBSTRING(_$NOW, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(_$NOW, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(_$NOW, 10));
+  SET _$NOWSHIFT   = IF(SUBSTRING(_$NOW, 12, 5) >= _$DAYSTART AND SUBSTRING(_$NOW, 12, 5) < _$NIGHTSTART, 'D', 'N');
+  SET _$NOWYW      = YEARWEEK(_$NOWWD, 3);
+
+  SET _$ITEMCNT = (SELECT COUNT(*)
+                     FROM MSTEQMREV_DETAIL
+                     WHERE MSTEQMREV_DETAIL.REVCD IN (_$GRPREVCD, _$REVCD)
+                       AND NOT EXISTS (SELECT 1
+                     FROM CHKRSTEQM AS DONE_H
+                     INNER JOIN CHKRSTEQMKND AS DONE_K
+                       ON DONE_K.CHKRSTKEY = DONE_H.CHKRSTKEY
+                     WHERE DONE_H.EQMCD = $EQMCD
+                       AND DONE_H.CHKTP = '01'
+                       AND DONE_H.CHKTIME >= DATE_FORMAT(DATE_SUB(LEFT(_$NOW, 10), INTERVAL 9 DAY), '%Y-%m-%d')
+                       AND DONE_K.PLANTP = IF(MSTEQMREV_DETAIL.REVCD = _$GRPREVCD, 'G', 'E')
+                       AND DONE_K.CHKKNDCD = MSTEQMREV_DETAIL.CHKKNDCD
+                       AND TRIM(DONE_K.CHKVALUE) <> ''
+                       AND (   (MSTEQMREV_DETAIL.CHKCYCLE = '01'   -- 1회/Shift: 같은 작업일 + 작업조
+                                AND IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(DONE_H.CHKTIME, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(DONE_H.CHKTIME, 10)) = _$NOWWD
+                                AND IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) >= _$DAYSTART AND SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$NIGHTSTART, 'D', 'N') = _$NOWSHIFT)
+                            OR (MSTEQMREV_DETAIL.CHKCYCLE = '03'   -- 1회/Day: 같은 작업일
+                                AND IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(DONE_H.CHKTIME, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(DONE_H.CHKTIME, 10)) = _$NOWWD)
+                            OR (MSTEQMREV_DETAIL.CHKCYCLE = '02'   -- 1회/Week: 같은 주 (월~일)
+                                AND YEARWEEK(IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(DONE_H.CHKTIME, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(DONE_H.CHKTIME, 10)), 3) = _$NOWYW))));
+
+  IF _$ITEMCNT = 0 THEN
+    CALL COMERR(CONCAT('이번 ', IF(_$NOWSHIFT = 'D', '주간', '야간'), ' 작업조(작업일 ', _$NOWWD, ')에 등록할 일상점검 항목이 없습니다.'
+                      , '\n점검주기별로 이미 등록한 항목은 빠집니다. (1회/Shift: 작업조, 1회/Day: 작업일, 1회/Week: 주)'));
+    LEAVE PROC;
+  END IF;
+
   -- 설비그룹 항목을 먼저, 설비 항목을 뒤에 표시
   SELECT
       'G' AS PLANTP
     , IFNULL(_$REVCD, '') AS REVCD
     , IFNULL(_$GRPREVCD, '') AS GRPREVCD
+    , CONCAT(IFNULL((SELECT CAST(REV_H.REVNUM AS SIGNED) FROM MSTEQMREV_HEADER AS REV_H WHERE REV_H.REVCD = _$REVCD), '')
+           , IFNULL(CONCAT(' (그룹 ', (SELECT CAST(REV_H.REVNUM AS SIGNED) FROM MSTEQMREV_HEADER AS REV_H WHERE REV_H.REVCD = _$GRPREVCD), ')'), '')) AS REVTEXT   -- 2026-11-26 리비전번호 (화면 표시)
     , MSTEQMREV_DETAIL.CHKKNDCD
     , MSTEQMREV_DETAIL.CHKKNDNM
     , MSTEQMREV_DETAIL.CHKLOC
     , MSTEQMREV_DETAIL.CHKMTH
     , MSTEQMREV_DETAIL.CHKVALTP
     , MSTEQMREV_DETAIL.CHKCYCLE
+    , MSTEQMREV_DETAIL.CHKSTD   -- 2026-11-26 점검기준·판정범위 (화면 자동판정)
+    , MSTEQMREV_DETAIL.STDTP
+    , IFNULL(TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(MSTEQMREV_DETAIL.MINVAL AS CHAR))), '') AS MINVAL
+    , IFNULL(TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(MSTEQMREV_DETAIL.MAXVAL AS CHAR))), '') AS MAXVAL
     , MSTEQMREV_DETAIL.SORTNO
     , '' AS CHKVALUE
     , '' AS REMARK
   FROM MSTEQMREV_DETAIL
   WHERE MSTEQMREV_DETAIL.REVCD = _$GRPREVCD
+    AND NOT EXISTS (SELECT 1
+                     FROM CHKRSTEQM AS DONE_H
+                     INNER JOIN CHKRSTEQMKND AS DONE_K
+                       ON DONE_K.CHKRSTKEY = DONE_H.CHKRSTKEY
+                     WHERE DONE_H.EQMCD = $EQMCD
+                       AND DONE_H.CHKTP = '01'
+                       AND DONE_H.CHKTIME >= DATE_FORMAT(DATE_SUB(LEFT(_$NOW, 10), INTERVAL 9 DAY), '%Y-%m-%d')
+                       AND DONE_K.PLANTP = IF(MSTEQMREV_DETAIL.REVCD = _$GRPREVCD, 'G', 'E')
+                       AND DONE_K.CHKKNDCD = MSTEQMREV_DETAIL.CHKKNDCD
+                       AND TRIM(DONE_K.CHKVALUE) <> ''
+                       AND (   (MSTEQMREV_DETAIL.CHKCYCLE = '01'   -- 1회/Shift: 같은 작업일 + 작업조
+                                AND IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(DONE_H.CHKTIME, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(DONE_H.CHKTIME, 10)) = _$NOWWD
+                                AND IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) >= _$DAYSTART AND SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$NIGHTSTART, 'D', 'N') = _$NOWSHIFT)
+                            OR (MSTEQMREV_DETAIL.CHKCYCLE = '03'   -- 1회/Day: 같은 작업일
+                                AND IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(DONE_H.CHKTIME, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(DONE_H.CHKTIME, 10)) = _$NOWWD)
+                            OR (MSTEQMREV_DETAIL.CHKCYCLE = '02'   -- 1회/Week: 같은 주 (월~일)
+                                AND YEARWEEK(IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(DONE_H.CHKTIME, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(DONE_H.CHKTIME, 10)), 3) = _$NOWYW)))
 
   UNION ALL
 
@@ -145,17 +226,40 @@ WHEN 'LIST_PLAN_ITEM' THEN  -- 점검 등록 팝업: 설비그룹·설비의 최
       'E' AS PLANTP
     , IFNULL(_$REVCD, '') AS REVCD
     , IFNULL(_$GRPREVCD, '') AS GRPREVCD
+    , CONCAT(IFNULL((SELECT CAST(REV_H.REVNUM AS SIGNED) FROM MSTEQMREV_HEADER AS REV_H WHERE REV_H.REVCD = _$REVCD), '')
+           , IFNULL(CONCAT(' (그룹 ', (SELECT CAST(REV_H.REVNUM AS SIGNED) FROM MSTEQMREV_HEADER AS REV_H WHERE REV_H.REVCD = _$GRPREVCD), ')'), '')) AS REVTEXT   -- 2026-11-26 리비전번호 (화면 표시)
     , MSTEQMREV_DETAIL.CHKKNDCD
     , MSTEQMREV_DETAIL.CHKKNDNM
     , MSTEQMREV_DETAIL.CHKLOC
     , MSTEQMREV_DETAIL.CHKMTH
     , MSTEQMREV_DETAIL.CHKVALTP
     , MSTEQMREV_DETAIL.CHKCYCLE
+    , MSTEQMREV_DETAIL.CHKSTD   -- 2026-11-26 점검기준·판정범위 (화면 자동판정)
+    , MSTEQMREV_DETAIL.STDTP
+    , IFNULL(TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(MSTEQMREV_DETAIL.MINVAL AS CHAR))), '') AS MINVAL
+    , IFNULL(TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(MSTEQMREV_DETAIL.MAXVAL AS CHAR))), '') AS MAXVAL
     , MSTEQMREV_DETAIL.SORTNO
     , '' AS CHKVALUE
     , '' AS REMARK
   FROM MSTEQMREV_DETAIL
   WHERE MSTEQMREV_DETAIL.REVCD = _$REVCD
+    AND NOT EXISTS (SELECT 1
+                     FROM CHKRSTEQM AS DONE_H
+                     INNER JOIN CHKRSTEQMKND AS DONE_K
+                       ON DONE_K.CHKRSTKEY = DONE_H.CHKRSTKEY
+                     WHERE DONE_H.EQMCD = $EQMCD
+                       AND DONE_H.CHKTP = '01'
+                       AND DONE_H.CHKTIME >= DATE_FORMAT(DATE_SUB(LEFT(_$NOW, 10), INTERVAL 9 DAY), '%Y-%m-%d')
+                       AND DONE_K.PLANTP = IF(MSTEQMREV_DETAIL.REVCD = _$GRPREVCD, 'G', 'E')
+                       AND DONE_K.CHKKNDCD = MSTEQMREV_DETAIL.CHKKNDCD
+                       AND TRIM(DONE_K.CHKVALUE) <> ''
+                       AND (   (MSTEQMREV_DETAIL.CHKCYCLE = '01'   -- 1회/Shift: 같은 작업일 + 작업조
+                                AND IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(DONE_H.CHKTIME, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(DONE_H.CHKTIME, 10)) = _$NOWWD
+                                AND IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) >= _$DAYSTART AND SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$NIGHTSTART, 'D', 'N') = _$NOWSHIFT)
+                            OR (MSTEQMREV_DETAIL.CHKCYCLE = '03'   -- 1회/Day: 같은 작업일
+                                AND IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(DONE_H.CHKTIME, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(DONE_H.CHKTIME, 10)) = _$NOWWD)
+                            OR (MSTEQMREV_DETAIL.CHKCYCLE = '02'   -- 1회/Week: 같은 주 (월~일)
+                                AND YEARWEEK(IF(SUBSTRING(DONE_H.CHKTIME, 12, 5) < _$DAYSTART, DATE_FORMAT(DATE_SUB(LEFT(DONE_H.CHKTIME, 10), INTERVAL 1 DAY), '%Y-%m-%d'), LEFT(DONE_H.CHKTIME, 10)), 3) = _$NOWYW)))
 
   ORDER BY PLANTP DESC, SORTNO, CHKKNDCD
   ;
@@ -263,8 +367,10 @@ WHEN 'ADD_CHKRSTEQM' THEN  -- 일상점검 등록
     SET _$ROWCNT = _$ROWCNT + 1;
   END WHILE;
 
-  IF _$ROWCNT <> _$ITEMCNT THEN
-    CALL COMERR('승인된 계획의 모든 점검항목을 입력하세요. 점검 창을 다시 열어주세요.');
+  -- 2026-11-26 점검주기별로 이미 등록한 항목은 등록 목록에서 빠지므로, 계획 전체 항목 수와 같은지 대신 1개 이상인지만 확인
+  --            (계획에 없는 항목은 위 루프에서 막음)
+  IF _$ROWCNT = 0 THEN
+    CALL COMERR('등록할 점검항목이 없습니다. 점검 창을 다시 열어주세요.');
     LEAVE PROC;
   END IF;
 
@@ -278,7 +384,12 @@ WHEN 'LIST_CHKRSTEQM_EDIT' THEN  -- 수정 팝업: 실적 헤더·항목
     , CHKRSTEQMKND.CHKLOC
     , CHKRSTEQMKND.CHKMTH
     , CHKRSTEQMKND.CHKVALTP
-    , MSTCHKKND.CHKCYCLE
+    -- 2026-11-26 점검주기·점검기준·판정범위는 그 점검에 쓴 계획 REV 에서 (전에는 점검주기를 기준정보 MSTCHKKND 에서)
+    , IFNULL(PLAN_D.CHKCYCLE, '') AS CHKCYCLE
+    , IFNULL(PLAN_D.CHKSTD, '') AS CHKSTD
+    , IFNULL(PLAN_D.STDTP, '') AS STDTP
+    , IFNULL(TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(PLAN_D.MINVAL AS CHAR))), '') AS MINVAL
+    , IFNULL(TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(PLAN_D.MAXVAL AS CHAR))), '') AS MAXVAL
     , CHKRSTEQMKND.CHKVALUE
     , CHKRSTEQMKND.REMARK
     , CHKRSTEQMKND.SORTNO
@@ -287,11 +398,14 @@ WHEN 'LIST_CHKRSTEQM_EDIT' THEN  -- 수정 팝업: 실적 헤더·항목
     , CHKRSTEQM.EMPCD
     , LEFT(CHKRSTEQM.CHKTIME, 10) AS DATE
     , SUBSTRING(CHKRSTEQM.CHKTIME, 12, 5) AS TIME
+    , CONCAT(IFNULL((SELECT CAST(REV_H.REVNUM AS SIGNED) FROM MSTEQMREV_HEADER AS REV_H WHERE REV_H.REVCD = CHKRSTEQM.REVCD), '')
+           , IFNULL(CONCAT(' (그룹 ', (SELECT CAST(REV_H.REVNUM AS SIGNED) FROM MSTEQMREV_HEADER AS REV_H WHERE REV_H.REVCD = CHKRSTEQM.GRPREVCD), ')'), '')) AS REVTEXT   -- 2026-11-26 그 점검에 쓴 계획 리비전번호
   FROM CHKRSTEQMKND
   INNER JOIN CHKRSTEQM
     ON CHKRSTEQM.CHKRSTKEY = CHKRSTEQMKND.CHKRSTKEY
-  LEFT JOIN MSTCHKKND
-    ON MSTCHKKND.CHKKNDCD = CHKRSTEQMKND.CHKKNDCD
+  LEFT JOIN MSTEQMREV_DETAIL AS PLAN_D
+    ON PLAN_D.REVCD = IF(CHKRSTEQMKND.PLANTP = 'G', CHKRSTEQM.GRPREVCD, CHKRSTEQM.REVCD)
+   AND PLAN_D.CHKKNDCD = CHKRSTEQMKND.CHKKNDCD
   WHERE CHKRSTEQMKND.CHKRSTKEY = $CHKRSTKEY
     AND CHKRSTEQM.CHKTP = '01'
   ORDER BY (CHKRSTEQMKND.PLANTP = 'G') DESC, CHKRSTEQMKND.SORTNO, CHKRSTEQMKND.CHKKNDCD

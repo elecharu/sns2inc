@@ -16,35 +16,63 @@ ItsPage.Load = function () {
         column.create('점검항목', 'CHKLOC', { width: 110, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKLOC' }),
         column.create('점검방법', 'CHKMTH', { width: 110, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKMTH' }),
         column.create('점검값', 'CHKVALUE', { width: 110, align: 'center' }),
+        column.create('판정', 'JUDGE', { width: 80, align: 'center' }),                  // 2026-11-26 자동판정 (화면 표시만)
+        column.create('점검기준', 'CHKSTD', { width: 130, align: 'center' }),            // 2026-11-26
         column.create('점검주기', 'CHKCYCLE', { width: 110, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKCYCLE' }),
         column.create('비고', 'REMARK', { width: 110, align: 'center' }),
+        column.create('판정방식', 'STDTP', { hidden: true }),
+        column.create('하한', 'MINVAL', { hidden: true }),
+        column.create('상한', 'MAXVAL', { hidden: true }),
+        column.create('점검값구분', 'CHKVALTP', { hidden: true }),
     ]);
 
+    // 2026-11-26 등록·수정 그리드: 순번 열 삭제, 점검주기 왼쪽에 점검기준, 점검값 오른쪽에 판정(자동판정, 화면 표시만)
     ItsGrid.Create('grid3', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        column.create('순번', 'SORTNO', { width: 60, align: 'center' }),
+        //column.create('순번', 'SORTNO', { width: 60, align: 'center' }),
         column.create('계획구분', 'PLANTP', { width: 60, hidden: true }),
         column.create('점검코드', 'CHKKNDCD', { width: 60, hidden: true }),
         column.create('점검명', 'CHKKNDNM', { width: 150, align: 'center' }),
-        column.create('점검항목', 'CHKLOC', { width: 150, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKLOC' }),
-        column.create('점검방법', 'CHKMTH', { width: 150, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKMTH' }),
-        column.create('점검값구분', 'CHKVALTP', { width: 150, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP' }),
-        column.create('점검주기', 'CHKCYCLE', { width: 110, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKCYCLE' }),
-        column.create('점검값', 'CHKVALUE', { width: 110, align: 'center' }),
-        column.create('비고', 'REMARK', { width: 250, align: 'center', readOnly: false }),
+        column.create('점검항목', 'CHKLOC', { width: 130, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKLOC' }),
+        column.create('점검방법', 'CHKMTH', { width: 110, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKMTH' }),
+        column.create('점검값구분', 'CHKVALTP', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP' }),
+        column.create('점검기준', 'CHKSTD', { width: 130, align: 'center' }),
+        column.create('점검주기', 'CHKCYCLE', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKCYCLE' }),
+        column.create('점검값', 'CHKVALUE', { width: 100, align: 'center' }),
+        column.create('판정', 'JUDGE', { width: 80, align: 'center' }),
+        column.create('비고', 'REMARK', { width: 220, align: 'center', readOnly: false }),
+        column.create('판정방식', 'STDTP', { hidden: true }),
+        column.create('하한', 'MINVAL', { hidden: true }),
+        column.create('상한', 'MAXVAL', { hidden: true }),
     ]);
 
     ItsGrid.Create('grid4', { isCheckBoxGrid: false, isSubTotalGrid: false }, [
-        column.create('순번', 'SORTNO', { width: 60, align: 'center' }),
+        //column.create('순번', 'SORTNO', { width: 60, align: 'center' }),
         column.create('계획구분', 'PLANTP', { width: 60, hidden: true }),
         column.create('점검코드', 'CHKKNDCD', { width: 60, hidden: true }),
         column.create('점검명', 'CHKKNDNM', { width: 150, align: 'center' }),
-        column.create('점검항목', 'CHKLOC', { width: 150, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKLOC' }),
-        column.create('점검방법', 'CHKMTH', { width: 150, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKMTH' }),
-        column.create('점검값구분', 'CHKVALTP', { width: 150, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP' }),
-        column.create('점검주기', 'CHKCYCLE', { width: 110, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKCYCLE' }),
-        column.create('점검값', 'CHKVALUE', { width: 110, align: 'center' }),
-        column.create('비고', 'REMARK', { width: 250, align: 'center', readOnly: false }),
+        column.create('점검항목', 'CHKLOC', { width: 130, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKLOC' }),
+        column.create('점검방법', 'CHKMTH', { width: 110, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKMTH' }),
+        column.create('점검값구분', 'CHKVALTP', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKVALTP' }),
+        column.create('점검기준', 'CHKSTD', { width: 130, align: 'center' }),
+        column.create('점검주기', 'CHKCYCLE', { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'CHKCYCLE' }),
+        column.create('점검값', 'CHKVALUE', { width: 100, align: 'center' }),
+        column.create('판정', 'JUDGE', { width: 80, align: 'center' }),
+        column.create('비고', 'REMARK', { width: 220, align: 'center', readOnly: false }),
+        column.create('판정방식', 'STDTP', { hidden: true }),
+        column.create('하한', 'MINVAL', { hidden: true }),
+        column.create('상한', 'MAXVAL', { hidden: true }),
     ]);
+
+    // 불합격은 빨간 굵은 글씨 (판정 칸)
+    $.each(['grid2', 'grid3', 'grid4'], function (i, id) {
+        ItsGrid.Get(id).formatItem.addHandler(function (s, e) {
+            if (e.panel != s.cells || s.columns[e.col].binding != 'JUDGE') return;
+            if (ItsGrid.GetValue(id, e.row, 'JUDGE') == '불합격') {
+                e.cell.style.color = 'red';
+                e.cell.style.fontWeight = 'bold';
+            }
+        });
+    });
 
     // 작업장 '전체'를 기본으로 선택 (onChanged 에서 설비 버튼 조회)
     ItsCombo.SetValueByIndex('cmb_LINECD', 0);
@@ -172,8 +200,38 @@ ItsGrid.Event('grid1').onSelect = function (rowIndex) {
     }
 
     ItsGrid.SetStore('grid2', maria.store);
+    JUDGE_ALL('grid2');
     ItsGrid.Get('grid2').autoSizeColumns();
 };
+
+// 2026-11-26 자동판정 (화면 표시만, 저장하지 않음)
+//   수치 항목: 계획 판정범위(하한~상한) 안이면 합격, 밖이면 불합격 / OK·NG: OK 합격, NG 불합격
+//   점검값이 없거나 판정범위가 없는 항목은 빈칸
+function JUDGE_TEXT(id, row) {
+    var val = $.trim(String(ItsGrid.GetValue(id, row, 'CHKVALUE') || ''));
+    if (val == '') return '';
+    var up = val.toUpperCase();
+    if (up == 'OK') return '합격';
+    if (up == 'NG') return '불합격';
+
+    if (ItsGrid.GetValue(id, row, 'STDTP') != 'RANGE' || !/^-?\d+(\.\d+)?$/.test(val)) return '';
+    var v = parseFloat(val);
+    var min = String(ItsGrid.GetValue(id, row, 'MINVAL') || '');
+    var max = String(ItsGrid.GetValue(id, row, 'MAXVAL') || '');
+    if (min !== '' && v < parseFloat(min)) return '불합격';
+    if (max !== '' && v > parseFloat(max)) return '불합격';
+    return '합격';
+}
+
+function JUDGE_ROW(id, row) {
+    ItsGrid.SetValue(id, row, 'JUDGE', JUDGE_TEXT(id, row));
+}
+
+function JUDGE_ALL(id) {
+    for (var i = 0; i < ItsGrid.Length(id); i++) {
+        JUDGE_ROW(id, i);
+    }
+}
 /**********************************************************************************************************************************************************************/
 // 점검 등록
 
@@ -189,7 +247,14 @@ ItsButton.Event('btn_REG').onClick = function () {
 
     ItsPage.InitData('pdiv1');
     ItsText.SetValue('pop1_txt_BASETIME', new Date().format('HH:mm'));   // 등록시간 기본값: 지금 시각
+    ItsText.SetValue('pop1_txt_REVTEXT', maria.store.Length() > 0 && maria.store.data[0]["REVTEXT"] != undefined ? maria.store.data[0]["REVTEXT"] : '');   // 2026-11-26 계획 리비전번호
+    // 2026-11-26 새 점검: OK/NG 항목(점검값구분 01 아님)은 OK 를 미리 넣음
+    for (var i = 0; i < maria.store.Length(); i++) {
+        var item = maria.store.data[i];
+        if (item.CHKVALTP != '01' && $.trim(String(item.CHKVALUE || '')) == '') item.CHKVALUE = 'OK';
+    }
     ItsGrid.SetStore('grid3', maria.store);
+    JUDGE_ALL('grid3');
     ItsPop.Open('pop1');
 };
 
@@ -254,10 +319,12 @@ ItsButton.Event('btn_EDIT').onClick = function () {
     }
 
     ItsGrid.SetStore('grid4', maria.store);
+    JUDGE_ALL('grid4');
     ItsDate.SetValue('pop2_date_BASEDATE', maria.store.data[0]["BASEDATE"]);
     ItsFind.SetValue('pop2_find_EMPCD', maria.store.data[0]["EMPCD"]);
     ItsDate.SetValue('pop2_date_REGDATE', maria.store.data[0]["DATE"]);
     ItsText.SetValue('pop2_txt_BASETIME', maria.store.data[0]["TIME"]);
+    ItsText.SetValue('pop2_txt_REVTEXT', maria.store.data[0]["REVTEXT"] == undefined ? '' : maria.store.data[0]["REVTEXT"]);   // 2026-11-26 그 점검에 쓴 계획 리비전번호
 
     ItsPop.Open('pop2');
 };
@@ -359,6 +426,7 @@ ItsButton.Event('btn_CLEAR_TAL0001_R05').onClick = function () {
 // 숫자 점검값 반영 (등록)
 ItsButton.Event('btn_ADDRST_TAL0001_R05').onClick = function () {
     ItsGrid.SetValue(KEYPAD_GRID, ItsGrid.GetCurrentIndex(KEYPAD_GRID), 'CHKVALUE', ItsNum.GetValue('txt_GOODQTY_TAL0001_R05'));
+    JUDGE_ROW(KEYPAD_GRID, ItsGrid.GetCurrentIndex(KEYPAD_GRID));
     ItsPop.Close('pop_NUM');
     ItsText.SetValue('txt_GOODQTY_TAL0001_R05', '');
 };
@@ -366,10 +434,12 @@ ItsButton.Event('btn_ADDRST_TAL0001_R05').onClick = function () {
 // OK/NG 점검값 반영
 ItsButton.Event('btn_OK_TAL0001_R05').onClick = function () {
     ItsGrid.SetValue(KEYPAD_GRID, ItsGrid.GetCurrentIndex(KEYPAD_GRID), 'CHKVALUE', 'OK');
+    JUDGE_ROW(KEYPAD_GRID, ItsGrid.GetCurrentIndex(KEYPAD_GRID));
     ItsPop.Close('pop_OK');
 };
 ItsButton.Event('btn_NG_TAL0001_R05').onClick = function () {
     ItsGrid.SetValue(KEYPAD_GRID, ItsGrid.GetCurrentIndex(KEYPAD_GRID), 'CHKVALUE', 'NG');
+    JUDGE_ROW(KEYPAD_GRID, ItsGrid.GetCurrentIndex(KEYPAD_GRID));
     ItsPop.Close('pop_OK');
 };
 /**********************************************************************************************************************************************************************/

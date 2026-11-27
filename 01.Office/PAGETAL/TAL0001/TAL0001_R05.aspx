@@ -68,6 +68,7 @@
             <Its:text runat="server" Label="등록시간" ID="pop1_txt_BASETIME"  Field="BASETIME" InputWidth="5" Type="hhmm" HiddenLabel="true"   />
 
             <Its:find runat="server" Label="점검자" ID="pop1_find_EMPCD" Field="EMPCD" REF01="44F20" GPCD="EMPCD"   InputWidth="110" />
+            <Its:text runat="server" Label="리비전" ID="pop1_txt_REVTEXT" Field="REVTEXT" ReadOnly="true" InputWidth="80" />   <%-- 2026-11-26 일상점검 계획 리비전번호 --%>
 
         </Its:div>
 
@@ -86,6 +87,7 @@
             <Its:text runat="server" Label="등록시간" ID="pop2_txt_BASETIME"  Field="BASETIME" InputWidth="5" Type="hhmm" HiddenLabel="true"   />
 
             <Its:find runat="server" Label="점검자" ID="pop2_find_EMPCD" Field="EMPCD" REF01="44F20" GPCD="EMPCD"   InputWidth="110" />
+            <Its:text runat="server" Label="리비전" ID="pop2_txt_REVTEXT" Field="REVTEXT" ReadOnly="true" InputWidth="80" />   <%-- 2026-11-26 그 점검에 쓴 계획 리비전번호 --%>
 
 
         </Its:div>
