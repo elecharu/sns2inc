@@ -18,6 +18,8 @@ PROCEDURE MES_SNS2.TML2010_R01(
 --         2026-11-26 WORK_DONE: 생산품의 사용중인 자주검사 리비전 항목 중 이번 작업에 검사주기상 해야 할 횟수보다 적으면 작업완료 막음
 --           5 1회/shift·1 3회/shift = 작업조 1·3번, 6 1회/1일 = 작업일 1번, 4 1회/1hr = 작업시간(시간) 번, 2 1회/2hr = 작업시간÷2 번 (최소 1)
 --           시업시(8)·공구교환(7)·그 밖은 확인 안 함
+--         2026-11-27 SAVE_LINEBAD: 검사항목이 연결된 불량코드(MSTBAD_STD)는 불량상세를 생산품 자주검사 기준 줄에서 고른 값만 저장
+--           (품목 없음·기준 없음·미선택이면 막음). 파라미터 변경 없음
 -- *****************************************************************************
   IN $LINECD VARCHAR(100),     -- 작업장
   IN $PRCCD VARCHAR(100),       -- 공정
@@ -887,6 +889,52 @@ WHEN 'SAVE_LINEBAD' THEN  -- 라인 불량정보 저장 (같은 불량코드·�
   IF IFNULL($BADQTY, 0) <= 0 THEN
     CALL COMERR('불량수량을 입력하세요.');
     LEAVE PROC;
+  END IF;
+
+  -- 2026-11-27 불량상세: 검사항목이 연결된 불량코드(MSTBAD_STD, 외경·내경 같은 치수 불량)는
+  --   생산품의 자주검사 기준 줄(DC_COMBO 'BADDETAIL' 목록)에서 고른 값만 저장. 연결이 없는 불량코드는 불량상세 없이 저장
+  --   목록 글자 식(검사항목명 + 세부항목 + (기준값))은 DC_COMBO 'BADDETAIL' 과 같게 유지할 것
+  IF EXISTS (SELECT 1 FROM MSTBAD_STD WHERE MSTBAD_STD.BADCD = $BADCD) THEN
+
+    IF IFNULL($ITEMID, 0) = 0 THEN
+      CALL COMERR('투입 바코드를 먼저 스캔하세요.\n(이 불량의 불량상세는 생산품의 자주검사 기준에서 고릅니다)');
+      LEAVE PROC;
+    END IF;
+
+    SET _$PRCREVCD = IFNULL((SELECT MSTRPTREV_HEADER.REVCD
+                               FROM MSTRPTREV_ITEM
+                               INNER JOIN MSTRPTREV_HEADER
+                                 ON MSTRPTREV_HEADER.REVCD = MSTRPTREV_ITEM.REVCD
+                              WHERE MSTRPTREV_ITEM.ITEMID = $ITEMID
+                                AND MSTRPTREV_HEADER.STDTP = 'PRCTEST'
+                                AND MSTRPTREV_HEADER.USEYN = 'Y'
+                              ORDER BY MSTRPTREV_HEADER.REVNUM DESC
+                              LIMIT 1), '');
+
+    IF NOT EXISTS (SELECT 1
+                     FROM MSTRPTREV_DETAIL
+                     INNER JOIN MSTBAD_STD
+                             ON MSTBAD_STD.BADCD = $BADCD
+                            AND MSTBAD_STD.STDCD = MSTRPTREV_DETAIL.STDCD
+                    WHERE MSTRPTREV_DETAIL.REVCD = _$PRCREVCD) THEN
+      CALL COMERR('생산품의 자주검사 기준에 이 불량의 검사항목이 없습니다.\n자주검사 기준을 먼저 등록하세요.');
+      LEAVE PROC;
+    END IF;
+
+    IF NOT EXISTS (SELECT 1
+                     FROM MSTRPTREV_DETAIL
+                     INNER JOIN MSTBAD_STD
+                             ON MSTBAD_STD.BADCD = $BADCD
+                            AND MSTBAD_STD.STDCD = MSTRPTREV_DETAIL.STDCD
+                    WHERE MSTRPTREV_DETAIL.REVCD = _$PRCREVCD
+                      AND LEFT(CONCAT(MSTRPTREV_DETAIL.STDNM
+                                    , IF(MSTRPTREV_DETAIL.STDPART <> '', CONCAT(' ', MSTRPTREV_DETAIL.STDPART), '')
+                                    , IF(MSTRPTREV_DETAIL.STDVAL <> 0
+                                       , CONCAT(' (', TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(MSTRPTREV_DETAIL.STDVAL AS CHAR))), ')'), '')), 100)
+                          = IFNULL($BADDETAIL, '')) THEN
+      CALL COMERR('불량상세를 선택하세요.');
+      LEAVE PROC;
+    END IF;
   END IF;
 
   -- 라인 작업자 중 사원코드가 가장 작은 사람 (IO_PRDRST 의 PRDWORK.EMPCD 와 같은 기준)

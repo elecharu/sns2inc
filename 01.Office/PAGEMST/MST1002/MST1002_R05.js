@@ -24,6 +24,8 @@ ItsPage.Load = function () {
         column.create("생산설비번호", "EQMNO", { width: 100, align: 'center', columnType: enumColumnTypes.combo, gpcd: 'FANO' }),
         column.create("사용여부", "USEYN", { width: 50, align: 'center', columnType: enumColumnTypes.check }),
         column.create("순번", "SORTNO", { width: 100, align: 'center' }),
+        column.create("생산모니터링", "MONITORYN", { width: 90, align: 'center', columnType: enumColumnTypes.check, readOnly: false }),                      // 2026-11-27 생산 모니터링 표시여부 (모니터링은 LINECD 순)
+        column.create("SPC 모니터링(자주검사)", "SPCMONYN", { width: 150, align: 'center', columnType: enumColumnTypes.check, readOnly: false }),         // 2026-11-27 SPC 모니터링(자주검사) 표시여부
         column.create("비고", "REMARK", { width: 150 }),
         //column.create("등록자", "REMP", { width: 100, align: 'center' }),
         //column.create("등록일", "RTIME", { width: 150, align: 'center' })
@@ -59,7 +61,7 @@ ItsButton.EventSearch = function () {
         return;
     }
 
-    ItsGrid.SetStore('grid1', maria.store.YnToBool('USEYN')); 
+    ItsGrid.SetStore('grid1', maria.store.YnToBool('USEYN').YnToBool('MONITORYN').YnToBool('SPCMONYN'));
 
     ItsMsg.Toast(maria.store.Length() + '건이 조회되었습니다.'); 
 
@@ -176,6 +178,35 @@ ItsButton.Event('btn_POP_SAVE').onClick = function () {
 
         ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
         ItsPop.Close('pop_PRCDETAIL');
+        ItsButton.EventSearch();
+    });
+};
+
+// 2026-11-27 [모니터링] 조회된 라인 전체의 생산 모니터링·SPC 모니터링(자주검사) 표시여부 저장
+ItsButton.Event('btn_SAVE_MONITOR').onClick = function () {
+    if (!ItsGrid.Get('grid1').finishEditing()) return;
+
+    if (ItsGrid.Length('grid1') == 0) {
+        ItsMsg.Toast('조회된 라인이 없습니다.');
+        return;
+    }
+
+    ItsMsg.Confirm('조회된 라인 ' + ItsGrid.Length('grid1') + '건의 모니터링 설정을 저장하시겠습니까?', function () {
+        var maria = new ItsMaria('MST1002_R05', 'SAVE_MONITOR');
+        for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
+            var row = ItsGrid.GetRowData('grid1', i);
+            maria.AddList('EQMCD_LIST', row.EQMCD);
+            maria.AddList('MONITORYN_LIST', row.MONITORYN ? 'Y' : 'N');
+            maria.AddList('SPCMONYN_LIST', row.SPCMONYN ? 'Y' : 'N');
+        }
+
+        maria.CallProc();
+        if (maria.isError) {
+            maria.ShowErrMsg();
+            return;
+        }
+
+        ItsMsg.Toast(ItsMsg.CommonMsg.SaveComplete());
         ItsButton.EventSearch();
     });
 };

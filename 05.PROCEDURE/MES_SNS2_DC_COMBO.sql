@@ -678,6 +678,34 @@ PROC: BEGIN
       ORDER BY MSTBAD.BADCD, MSTBAD.BADNM
       LIMIT 100;
 
+-- *****************************************************************************
+  ELSEIF $GPCD = 'BADDETAIL' THEN
+    -- 2026-11-27 불량상세 (현장 불량등록 TML2010_R01): REF01 = 생산품 ITEMID, REF02 = 불량코드
+    --   생산품의 사용중인 자주검사 리비전(PRCTEST, USEYN = Y, 최신 REVNUM) 줄 중 불량코드에 연결된 검사항목(MSTBAD_STD) 줄
+    --   글자 = 검사항목명 + 세부항목 + (기준값). 저장값도 이 글자 (TML2010_R01 SAVE_LINEBAD 의 확인 식과 같게 유지할 것)
+    SELECT LEFT(CONCAT(MSTRPTREV_DETAIL.STDNM
+                     , IF(MSTRPTREV_DETAIL.STDPART <> '', CONCAT(' ', MSTRPTREV_DETAIL.STDPART), '')
+                     , IF(MSTRPTREV_DETAIL.STDVAL <> 0
+                        , CONCAT(' (', TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(MSTRPTREV_DETAIL.STDVAL AS CHAR))), ')'), '')), 100) AS Label
+         , LEFT(CONCAT(MSTRPTREV_DETAIL.STDNM
+                     , IF(MSTRPTREV_DETAIL.STDPART <> '', CONCAT(' ', MSTRPTREV_DETAIL.STDPART), '')
+                     , IF(MSTRPTREV_DETAIL.STDVAL <> 0
+                        , CONCAT(' (', TRIM(TRAILING '.' FROM TRIM(TRAILING '0' FROM CAST(MSTRPTREV_DETAIL.STDVAL AS CHAR))), ')'), '')), 100) AS Value
+      FROM MSTRPTREV_DETAIL
+      INNER JOIN MSTBAD_STD
+              ON MSTBAD_STD.BADCD = $REF02
+             AND MSTBAD_STD.STDCD = MSTRPTREV_DETAIL.STDCD
+     WHERE MSTRPTREV_DETAIL.REVCD = IFNULL((SELECT MSTRPTREV_HEADER.REVCD
+                                              FROM MSTRPTREV_ITEM
+                                              INNER JOIN MSTRPTREV_HEADER
+                                                ON MSTRPTREV_HEADER.REVCD = MSTRPTREV_ITEM.REVCD
+                                             WHERE MSTRPTREV_ITEM.ITEMID = $REF01
+                                               AND MSTRPTREV_HEADER.STDTP = 'PRCTEST'
+                                               AND MSTRPTREV_HEADER.USEYN = 'Y'
+                                             ORDER BY MSTRPTREV_HEADER.REVNUM DESC
+                                             LIMIT 1), '')
+     ORDER BY MSTRPTREV_DETAIL.SORTNO, MSTRPTREV_DETAIL.STDNM, MSTRPTREV_DETAIL.STDPART;
+
 -- *****************************************************************************  
   ELSEIF $GPCD = 'TMLCD' THEN
 

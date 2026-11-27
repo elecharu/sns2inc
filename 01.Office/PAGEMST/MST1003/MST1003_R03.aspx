@@ -20,7 +20,16 @@
 
 <%-- BODY --%>
 <asp:Content ContentPlaceHolderID="CPH_BODY" Runat="Server">
-    <Its:div runat="server" Type="SplitSingle">
+    <Its:div runat="server" Type="SplitLeft" LeftWidthPc="70">
         <Its:grid runat="server" ID="grid1" />
+    </Its:div>
+    <Its:split runat="server" Type="Vertical" />
+    <%-- 2026-11-27 불량코드별 연결 검사항목: 현장 불량등록(TML2010) 때 생산품 자주검사 기준 중 이 항목 줄을 불량상세 목록으로 보여준다 --%>
+    <Its:div runat="server" Type="SplitRight">
+        <Its:tab runat="server" ID="tab1">
+            <Its:div runat="server" Type="SplitSingle" TabTitle="연결 검사항목 (불량상세)" ID="div3">
+                <Its:grid runat="server" ID="grid2" />
+            </Its:div>
+        </Its:tab>
     </Its:div>
 </asp:Content>

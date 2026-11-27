@@ -23,10 +23,18 @@ namespace TML1020
         ItsModelGrid MODEL_G1 = new ItsModelGrid();
         ItsModelPanel MODEL_S2 = new ItsModelPanel();   // [이동내역삭제] 탭 조회조건
         ItsModelGrid MODEL_G2 = new ItsModelGrid();     // [이동내역삭제] 탭 이동 이력
+        ItsModelPanel MODEL_S3 = new ItsModelPanel();   // [재발행] 탭 조회조건 (2026-11-27)
+        ItsModelGrid MODEL_G3 = new ItsModelGrid();     // [재발행] 탭 이동 건 목록 (2026-11-27)
 
         public R03()
         {
             InitializeComponent();
+
+            MODEL_S3.Binding(PANEL_S3);
+            MODEL_S3.InitData();
+
+            MODEL_G3.Binding(GRID_G3);
+            MODEL_G3.InitData();
 
             MODEL_S1.Binding(PANEL_S1);
             MODEL_S1.InitData();
@@ -52,6 +60,9 @@ namespace TML1020
 
             MODEL_S2.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-dd"));
             MODEL_S2.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+
+            MODEL_S3.SetValue("SDATE", DateTime.Now.ToString("yyyy-MM-dd"));
+            MODEL_S3.SetValue("EDATE", DateTime.Now.ToString("yyyy-MM-dd"));
 
             txt_BARCODE.Focus();
         }
@@ -148,11 +159,98 @@ namespace TML1020
             SearchMove();
             return true;
         }
+        // ===== [재발행] 탭 : 이동 건 조회 / 재고이동표 재발행 (프로시저 TML1020_R03 LIST_MOVE_GROUP, PRINT_MOVE) 2026-11-27 =====
+        private void SearchReprint()
+        {
+            ItsMaria.Set("TML1020_R03", "LIST_MOVE_GROUP");
+            ItsMaria.AddModel(MODEL_S3);
+            DataSet ds = ItsMaria.Call();
+            if (ItsMaria.IsError)
+            {
+                ShowMessageBox("", ItsMaria.ErrMessage);
+                return;
+            }
+
+            MODEL_G3.SetData(ds.Tables[0]);
+        }
+
+        // 조회·재발행 버튼 처리. 처리했으면 true
+        private bool EventCommandReprint(string commandName)
+        {
+            if (commandName == "SEARCH_REPRINT")
+            {
+                if (MODEL_S3.GetText("SDATE") == "" || MODEL_S3.GetText("EDATE") == "")
+                {
+                    ShowMessageBox("", "이동일자를 선택하세요.");
+                    return true;
+                }
+
+                SearchReprint();
+                return true;
+            }
+            else if (commandName == "REPRINT_MOVE")
+            {
+                int cnt = 0;
+                for (int i = 0; i < MODEL_G3.ModelCount; i++)
+                {
+                    if (MODEL_G3.IsChecked(i)) cnt++;
+                }
+                if (cnt == 0)
+                {
+                    ShowMessageBox("", "재발행할 이동 건을 체크하세요.");
+                    return true;
+                }
+
+                ShowMessageBox(commandName, "체크한 이동 건 " + cnt + "건의 재고이동표를 재발행하시겠습니까?");
+                return true;
+            }
+
+            return false;
+        }
+
+        // 재발행 확인 후 처리: 이동 건마다 재고이동표 한 장 (등록 때와 같은 양식·프린터). 처리했으면 true
+        private bool EventMessageReprint(string commandName)
+        {
+            if (commandName != "REPRINT_MOVE") return false;
+
+            int printCnt = 0;
+            try
+            {
+                for (int i = 0; i < MODEL_G3.ModelCount; i++)
+                {
+                    if (!MODEL_G3.IsChecked(i)) continue;
+
+                    ItsMaria.Set("TML1020_R03", "PRINT_MOVE");
+                    ItsMaria.AddOne("GROUPKEY_LIST", MODEL_G3.GetText(i, "GROUPKEY"));
+                    DataSet ds = ItsMaria.Call();
+                    if (ItsMaria.IsError)
+                    {
+                        ShowMessageBox("", ItsMaria.ErrMessage);
+                        return true;
+                    }
+                    if (ds.Tables.Count < 3 || ds.Tables[1].Rows.Count == 0 || ds.Tables[2].Rows.Count == 0) continue;
+
+                    TMLPRINT.MTR_5 rptMove = new TMLPRINT.MTR_5(ds);
+                    rptMove.PrintDirect(ItsPrinter.BarcodePrintName);
+                    printCnt++;
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowMessageBox("", "재고이동표 출력에 실패했습니다. 프린터를 확인해주세요." + (printCnt > 0 ? " (" + printCnt + "건은 출력됨)" : "") + "\n" + ex.Message);
+                return true;
+            }
+
+            ShowMessageBox("", "재고이동표를 재발행했습니다. (" + printCnt + "건)");
+            return true;
+        }
+
         public override void EventCommand(string commandName)
         {
             base.EventCommand(commandName);
 
             if (EventCommandHistory(commandName)) return;
+            if (EventCommandReprint(commandName)) return;
 
             // 행 삭제
             if (commandName == "DEL_ROW")
@@ -217,6 +315,7 @@ namespace TML1020
             base.EventMessageResult(commandName);
 
             if (EventMessageHistory(commandName)) return;
+            if (EventMessageReprint(commandName)) return;
 
             if (commandName == "ADD_MOVE")
             {

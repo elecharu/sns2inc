@@ -39,13 +39,8 @@ namespace XtraRpt
                     }
                 }
 
-                // 2026-11-26 엑셀 변환·고객사 양식: 웹이 4번째 인자로 fileType(pdf/xlsx)을 넘긴다.
-                // 출하성적서 R01 은 계획에 고객사 엑셀 양식이 등록돼 있으면 그 양식에 값을 채워 출력한다 (FormRouter). 없으면 아래 기존 양식
+                // 2026-11-26 엑셀 변환: 웹이 4번째 인자로 fileType(pdf/xlsx)을 넘긴다. (고객사별 양식은 2026-11-27 제거)
                 string fileType = args.Length > 3 ? args[3].ToLower() : "pdf";
-                if (prg == "R01" && FormRouter.TryRun(param, fileName, fileType))
-                {
-                    return;
-                }
 
                 Assembly assembly = Assembly.GetExecutingAssembly();
                 Type t = assembly.GetType("XtraRpt." + prg);

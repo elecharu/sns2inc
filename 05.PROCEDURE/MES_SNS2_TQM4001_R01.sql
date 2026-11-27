@@ -1,0 +1,300 @@
+﻿CREATE DEFINER = 'root'@'%'
+PROCEDURE MES_SNS2.TQM4001_R01(
+-- *****************************************************************************
+-- Comment: SPC 관리항목 등록
+-- Create: 2026-11-27 신정수 (SEA TQM3001_R01 참조, 고객사코드 제외 / 품목은 ITEMID / 검사항목 키는 STDCD+STDPART+PRCDETAIL)
+-- Modify: 2026-11-27 신정수 검사구분은 자주검사만, LIST_CPKPPK 에 특성(FEATURE) 추가
+-- *****************************************************************************
+  IN $STDTP             VARCHAR(100), -- 검사구분
+  IN $ITEMCG            VARCHAR(100), -- 품목유형 (조회조건)
+  IN $ITEMID            VARCHAR(100), -- 품목ID
+  IN $ITEMID_LIST       MEDIUMTEXT,
+  IN $STDCD_LIST        MEDIUMTEXT,
+  IN $STDPART_LIST      MEDIUMTEXT,
+  IN $PRCDETAIL_LIST    MEDIUMTEXT,
+  IN $CPK_LIST          MEDIUMTEXT,
+  IN $PPK_LIST          MEDIUMTEXT,
+  IN $XBAR_UCL_LIST     MEDIUMTEXT,
+  IN $XBAR_LCL_LIST     MEDIUMTEXT,
+  IN $XBAR_USL_LIST     MEDIUMTEXT,
+  IN $XBAR_LSL_LIST     MEDIUMTEXT,
+  IN $R_UCL_LIST        MEDIUMTEXT,
+  IN $R_USL_LIST        MEDIUMTEXT,
+-- *****************************************************************************
+ IN $CALLTYPE VARCHAR(50), IN $KEYWORD VARCHAR(1000))
+PROC:  BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
+-- SET @DEBUGLOGYN = 'Y';
+-- *****************************************************************************
+
+  DECLARE _$ITEMID VARCHAR(100);
+  DECLARE _$STDCD VARCHAR(100);
+  DECLARE _$STDPART VARCHAR(100);
+  DECLARE _$PRCDETAIL VARCHAR(100);
+  DECLARE _$CPK VARCHAR(100);
+  DECLARE _$PPK VARCHAR(100);
+  DECLARE _$XBAR_UCL VARCHAR(100);
+  DECLARE _$XBAR_LCL VARCHAR(100);
+  DECLARE _$XBAR_USL VARCHAR(100);
+  DECLARE _$XBAR_LSL VARCHAR(100);
+  DECLARE _$R_UCL VARCHAR(100);
+  DECLARE _$R_USL VARCHAR(100);
+
+-- ****************************************************************************
+CASE $CALLTYPE
+-- ****************************************************************************
+WHEN 'LIST_STDTP' THEN -- 검사구분 조회 (grid1) - 자주검사만
+
+  SELECT
+      COMTYPE.TPCD AS STDTP
+    , COMTYPE.TPNM AS STDTPNM
+  FROM COMTYPE
+  WHERE COMTYPE.GPCD = 'STDTP'
+    AND COMTYPE.TPCD = 'PRCTEST' -- 자주검사
+    AND COMTYPE.USEYN = 'Y'
+  ORDER BY COMTYPE.SORTNO;
+
+-- ****************************************************************************
+WHEN 'LIST_ITEM' THEN -- 사용중 검사기준(리비전)이 있는 품목 조회 (grid2)
+
+  IF IFNULL($STDTP, '') = '' THEN
+    CALL COMERR('검사구분을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  SELECT
+      LIST_ITEM.SPC_YN
+    , LIST_ITEM.ITEMCG
+    , LIST_ITEM.ITEMID
+    , LIST_ITEM.ITEMCD
+    , LIST_ITEM.ITEMNM
+  FROM (
+        SELECT
+            IF(MAX(SPC_TYPE.ITEMID) IS NOT NULL, 'Y', 'N') AS SPC_YN
+          , MSTITEM.ITEMCG
+          , CAST(MSTITEM.ITEMID AS CHAR) AS ITEMID
+          , MSTITEM.ITEMCD
+          , MSTITEM.ITEMNM
+        FROM MSTITEM
+        INNER JOIN MSTRPTREV_ITEM
+                ON MSTRPTREV_ITEM.ITEMID = MSTITEM.ITEMID
+        INNER JOIN MSTRPTREV_HEADER
+                ON MSTRPTREV_HEADER.REVCD = MSTRPTREV_ITEM.REVCD
+               AND MSTRPTREV_HEADER.STDTP = $STDTP
+               AND MSTRPTREV_HEADER.USEYN = 'Y'
+        LEFT JOIN SPC_TYPE
+               ON SPC_TYPE.STDTP = $STDTP
+              AND SPC_TYPE.ITEMID = MSTITEM.ITEMID
+        WHERE MSTITEM.ENDYN = 'N'
+          AND MSTITEM.ITEMID LIKE CONCAT('%', IFNULL($ITEMID, ''), '%')
+          AND MSTITEM.ITEMCG LIKE CONCAT('%', IFNULL($ITEMCG, ''), '%')
+        GROUP BY MSTITEM.ITEMID
+       ) AS LIST_ITEM
+  ORDER BY IF(LIST_ITEM.SPC_YN = 'Y', 1, 2)
+         , LIST_ITEM.ITEMCG
+         , LIST_ITEM.ITEMID;
+
+-- ****************************************************************************
+WHEN 'LIST_CPKPPK' THEN -- 사용중 리비전의 측정 검사항목별 CPK, PPK 조회 (grid3)
+
+  IF IFNULL($STDTP, '') = '' THEN
+    CALL COMERR('검사구분을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($ITEMID, '') = '' THEN
+    CALL COMERR('품목을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF NOT EXISTS (SELECT SPC_TYPE.ITEMID FROM SPC_TYPE WHERE SPC_TYPE.STDTP = $STDTP AND SPC_TYPE.ITEMID = $ITEMID) THEN
+    LEAVE PROC; -- SPC 관리품목이 아니면 빈 목록
+  END IF;
+
+  SELECT
+      IF(SPC_TYPE_CPKPPK.STDCD IS NOT NULL, 'Y', 'N') AS SPC_YN
+    , MSTRPTREV_DETAIL.STDCD
+    , MSTRPTREV_DETAIL.STDNM
+    , MSTRPTREV_DETAIL.STDPART
+    , MSTRPTREV_DETAIL.PRCDETAIL
+    , MSTRPTREV_DETAIL.FEATURE
+    , ROUND(IFNULL(SPC_TYPE_CPKPPK.CPK, 0), 3) AS CPK
+    , ROUND(IFNULL(SPC_TYPE_CPKPPK.PPK, 0), 3) AS PPK
+    , ROUND(IFNULL(SPC_TYPE_CPKPPK.XBAR_UCL, 0), 3) AS XBAR_UCL
+    , ROUND(IFNULL(SPC_TYPE_CPKPPK.XBAR_LCL, 0), 3) AS XBAR_LCL
+    , ROUND(IFNULL(SPC_TYPE_CPKPPK.XBAR_USL, 0), 3) AS XBAR_USL
+    , ROUND(IFNULL(SPC_TYPE_CPKPPK.XBAR_LSL, 0), 3) AS XBAR_LSL
+    , ROUND(IFNULL(SPC_TYPE_CPKPPK.R_UCL, 0), 3) AS R_UCL
+    , ROUND(IFNULL(SPC_TYPE_CPKPPK.R_USL, 0), 3) AS R_USL
+  FROM MSTRPTREV_HEADER
+  INNER JOIN MSTRPTREV_ITEM
+          ON MSTRPTREV_ITEM.REVCD = MSTRPTREV_HEADER.REVCD
+  INNER JOIN MSTRPTREV_DETAIL
+          ON MSTRPTREV_DETAIL.REVCD = MSTRPTREV_HEADER.REVCD
+  LEFT JOIN SPC_TYPE_CPKPPK
+         ON SPC_TYPE_CPKPPK.STDTP = MSTRPTREV_HEADER.STDTP
+        AND SPC_TYPE_CPKPPK.ITEMID = MSTRPTREV_ITEM.ITEMID
+        AND SPC_TYPE_CPKPPK.STDCD = MSTRPTREV_DETAIL.STDCD
+        AND SPC_TYPE_CPKPPK.STDPART = MSTRPTREV_DETAIL.STDPART
+        AND SPC_TYPE_CPKPPK.PRCDETAIL = MSTRPTREV_DETAIL.PRCDETAIL
+  WHERE MSTRPTREV_HEADER.STDTP = $STDTP
+    AND MSTRPTREV_HEADER.USEYN = 'Y'
+    AND MSTRPTREV_ITEM.ITEMID = $ITEMID
+    AND MSTRPTREV_DETAIL.STDCHKTP = '02' -- 측정
+  ORDER BY IF(SPC_YN = 'Y', 1, 2)
+         , MSTRPTREV_DETAIL.SORTNO;
+
+-- ****************************************************************************
+WHEN 'ADD_SPC' THEN -- SPC 관리품목 등록
+
+  IF IFNULL($STDTP, '') = '' THEN
+    CALL COMERR('검사구분을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  WHILE LENGTH($ITEMID_LIST) > 0 DO
+    CALL COMSPLIT($ITEMID_LIST, _$ITEMID);
+
+    IF NOT EXISTS (SELECT SPC_TYPE.ITEMID FROM SPC_TYPE WHERE SPC_TYPE.STDTP = $STDTP AND SPC_TYPE.ITEMID = _$ITEMID) THEN
+      INSERT INTO SPC_TYPE (STDTP, ITEMID, RTIME, REMP, RPRG)
+      VALUES ($STDTP, _$ITEMID, CALLTIME(), CALLEMP(), CALLPRG());
+    END IF;
+  END WHILE;
+
+-- ****************************************************************************
+WHEN 'DEL_SPC' THEN -- SPC 관리품목 삭제 (검사항목별 CPK, PPK 도 같이 삭제)
+
+  IF IFNULL($STDTP, '') = '' THEN
+    CALL COMERR('검사구분을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  WHILE LENGTH($ITEMID_LIST) > 0 DO
+    CALL COMSPLIT($ITEMID_LIST, _$ITEMID);
+
+    DELETE FROM SPC_TYPE_CPKPPK WHERE SPC_TYPE_CPKPPK.STDTP = $STDTP AND SPC_TYPE_CPKPPK.ITEMID = _$ITEMID;
+    DELETE FROM SPC_TYPE WHERE SPC_TYPE.STDTP = $STDTP AND SPC_TYPE.ITEMID = _$ITEMID;
+  END WHILE;
+
+-- ****************************************************************************
+WHEN 'SAVE_CPKPPK' THEN -- 검사항목별 CPK, PPK 저장
+
+  IF IFNULL($STDTP, '') = '' THEN
+    CALL COMERR('검사구분을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($ITEMID, '') = '' THEN
+    CALL COMERR('품목을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  WHILE LENGTH($STDCD_LIST) > 0 DO
+    CALL COMSPLIT($STDCD_LIST, _$STDCD);
+    CALL COMSPLIT($STDPART_LIST, _$STDPART);
+    CALL COMSPLIT($PRCDETAIL_LIST, _$PRCDETAIL);
+    CALL COMSPLIT($CPK_LIST, _$CPK);
+    CALL COMSPLIT($PPK_LIST, _$PPK);
+    CALL COMSPLIT($XBAR_UCL_LIST, _$XBAR_UCL);
+    CALL COMSPLIT($XBAR_LCL_LIST, _$XBAR_LCL);
+    CALL COMSPLIT($XBAR_USL_LIST, _$XBAR_USL);
+    CALL COMSPLIT($XBAR_LSL_LIST, _$XBAR_LSL);
+    CALL COMSPLIT($R_UCL_LIST, _$R_UCL);
+    CALL COMSPLIT($R_USL_LIST, _$R_USL);
+
+    IF IFNULL(_$STDCD, '') = '' THEN
+      CALL COMERR('검사항목코드가 없습니다.');
+      LEAVE PROC;
+    END IF;
+
+    IF EXISTS (SELECT SPC_TYPE_CPKPPK.STDCD
+                 FROM SPC_TYPE_CPKPPK
+                WHERE SPC_TYPE_CPKPPK.STDTP = $STDTP
+                  AND SPC_TYPE_CPKPPK.ITEMID = $ITEMID
+                  AND SPC_TYPE_CPKPPK.STDCD = _$STDCD
+                  AND SPC_TYPE_CPKPPK.STDPART = IFNULL(_$STDPART, '')
+                  AND SPC_TYPE_CPKPPK.PRCDETAIL = IFNULL(_$PRCDETAIL, '')) THEN
+      UPDATE SPC_TYPE_CPKPPK
+         SET CPK = IF(IFNULL(_$CPK, '') = '', 0, CAST(_$CPK AS DECIMAL(20, 8)))
+           , PPK = IF(IFNULL(_$PPK, '') = '', 0, CAST(_$PPK AS DECIMAL(20, 8)))
+           , XBAR_UCL = IF(IFNULL(_$XBAR_UCL, '') = '', 0, CAST(_$XBAR_UCL AS DECIMAL(20, 8)))
+           , XBAR_LCL = IF(IFNULL(_$XBAR_LCL, '') = '', 0, CAST(_$XBAR_LCL AS DECIMAL(20, 8)))
+           , XBAR_USL = IF(IFNULL(_$XBAR_USL, '') = '', 0, CAST(_$XBAR_USL AS DECIMAL(20, 8)))
+           , XBAR_LSL = IF(IFNULL(_$XBAR_LSL, '') = '', 0, CAST(_$XBAR_LSL AS DECIMAL(20, 8)))
+           , R_UCL = IF(IFNULL(_$R_UCL, '') = '', 0, CAST(_$R_UCL AS DECIMAL(20, 8)))
+           , R_USL = IF(IFNULL(_$R_USL, '') = '', 0, CAST(_$R_USL AS DECIMAL(20, 8)))
+           , MTIME = CALLTIME()
+           , MEMP = CALLEMP()
+           , MPRG = CALLPRG()
+       WHERE SPC_TYPE_CPKPPK.STDTP = $STDTP
+         AND SPC_TYPE_CPKPPK.ITEMID = $ITEMID
+         AND SPC_TYPE_CPKPPK.STDCD = _$STDCD
+         AND SPC_TYPE_CPKPPK.STDPART = IFNULL(_$STDPART, '')
+         AND SPC_TYPE_CPKPPK.PRCDETAIL = IFNULL(_$PRCDETAIL, '');
+    ELSE
+      INSERT INTO SPC_TYPE_CPKPPK (
+          STDTP
+        , ITEMID
+        , STDCD
+        , STDPART
+        , PRCDETAIL
+        , CPK
+        , PPK
+        , XBAR_UCL
+        , XBAR_LCL
+        , XBAR_USL
+        , XBAR_LSL
+        , R_UCL
+        , R_USL
+        , RTIME, REMP, RPRG)
+      VALUES (
+          $STDTP
+        , $ITEMID
+        , _$STDCD
+        , IFNULL(_$STDPART, '')
+        , IFNULL(_$PRCDETAIL, '')
+        , IF(IFNULL(_$CPK, '') = '', 0, CAST(_$CPK AS DECIMAL(20, 8)))
+        , IF(IFNULL(_$PPK, '') = '', 0, CAST(_$PPK AS DECIMAL(20, 8)))
+        , IF(IFNULL(_$XBAR_UCL, '') = '', 0, CAST(_$XBAR_UCL AS DECIMAL(20, 8)))
+        , IF(IFNULL(_$XBAR_LCL, '') = '', 0, CAST(_$XBAR_LCL AS DECIMAL(20, 8)))
+        , IF(IFNULL(_$XBAR_USL, '') = '', 0, CAST(_$XBAR_USL AS DECIMAL(20, 8)))
+        , IF(IFNULL(_$XBAR_LSL, '') = '', 0, CAST(_$XBAR_LSL AS DECIMAL(20, 8)))
+        , IF(IFNULL(_$R_UCL, '') = '', 0, CAST(_$R_UCL AS DECIMAL(20, 8)))
+        , IF(IFNULL(_$R_USL, '') = '', 0, CAST(_$R_USL AS DECIMAL(20, 8)))
+        , CALLTIME(), CALLEMP(), CALLPRG()
+      );
+    END IF;
+  END WHILE;
+
+-- ****************************************************************************
+WHEN 'DELETE_CPKPPK' THEN -- 검사항목별 CPK, PPK 삭제
+
+  IF IFNULL($STDTP, '') = '' THEN
+    CALL COMERR('검사구분을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  IF IFNULL($ITEMID, '') = '' THEN
+    CALL COMERR('품목을 선택하세요.');
+    LEAVE PROC;
+  END IF;
+
+  WHILE LENGTH($STDCD_LIST) > 0 DO
+    CALL COMSPLIT($STDCD_LIST, _$STDCD);
+    CALL COMSPLIT($STDPART_LIST, _$STDPART);
+    CALL COMSPLIT($PRCDETAIL_LIST, _$PRCDETAIL);
+
+    IF IFNULL(_$STDCD, '') = '' THEN
+      CALL COMERR('검사항목코드가 없습니다.');
+      LEAVE PROC;
+    END IF;
+
+    DELETE FROM SPC_TYPE_CPKPPK
+     WHERE SPC_TYPE_CPKPPK.STDTP = $STDTP
+       AND SPC_TYPE_CPKPPK.ITEMID = $ITEMID
+       AND SPC_TYPE_CPKPPK.STDCD = _$STDCD
+       AND SPC_TYPE_CPKPPK.STDPART = IFNULL(_$STDPART, '')
+       AND SPC_TYPE_CPKPPK.PRCDETAIL = IFNULL(_$PRCDETAIL, '');
+  END WHILE;
+
+-- ****************************************************************************
+END CASE;  END

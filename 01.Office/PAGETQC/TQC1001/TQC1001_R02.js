@@ -417,27 +417,52 @@ ItsButton.Event('btn_ADDSTD').onClick = function () {
 // "저장" 버튼
 ItsButton.Event('btn_SAVE_DETAIL').onClick = function () {
 
-    var comboSet = new Set();
+    // 2026-11-27 검사항목 + 세부항목 + 세부공정 중복 검사: 중복된 줄을 모두 모아 행 번호와 값을 같이 보여줌
+    var comboRows = {};   // 조합 → 행 번호(0부터) 목록
+    var comboOrder = [];
+    var prcdetailMap = ItsGrid.Get('grid4').columns[ItsGrid.$colIndex('grid4', 'PRCDETAIL')].dataMap;
 
     for (var i = 0; i < ItsGrid.Length('grid4'); i++) {
         var stdcd = (ItsGrid.GetValue('grid4', i, 'STDCD') || '').trim();
         var stdpart = (ItsGrid.GetValue('grid4', i, 'STDPART') || '').trim();
-        var eqmgroup = (ItsGrid.GetValue('grid4', i, 'PRCDETAIL') || '').trim();
+        var prcdetail = (ItsGrid.GetValue('grid4', i, 'PRCDETAIL') || '').trim();
 
         if (stdcd !== '') {
 
             var comboKey = stdcd + '|' +
                 (stdpart === '' ? 'NULL' : stdpart) + '|' +
-                (eqmgroup === '' ? 'NULL' : eqmgroup);
+                (prcdetail === '' ? 'NULL' : prcdetail);
 
-            if (comboSet.has(comboKey)) {
-                ItsMsg.Alert('검사항목 + 세부항목 + 설비중분류 조합이 중복되었습니다.');
-                return;
+            if (!comboRows[comboKey]) {
+                comboRows[comboKey] = [];
+                comboOrder.push(comboKey);
             }
-
-            comboSet.add(comboKey);
-
+            comboRows[comboKey].push(i);
         }
+    }
+
+    var dupLines = [];
+    var firstDupRow = -1;
+    for (var k = 0; k < comboOrder.length; k++) {
+        var rows = comboRows[comboOrder[k]];
+        if (rows.length < 2) continue;
+
+        var r = rows[0];
+        if (firstDupRow < 0) firstDupRow = rows[1];
+        var dupPart = (ItsGrid.GetValue('grid4', r, 'STDPART') || '').trim();
+        var dupPrc = (ItsGrid.GetValue('grid4', r, 'PRCDETAIL') || '').trim();
+        var dupPrcNm = (dupPrc !== '' && prcdetailMap) ? (prcdetailMap.getDisplayValue(dupPrc) || dupPrc) : dupPrc;
+
+        dupLines.push(' · ' + rows.map(function (n) { return (n + 1) + '행'; }).join(', ') + ' : '
+            + (ItsGrid.GetValue('grid4', r, 'STDNM') || '') + ' / '
+            + (dupPart === '' ? '(세부항목 없음)' : dupPart) + ' / '
+            + (dupPrc === '' ? '(세부공정 없음)' : dupPrcNm));
+    }
+
+    if (dupLines.length > 0) {
+        ItsGrid.SelectRow('grid4', firstDupRow);
+        ItsMsg.Alert('검사항목 + 세부항목 + 세부공정 조합이 중복되었습니다.\n\n' + dupLines.join('\n'));
+        return;
     }
 
     ItsMsg.Confirm("저장하시겠습니까?", function () {

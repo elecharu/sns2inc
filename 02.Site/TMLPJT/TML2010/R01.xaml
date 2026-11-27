@@ -152,7 +152,8 @@
                 <its:Combo Label="대분류" LabelWidth="80" Width="300" GPCD="QM210" Value="{Binding BADTP1}"/>
                 <its:Combo Label="중분류" LabelWidth="80" Width="300" GPCD="QM220" Value="{Binding BADTP2}"/>
                 <its:Pop Label="불량코드" LabelWidth="80" Width="300" GPCD="BADCD" Value="{Binding BADCD}" ShowKeyPad="True"/>
-                <its:Text Label="불량상세" LabelWidth="80" Width="300" Value="{Binding BADDETAIL}"/>
+                <!-- 2026-11-27 불량상세: 불량코드에 연결된 검사항목(MSTBAD_STD)이 있으면 생산품 자주검사 기준 줄에서 선택 (REF01 = ITEMID, REF02 = 불량코드) -->
+                <its:Combo Label="불량상세" LabelWidth="80" Width="300" GPCD="BADDETAIL" Value="{Binding BADDETAIL}"/>
                 <its:Number Label="불량수량" LabelWidth="80" Width="300" Value="{Binding BADQTY}" DecimalPoint="0" ShowKeyPad="True"/>
                 <UserControl Width="330" Height="10"/>
                 <UserControl Width="90"/>
@@ -435,7 +436,7 @@
 
         <!--2026-11-26 숫자 입력 팝업 (자주검사 시료 칸, 일상점검 숫자 점검값). 누르는 대로 칸에 바로 들어감
             [다음]/Enter: 같은 줄 다음 시료 → 마지막 시료면 다음 줄 첫 입력 칸 (입력 못 하는 칸·OK/NG 칸은 건너뜀)-->
-        <UserControl x:Name="POPUP_A13" Style="{DynamicResource TML_POP}" Canvas.Left="830" Canvas.Top="205" Visibility="Collapsed">
+        <UserControl x:Name="POPUP_A13" Panel.ZIndex="100000" Tag="NODIM" Style="{DynamicResource TML_POP}" Canvas.Left="830" Canvas.Top="205" Visibility="Collapsed">
             <its:WrapContent x:Name="PANEL_A13" Width="340" Height="410">
                 <!--2026-11-26 이 줄을 손가락(또는 마우스)으로 끌면 팝업 위치를 옮김 (KEY_DRAG)-->
                 <Border x:Name="KEY_DRAG" Width="330" Height="30" Background="#E6F1FB" Cursor="SizeAll">

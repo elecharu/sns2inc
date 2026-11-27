@@ -102,18 +102,12 @@
       <HintPath>..\..\bin\MySql.Data.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FormRouter.cs" />
-    <Compile Include="TokenFill.cs" />
-    <Compile Include="XlsxPackage.cs" />
-    <Compile Include="XlsxRender.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="R01.cs">

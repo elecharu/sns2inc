@@ -7,6 +7,10 @@ PROCEDURE MES_SNS2.MST1002_R05(
 --           SEL_LINE_EQM 세부공정 컬럼(PRCDETAILNM), SEL_POP_PRCDETAIL, SAVE_PRCDETAIL 추가
 --         2026-11-03: 김영철 라인별 설비 매칭(MSTEQM_MATCH) 관리
 --           SEL_LINE_EQM 매칭설비 컬럼(FANONM), SEL_EQMMATCH, SAVE_EQMMATCH(SEQ 라인별 채번), $FANO_LIST 추가
+--         2026-11-27: 신정수 생산 모니터링 표시여부(MSTLINE_EQM.MONITORYN)
+--           SEL_LINE_EQM 컬럼 추가, SAVE_MONITOR 추가, $EQMCD_LIST·$MONITORYN_LIST 추가
+--         2026-11-27: 신정수 SPC 모니터링(자주검사) 표시여부(MSTLINE_EQM.SPCMONYN)
+--           SEL_LINE_EQM 컬럼 추가, SAVE_MONITOR 에서 같이 저장, $SPCMONYN_LIST 추가
 -- *****************************************************************************
 
   IN $FACTORYCD VARCHAR(20),
@@ -18,7 +22,10 @@ PROCEDURE MES_SNS2.MST1002_R05(
   IN $KEYWORD VARCHAR(1000),
   IN $PRCDETAIL_LIST MEDIUMTEXT,
   IN $REMARK_LIST MEDIUMTEXT,
-  IN $FANO_LIST MEDIUMTEXT
+  IN $FANO_LIST MEDIUMTEXT,
+  IN $EQMCD_LIST MEDIUMTEXT,        -- 모니터링 설정 저장 (2026-11-27)
+  IN $MONITORYN_LIST MEDIUMTEXT,
+  IN $SPCMONYN_LIST MEDIUMTEXT      -- SPC 모니터링(자주검사) 설정 저장 (2026-11-27)
   )
 PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
 -- SET @DEBUGLOGYN = 'Y';
@@ -28,6 +35,9 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
   DECLARE _$PRCDETAIL_ALL MEDIUMTEXT;
   DECLARE _$FANO          VARCHAR(50);
   DECLARE _$FANO_ALL      MEDIUMTEXT;
+  DECLARE _$EQMCD         VARCHAR(20);
+  DECLARE _$MONITORYN     VARCHAR(10);
+  DECLARE _$SPCMONYN      VARCHAR(10);
 -- *****************************************************************************
 
   CASE $CALLTYPE
@@ -46,6 +56,8 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
       , A.REMP
       , IFNULL(MSTLINE_EQM_PRCDETAIL_GROUP.PRCDETAILNM, '') AS PRCDETAILNM
       , IFNULL(MSTEQM_MATCH_GROUP.FANONM, '') AS FANONM
+      , A.MONITORYN       -- 생산 모니터링 표시여부 (2026-11-27)
+      , A.SPCMONYN        -- SPC 모니터링(자주검사) 표시여부 (2026-11-27)
       FROM MSTLINE_EQM AS A
       INNER JOIN MSTLINE AS C ON A.LINECD = C.LINECD
       LEFT JOIN ( -- 라인별 세부공정을 공통코드 순번대로 한 칸에 (OP10, OP20, OP30 ...)
@@ -182,6 +194,24 @@ PROC: BEGIN -- @CALLEMP, @CALLPRG, @CALLHOST, @CALLIP, @CALLMAC
           FROM MSTEQM_MATCH
          WHERE MSTEQM_MATCH.EQMCD = $EQMCD;
       END IF;
+    END WHILE;
+
+-- ****************************************************************************
+
+  WHEN 'SAVE_MONITOR' THEN -- 생산 모니터링·SPC 모니터링(자주검사) 표시여부 저장 (2026-11-27, 넘어온 라인만)
+
+    WHILE LENGTH($EQMCD_LIST) > 0 DO
+      CALL COMSPLIT($EQMCD_LIST, _$EQMCD);
+      CALL COMSPLIT($MONITORYN_LIST, _$MONITORYN);
+      CALL COMSPLIT($SPCMONYN_LIST, _$SPCMONYN);
+
+      UPDATE MSTLINE_EQM
+         SET MSTLINE_EQM.MONITORYN = IF(IFNULL(_$MONITORYN, '') = 'Y', 'Y', 'N')
+           , MSTLINE_EQM.SPCMONYN = IF(IFNULL(_$SPCMONYN, '') = 'Y', 'Y', 'N')
+           , MTIME = CALLTIME()
+           , MEMP = CALLEMP()
+           , MPRG = CALLPRG()
+       WHERE MSTLINE_EQM.EQMCD = _$EQMCD;
     END WHILE;
 
 -- ****************************************************************************

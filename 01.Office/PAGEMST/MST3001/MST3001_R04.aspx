@@ -19,7 +19,31 @@
 
 <%-- BODY --%>
 <asp:Content ContentPlaceHolderID="CPH_BODY" Runat="Server">
-    <Its:div runat="server" Type="SplitSingle">
+    <%-- 2026-11-27 분류(사용위치) 기능: 외주처 소모품(MST3001_R05)과 같게 왼쪽 품목 / 오른쪽 사용위치 + 일괄 추가 팝업 --%>
+    <Its:div runat="server" Type="SplitLeft" LeftWidthPc="45">
         <Its:grid runat="server" ID="grid1" />
     </Its:div>
+    <Its:split runat="server" Type="Vertical" />
+    <Its:div runat="server" Type="SplitRight">
+        <Its:grid runat="server" ID="grid2" />
+    </Its:div>
+
+    <Its:pop runat="server" ID="pop_BULK" Title="사용위치 일괄 추가" Width="1100" Height="600">
+        <Its:div runat="server" Type="SplitTop" TopHeightPc="9">
+            <Its:combo runat="server" Label="작업장" ID="pop_combo_LINECD" GPCD="LINECD" REF01="07" InputWidth="140" MarginTop="5" />
+            <Its:combo runat="server" Label="공정" ID="pop_combo_PRCCD" GPCD="*PRCCD_LINE" InputWidth="140" MarginTop="5" />
+            <Its:button runat="server" Label="추가" ID="btn_POP_ADD" MarginLeft="20" MarginTop="5" BackColor="CustomButton" />
+            <Its:button runat="server" Label="닫기" ID="btn_POP_CLOSE" MarginLeft="10" MarginTop="5" />
+        </Its:div>
+        <Its:split runat="server" Type="Horizon" Resizeable="false" />
+        <Its:div runat="server" Type="SplitDown">
+            <Its:div runat="server" Type="SplitLeft" LeftWidthPc="75">
+                <Its:grid runat="server" ID="grid_POP_EQM" />
+            </Its:div>
+            <Its:split runat="server" Type="Vertical" Resizeable="false" />
+            <Its:div runat="server" Type="SplitRight">
+                <Its:grid runat="server" ID="grid_POP_TURRET" />
+            </Its:div>
+        </Its:div>
+    </Its:pop>
 </asp:Content>

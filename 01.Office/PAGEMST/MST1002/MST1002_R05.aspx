@@ -15,6 +15,8 @@
         <Its:combo runat="server" Label="작업장" Field="LINECD" GPCD="*LINECD" REF01="07"/>
         <Its:combo runat="server" Label="공정" Field="PRCCD" GPCD="*PRCCD" REF01="07"/>
         <Its:check runat="server" Label="사용여부" Field="USEYN" Value="Y" MarginLeft="20"/>
+        <%-- 2026-11-27 생산 모니터링·SPC 모니터링(자주검사) 표시여부 저장 --%>
+        <Its:button runat="server" Label="모니터링 설정 저장" ID="btn_SAVE_MONITOR" BackColor="CustomButton" MarginLeft="20" />
     </Its:div>
 </asp:Content>
 

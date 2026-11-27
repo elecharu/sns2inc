@@ -13,7 +13,6 @@
         <Its:combo runat="server" Label="품목유형" ID="sdiv1_combo_ITEMCG" Field="ITEMCG" GPCD="DM100" Value="DM100990" ReadOnly="true"/>
         <Its:find runat="server" Label="품목" ID="sdiv1_find_ITEMID" Field="ITEMID" GPCD="ITEMID" REF02="DM100990"/>
         <Its:check runat="server" Label="종료 여부" ID="sdiv1_check_ENDYN" Field="ENDYN" Value="N"/>
-        <Its:label runat="server" Text="안전재고 미만 (현재고가 안전재고보다 적음)" BackColorHex="Pink" MarginLeft="20"/>
     </Its:div>
 </asp:Content>
 

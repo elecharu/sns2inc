@@ -9,6 +9,14 @@
     <link rel="stylesheet" type="text/css" href="../css/new_main.css?ver=<%= BasePage.srcVersion %>" />
     <link rel="stylesheet" type="text/css" href="../css/font-awesome.min.css" />
     <link rel="stylesheet" type="text/css" href="./css/login.css?ver=<%= BasePage.srcVersion %>" />
+    <%-- 2026-11-27 시스템 선택 라디오 4개를 한 줄에 하나씩 (아이디 입력칸 왼쪽 끝에 맞춤). login.css 는 CP949 라 여기서 덮어씀 --%>
+    <style type="text/css">
+        .login_box .title1 { margin-top: 6px; }   <%-- 4줄로 늘어난 높이만큼 위를 줄여 오류 문구가 흰 상자 안에 남게 --%>
+        .login_box .chk_system { width: 322px; height: auto; margin: 12px 0 0 50px; text-align: left; }
+        .login_box .chk_system label { display: flex; align-items: center; height: 22px; cursor: pointer; }
+        .login_box .chk_system input[type=radio] { width: 18px; height: 18px; margin: 0 8px 0 0; }
+        .login_box #login_id { margin-top: 8px; }
+    </style>
     <script type="text/javascript" src="../../UserControl/ItsPage.js?ver=<%= BasePage.srcVersion %>"></script>
     <script type="text/javascript" src="../../UserControl/ItsMaria.js?ver=<%= BasePage.srcVersion %>"></script>
     <script type="text/javascript" src="./js/portal.js?ver=<%= BasePage.srcVersion %>"></script>
@@ -46,10 +54,7 @@
 
                 $('#btn_login').show();
                 $('#btn_view').hide();
-
-
-                $('#login_id').val('');
-                $('#login_pw').val('');
+                // 2026-11-27 라디오를 바꿔도 입력한 ID·PW 는 지우지 않음
             }
             else if (this.value == 'MES') {
                 $('#login_id').show();
@@ -57,9 +62,7 @@
 
                 $('#btn_login').show();
                 $('#btn_view').hide();
-
-                $('#login_id').val('');
-                $('#login_pw').val('');
+                // 2026-11-27 라디오를 바꿔도 입력한 ID·PW 는 지우지 않음
             }
             else if (this.value == 'MONITOR') {
                 $('#login_id').hide();
@@ -89,9 +92,11 @@
             <h1 class="title2"></h1>
             <h1 class="title2"> S&S 2공장 MES SYSTEM</h1>
 
-			<div class="chk_system">
+			<div class="chk_system"><%-- 2026-11-27 라디오 4개를 한 줄에 하나씩 (위 style) --%>
                 <label><input type="radio" name="chk_system" value="MES" checked="checked"/><span>MES</span></label>
                 <label><input type="radio" name="chk_system" value="TAL"/><span>태블릿</span></label>
+                <label><input type="radio" name="chk_system" value="PRDMON"/><span>생산 모니터링</span></label>
+                <label><input type="radio" name="chk_system" value="SPCMON"/><span>SPC 모니터링(자주검사)</span></label>
                 <%--<label><input type="radio" name="chk_system" value="MONITOR"/><span>모니터링</span></label>--%>
             </div>
 

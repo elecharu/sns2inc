@@ -4,9 +4,10 @@ PROCEDURE MES_SNS2.IO_MTRINVOICE_CANCEL(
 -- Comment: 거래명세서 입고 취소 (외주입고 TML1020_R01 [입고취소] 탭) - 거래명세서 단위
 --          입고이력(MTRIN) 별로 IO_MTRINVOICE_DEL 을 부르고, 무상사급 납품(03) 은 먼저 외주처 재고 차감·출고이력(구분 82)을 되돌림
 --          거래명세서는 남기고 입고대기 상태로 돌아감
---          무상사급 납품(03) : ERP 로 이미 넘어간 입고는 취소 불가. 시편수량은 IO_MOVELOT_TEST_DEL 로 시편창고에서 되돌림 (시편을 이미 썼으면 취소 불가)
+--          무상사급 납품(03) : ERP 로는 WORK_21 I 를 D 로 다시 송신. 시편수량은 IO_MOVELOT_TEST_DEL 로 시편창고에서 되돌림 (시편을 이미 썼으면 취소 불가)
 -- Create: 2026-11-12
 -- Modify: 2026-11-23: 시편수량이 있는 입고도 취소 가능
+-- Modify: 2026-11-27 김영철 무상사급 납품(03) 입고 취소 시 ERP 전송 여부와 상관없이 취소 가능, WORK_21 D 송신 (기존: 미전송 행 삭제, 전송된 입고는 취소 불가)
 -- *****************************************************************************
   IN $INVOICEKEY      VARCHAR(50)
 -- *****************************************************************************
@@ -37,12 +38,6 @@ IF IFNULL(@ERRMSG, '') = '' THEN
 
     IF EXISTS (SELECT 1 FROM MSTMAGAM_PRD WHERE MSTMAGAM_PRD.BDVCD = '71' AND MSTMAGAM_PRD.EDT = _$MAGAMDT) THEN
       CALL COMERR(CONCAT('ERP에서 마감된 일자 입니다. (', _$MAGAMDT, ')'));
-      LEAVE PROC;
-    END IF;
-
-    IF EXISTS (SELECT 1 FROM IF_MES_SNS_FAC2.FAC2_ERP_IF_WORK AS W
-                WHERE W.MOVENO = CONCAT('2MES', $INVOICEKEY) AND W.IF_YN <> 'N') THEN
-      CALL COMERR('이미 ERP 로 전송된 입고는 취소할 수 없습니다.');
       LEAVE PROC;
     END IF;
 
@@ -80,8 +75,12 @@ IF IFNULL(@ERRMSG, '') = '' THEN
 
     DELETE FROM COMOUT WHERE INVOICEKEY = $INVOICEKEY AND OUTTP = '82';
 
-    DELETE FROM IF_MES_SNS_FAC2.FAC2_ERP_IF_WORK
-     WHERE MOVENO = CONCAT('2MES', $INVOICEKEY) AND IF_YN = 'N';
+    -- ERP 인터페이스 (외주입고 WORK_21 취소 : 송신한 I 를 D 로 다시 송신)
+    CALL IO_ERP_INTERFACE('WORK_DEL', $INVOICEKEY, 'D');
+
+    IF IFNULL(@ERRMSG, '') <> '' THEN
+      LEAVE PROC;
+    END IF;
   END IF;
 
   -- 입고이력 별 취소 (입고창고 재고·입고이력 삭제, 유상사급 01 은 ERP DLV 취소 포함)

@@ -3,8 +3,9 @@ PROCEDURE MES_SNS2.IO_MOVELOT_WARE_DEL(
 -- *****************************************************************************
 -- Comment: LOT 창고이동 삭제 (IO_MOVELOT_WARE 로 만든 이동 1건 = GROUPKEY 단위를 되돌림)
 --          입고창고에서 이동량을 빼 출고창고로 돌려놓고, 출고·입고 이력(COMOUT·COMOUTLOT·COMIN·COMINLOT) 삭제
---          ERP 로 아직 안 넘어간(IF_YN = 'N') 송신 행은 같이 지우고, 이미 넘어간 이동은 삭제할 수 없음
+--          ERP 로는 송신한 I 행을 D 로 다시 송신 (IO_ERP_INTERFACE WORK_DEL)
 -- Create: 2026-11-12
+-- Modify: 2026-11-27 김영철 ERP 전송 여부와 상관없이 삭제 가능, 삭제 시 D 송신 (기존: 미전송 행은 삭제, 전송된 이동은 삭제 불가)
 -- *****************************************************************************
   IN $GROUPKEY_LIST   MEDIUMTEXT      -- 삭제할 이동 GROUPKEY 목록 (COMSPLIT 구분자)
 -- *****************************************************************************
@@ -59,13 +60,6 @@ IF IFNULL(@ERRMSG, '') = '' THEN
 
       IF EXISTS (SELECT 1 FROM MSTMAGAM_PRD WHERE MSTMAGAM_PRD.BDVCD = '71' AND MSTMAGAM_PRD.EDT = _$MAGAMDT) THEN
         CALL COMERR(CONCAT('ERP에서 마감된 일자 입니다. (', _$MAGAMDT, ')'));
-        LEAVE PROC;
-      END IF;
-
-      -- ERP 로 이미 넘어간 이동은 삭제 불가
-      IF EXISTS (SELECT 1 FROM IF_MES_SNS_FAC2.FAC2_ERP_IF_WORK AS W
-                  WHERE W.MOVENO = CONCAT('2MES', _$GROUPKEY) AND W.IF_YN <> 'N') THEN
-        CALL COMERR('이미 ERP 로 전송된 이동은 삭제할 수 없습니다.');
         LEAVE PROC;
       END IF;
 
@@ -131,10 +125,12 @@ IF IFNULL(@ERRMSG, '') = '' THEN
 
       DELETE FROM COMIN WHERE COMIN.GROUPKEY = _$GROUPKEY;
 
-      -- ERP 송신 행 (아직 안 넘어간 것) 삭제
-      DELETE FROM IF_MES_SNS_FAC2.FAC2_ERP_IF_WORK
-       WHERE MOVENO = CONCAT('2MES', _$GROUPKEY)
-         AND IF_YN = 'N';
+      -- ERP 인터페이스 (창고이동 삭제 : 송신한 I 를 D 로 다시 송신)
+      CALL IO_ERP_INTERFACE('WORK_DEL', _$GROUPKEY, 'D');
+
+      IF IFNULL(@ERRMSG, '') <> '' THEN
+        LEAVE PROC;
+      END IF;
 
       SET _$CNT = _$CNT + 1;
     END IF;

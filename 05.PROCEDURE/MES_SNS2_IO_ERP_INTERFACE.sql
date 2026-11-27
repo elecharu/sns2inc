@@ -18,6 +18,9 @@ PROCEDURE MES_SNS2.IO_ERP_INTERFACE(
 --                      유상사급 자재입고확인 CSM(2CM + 이동 GROUPKEY), 유상사급 자재반출 CSM_RETURN 추가. 반출 중 납품 삭제 DLV D 는 송신 안 함(@ERP_SKIP_DLV_D)
 -- Modify: 2026-11-23 : 유상사급 납품등록이 거래명세서를 만들지 않으므로 DLV(입고 때 송신)·CSM·CSM_RETURN 의 납품번호를 자재이동 거래명세서(05) 기준(2MES + 거래명세서번호)으로 변경
 -- Modify: 2026-11-24 : 마감 확인 누락 보완 - DLV_INV(납품일자), CSM_RETURN(반출일자)
+-- Modify: 2026-11-27 김영철 DLV·DLV_INV 의 FACTORYCD 를 거래처코드(외주처)에서 공장코드 '07' 로 수정 (외주처는 CUSTCD 칸에 이미 송신)
+-- Modify: 2026-11-27 김영철 창고이동·외주간이동 삭제 시 D 송신 추가 (WORK_DEL : 송신한 I 행을 D 로 다시 송신)
+-- Modify: 2026-11-27 김영철 외주입고 취소(WORK_21)도 WORK_DEL 로 D 송신 (IO_MTRINVOICE_CANCEL)
 -- *****************************************************************************
   IN $INTERFACENAME VARCHAR(20),  -- INTERFACE 호출명
   IN $KEY           VARCHAR(100), -- KEY
@@ -110,7 +113,7 @@ WHEN $INTERFACENAME = 'DLV' THEN -- 외주처 원자재 납품 (KEY = 입고번�
     IF_TYPE, IF_YN, IF_TIME
   )
   SELECT
-    HEADER.CUSTCD_GIVER,                         -- 외주처 (납품한 곳)
+    '07',                                        -- INC 2공장 (외주처는 CUSTCD 칸)
     CONCAT('2MES', HEADER.INVOICEKEY),           -- 1&2공장 구분을 위해 앞에 2MES
     T.SQ,                                        -- 거래명세서 전체 기준 순번
     LEFT(IFNULL(MTRCUSTLOT.PRDDATE, HEADER.INVOICEDATE), 10),   -- 납품일자 = 납품 LOT 의 납품(출하)일자
@@ -164,7 +167,7 @@ WHEN $INTERFACENAME = 'DLV_INV' THEN -- 무상사급 구매(MM100910) 납품등�
     IF_TYPE, IF_YN, IF_TIME
   )
   SELECT
-    HEADER.CUSTCD_GIVER,
+    '07',                                        -- INC 2공장 (외주처는 CUSTCD 칸)
     CONCAT('2MES', HEADER.INVOICEKEY),
     ROW_NUMBER() OVER(ORDER BY D.ITEMID, D.LOTKEY),   -- 입고확인(PUR)의 DLV_SQ 와 같은 순번
     LEFT(HEADER.INVOICEDATE, 10),
@@ -992,6 +995,33 @@ WHEN $INTERFACENAME = 'WORK_21' THEN -- 창고이동 21 외주입고 (무상사�
          AND IFNULL(DTL.LOTTP, '') <> '02'
     ) AS T
    ORDER BY T.LOTKEY, T.RN;
+
+-- ****************************************************************************
+-- CALL PROC
+-- IO_MOVELOT_WARE_DEL : D (KEY = 이동 GROUPKEY), IO_MOVELOT_OSC_DEL : D (KEY = 거래명세서번호), IO_MTRINVOICE_CANCEL : D (KEY = 거래명세서번호, 외주입고 WORK_21 취소)
+WHEN $INTERFACENAME = 'WORK_DEL' THEN -- 창고이동(WORK) 삭제 : 이미 송신한 I 행을 그대로 D 로 다시 송신 (MOV_BC/ENT_BC 등 구분값이 I 와 같음)
+                                      --   송신한 I 가 없는 이동(ERP 송신 대상이 아닌 이동)은 송신하지 않음. 이미 D 를 보낸 I 는 다시 보내지 않음
+
+  -- 같은 번호로 입고·취소를 반복할 수 있으므로(외주입고 취소 후 재입고), 마지막 D 이후에 보낸 I 만 D 로 보냄
+  INSERT INTO IF_MES_SNS_FAC2.FAC2_ERP_IF_WORK (
+    OUTFACTORY, INFACTORY, MOVENO, MOVESEQ, OUTDT,
+    OUTWARE, INWARE, ITEMID, LOTKEY, ITEMUNIT,
+    OUTQTY, CUSTCD, REMARK, REMP, MOV_BC, ENT_BC, LOCATION,
+    IF_TYPE, IF_YN, IF_TIME
+  )
+  SELECT
+    W.OUTFACTORY, W.INFACTORY, W.MOVENO, W.MOVESEQ, W.OUTDT,
+    W.OUTWARE, W.INWARE, W.ITEMID, W.LOTKEY, W.ITEMUNIT,
+    W.OUTQTY, W.CUSTCD, W.REMARK, W.REMP, W.MOV_BC, W.ENT_BC, W.LOCATION,
+    'D', 'N', GETTIME()
+    FROM IF_MES_SNS_FAC2.FAC2_ERP_IF_WORK AS W
+   WHERE W.MOVENO = CONCAT('2MES', $KEY)
+     AND W.IF_TYPE = 'I'
+     AND W.IF_KEY > IFNULL((SELECT MAX(D.IF_KEY)
+                              FROM IF_MES_SNS_FAC2.FAC2_ERP_IF_WORK AS D
+                             WHERE D.MOVENO = W.MOVENO AND D.IF_TYPE = 'D'), 0)
+   ORDER BY W.IF_KEY;
+
 -- ****************************************************************************
 ELSE
   CALL COMERR(CONCAT('정의되지 않은 인터페이스 입니다. : ', IFNULL($INTERFACENAME, '')));

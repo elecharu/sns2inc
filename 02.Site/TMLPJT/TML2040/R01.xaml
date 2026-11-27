@@ -8,119 +8,272 @@
       xmlns:local="clr-namespace:TML2040"
       xmlns:its="clr-namespace:ITSLIB;assembly=ITSLIB"
       Width="1176" Height="576">
-    <Canvas Background="Silver">
-        <!--2026-11-27 라인 버튼 목록 조회조건: 작업장·공정 선택 → [라인 조회] → 아래에 라인 버튼 → 라인을 골라 비가동 등록-->
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
-            <its:WrapContent x:Name="PANEL_B3" Width="980" Height="40">
-                <its:Combo Label="작업장" LabelWidth="60" Width="260" GPCD="LINECD" Value="{Binding LINECD}" REF01="07"/>
-                <its:Combo Label="공정" LabelWidth="45" Width="260" GPCD="PRCCD_LINE" Value="{Binding PRCCD}"/>
-                <its:Button Label="라인 조회" Width="150" Height="35" FontSize="15" CommandName="SEARCH_LINE" BackColor="BLACK"/>
-            </its:WrapContent>
-        </UserControl>
+    <Canvas Background="Silver">   <!--2026-11-27 색은 현장프로그램 공통(생산실적등록 TML2010 등)에 맞춤: 바탕 Silver, 판넬 #F5F5F5, 기본 버튼 파랑 #4472C4, 제목 남색 #262938-->
+        <!--2026-11-27 화면 B안: 위 조회조건 카드 / 왼쪽 생산라인 목록 카드 / 오른쪽 비가동 이력 카드
+            작업장·공정을 바꿀 때마다 왼쪽 라인 목록을 다시 조회 (작업장이 있어야 조회) → 라인을 골라 비가동 등록·조회-->
 
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="40">
-            <its:ButtonList x:Name="EQM_LIST" PanelWidth="980" Height="105"/>
-        </UserControl>
+        <!--조회조건 카드: 작업장·공정(라인 목록 조건) + 조회기간(비가동 이력)-->
+        <Border Canvas.Left="6" Canvas.Top="6" Width="1164" Height="48" Background="#F5F5F5" CornerRadius="6" BorderBrush="#A9A9A9" BorderThickness="1">
+            <DockPanel Margin="6,0,6,0">
+                <its:WrapContent x:Name="PANEL_B2" DockPanel.Dock="Right" Width="470" Height="34" VerticalAlignment="Center">   <!--2026-11-27 카드 안 세로 가운데-->
+                    <its:Date Label="조회기간" Value="{Binding SDATE}"/>
+                    <TextBlock Text="~" FontSize="16" Margin="4,0,4,0"/>
+                    <its:Date HidenLabel="Y" Value="{Binding EDATE}"/>
+                </its:WrapContent>
+                <!--2026-11-27 생산실적등록(TML2010)에서 [비가동 등록]으로 넘어왔을 때만 보임: 누르면 생산실적등록 화면으로 돌아감-->
+                <its:WrapContent x:Name="PANEL_BACK" DockPanel.Dock="Left" Width="186" Height="40" VerticalAlignment="Center" Visibility="Collapsed">
+                    <its:Button x:Name="BTN_BACK" Label="◀ 생산실적등록으로" Width="180" Height="38" SetFontSize="15" CommandName="GO_BACK"/>
+                </its:WrapContent>
+                <!--2026-11-27 폭 560→490: 돌아가기 버튼(186)이 보일 때 조회기간(470)과 겹치지 않게 (카드 안쪽 폭 1152)-->
+                <its:WrapContent x:Name="PANEL_B3" Width="490" Height="34" VerticalAlignment="Center">
+                    <its:Combo Label="작업장" LabelWidth="60" Width="240" GPCD="LINECD" Value="{Binding LINECD}" REF01="07"/>
+                    <its:Combo Label="공정" LabelWidth="45" Width="240" GPCD="PRCCD_LINE" Value="{Binding PRCCD}"/>
+                </its:WrapContent>
+            </DockPanel>
+        </Border>
 
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="145">
-            <its:WrapContent x:Name="PANEL_B1" Width="980" Height="40">
-                
-                <its:Button Label="비가동조회" Width="150" Height="35" FontSize="15" CommandName="SEARCH_WORK" BackColor="BLACK"/>
-                <its:Button Label="비가동추가" Width="150" Height="35" FontSize="15" CommandName="ADD" BackColor="SEAGREEN" Visibility="Collapsed"/>
-                <its:Button Label="비가동수정" Width="150" Height="35" FontSize="15" CommandName="UPDATE"/>
-                <its:Button Label="삭  제" Width="150" Height="35" CommandName="DELETE" FontSize="15" BackColor="IndianRed"/>
-                <its:Button Label="문제점 / 조치사항" CommandName="ERR" FontSize="15" Width="200" Height="35" BackColor="PURPLE"/>   <!--2026-11-27 명칭 변경 (고장내용 → 문제점, 수리내역상세 → 조치사항)-->
-            </its:WrapContent>
-        </UserControl>
+        <!--생산라인 목록 카드 (세로 목록, 고른 라인은 파란색, 진행 중 비가동이 있으면 빨간 점)-->
+        <Border Canvas.Left="6" Canvas.Top="60" Width="270" Height="510" Background="#F5F5F5" CornerRadius="6" BorderBrush="#A9A9A9" BorderThickness="1">
+            <DockPanel Margin="8">
+                <DockPanel DockPanel.Dock="Top" Margin="2,0,2,6">
+                    <TextBlock x:Name="TXT_LINECNT" DockPanel.Dock="Right" FontSize="13" Foreground="#555555" VerticalAlignment="Center"/>
+                    <TextBlock Text="생산라인" FontSize="15" FontWeight="Bold" Foreground="#262938"/>
+                </DockPanel>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="LINE_LIST"/>
+                </ScrollViewer>
+            </DockPanel>
+        </Border>
 
-        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="182">
-            <its:WrapContent x:Name="PANEL_B2" Width="980" Height="40">
-                <!--2026-11-27 비가동 이력 조회기간 (시작~종료, 비가동 시작시간 기준)-->
-                
-                <its:Date Label="조회기간" Value="{Binding SDATE}"/>
-                <TextBlock Text="~" FontSize="16" Margin="4,8,4,0"/>
-                <its:Date HidenLabel="Y" Value="{Binding EDATE}"/>
-            </its:WrapContent>
-        </UserControl>
+        <!--비가동 이력 카드: 고른 라인 요약 + 작업 버튼 + 이력 그리드-->
+        <Border Canvas.Left="282" Canvas.Top="60" Width="888" Height="510" Background="#F5F5F5" CornerRadius="6" BorderBrush="#A9A9A9" BorderThickness="1">
+            <DockPanel Margin="8">
+                <DockPanel DockPanel.Dock="Top" Height="50">
+                    <its:WrapContent x:Name="PANEL_B1" DockPanel.Dock="Right" Width="680" Height="48">
+                        <its:Button Label="비가동 시작" Width="130" Height="44" SetFontSize="15" CommandName="START_POP"/>   <!--2026-11-27 비가동추가 → 비가동 시작 (생산실적등록 비가동 팝업과 같은 방식)-->
+                        <its:Button Label="비가동종료" Width="115" Height="44" SetFontSize="15" CommandName="END_SEL"/>   <!--2026-11-27 고른 진행 중 비가동 종료 (비가동코드 선택)-->
+                        <its:Button Label="수정" Width="80" Height="44" SetFontSize="15" CommandName="UPDATE" BackColor="GRAY"/>
+                        <its:Button Label="분할" Width="80" Height="44" SetFontSize="15" CommandName="SPLIT_POP" BackColor="GRAY"/>   <!--2026-11-27 종료된 비가동을 분할 시각으로 2건-->
 
-        <!--비가동 이력 그리드-->
-        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="215">
-            <Grid>
-                <its:Grid x:Name="GRID_G1" Width="980" Height="360">
-                    <!--<its:Column Width="50" Header="선택" IsRowCheck="True"/>-->
+                        <its:Button Label="문제점·조치사항" Width="150" Height="44" SetFontSize="15" CommandName="ERR" BackColor="GRAY"/>   <!--2026-11-27 명칭 변경 (고장내용 → 문제점, 수리내역상세 → 조치사항)-->
+                        <its:Button Label="삭제" Width="80" Height="44" SetFontSize="15" CommandName="DELETE" BackColor="RED"/>
+                    </its:WrapContent>
+                    <StackPanel VerticalAlignment="Center" Margin="4,0,0,0">
+                        <TextBlock x:Name="TXT_LINENM" FontSize="18" FontWeight="Bold" Foreground="#262938" Text="라인을 선택하세요" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock x:Name="TXT_NONSUM" FontSize="13" Foreground="#555555"/>
+                    </StackPanel>
+                </DockPanel>
+                <!--비가동 이력 그리드 (진행 중인 비가동은 빨간 글자)-->
+                <its:Grid x:Name="GRID_G1" Margin="0,6,0,0">
                     <its:Column Width="90" Header="설비코드" FieldName="EQMCD" Visible="False"/>
-                    <its:Column Width="120" Header="라인" FieldName="EQMNM"/>                    
+                    <its:Column Width="120" Header="라인" FieldName="EQMNM" Visible="False"/>
                     <its:Column Width="130" Header="시작시간" FieldName="NONSTIME" ALGIN="CENTER"/>
                     <its:Column Width="130" Header="종료시간" FieldName="NONETIME" ALGIN="CENTER"/>
                     <its:Column Width="80" Header="비가동시간" FieldName="NONTIME" ALGIN="CENTER"/>
                     <its:Column Width="80" Header="비가동코드" FieldName="NONCD" Visible="False"/>
-                    <its:Column Width="85" Header="비가동명" FieldName="NONNM"/>
+                    <its:Column Width="100" Header="비가동명" FieldName="NONNM"/>
                     <its:Column Width="100" Header="작업키" FieldName="PRDWORKKEY" Visible="False"/>
                     <its:Column Width="80" Header="비가동유형" FieldName="NONTP"/>
-                    <its:Column Width="100" Header="문제점" FieldName="PROBLEM"/>
-                    <its:Column Width="100" Header="조치사항" FieldName="SOLUTION"/>
-                    <its:Column Width="100" Header="비가동키" FieldName="PRDNONKEY"/>
+                    <its:Column Width="170" Header="문제점" FieldName="PROBLEM"/>
+                    <its:Column Width="170" Header="조치사항" FieldName="SOLUTION"/>
+                    <its:Column Width="100" Header="비가동키" FieldName="PRDNONKEY" Visible="False"/>
                 </its:Grid>
-            </Grid>
-        </UserControl>
+            </DockPanel>
+        </Border>
 
-        <!--비가동 유형선택 팝업-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="288" Canvas.Top="1" Visibility="Collapsed">
-            <its:WrapContent x:Name="PANEL_A1" Width="400" Height="450">
+        <!--2026-11-27 버튼 색은 3가지: 파랑(실행, 기본색) · 회색(보조·닫기) · 빨강(삭제). 팝업 새 모양 (메인 화면과 같은 색: 바탕 #F5F5F5, 흰 구역 칸, 고른 버튼 파랑 #4472C4, 아래 오른쪽 [닫기]+실행 버튼)-->
+
+        <!--비가동 수정 팝업 (종료된 비가동의 유형·코드)-->
+        <UserControl x:Name="POPUP_A1" Style="{DynamicResource TML_POP}" Canvas.Left="268" Canvas.Top="20" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A1" Width="640" Height="500">
                 <its:Text Label="비가동키" Value="{Binding PRDNONKEY}" Visibility="Collapsed"/>
-                <its:Date Label="시작시간" Value="{Binding NONSDAY}" ReadOnly="True"/>
-                <its:Time HidenLabel="Y" Value="{Binding NONSTIME}" ReadOnly="True"/>
-                <its:Date Label="종료시간" Value="{Binding NONEDAY}" ReadOnly="True"/>
-                <its:Time HidenLabel="Y" Value="{Binding NONETIME}" ReadOnly="True"/>
-                <its:Pop Label="상세설비" Width="325" Value="{Binding FANO}" GPCD="EQMFANO"/>
-                <its:ButtonList x:Name="NONTP_LIST" PanelWidth="400" Height="160"/>
-                <UserControl Width="5000" Height="1" Background="Black"/>
-                <its:ButtonList x:Name="NONCD_LIST" PanelWidth="400" Height="160"/>
-                <its:Button Label="등    록" FontSize="14" Width="400" Height="43" x:Name="btnPOP" CommandName="ADD_NON"/>
+                <StackPanel Width="630" Margin="5,6,5,0">
+                    <Border Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel Margin="0,0,16,0">
+                                <TextBlock Text="시작시간" FontSize="12" FontWeight="Bold" Foreground="#555555"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <its:Date HidenLabel="Y" Value="{Binding NONSDAY}" ReadOnly="True"/>
+                                    <its:Time HidenLabel="Y" Value="{Binding NONSTIME}" ReadOnly="True"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Margin="0,0,16,0">
+                                <TextBlock Text="종료시간" FontSize="12" FontWeight="Bold" Foreground="#555555"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <its:Date HidenLabel="Y" Value="{Binding NONEDAY}" ReadOnly="True"/>
+                                    <its:Time HidenLabel="Y" Value="{Binding NONETIME}" ReadOnly="True"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="비가동시간" FontSize="12" FontWeight="Bold" Foreground="#555555"/>
+                                <TextBlock x:Name="TXT_A1MIN" FontSize="20" FontWeight="Bold" Foreground="#262938" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="비가동유형" FontSize="12" FontWeight="Bold" Foreground="#555555" Margin="0,0,0,4"/>
+                            <its:ButtonList x:Name="NONTP_LIST" PanelWidth="560" Width="600" Height="66" ButtonBackColor="#8C97AB" ButtonSelectBackColor="#4472C4"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="비가동코드" FontSize="12" FontWeight="Bold" Foreground="#555555" Margin="0,0,0,4"/>
+                            <its:ButtonList x:Name="NONCD_LIST" PanelWidth="560" Width="600" Height="228" ButtonBackColor="#8C97AB" ButtonSelectBackColor="#4472C4"/>
+                        </StackPanel>
+                    </Border>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <its:Button Label="닫기" Width="100" Height="42" SetFontSize="15" CommandName="CLOSE_A1" BackColor="GRAY"/>
+                        <its:Button Label="수정 저장" Width="140" Height="42" SetFontSize="15" x:Name="btnPOP" CommandName="ADD_NON"/>
+                    </StackPanel>
+                </StackPanel>
             </its:WrapContent>
         </UserControl>
 
-        <!--비가동 시작종료-->
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="188" Canvas.Top="1" Visibility="Collapsed">
-            <its:WrapContent x:Name="PANEL_A3" Width="600" Height="450">
-                <UserControl Width="3000" Height="3"/>
-                <its:Date Label="시작시간" Value="{Binding NONSDAY}"  />
-                <its:Time HidenLabel="Y" Value="{Binding NONSTIME}"  ShowSecond="Y" />
-                <its:Button Label="시  작" x:Name="BTN_START" CommandName="START" Width="70" Height="35"/>
-                <its:ButtonList x:Name="SE_NONTP_LIST" PanelWidth="500" Height="100" Width="600"/>
-                <UserControl Width="600" Height="2" Background="Black"/>
-                <UserControl Height="10"/>
-                <its:ButtonList x:Name="SE_NONCD_LIST" PanelWidth="500" Height="150" Width="600"/>
-                <UserControl Width="3000" Height="55"/>
-                <its:Text Label="비  고" x:Name="SE_REMARK" Value="{Binding REMARK}" Width="305"/>
-                <UserControl Width="33"/>
-                <UserControl Width="3000"/>
-                <its:Date Label="종료시간" Value="{Binding NONEDAY}" />
-                <its:Time HidenLabel="Y" Value="{Binding NONETIME}"  ShowSecond="Y"/>
-                <its:Button Label="종  료" x:Name="BTN_END" CommandName="END" Width="70" Height="35" BackColor="IndianRed"/>
+        <!--문제점 · 조치사항 팝업-->
+        <UserControl x:Name="POPUP_A4" Style="{DynamicResource TML_POP}" Canvas.Left="288" Canvas.Top="90" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A4" Width="600" Height="320">
+                <StackPanel Width="590" Margin="5,6,5,0">
+                    <Border Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="10,7" Margin="0,0,0,8">
+                        <TextBlock x:Name="TXT_ERRINFO" FontSize="14" Foreground="#262938" TextTrimming="CharacterEllipsis"/>
+                    </Border>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="10,6">
+                            <StackPanel>
+                                <TextBlock Text="문제점" FontSize="14" FontWeight="Bold" Foreground="#262938" Margin="0,0,0,4"/>
+                                <TextBox Height="160" x:Name="PROB" FontSize="14" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Text="{Binding PROBLEM}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="2" Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="10,6">
+                            <StackPanel>
+                                <TextBlock Text="조치사항" FontSize="14" FontWeight="Bold" Foreground="#262938" Margin="0,0,0,4"/>
+                                <TextBox Height="160" x:Name="SOL" FontSize="14" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Text="{Binding SOLUTION}"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <its:Button Label="닫기" Width="100" Height="42" SetFontSize="15" CommandName="CLOSE_A4" BackColor="GRAY"/>
+                        <its:Button Label="저장" Width="120" Height="42" SetFontSize="15" CommandName="SAVE_ERR"/>
+                    </StackPanel>
+                </StackPanel>
             </its:WrapContent>
         </UserControl>
 
-        <UserControl Style="{DynamicResource TML_POP}" Canvas.Left="238" Canvas.Top="101" Visibility="Collapsed">
-            <its:WrapContent x:Name="PANEL_A4" Width="500" Height="250">
-                <UserControl Width="5000" Height="5"/>
-                <UserControl Width="10"/>
-                <Label Content="문제점" Width="230" HorizontalContentAlignment="Center" HorizontalAlignment="Left"
-                       FontSize="20" Foreground="Red" FontWeight="Heavy"/>
-                <UserControl Width="10"/>
-                <Label Content="조치사항" Width="250" HorizontalContentAlignment="Center" HorizontalAlignment="Right"
-                       FontSize="20" Foreground="Purple" FontWeight="Heavy"/>
-                <UserControl Width="5000"/>
-                <UserControl Width="10"/>
-
-                <TextBox Width="230" Height="150" x:Name="PROB" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Text="{Binding PROBLEM}"/>
-                <UserControl Width="20"/>
-                <TextBox Width="230" Height="150" x:Name="SOL" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Text="{Binding SOLUTION}"/>
-
-                <UserControl Width="5000" Height="15"/>
-                <UserControl Width="150"/>
-                <its:Button Label="저  장" CommandName="SAVE_ERR" Width="200" Height="40"/>
+        <!--비가동 시작·종료 팝업 (한 팝업, 모드에 따라 위 시간 칸과 아래 버튼만 바뀜)
+            시작: 시작시간(기본 지금) + 비가동유형·코드(코드는 종료 때 골라도 됨) + 비고 → [시작]
+            종료: 그리드에서 진행 중 비가동 선택 → 시작시간 → 종료시간(기본 지금)·경과, 유형·코드 바꿀 수 있음 → [종료]-->
+        <UserControl x:Name="POPUP_A5" Style="{DynamicResource TML_POP}" Canvas.Left="268" Canvas.Top="2" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A5" Width="640" Height="545">   <!--2026-11-27 비가동코드 3줄 보이게 (코드 칸 120 → 228)-->
+                <StackPanel Width="630" Margin="5,6,5,0">
+                    <Border Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel>
+                                <TextBlock x:Name="TXT_STARTLBL" Text="시작시간" FontSize="12" FontWeight="Bold" Foreground="#555555"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <its:Date HidenLabel="Y" Value="{Binding NONSDAY}"/>
+                                    <its:Time HidenLabel="Y" Value="{Binding NONSTIME}" ShowSecond="Y"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock x:Name="TXT_ARROW" Text="→" FontSize="20" Foreground="#999999" Margin="10,18,10,0"/>
+                            <StackPanel x:Name="END_TIME_BOX">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="종료시간 (기본 지금)" FontSize="12" FontWeight="Bold" Foreground="#555555"/>
+                                    <!--2026-11-27 경과는 종료시간 제목 옆에 (오른쪽 끝에 두면 글자가 잘림)-->
+                                    <StackPanel x:Name="ELAPSED_BOX" Orientation="Horizontal" Margin="12,0,0,0">
+                                        <TextBlock Text="경과 " FontSize="12" FontWeight="Bold" Foreground="#555555"/>
+                                        <TextBlock x:Name="TXT_ELAPSED" FontSize="12" FontWeight="Bold" Foreground="IndianRed"/>
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <its:Date HidenLabel="Y" Value="{Binding NONEDAY}"/>
+                                    <its:Time HidenLabel="Y" Value="{Binding NONETIME}" ShowSecond="Y"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,8">
+                        <StackPanel>
+                            <TextBlock Text="비가동유형" FontSize="12" FontWeight="Bold" Foreground="#555555" Margin="0,0,0,4"/>
+                            <its:ButtonList x:Name="END_NONTP_LIST" PanelWidth="560" Width="600" Height="66" ButtonBackColor="#8C97AB" ButtonSelectBackColor="#4472C4"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,8">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="비가동코드" FontSize="12" FontWeight="Bold" Foreground="#555555"/>
+                                <TextBlock x:Name="TXT_CODENOTE" Text="  (시작 때는 비워도 됨)" FontSize="11" Foreground="#777777"/>
+                            </StackPanel>
+                            <its:ButtonList x:Name="END_NONCD_LIST" PanelWidth="560" Width="600" Height="228" ButtonBackColor="#8C97AB" ButtonSelectBackColor="#4472C4"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="10,4" Margin="0,0,0,8">
+                        <its:Text Label="비고" LabelWidth="40" Value="{Binding REMARK}" Width="600"/>
+                    </Border>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <its:Button Label="닫기" Width="100" Height="42" SetFontSize="15" CommandName="CLOSE_A5" BackColor="GRAY"/>
+                        <its:Button Label="시작" x:Name="BTN_NONSTART" Width="120" Height="42" SetFontSize="15" CommandName="START_SAVE"/>
+                        <its:Button Label="종료" x:Name="BTN_NONEND" Width="120" Height="42" SetFontSize="15" CommandName="END_SEL_SAVE"/>
+                    </StackPanel>
+                </StackPanel>
             </its:WrapContent>
         </UserControl>
+
+        <!--2026-11-27 비가동 분할 팝업: 종료된 비가동을 분할 시각 하나로 앞쪽·뒤쪽 2건, 각각 유형·코드 선택 (문제점·조치사항·비고는 앞쪽에만)-->
+        <UserControl x:Name="POPUP_A6" Style="{DynamicResource TML_POP}" Canvas.Left="228" Canvas.Top="10" Visibility="Collapsed">
+            <its:WrapContent x:Name="PANEL_A6" Width="720" Height="520">
+                <StackPanel Width="710" Margin="5,6,5,0">
+                    <Border Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="10,6" Margin="0,0,0,8">
+                        <StackPanel Orientation="Horizontal">
+                            <StackPanel Margin="0,0,24,0">
+                                <TextBlock Text="원래 비가동" FontSize="12" FontWeight="Bold" Foreground="#555555"/>
+                                <TextBlock x:Name="TXT_SPLINFO" FontSize="14" FontWeight="Bold" Foreground="#262938" Margin="0,6,0,0"/>
+                            </StackPanel>
+                            <StackPanel>
+                                <TextBlock Text="분할 시각" FontSize="12" FontWeight="Bold" Foreground="#555555"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <its:Date HidenLabel="Y" Value="{Binding SPLDAY}"/>
+                                    <its:Time HidenLabel="Y" Value="{Binding SPLTIME}" ShowSecond="Y"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="8,6">
+                            <StackPanel>
+                                <TextBlock x:Name="TXT_SPL1" FontSize="13" FontWeight="Bold" Foreground="#262938" Margin="0,0,0,4"/>
+                                <TextBlock Text="비가동유형" FontSize="12" FontWeight="Bold" Foreground="#555555" Margin="0,0,0,2"/>
+                                <its:ButtonList x:Name="SPL_TP1" PanelWidth="300" Width="335" Height="66" ButtonBackColor="#8C97AB" ButtonSelectBackColor="#4472C4"/>
+                                <TextBlock Text="비가동코드" FontSize="12" FontWeight="Bold" Foreground="#555555" Margin="0,4,0,2"/>
+                                <its:ButtonList x:Name="SPL_CD1" PanelWidth="300" Width="335" Height="228" ButtonBackColor="#8C97AB" ButtonSelectBackColor="#4472C4"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="2" Background="White" BorderBrush="#D6D6D6" BorderThickness="1" CornerRadius="6" Padding="8,6">
+                            <StackPanel>
+                                <TextBlock x:Name="TXT_SPL2" FontSize="13" FontWeight="Bold" Foreground="#262938" Margin="0,0,0,4"/>
+                                <TextBlock Text="비가동유형" FontSize="12" FontWeight="Bold" Foreground="#555555" Margin="0,0,0,2"/>
+                                <its:ButtonList x:Name="SPL_TP2" PanelWidth="300" Width="335" Height="66" ButtonBackColor="#8C97AB" ButtonSelectBackColor="#4472C4"/>
+                                <TextBlock Text="비가동코드" FontSize="12" FontWeight="Bold" Foreground="#555555" Margin="0,4,0,2"/>
+                                <its:ButtonList x:Name="SPL_CD2" PanelWidth="300" Width="335" Height="228" ButtonBackColor="#8C97AB" ButtonSelectBackColor="#4472C4"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <its:Button Label="닫기" Width="100" Height="42" SetFontSize="15" CommandName="CLOSE_A6" BackColor="GRAY"/>
+                        <its:Button Label="분할 저장" Width="140" Height="42" SetFontSize="15" CommandName="SPLIT_SAVE"/>
+                    </StackPanel>
+                </StackPanel>
+            </its:WrapContent>
+        </UserControl>
+
     </Canvas>
 </its:ItsPageTml>

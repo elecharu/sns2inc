@@ -52,6 +52,43 @@
         </UserControl>
     </Canvas>
     </TabItem>
+    <!-- 2026-11-27 [재발행] 이동 건 목록 (이동 1건 = 1줄), 체크한 이동 건마다 재고이동표를 다시 출력 (등록 때와 같은 양식 MTR_5) -->
+    <TabItem Height="25">
+    <TabItem.Header><TextBlock Text="  재발행  " FontSize="14" FontWeight="Bold"/></TabItem.Header>
+    <Canvas Background="Silver">
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="0" Canvas.Top="0">
+            <its:WrapContent x:Name="PANEL_S3" Width="1176" Height="58">
+                <its:Date Label="이동일자" LabelWidth="70" Width="230" Value="{Binding SDATE}"/>
+                <its:Date HidenLabel="Y" Width="160" Value="{Binding EDATE}"/>
+                <UserControl Width="20"/>
+                <its:Button Label="조 회" Width="120" Height="45" FontWeight="Bold" CommandName="SEARCH_REPRINT" BackColor="SteelBlue"/>
+            </its:WrapContent>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_GRID}" Canvas.Left="0" Canvas.Top="58">
+            <its:Grid x:Name="GRID_G3" Width="1056" Height="493">
+                <its:Grid.Columns>
+                    <its:Column Width="45" Header="선택" CellType="Check" FieldName="ISCHECKED" IsRowCheck="True"/>
+                    <its:Column Width="110" Header="이동일자" FieldName="MOVEDATE" ALGIN="Center"/>
+                    <its:Column Width="170" Header="출고창고" FieldName="OUTWARENM" ALGIN="Center"/>
+                    <its:Column Width="170" Header="입고창고" FieldName="INWARENM" ALGIN="Center"/>
+                    <its:Column Width="80" Header="LOT 수" FieldName="LOTCNT" DecimalPoint="0"/>
+                    <its:Column Width="110" Header="총 이동량" FieldName="MOVEQTY" DecimalPoint="0"/>
+                    <its:Column Width="100" Header="등록자" FieldName="EMPNM" ALGIN="Center"/>
+                    <its:Column Width="160" Header="등록시간" FieldName="RTIME" ALGIN="Center"/>
+                    <its:Column Width="80" Header="GROUPKEY" FieldName="GROUPKEY" Visible="False"/>
+                </its:Grid.Columns>
+            </its:Grid>
+        </UserControl>
+
+        <UserControl Style="{DynamicResource TML_PANEL}" Canvas.Left="1056" Canvas.Top="58" Width="120" Height="493">
+            <StackPanel Width="100" VerticalAlignment="Bottom" Margin="0,0,0,10">
+                <its:Button Label="재발행" Width="100" Height="55" FontWeight="Bold" CommandName="REPRINT_MOVE" BackColor="Green"/>
+            </StackPanel>
+        </UserControl>
+    </Canvas>
+    </TabItem>
     <!-- [이동내역삭제] 이동 이력 (LOT 행 단위), 체크한 행이 속한 이동 건 삭제 (재고 원복) -->
     <TabItem Height="25">
     <TabItem.Header><TextBlock Text="  이동내역삭제  " FontSize="14" FontWeight="Bold"/></TabItem.Header>

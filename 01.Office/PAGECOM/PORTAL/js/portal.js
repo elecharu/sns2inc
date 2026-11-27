@@ -44,6 +44,20 @@ function login() {
             SET_COOKIE('SAVE_ID', '');
         }
 
+        // 생산 모니터링 : 새 창으로 열고 로그인 화면은 그대로 둔다
+        if ($("input[name='chk_system']:checked").val() == 'PRDMON') {
+            window.open('../MONITOR/PrdMonitor.aspx', 'PrdMonitor', 'width=' + screen.availWidth + ',height=' + screen.availHeight + ',left=0,top=0');
+            $('#login_pw').val('');
+            return;
+        }
+
+        // 2026-11-27 SPC 모니터링(자주검사) : 새 창으로 열고 로그인 화면은 그대로 둔다
+        if ($("input[name='chk_system']:checked").val() == 'SPCMON') {
+            window.open('../MONITOR/SpcMonitor.aspx', 'SpcMonitor', 'width=' + screen.availWidth + ',height=' + screen.availHeight + ',left=0,top=0');
+            $('#login_pw').val('');
+            return;
+        }
+
         location.href = url;
     }
 }

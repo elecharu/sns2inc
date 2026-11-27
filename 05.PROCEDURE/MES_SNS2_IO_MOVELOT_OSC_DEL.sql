@@ -3,8 +3,9 @@ PROCEDURE MES_SNS2.IO_MOVELOT_OSC_DEL(
 -- *****************************************************************************
 -- Comment: 외주간 이동(거래명세서 04) 삭제 - IO_MOVELOT_OSC 로 만든 이동을 되돌림
 --          이동받은 외주창고에서 이동량을 빼 원래 외주창고로 돌려놓고, 출고·입고 이력과 거래명세서 삭제
---          시편수량이 있는 이동(시편창고로 따로 이동됨) 과 ERP 로 이미 넘어간 이동은 삭제 불가
+--          시편수량이 있는 이동(시편창고로 따로 이동됨)은 삭제 불가. ERP 로는 송신한 I 행을 D 로 다시 송신 (IO_ERP_INTERFACE WORK_DEL)
 -- Create: 2026-11-12
+-- Modify: 2026-11-27 김영철 ERP 전송 여부와 상관없이 삭제 가능, 삭제 시 D 송신 (기존: 미전송 행은 삭제, 전송된 이동은 삭제 불가)
 -- *****************************************************************************
   IN $INVOICEKEY   VARCHAR(100)
 -- *****************************************************************************
@@ -49,12 +50,6 @@ IF IFNULL(@ERRMSG, '') = '' THEN
 
   IF EXISTS (SELECT 1 FROM MSTMAGAM_PRD WHERE MSTMAGAM_PRD.BDVCD = '71' AND MSTMAGAM_PRD.EDT = _$MAGAMDT) THEN
     CALL COMERR(CONCAT('ERP에서 마감된 일자 입니다. (', _$MAGAMDT, ')'));
-    LEAVE PROC;
-  END IF;
-
-  IF EXISTS (SELECT 1 FROM IF_MES_SNS_FAC2.FAC2_ERP_IF_WORK AS W
-              WHERE W.MOVENO = CONCAT('2MES', $INVOICEKEY) AND W.IF_YN <> 'N') THEN
-    CALL COMERR('이미 ERP 로 전송된 이동은 삭제할 수 없습니다.');
     LEAVE PROC;
   END IF;
 
@@ -132,9 +127,12 @@ IF IFNULL(@ERRMSG, '') = '' THEN
 
   DELETE FROM COMIN WHERE COMIN.INVOICEKEY = $INVOICEKEY AND COMIN.INTP = '83';
 
-  DELETE FROM IF_MES_SNS_FAC2.FAC2_ERP_IF_WORK
-   WHERE MOVENO = CONCAT('2MES', $INVOICEKEY)
-     AND IF_YN = 'N';
+  -- ERP 인터페이스 (외주간 이동 삭제 : 송신한 I 를 D 로 다시 송신)
+  CALL IO_ERP_INTERFACE('WORK_DEL', $INVOICEKEY, 'D');
+
+  IF IFNULL(@ERRMSG, '') <> '' THEN
+    LEAVE PROC;
+  END IF;
 
   DELETE FROM MTRCUST_INVOICE_DETAIL WHERE INVOICEKEY = $INVOICEKEY;
   DELETE FROM MTRCUST_INVOICE_HEADER WHERE INVOICEKEY = $INVOICEKEY;

@@ -274,6 +274,11 @@ namespace TML2010
                 MODEL_A2.SetRef03("BADCD", MODEL_A2.GetText("BADTP2"));
                 MODEL_A2.SetValue("BADCD", "");
             }
+            else if (fieldName == "BADCD")
+            {   // 2026-11-27 불량코드가 바뀌면 불량상세 목록(생산품 자주검사 기준 중 연결된 검사항목 줄)을 다시 채우고 선택값 비움
+                MODEL_A2.SetRef02("BADDETAIL", MODEL_A2.GetText("BADCD"));
+                MODEL_A2.SetValue("BADDETAIL", "");
+            }
         }
         //비가동 유형 버튼 (TML2040 NontpButton 참고, 라인 대신 작업장 기준)
         private void NontpButton()
@@ -947,6 +952,33 @@ namespace TML2010
         }
 
         //비가동 탭 목록 (LIST_INPUT 은 입력 중인 사용량을 지우므로 따로 조회)
+        // 2026-11-27 다른 현장프로그램 화면으로 이동 (메인 TMLMAIN 의 LoadMenu, 열린 화면은 입력 상태 그대로 유지)
+        //            메뉴에 그 화면이 없으면 LoadMenu 가 아무것도 안 하므로 이동했는지(ActiveTml)로 확인
+        private bool GoMenu(string pName, Dictionary<string, string> param)
+        {
+            // Application.Current.MainWindow 는 로그인 창이다 (로그인 창이 TMLMAIN 을 ShowDialog 로 띄움) → 열린 창 중 LoadMenu 가 있는 창을 찾는다
+            foreach (Window w in Application.Current.Windows)
+            {
+                System.Reflection.MethodInfo m = w.GetType().GetMethod("LoadMenu", new Type[] { typeof(string), typeof(Dictionary<string, string>) });
+                if (m == null) continue;
+                m.Invoke(w, new object[] { pName, param });
+                return ItsElement.ActiveTml == pName;
+            }
+            return false;
+        }
+
+        // 2026-11-27 비가동관리(TML2040)에서 돌아오면 비가동 탭 다시 조회
+        public override void EventMenuParam(Dictionary<string, string> param)
+        {
+            base.EventMenuParam(param);
+            if (param == null) return;
+            if (param.ContainsKey("REFRESH") && param["REFRESH"] == "NON")
+            {
+                NonList();
+                if (param.ContainsKey("MSG") && param["MSG"] != "") ShowMessageBox("", param["MSG"]);
+            }
+        }
+
         private void NonList()
         {
             ItsMaria.Set("TML2010_R01", "LIST_NON");
@@ -1150,6 +1182,9 @@ namespace TML2010
                 MODEL_A2.SetRef01("BADCD", "07");
                 MODEL_A2.SetRef02("BADCD", "");
                 MODEL_A2.SetRef03("BADCD", "");
+                // 2026-11-27 불량상세 목록은 생산품(투입 스캔으로 정해짐)의 자주검사 기준에서
+                MODEL_A2.SetRef01("BADDETAIL", MODEL_S1.GetText("ITEMID"));
+                MODEL_A2.SetRef02("BADDETAIL", "");
                 PANEL_A2.Show();
             }
             else if (commandName == "SAVE_BAD")
@@ -1176,12 +1211,29 @@ namespace TML2010
                 return;
             }
             else if (commandName == "POP_NON")
-            {   // 비가동등록 팝업
+            {   // 비가동등록
                 if (MODEL_S1.GetText("LINECD") == "" || MODEL_S1.GetText("PRCCD") == "" || MODEL_S1.GetText("EQMCD") == "")
                 {
                     ShowMessageBox("", "생산작업장, 생산공정, 생산라인을 선택하세요.");
                     return;
                 }
+
+                // 2026-11-27 비가동관리(TML2040) 화면으로 넘어가서 등록 (이 라인을 골라 두고 시작·종료 팝업을 바로 띄움, 저장하면 이 화면으로 돌아옴)
+                //            아래 예전 비가동 팝업 소스는 남겨 둠 (화면 이동이 안 될 때 참고)
+                Dictionary<string, string> navParam = new Dictionary<string, string>();
+                navParam["LINECD"] = MODEL_S1.GetText("LINECD");
+                navParam["PRCCD"] = MODEL_S1.GetText("PRCCD");
+                navParam["EQMCD"] = MODEL_S1.GetText("EQMCD");
+                navParam["RETURN"] = "TML2010_R01";
+                navParam["AUTO"] = "Y";
+                if (!GoMenu("TML2040_R01", navParam))
+                {
+                    ShowMessageBox("", "비가동관리(TML2040) 화면이 이 PC 메뉴에 없습니다.\n현장프로그램 메뉴에 비가동관리를 등록하세요.");
+                }
+                return;
+            }
+            else if (commandName == "POP_NON_OLD")
+            {   // (예전) 비가동등록 팝업 — 2026-11-27 부터 POP_NON 은 비가동관리 화면으로 이동
 
                 // 라인에 진행 중인 비가동이 있는지 확인
                 ItsMaria.Set("TML2010_R01", "CHK_NON");

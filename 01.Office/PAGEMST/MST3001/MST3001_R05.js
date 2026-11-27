@@ -6,8 +6,6 @@ ItsPage.Load = function () {
         column.create("품목코드", "ITEMCD", { width: 100, align: 'center', backColor: enumColor.greenLight2 }),
         column.create("품명", "ITEMNM", { width: 120 }),
         column.create("규격", "ITEMSPEC", { width: 120 }),
-        column.create("안전재고", "SAFEQTY", { width: 70, align: 'right', format: '#,##0', readOnly: false }),
-        column.create("현재고", "LOTQTY", { width: 70, align: 'right', format: '#,##0' }),
         column.create("위치수", "LOCCNT", { width: 60, align: 'right', format: '#,##0' }),
         column.create("대분류", "ITEM_LVL1", { width: 100, align: 'center' }),
         column.create("중분류", "ITEM_LVL2", { width: 100, align: 'center' }),
@@ -85,10 +83,10 @@ ItsButton.EventSearch = function () {
         return;
     }
 
-    // 저장 때 안전재고가 바뀐 품목만 골라내려고 조회 당시 값을 보관
+    // 2026-11-27 안전재고·현재고 컬럼을 없애서 안전재고 미만 행 분홍 표시(프로시저 BACKGROUND)도 끈다
     var store = maria.store.YnToBool('ENDYN');
     for (var i = 0; i < store.data.length; i++) {
-        store.data[i]._ORG_SAFEQTY = store.data[i].SAFEQTY;
+        store.data[i].BACKGROUND = '';
     }
 
     ItsGrid.SetStore('grid1', store);
@@ -151,19 +149,11 @@ ItsButton.EventAdd = function () {
     SearchPopEqm();
 };
 
-// 2026-10-30 [외주처 소모품] 왼쪽 안전재고가 바뀐 품목과, 오른쪽 체크한 사용위치(선택한 품목)를 저장
+// 2026-10-30 [외주처 소모품] 오른쪽 체크한 사용위치(선택한 품목)를 저장
+//  2026-11-27 안전재고 컬럼을 없애서 안전재고 저장(SAVE_SAFEQTY)은 뺐다
 ItsButton.EventSave = function () {
 
-    if (!ItsGrid.Get('grid1').finishEditing()) return;
     if (!ItsGrid.Get('grid2').finishEditing()) return;
-
-    var arrSafe = [];
-    for (var i = 0; i < ItsGrid.Length('grid1'); i++) {
-        var item = ItsGrid.GetRowData('grid1', i);
-        if ((parseFloat(item.SAFEQTY) || 0) !== (parseFloat(item._ORG_SAFEQTY) || 0)) {
-            arrSafe.push({ rowIndex: i, data: item });
-        }
-    }
 
     // 같은 사용위치가 두 행 이상이면 저장하지 않고 다시 설정하게 함
     //  (오른쪽에는 선택한 품목의 위치가 모두 보이므로 이미 등록된 위치와의 중복도 여기서 걸린다)
@@ -198,44 +188,13 @@ ItsButton.EventSave = function () {
             arrRows.push(row);
         }
     }
-    if (arrSafe.length === 0 && arrRows.length === 0) {
+    if (arrRows.length === 0) {
         ItsMsg.Toast('수정되거나 선택된 항목이 없습니다.');
         return;
     }
 
     var selItem = ItsGrid.GetRowData('grid1', ItsGrid.GetCurrentIndex('grid1'));
-    var arrMsg = [];
-    if (arrSafe.length > 0) arrMsg.push('안전재고 ' + arrSafe.length + '건');
-    if (arrRows.length > 0) arrMsg.push('[' + selItem.ITEMCD + '] 의 사용위치 ' + arrRows.length + '건');
-    ItsMsg.Confirm(arrMsg.join(', ') + '을 저장하시겠습니까?', function () {
-
-        if (arrSafe.length > 0) {
-            var mariaSafe = new ItsMaria('MST3001_R05', 'SAVE_SAFEQTY');
-            for (var i = 0; i < arrSafe.length; i++) {
-                mariaSafe.AddList('ITEMID_LIST', arrSafe[i].data.ITEMID);
-                mariaSafe.AddList('SAFEQTY_LIST', parseFloat(arrSafe[i].data.SAFEQTY) || 0);
-            }
-            mariaSafe.CallProc();
-            if (mariaSafe.isError) {
-                mariaSafe.ShowErrMsg();
-                return;
-            }
-
-            // 저장한 값을 원래 값으로 삼고, 안전재고 미만 표시(분홍)를 다시 맞춘다
-            ItsGrid.Get('grid1').deferUpdate(function () {
-                for (var i = 0; i < arrSafe.length; i++) {
-                    var item = arrSafe[i].data;
-                    item._ORG_SAFEQTY = item.SAFEQTY;
-                    ItsGrid.SetValue('grid1', arrSafe[i].rowIndex, 'BACKGROUND',
-                        (parseFloat(item.LOTQTY) || 0) < (parseFloat(item.SAFEQTY) || 0) ? 'PINK' : '');
-                }
-            });
-        }
-
-        if (arrRows.length === 0) {
-            ItsMsg.Toast('안전재고 ' + arrSafe.length + '건 저장');
-            return;
-        }
+    ItsMsg.Confirm('[' + selItem.ITEMCD + '] 의 사용위치 ' + arrRows.length + '건을 저장하시겠습니까?', function () {
 
         var maria = new ItsMaria('MST3001_R05', 'SAVE_ITEM');
         for (var i = 0; i < arrRows.length; i++) {
@@ -261,7 +220,7 @@ ItsButton.EventSave = function () {
             return;
         }
 
-        ItsMsg.Toast((arrSafe.length > 0 ? '안전재고 ' + arrSafe.length + '건, ' : '') + '사용위치 ' + maria.store.data[0].SAVECNT + '건 저장');
+        ItsMsg.Toast('사용위치 ' + maria.store.data[0].SAVECNT + '건 저장');
         ItsGrid.Event('grid1').onSelect(ItsGrid.GetCurrentIndex('grid1'));
     });
 };
